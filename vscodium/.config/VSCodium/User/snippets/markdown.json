@@ -1,0 +1,12 @@
+{
+	"Em Dash": {
+		"prefix": "---",
+		"body": "—",
+		"description": "Insert em dash (—)"
+	},
+	"En Dash": {
+		"prefix": "--",
+		"body": "–",
+		"description": "Insert en dash (–)"
+	}
+}
