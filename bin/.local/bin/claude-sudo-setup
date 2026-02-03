@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Retrieves sudo password from system keyring and caches it for the session
+# Used when user types "SUDO PASSWORD" in chat instead of actual password
+
+# Retrieve password from keyring
+PASSWORD=$(secret-tool lookup service claude-code account sudo 2>/dev/null)
+
+if [ -z "$PASSWORD" ]; then
+    echo "Error: Password not found in keyring. Run initial setup first." >&2
+    exit 1
+fi
+
+# Cache it in the temporary token file
+echo "$PASSWORD" > ~/.cache/claude-sudo-token
+chmod 600 ~/.cache/claude-sudo-token
+
+echo "Sudo password retrieved from keyring and cached for session."
