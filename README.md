@@ -1,52 +1,55 @@
 # Workstation Configuration
 
-Ubuntu/Linux Mint workstation configuration — shell setup, custom scripts, Claude CLI tools, and VSCodium settings.
+Personal workstation dotfiles — shell setup, custom scripts, Claude CLI tools, and VSCodium settings.
 
-Managed with [GNU Stow](https://www.gnu.org/software/stow/) for automatic symlink management.
+**Platform:** Linux Mint 22 (Cinnamon), Ubuntu 24.04 base
+**Managed with:** [GNU Stow](https://www.gnu.org/software/stow/)
 
-## Contents
+---
 
-- **bash/**: Shell configuration (.bashrc, .profile)
-- **bin/**: Custom scripts (`cld`, `claude-askpass`, `claude-sudo-clear`, `update-android-sdk`)
-- **claude/**: Claude CLI configuration (cli-mode.md system prompt, gather scripts, skills)
-- **git/**: Git configuration (.gitconfig)
-- **vscodium/**: VSCodium editor settings and extension list
-- **android/**: Android SDK setup documentation
-- **themes/**: Nord theme setup and installation scripts
-- **wallpapers/**: Nord-themed desktop wallpapers
-- **sync-dotfiles.sh**: Health check script for tracking drift
+## Packages
 
-## Quick Setup on New System
+| Package | Destination | Contents |
+|---------|-------------|----------|
+| `bash` | `~/` | `.bashrc`, `.profile`, `.bash_blog_functions` |
+| `bin` | `~/.local/bin/` | `cld`, `claude-askpass`, `claude-sudo-clear`, `claude-sudo-setup`, `update-android-sdk`, `write` |
+| `claude` | `~/.claude/` | CLI mode system prompt, context scripts, skills |
+| `vscodium` | `~/.config/VSCodium/User/` | `settings.json`, extension list, markdown snippets |
+| `git` | `~/` | `.gitconfig` — git identity and settings |
+| `android` | *(docs only)* | SDK setup guide — SDK itself lives in `~/Android/` |
+| `themes` | `~/.themes/` | Nord GTK theme installer |
+| `wallpapers` | `~/Pictures/Wallpapers/` | Nord-themed desktop wallpapers |
+| `applications` | `~/.local/share/applications/` | VSCodium writing profile launcher |
+| `browser-bookmarks` | *(backup only)* | Chrome/Firefox bookmark exports |
+
+---
+
+## Quick Setup (New Machine)
 
 ```bash
-# Install GNU Stow
-sudo apt install -y stow
-
-# Clone this repository
+sudo apt update && sudo apt install -y stow git curl micro gh
 git clone https://github.com/glw907/workstation.git ~/.dotfiles
 cd ~/.dotfiles
-
-# Install desired packages (creates symlinks)
-stow bash bin claude vscodium
-
-# Reload shell configuration
+stow bash bin claude vscodium git
 source ~/.bashrc
 ```
 
-## Using Stow
+→ See `CLAUDE.md` for the complete new machine setup guide (prerequisites, NVM, Android SDK, etc.)
 
-Stow creates symlinks from `~/.dotfiles/` to your home directory automatically:
+---
+
+## Using Stow (Day-to-Day)
 
 ```bash
 cd ~/.dotfiles
 
 # Install a package (create symlinks)
-stow bash              # Links .bashrc and .profile
-stow bin               # Links scripts to ~/.local/bin/
-stow vscodium          # Links VSCodium settings.json
+stow bash
+stow bin
+stow vscodium
 
 # Install multiple packages at once
-stow bash bin vscodium
+stow bash bin claude vscodium git
 
 # Remove a package (remove symlinks)
 stow -D bash
@@ -55,145 +58,48 @@ stow -D bash
 stow -R bash
 ```
 
-## Manual Setup (Alternative)
+---
 
-If you prefer not to use Stow, you can manually copy files:
-
-### 1. Shell Configuration
-
-```bash
-cp bash/.bashrc ~/.bashrc
-cp bash/.profile ~/.profile
-source ~/.bashrc
-```
-
-### 2. Git Configuration
-
-```bash
-cp git/.gitconfig ~/.gitconfig
-```
-
-### 3. Custom Scripts
-
-```bash
-mkdir -p ~/.local/bin
-cp bin/.local/bin/* ~/.local/bin/
-chmod +x ~/.local/bin/*
-```
-
-### 4. VSCodium Setup
-
-```bash
-# Install VSCodium first
-# Visit: https://vscodium.com/
-
-# Copy settings
-mkdir -p ~/.config/VSCodium/User
-cp vscodium/settings.json ~/.config/VSCodium/User/
-
-# Install extensions
-cat vscodium/extensions.txt | xargs -L 1 codium --install-extension
-```
-
-### 5. Android SDK Setup
-
-See `android/README.md` for detailed Android SDK installation instructions.
-
-### 6. Nord Theme Setup
-
-Install Nord theme across system (GTK, icons, terminal, VSCodium):
-
-```bash
-# Automated installation
-cd ~/.dotfiles/themes
-./setup-nord.sh
-
-# Or see themes/NORD.md for manual installation steps
-```
-
-This will install:
-- Nordic GTK theme
-- Papirus icon theme (Nord-compatible)
-- Nord GNOME Terminal colors
-- Nord wallpapers
-- VSCodium Nord theme extension
-
-## Key Features
-
-### Shell Aliases & Functions
-
-- `blog` - Quick access to Hugo blog development (`cd ~/Projects/907-life && codium . && hugo server -D`)
-- `newpost` - Create new blog post with date prefix
-- `blogpush` - Commit and push blog changes
-- `blogdeploy` - Deploy blog to Cloudflare
+## Key Tools
 
 ### CLI Mode (`cld`)
 
-The `cld` command launches Claude in system administration mode — for package management, dotfiles, services, and workstation configuration. Tracked in the **bin** and **claude** Stow packages:
+Launches Claude in system administration mode — for package management, dotfiles, system services, and workstation configuration. Tracked in the **bin** and **claude** Stow packages.
 
-**Scripts (bin package → `~/.local/bin/`):**
-- `cld` - CLI mode launcher
-- `claude-askpass` - SUDO_ASKPASS helper for cached sudo
-- `claude-sudo-clear` - Clears cached sudo password
+Variant modes (`cld-arch`, `cld-research`, `cld-write`, `cld-critic`) live in `~/Projects/modal-claude/` and are not tracked here.
 
-**Claude config (claude package → `~/.claude/`):**
-- `cli-mode.md` - System prompt for CLI mode
-- `gather-dotfiles.sh` - Injects shell config into context
-- `gather-scripts.sh` - Injects script inventory into context
+### Blog Shortcuts
 
-### System Utility Scripts
+Defined in `.bash_blog_functions`, targeting the Hugo blog at `~/Projects/907-life`:
 
-Scripts tracked in this repository:
-- **update-android-sdk**: Android SDK component updater
+- `blog` — open blog in VSCodium and start Hugo dev server
+- `newpost` — create a new post with date prefix
+- `blogpush` — commit and push blog changes
+- `blogdeploy` — deploy to Cloudflare
 
-## System Information
+### sync-dotfiles.sh
 
-This configuration was created on:
-- OS: Ubuntu 24.04 LTS
-- Shell: bash
-- Editor: VSCodium
+Health check script for tracking configuration drift. Checks:
+- Stow package symlink status
+- Git config changes (auto-copies to dotfiles if changed)
+- VSCodium extension changes
+- Uncommitted changes in this repository
 
-Compatible with Ubuntu, Linux Mint, and other Debian-based distributions.
+Run it before committing, or when you've made system configuration changes.
 
-## Blog Configuration
+### update-android-sdk
 
-The .bashrc includes shortcuts for managing the 907.life Hugo blog:
-- Blog directory: `~/Projects/907-life`
-- Hugo server with drafts: `blog`
-- Create posts: `newpost YYYY-MM-DD-title`
-- Deploy: `npx wrangler deploy`
+Checks for and installs updates to all installed Android SDK components via `sdkmanager`.
 
-## What Lives Here
-
-All workstation configuration and personal tooling is tracked in this repo:
-- Shell config (bash)
-- Editor settings (vscodium)
-- Git configuration
-- System utilities (`update-android-sdk`)
-- Claude CLI mode launcher and system prompt (`cld`, `cli-mode.md`)
+---
 
 ## Maintenance
 
-Run the sync script to check for drift and update tracked files:
 ```bash
 ~/.dotfiles/sync-dotfiles.sh
 ```
 
-This checks:
-- Stow package symlink status
-- Git config changes (auto-copies if changed)
-- VSCodium extension changes
-- Uncommitted changes in the repository
-
-CLI mode automatically runs this when making configuration changes.
-
-## Notes
-
-- VSCodium settings.json is Stow-managed (symlinked)
-- Extensions are listed in `vscodium/extensions.txt` (manual sync via script)
-- Git config is NOT stowed - manually synced via `sync-dotfiles.sh`
-- CLI mode scripts (`cld`, helpers, system prompt) tracked in bin and claude packages
-
-## License
-
-Personal configuration files - use as you wish.
+**Notes:**
+- VSCodium `settings.json` is Stow-managed (symlinked) — changes are automatically tracked
+- VSCodium extensions are manually synced via `vscodium/sync-extensions.sh`
+- Git config is **not** stowed — manually synced via `sync-dotfiles.sh`
