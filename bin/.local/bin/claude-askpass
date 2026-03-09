@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# SUDO_ASKPASS helper for Claude sessions
+# Reads the cached sudo password from token file to avoid interactive prompts
+cat ~/.cache/claude-sudo-token 2>/dev/null

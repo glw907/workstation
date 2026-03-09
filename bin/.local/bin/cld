@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Initialize Claude CLI mode
+# Usage:
+#   cld              - Start Claude session
+#   cld "command"    - Start Claude session with initial command
+#
+# Sudo behavior: Uses standard sudo (prompts when needed, system handles timeout)
+
+# Start Claude with CLI mode
+# Pass initial prompt as a positional argument (NOT using -p flag)
+# This executes the prompt AND keeps the session interactive (vs -p which exits after execution)
+# We require exactly 1 argument (quoted) to avoid ambiguity with multi-word commands
+if [[ $# -eq 1 ]]; then
+    echo "Starting Claude with prompt: $1"
+    echo "Please wait..."
+    exec claude --dangerously-skip-permissions --model sonnet --system-prompt "$(cat ~/.claude/cli-mode.md && echo "" && ~/.claude/gather-dotfiles.sh && echo "" && ~/.claude/gather-scripts.sh)" "$1"
+elif [[ $# -gt 1 ]]; then
+    echo "Error: Multiple arguments detected. Please use quotes around your prompt."
+    echo "Example: cld \"install chrome\""
+    exit 1
+else
+    exec claude --dangerously-skip-permissions --model sonnet --system-prompt "$(cat ~/.claude/cli-mode.md && echo "" && ~/.claude/gather-dotfiles.sh && echo "" && ~/.claude/gather-scripts.sh)"
+fi

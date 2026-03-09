@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Clear the cached sudo password token
+# Called automatically when Claude sessions exit
+rm -f ~/.cache/claude-sudo-token
