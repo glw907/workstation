@@ -194,14 +194,15 @@ CLI mode should actively maintain a clean, organized environment.
 
 ## Dotfiles Management
 
-**Location:** `~/.dotfiles` (git repo: github.com/glw907/dotfiles)
+**Location:** `~/.dotfiles` (git repo: github.com/glw907/workstation)
 
 Configuration files are managed with **GNU Stow** for automatic symlink tracking. When you make system configuration changes in CLI mode, proactively keep dotfiles synced.
 
 ### Stow Packages (Auto-tracked via Symlinks)
 
 - **bash** - Shell configuration (.bashrc, .profile)
-- **bin** - Custom utility scripts (update-android-sdk)
+- **bin** - Custom utility scripts (`cld`, `claude-askpass`, `claude-sudo-clear`, `update-android-sdk`)
+- **claude** - Claude config (`cli-mode.md`, `gather-dotfiles.sh`, `gather-scripts.sh`, skills)
 - **vscodium** - VSCodium settings.json (symlinked)
 - **git** - Git config (NOT stowed, manually synced)
 
@@ -293,7 +294,7 @@ git commit -m "Add newtool configuration"
 
 - **Symlinked files** (bash, vscodium settings) are automatically tracked - just commit
 - **Extension lists** and **git config** require manual sync via scripts
-- Modal Claude scripts (`cld`, `cld-arch`, etc.) are in `~/Projects/modal-claude/`, NOT in dotfiles
+- `cld` and related Claude scripts are tracked in the **bin** and **claude** Stow packages
 - Always run `sync-dotfiles.sh` before committing to catch drift
 
 ## System Administration Tasks
@@ -540,35 +541,10 @@ CLI mode is NOT a replacement for general-purpose Claude Code. Recommend using r
 
 Example: "For development work, use regular Claude Code instead of CLI mode. Exit with `exit` and run `claude` in your project directory."
 
-### When to recommend Architecture mode (`cld-arch`)
-- User asks to "design" or "plan" a system or feature
-- Need to evaluate architectural tradeoffs before implementation
-- Starting a new project that needs scaffolding
-- Design decisions require deep reasoning
-
-Example: "This would benefit from architectural planning. Switch to architecture mode: `cld-arch \"design a [system]\"`"
-
-### When to recommend Research mode (`cld-research`)
-- Need to investigate technologies, frameworks, or approaches
-- Comparing multiple tools or solutions
-- Understanding best practices or design patterns
-- Questions require web research or documentation review
-
-Example: "Let me research this. Switch to research mode: `cld-research \"investigate [topic]\"`"
-
-### When to recommend Write mode (`cld-write`)
-- Drafting or editing documentation (README, guides, blog posts)
-- Content needs audience-specific refinement
-- Writing requires adherence to style guidelines
-
-Example: "For documentation, use write mode: `cld-write \"draft a README for this project\"`"
-
-### When to recommend Critic mode (`cld-critic`)
-- User asks for media recommendations (books, films, music, games)
-- Building or querying taste preferences
-- Managing watchlist of content to consume
-
-Example: "For recommendations, use critic mode: `cld-critic \"suggest a sci-fi book\"`"
+### When to recommend regular Claude Code for complex tasks
+For tasks requiring deep reasoning, architectural planning, or research:
+- Start a regular `claude` session in the relevant project directory
+- CLI mode is optimised for fast execution, not extended analysis
 
 ## Notes
 
