@@ -168,9 +168,9 @@ Backup any custom fonts for transfer.
 
 2. [ ] Restore dotfiles:
    ```bash
-   git clone https://github.com/glw907/dotfiles.git
-   cd dotfiles
-   ./setup.sh
+   git clone https://github.com/glw907/workstation.git ~/.dotfiles
+   cd ~/.dotfiles
+   stow bash bin claude vscodium git
    source ~/.bashrc
    ```
 
@@ -244,7 +244,7 @@ echo "  - Any files in ~/Documents, ~/Pictures, ~/Downloads"
 - **Cinnamon vs GNOME**: Different desktop environment - embrace the differences!
 - **Don't over-restore**: Fresh start is good - only install packages you actually use
 - **Use cloud sync**: Browsers, 1Password, and git handle most data automatically
-- **Test the dotfiles setup**: The `setup.sh` script handles the important configs
+- **Test the dotfiles setup**: Run `sync-dotfiles.sh` to verify all Stow packages are in sync
 
 ## ⚠️ Don't Forget
 
