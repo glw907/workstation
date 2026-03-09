@@ -18,7 +18,7 @@ needs_commit=false
 
 # 1. Check Stow-managed packages
 echo -e "${BOLD}📦 Checking Stow packages...${NC}"
-for package in bash bin vscodium; do
+for package in bash bin claude vscodium; do
     if [ -d "$DOTFILES/$package" ]; then
         echo -e "  ${GREEN}✓${NC} $package (Stow-managed)"
     fi

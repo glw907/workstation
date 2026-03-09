@@ -1,13 +1,14 @@
-# Dotfiles & Configuration
+# Workstation Configuration
 
-Ubuntu/Linux Mint configuration backup including shell setup, custom scripts, Claude CLI configuration, and VSCodium settings.
+Ubuntu/Linux Mint workstation configuration — shell setup, custom scripts, Claude CLI tools, and VSCodium settings.
 
 Managed with [GNU Stow](https://www.gnu.org/software/stow/) for automatic symlink management.
 
 ## Contents
 
 - **bash/**: Shell configuration (.bashrc, .profile)
-- **bin/**: System utility scripts (update-android-sdk)
+- **bin/**: Custom scripts (`cld`, `claude-askpass`, `claude-sudo-clear`, `update-android-sdk`)
+- **claude/**: Claude CLI configuration (cli-mode.md system prompt, gather scripts, skills)
 - **git/**: Git configuration (.gitconfig)
 - **vscodium/**: VSCodium editor settings and extension list
 - **android/**: Android SDK setup documentation
@@ -22,11 +23,11 @@ Managed with [GNU Stow](https://www.gnu.org/software/stow/) for automatic symlin
 sudo apt install -y stow
 
 # Clone this repository
-git clone https://github.com/glw907/dotfiles.git ~/.dotfiles
+git clone https://github.com/glw907/workstation.git ~/.dotfiles
 cd ~/.dotfiles
 
 # Install desired packages (creates symlinks)
-stow bash bin vscodium
+stow bash bin claude vscodium
 
 # Reload shell configuration
 source ~/.bashrc
@@ -126,22 +127,19 @@ This will install:
 - `blogpush` - Commit and push blog changes
 - `blogdeploy` - Deploy blog to Cloudflare
 
-### Modal Claude Integration
+### CLI Mode (`cld`)
 
-Modal Claude scripts are maintained in a separate repository (`~/Projects/modal-claude/`) and symlinked to `~/.local/bin/`:
+The `cld` command launches Claude in system administration mode — for package management, dotfiles, services, and workstation configuration. Tracked in the **bin** and **claude** Stow packages:
 
-**Mode Launchers:**
-- `cld` - CLI mode (execution and system changes)
-- `cld-arch` - Architecture mode (design and scaffolding)
-- `cld-research` - Research mode (external research)
-- `cld-write` - Write mode (documentation and prose)
-- `cld-critic` - Critic mode (media recommendations)
-
-**Helper Scripts:**
-- `claude-askpass` - SUDO_ASKPASS helper for Claude sessions
+**Scripts (bin package → `~/.local/bin/`):**
+- `cld` - CLI mode launcher
+- `claude-askpass` - SUDO_ASKPASS helper for cached sudo
 - `claude-sudo-clear` - Clears cached sudo password
 
-See: [github.com/glw907/modal-claude](https://github.com/glw907/modal-claude)
+**Claude config (claude package → `~/.claude/`):**
+- `cli-mode.md` - System prompt for CLI mode
+- `gather-dotfiles.sh` - Injects shell config into context
+- `gather-scripts.sh` - Injects script inventory into context
 
 ### System Utility Scripts
 
@@ -165,21 +163,14 @@ The .bashrc includes shortcuts for managing the 907.life Hugo blog:
 - Create posts: `newpost YYYY-MM-DD-title`
 - Deploy: `npx wrangler deploy`
 
-## Script Distribution Strategy
+## What Lives Here
 
-Configuration and scripts are distributed across two repositories:
-
-**This repository (`~/.dotfiles/`)** - System configuration
+All workstation configuration and personal tooling is tracked in this repo:
 - Shell config (bash)
 - Editor settings (vscodium)
 - Git configuration
 - System utilities (`update-android-sdk`)
-
-**Modal Claude (`~/Projects/modal-claude/`)** - Application code
-- Mode launchers (`cld`, `cld-arch`, `cld-research`, `cld-write`, `cld-critic`)
-- Claude-specific helpers (`claude-askpass`, `claude-sudo-clear`)
-
-This separation keeps system configuration portable while maintaining Modal Claude as versioned application code.
+- Claude CLI mode launcher and system prompt (`cld`, `cli-mode.md`)
 
 ## Maintenance
 
@@ -201,7 +192,7 @@ CLI mode automatically runs this when making configuration changes.
 - VSCodium settings.json is Stow-managed (symlinked)
 - Extensions are listed in `vscodium/extensions.txt` (manual sync via script)
 - Git config is NOT stowed - manually synced via `sync-dotfiles.sh`
-- Modal Claude scripts are separate - see modal-claude repository
+- CLI mode scripts (`cld`, helpers, system prompt) tracked in bin and claude packages
 
 ## License
 
