@@ -43,10 +43,6 @@ This is Geoff's home directory on a personal workstation. This mode is specifica
   - Platform-tools (adb, fastboot): ~/Android/platform-tools/
   - Environment: ANDROID_HOME configured in .bashrc
 
-## Mode Identity
-
-This is CLI Mode (`cld`). You use the Sonnet model for fast, practical execution of **system administration tasks**. This mode is for managing the system environment - installing and updating software, configuring system services, managing dotfiles, and maintaining the workstation.
-
 ## Preferences
 
 ### Troubleshooting Strategy
@@ -61,13 +57,13 @@ This is CLI Mode (`cld`). You use the Sonnet model for fast, practical execution
 
 **Example workflow:**
 1. First attempt: Try the standard/obvious solution
-2. If that fails: Search online for the error message or issue (include "Ubuntu 24.04" in search)
+2. If that fails: Search online for the error message or issue (include "Linux Mint 22" in search)
 3. Apply the solution found online
 4. Only if no online solution exists: Continue with deeper local troubleshooting
 
 **What to search for:**
 - Exact error messages (in quotes)
-- Include version numbers and "Ubuntu 24.04"
+- Include version numbers and "Linux Mint 22"
 - Package names with "installation" or "configuration"
 
 ### Communication Style
@@ -201,7 +197,7 @@ Configuration files are managed with **GNU Stow** for automatic symlink tracking
 ### Stow Packages (Auto-tracked via Symlinks)
 
 - **bash** - Shell configuration (.bashrc, .profile)
-- **bin** - Custom utility scripts (`cld`, `claude-askpass`, `claude-sudo-clear`, `update-android-sdk`)
+- **bin** - Custom utility scripts (`cld`, `claude-askpass`, `claude-sudo-*`, `update-android-sdk`, `write`)
 - **claude** - Claude config (`cli-mode.md`, `gather-dotfiles.sh`, `gather-scripts.sh`, skills)
 - **vscodium** - VSCodium settings.json (symlinked)
 - **git** - Git config (NOT stowed, manually synced)
@@ -251,26 +247,6 @@ This checks:
    - If the script should be tracked, add it to `~/.dotfiles/bin/.local/bin/`
    - Restow: `cd ~/.dotfiles && stow -R bin`
 
-### Adding New Configurations
-
-To track a new config file:
-```bash
-# 1. Create proper directory structure in dotfiles
-mkdir -p ~/.dotfiles/packagename/path/to/
-
-# 2. Move existing config to dotfiles
-mv ~/.config/app/config.json ~/.dotfiles/packagename/.config/app/config.json
-
-# 3. Stow the package (creates symlink)
-cd ~/.dotfiles && stow packagename
-
-# 4. Verify symlink
-ls -la ~/.config/app/config.json
-
-# 5. Commit
-git add packagename/ && git commit -m "Add packagename config"
-```
-
 ### Workflow Example
 
 When you install a new package and configure it:
@@ -310,7 +286,7 @@ free -h
 # CPU info
 lscpu
 
-# Ubuntu version
+# OS version
 lsb_release -a
 
 # Kernel
@@ -365,47 +341,6 @@ snap list
 
 # Snap: remove package
 sudo -A snap remove packagename
-```
-
-### Firewall (ufw)
-```bash
-# Status
-sudo -A ufw status verbose
-
-# Enable/disable
-sudo -A ufw enable
-sudo -A ufw disable
-
-# Allow port
-sudo -A ufw allow 22/tcp
-
-# Allow application profile
-sudo -A ufw allow 'OpenSSH'
-
-# Deny port
-sudo -A ufw deny 3306
-
-# Delete rule
-sudo -A ufw delete allow 22/tcp
-```
-
-### Users and Permissions
-```bash
-# Add user
-sudo -A adduser username
-
-# Add user to group
-sudo -A usermod -aG groupname username
-
-# Check groups for user
-groups username
-
-# Change ownership
-chown -R user:group directory/
-
-# Set permissions (rwxr-xr-x)
-chmod 755 file
-chmod -R 755 directory/
 ```
 
 ### Android SDK Tools
@@ -475,17 +410,7 @@ Run `update-android-sdk` to check for and install updates to all SDK components.
 ### Cloudflare Workers & Wrangler CLI
 Cloudflare is the primary hosting platform for web projects. Wrangler is installed via npx (not globally).
 
-**Authentication:**
-```bash
-# Global API token (already configured in ~/.bashrc)
-export CLOUDFLARE_API_TOKEN=Bmk6ADrx-4MYLwPbyx4dLziVbcJxRTRiB2U_7qOd
-
-# Login to Wrangler (one-time)
-npx wrangler login
-
-# Verify authentication
-npx wrangler whoami
-```
+**Authentication:** Token is already set in `~/.bashrc` — Wrangler uses it automatically.
 
 **Common commands:**
 ```bash
@@ -541,21 +466,7 @@ CLI mode is NOT a replacement for general-purpose Claude Code. Recommend using r
 
 Example: "For development work, use regular Claude Code instead of CLI mode. Exit with `exit` and run `claude` in your project directory."
 
-### When to recommend regular Claude Code for complex tasks
-For tasks requiring deep reasoning, architectural planning, or research:
-- Start a regular `claude` session in the relevant project directory
-- CLI mode is optimised for fast execution, not extended analysis
-
 ## Notes
-
-### Sudo Behavior
-On-demand password prompting:
-- When sudo is needed, Claude will ask: "I need sudo access. Please enter your password:"
-- User types password once (echoed as dots for security)
-- Password cached in `~/.cache/claude-sudo-token` (mode 600) for the session
-- Subsequent sudo commands work automatically
-- Token automatically cleared when session exits
-- No need to provide password at session start - only when actually needed
 
 ### Key Locations
 - User config: `~/.config/`
@@ -577,17 +488,3 @@ On-demand password prompting:
 - `ncdu`: interactive disk usage - `sudo -A apt install ncdu`
 - `tldr`: simplified man pages - `sudo -A apt install tldr`
 
-### Verifying Success
-```bash
-# Check last command exit status
-echo $?    # 0 = success, non-zero = failure
-
-# Chain commands (stop on failure)
-cmd1 && cmd2 && cmd3
-
-# Run regardless of previous success
-cmd1; cmd2; cmd3
-
-# Run only if previous failed
-cmd1 || fallback_cmd
-```
