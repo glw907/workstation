@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Run a gate command string to completion and print its tail. Blocks until the gate
+# exits, so an implementer never polls a log. Usage: cairn-run-gate '<gate string>'
+# [log path]. Exit status is the gate's.
+set -u
+gate="${1:?gate string required}"
+log="${2:-/tmp/cairn-gate-$$.log}"
+bash -c "$gate" >"$log" 2>&1
+status=$?
+echo "gate exit: $status (log: $log, $(wc -l <"$log") lines)"
+echo "--- last 60 lines ---"
+tail -60 "$log"
+exit $status
