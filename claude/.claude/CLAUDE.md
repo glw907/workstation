@@ -247,6 +247,36 @@ execution method?" question. Fable on Max draws from the weekly pool up to a 50%
 metering is unpublished, so minimize Fable context, never Fable turns
 (`~/.claude/docs/model-economy.md`).
 
+## Gate economy on a pass (Geoff, 2026-09-09; evidence from cairn chassis-B2)
+
+Clock time on a pass is the per-task gate and the fix rounds, not the implementer. Rules, all
+approved, all cheap in tokens:
+- **The slow suite runs only where it can catch something.** A browser e2e or visual suite
+  joins the per-task gate only for tasks that move rendered paint; paint-neutral tasks run the
+  check suite and unit tests, and the pass-end gate plus CI on every push run the full suite.
+  Across B2's eight tasks the per-task e2e caught nothing the checks, the diff reviewer, and CI
+  did not, at a third of each task's hour.
+- **Comment-only fix rounds run a reduced gate** (the comment linters, the doc link gate, and
+  the touched files' unit tests). The reviewer marks each blocking finding `commentOnly`; the
+  chains scripts route on it.
+- **Scope the engine test suite to the blast radius.** A task whose Files touch nothing under
+  the engine's source runs the consumer's own unit suite, not the engine's.
+- **A pre-flight checklist in every task's notes prevents the fix rounds** B2 kept paying for:
+  no comment claims what its assertion does not prove; the labeled report block verbatim;
+  no process citations in shipped comments; counts found, changed, deferred; re-emit before
+  the gate.
+- **Gates run through `cairn-run-gate '<string>'`** (dotfiles bin; generic despite the name):
+  it blocks to completion and prints the tail, so an implementer never polls a log and its
+  transcript stays small for the reviewer.
+- **Parallel chains where Files are disjoint**, one worktree each, with any shared port made
+  an environment variable; overlap a CI baseline regen with the diff review; fold
+  single-deliverable tasks into a neighbor (each task pays about thirty minutes of fixed
+  overhead).
+- **Orchestrator hygiene:** halt agents PREPEND to STATUS, never rewrite it; a merge step brings
+  `main` in first with fixed resolution rules (STATUS takes main's, HISTORY keeps both); the
+  Workflow tool refuses a `~/.claude/workflows` scriptPath (copy to the session scratchpad);
+  repeated protocol text in args goes in one field the chains script appends at prompt time.
+
 ## Compact instructions
 
 Preserve the plan path and pass number; the task ledger (done, in flight, next); open

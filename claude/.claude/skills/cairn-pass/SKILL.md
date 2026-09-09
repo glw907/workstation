@@ -59,6 +59,13 @@ re-deriving the design.
    correctness-critical logic the plan does not fully specify; `model: fable` only when an
    Opus verdict itself hedges on something that matters.
 
+> **Gate economy (Geoff, 2026-09-09).** The per-task gate omits the showcase e2e for
+> paint-neutral tasks; paint tasks keep it; the pass-end ritual and CI run the full suite.
+> Comment-only fix rounds run the reduced gate; the engine's `npm test` runs only when a task
+> touches `src/lib` or `packages/`. Implementers run gates through `cairn-run-gate`. The
+> chains scripts honor per-task `gate` and `model` fields. Rules and evidence: the workstation
+> CLAUDE.md, "Gate economy on a pass".
+
 > **Legacy discipline.** The frozen `legacy/` build only ever got smoke tests, not real
 > use, so it is an accelerator and a behavioral reference, not a proven artifact to
 > preserve. Port pure, framework-agnostic logic from it to move fast, but hold everything

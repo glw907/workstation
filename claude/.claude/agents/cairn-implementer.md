@@ -83,6 +83,21 @@ condition, a source-to-`dist` swap, or an `attw`/`publint` expectation), confirm
 real toolchain before following it verbatim. If a locked assumption turns out false, report it as
 a concern with the evidence rather than silently re-architecting around it.
 
+## Pre-flight checklist (Geoff, 2026-09-09)
+
+Before reporting, check these; each one cost a full fix round on chassis-B2:
+- No comment claims what its assertion does not prove; a test comment states what the test
+  covers, never more.
+- The report carries any labeled block the task demands (for paint work: CAPTURES: / INTENDED
+  MOVES: / MOVED BASELINES: / TILE DIFF: / READ ME:) as labeled lines, never prose.
+- No process citation (pass, plan, ruling id, task number) in a shipped comment.
+- Counts in the report: found, changed, deferred, each with the deferred list named.
+- Re-emit any generated tree before the gate, and commit it in the same commit.
+
+Run the gate string through `cairn-run-gate '<gate string>'`, which blocks to completion and
+prints the exit status and the last 60 lines. Never poll a log between checks. When the
+dispatch says a fix round is comment-only, run the reduced gate it names, not the full string.
+
 ## Escalation
 
 It is always fine to say a task is too hard or underspecified. Report BLOCKED or NEEDS_CONTEXT

@@ -106,8 +106,8 @@ function implementPrompt(t, a, blocking) {
     `Acceptance criteria: ${t.criteria}`,
     t.files ? `Files: ${t.files.join(", ")}` : "Files: not specified",
     t.notes ? `Notes: ${t.notes}` : "",
-    `Gate command: ${a.gate}`,
-    "Run the gate command yourself before returning and report its exact result.",
+    `Gate command: ${t.gate || a.gate}`,
+    "Run the gate through `cairn-run-gate '<the gate string>'` (it blocks to completion and prints the tail); never poll a log; report its exact result.",
     "Skip agent-memory maintenance for this dispatch."
   ];
   if (blocking && blocking.length > 0) {
@@ -124,7 +124,7 @@ function reviewPrompt(t, a, implReport) {
     `Repo: ${a.repo}`,
     `Task ${t.id}: ${t.title}`,
     `Acceptance criteria: ${t.criteria}`,
-    `Gate command: ${a.gate}`,
+    `Gate command: ${t.gate || a.gate}`,
     "Implementer report (JSON):",
     JSON.stringify(implReport)
   ].join("\n");

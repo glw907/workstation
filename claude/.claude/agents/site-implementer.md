@@ -75,6 +75,21 @@ the task's intent, stop and report DONE_WITH_CONCERNS rather than splitting it o
 In existing files, follow the surrounding idiom; improve what you touch, but do not
 restructure beyond your task.
 
+## Pre-flight checklist (Geoff, 2026-09-09)
+
+Before reporting, check these; each one cost a full fix round on chassis-B2:
+- No comment claims what its assertion does not prove; a test comment states what the test
+  covers, never more.
+- The report carries any labeled block the task demands (for paint work: CAPTURES: / INTENDED
+  MOVES: / MOVED BASELINES: / TILE DIFF: / READ ME:) as labeled lines, never prose.
+- No process citation (pass, plan, ruling id, task number) in a shipped comment.
+- Counts in the report: found, changed, deferred, each with the deferred list named.
+- Re-emit any generated tree before the gate, and commit it in the same commit.
+
+Run the gate string through `cairn-run-gate '<gate string>'`, which blocks to completion and
+prints the exit status and the last 60 lines. Never poll a log between checks. When the
+dispatch says a fix round is comment-only, run the reduced gate it names, not the full string.
+
 ## Escalation
 
 It is always fine to say a task is too hard or underspecified. Report BLOCKED or

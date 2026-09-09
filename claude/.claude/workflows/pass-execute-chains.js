@@ -1,7 +1,9 @@
 // Chain-aware variant of ~/.claude/workflows/pass-execute.js for the cairn
 // internals-B pass: five mutually independent chains run in parallel, each in
 // its own git worktree, with the tasks inside a chain strictly sequential.
-// The conductor reads only the returned per-task records.
+// The conductor reads only the returned per-task records. A task may carry `model`
+// ("opus" or "fable") to upshift its implementer dispatch per the workstation rule, and
+// `gate` to override the chain's gate string for that task alone (paint tasks keep the e2e).
 
 export const meta = {
   name: "pass-execute-chains",
@@ -39,7 +41,8 @@ const REVIEW_SCHEMA = {
         properties: {
           location: { type: "string" },
           finding: { type: "string" },
-          fix: { type: "string" }
+          fix: { type: "string" },
+          commentOnly: { type: "boolean" }
         },
         required: ["location", "finding", "fix"]
       }
@@ -69,12 +72,12 @@ function implementPrompt(t, chain, a, blocking) {
     `Task ${t.id}: ${t.title}`,
     ``,
     `FIRST read, in the plan file: the "Global constraints" section, the "Ruled inputs" section, and the full "Task ${t.id}" section (its Files, Interfaces, Steps, and Acceptance criteria). The plan section is the authority; the criteria below are the condensed form.`,
-    `Acceptance criteria (condensed): ${t.criteria}`,
+    `Acceptance criteria (condensed): ${t.criteria}${a.paintProtocol ? " " + a.paintProtocol : ""}`,
     t.files ? `Files: ${t.files.join(", ")}` : "",
     t.notes ? `Notes: ${t.notes}` : "",
     ``,
-    `Gate command: ${a.gate}`,
-    `Run the gate command yourself before returning and report its exact result.`,
+    `Gate command: ${t.gate || a.gate}`,
+    `Run the gate with the blocking runner, never by polling a log: \`cairn-run-gate '<the gate string>'\` runs it to completion and prints the exit status and the last 60 lines; report its exact result.`,
     `Commit at each step boundary the plan marks "Commit", following the repo's git conventions (imperative mood, specific files, the repo's co-author footer). Report every commit SHA you made in the commits field.`,
     `Scope expectation: this is one focused task; sweeps rewrite comments, casts, and whitespace and never behavior unless the plan section says a step is behavioral; if you find yourself changing logic the plan does not name as changing, stop and report it in unspecifiedDecisions instead.`,
     `Skip agent-memory maintenance for this dispatch.`
@@ -83,6 +86,9 @@ function implementPrompt(t, chain, a, blocking) {
     lines.push("The previous attempt failed review. Fix exactly these blocking findings (fix commits on top, do not rewrite history):");
     for (const b of blocking) {
       lines.push(`- ${b.location}: ${b.finding}. Fix: ${b.fix}`);
+    }
+    if (blocking.every(b => b.commentOnly)) {
+      lines.push("Every finding above is COMMENT-ONLY (the fix changes comment or doc text, never code behavior). For this fix round the gate is reduced by the conductor's 2026-09-09 ruling: run `npm run check:comments && npm run check:symbols && npm run check:docs` plus the unit test files that cover the touched files, through cairn-run-gate, and report that reduced gate as the gate result; do not run the full gate string.");
     }
   }
   return lines.filter(Boolean).join("\n");
@@ -94,9 +100,10 @@ function reviewPrompt(t, chain, a, implReport) {
     `Plan file: ${a.planPath}`,
     `Task ${t.id}: ${t.title}`,
     `Read the plan's "Task ${t.id}" section (its acceptance criteria are the contract) plus the "Global constraints" section before verdicting.`,
-    `Acceptance criteria (condensed): ${t.criteria}`,
+    `For each blocking finding set commentOnly: true when its fix changes only comment or doc text and no code behavior; a fix round whose findings are all comment-only runs a reduced gate (check:comments, check:symbols, check:docs, the touched files' unit tests) by the conductor's 2026-09-09 ruling, so mark it honestly. If you are reviewing such a fix round, the reduced gate is the expected gate.`,
+    `Acceptance criteria (condensed): ${t.criteria}${a.paintProtocol ? " " + a.paintProtocol : ""}`,
     `The task's diff is exactly the commits the implementer reports below (diff each against its parent; the worktree has no other writers).`,
-    `Gate command: ${a.gate}`,
+    `Gate command: ${t.gate || a.gate}`,
     "Implementer report (JSON):",
     JSON.stringify(implReport)
   ].join("\n");
@@ -123,6 +130,7 @@ async function runTask(t, chain, a) {
     label: `impl:${t.id}`,
     phase: phaseName,
     agentType: a.implementer,
+    ...(t.model ? { model: t.model } : {}),
     schema: IMPL_SCHEMA
   });
 
@@ -151,6 +159,7 @@ async function runTask(t, chain, a) {
       label: `impl:${t.id}:fix${fixRounds}`,
       phase: phaseName,
       agentType: a.implementer,
+      ...(t.model ? { model: t.model } : {}),
       schema: IMPL_SCHEMA
     });
 
