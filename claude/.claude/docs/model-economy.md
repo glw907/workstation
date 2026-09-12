@@ -188,13 +188,12 @@ and Opus 5 rows from claude.com/pricing (batch is 50% off base). The
 benchmark row is Anthropic's own table from the announcement. Effort
 levels are not published, and the margin is effort-sensitive. Anthropic
 estimates Fable 5.1 costs about 25% less than Fable 5 for typical
-workloads and up to about 45% less for highly agentic work. Two
-independent per-task measurements point opposite ways on different
-measures. Artificial Analysis measured $3.76 per Intelligence Index
-task at `max` effort against Fable 5's $3.14, about 20% more, because
-5.1 emits roughly 1.7 times the output tokens. The saving is
-effort-dependent, which is why the effort rule keeps `high` as the
-standing level.
+workloads and up to about 45% less for highly agentic work. One
+independent per-task measurement points the other way. Artificial
+Analysis measured $3.76 per Intelligence Index task at `max` effort
+against Fable 5's $3.14, about 20% more, because 5.1 emits roughly 1.7
+times the output tokens. The saving is effort-dependent, which is why
+the effort rule keeps `high` as the standing level.
 
 ### The pool-metering unknown
 
