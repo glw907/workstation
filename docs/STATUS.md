@@ -38,17 +38,17 @@ actually stands, not the retired Mint 22 desktop setup.
 
 ## Immediate next action
 
-**The Claude infra round is executing in the dubplate session of 2026-09-12** from
-`docs/superpowers/plans/2026-09-12-claude-infra-round.md` (revision 2). Segment A (tasks 1, 2, 3) is
-closed and accepted: `95c65a7` (site-implementer exit-75 wording; dubplate `a30d32e`), `f905328` (guards
-doc corrections), `dbb653d` (svelte-check hoisted; repo copies removed in 907-life and ecxc-ski).
-Segment A spent about 0.38M against the plan's 0.35M early tripwire; the projection is about 1.4M
-against the 1.5M ceiling, and the conductor continued under Geoff's same-session grant with the 80%
-flag (1.2M) as the hard check. Next: segment B (tasks 4, 5, 6, 7) through `pass-execute`, then segment
-C (8, 9, 10) as main-loop chains after the cairn overnight workflow `wf_2d52758e-603` has ended.
-`claude/.claude/agents/cairn-implementer.md` is off-limits: a cairn session owns its warm diff.
-Resume prompt if interrupted: "Resume the Claude infra round at segment B from the plan, revision 2;
-segment A is closed at dbb653d."
+**The Claude infra round stood down at the battery floor (11%, 2026-09-12 13:56) mid segment B.**
+Plan: `docs/superpowers/plans/2026-09-12-claude-infra-round.md` (revision 2). Closed and accepted:
+segment A (tasks 1, 2, 3 at `95c65a7`, `f905328`, `dbb653d`; dubplate `a30d32e`), and segment B's
+tasks 4 and 5 (`aa20264`, `a2c6463`, with their site-repo and dubplate commits). Task 6 (model-economy
+doc) and task 7 (the two displacement destination docs) were in flight in workflow `wf_db12879d-af0`
+when it was stopped; check `git status --short` for a warm `claude/.claude/docs/model-economy.md` and
+keep or revert it by reading it, never blindly. **Resume prompt:** "Resume the Claude infra round at
+tasks 6 and 7 (segment B remainder) from the plan, revision 2, then segment C (8, 9, 10). Task 9 runs
+only after the cairn overnight workflow `wf_2d52758e-603` has ended." Segment A spent about 0.38M;
+the 80% flag is 1.2M of the 1.5M ceiling. `claude/.claude/agents/cairn-implementer.md` stays
+off-limits: a cairn session owns its warm diff.
 
 Carried after the round: plan two of the cairn documentation standard
 (`docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`); `cairn-cms/CLAUDE.md`'s
