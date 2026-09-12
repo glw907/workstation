@@ -7,9 +7,6 @@ artifacts. github.com/glw907/workstation.
 
 ## Current state
 
-Post-migration reorg complete: the repo describes the Bluefin machine as it
-actually stands, not the retired Mint 22 desktop setup.
-
 - **Stow packages** (single source: `bluefin/stow-packages.txt`): `bash beets
   bin claude contacts git kitty mise upkeep vale`. `bluefin/bootstrap.sh` and
   `check-drift` both read that file.
@@ -27,31 +24,30 @@ actually stands, not the retired Mint 22 desktop setup.
   gitleaks pre-commit, GitHub push protection.
 - **Gate**: `scripts/check.sh` (shell syntax, ruff-D, tests, vale fixtures,
   gitleaks, tellgrader go check).
-- **Docs standard, plan one closed**: the tellgrader `docs-register` profile and opt-in
-  discovery, `MEASURES.md` as the canonical measure definition, the output-style and voice-file
-  updates, the path-grading Vale hook, the four review agents (including the new
-  `figure-verifier`), and the two skills (`cairn-figure`; `writing-voice`'s renamed
-  author-facing section). Unit 3c stays open: both `CLAUDE.md` files still owe the owner's
-  four-line pick, ranked in
-  `docs/superpowers/plans/2026-09-08-claude-md-displacement-candidates.md`, batched with the
-  docs-standard corpus approval.
+- **Claude infra round closed**: the exit-75 reattach protocol is correct in every
+  implementer that calls `cairn-run-gate`; `svelte-check` and `go-architecture-reader` are
+  hoisted to workstation agents; the workstation and dubplate instruction files are hoisted
+  with repo-specific supplements; `claude/.claude/CLAUDE.md` displaced to 23,947 bytes and
+  picked up the docs standard's four lines. Handoff:
+  `docs/superpowers/plans/2026-09-12-claude-infra-round-handoff.md`.
+- **Docs standard, plan one closed**: tellgrader's `docs-register` profile, `MEASURES.md`,
+  the output-style and voice-file updates, the path-grading Vale hook, the four review agents
+  (including `figure-verifier`), and the two skills (`cairn-figure`; `writing-voice`'s
+  renamed author-facing section).
 
 ## Immediate next action
 
-**The Claude infra round is at its segment B boundary and its 80% flag.** Plan:
-`docs/superpowers/plans/2026-09-12-claude-infra-round.md` (revision 2). Accepted: tasks 1 to 7
-(`95c65a7`, `f905328`, `dbb653d`, `aa20264`, `a2c6463`, `2059e84` and `a30733e`, `12017a4`). Task 6 took one fix round; the rest none. Measured spend about 1.33M of
-subagent tokens against the 1.5M ceiling, 0.5M of it the battery-interrupted first run of segment B.
-The cairn overnight workflow `wf_2d52758e-603` is still live (transcript written 14:29), so task 9
-(the runner edit) defers per the segment-C launch condition. Remaining: task 8 (CLAUDE.md
-displacement, main-loop chain), task 10 (close fold), projected to end near 1.75M. Geoff is asked
-one combined question at this boundary. Resume prompt if interrupted: "Resume the Claude infra
-round at segment C, tasks 8 and 10, task 9 deferred while the cairn workflow lives."
+Plan two of the cairn documentation standard: its handoff is
+`docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`. Once the cairn
+overnight workflow has ended, also run the infra round's deferred task 9 (`pass-execute.js`
+and its skill text).
 
-Carried after the round: plan two of the cairn documentation standard
-(`docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`); `cairn-cms/CLAUDE.md`'s
-own four-line pick and budget trim; dubplate-implementer's gate example names the main tree, so a
-worktree lane must be told the dispatch's own absolute string wins (task 1 review note).
+Owed, from the infra round's handoff: `cairn-cms/CLAUDE.md`'s own four-line pick and budget
+trim; poplar's `go-architecture-reader` adoption; whether `aksailingclub-org`, `xcathletes-org`,
+or `cairn-pub` wants a `CLAUDE.md` pointer at `~/.claude/instructions/`; whether the
+overnight-run runaway guard should become an armable script in `bin/.local/bin/`; the
+dubplate-implementer worktree gate-string note (a worktree lane must be told the dispatch's own
+absolute string wins).
 
 ## Open items
 

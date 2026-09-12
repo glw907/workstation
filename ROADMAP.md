@@ -24,7 +24,9 @@ Current state lives in `docs/STATUS.md`; the per-pass ledger in
   the workstation's Claude infrastructure, is closed
   (`docs/superpowers/plans/2026-09-08-docs-standard-claude-infra.md`); its hand-off is
   `docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`. Plan two (cairn's
-  own toolset) and plan three (the docs rewrite) build against it next. The workstation's
+  own toolset) and plan three (the docs rewrite) build against it next. `claude/.claude/CLAUDE.md`
+  now carries the standard's four docs-standard lines (the 2026-09-12 Claude infra round);
+  `cairn-cms/CLAUDE.md` still owes its own four-line pick and budget trim. The workstation's
   continuing obligation: the scanner, the voice files, the agents, and the skills this pass
   shipped stay in step with the standard as plan two and plan three exercise them.
 

@@ -3,6 +3,52 @@
 Per-pass ledger, newest first. Current state lives in `docs/STATUS.md`;
 strategic initiatives spanning passes live in `ROADMAP.md`.
 
+## 2026-09-12 -- Claude infra round
+
+Plan `docs/superpowers/plans/2026-09-12-claude-infra-round.md` (revision 2, ratified at
+`1ec5c0a`). Ten dispatched tasks corrected and hoisted Claude-facing infrastructure across the
+workstation and its consumer repos. Task 1 fixed the exit-75 reattach protocol in the two
+implementers that call `cairn-run-gate` without it (dotfiles `95c65a7`, dubplate `a30d32e`).
+Task 2 corrected the unattended-work guards doc (dotfiles `f905328`). Task 3 hoisted the
+`svelte-check` skill to the workstation (907-life `9ab912f`, ecxc-ski `b276e0c`, dotfiles
+`dbb653d`). Task 4 hoisted and supplemented the two instruction files (907-life `1ec7fd0`,
+ecxc-ski `0131ac0` then `7817b36` for a RESEND_API_KEY sourcing-fact fix, dotfiles `aa20264`).
+Task 5 hoisted `go-architecture-reader` to the workstation agents (dubplate `f3a55da`, dotfiles
+`a2c6463`). Task 6 carried the model-economy update (dotfiles `2059e84` then `a30733e`, one fix
+round). Task 7 wrote the two displacement destination documents (dotfiles `12017a4`). Task 8
+displaced `claude/.claude/CLAUDE.md` from 27,807 to 23,947 bytes, picking candidates 1, 2, 3,
+and 5 (dotfiles `23f8885`). Task 9, the `pass-execute.js` runner edit, deferred: the cairn
+overnight workflow `wf_2d52758e-603` was still live at the segment-C boundary, owed to the next
+round that touches it.
+
+Every task took 0 fix rounds except task 6, which took 1: the reviewer found `couldNotDo` filed
+empty though the unverified Devin/Cognition figures were correctly omitted, and that the plan
+named three subsections where the source names four, with four landing. Task 8's reviewer left
+one non-blocking note, corrected in this round's own close task: `pass-gate-economy.md` still
+said `cairn-run-gate` "blocks to completion" after the exit-75 correction landed in CLAUDE.md.
+Segment B's first run stood down at the 11% battery floor mid task 6 (STATUS recorded at
+`74807bc`) and resumed on mains. Conductor checkpoints `45fe6d8` (segment A) and `85c8d56`
+(segment B and the 80% flag). Spend about 1.55M subagent tokens against the 1.5M ceiling, over
+by the interrupted segment-B run; zero planning misses, one execution sitting (the 80% flag
+question, task 9's deferral).
+
+**What a later pass would be wrong to rediscover**:
+
+- **Five `~/.claude` directories are whole-directory stow symlinks, folded, not four.**
+  `~/.claude/agents`, `docs`, `instructions`, and `workflows` each link to
+  `../.dotfiles/claude/.claude/<name>`, and `~/.claude/skills/svelte-check` is a real directory
+  linked per skill. A later pass never needs to `stow -R claude` for a new file inside any of
+  these; the write to the dotfiles source is live machine-wide the instant it lands.
+- **The dotfiles gate reads repository markdown only through gitleaks** (and vale over its
+  fixtures). Every task's acceptance criteria, not a markdown linter, were this round's proof
+  that a doc's content was correct.
+- **`claude/.claude/CLAUDE.md` grew 3,812 bytes in four days**, from 23,995 bytes on 2026-09-08
+  to 27,807 bytes on 2026-09-12. That growth rate is why the four ranked displacement
+  candidates from the 2026-09-08 pass stopped being sufficient and task 8 needed a fifth pick.
+- **A displacement pointer must keep its section's load-bearing lines inline.** A preserved
+  trigger that fires after the decision it guards is already made is not a trigger; task 8's
+  reviewer held every pick to that rule before accepting it.
+
 ## 2026-09-08 -- docs-standard Claude infrastructure pass (plan one of three)
 
 Plan `docs/superpowers/plans/2026-09-08-docs-standard-claude-infra.md`, spec
