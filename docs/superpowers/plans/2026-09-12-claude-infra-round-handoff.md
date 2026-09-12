@@ -115,11 +115,13 @@ question, task 9's deferral).
 
 **What a later pass would be wrong to rediscover**:
 
-- **Five `~/.claude` directories are whole-directory stow symlinks, folded, not four.**
-  `~/.claude/agents`, `docs`, `instructions`, and `workflows` each link to
-  `../.dotfiles/claude/.claude/<name>`, and `~/.claude/skills/svelte-check` is a real directory
-  linked per skill. A later pass never needs to `stow -R claude` for a new file inside any of
-  these; the write to the dotfiles source is live machine-wide the instant it lands.
+- **Six `~/.claude` directories are whole-directory stow symlinks, not five.**
+  `~/.claude/agents`, `docs`, `instructions`, `output-styles`, `skills`, and `workflows` each
+  link to `../.dotfiles/claude/.claude/<name>` (so `~/.claude/skills/svelte-check` is reached
+  through the `skills` fold, not linked on its own), plus the file-level links `CLAUDE.md`,
+  `settings.json`, and `gather-dotfiles.sh`. A later pass never needs to `stow -R claude` for a
+  new file inside any of these; the write to the dotfiles source is live machine-wide the
+  instant it lands.
 - **The dotfiles gate reads repository markdown only through gitleaks** (and vale over its
   fixtures). Every task's acceptance criteria, not a markdown linter, were this round's proof
   that a doc's content was correct.
