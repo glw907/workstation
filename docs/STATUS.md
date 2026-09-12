@@ -38,17 +38,15 @@ actually stands, not the retired Mint 22 desktop setup.
 
 ## Immediate next action
 
-**The Claude infra round stood down at the battery floor (11%, 2026-09-12 13:56) mid segment B.**
-Plan: `docs/superpowers/plans/2026-09-12-claude-infra-round.md` (revision 2). Closed and accepted:
-segment A (tasks 1, 2, 3 at `95c65a7`, `f905328`, `dbb653d`; dubplate `a30d32e`), and segment B's
-tasks 4 and 5 (`aa20264`, `a2c6463`, with their site-repo and dubplate commits). Task 6 (model-economy
-doc) and task 7 (the two displacement destination docs) were in flight in workflow `wf_db12879d-af0`
-when it was stopped; check `git status --short` for a warm `claude/.claude/docs/model-economy.md` and
-keep or revert it by reading it, never blindly. **Resume prompt:** "Resume the Claude infra round at
-tasks 6 and 7 (segment B remainder) from the plan, revision 2, then segment C (8, 9, 10). Task 9 runs
-only after the cairn overnight workflow `wf_2d52758e-603` has ended." Segment A spent about 0.38M;
-the 80% flag is 1.2M of the 1.5M ceiling. `claude/.claude/agents/cairn-implementer.md` stays
-off-limits: a cairn session owns its warm diff.
+**The Claude infra round is at its segment B boundary and its 80% flag.** Plan:
+`docs/superpowers/plans/2026-09-12-claude-infra-round.md` (revision 2). Accepted: tasks 1 to 7
+(`95c65a7`, `f905328`, `dbb653d`, `aa20264`, `a2c6463`, `2059e84` and `a30733e`, `12017a4`). Task 6 took one fix round; the rest none. Measured spend about 1.33M of
+subagent tokens against the 1.5M ceiling, 0.5M of it the battery-interrupted first run of segment B.
+The cairn overnight workflow `wf_2d52758e-603` is still live (transcript written 14:29), so task 9
+(the runner edit) defers per the segment-C launch condition. Remaining: task 8 (CLAUDE.md
+displacement, main-loop chain), task 10 (close fold), projected to end near 1.75M. Geoff is asked
+one combined question at this boundary. Resume prompt if interrupted: "Resume the Claude infra
+round at segment C, tasks 8 and 10, task 9 deferred while the cairn workflow lives."
 
 Carried after the round: plan two of the cairn documentation standard
 (`docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`); `cairn-cms/CLAUDE.md`'s
