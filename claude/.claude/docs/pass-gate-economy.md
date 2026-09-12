@@ -28,8 +28,8 @@ approved, all cheap in tokens:
   scopes gitleaks to the change set, the merge ritual's in-tree gate adds one `gitleaks
   detect` over the branch's commit range, without `--no-git`.
 - **Gates run through `cairn-run-gate '<string>'`** (dotfiles bin; generic despite the name):
-  it blocks to completion and prints the tail, so an implementer never polls a log and its
-  transcript stays small for the reviewer.
+  on exit 75, re-issue the same command until it prints `gate exit:`; never poll a log. This
+  keeps an implementer's transcript small for the reviewer.
 - **Parallel chains where Files are disjoint**, one worktree each, with any shared port made
   an environment variable; overlap a CI baseline regen with the diff review; fold
   single-deliverable tasks into a neighbor (each task pays about thirty minutes of fixed
