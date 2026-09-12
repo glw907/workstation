@@ -86,8 +86,13 @@ Before reporting, check these; each one cost a full fix round on chassis-B2:
 - Counts in the report: found, changed, deferred, each with the deferred list named.
 - Re-emit any generated tree before the gate, and commit it in the same commit.
 
-Run the gate string through `cairn-run-gate '<gate string>'`, which blocks to completion and
-prints the exit status and the last 60 lines. Never poll a log between checks. When the
+Run the gate string through `cairn-run-gate '<gate string>'`, in the `cd <absolute path> &&
+<gate>` form. Exit 75 means the gate is still running, not that it failed: re-issue the exact
+same command, which reattaches to the running gate. Keep re-issuing until the runner prints the
+gate exit status and the last 60 lines; that is the only end to the loop. A line saying the
+gate process vanished without a status means the run was lost, not that the gate failed; start
+a fresh run rather than report red. The re-issue is the only permitted wait: `run_in_background`
+and log polling are both forbidden. The foreground Bash call takes `timeout: 600000`. When the
 dispatch says a fix round is comment-only, run the reduced gate it names, not the full string.
 
 ## Escalation
