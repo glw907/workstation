@@ -13,6 +13,10 @@
 //       reviewer: "diff-reviewer",       // optional, defaults below
 //       maxFix: 1,                        // optional, defaults below
 //       parallel: false,                  // optional, defaults to sequential
+//       reducedGate: "...",               // optional; the gate string a fix round runs
+//                                         // when every blocking finding is commentOnly.
+//                                         // Absent means every round runs the full gate,
+//                                         // which is the unchanged behavior.
 //       tasks: [
 //         { id: "1", title: "...", criteria: "...", files: ["..."], notes: "..." }
 //       ]
@@ -40,6 +44,22 @@ const IMPL_SCHEMA = {
     filesTouched: { type: "array", items: { type: "string" } },
     gate: { type: "string", enum: ["pass", "fail", "not run"] },
     gateOutput: { type: "string" },
+    // Optional: one row per mutation the plan named for this task. Never in
+    // `required`, since a consumer whose implementer definition does not name
+    // mutations must not be asked for it.
+    mutationLedger: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          mutation: { type: "string" },
+          site: { type: "string" },
+          provingTest: { type: "string" },
+          fired: { type: "boolean" }
+        },
+        required: ["mutation", "fired"]
+      }
+    },
     unspecifiedDecisions: { type: "array", items: { type: "string" } },
     couldNotDo: { type: "array", items: { type: "string" } },
     summary: { type: "string" }
@@ -59,7 +79,13 @@ const REVIEW_SCHEMA = {
         properties: {
           location: { type: "string" },
           finding: { type: "string" },
-          fix: { type: "string" }
+          fix: { type: "string" },
+          // Both optional, for the same shared-asset reason as mutationLedger.
+          commentOnly: { type: "boolean" },
+          severity: {
+            type: "string",
+            enum: ["blocking-correctness", "blocking-contract", "comment-only", "optional"]
+          }
         },
         required: ["location", "finding", "fix"]
       }
@@ -115,6 +141,9 @@ function implementPrompt(t, a, blocking) {
     for (const b of blocking) {
       lines.push(`- ${b.location}: ${b.finding}. Fix: ${b.fix}`);
     }
+    if (a.reducedGate && blocking.every((b) => b.commentOnly)) {
+      lines.push(`Every finding above is COMMENT-ONLY (the fix changes comment or doc text, never code behavior). For this fix round the gate is reduced: run \`${a.reducedGate}\` through cairn-run-gate and report that reduced gate as the gate result; do not run the full gate string. If your fix diff touches any non-comment line, run the full gate string instead.`);
+    }
   }
   return lines.filter(Boolean).join("\n");
 }
@@ -125,9 +154,12 @@ function reviewPrompt(t, a, implReport) {
     `Task ${t.id}: ${t.title}`,
     `Acceptance criteria: ${t.criteria}`,
     `Gate command: ${t.gate || a.gate}`,
+    a.reducedGate
+      ? `For each blocking finding set commentOnly: true when its fix changes only comment or doc text and no code behavior; a fix round whose findings are all comment-only runs the reduced gate \`${a.reducedGate}\`, so mark it honestly. If you are reviewing such a fix round, that reduced gate is the expected gate.`
+      : "",
     "Implementer report (JSON):",
     JSON.stringify(implReport)
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 function taskStatus(review, implReport) {

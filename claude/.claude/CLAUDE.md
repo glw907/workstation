@@ -223,7 +223,11 @@ inside the chain, never in the main loop. One re-dispatch on `fix`; a second `fi
 conductor's decision. Domain reviewers still fan out at pass end. Below six tasks, dispatch
 the chain per task with the Agent tool; at six or more, or when the plan marks tasks
 independent, run `~/.claude/workflows/pass-execute.js` (a plan
-naming the mode is the opt-in).
+naming the mode is the opt-in). A pass's close task is authored by one fold agent, which
+commits its draft and then folds, with one independent `diff-reviewer` read over the fold's
+diff (Geoff, 2026-09-12). The default plan-review fan-out is three disjoint lenses,
+contract-and-criteria, mechanics-and-feasibility, and domain-risk, with staleness moved into
+the drafter's own pre-flight and the fold capped at one dispatch (Geoff, 2026-09-12).
 
 Every dispatch names a model and an effort: `sonnet` by default, `haiku` for mechanical
 search, `claude-opus-5` for reviewers (cross-model diversity). A dispatch without a model
@@ -240,7 +244,13 @@ model ran.
 Every pass plan header carries a token ceiling and a checkpoint interval (default four
 tasks). At each checkpoint, at any split, and before any question to Geoff, write STATUS
 (task ledger, decisions taken, spend, next task), then continue and rely on compaction. At
-80% of the ceiling, finish the task, write STATUS, and ask one combined question. Pre-bake
+80% of the ceiling, finish the task, write STATUS, and ask one combined question; check that
+flag at each segment boundary, the only place a decision can land (Geoff, 2026-09-12).
+Segment a pass at three to four tasks, every boundary on a commit the gate proved green; the
+count, never the placement, is overridden by an irreversible task, a second `fix` verdict, or
+a seam where a task's Files are disjoint from the next's (Geoff, 2026-09-12). At a window's
+end with the next work hours away, close the session rather than re-prime it after the idle
+gap (Geoff, 2026-09-12). Pre-bake
 before executing: commit the plan, point STATUS at it, refresh memory; anything load-bearing
 lives in an artifact, never only in the conversation. Do not run the `writing-plans` "which
 execution method?" question. Fable on Max draws from the weekly pool up to a 50% cap; its
@@ -265,6 +275,15 @@ approved, all cheap in tokens:
   no comment claims what its assertion does not prove; the labeled report block verbatim;
   no process citations in shipped comments; counts found, changed, deferred; re-emit before
   the gate.
+- **Task 0 takes no gate** (Geoff, 2026-09-12): a read-only staleness pre-task runs none, and
+  the lane's baseline is the conductor's own one `cairn-run-gate` call at lane launch, quoted
+  to the reviewer as Task 0's gate evidence.
+- **The cross-lane review fires on a disjunction** (Geoff, 2026-09-12): the merge ritual's
+  `diff-reviewer` over the merged range runs when the rebase was not a fast-forward **or**
+  when the two lanes touched a shared package or contested surface.
+- **A scoped gitleaks leg owes a branch-history scan** (Geoff, 2026-09-12): where the gate
+  scopes gitleaks to the change set, the merge ritual's in-tree gate adds one `gitleaks
+  detect` over the branch's commit range, without `--no-git`.
 - **Gates run through `cairn-run-gate '<string>'`** (dotfiles bin; generic despite the name):
   it blocks to completion and prints the tail, so an implementer never polls a log and its
   transcript stays small for the reviewer.

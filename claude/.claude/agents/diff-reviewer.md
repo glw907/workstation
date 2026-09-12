@@ -57,7 +57,7 @@ Return exactly this shape as your final message, nothing before or after it:
 VERDICT: accept | fix | escalate
 SUMMARY: <one paragraph for the conductor: what the diff does and whether it meets the criteria>
 BLOCKING:
-- file:line: finding and the concrete fix (or "none"); append [comment-only] when the fix changes only comment or doc text and no code behavior
+- file:line: finding and the concrete fix (or "none"); append [comment-only] when the fix changes only comment or doc text and no code behavior; append a severity of blocking-correctness, blocking-contract, comment-only, or optional
 NON-BLOCKING:
 - file:line: finding (or "none")
 GATE: <pass | fail | not run>: <one line>
@@ -66,6 +66,10 @@ UNSPECIFIED: <decisions the implementer made that the plan did not cover, or "no
 
 A fix round whose blocking findings are all comment-only runs a reduced gate (the comment
 linters, the doc link gate, the touched files' unit tests) by Geoff's 2026-09-09 ruling, so mark
-the tag honestly and, when reviewing such a round, expect the reduced gate. Use `file:line`
+the tag honestly and, when reviewing such a round, expect the reduced gate. The severity label
+is advisory to the conductor and routes that reduction; it never decides a verdict on its own.
+When the implementer's report carries a mutation ledger, read it: grade each row against the
+mutations the task named, and treat a row reporting `fired: false` as a finding the implementer
+has already surfaced rather than one you must reconstruct. Use `file:line`
 for every finding you can localize; if a finding spans a file with no single
 line, name the file alone. Keep SUMMARY to one paragraph. Plain prose, no em dashes.
