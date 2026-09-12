@@ -38,13 +38,18 @@ actually stands, not the retired Mint 22 desktop setup.
 
 ## Immediate next action
 
-Open the hand-off document,
-`~/.dotfiles/docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`, and start plan two
-of the cairn documentation standard (cairn's own toolset): its preflight verifies the six
-artifacts the hand-off names, and its plan must add creating
-`~/Projects/cairn-cms/.tellgrader.json` and wiring `figure-verifier` into its chain D. Separately,
-the docs-standard corpus approval sitting still owes the `CLAUDE.md` four-line picks for both
-files and the three open items carried from the 2026-09-04 Fable 5.1 pass.
+**Execute the Claude infra round** from `docs/superpowers/plans/2026-09-12-claude-infra-round.md`
+(revision 2, three-lens reviewed and folded, 2026-09-12; scope ruled from the cross-project survey at
+`docs/superpowers/research/2026-09-12-claude-infra-round-survey.md`). Eleven tasks in three segments:
+A and B through `pass-execute` by name, C as main-loop chains because task 9 edits the runner. Its
+Task 0 is the conductor's own launch check: AC power or both guards armed, no executor in this repo,
+and the cairn overnight workflow ended before segment C. `claude/.claude/agents/cairn-implementer.md`
+is off-limits: a cairn session owns its warm diff. Resume prompt: "Execute the Claude infra round
+plan, revision 2, from Task 0."
+
+Still owed after it: plan two of the cairn documentation standard (its hand-off is
+`docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`), and `cairn-cms/CLAUDE.md`'s
+own four-line pick and budget trim, which the round records as a handoff and does not edit.
 
 ## Open items
 
