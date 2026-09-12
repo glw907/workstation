@@ -91,14 +91,10 @@ build of either: the sandbox blocks required native messaging. Read
 
 ## Cloudflare / Wrangler
 
-**FULL ACCOUNT ACCESS (Geoff, 2026-07-06): the CLAUDE_CODE Cloudflare API token + the MCP
-plugin cover the whole glw907 account (120c269ad6d3dfbe6d63a0bb53758ca0) — zones, DNS,
-Workers, Access, D1, R2 — holding BOTH the cairn-family sites AND the aksailingclub.org
-estate. Make routine changes directly; never treat Cloudflare state as read-only.** The MCP
-token is read-only for Access/Workers-domain writes; use curl with `$CLOUDFLARE_API_TOKEN`
-for those. Access-protected ASC sites are reachable non-interactively via the service token
-in `~/.local/secrets` (`ASC_ACCESS_CLIENT_ID`/`SECRET`, CF-Access-Client-* headers; full
-process: the `asc-cloudflare-access` memory in the cairn project).
+**FULL ACCOUNT ACCESS (Geoff, 2026-07-06).** Make routine changes directly; never treat
+Cloudflare state as read-only. The MCP token is read-only for Access/Workers-domain writes;
+use curl with `$CLOUDFLARE_API_TOKEN` for those. Account id, the ASC Access service-token
+route, and the full authorization model: `~/.claude/docs/cloudflare-estate-inventory.md`.
 
 - `npx wrangler deploy` / `dev` / `secret put NAME` / `tail`
 - `CLOUDFLARE_API_TOKEN` in `~/.local/secrets` (sourced for interactive shells only; a
@@ -165,32 +161,12 @@ before/after. (Born from two same-day production misses.)
 
 ## Engine-level UI mechanics, every cairn site (Geoff, 2026-07-30; consultation 2026-08-26)
 
-Every cairn-cms site (aksailingclub-org, ecxc-ski, 907-life, later consumers), not one repo. A
-UI **mechanic** belongs to cairn; a design **choice** belongs to the site. A mechanic recurs in
-any component of that shape on any cairn site: how a padded label optically centers its text,
-which element a two-part row drops when space runs out, a framework default rendering an
-invisible control on a dark ground. Patching one in a site's theme or a route's scoped `<style>`
-leaves every sibling site to rediscover it.
-
-**The primary path is consultation, before the pass builds.** Engine edges are enumerated at
-plan-authoring time through the `engine-consult` skill (both pass skills carry the hook), and
-accepted work lands ahead of the site task that needs it.
-
-**Mid-pass filing stays as the fallback, default behavior, never a response to being asked.**
-Consultation cannot foresee what a pass discovers while building: a pass carrying UI work ends
-by enumerating what it built, asking of each item whether it is a mechanic, and filing what
-qualifies BEFORE reporting the pass done. A mid-pass staging doc uses the consultation brief's
-four-field item schema, and its triage runs through `engine-triage` against the rulings ledger
-(`cairn-cms/docs/internal/engine-rulings.md`). **A repeated local
-workaround is the loudest signal that something sits at the wrong altitude**: "this repo has
-patched this before" is an automatic filing trigger, not a reason to patch it faster. (Born
-2026-07-30: a third repeat patch of the same DaisyUI edge, filed only when Geoff asked.)
-
-Two qualifications. A mechanic that is always right becomes a silent default (`text-box-trim`
-for optical centering); one whose answer depends on what the content means makes the choice
-explicit at the call site (which element a row drops). The mechanically detectable half belongs
-in `cairn-audit`, never a consuming site's own probe script. Worked example with the evidence
-and measurement methods: `aksailingclub-org/docs/2026-07-30-assets-substrate-harvest-findings.md`.
+A UI **mechanic** belongs to cairn. A design **choice** belongs to the site. A mechanic
+recurs in any component of that shape on any cairn site. Patching one in a site's own theme
+leaves every sibling site to rediscover it. "This repo has patched this before" is an
+automatic filing trigger, never a reason to patch it faster. Full protocol, the
+consultation-first path, and the mid-pass filing fallback:
+`~/.claude/docs/engine-ui-mechanics.md`.
 
 ## Claude Code Agent Usage
 
@@ -259,42 +235,11 @@ metering is unpublished, so minimize Fable context, never Fable turns
 
 ## Gate economy on a pass (Geoff, 2026-09-09; evidence from cairn chassis-B2)
 
-Clock time on a pass is the per-task gate and the fix rounds, not the implementer. Rules, all
-approved, all cheap in tokens:
-- **The slow suite runs only where it can catch something.** A browser e2e or visual suite
-  joins the per-task gate only for tasks that move rendered paint; paint-neutral tasks run the
-  check suite and unit tests, and the pass-end gate plus CI on every push run the full suite.
-  Across B2's eight tasks the per-task e2e caught nothing the checks, the diff reviewer, and CI
-  did not, at a third of each task's hour.
-- **Comment-only fix rounds run a reduced gate** (the comment linters, the doc link gate, and
-  the touched files' unit tests). The reviewer marks each blocking finding `commentOnly`; the
-  chains scripts route on it.
-- **Scope the engine test suite to the blast radius.** A task whose Files touch nothing under
-  the engine's source runs the consumer's own unit suite, not the engine's.
-- **A pre-flight checklist in every task's notes prevents the fix rounds** B2 kept paying for:
-  no comment claims what its assertion does not prove; the labeled report block verbatim;
-  no process citations in shipped comments; counts found, changed, deferred; re-emit before
-  the gate.
-- **Task 0 takes no gate** (Geoff, 2026-09-12): a read-only staleness pre-task runs none, and
-  the lane's baseline is the conductor's own one `cairn-run-gate` call at lane launch, quoted
-  to the reviewer as Task 0's gate evidence.
-- **The cross-lane review fires on a disjunction** (Geoff, 2026-09-12): the merge ritual's
-  `diff-reviewer` over the merged range runs when the rebase was not a fast-forward **or**
-  when the two lanes touched a shared package or contested surface.
-- **A scoped gitleaks leg owes a branch-history scan** (Geoff, 2026-09-12): where the gate
-  scopes gitleaks to the change set, the merge ritual's in-tree gate adds one `gitleaks
-  detect` over the branch's commit range, without `--no-git`.
-- **Gates run through `cairn-run-gate '<string>'`** (dotfiles bin; generic despite the name):
-  it blocks to completion and prints the tail, so an implementer never polls a log and its
-  transcript stays small for the reviewer.
-- **Parallel chains where Files are disjoint**, one worktree each, with any shared port made
-  an environment variable; overlap a CI baseline regen with the diff review; fold
-  single-deliverable tasks into a neighbor (each task pays about thirty minutes of fixed
-  overhead).
-- **Orchestrator hygiene:** halt agents PREPEND to STATUS, never rewrite it; a merge step brings
-  `main` in first with fixed resolution rules (STATUS takes main's, HISTORY keeps both); the
-  Workflow tool refuses a `~/.claude/workflows` scriptPath (copy to the session scratchpad);
-  repeated protocol text in args goes in one field the chains script appends at prompt time.
+Clock time on a pass is the per-task gate and the fix rounds, not the implementer. Gates run
+through `cairn-run-gate '<string>'` (dotfiles bin; generic despite the name): on exit 75,
+re-issue the same command until it prints `gate exit:`; never poll a log. The Workflow tool
+refuses a `~/.claude/workflows` scriptPath (copy to the session scratchpad). Full rule set:
+`~/.claude/docs/pass-gate-economy.md`.
 
 ## Compact instructions
 
@@ -309,12 +254,10 @@ explicit opt-in ("use a workflow"). When a task would clearly benefit (a large a
 review gate, a repo-wide audit or migration, deep research) suggest it in one sentence with
 the shape and rough scale.
 
-**Guards on long unattended work, both mandatory; procedures in
-`~/.claude/docs/unattended-work-guards.md` (read before arming either).** Past ~30 minutes,
-arm the runaway guard, a transcript-dir watcher; intervene with TaskStop plus
-`resumeFromRunId`. On battery, arm `systemd-inhibit --what=sleep` plus the battery watchdog
-(save state by 10%). GNOME suspends after 15 idle minutes on battery; check `journalctl` for
-suspends before calling it stalled.
+**Guards on long unattended work, both mandatory.** Past ~30 minutes, arm the runaway guard.
+On battery, arm the battery watchdog. GNOME suspends after 15 idle minutes on battery; check
+`journalctl` for suspends before calling it stalled. Full procedures:
+`~/.claude/docs/unattended-work-guards.md` (read before arming either).
 
 ## Initiative-scoped sessions
 
@@ -415,3 +358,11 @@ The highest-frequency tells, inline so they are unmissable:
 - No participial or connector openers ("Building on this", "Moreover", "Additionally").
 - The em dash is banned in code comments (linter-enforced). Developer docs follow Google (no
   spaces); editor copy Microsoft; replies and commits go without. Overuse is a tell anywhere.
+- The cairn documentation standard governs every published docs page; see
+  `~/Projects/cairn-cms/docs/superpowers/specs/2026-09-08-docs-standard-design.md`.
+- Any page an outside reader opens leads with a one-paragraph brief and carries one section
+  per read; do not make a reader assemble the page's point from its parts.
+- A claim about the owner, or about cairn's own stance, resolves to a line in an owner brief,
+  never to an inference from other prose.
+- `tellgrader --profile docs-register` reports cadence measures for an opted-in repo; every
+  number is report-only and gates nothing (see the scanner's `MEASURES.md`).
