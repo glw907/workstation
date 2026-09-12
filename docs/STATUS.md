@@ -38,18 +38,22 @@ actually stands, not the retired Mint 22 desktop setup.
 
 ## Immediate next action
 
-**Execute the Claude infra round** from `docs/superpowers/plans/2026-09-12-claude-infra-round.md`
-(revision 2, three-lens reviewed and folded, 2026-09-12; scope ruled from the cross-project survey at
-`docs/superpowers/research/2026-09-12-claude-infra-round-survey.md`). Eleven tasks in three segments:
-A and B through `pass-execute` by name, C as main-loop chains because task 9 edits the runner. Its
-Task 0 is the conductor's own launch check: AC power or both guards armed, no executor in this repo,
-and the cairn overnight workflow ended before segment C. `claude/.claude/agents/cairn-implementer.md`
-is off-limits: a cairn session owns its warm diff. Resume prompt: "Execute the Claude infra round
-plan, revision 2, from Task 0."
+**The Claude infra round is executing in the dubplate session of 2026-09-12** from
+`docs/superpowers/plans/2026-09-12-claude-infra-round.md` (revision 2). Segment A (tasks 1, 2, 3) is
+closed and accepted: `95c65a7` (site-implementer exit-75 wording; dubplate `a30d32e`), `f905328` (guards
+doc corrections), `dbb653d` (svelte-check hoisted; repo copies removed in 907-life and ecxc-ski).
+Segment A spent about 0.38M against the plan's 0.35M early tripwire; the projection is about 1.4M
+against the 1.5M ceiling, and the conductor continued under Geoff's same-session grant with the 80%
+flag (1.2M) as the hard check. Next: segment B (tasks 4, 5, 6, 7) through `pass-execute`, then segment
+C (8, 9, 10) as main-loop chains after the cairn overnight workflow `wf_2d52758e-603` has ended.
+`claude/.claude/agents/cairn-implementer.md` is off-limits: a cairn session owns its warm diff.
+Resume prompt if interrupted: "Resume the Claude infra round at segment B from the plan, revision 2;
+segment A is closed at dbb653d."
 
-Still owed after it: plan two of the cairn documentation standard (its hand-off is
-`docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`), and `cairn-cms/CLAUDE.md`'s
-own four-line pick and budget trim, which the round records as a handoff and does not edit.
+Carried after the round: plan two of the cairn documentation standard
+(`docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`); `cairn-cms/CLAUDE.md`'s
+own four-line pick and budget trim; dubplate-implementer's gate example names the main tree, so a
+worktree lane must be told the dispatch's own absolute string wins (task 1 review note).
 
 ## Open items
 
