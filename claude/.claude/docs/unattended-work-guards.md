@@ -7,12 +7,19 @@ arming either one.
 
 Nothing intervenes unless the main loop watches from outside (proven 2026-07-02: a sweep
 agent burned ~5 hours grooming its own agent-memory index). At launch, arm a background
-Bash guard polling the workflow transcript dir every ~5 minutes, alarming on either
-signature: the newest `agent-*.jsonl` idle past ~25 minutes (stall; `journal.jsonl` only
-records agent starts and finishes, so a long-running task looks idle there; poll the
-agent transcripts, learned 2026-09-02), or any `agent-*.jsonl` past ~900KB and still
+Bash guard that first reads the workflow's `journal.jsonl` for completed agents, then polls
+the transcript dir every ~5 minutes for either signature: the newest `agent-*.jsonl` idle
+past ~25 minutes (stall; `journal.jsonl` only records agent starts and finishes, so a
+long-running task looks idle there; poll the agent transcripts, learned 2026-09-02, and
+filter out any agent `journal.jsonl` already marks complete, or every finished chain agent
+reads as a stall, learned 2026-09-12), or any `agent-*.jsonl` past ~900KB and still
 growing (token runaway; ~3.5-4 chars/token; an implementer polling its own background
-gate run also inflates its transcript, so confirm with a tail sample before killing).
+gate run also inflates its transcript, so confirm with a tail sample before killing). The
+rule in one line: journal for completion, transcripts for idle and size. A working
+reference implementation lives at `~/.cache/cairn-overnight-2026-09-12/runaway-guard.sh`;
+that is a cache path the next session will not find on its own, so copy the pattern rather
+than the path (copying it into `bin/.local/bin/` is a larger change than one doc correction
+carries).
 Intervention: TaskStop, relaunch with `resumeFromRunId` (done steps replay from cache;
 give the re-run task a note to review and keep-or-revert any partial uncommitted work).
 Prevention rides the prompts: memory-keeping agentTypes get an explicit "skip
@@ -34,10 +41,19 @@ inhibitors while logind honors systemd ones: `systemd-inhibit --what=sleep ... s
 AND `gnome-session-inhibit --inhibit suspend ... sleep NNN`; inhibit `suspend` ONLY, never
 `suspend:idle`: the `idle` flag stops the session from ever counting as idle, which keeps
 the DISPLAY awake for the whole hold (Geoff caught this live 2026-09-02), while `suspend`
-alone blocks auto-suspend and lets the screen blank), and a battery watchdog
-polling
-`/sys/class/power_supply/BAT*/{capacity,status}` every ~2 minutes, triggering at 11%
-while `Discharging` (silent on AC; 11% so state is saved by 10%). On trigger, stand
+alone blocks auto-suspend and lets the screen blank), and a battery watchdog polling
+`/sys/class/power_supply/` every ~2 minutes. Test mains power by supply `type`, never by
+an `AC*` name glob: on this laptop `AC` reads `type=Mains`, while
+`ucsi-source-psy-USBC000:001` and `:002` read `type=USB`; a name glob misses that an
+underpowered USB-C or dock supply can read `online` while the battery still drains, which
+is the one plugged-in case that still reaches 0%. The mains test is "any supply whose
+`type` reads `Mains` reads `online` 1". Verify it once per machine while plugged in over
+USB-C, since every supply reads 0 unplugged and the question cannot be settled from an
+unplugged session. The battery reads `Not charging` on AC under the charge threshold, so
+`status` alone is not a drain signal, and a supply reading online does not prove the
+battery is charging. Trigger the alarm at 11% on a disjunction: no `Mains`-type supply is
+online, or `capacity` fell across two consecutive polls (silent on AC only when neither
+half fires; 11% so state is saved by 10%). On trigger, stand
 down: TaskStop the workflow and guards, WIP-commit partial work on the feature branch,
 write STATUS with the exact resume prompt (including any `resumeFromRunId`), release the
 inhibitor so the machine may sleep, and report. Suspend evidence lives in `journalctl`;
