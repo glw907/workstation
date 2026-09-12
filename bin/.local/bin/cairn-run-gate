@@ -1,12 +1,59 @@
 #!/usr/bin/env bash
-# Run a gate command string to completion and print its tail. Blocks until the gate
-# exits, so an implementer never polls a log. Usage: cairn-run-gate '<gate string>'
-# [log path]. Exit status is the gate's.
+# Run a gate command string to completion and print its tail, pacing the wait so an
+# implementer never polls a log.
+#
+# The first call starts the gate detached (keyed by the gate string and the working
+# directory) and blocks up to CAIRN_GATE_WAIT seconds (default 540, under the shell
+# tool's ten-minute cap). If the gate finishes inside that window, the exit status and
+# the last 60 lines print. If not, the call prints "gate still running" and exits 75;
+# the caller re-issues the SAME command, which reattaches to the running gate and waits
+# again. A finished gate's result is printed once and then cleared, so a later call with
+# the same string starts a fresh run.
+#
+# Usage: cairn-run-gate '<gate string>' [log path]
+# Exit status: the gate's when it has finished; 75 while it is still running.
 set -u
 gate="${1:?gate string required}"
-log="${2:-/tmp/cairn-gate-$$.log}"
-bash -c "$gate" >"$log" 2>&1
-status=$?
+wait_s="${CAIRN_GATE_WAIT:-540}"
+key=$(printf '%s\n%s' "$PWD" "$gate" | sha256sum | cut -c1-16)
+state="${TMPDIR:-/tmp}/cairn-gate-$(id -u)/$key"
+mkdir -p "$state"
+log="${2:-$state/gate.log}"
+pidfile="$state/pid"
+statusfile="$state/status"
+
+if [ ! -e "$pidfile" ]; then
+  rm -f "$statusfile"
+  : >"$log"
+  ( bash -c "$gate" >"$log" 2>&1; echo $? >"$statusfile" ) </dev/null &
+  echo $! >"$pidfile"
+  echo "gate started (log: $log)"
+fi
+
+pid=$(cat "$pidfile")
+waited=0
+while [ ! -e "$statusfile" ] && [ "$waited" -lt "$wait_s" ]; do
+  sleep 5
+  waited=$((waited + 5))
+  if ! kill -0 "$pid" 2>/dev/null && [ ! -e "$statusfile" ]; then
+    sleep 2
+    break
+  fi
+done
+
+if [ ! -e "$statusfile" ]; then
+  if kill -0 "$pid" 2>/dev/null; then
+    echo "gate still running after ${waited}s more (log: $log, $(wc -l <"$log") lines so far)."
+    echo "Re-run this exact cairn-run-gate command to keep waiting; do not tail, wc, ps, or sleep on the log."
+    exit 75
+  fi
+  echo "gate process vanished without a status; treating as failure (log: $log)"
+  status=1
+else
+  status=$(cat "$statusfile")
+fi
+
+rm -f "$pidfile" "$statusfile"
 echo "gate exit: $status (log: $log, $(wc -l <"$log") lines)"
 echo "--- last 60 lines ---"
 tail -60 "$log"
