@@ -165,12 +165,111 @@ token cost favor the clean boundary.
 ## Fable 5.1 (noted 2026-09-04)
 
 Fable 5.1 shipped 2026-09-01 (Mythos 5.1 alongside; no Opus or Sonnet
-5.1). Same $10/$50 per MTok as Fable 5, with cache reads cut 75% —
-directly favorable for long conducting sessions, whose meters are
-dominated by cache-read compounding. Geoff moved sessions to 5.1 on
-2026-09-04. Reviewer pins stay `claude-opus-5` and implementer aliases
-stay `sonnet` (both still their tiers' heads); unpinned subagents
-inherit the session model, so they follow the switch automatically.
+5.1). Same $10/$50 per MTok as Fable 5, with cache reads cut 75%. This
+favors long conducting sessions, whose meters are dominated by
+cache-read compounding. Geoff moved sessions to 5.1 on 2026-09-04.
+Reviewer pins stay `claude-opus-5` and implementer aliases stay
+`sonnet` (both still their tiers' heads); a dispatch without a model
+now falls to `sonnet` through the settings `env` entry (decisions
+below).
+
+### Prices and benchmarks (verified 2026-09-04)
+
+| Measure | Fable 5.1 | Fable 5 | Opus 5 |
+|---|---|---|---|
+| Input / output, per MTok | $10 / $50 | $10 / $50 | $5 / $25 |
+| Cache read, per MTok | $0.25 | $1.00 | $0.50 |
+| Batch input / output, per MTok | $5 / $25 | $5 / $25 | $2.50 / $12.50 |
+| Terminal-Bench 4.0 | 55.8% | 42.0% | 52.3% |
+
+Prices: the 5.1 row from Anthropic's announcement and the "What's new"
+page (cache reads at 0.025 times base input; batch at half); the Fable 5
+and Opus 5 rows from claude.com/pricing (batch is 50% off base). The
+benchmark row is Anthropic's own table from the announcement. Effort
+levels are not published, and the margin is effort-sensitive. Anthropic
+estimates Fable 5.1 costs about 25% less than Fable 5 for typical
+workloads and up to about 45% less for highly agentic work. Two
+independent per-task measurements point opposite ways on different
+measures. Artificial Analysis measured $3.76 per Intelligence Index
+task at `max` effort against Fable 5's $3.14, about 20% more, because
+5.1 emits roughly 1.7 times the output tokens. The saving is
+effort-dependent, which is why the effort rule keeps `high` as the
+standing level.
+
+### The pool-metering unknown
+
+The support page says Fable models "draw from your plan's regular weekly
+usage limits and use them faster than other Claude models" and that Fable
+5 and 5.1 "work the same way on your plan". No Anthropic page states how
+the draw is computed, and Claude Code's `/usage` shows plan bars shared
+across all models plus attribution by skill, subagent, plugin, and MCP
+server, with no per-model share. The question cannot be measured from this
+machine, so the thin-conductor rule stays as strict as under Fable 5. The
+monthly review records the overall 7-day bar and the behavior flags as a
+trend (spec checklist, item 4); if Anthropic publishes the metering basis,
+that item is replaced.
+
+### Decisions taken 2026-09-04
+
+- `CLAUDE_CODE_SUBAGENT_MODEL` moved from a `.bashrc` export of `inherit`
+  to a `settings.json` `env` entry of `sonnet`. A settings value outranks
+  the shell and is reapplied to running sessions when the file changes. It
+  reaches only dispatches that carry no model of their own:
+  `general-purpose`, `claude`, custom agents without a pin, and Workflow
+  `agent()` without `model`. It does not reach the built-in `Explore`
+  (already capped at Opus) or `Plan`; forcing it onto them would also
+  override every frontmatter pin. The plugin `code-simplifier` is pinned
+  `opus` in its own frontmatter and was never at Fable price.
+- Effort: `medium` is the committed default (Geoff, 2026-09-04, on the
+  outside evidence in `2026-09-04-fable-5-1-outside-evidence.md`); raise
+  to `high` for plan authorship, adjudication, and research-shaped turns
+  rather than lowering, because Fable 5.1 at `low` searches less and
+  answers from memory; `max` only for one adjudication, and it is
+  session-only. `/effort` saves the level per model into `settings.json`
+  through the stow symlink, so a raised session is visible drift until
+  reset.
+- Reviewer pins stay `claude-opus-5`: half the output price, fresh-context
+  work that is not cache-heavy, cross-model diversity, and Anthropic's own
+  recommendation to start with Opus 5 for most workloads. Implementers
+  stay `sonnet`; `pass-execute.js` implementers fall to the variable only
+  when a plan omits `t.model`, and both repo implementer agents are pinned.
+  Collapsing the upshift ladder (Fable at `medium` instead of Opus for a
+  novel-logic task) needs a per-task cost measurement this machine cannot
+  yet make.
+
+### 5.1 behavior deltas that matter to conducting
+
+Anthropic's "What's new" page lists seven behavior differences from Fable
+5; four bear on this workstation. In long agent loops 5.1 may issue one
+tool call per turn where implied reads could be batched. It writes fewer
+user-facing progress updates during long tool-calling turns. At `low`
+effort it calls a search or retrieval tool less often and answers from
+memory, which is the premise of the "raise effort for research-shaped
+turns" rule. It is more likely to rewrite a whole file where a targeted
+edit would do, which matters only when the conductor edits inline. The
+prompting page adds that at `xhigh` and `max` it can draft a long
+deliverable in its thinking and write it out again in the reply, costing
+extra output tokens and time; that is the `max` adjudication turn the
+effort rule allows. Claude Code's own turn prompts appear to carry
+equivalent batching and progress reminders (observed in-session
+2026-09-04; not documented, and not verified as the same text). The
+public prompting page expects Fable 5 prompts to carry
+over unchanged; the bundled `claude-api` skill's long-running-agent notes
+say prior-model prompts and skills are often too prescriptive and reduce
+output quality. The prompt-audit report at
+`~/.dotfiles/docs/superpowers/plans/2026-09-04-prompt-audit-report.md`
+and the site-pass experiment (HISTORY 2026-09-04) test which reading holds
+here.
+
+Sources: https://www.anthropic.com/claude-fable-and-mythos-5-1;
+https://platform.claude.com/docs/en/models/fable-5-1/whats-new-fable-5-1;
+https://platform.claude.com/docs/en/models/fable-5-1/migration-guide;
+https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1;
+https://claude.com/pricing;
+https://support.claude.com/en/articles/15424964-claude-fable-5-on-your-plan;
+https://code.claude.com/docs/en/sub-agents; https://code.claude.com/docs/en/env-vars;
+https://code.claude.com/docs/en/costs; https://artificialanalysis.ai/articles/claude-fable-5-1;
+the `claude-api` skill's `shared/model-migration.md` (Fable 5.1 sections).
 
 ## Interaction is front-loaded, never minimized (Geoff, 2026-09-04)
 

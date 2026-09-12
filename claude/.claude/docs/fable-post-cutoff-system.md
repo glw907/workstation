@@ -9,7 +9,7 @@ Fable use beyond the 50% weekly cap.
 
 There is no cutoff anymore: as of 2026-07-20 Fable 5 is permanently included on the Max plan
 at ~50% of regular usage limits. This doc now governs Fable use BEYOND that allocation, where
-Fable runs on usage credits at API rates (output ~$50/MTok, 2x Opus 5). Token efficiency is
+Fable runs on usage credits at API rates (output $50/MTok, 2x Opus 5; cache reads $0.25/MTok on Fable 5.1, half Opus 5's; batch $5/$25). Token efficiency is
 the design constraint. The system: Opus 5 holds the execution-conductor seat (the global
 CLAUDE.md model economy governs the in-allocation split — Fable plans and judges in sittings,
 Opus 5 executes); credit-metered Fable is a scheduled specialist with three access modes,
