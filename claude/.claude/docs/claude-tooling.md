@@ -72,6 +72,8 @@ commit skills and manifest together.
   the launching shell, and a terminal older than the secret leaves it empty (born 2026-09-14).
   Rule of use and audit procedure: the cairn `daisyui-tooling-workstation` memory and the
   workstation CLAUDE.md "DaisyUI tooling" section.
+- **Dependency upgrades:** the authored `dependency-upgrade` skill (2026-09-14), the procedure every
+  bump in every repo follows; the global CLAUDE.md "Dependencies" section is the standing rule.
 - **Svelte:** the official server (user scope, remote).
 - **Playwright:** Microsoft's server (user scope, stdio).
 - **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook.

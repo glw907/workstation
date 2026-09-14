@@ -43,6 +43,12 @@ so fast-forward `main` from the feature branch (`git push origin HEAD:main`, nev
 already merged. The branch must be a clean fast-forward of `origin/main` (`git merge-base --is-ancestor
 origin/main HEAD`).
 
+Dependencies are current before the gate runs. A release starts from the newest production version of
+everything, so the last merge before the cut is the `dependency-upgrade` skill's sweep on `main` with no
+worktree live (its lockfiles collide with a live branch): every minor and patch taken, every major held
+with its unblock trigger recorded, the survey and the refactor decision on record. Skip this only when the
+window already contains such a sweep and `npm outdated` at every manifest returns only the held majors.
+
 The full gate must be green at the release commit. Run it (sequentially; `npm test` and
 `check:custom-surface` both repackage `dist`, so do not run them concurrently):
 

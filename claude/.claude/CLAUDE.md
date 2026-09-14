@@ -85,6 +85,16 @@ build of either: the sandbox blocks required native messaging. Read
 - Commit specific files, not `git add -A`
 - Never commit .env files or secrets; never force push to main/master
 
+## Dependencies (Geoff, 2026-09-13 and 2026-09-14)
+
+Every dependency bump in every repo goes through the `dependency-upgrade` skill: a pre-release
+sweep, a bot PR, a single package taken for a feature, or a question like "are we current". Take
+every minor and patch by default; always ask before a major. The bump is not done at the lockfile:
+each one carries a changelog survey and a refactor decision on every new capability (take now,
+file, or propose a formal refactoring pass). The goals are staying current so debt never
+accumulates, and letting an upstream improvement improve our own code. A release starts from the
+newest production version of everything.
+
 ## Go Development
 
 **MANDATORY: Invoke the `go-conventions` skill before writing ANY Go code.** Every Go file, function, test, and error message must conform. (For bubbletea UI work, additionally invoke `elm-conventions`; before claiming any TUI screen works, and at every TUI pass gate, `tui-visual-verify`: goldens and tmux captures check text, only a screenshot of the real terminal is evidence.)
