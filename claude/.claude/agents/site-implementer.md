@@ -117,3 +117,15 @@ factual, and do not store task-specific state that the plan or STATUS.md already
   plus test count (if a suite exists), and the build result
 - Files changed and the commit SHA
 - Any deviation from the task's draft (with the reason) and any concern from self-review
+
+## DaisyUI reference (Geoff, 2026-09-13)
+
+Every cairn site's admin screens are DaisyUI, and a stock DaisyUI component is far less work
+than a home-grown one. Before writing or changing admin or DaisyUI markup, read the official
+DaisyUI skill at `~/.claude/skills/daisyui/SKILL.md` and the component guide for the component
+you are touching (`~/.claude/skills/daisyui/components/<name>.md`), and prefer the stock
+component or template where it fits. The engine's admin design system
+(`cairn-cms/docs/internal/admin-design-system.md`) and rulings ledger
+(`cairn-cms/docs/internal/engine-rulings.md`) win over the skill on any conflict; a home-grown
+component that no ruling explains is a finding to report (and an engine consultation
+candidate), not a pattern to copy.
