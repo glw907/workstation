@@ -3,13 +3,10 @@
   "servers": {
     "daisyui-blueprint": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "daisyui-blueprint@latest"],
-      "env": {
-        "LICENSE": "${DAISYUI_BLUEPRINT_LICENSE}",
-        "EMAIL": "${DAISYUI_BLUEPRINT_EMAIL}"
-      },
-      "_why": "Official daisyUI Blueprint (licensed 2026-09-13): rules enforcer and read-only quality inspector as the pre-cut admin audit, component syntax expert for plan authorship. Credentials: registry entries DAISYUI_BLUEPRINT_LICENSE and DAISYUI_BLUEPRINT_EMAIL."
+      "command": "daisyui-blueprint-mcp",
+      "args": [],
+      "env": {},
+      "_why": "Official daisyUI Blueprint (licensed 2026-09-13): rules enforcer and read-only quality inspector as the pre-cut admin audit, component syntax expert for plan authorship. Credentials: registry entries DAISYUI_BLUEPRINT_LICENSE and DAISYUI_BLUEPRINT_EMAIL. The launcher (dotfiles bin) sources ~/.local/secrets at spawn and maps the two variables to LICENSE and EMAIL, so a stale login shell cannot starve the server of its key (2026-09-14)."
     },
     "svelte": {
       "type": "http",
@@ -19,7 +16,10 @@
     "playwright": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"],
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ],
       "env": {},
       "_why": "Microsoft's Playwright server: structured DOM inspection for reproducing an e2e failure; distinct from claude-in-chrome, which drives the desktop browser."
     }

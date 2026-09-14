@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Launch the daisyUI Blueprint MCP server with its license taken from the age-store export.
+#
+# The user-scope MCP entry runs this instead of npx directly, so the license reaches the
+# server even when the shell that started Claude Code predates the secret (a long-lived
+# terminal keeps the environment it had at login; born 2026-09-14).
+set -eu
+[ -f "$HOME/.local/secrets" ] && . "$HOME/.local/secrets"
+: "${DAISYUI_BLUEPRINT_LICENSE:?missing in ~/.local/secrets; run ~/.dotfiles/scripts/secrets/sync.sh}"
+: "${DAISYUI_BLUEPRINT_EMAIL:?missing in ~/.local/secrets; run ~/.dotfiles/scripts/secrets/sync.sh}"
+export LICENSE="$DAISYUI_BLUEPRINT_LICENSE" EMAIL="$DAISYUI_BLUEPRINT_EMAIL"
+exec npx -y daisyui-blueprint@latest "$@"

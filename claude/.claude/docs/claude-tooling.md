@@ -67,6 +67,9 @@ commit skills and manifest together.
 ## Inventory of third-party pieces (2026-09-13)
 
 - **DaisyUI:** the official skill (vendored) and the licensed Blueprint server (user scope).
+  The server entry runs `daisyui-blueprint-mcp` (dotfiles bin), which sources `~/.local/secrets`
+  at spawn and maps the license pair to `LICENSE` and `EMAIL`; a `${VAR}` env entry resolves from
+  the launching shell, and a terminal older than the secret leaves it empty (born 2026-09-14).
   Rule of use and audit procedure: the cairn `daisyui-tooling-workstation` memory and the
   workstation CLAUDE.md "DaisyUI tooling" section.
 - **Svelte:** the official server (user scope, remote).
