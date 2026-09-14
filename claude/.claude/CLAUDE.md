@@ -150,19 +150,16 @@ poplar, a bubbletea terminal email client from `~/Projects/poplar/`; binary
 `$FASTMAIL_API_TOKEN` in `~/.local/secrets`. API reference:
 `~/.claude/instructions/fastmail-api.md`.
 
-## DaisyUI tooling (all projects, Geoff, 2026-09-13)
+## Claude tooling: manifests, scopes, and the DaisyUI-first rule (Geoff, 2026-09-13)
 
-Every cairn-family admin is DaisyUI, and a stock component is far less work than a home-grown
-one. Three pieces serve that: the official DaisyUI skill at `~/.claude/skills/daisyui/` (one
-guide per component; the reference every implementer and reviewer reads before touching
-DaisyUI markup, since subagents cannot reach MCP), the licensed daisyUI Blueprint MCP server
-at user scope (`daisyui-blueprint`; license and email from `~/.local/secrets`, so launch
-Claude Code from a shell that sourced them; its rules enforcer and read-only quality inspector
-are the pre-cut audit, its syntax expert the plan-authoring reference; the converters and
-greenfield design tools stay unused), and the DaisyUI-first rule: prefer the stock component
-unless the engine's rulings ledger records the defect that forced a home-grown one, and the
-admin design system wins over the skill on any conflict. Details: the cairn `daisyui-tooling-
-workstation` memory.
+Every skill, agent, MCP server, and plugin on this workstation has one home and one manifest,
+and `claude-tooling-sync verify` (run by `check-drift`) reconciles them: layout, rules, and
+procedures in `~/.claude/docs/claude-tooling.md`. Read it before adding any of them. Two rules
+inline: a skill on disk reaches every agent while an MCP server reaches only the main loop, so
+take the skill first; and every cairn-family admin is DaisyUI, so prefer a stock DaisyUI
+component over a home-grown one unless the engine's rulings ledger records the defect that
+forced it (the official DaisyUI skill is the reference, the licensed Blueprint server the
+pre-cut audit; the admin design system wins over both on conflict).
 
 ## Visual fidelity (all projects, 2026-07-05)
 
