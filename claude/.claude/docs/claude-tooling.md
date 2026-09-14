@@ -10,13 +10,13 @@ machine.** The manifests record intent; the script reports what happened.
 | Piece | Lives at | Manifest | Applied by |
 | --- | --- | --- | --- |
 | Skills (authored here) | `~/.dotfiles/claude/.claude/skills/<name>/` (stowed) | the directory itself | stow |
-| Skills (vendored, third party) | same directory | `~/.dotfiles/claude/tooling/vendored-skills.json` | `claude-tooling-sync update-skills` |
+| Skills (vendored, third party) | same directory | `~/.dotfiles/claude/.claude/tooling/ (stowed to ~/.claude/tooling/)vendored-skills.json` | `claude-tooling-sync update-skills` |
 | Agents | `~/.dotfiles/claude/.claude/agents/<name>.md` (stowed) | the directory itself | stow |
 | Docs (this file and its siblings) | `~/.dotfiles/claude/.claude/docs/` (stowed) | the directory itself | stow |
 | Instructions (cross-repo reference docs, linked from consumer CLAUDE.md files) | `~/.dotfiles/claude/.claude/instructions/` (stowed) | the directory itself | stow |
 | Workstation `CLAUDE.md`, `settings.json` (hooks, plugins, models) | `~/.dotfiles/claude/.claude/` (stowed) | `settings.json` | stow |
 | Plugins | Claude Code's plugin cache | `settings.json` `enabledPlugins` + `extraKnownMarketplaces` | `claude plugin install` |
-| MCP servers, user scope | `~/.claude.json` (not in git; holds other state) | `~/.dotfiles/claude/tooling/mcp-servers.json` | `claude-tooling-sync apply` |
+| MCP servers, user scope | `~/.claude.json` (not in git; holds other state) | `~/.dotfiles/claude/.claude/tooling/ (stowed to ~/.claude/tooling/)mcp-servers.json` | `claude-tooling-sync apply` |
 | MCP servers, project scope | a repo's `.mcp.json` | that repo | the repo's own CLAUDE.md names it |
 | Secrets a server needs | the age store, `~/.local/secrets` | `~/.dotfiles/secrets/registry.md` | `secret-receive`, `sync.sh` |
 | Memory | `~/.claude/projects/<repo>/memory/` | `MEMORY.md` index per repo | the session |

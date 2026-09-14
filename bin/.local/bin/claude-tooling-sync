@@ -24,7 +24,7 @@ import sys
 from pathlib import Path
 
 HOME = Path.home()
-TOOLING = HOME / ".dotfiles" / "claude" / "tooling"
+TOOLING = HOME / ".dotfiles" / "claude" / ".claude" / "tooling"
 SKILLS = HOME / ".dotfiles" / "claude" / ".claude" / "skills"
 CLAUDE_JSON = HOME / ".claude.json"
 SETTINGS = HOME / ".dotfiles" / "claude" / ".claude" / "settings.json"
