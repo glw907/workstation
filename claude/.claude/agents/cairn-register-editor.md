@@ -1,7 +1,7 @@
 ---
 name: cairn-register-editor
 description: Adversarial register editor for cairn prose. Reviews a draft against the full cairn register contract (frame, audience, voice, the tell catalogue, logic, and facts-adjacent phrasing) and returns ranked findings WITH proposed rewrites. Run on every cairn prose draft before Geoff reads it. Read-only.
-model: opus
+model: claude-opus-5
 tools: Read, Grep, Glob, Bash
 ---
 

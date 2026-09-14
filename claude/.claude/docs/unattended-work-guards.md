@@ -15,11 +15,11 @@ filter out any agent `journal.jsonl` already marks complete, or every finished c
 reads as a stall, learned 2026-09-12), or any `agent-*.jsonl` past ~900KB and still
 growing (token runaway; ~3.5-4 chars/token; an implementer polling its own background
 gate run also inflates its transcript, so confirm with a tail sample before killing). The
-rule in one line: journal for completion, transcripts for idle and size. A working
-reference implementation lives at `~/.cache/cairn-overnight-2026-09-12/runaway-guard.sh`;
-that is a cache path the next session will not find on its own, so copy the pattern rather
-than the path (copying it into `bin/.local/bin/` is a larger change than one doc correction
-carries).
+rule in one line: journal for completion, transcripts for idle and size. Arm it with
+`claude-wf-guard <transcript-dir> <tier> [run-id]` (`bin/.local/bin/claude-wf-guard`), which
+implements exactly this journal-then-transcript check against tiered, measured size limits
+(`implementer` 1.8MB, `writer` 4MB, `build` 5MB, `visual` 24MB) rather than hand-written
+thresholds.
 Intervention: TaskStop, relaunch with `resumeFromRunId` (done steps replay from cache;
 give the re-run task a note to review and keep-or-revert any partial uncommitted work).
 Prevention rides the prompts: memory-keeping agentTypes get an explicit "skip
