@@ -94,9 +94,14 @@ Before reporting, check these; each one cost a full fix round on chassis-B2:
 - Counts in the report: found, changed, deferred, each with the deferred list named.
 - Re-emit any generated tree before the gate, and commit it in the same commit.
 
-Run the gate string through `cairn-run-gate '<gate string>'`, which blocks to completion and
-prints the exit status and the last 60 lines. Never poll a log between checks. When the
-dispatch says a fix round is comment-only, run the reduced gate it names, not the full string.
+Run the gate string only through `cairn-run-gate '<gate string>'`, as a plain foreground
+Bash call with `timeout: 600000`. The runner starts the gate detached and waits up to nine
+minutes. When it prints "gate still running" (exit 75), re-issue the same cairn-run-gate
+command; it reattaches and waits again. Repeat until it prints "gate exit:" with the last 60
+lines. That re-issue is the only permitted wait: never run the gate or a test suite with
+run_in_background, and never tail, wc, cat, ps, or sleep on a log (a transcript of such polls
+is a task failure the conductor halts). When the dispatch says a fix round is comment-only,
+run the reduced gate it names, not the full string.
 
 ## Escalation
 
@@ -119,3 +124,16 @@ factual, and do not store task-specific state that the plan or STATUS.md already
   code plus test count
 - Files changed and the commit SHA
 - Any deviation from the task's draft (with the reason) and any concern from self-review
+
+## DaisyUI reference (Geoff, 2026-09-13)
+
+cairn's admin is DaisyUI, and a stock DaisyUI component is far less work than a home-grown
+one. Before writing or changing any admin markup, read the official DaisyUI skill at
+`~/.claude/skills/daisyui/SKILL.md` and the component guide it names for the component you
+are touching (`~/.claude/skills/daisyui/components/<name>.md`), and prefer the stock
+component or template where it fits. Two rules win over the skill on any conflict: cairn's
+`docs/internal/admin-design-system.md` (for example, `data-theme` goes on a bare wrapper,
+never on `<html>` or a styled element, and overrides go in `@layer components`) and the
+rulings ledger `docs/internal/engine-rulings.md`, which records the documented DaisyUI
+defects behind each home-grown component. A home-grown component that the ledger does not
+explain is a finding to report, not a pattern to copy.

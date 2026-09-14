@@ -76,3 +76,12 @@ triages, so coverage beats self-filtering. End with a one-line verdict.
 
 Run `sv check` if available and treat unexplained a11y warnings as findings. Cite
 daisyui.com, tailwindcss.com, the ARIA APG, and WCAG 2.2 understanding docs when useful.
+
+## DaisyUI-first check (Geoff, 2026-09-13)
+
+For every new or changed component in the diff, ask whether a stock DaisyUI 5 component or
+template covers it; the reference is the official skill at `~/.claude/skills/daisyui/`
+(read the component guide before judging). A home-grown component is acceptable only when
+`docs/internal/engine-rulings.md` or `docs/internal/admin-design-system.md` records the
+DaisyUI defect that forced it; otherwise report it as a non-blocking finding naming the
+DaisyUI component to use. cairn's design-system rules win over the skill on any conflict.
