@@ -99,6 +99,11 @@ above before layering anything.
   layering, `bootc status` for a quick "what image am I on" check, and the `ujust`
   wrappers for anything that has one.
 
+Claude Code's Bash tool does not source `~/.bashrc`, so an env var it sets (a Cloudflare
+token, for example) comes back empty unless a command sources it explicitly per invocation:
+`bash -c 'source ~/.local/secrets && echo -n $VAR'`. Working directory persists between Bash
+tool calls; sourced files and exported variables do not.
+
 ## Update cadence and rollback
 
 Updates are checked automatically every 6 hours; a fetched system image applies at
@@ -125,6 +130,9 @@ stays the record of what's actually on disk. Current captured files:
 - `bluefin/etc/chromium-policies/*.json` → `/etc/chromium/policies/managed/`
 - `bluefin/etc/udev/51-android.rules` → `/etc/udev/rules.d/`
 - `bluefin/etc/systemd/logind.conf.d/10-lid-ignore.conf` → `/etc/systemd/logind.conf.d/` (lid close never suspends, Geoff 2026-09-12; after a change: `sudo -A systemctl kill -s HUP systemd-logind`)
+- `bluefin/etc/systemd/user.conf.d/10-oom-continue.conf` and
+  `bluefin/etc/systemd/zram-generator.conf.d/10-larger-zram.conf` → the memory-pressure
+  defense; see `docs/oom-defense.md` for why they exist before touching either
 
 `/etc` is writable on Bluefin and persists across image updates (unlike `/usr`), so
 there's no technical reason to skip the dotfiles round-trip — treat any direct edit as

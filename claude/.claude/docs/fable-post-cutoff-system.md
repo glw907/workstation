@@ -1,37 +1,16 @@
 # The Fable overflow system (reframed 2026-07-26; originally the post-cutoff plan of 2026-07-07)
 
-**Superseded 2026-08-21:** the seat policy below (Opus 5 holds the
-execution-conductor seat) is superseded by the global CLAUDE.md "Conducting
-a pass" section and `model-economy.md`. Fable now conducts plan through
-execution in one session. The overflow mechanics in the rest of this doc
-(the access modes, the batch desk, the suggestion rules) remain in force for
-Fable use beyond the 50% weekly cap.
+**Note (2026-08-21):** this doc's original seat policy (Opus 5 holds the execution-conductor
+seat) was superseded by the global CLAUDE.md "Conducting a pass" section and
+`model-economy.md`; Fable now conducts plan through execution in one session, and that
+section has been removed from here. The overflow mechanics below (the access modes, the
+batch desk, the suggestion rules) remain in force for Fable use beyond the 50% weekly cap.
 
 There is no cutoff anymore: as of 2026-07-20 Fable 5 is permanently included on the Max plan
 at ~50% of regular usage limits. This doc now governs Fable use BEYOND that allocation, where
 Fable runs on usage credits at API rates (output $50/MTok, 2x Opus 5; cache reads $0.25/MTok on Fable 5.1, half Opus 5's; batch $5/$25). Token efficiency is
-the design constraint. The system: Opus 5 holds the execution-conductor seat (the global
-CLAUDE.md model economy governs the in-allocation split — Fable plans and judges in sittings,
-Opus 5 executes); credit-metered Fable is a scheduled specialist with three access modes,
-batch-first.
-
-## The seat policy — when Fable at all
-
-Fable is invoked ONLY for enumerated job types, each a deliberate spend (tightened 2026-07-26
-against Opus 5, which absorbed most of the old verification and hard-code triggers at half
-price):
-1. Plan/spec authorship for major initiatives (the judgment that prevents rework).
-2. Design-sitting judgment (candidate synthesis, taste-fork framing).
-3. Adjudicating a verdict Opus 5 itself hedges on and that gates something that matters.
-   Routine hard verification and pre-ship review is Opus 5 work now.
-4. Post-mortems of large arcs (the synthesis that becomes doctrine).
-5. CRITICAL/COMPLEX CODE, narrowed: Opus 5 drafts and reviews this class by default; a
-   Fable BATCH-AUDIT (the draft + its tests as context, the verdict + improved code as
-   output) is reserved for the highest-stakes seams (auth, signing, money) or when the
-   Opus 5 review hedges.
-Everything else keeps the standing economy: Opus 5 conducts and reviews, Sonnet implements,
-Haiku fetches. The escalation ladder in one line: Sonnet implements, Opus 5 reviews and
-verifies, Fable adjudicates the hedge.
+the design constraint: credit-metered Fable is a scheduled specialist with three access
+modes, batch-first.
 
 ## Mode 1 — THE BATCH DESK (default; 50% discount)
 
