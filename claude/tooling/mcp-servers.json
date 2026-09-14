@@ -1,0 +1,27 @@
+{
+  "_doc": "User-scope MCP servers for every project on this workstation. Applied by `claude-tooling-sync apply`, checked by `claude-tooling-sync verify` (also run by check-drift). Env values in ${VAR} form resolve from the session environment; secrets come from ~/.local/secrets (the age store), never from this file. Record every server here in the same session it is added; see ~/.claude/docs/claude-tooling.md.",
+  "servers": {
+    "daisyui-blueprint": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "daisyui-blueprint@latest"],
+      "env": {
+        "LICENSE": "${DAISYUI_BLUEPRINT_LICENSE}",
+        "EMAIL": "${DAISYUI_BLUEPRINT_EMAIL}"
+      },
+      "_why": "Official daisyUI Blueprint (licensed 2026-09-13): rules enforcer and read-only quality inspector as the pre-cut admin audit, component syntax expert for plan authorship. Credentials: registry entries DAISYUI_BLUEPRINT_LICENSE and DAISYUI_BLUEPRINT_EMAIL."
+    },
+    "svelte": {
+      "type": "http",
+      "url": "https://mcp.svelte.dev/mcp",
+      "_why": "Official Svelte team server: versioned Svelte 5 and SvelteKit 2 docs plus a static check of Svelte code. Every cairn-family site is SvelteKit."
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "env": {},
+      "_why": "Microsoft's Playwright server: structured DOM inspection for reproducing an e2e failure; distinct from claude-in-chrome, which drives the desktop browser."
+    }
+  }
+}

@@ -152,5 +152,13 @@ else
 fi
 
 echo ""
+echo ""
+echo "Claude Code tooling (claude/tooling manifests):"
+if command -v claude-tooling-sync >/dev/null 2>&1; then
+    claude-tooling-sync verify | sed 's/^/  /' || fail=1
+else
+    bad "claude-tooling-sync not on PATH (stow bin)"
+fi
+
 [[ "$fail" -eq 0 ]] && echo "check-drift: clean" || echo "check-drift: DRIFT FOUND"
 exit "$fail"

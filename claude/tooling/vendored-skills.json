@@ -1,0 +1,28 @@
+{
+  "_doc": "Third-party skills vendored into claude/.claude/skills/ (stowed to ~/.claude/skills/). Each entry names the GitHub source, the path inside it, the commit it was taken at, and the license. `claude-tooling-sync update-skills [name]` re-fetches at the source's default branch and rewrites `commit`; `verify` checks each directory exists and carries a SKILL.md. Skills authored on this workstation are not listed here.",
+  "skills": {
+    "daisyui": {
+      "repo": "saadeghi/daisyui",
+      "path": "skills/daisyui",
+      "branch": "master",
+      "commit": "86b4a2acd381",
+      "license": "MIT",
+      "installed": "2026-09-13",
+      "_why": "The official daisyUI skill, one guide per component; the reference every implementer and reviewer reads before touching DaisyUI markup."
+    },
+    "golang-spf13-cobra": {
+      "repo": "samber/cc-skills-golang",
+      "path": "skills/golang-spf13-cobra",
+      "branch": "main",
+      "commit": "19a0626ae856",
+      "license": "MIT",
+      "installed": "2026-09-13",
+      "_why": "Cobra command-tree conventions for the planned cairn Go tool; go-conventions and elm-conventions stay mandatory beside it."
+    },
+    "vale-ci": { "repo": "vale-cli/agent-tools", "path": "skills/ci", "rename": "vale-ci", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13", "_why": "Vale's official skills, vendored instead of the plugin because the plugin's edit hook duplicates the workstation vale-hook." },
+    "vale-fix": { "repo": "vale-cli/agent-tools", "path": "skills/fix", "rename": "vale-fix", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13" },
+    "vale-setup": { "repo": "vale-cli/agent-tools", "path": "skills/setup", "rename": "vale-setup", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13" },
+    "vale-triage": { "repo": "vale-cli/agent-tools", "path": "skills/triage", "rename": "vale-triage", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13" },
+    "vale-vocab": { "repo": "vale-cli/agent-tools", "path": "skills/vocab", "rename": "vale-vocab", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13" }
+  }
+}
