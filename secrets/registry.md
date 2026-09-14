@@ -129,6 +129,8 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CMS_BOT_PAT         | ✓     | —        | —    | —        | —          |
 | RESEND_API_KEY      | ✓     | ✓        | ✓    | —        | —          |
 | CONTACT_EMAIL       | ✓     | —        | —    | —        | ✓          |
+| DAISYUI_BLUEPRINT_LICENSE | ✓ | —      | —    | —        | —          |
+| DAISYUI_BLUEPRINT_EMAIL | ✓  | —        | —    | —        | —          |
 | HCLOUD_TOKEN        | ✓     | —        | —    | —        | —          |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | GITHUB_APP_ID       | ✓     | ✓        | —    | —        | —          |
@@ -291,6 +293,11 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 - **Client ID**: 355524dff8edea34539419e97c66a085.access
 - **Used by**: Testing ops dashboard endpoints from CLI
 - **Rotate at**: Cloudflare Access > Service Tokens dashboard
+
+### DAISYUI_BLUEPRINT_LICENSE
+- **Grants**: the daisyUI Blueprint MCP server (official, paid) for Claude Code; read by the user-scope MCP entry `daisyui-blueprint` as `LICENSE`, with `DAISYUI_BLUEPRINT_EMAIL` as `EMAIL`
+- **Used by**: Claude Code on this workstation only (never a worker, never the cairn repo's committed `.mcp.json`)
+- **Rotate at**: https://daisyui.com/blueprint/ (account page); purchased 2026-09-13
 
 ### ANTHROPIC_API_KEY
 - **Grants**: Claude API access (claude-3-*, claude-sonnet-*, etc.)
