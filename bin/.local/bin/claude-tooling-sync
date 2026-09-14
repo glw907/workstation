@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Apply and verify the workstation's Claude Code tooling manifests.
 
-The manifests live in ~/.dotfiles/claude/tooling/: mcp-servers.json (user-scope MCP
+The manifests live in ~/.claude/tooling/ (stowed from ~/.dotfiles/claude/.claude/tooling/): mcp-servers.json (user-scope MCP
 servers) and vendored-skills.json (third-party skills copied into the stowed skills
 directory). Plugins need no manifest here; settings.json's enabledPlugins is stowed
 and is the manifest.
@@ -144,7 +144,7 @@ def update_skills(names):
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
         f.write("\n")
-    print("Review the diff, then commit claude/.claude/skills and claude/tooling together.")
+    print("Review the diff, then commit claude/.claude/skills and claude/.claude/tooling together.")
     return 0
 
 
