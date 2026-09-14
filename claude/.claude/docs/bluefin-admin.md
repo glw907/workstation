@@ -124,6 +124,7 @@ stays the record of what's actually on disk. Current captured files:
 
 - `bluefin/etc/chromium-policies/*.json` → `/etc/chromium/policies/managed/`
 - `bluefin/etc/udev/51-android.rules` → `/etc/udev/rules.d/`
+- `bluefin/etc/systemd/logind.conf.d/10-lid-ignore.conf` → `/etc/systemd/logind.conf.d/` (lid close never suspends, Geoff 2026-09-12; after a change: `sudo -A systemctl kill -s HUP systemd-logind`)
 
 `/etc` is writable on Bluefin and persists across image updates (unlike `/usr`), so
 there's no technical reason to skip the dotfiles round-trip — treat any direct edit as

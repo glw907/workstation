@@ -79,3 +79,12 @@ needed. Two rules follow. Name each inhibitor for its initiative (`--who` /
 own guards: never TaskStop, kill, or release an inhibitor, runaway guard, or watchdog
 another session armed; `pgrep` and inhibitor listings will show siblings, and a
 same-named process from another session is theirs, not a leak.
+
+## The lid switch ignores the sleep inhibitor (born 2026-09-12, 18 minutes lost)
+
+logind handles a lid close even while `systemd-inhibit --what=sleep` and the GNOME session
+inhibitor are held (`LidSwitchIgnoreInhibited=yes` is the default). A run that must survive a
+closed lid also holds `systemd-inhibit --what=handle-lid-switch --who=<initiative> sleep NNN`,
+which stops logind from acting on the lid at all. Arm it alongside the sleep pair whenever the
+laptop may be closed or carried; `journalctl | grep "time jump detected"` shows the gap if it
+happens anyway.
