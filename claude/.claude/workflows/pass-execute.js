@@ -26,6 +26,15 @@
 // The conductor reads only the returned per-task records. It never reads a
 // diff, a gate transcript, or an agent's full report; the review step already
 // did that.
+//
+// Gate tier (Geoff, 2026-09-15): when `<a.repo>/scripts/checks/gate-tier.mjs` exists, the gate
+// string for a task is chosen from its committed diff rather than fixed by the plan. A task may
+// carry `gateTier` to pin a tier the diff cannot size (a token value); a task's `paint` flag
+// (true/false) is passed through as the classifier's `--paint` flag. The implementer runs the
+// classifier itself (its prompt says how) and reports the tier and string it ran; the runner
+// independently resolves the same tier via a probe agent and hands the reviewer both, flagging a
+// mismatch as blocking. The workflow runtime has no filesystem or exec access, so every git/node
+// call here goes through a small probe agent rather than direct code.
 
 export const meta = {
   name: "pass-execute",
@@ -44,6 +53,11 @@ const IMPL_SCHEMA = {
     filesTouched: { type: "array", items: { type: "string" } },
     gate: { type: "string", enum: ["pass", "fail", "not run"] },
     gateOutput: { type: "string" },
+    // Both optional, present only when the repo has a gate-tier classifier
+    // script (scripts/checks/gate-tier.mjs): gateTier is "pin", "computed",
+    // or "default"; gateCommand is the exact gate string the implementer ran.
+    gateTier: { type: "string" },
+    gateCommand: { type: "string" },
     // Optional: one row per mutation the plan named for this task. Never in
     // `required`, since a consumer whose implementer definition does not name
     // mutations must not be asked for it.
@@ -65,6 +79,23 @@ const IMPL_SCHEMA = {
     summary: { type: "string" }
   },
   required: ["filesTouched", "gate", "gateOutput", "unspecifiedDecisions", "couldNotDo", "summary"]
+};
+
+const GATE_PROBE_SCHEMA = {
+  type: "object",
+  properties: {
+    sha: { type: "string" }
+  },
+  required: ["sha"]
+};
+
+const GATE_TIER_SCHEMA = {
+  type: "object",
+  properties: {
+    exists: { type: "boolean" },
+    gate: { type: "string" }
+  },
+  required: ["exists", "gate"]
 };
 
 const REVIEW_SCHEMA = {
@@ -125,7 +156,10 @@ function validateArgs(a) {
   }
 }
 
-function implementPrompt(t, a, blocking) {
+function implementPrompt(t, a, blocking, baseSha) {
+  const paintFlag = t.paint != null ? ` --paint ${t.paint ? "yes" : "no"}` : "";
+  const pinFlag = t.gateTier ? ` --pin ${t.gateTier}` : "";
+  const classifierCmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${pinFlag}`;
   const lines = [
     `Repo: ${a.repo}`,
     `Task ${t.id}: ${t.title}`,
@@ -133,6 +167,7 @@ function implementPrompt(t, a, blocking) {
     t.files ? `Files: ${t.files.join(", ")}` : "Files: not specified",
     t.notes ? `Notes: ${t.notes}` : "",
     `Gate command: ${t.gate || a.gate}`,
+    `Before running the gate, check whether scripts/checks/gate-tier.mjs exists in this repo. If it does, run \`${classifierCmd}\` from the repo root, after your commits and before the gate, and run the gate string it prints on stdout instead of the Gate command above (report gateTier: "${t.gateTier ? "pin" : "computed"}" and gateCommand as that exact string). If the script is absent, exits non-zero, or prints nothing, run the Gate command above unchanged (report gateTier: "default" and gateCommand as that string).`,
     "Run the gate through `cairn-run-gate '<the gate string>'` (it blocks to completion and prints the tail); never poll a log; report its exact result.",
     "Skip agent-memory maintenance for this dispatch."
   ];
@@ -148,12 +183,19 @@ function implementPrompt(t, a, blocking) {
   return lines.filter(Boolean).join("\n");
 }
 
-function reviewPrompt(t, a, implReport) {
+function reviewPrompt(t, a, implReport, resolvedGate) {
+  const ranCommand = implReport.gateCommand || t.gate || a.gate;
+  const mismatch =
+    resolvedGate.gate && implReport.gateCommand && implReport.gateCommand !== resolvedGate.gate
+      ? `MISMATCH: the runner independently resolved a different gate string ("${resolvedGate.gate}") than the implementer reports running. Treat this mismatch itself as a blocking finding.`
+      : "";
   return [
     `Repo: ${a.repo}`,
     `Task ${t.id}: ${t.title}`,
     `Acceptance criteria: ${t.criteria}`,
-    `Gate command: ${t.gate || a.gate}`,
+    `The gate string this task ran: ${ranCommand}`,
+    `Reproduce the gate with: ${resolvedGate.gate}`,
+    mismatch,
     a.reducedGate
       ? `For each blocking finding set commentOnly: true when its fix changes only comment or doc text and no code behavior; a fix round whose findings are all comment-only runs the reduced gate \`${a.reducedGate}\`, so mark it honestly. If you are reviewing such a fix round, that reduced gate is the expected gate.`
       : "",
@@ -178,6 +220,55 @@ function taskStatus(review, implReport) {
   return "needs-decision";
 }
 
+/**
+ * Captures the task's starting commit before the implementer's first
+ * dispatch. The gate-tier classifier diffs against this base, and it must be
+ * captured before any commit lands, since HEAD moves as soon as the
+ * implementer commits. The workflow runtime has no direct git access, so a
+ * minimal probe agent runs the command instead.
+ */
+async function recordBaseSha(a, label) {
+  const out = await agent(
+    `Repo: ${a.repo}\nRun \`git rev-parse HEAD\` there and report exactly that commit SHA, nothing else.`,
+    { label, phase: "Implement", schema: GATE_PROBE_SCHEMA, effort: "low" }
+  );
+  return out && out.sha ? out.sha.trim() : "";
+}
+
+/**
+ * Resolves the gate string the runner hands the reviewer, independently of
+ * whatever the implementer ran. A plan pin (`t.gateTier`) skips the
+ * classifier entirely and keeps the task's declared gate string, matching
+ * pre-classifier behavior; so does a repo with no classifier script. Any
+ * other task asks a probe agent to run the classifier over the task's diff
+ * so far (base..HEAD, which grows across fix rounds).
+ */
+async function resolveGate(t, a, baseSha, label) {
+  if (t.gateTier) {
+    return { gate: t.gate || a.gate, source: "pin", tier: t.gateTier };
+  }
+  const paintFlag = t.paint != null ? ` --paint ${t.paint ? "yes" : "no"}` : "";
+  const cmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}`;
+  const probe = await agent(
+    [
+      `Repo: ${a.repo}`,
+      `Check whether the file scripts/checks/gate-tier.mjs exists there.`,
+      `If it does not, report exists: false and gate: "".`,
+      `If it does, run exactly \`${cmd}\` from the repo root and report exists: true and gate: "<its exact stdout, trimmed>". On a non-zero exit or empty stdout, report exists: true and gate: "".`,
+      `Do not run any other command and never modify a file.`
+    ].join("\n"),
+    { label, phase: "Implement", schema: GATE_TIER_SCHEMA, effort: "low" }
+  );
+  if (!probe || !probe.exists || !probe.gate) {
+    return { gate: t.gate || a.gate, source: "fallback", tier: "default" };
+  }
+  return { gate: probe.gate, source: "classifier", tier: "computed" };
+}
+
+function logGateTier(t, resolved) {
+  log(`task ${t.id}: gate tier ${resolved.tier} (${resolved.source})`);
+}
+
 async function runTask(t, a) {
   const implementer = a.implementer;
   const reviewer = a.reviewer || "diff-reviewer";
@@ -187,7 +278,9 @@ async function runTask(t, a) {
   // option takes precedence over the agent definition's pinned model.
   const implOpts = t.model ? { model: t.model } : {};
 
-  let implReport = await agent(implementPrompt(t, a, null), {
+  const baseSha = await recordBaseSha(a, `base:${t.id}`);
+
+  let implReport = await agent(implementPrompt(t, a, null, baseSha), {
     label: `impl:${t.id}`,
     phase: "Implement",
     agentType: implementer,
@@ -200,7 +293,10 @@ async function runTask(t, a) {
     return { id: t.id, title: t.title, status: "failed", fixRounds: 0, implementer: null, review: null };
   }
 
-  let review = await agent(reviewPrompt(t, a, implReport), {
+  let resolvedGate = await resolveGate(t, a, baseSha, `gatetier:${t.id}`);
+  logGateTier(t, resolvedGate);
+
+  let review = await agent(reviewPrompt(t, a, implReport, resolvedGate), {
     label: `review:${t.id}`,
     phase: "Review",
     model: "claude-opus-5",
@@ -216,7 +312,7 @@ async function runTask(t, a) {
   let fixRounds = 0;
   while (review.verdict === "fix" && fixRounds < maxFix) {
     fixRounds += 1;
-    implReport = await agent(implementPrompt(t, a, review.blocking), {
+    implReport = await agent(implementPrompt(t, a, review.blocking, baseSha), {
       label: `impl:${t.id}:fix${fixRounds}`,
       phase: "Implement",
       agentType: implementer,
@@ -229,7 +325,10 @@ async function runTask(t, a) {
       return { id: t.id, title: t.title, status: "failed", fixRounds, implementer: null, review };
     }
 
-    review = await agent(reviewPrompt(t, a, implReport), {
+    resolvedGate = await resolveGate(t, a, baseSha, `gatetier:${t.id}:fix${fixRounds}`);
+    logGateTier(t, resolvedGate);
+
+    review = await agent(reviewPrompt(t, a, implReport, resolvedGate), {
       label: `review:${t.id}:fix${fixRounds}`,
       phase: "Review",
       model: "claude-opus-5",
