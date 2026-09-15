@@ -4,6 +4,8 @@
 // The conductor reads only the returned per-task records. A task may carry `model`
 // ("opus" or "fable") to upshift its implementer dispatch per the workstation rule, and
 // `gate` to override the chain's gate string for that task alone (paint tasks keep the e2e).
+// `args.mainCheckout`, when a chain's `repo` equals it, tells the prompts that the chain runs on
+// main by its plan's rule rather than in a worktree, so the never-touch-main sentence is dropped.
 
 export const meta = {
   name: "pass-execute-chains",
@@ -65,9 +67,14 @@ const REVIEW_SCHEMA = {
 };
 
 function implementPrompt(t, chain, a, blocking) {
+  const onMain = chain.repo === a.mainCheckout;
   const lines = [
-    `Repo (your working directory, a dedicated git worktree on branch ${chain.branch}): ${chain.repo}`,
-    `You are the ONLY writer in this worktree. Work only here, never in the main checkout.`,
+    onMain
+      ? `Repo (the main checkout, branch main; this pass runs on main by its plan's rule, no worktree, commit directly on main): ${chain.repo}`
+      : `Repo (your working directory, a dedicated git worktree on branch ${chain.branch}): ${chain.repo}`,
+    onMain
+      ? `You are the ONLY writer in this checkout for the duration of this task.`
+      : `You are the ONLY writer in this worktree. Work only here, never in the main checkout.`,
     `Plan file (committed in this repo): ${a.planPath}`,
     `Task ${t.id}: ${t.title}`,
     ``,
@@ -77,7 +84,7 @@ function implementPrompt(t, chain, a, blocking) {
     t.notes ? `Notes: ${t.notes}` : "",
     ``,
     `Gate command: ${t.gate || a.gate}`,
-    `Run the gate with the blocking runner, never by polling a log: \`cairn-run-gate '<the gate string>'\` runs it to completion and prints the exit status and the last 60 lines; report its exact result.`,
+    `Run the gate ONLY through \`cairn-run-gate '<the gate string>'\` as a plain foreground Bash call with \`timeout: 600000\`. The runner starts the gate detached and waits up to nine minutes; when it prints "gate still running" (exit 75), re-issue the SAME cairn-run-gate command, which reattaches and waits again, and repeat until it prints "gate exit:" with the last 60 lines. That re-issue is the only permitted wait: never run the gate or any test yourself with run_in_background, and never tail, wc, cat, ps, or sleep on a log. A transcript containing such polling calls is a task failure the conductor halts. Report the runner's exact exit line.`,
     `Commit at each step boundary the plan marks "Commit", following the repo's git conventions (imperative mood, specific files, the repo's co-author footer). Report every commit SHA you made in the commits field.`,
     `Scope expectation: this is one focused task; sweeps rewrite comments, casts, and whitespace and never behavior unless the plan section says a step is behavioral; if you find yourself changing logic the plan does not name as changing, stop and report it in unspecifiedDecisions instead.`,
     `Skip agent-memory maintenance for this dispatch.`
@@ -96,7 +103,9 @@ function implementPrompt(t, chain, a, blocking) {
 
 function reviewPrompt(t, chain, a, implReport) {
   return [
-    `Repo (a dedicated git worktree on branch ${chain.branch}): ${chain.repo}`,
+    chain.repo === a.mainCheckout
+      ? `Repo (the main checkout, branch main; this pass runs on main by its plan's rule): ${chain.repo}`
+      : `Repo (a dedicated git worktree on branch ${chain.branch}): ${chain.repo}`,
     `Plan file: ${a.planPath}`,
     `Task ${t.id}: ${t.title}`,
     `Read the plan's "Task ${t.id}" section (its acceptance criteria are the contract) plus the "Global constraints" section before verdicting.`,
