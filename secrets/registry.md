@@ -137,6 +137,8 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | GITHUB_APP_INSTALLATION_ID | ✓ | ✓     | —    | —        | —          |
 | GITHUB_APP_PRIVATE_KEY_B64 | ✓ | ✓     | ✓    | —        | ✓          |
 | GOOGLE_SA_KEY_B64   | ✓     | —        | ✓    | —        | —          |
+| GOOGLE_WORKSPACE_CLI_CLIENT_ID | ✓ | —    | —    | —        | —          |
+| GOOGLE_WORKSPACE_CLI_CLIENT_SECRET | ✓ | — | —  | —        | —          |
 | TWILIO_ACCOUNT_SID  | ✓     | —        | —    | —        | ✓          |
 | TWILIO_API_KEY_SID  | ✓     | —        | —    | —        | ✓          |
 | TWILIO_API_KEY_SECRET | ✓   | —        | —    | —        | ✓          |
@@ -356,6 +358,18 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   then `secret-set.sh GOOGLE_SA_KEY_B64 --b64-file <file>`, `sync.sh --worker ecxc`, delete
   the file and the old key (`gcloud iam service-accounts keys list/delete`). No loose copy
   lives on disk; GCP IAM is the mint-a-new-key origin.
+
+### GOOGLE_WORKSPACE_CLI_CLIENT_ID / GOOGLE_WORKSPACE_CLI_CLIENT_SECRET
+- **Grants**: nothing by themselves; the Desktop OAuth client `gws-thinkpad-x1` in GCP project
+  `gws-personal` (id `gws-personal-508705`, owned by geoff@907.life). `gws auth login` uses the
+  pair to mint a user token stored encrypted in `~/.config/gws/`; that token carries Docs and
+  Drive scopes as geoff@907.life. Consent screen is External/Testing with geoff@907.life as the
+  only test user, so the refresh token expires after 7 days and `gws auth login` re-runs.
+- **Used by**: `gws` (Google Workspace CLI) from Claude Code sessions, personal Google Docs
+  formatting work (2026-09-14). `gws` reads both names straight from the environment.
+- **Rotate at**: console.cloud.google.com → gws-personal → Google Auth Platform → Clients →
+  gws-thinkpad-x1 (reset secret or create a new Desktop client), then `secret-receive` each
+  value. Delete `~/.config/gws/client_secret.json` if a downloaded copy exists.
 
 ### TWILIO_ACCOUNT_SID / TWILIO_API_KEY_SID / TWILIO_API_KEY_SECRET
 - **Grants**: Twilio REST API on the team-platform account (`AC9387aa5b...`), via the
