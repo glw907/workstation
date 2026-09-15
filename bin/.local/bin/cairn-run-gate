@@ -11,6 +11,8 @@
 # the same string starts a fresh run.
 #
 # Usage: cairn-run-gate '<gate string>' [log path]
+# Memory: the gate runs in a transient user scope capped by CAIRN_GATE_MEMORY_HIGH (7G),
+# CAIRN_GATE_MEMORY_MAX (8G), and CAIRN_GATE_SWAP_MAX (4G); override per call as needed.
 # Exit status: the gate's when it has finished; 75 while it is still running.
 set -u
 gate="${1:?gate string required}"
@@ -25,7 +27,18 @@ statusfile="$state/status"
 if [ ! -e "$pidfile" ]; then
   rm -f "$statusfile"
   : >"$log"
-  ( bash -c "$gate" >"$log" 2>&1; echo $? >"$statusfile" ) </dev/null &
+  # Run the gate in its own transient cgroup with a memory ceiling, so a runaway headless
+  # browser is throttled and then killed inside the gate instead of driving system-wide
+  # pressure that systemd-oomd resolves by killing the desktop session (two concurrent
+  # gates cost the GNOME session on 2026-09-14). Empty prefix where systemd-run is absent.
+  scope=()
+  if command -v systemd-run >/dev/null 2>&1; then
+    scope=(systemd-run --user --scope -q
+      -p "MemoryHigh=${CAIRN_GATE_MEMORY_HIGH:-7G}"
+      -p "MemoryMax=${CAIRN_GATE_MEMORY_MAX:-8G}"
+      -p "MemorySwapMax=${CAIRN_GATE_SWAP_MAX:-4G}")
+  fi
+  ( "${scope[@]}" bash -c "$gate" >"$log" 2>&1; echo $? >"$statusfile" ) </dev/null &
   echo $! >"$pidfile"
   echo "gate started (log: $log)"
 fi
