@@ -9,6 +9,7 @@
 
 brew "age"
 brew "gh"
+brew "googleworkspace-cli"   # gws: Google Docs/Drive/Sheets from Claude Code (2026-09-14)
 brew "git"
 brew "jq"
 brew "yq"

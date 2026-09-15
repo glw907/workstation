@@ -153,6 +153,15 @@ Use API or CLI first for external services -- never suggest the web dashboard un
   has it, that is the finding, not "Geoff owes a paste." Name-only checks, never print
   values. (Born 2026-07-07, twice, both false "you still owe me X" reports.)
 
+## Google Docs / Drive (gws)
+
+`gws` (Google Workspace CLI, Homebrew `googleworkspace-cli`) is the path to Google Docs,
+Drive, and Sheets; never an MCP server for these. Auth today is the ASC service account
+(`GOOGLE_APPLICATION_CREDENTIALS`, `~/.config/google-workspace/`); a doc must be shared with
+that account's email to be reachable. Formatting edits go through `docs documents batchUpdate`
+after a `get` for indexes; `--dry-run` first on any write. Patterns: `google-docs-formatting`
+memory.
+
 ## Email (poplar)
 
 poplar, a bubbletea terminal email client from `~/Projects/poplar/`; binary
