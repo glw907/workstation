@@ -156,11 +156,12 @@ Use API or CLI first for external services -- never suggest the web dashboard un
 ## Google Docs / Drive (gws)
 
 `gws` (Google Workspace CLI, Homebrew `googleworkspace-cli`) is the path to Google Docs,
-Drive, and Sheets; never an MCP server for these. Auth today is the ASC service account
-(`GOOGLE_APPLICATION_CREDENTIALS`, `~/.config/google-workspace/`); a doc must be shared with
-that account's email to be reachable. Formatting edits go through `docs documents batchUpdate`
-after a `get` for indexes; `--dry-run` first on any write. Patterns: `google-docs-formatting`
-memory.
+Drive, and Sheets; never an MCP server for these. Personal docs: OAuth as Geoff's own Google
+account (`gws auth login -s docs,drive`; the Desktop OAuth client pair lives in the age store
+as `GOOGLE_WORKSPACE_CLI_CLIENT_ID` / `_CLIENT_SECRET`). ASC docs only: the club service
+account via `GOOGLE_APPLICATION_CREDENTIALS`, which `gws` also honors; unset it if it
+shadows the personal login. Formatting edits go through `docs documents batchUpdate` after a
+`get` for indexes; `--dry-run` first on any write. Patterns: `google-docs-formatting` memory.
 
 ## Email (poplar)
 
