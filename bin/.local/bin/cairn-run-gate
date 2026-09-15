@@ -13,12 +13,14 @@
 # Usage: cairn-run-gate '<gate string>' [log path]
 # Memory: the gate runs in a transient user scope capped by CAIRN_GATE_MEMORY_HIGH (7G),
 # CAIRN_GATE_MEMORY_MAX (8G), and CAIRN_GATE_SWAP_MAX (4G); override per call as needed.
+# Gates queue on one machine-wide lock; CAIRN_GATE_PARALLEL=1 lets a light gate skip the queue.
 # Exit status: the gate's when it has finished; 75 while it is still running.
 set -u
 gate="${1:?gate string required}"
 wait_s="${CAIRN_GATE_WAIT:-540}"
 key=$(printf '%s\n%s' "$PWD" "$gate" | sha256sum | cut -c1-16)
-state="${TMPDIR:-/tmp}/cairn-gate-$(id -u)/$key"
+gatedir="${TMPDIR:-/tmp}/cairn-gate-$(id -u)"
+state="$gatedir/$key"
 mkdir -p "$state"
 log="${2:-$state/gate.log}"
 pidfile="$state/pid"
@@ -38,7 +40,15 @@ if [ ! -e "$pidfile" ]; then
       -p "MemoryMax=${CAIRN_GATE_MEMORY_MAX:-8G}"
       -p "MemorySwapMax=${CAIRN_GATE_SWAP_MAX:-4G}")
   fi
-  ( "${scope[@]}" bash -c "$gate" >"$log" 2>&1; echo $? >"$statusfile" ) </dev/null &
+  # One gate per machine at a time: a browser-bearing gate peaks near the laptop's RAM, so
+  # concurrent gates from parallel chains queue on a shared lock instead of running side
+  # by side. CAIRN_GATE_PARALLEL=1 opts a call out (a light gate that cannot contend).
+  if [ "${CAIRN_GATE_PARALLEL:-0}" = "1" ]; then
+    lock=()
+  else
+    lock=(flock "$gatedir/machine.lock")
+  fi
+  ( "${lock[@]}" "${scope[@]}" bash -c "$gate" >"$log" 2>&1; echo $? >"$statusfile" ) </dev/null &
   echo $! >"$pidfile"
   echo "gate started (log: $log)"
 fi
