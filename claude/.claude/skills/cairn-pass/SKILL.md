@@ -103,7 +103,7 @@ gate is one of SIX CI-only checks the local ritual skips; the other five are
 and the 2026-08-01 xcathletes seams pass shipped red on `check:snippets`. Treat the six as one list
 and run them by name.
 
-Also run `npm run check:transcripts` and `npm run check:symbols`. `check:transcripts` fails when a
+Also run `npm run check:transcripts`, `npm run check:symbols`, and `npm run check:arm-indexes` (a new page under any docs arm, `docs/internal/` included, must be linked from that arm's index; the docs-to-facts close missed it, 2026-09-16). `check:transcripts` fails when a
 quoted transcript block on an admin doc page has drifted from its recorded fixture; the
 newest-toolchain pass (2026-08-21/22) hit this on a hand edit to an admin page that no other local
 gate caught. `check:symbols` fails when a backticked dotted token in a code comment reads as an
