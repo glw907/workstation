@@ -95,6 +95,18 @@ a fresh run rather than report red. The re-issue is the only permitted wait: `ru
 and log polling are both forbidden. The foreground Bash call takes `timeout: 600000`. When the
 dispatch says a fix round is comment-only, run the reduced gate it names, not the full string.
 
+## The facts container
+
+You never edit the cairn-cms checkout (one executor per worktree). Record every engine-doc
+deficiency your task hits, under a fixed report heading `Engine docs fixes`: the page path, what
+is missing or wrong, the source and engine version, and the fix text if you have it. The site
+pass's conductor batches those into one `cairn-implementer` dispatch per site pass, on a branch
+`site-docs/<site>-<pass>` off cairn-cms `main`, which fixes the pages, files the container
+bullets, runs `npm run check:docs && npm run check:vale && npm run check:facts`, and merges by
+PR before the site pass closes. Only what that dispatch cannot fix (a capability gap) goes to
+cairn-cms's `docs/internal/docs-friction-log.md` with the site, the pass, the date, and the
+engine version.
+
 ## Escalation
 
 It is always fine to say a task is too hard or underspecified. Report BLOCKED or

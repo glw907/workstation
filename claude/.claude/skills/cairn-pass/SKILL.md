@@ -142,23 +142,33 @@ Documentation is a pass dimension, not a follow-up. Before the pass is done, upd
 whatever it changed. The standing principle is that docs stay current and never drift, so a pass
 fixes every doc its change touched, including the inbound references on other pages.
 
-- Update the relevant `docs/` track: the reference page for any public-API change, and the admin,
-  editors, or extend track as the change touches its reader. Update `CHANGELOG.md` and the
-  per-version record (`docs/extend/migration-notes.md`) for any **behavior** change, not only a
-  rename, with a short per-version entry. (`docs/extend/upgrade-cairn.md` is the short task, bump
-  and verify; the record is the other half of that split.) The "Consumers must:" convention below applies to the changelog; a behavior change
-  that needs no consumer action still gets an entry that says so, so an upgrader who hits it has a
-  reference.
+- **Container first, reference page second, narrative arms frozen against rewrites, open to
+  fixes.** A public-behavior change files its bullet in `docs/internal/facts/<arm>.md`, gated
+  by `check:facts`, then updates the reference page if public API. No pass rewrites the admin,
+  editors, extend, or why-cairn narrative; a discovered deficiency (missing step, wrong warning,
+  stale command) is fixed on the page in the same pass, gated by its own gates, bullet filed
+  alongside, agent-facing not register-graded: source, engine version, why, Vale's error tier
+  only, no prose review, since the site round rewrites the human page from it.
+- Update the relevant `docs/` track: the reference page for any public-API change; the admin,
+  editors, or extend narrative only as the freeze bullet above allows (a discovered deficiency
+  fixed on the page, never a rewrite). Update `CHANGELOG.md` and the per-version record
+  (`docs/extend/migration-notes.md`, outside the freeze and maintained every pass like the
+  reference arm) for any **behavior** change, not only a rename, with a short per-version entry.
+  (`docs/extend/upgrade-cairn.md` is the same, the short task, bump and verify; the record is the
+  other half of that split.) The "Consumers must:" convention below applies to the changelog; a
+  behavior change that needs no consumer action still gets an entry that says so, so an upgrader
+  who hits it has a reference.
 - **Hunt drift on a removed or renamed symbol.** When a pass removes a symbol from the public surface
   or renames it, the reference page is not the only place that names it. `grep -rn` the whole `docs/`
   tree (and `README.md`) for the old name and any reference anchor (`core.md#<oldname>`), and repoint
   or rewrite every hit. The reference-coverage gate does not catch a stale inbound link.
-- **Run all four doc gates.** `npm run check:reference` (the export-coverage gate fails on an
+- **Run all five doc gates.** `npm run check:reference` (the export-coverage gate fails on an
   undocumented export), `npm run check:reference:signatures` (the documented signature must match the
   real exported type, so a member added to an exported function's return, like `helpLoad` on
   `createContentRoutes`, fails until the reference signature carries it), `npm run check:package` (the
-  entry-point shapes), and `npm run check:docs` (the link gate, which fails on a dead relative link or a
-  stale `#anchor` anywhere under `docs/`). All four must pass. `check:reference:signatures` is CI-only
+  entry-point shapes), `npm run check:docs` (the link gate, which fails on a dead relative link or a
+  stale `#anchor` anywhere under `docs/`), and `npm run check:facts` (the container gate). All five
+  must pass. `check:reference:signatures` is CI-only
   and easy to skip locally, so run it by name here. A public-API change is not done until its reference
   page matches and no doc links to a name the pass removed.
 - **Any public-surface change also runs `npm run check:surface`** and, when the drift is intended,
