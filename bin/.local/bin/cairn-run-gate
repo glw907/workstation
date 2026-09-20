@@ -63,7 +63,11 @@ if [ ! -e "$pidfile" ]; then
   else
     lock=(flock "$gatedir/machine.lock")
   fi
-  ( "${lock[@]}" "${scope[@]}" bash -c "$gate" >"$log" 2>&1; echo $? >"$statusfile" ) </dev/null &
+  # Stamp when the run was queued and when it got the lock, so the result can say how long the
+  # gate waited on another gate. The stamp runs inside the lock, before the gate itself.
+  date +%s >"$state/queued"
+  echo "$lane" >"$state/lane"
+  ( "${lock[@]}" "${scope[@]}" bash -c 'date +%s >"$1"; exec bash -c "$2"' _ "$state/acquired" "$gate" >"$log" 2>&1; echo $? >"$statusfile" ) </dev/null &
   echo $! >"$pidfile"
   echo "gate started (log: $log)"
 fi
@@ -91,7 +95,19 @@ else
   status=$(cat "$statusfile")
 fi
 
-rm -f "$pidfile" "$statusfile"
+# Tell whoever ran this gate when it lost real time to the queue. The rule that a browserless
+# gate belongs on the light lane is easy to not know; the wait is where it costs, so say it here.
+hint_after="${CAIRN_GATE_HINT_AFTER:-120}"
+if [ -e "$state/queued" ] && [ -e "$state/acquired" ]; then
+  lock_wait=$(( $(cat "$state/acquired") - $(cat "$state/queued") ))
+  if [ "$lock_wait" -ge "$hint_after" ] && [ "$(cat "$state/lane" 2>/dev/null)" = "heavy" ]; then
+    echo "NOTE: this gate waited ${lock_wait}s for another gate to release the machine lock."
+    echo "NOTE: if it launches no browser (a Go make check, a lint-only run), run it as"
+    echo "NOTE:   CAIRN_GATE_LANE=light cairn-run-gate '<gate string>'"
+    echo "NOTE: which has its own lock. Report this NOTE to your conductor verbatim."
+  fi
+fi
+rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane"
 echo "gate exit: $status (log: $log, $(wc -l <"$log") lines)"
 echo "--- last 60 lines ---"
 tail -60 "$log"

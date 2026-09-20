@@ -274,6 +274,21 @@ lock and a 3G cap, so it never queues behind another session's browser gate (202
 refuses a `~/.claude/workflows` scriptPath (copy to the session scratchpad). Full rule set:
 `~/.claude/docs/pass-gate-economy.md`.
 
+## A rule lives where it executes (Geoff, 2026-09-20)
+
+A rule reaches an agent only through what that agent is given: its definition, its dispatch
+prompt, the runner that builds the prompt, or the tool's own output. A rule written only in a
+side doc reaches nobody, because subagents start with zero context and a conductor reads a side
+doc only if something sends it there. Cairn Go tool pass A lost two to three hours this way: the
+light-gate opt-out existed, in an uncommitted paragraph of `pass-gate-economy.md`, and no runner,
+agent definition, plan, or skill carried it. So when a rule is written or learned, land it in the
+execution path in the same session, strongest form first: the tool enforces or announces it
+(`cairn-run-gate` now prints a NOTE when a heavy gate waits on the lock); else the runner renders
+it into the prompt (`gateLane`); else the agent definition or the skill states it; a doc alone is
+the record, never the delivery. Two habits follow. Before relying on a workstation tool for a
+whole pass, read its header or `--help` once, since the tool is the spec and the summary in this
+file is not. And when an agent's report carries a tool's NOTE, act on it before the next dispatch.
+
 ## Compact instructions
 
 Preserve the plan path and pass number; the task ledger (done, in flight, next); open
