@@ -1,5 +1,7 @@
 # docs-infra currency pass
 
+**Approved:** Geoff, 2026-09-19, all nine decisions as recommended; queues after the one cut, before the site round.
+
 > **For agentic workers:** execute through `~/.claude/workflows/pass-execute-chains.js`. Each
 > task runs as an implementer, `diff-reviewer`, gate chain. The conductor reads reports, never
 > diffs.
