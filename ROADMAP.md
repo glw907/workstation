@@ -40,6 +40,18 @@ Current state lives in `docs/STATUS.md`; the per-pass ledger in
   before server artifacts accrete; coordinate with the music session that
   owns them.
 
+- **`claude-wf-guard` alarms on a run that finished cleanly.** Its idle alarm cannot tell a
+  finished workflow from a stalled one (its own message says "a clean finish looks identical"),
+  so every completed run ends with exit 2 and an ALARM, ten minutes after the run's real
+  completion notification. Cairn Go tool pass A (2026-09-19/20) ran ten workflows and paid one
+  conductor turn per run to confirm each alarm was false. The fix is not in `journal.jsonl`,
+  which records only `launched`, `started`, and `result` and has no run-level completion event,
+  and the guard already avoids journal idle on purpose. It needs a completion signal from outside
+  the journal: the workflow task's own output file (`tasks/<task-id>.output` is written when the
+  run completes) passed as an optional fourth argument, on whose appearance the guard exits 0
+  silently. Until then a conductor treats an idle ALARM that arrives AFTER the run's completion
+  notification as expected, checks only that any live run still has a guard, and moves on.
+
 ## Someday
 
 - **Devcontainers** for the SvelteKit/Cloudflare site repos: logged per repo
