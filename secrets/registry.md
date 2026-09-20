@@ -123,6 +123,9 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | Secret              | Local | 907-life | ecxc | asc-site | xcathletes |
 |---------------------|-------|----------|------|----------|------------|
 | CLOUDFLARE_API_TOKEN | ✓    | ✓        | —    | —        | —          |
+| CAIRN_CF_ACCOUNT_ID | ✓     | —        | —    | —        | —          |
+| CAIRN_CF_READ_TOKEN | ✓     | —        | —    | —        | —          |
+| CAIRN_GH_READ_TOKEN | ✓     | —        | —    | —        | —          |
 | CF_ZT_TOKEN         | ✓     | —        | —    | —        | —          |
 | CF_ACCESS_CLIENT_SECRET | ✓ | —        | —    | —        | —          |
 | ANTHROPIC_API_KEY   | ✓     | —        | ✓    | ✓        | —          |
@@ -262,6 +265,29 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   Tunnel: Edit (closed the same day, the musicbox `CF_ZT_TOKEN` blocker above). The token
   cannot edit its own permissions (confirmed: `GET /user/tokens/{id}` 403s even for this
   token against itself), so any future scope gap needs the same dashboard-edit path.
+
+### CAIRN_CF_READ_TOKEN / CAIRN_CF_ACCOUNT_ID / CAIRN_GH_READ_TOKEN
+- **Grants**: the Go `cairn` operator tool's read-only credentials (cairn-cms `tool/`), minted
+  2026-09-19 as the tool's Task 10 verification set. Local only; no Worker consumes them.
+- **CAIRN_CF_READ_TOKEN**: Cloudflare token "cairn tool read". Seven Read groups: Workers
+  Scripts, Workers Builds Configuration, Workers Observability, Zone, Zone Settings, DNS, Email
+  Sending; account `glw907`, all zones. Zone Settings was added by dashboard edit the same day
+  (the HTTPS-forced check reads `always_use_https` and `security_header`; the edit persisted).
+  Every endpoint the checks use verified 200; a DNS write and a settings write both verified 403.
+  No expiry. Rotate at https://dash.cloudflare.com/profile/api-tokens.
+- **CAIRN_CF_ACCOUNT_ID**: the account id the tool pins. A public identifier, stored so the
+  tool's three names resolve from one place.
+- **CAIRN_GH_READ_TOKEN**: GitHub fine-grained token "cairn-tool-read". Contents: Read and
+  Metadata: Read on glw907/ecxc-ski, 907-life, aksailingclub-org, xcathletes-org, and cairn-cms.
+  **Expires 2026-10-19; rotate before then** at https://github.com/settings/personal-access-tokens
+  (regenerating keeps the scope; re-store with `secret-receive CAIRN_GH_READ_TOKEN`).
+  Verified 200 on `commits/main` and `contents/package.json` for the four sites and
+  `contents/CHANGELOG.md` on cairn-cms; a contents write verified 403.
+- **Gotcha (born at the mint)**: four of the five repositories are public, and a fine-grained
+  token reads a public repository with NO permissions at all. The first mint carried no
+  Contents permission and still probed 200 on all four; only private `xcathletes-org` exposed
+  it (404). Verify any re-mint against `xcathletes-org`.
+- **Symptom of expiry**: every GitHub-backed check in `cairn health` turns unknown at once.
 
 ### HCLOUD_TOKEN
 - **Grants**: Hetzner Cloud API read/write, project `musicbox` only
