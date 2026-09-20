@@ -36,6 +36,10 @@
 // mismatch as blocking. The workflow runtime has no filesystem or exec access, so every git/node
 // call here goes through a small probe agent rather than direct code.
 
+// Gate lane (Geoff, 2026-09-20): `args.gateLane` or a task's `gateLane` set to "light" makes the
+// implementer prefix every cairn-run-gate call with CAIRN_GATE_LANE=light, for a gate that launches
+// no browser. Unset means the default heavy lane.
+
 export const meta = {
   name: "pass-execute",
   description: "Runs a pass plan's tasks through implementer, diff-reviewer, and gate in a chain.",
@@ -159,6 +163,9 @@ function validateArgs(a) {
 function implementPrompt(t, a, blocking, baseSha) {
   const paintFlag = t.paint != null ? ` --paint ${t.paint ? "yes" : "no"}` : "";
   const pinFlag = t.gateTier ? ` --pin ${t.gateTier}` : "";
+  const light = (t.gateLane || a.gateLane) === "light";
+  const lanePrefix = light ? "CAIRN_GATE_LANE=light " : "";
+  const laneNote = light ? " (keep the CAIRN_GATE_LANE=light prefix on the first call and on every re-issue: this gate launches no browser, so it takes the light lane)" : "";
   const classifierCmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${pinFlag}`;
   const lines = [
     `Repo: ${a.repo}`,
@@ -168,7 +175,7 @@ function implementPrompt(t, a, blocking, baseSha) {
     t.notes ? `Notes: ${t.notes}` : "",
     `Gate command: ${t.gate || a.gate}`,
     `Before running the gate, check whether scripts/checks/gate-tier.mjs exists in this repo. If it does, run \`${classifierCmd}\` from the repo root, after your commits and before the gate, and run the gate string it prints on stdout instead of the Gate command above (report gateTier: "${t.gateTier ? "pin" : "computed"}" and gateCommand as that exact string). If the script is absent, exits non-zero, or prints nothing, run the Gate command above unchanged (report gateTier: "default" and gateCommand as that string).`,
-    "Run the gate through `cairn-run-gate '<the gate string>'` (it blocks to completion and prints the tail); never poll a log; report its exact result.",
+    "Run the gate through `" + lanePrefix + "cairn-run-gate '<the gate string>'`" + laneNote + " (it blocks to completion and prints the tail); never poll a log; report its exact result.",
     "Skip agent-memory maintenance for this dispatch."
   ];
   if (blocking && blocking.length > 0) {

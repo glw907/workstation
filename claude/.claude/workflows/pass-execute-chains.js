@@ -16,6 +16,10 @@
 // mismatch as blocking. The workflow runtime has no filesystem or exec access, so every git/node
 // call here goes through a small probe agent rather than direct code.
 
+// Gate lane (Geoff, 2026-09-20): `args.gateLane` or a task's `gateLane` set to "light" makes the
+// implementer prefix every cairn-run-gate call with CAIRN_GATE_LANE=light, for a gate that launches
+// no browser (a Go `make check`, a lint-only run). Unset means the default heavy lane.
+
 export const meta = {
   name: "pass-execute-chains",
   description: "Runs a pass plan's chains in parallel worktrees, tasks sequential within each chain",
@@ -101,6 +105,9 @@ function implementPrompt(t, chain, a, blocking, baseSha) {
   const onMain = chain.repo === a.mainCheckout;
   const paintFlag = t.paint != null ? ` --paint ${t.paint ? "yes" : "no"}` : "";
   const pinFlag = t.gateTier ? ` --pin ${t.gateTier}` : "";
+  const light = (t.gateLane || a.gateLane) === "light";
+  const lanePrefix = light ? "CAIRN_GATE_LANE=light " : "";
+  const laneNote = light ? " (keep the CAIRN_GATE_LANE=light prefix on the first call and on every re-issue: this gate launches no browser, so it takes the light lane and does not queue behind a browser gate)" : "";
   const classifierCmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${pinFlag}`;
   const lines = [
     onMain
@@ -119,7 +126,7 @@ function implementPrompt(t, chain, a, blocking, baseSha) {
     ``,
     `Gate command: ${t.gate || a.gate}`,
     `Before running the gate, check whether scripts/checks/gate-tier.mjs exists in this repo. If it does, run \`${classifierCmd}\` from the repo root, after your commits and before the gate, and run the gate string it prints on stdout instead of the Gate command above (report gateTier: "${t.gateTier ? "pin" : "computed"}" and gateCommand as that exact string). If the script is absent, exits non-zero, or prints nothing, run the Gate command above unchanged (report gateTier: "default" and gateCommand as that string).`,
-    `Run the gate ONLY through \`cairn-run-gate '<the gate string>'\` as a plain foreground Bash call with \`timeout: 600000\`. The runner starts the gate detached and waits up to nine minutes; when it prints "gate still running" (exit 75), re-issue the SAME cairn-run-gate command, which reattaches and waits again, and repeat until it prints "gate exit:" with the last 60 lines. That re-issue is the only permitted wait: never run the gate or any test yourself with run_in_background, and never tail, wc, cat, ps, or sleep on a log. A transcript containing such polling calls is a task failure the conductor halts. Report the runner's exact exit line.`,
+    `Run the gate ONLY through \`${lanePrefix}cairn-run-gate '<the gate string>'\`${laneNote} as a plain foreground Bash call with \`timeout: 600000\`. The runner starts the gate detached and waits up to nine minutes; when it prints "gate still running" (exit 75), re-issue the SAME cairn-run-gate command, which reattaches and waits again, and repeat until it prints "gate exit:" with the last 60 lines. That re-issue is the only permitted wait: never run the gate or any test yourself with run_in_background, and never tail, wc, cat, ps, or sleep on a log. A transcript containing such polling calls is a task failure the conductor halts. Report the runner's exact exit line.`,
     `Commit at each step boundary the plan marks "Commit", following the repo's git conventions (imperative mood, specific files, the repo's co-author footer). Report every commit SHA you made in the commits field.`,
     `Scope expectation: this is one focused task; sweeps rewrite comments, casts, and whitespace and never behavior unless the plan section says a step is behavioral; if you find yourself changing logic the plan does not name as changing, stop and report it in unspecifiedDecisions instead.`,
     `Skip agent-memory maintenance for this dispatch.`

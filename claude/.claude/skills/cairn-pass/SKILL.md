@@ -62,7 +62,11 @@ re-deriving the design.
 > **Gate economy (Geoff, 2026-09-09).** The per-task gate omits the showcase e2e for
 > paint-neutral tasks; paint tasks keep it; the pass-end ritual and CI run the full suite.
 > Comment-only fix rounds run the reduced gate; the engine's `npm test` runs only when a task
-> touches `src/lib` or `packages/`. Implementers run gates through `cairn-run-gate`. The
+> touches `src/lib` or `packages/`. Implementers run gates through `cairn-run-gate`. A pass
+> whose gate launches no browser (the Go tool's `make -C tool check`) sets `gateLane: "light"`
+> in the runner's args, or it queues behind every other session's browser gate. Read
+> `~/.claude/docs/pass-gate-economy.md` in full before launching a pass's first segment; it is
+> short, and its rules reach an implementer only through what the conductor puts in the args. The
 > chains scripts honor per-task `gate` and `model` fields. Rules and evidence: the workstation
 > CLAUDE.md, "Gate economy on a pass".
 

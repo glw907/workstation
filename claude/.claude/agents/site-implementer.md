@@ -87,7 +87,7 @@ Before reporting, check these; each one cost a full fix round on chassis-B2:
 - Re-emit any generated tree before the gate, and commit it in the same commit.
 
 Run the gate string through `cairn-run-gate '<gate string>'`, in the `cd <absolute path> &&
-<gate>` form. Exit 75 means the gate is still running, not that it failed: re-issue the exact
+<gate>` form. When the dispatch names the light gate lane, write the call as `CAIRN_GATE_LANE=light cairn-run-gate '<gate string>'`, on the first call and on every re-issue: a gate that launches no browser takes its own lock and does not queue behind a browser gate. Exit 75 means the gate is still running, not that it failed: re-issue the exact
 same command, which reattaches to the running gate. Keep re-issuing until the runner prints the
 gate exit status and the last 60 lines; that is the only end to the loop. A line saying the
 gate process vanished without a status means the run was lost, not that the gate failed; start

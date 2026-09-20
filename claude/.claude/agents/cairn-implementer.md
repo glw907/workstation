@@ -95,7 +95,7 @@ Before reporting, check these; each one cost a full fix round on chassis-B2:
 - Re-emit any generated tree before the gate, and commit it in the same commit.
 
 Run the gate string only through `cairn-run-gate '<gate string>'`, as a plain foreground
-Bash call with `timeout: 600000`. The runner starts the gate detached and waits up to nine
+Bash call with `timeout: 600000`. When the dispatch names the light gate lane, write the call as `CAIRN_GATE_LANE=light cairn-run-gate '<gate string>'`, on the first call and on every re-issue: a gate that launches no browser takes its own lock and does not queue behind a browser gate. The runner starts the gate detached and waits up to nine
 minutes. When it prints "gate still running" (exit 75), re-issue the same cairn-run-gate
 command; it reattaches and waits again. Repeat until it prints "gate exit:" with the last 60
 lines. That re-issue is the only permitted wait: never run the gate or a test suite with
