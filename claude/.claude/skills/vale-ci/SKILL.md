@@ -45,7 +45,7 @@ will see them.
 ```yaml
 repos:
   - repo: https://github.com/vale-cli/vale
-    rev: v3.17.0
+    rev: v3.22.0
     hooks:
       - id: vale
 ```

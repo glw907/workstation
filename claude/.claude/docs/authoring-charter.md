@@ -76,9 +76,9 @@ and code comments.
 
 ## Build state
 
-The cutover landed (plan 07): the `vale-hook` is the live prose feedback hook, the output style and the
-global CLAUDE.md are leaned to the audience-invariant core, and the `writing-voice` skill routes the
-registers. The external-standards refactor is the next pass. It removes the house overlay and the four
-tell catalogues, repoints the docs registers to canonical Google and Microsoft exemplars, wires the
-agent-facing and commit standards, sets the linters to the external packages only, and brings cairn's
-TypeScript and Svelte comments to professional-grade TSDoc.
+The cutover landed (plan 07) and the external-standards refactor landed after it: the `vale-hook`
+is the live prose feedback hook, the output style and the global CLAUDE.md are leaned to the
+audience-invariant core, and the `writing-voice` skill routes the registers to canonical Google
+and Microsoft exemplars. The agent-facing and commit standards are wired, the linters run on the
+external packages (Vale's Google and Microsoft styles, ESLint's TSDoc config), and cairn's
+TypeScript and Svelte comments hold to professional-grade TSDoc.

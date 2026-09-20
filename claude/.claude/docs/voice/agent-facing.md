@@ -5,11 +5,14 @@ message. Applies to every file whose audience is a model executing a task, not a
 prose.
 
 The standard is **Anthropic's Claude Code and prompt-engineering best practices**
-(https://docs.anthropic.com/en/docs/claude-code/ and
-https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview). There is no
+(https://code.claude.com/docs/en/best-practices and
+https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview). There is no
 deterministic linter; the standard is guidance plus Anthropic's own published examples. This
 register is the agent-facing arm of the authoring charter
 (`~/.claude/docs/authoring-charter.md`).
+
+The best-practices page's own lead practice: give an agent a check it can run, tests, a build,
+a screenshot to compare, rather than leaving it to stop when the work merely "looks done."
 
 ## What the standard asks for
 

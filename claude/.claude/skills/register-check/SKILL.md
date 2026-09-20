@@ -1,6 +1,7 @@
 ---
 name: register-check
 description: Run the full cairn three-gate prose review (mechanical slop gate, adversarial register edit, logic and claims check) on a draft and fold the findings. Use on any cairn prose artifact before Geoff reads it, or when Geoff asks for a register check.
+context: fork
 ---
 
 # Register check

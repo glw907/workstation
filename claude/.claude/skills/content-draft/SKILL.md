@@ -1,7 +1,6 @@
 ---
 name: content-draft
 description: "Draft website content (pages, posts, form copy) brief-first. Use BEFORE writing any new site page, post, or form copy, or when the user says \"draft a page\", \"write the X page\", \"write a post\", \"write copy for\". For website content only, NOT code, docs, specs, or commit messages. Loads the shared web-content method and the site's generative content guide."
-user_invocable: true
 ---
 
 # Content Draft

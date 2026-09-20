@@ -24,9 +24,9 @@ type hookInput struct {
 }
 
 // RegisterFor picks the register a saved file is graded against. Agent-
-// facing homes (CLAUDE.md, skills, agents, commands) outrank the
-// extension default; code files grade on their comments; other Markdown
-// grades as developer docs.
+// facing homes (CLAUDE.md, skills, agents) outrank the extension default;
+// code files grade on their comments; other Markdown grades as developer
+// docs.
 func RegisterFor(path string) (tellscan.Register, bool) {
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".go", ".ts", ".js", ".svelte", ".py":
@@ -43,7 +43,7 @@ func RegisterFor(path string) (tellscan.Register, bool) {
 func agentFacing(path string) bool {
 	base := filepath.Base(path)
 	return base == "CLAUDE.md" || base == "SKILL.md" ||
-		strings.Contains(path, "/.claude/agents/") || strings.Contains(path, "/.claude/commands/")
+		strings.Contains(path, "/.claude/agents/")
 }
 
 // scanOptions builds the Scan options for a hook-triggered save. The hook grades one

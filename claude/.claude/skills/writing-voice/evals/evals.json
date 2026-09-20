@@ -1,6 +1,6 @@
 {
   "skill_name": "writing-voice",
-  "description": "Benchmark corpus for the workstation voice system. Each prompt is a realistic drafting task in one of the registers the writing-voice router names. Runs compare a with-skill draft against a bare baseline on three layers: deterministic tell scan (tell-grader.py), register-fidelity rubric (fresh-context judge against the register's named standard), and blind A/B quality comparison.",
+  "description": "Benchmark corpus for the workstation voice system. Each prompt is a realistic drafting task in one of the registers the writing-voice router names. Runs compare a with-skill draft against a bare baseline on three layers: deterministic tell scan (the Go `tellgrader` binary), register-fidelity rubric (fresh-context judge against the register's named standard), and blind A/B quality comparison.",
   "evals": [
     {
       "id": 0,

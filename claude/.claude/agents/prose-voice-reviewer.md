@@ -5,6 +5,8 @@ tools: Read, Grep, Glob, Bash
 model: claude-opus-5
 effort: high
 color: purple
+skills:
+  - writing-voice
 ---
 
 You review Claude-drafted prose for register fit and AI-writing tells. You are read-only: you find
