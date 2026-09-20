@@ -33,6 +33,21 @@ at the foot; treat the snapshot below as orientation, verify before acting.
   bullet, same session; after a rotation, a RUNNING Claude session's env still holds
   the OLD token (the harness captures env at session start) — prefix commands with
   `source ~/.local/secrets` until the session cycles.
+- **Second managed token, read-only: "cairn tool read" (minted 2026-09-19)**, stored as
+  `CAIRN_CF_READ_TOKEN` (age store, local only) for the Go `cairn` operator tool in cairn-cms
+  `tool/`. Seven Read permission groups, by their dashboard names: Workers Scripts, Workers
+  Builds Configuration, Workers Observability, Zone, Zone Settings, DNS, Email Sending; account
+  `glw907`, all zones. A read-level Builds group EXISTS (the tool's plan had allowed for none).
+  Probe results 2026-09-19, statuses only: `user/tokens/verify` active; 200 on
+  `workers/scripts`, `zones`, `dns_records`, `settings/always_use_https`,
+  `settings/security_header`, `email/sending/subdomains`, `builds/tokens`,
+  `builds/workers/{tag}/builds`, `builds/workers/{tag}/triggers`, and
+  `workers/observability/telemetry/keys`; 403 on a DNS record POST and a zone-setting PATCH.
+  `accounts/{id}/tokens/verify` answers error 1000 for this user-owned token; use the `user/`
+  path. The Zone Settings group was added by a dashboard edit that DID persist (contrast the
+  2026-07-14 failure above). Permission-group ids are not recorded: listing them needs
+  token-management scope, which neither token carries. Registry entry:
+  `~/.dotfiles/secrets/registry.md`.
 - **Worker secrets are WRITE-ONLY**: `wrangler secret list` returns NAMES, never values; a value
   set with `wrangler secret put` cannot be read back. To learn a secret's value you need its
   origin store, not the worker.
