@@ -59,6 +59,20 @@ write STATUS with the exact resume prompt (including any `resumeFromRunId`), rel
 inhibitor so the machine may sleep, and report. Suspend evidence lives in `journalctl`;
 check it before diagnosing any long-running background work as slow or stalled.
 
+## A wake-up that does not depend on the API link (born 2026-09-20, five hours lost)
+
+Every guard above watches the machine or the agents. None of them wakes the CONDUCTOR. A
+workflow's completion or failure reaches the main loop only as a task notification, and a
+notification that fires while the API link is down is not retried on a timer: the session sits
+until a human types. On 2026-09-20 an `EAI_AGAIN` drop killed a fold implementer at about 04:00,
+the chain halted, and the conductor sat unwoken until Geoff's 09:16 message, with no suspend in
+`journalctl` and every inhibitor held. So any run left unattended arms a scheduled wake-up as
+well: start `/loop` with no interval (dynamic pacing) once the first workflow is launched, with
+the workflow's own notification as the primary signal and a 1200 to 1800 second fallback. The
+fallback tick checks the journal for a dead or halted run and relaunches with `resumeFromRunId`.
+A tick that fires while the link is still down fails and the next one retries, which is the
+property the notification lacks. Arm it at launch, not when something already looks slow.
+
 ## Restart recovery re-arms the FULL set (born of a 7% near-miss, 2026-09-03)
 
 A harness process restart orphans every background guard at once. Recovery after ANY

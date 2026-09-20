@@ -329,6 +329,17 @@ same-session default's history and `cairn-pass-ends-with-context-clear-prep` for
   (git log and status) before depending on it. On an API overload or 5xx, wait and retry once
   deliberately; never fire a second dispatch while one may still be in flight, because a cleared
   overload fires every queued retry at once. See the `plan-execution-dispatch-discipline` memory.
+- **Verify a plan's factual claims about existing code before dispatch, not at review.** A plan
+  that ports or mirrors sibling code states facts a grep can check: a count of literals, an error
+  code's meaning, which path a CLI writes to, a response's shape. Each one that is wrong costs a
+  full fix round (implementer, reviewer, gate) when a reviewer finds it, against a minute when the
+  conductor's pre-flight does. Go tool pass A (2026-09-20) paid that five times in seven tasks: a
+  step count of eighteen that was nineteen, an error code read as "not connected" that meant
+  "no such route", a directory precedence whose second branch was unreachable, a criterion no
+  fixture could satisfy, and a permission list one group short. Before launching a segment,
+  dispatch one `haiku` or `sonnet` pre-flight over that segment's tasks: list every checkable
+  factual claim, check each against the tree at HEAD, and return the ones that fail. Amend the
+  plan first, then dispatch.
 - **Verify a plan's locked build assumptions.** When a plan locks a packaging, build, or
   module-resolution mechanism (for example `publishConfig.exports`, an export condition, or a
   source-to-`dist` swap), confirm it against the real toolchain at the first task that touches it

@@ -13,7 +13,12 @@
 # Usage: cairn-run-gate '<gate string>' [log path]
 # Memory: the gate runs in a transient user scope capped by CAIRN_GATE_MEMORY_HIGH (7G),
 # CAIRN_GATE_MEMORY_MAX (8G), and CAIRN_GATE_SWAP_MAX (4G); override per call as needed.
-# Gates queue on one machine-wide lock; CAIRN_GATE_PARALLEL=1 lets a light gate skip the queue.
+# Lanes: gates queue on one machine-wide lock per lane. The default lane, heavy, is for a
+# browser-bearing gate that peaks near the laptop's RAM. CAIRN_GATE_LANE=light is for a gate
+# that launches no browser (a Go `make check`, a lint-only run): it queues on its own lock, so
+# it never waits behind a browser gate, and it runs under a smaller cap (2G high, 3G max, 1G
+# swap) so one light gate beside one heavy gate still fits in RAM. Light gates serialize among
+# themselves. CAIRN_GATE_PARALLEL=1 skips every lock and is kept for callers that set it.
 # Exit status: the gate's when it has finished; 75 while it is still running.
 set -u
 gate="${1:?gate string required}"
@@ -33,18 +38,28 @@ if [ ! -e "$pidfile" ]; then
   # browser is throttled and then killed inside the gate instead of driving system-wide
   # pressure that systemd-oomd resolves by killing the desktop session (two concurrent
   # gates cost the GNOME session on 2026-09-14). Empty prefix where systemd-run is absent.
+  lane="${CAIRN_GATE_LANE:-heavy}"
+  case "$lane" in
+    heavy) mem_high=7G mem_max=8G swap_max=4G ;;
+    light) mem_high=2G mem_max=3G swap_max=1G ;;
+    *) echo "cairn-run-gate: unknown CAIRN_GATE_LANE '$lane' (heavy or light)" >&2; rm -rf "$state"; exit 2 ;;
+  esac
   scope=()
   if command -v systemd-run >/dev/null 2>&1; then
     scope=(systemd-run --user --scope -q
-      -p "MemoryHigh=${CAIRN_GATE_MEMORY_HIGH:-7G}"
-      -p "MemoryMax=${CAIRN_GATE_MEMORY_MAX:-8G}"
-      -p "MemorySwapMax=${CAIRN_GATE_SWAP_MAX:-4G}")
+      -p "MemoryHigh=${CAIRN_GATE_MEMORY_HIGH:-$mem_high}"
+      -p "MemoryMax=${CAIRN_GATE_MEMORY_MAX:-$mem_max}"
+      -p "MemorySwapMax=${CAIRN_GATE_SWAP_MAX:-$swap_max}")
   fi
   # One gate per machine at a time: a browser-bearing gate peaks near the laptop's RAM, so
   # concurrent gates from parallel chains queue on a shared lock instead of running side
-  # by side. CAIRN_GATE_PARALLEL=1 opts a call out (a light gate that cannot contend).
+  # by side. A browserless gate takes the light lane instead of waiting behind a browser.
+  # The heavy lane keeps the original lock file name, so a gate started by an older copy of
+  # this script and one started by this copy still exclude each other.
   if [ "${CAIRN_GATE_PARALLEL:-0}" = "1" ]; then
     lock=()
+  elif [ "$lane" = "light" ]; then
+    lock=(flock "$gatedir/machine-light.lock")
   else
     lock=(flock "$gatedir/machine.lock")
   fi

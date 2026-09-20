@@ -268,7 +268,9 @@ metering is unpublished, so minimize Fable context, never Fable turns
 
 Clock time on a pass is the per-task gate and the fix rounds, not the implementer. Gates run
 through `cairn-run-gate '<string>'` (dotfiles bin; generic despite the name): on exit 75,
-re-issue the same command until it prints `gate exit:`; never poll a log. The Workflow tool
+re-issue the same command until it prints `gate exit:`; never poll a log. A gate that
+launches no browser (a Go `make check`, a lint-only run) sets `CAIRN_GATE_LANE=light`: its own
+lock and a 3G cap, so it never queues behind another session's browser gate (2026-09-20). The Workflow tool
 refuses a `~/.claude/workflows` scriptPath (copy to the session scratchpad). Full rule set:
 `~/.claude/docs/pass-gate-economy.md`.
 
