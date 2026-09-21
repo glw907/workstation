@@ -1,0 +1,7 @@
+# Distrobox containers this workstation deliberately maintains, one per
+# line: <name> <base-image> <what it's for>. Not yet reconciled by
+# check-drift (no probe exists for this tier yet); this file is the record
+# of intent until one is added. Recreate a missing box with the listed
+# setup command.
+
+term-headless fedora:41 headless real-terminal capture (kitty-headless-shot); setup: kitty-headless-shot setup

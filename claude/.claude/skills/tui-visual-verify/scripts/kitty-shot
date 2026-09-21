@@ -1,30 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# kitty-shot drives a real kitty window and captures what it paints: a
-# PNG per named step (ImageMagick import of the X window) plus kitty's
-# own ANSI text dump of the screen. Goldens, teatest, and tmux
-# capture-pane all check text; only the painted terminal shows grounds,
-# erase behavior, and pointer delivery. X11 only; it needs kitty,
-# xdotool, and import on PATH. The tui-visual-verify skill explains
-# each choice in here.
+# kitty-shot drives a REAL kitty terminal and captures what it paints: a
+# PNG per named step (ImageMagick import) plus kitty's own ANSI text dump
+# of the screen. Goldens, teatest, and tmux capture-pane all check text;
+# only the painted terminal shows grounds, erase behavior, and pointer
+# delivery. The tui-visual-verify skill explains each choice in here.
 #
-# On a Wayland session (Bluefin's GNOME is one), kitty must be forced to
-# XWayland or xdotool and import cannot see its window at all -- the
-# search below returns nothing and every capture fails. The workstation
-# kitty.conf sets `linux_display_server x11` for exactly this reason; if
-# you run this against some other kitty config, set it there too.
+# HEADLESS IS THE DEFAULT (born 2026-09-21: captures on the live desktop
+# interrupted the owner mid-session, stealing focus for the run's
+# duration). By default this script hands off entirely to
+# `kitty-headless-shot`, the workstation-level tool that drives kitty on
+# an Xvfb display inside a distrobox: same real kitty, same painted
+# glyphs, nothing appears on the owner's screen, no focus stolen. Pass
+# `-d` (desktop) to opt into the old on-desktop path instead, forcing
+# kitty onto XWayland and grabbing the window with xdotool/import against
+# the LIVE session -- reserve this for the rare case the owner wants to
+# watch the run happen, or for debugging the headless path itself.
 #
-#   scripts/kitty-shot [-o OUTDIR] [-t dark|light] [-s COLSxROWS] [-c CMD] STEP...
-#
-# Each STEP is one of
-#   key:KEY           send a key by kitty name (q, 2, escape, question, down)
-#   type:TEXT         type literal text
-#   resize:COLSxROWS  resize the OS window live, in cells
-#   sleep:SECONDS     settle
-#   shot:NAME         capture OUTDIR/NAME.png and OUTDIR/NAME.ansi
-#   click:COL,ROW     left-click a cell (1-based)
-#   wheel:up|down[@COL,ROW]  one wheel notch at a cell (default 40,10)
+#   scripts/kitty-shot [-d] [-o OUTDIR] [-t dark|light] [-s COLSxROWS] [-c CMD] STEP...
+#   key:K           one character, or a kitty key name (escape, down)
+#   type:TEXT       literal text
+#   click:COL,ROW   left click on a cell, 1-based
+#   wheel:up|down[@COL,ROW]
+#   resize:COLSxROWS   live resize, in cells, verified against kitty
+#   sleep:S
+#   shot:NAME       OUTDIR/NAME.png + NAME.ansi, size appended to sizes.txt
 #
 # CMD is the app to drive, run under bash -c; give it an isolated state
 # dir if a second instance would fight the real one's lock. -t light
@@ -32,24 +33,40 @@ set -euo pipefail
 # terminal background picks its light theme. Copy this file into the
 # repo's scripts/ and set the app's defaults there.
 
+desktop=no
 outdir="${KITTY_SHOT_OUT:-captures/kitty-shot}"
 theme=dark
 size=120x36
 cmd=""
-while getopts "o:t:s:c:" opt; do
-  case "$opt" in
-    o) outdir="$OPTARG" ;;
-    t) theme="$OPTARG" ;;
-    s) size="$OPTARG" ;;
-    c) cmd="$OPTARG" ;;
-    *) exit 2 ;;
+steps=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -d) desktop=yes; shift ;;
+    -o) outdir="$2"; shift 2 ;;
+    -t) theme="$2"; shift 2 ;;
+    -s) size="$2"; shift 2 ;;
+    -c) cmd="$2"; shift 2 ;;
+    *) steps+=("$1"); shift ;;
   esac
 done
-shift $((OPTIND - 1))
+[ -n "$cmd" ] || { echo "kitty-shot: -c CMD is required (the app to drive)" >&2; exit 2; }
+
+if [ "$desktop" = no ]; then
+  command -v kitty-headless-shot >/dev/null 2>&1 || {
+    echo "kitty-shot: kitty-headless-shot not on PATH (stow the dotfiles bin package)," \
+         "or pass -d to run on the live desktop instead" >&2
+    exit 1
+  }
+  exec kitty-headless-shot -o "$outdir" -t "$theme" -s "$size" -c "$cmd" "${steps[@]}"
+fi
+
+# --- everything below is the on-desktop path (-d): unchanged from the
+# original harness, X11-only, forces kitty onto XWayland via kitty.conf's
+# `linux_display_server x11` and grabs the window against the owner's own
+# live session. ---
+
 mkdir -p "$outdir"
 outdir="$(cd "$outdir" && pwd)"
-
-[ -n "$cmd" ] || { echo "kitty-shot: -c CMD is required (the app to drive)" >&2; exit 2; }
 
 cols="${size%x*}"
 rows="${size#*x}"
@@ -97,7 +114,7 @@ print(w["columns"], w["lines"])'
 send() { kitten @ --to "$sock" send-text "$@"; }
 mouse() { printf '\033[<%s;%s;%sM\033[<%s;%s;%sm' "$1" "$2" "$3" "$1" "$2" "$3"; }
 
-for step in "$@"; do
+for step in "${steps[@]}"; do
   kind="${step%%:*}"
   arg="${step#*:}"
   case "$kind" in

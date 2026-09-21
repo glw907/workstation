@@ -48,7 +48,10 @@ in the same session, in the manifest that tier owns: `bluefin/Brewfile` (brew),
 `bluefin/flatpaks.txt` (flatpak, deliberate installs only), `bluefin/uv-tools.txt`
 (uv tools), `bluefin/layered-packages.txt` (layering, via the change-control rule),
 `bluefin/stow-packages.txt` (new stow packages), `bluefin/untracked-bin.txt` (a
-deliberately untracked `~/.local/bin` binary). `/etc` changes stage under
+deliberately untracked `~/.local/bin` binary), `bluefin/distrobox.txt` (a distrobox
+container this workstation deliberately maintains, name, base image, and its recreate
+command; not yet reconciled by `check-drift`, so this file is the record of intent
+until a probe is added). `/etc` changes stage under
 `bluefin/etc/` first, per the drift discipline below. `check-drift` reconciles all
 of these against the live machine; a weekly user timer (`check-drift.timer`, the
 `upkeep` package) notifies on drift, and a session that installed or reconfigured
@@ -160,6 +163,21 @@ Chromium policy files (telemetry, extensions, 1Password) are captured at
 Verify on first boot: `chrome://policy` in the layered Chromium lists all three
 managed policies as active. (The retired Mint-era `chromium-browser.md` carried
 deeper verification recipes; it lives in git history, removed 2026-08-30.)
+
+## Headless real-terminal capture
+
+`kitty-headless-shot` (`bin/.local/bin/`, stowed) drives a real kitty terminal on an
+Xvfb display that exists only inside the `term-headless` distrobox (`bluefin/distrobox.txt`),
+so a TUI capture never opens a window on the live desktop or steals focus. It is the
+general-purpose primitive; per-repo harnesses such as the `tui-visual-verify` skill's
+`kitty-shot` template call it by default and fall back to the on-desktop path only on
+an explicit opt-in flag. `kitty-headless-shot --help` is the spec. Run
+`kitty-headless-shot setup` once per machine to create the box (idempotent); this is
+the first deliberate use of the distrobox tier on this workstation, so it is also the
+precedent: a container is the right home for an X/Wayland server, Mesa, and
+ImageMagick when the host's own copies can't do the job headless (the host's
+ImageMagick has no X11 delegate wired up, and a GNOME screenshot portal or D-Bus route
+is denied or interactive).
 
 ## SELinux for restored data
 

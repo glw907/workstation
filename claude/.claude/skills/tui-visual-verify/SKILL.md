@@ -39,13 +39,36 @@ repo's `scripts/` and set the app-specific defaults there (poplar's
 copy defaults to an isolated XDG store so a second instance never
 fights the real one's lock).
 
+**Headless is the default capture mode** (born 2026-09-21: a capture on
+the live desktop interrupted the owner mid-session, forcing kitty onto
+XWayland and stealing focus for the run's whole duration). By default
+the template hands off to `kitty-headless-shot`, a workstation-level
+tool (`~/.dotfiles/bin/.local/bin/`, `--help` is the spec) that drives
+the SAME real kitty on an Xvfb display that exists only inside a
+distrobox (`term-headless`, `bluefin/distrobox.txt`; `kitty-headless-shot
+setup` creates it, idempotent). Same real terminal, same painted glyphs,
+same font as the owner's own `kitty.conf` (shared into the container
+unchanged), both grounds capturable (`-t dark|light`), but nothing
+appears on the owner's screen and no focus is stolen, because the
+display genuinely isn't the owner's. It also drives a long-running
+full-screen program correctly: start it, send keys/clicks/wheel/resize
+against the live process across many `shot:` steps, then quit it, all
+inside one invocation. Pass `-d` (desktop) to opt into the OLD on-desktop
+path instead. It forces kitty onto XWayland and grabs the window with
+xdotool/import against the owner's live session, reserved for the rare
+case the owner wants to watch the run happen or for debugging the
+headless path itself. This workstation's own ImageMagick has no X11
+delegate at all, and a GNOME screenshot portal or D-Bus route is denied
+or interactive, so `-d` and the headless path are the only two options
+that produce anything.
+
 ```
-kitty-shot [-o OUTDIR] [-t dark|light] [-s COLSxROWS] [-c CMD] STEP...
+kitty-shot [-d] [-o OUTDIR] [-t dark|light] [-s COLSxROWS] [-c CMD] STEP...
   key:K           one character, or a kitty key name (escape, down)
   type:TEXT       literal text
   click:COL,ROW   left click on a cell, 1-based
   wheel:up|down[@COL,ROW]
-  resize:COLSxROWS   live OS-window resize, verified against kitty
+  resize:COLSxROWS   live resize, in cells, verified against kitty
   sleep:S
   shot:NAME       OUTDIR/NAME.png + NAME.ansi, size appended to sizes.txt
 ```
