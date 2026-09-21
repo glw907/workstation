@@ -192,8 +192,15 @@ function implementPrompt(t, a, blocking, baseSha) {
 
 function reviewPrompt(t, a, implReport, resolvedGate) {
   const ranCommand = implReport.gateCommand || t.gate || a.gate;
+  // The probe can return the classifier's whole stdout (preamble, file list, then the command),
+  // and an implementer may report the cairn-run-gate wrapper, so compare on the command alone.
+  const gateCore = (s) => {
+    const last = String(s).trim().split("\n").pop().trim();
+    const wrapped = last.match(/cairn-run-gate\s+'([^']+)'/);
+    return wrapped ? wrapped[1] : last;
+  };
   const mismatch =
-    resolvedGate.gate && implReport.gateCommand && implReport.gateCommand !== resolvedGate.gate
+    resolvedGate.gate && implReport.gateCommand && gateCore(implReport.gateCommand) !== gateCore(resolvedGate.gate)
       ? `MISMATCH: the runner independently resolved a different gate string ("${resolvedGate.gate}") than the implementer reports running. Treat this mismatch itself as a blocking finding.`
       : "";
   return [
