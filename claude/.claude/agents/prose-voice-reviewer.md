@@ -2,7 +2,7 @@
 name: prose-voice-reviewer
 description: Reviews Claude-drafted prose (docs, plans, specs, site content) against its register and the workstation tell catalogue. Use on a substantial prose artifact after the Vale floor passes and before a human read. Read-only.
 tools: Read, Grep, Glob, Bash
-model: claude-opus-5
+model: claude-opus-5-5
 effort: high
 color: purple
 skills:

@@ -2,7 +2,7 @@
 name: web-auth-security-reviewer
 description: Security review for web authentication and session code, especially magic-link login, D1/SQL session stores, CSRF on form actions, GitHub App JWT signing, and origin/redirect trust. Use after changing auth, session, cookie, token, or signing code. Skeptical by default.
 tools: Read, Grep, Glob, Bash
-model: claude-opus-5
+model: claude-opus-5-5
 effort: high
 color: red
 ---

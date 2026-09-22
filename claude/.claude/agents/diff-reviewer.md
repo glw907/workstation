@@ -2,7 +2,7 @@
 name: diff-reviewer
 description: Reviews one plan task's diff against that task's stated acceptance criteria and the implementer's report, then returns a structured verdict for the conductor. Read-only: inspects `git diff`/`git status` and surrounding code, never edits files. Runs once per task in the implementer-review-gate chain during pass execution; it replaces the conductor's own diff read, not the repo's domain reviewers (svelte, a11y, security, workers), which still run at pass end.
 tools: Read, Grep, Glob, Bash
-model: claude-opus-5
+model: claude-opus-5-5
 effort: high
 color: cyan
 ---

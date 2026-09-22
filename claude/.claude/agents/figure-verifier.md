@@ -2,7 +2,7 @@
 name: figure-verifier
 description: Grades every figure (diagram, screenshot, or reproduction) on a cairn-family docs page against the two figure tests and the 2026-08-15 visual-layer rulings. Returns one verdict per figure with a file:line. Use after a page carrying figures is drafted or edited, before a human read. Read-only.
 tools: Read, Grep, Glob, Bash
-model: claude-opus-5
+model: claude-opus-5-5
 effort: high
 ---
 

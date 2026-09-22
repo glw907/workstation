@@ -2,7 +2,7 @@
 name: daisyui-a11y-reviewer
 description: Reviews UI code for DaisyUI 5 and Tailwind 4 correctness plus WCAG 2.2 accessibility (semantic HTML, ARIA, keyboard and focus management, contrast, live regions). Use after changing components, markup, styles, or theme config.
 tools: Read, Grep, Glob, Bash
-model: claude-opus-5
+model: claude-opus-5-5
 effort: high
 color: purple
 ---

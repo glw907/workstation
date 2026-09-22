@@ -12,7 +12,7 @@ tightest rate-limit bucket. That gap is why the seat split exists at all: a
 Fable conductor doing execution-shaped work (dispatch grinding, gate-running,
 bulk reads) is paying the most expensive tier for work that doesn't need it.
 
-Reviewers pin `claude-opus-5` (dated-ID pins repointed 2026-07-26; same price
+Reviewers pin `claude-opus-5-5` (dated-ID pins repointed 2026-07-26; same price
 as 4.8, better recall and precision, separate rate bucket). Beside a Fable
 planner and Sonnet implementers, the Opus gate buys cross-model diversity
 against correlated self-review blind spots; under a Fable conductor the Opus
@@ -48,7 +48,7 @@ reading diffs or grinding edits inline flags itself and dispatches.
 task runs implementer, then diff reviewer, then gate. The repo's
 Sonnet-pinned implementer returns a fixed shape: files touched, gate result,
 decisions the plan did not cover, anything it could not do. The
-`diff-reviewer` agent (`claude-opus-5`) takes the task's acceptance criteria
+`diff-reviewer` agent (`claude-opus-5-5`) takes the task's acceptance criteria
 and the implementer's report, reads the diff, and returns a verdict (accept,
 fix, escalate) with blocking findings at `file:line`. One re-dispatch on
 `fix`; a second `fix` verdict goes to the conductor as a decision. The
@@ -168,7 +168,7 @@ Fable 5.1 shipped 2026-09-01 (Mythos 5.1 alongside; no Opus or Sonnet
 5.1). Same $10/$50 per MTok as Fable 5, with cache reads cut 75%. This
 favors long conducting sessions, whose meters are dominated by
 cache-read compounding. Geoff moved sessions to 5.1 on 2026-09-04.
-Reviewer pins stay `claude-opus-5` and implementer aliases stay
+Reviewer pins stay `claude-opus-5-5` and implementer aliases stay
 `sonnet` (both still their tiers' heads); a dispatch without a model
 now falls to `sonnet` through the settings `env` entry (decisions
 below).
@@ -227,7 +227,7 @@ that item is replaced.
   session-only. `/effort` saves the level per model into `settings.json`
   through the stow symlink, so a raised session is visible drift until
   reset.
-- Reviewer pins stay `claude-opus-5`: half the output price, fresh-context
+- Reviewer pins stay `claude-opus-5-5`: half the output price, fresh-context
   work that is not cache-heavy, cross-model diversity, and Anthropic's own
   recommendation to start with Opus 5 for most workloads. Implementers
   stay `sonnet`; `pass-execute.js` implementers fall to the variable only

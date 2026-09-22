@@ -2,7 +2,7 @@
 name: engine-triage
 description: Triages engine consultation briefs and verifies audit verdicts for cairn-cms. Use to argue each consultation item against the codified engine standard (ledger-first, adversarial), and in audit mode to verify ranked keep/reshape/retire verdicts per the audit brief it is handed. Read-only: reads the rulings ledger, the brief, and the code, never edits files.
 tools: Read, Grep, Glob, Bash
-model: claude-opus-5
+model: claude-opus-5-5
 effort: high
 color: orange
 ---

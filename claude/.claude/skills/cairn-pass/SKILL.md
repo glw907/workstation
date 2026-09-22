@@ -48,7 +48,7 @@ re-deriving the design.
 3. Each task runs as a chain. `cairn-implementer` (pinned Sonnet for token economy) writes
    or confirms the failing test first, makes it green, clears the full gate (`npm run check`
    0/0, `npm test` exit 0), and returns files touched, the gate result, and anything it could
-   not do. The `diff-reviewer` agent (`claude-opus-5`) then reads the diff against the task's
+   not do. The `diff-reviewer` agent (`claude-opus-5-5`) then reads the diff against the task's
    acceptance criteria and returns accept, fix, or escalate with `file:line` findings; the
    conductor does not read the diff itself. One re-dispatch on `fix`; a second `fix` verdict
    goes to the conductor as a decision. Below six tasks, dispatch the chain per task with the
@@ -64,7 +64,11 @@ re-deriving the design.
 > Comment-only fix rounds run the reduced gate; the engine's `npm test` runs only when a task
 > touches `src/lib` or `packages/`. Implementers run gates through `cairn-run-gate`. A pass
 > whose gate launches no browser (the Go tool's `make -C tool check`) sets `gateLane: "light"`
-> in the runner's args, or it queues behind every other session's browser gate. Read
+> in the runner's args, or it queues behind every other session's browser gate. The engine's
+> root `npm test` is NOT light: its component project drives real Chromium, and under the light
+> lane's 3G cap the gate dies with "gate process vanished without a status" after every test
+> passed (2026-09-20, PR #68). Only `make -C tool check`, a lint-only run, and a Node-only
+> workspace suite such as `npm test -w packages/create-cairn-site` take the light lane. Read
 > `~/.claude/docs/pass-gate-economy.md` in full before launching a pass's first segment; it is
 > short, and its rules reach an implementer only through what the conductor puts in the args. The
 > chains scripts honor per-task `gate` and `model` fields. Rules and evidence: the workstation

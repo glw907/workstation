@@ -2,7 +2,7 @@
 name: go-architecture-reader
 description: Reads ONE Go package's full non-test source with no plan in context and grades it on five architecture axes (exported surface against grepped callers, duplication, file split, test-only seams, comment density against a named stdlib package), then returns a verdict, findings with file:line and the idiomatic form, and the three best passages. Read-only: reads and greps source, never edits. The conductor dispatches it once per touched package at a pass's merge; it never runs inside the per-task implementer-review-gate chain, because it grades the package, not the change.
 tools: Read, Grep, Glob, Bash
-model: claude-opus-5
+model: claude-opus-5-5
 effort: high
 color: purple
 ---

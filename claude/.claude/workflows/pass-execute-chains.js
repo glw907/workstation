@@ -254,7 +254,7 @@ async function runTask(t, chain, a) {
   let review = await agent(reviewPrompt(t, chain, a, implReport, resolvedGate), {
     label: `review:${t.id}`,
     phase: phaseName,
-    model: "claude-opus-5",
+    model: "claude-opus-5-5",
     agentType: a.reviewer || "diff-reviewer",
     schema: REVIEW_SCHEMA
   });
@@ -286,7 +286,7 @@ async function runTask(t, chain, a) {
     review = await agent(reviewPrompt(t, chain, a, implReport, resolvedGate), {
       label: `review:${t.id}:fix${fixRounds}`,
       phase: phaseName,
-      model: "claude-opus-5",
+      model: "claude-opus-5-5",
       agentType: a.reviewer || "diff-reviewer",
       schema: REVIEW_SCHEMA
     });
