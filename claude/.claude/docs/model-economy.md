@@ -270,6 +270,26 @@ https://code.claude.com/docs/en/sub-agents; https://code.claude.com/docs/en/env-
 https://code.claude.com/docs/en/costs; https://artificialanalysis.ai/articles/claude-fable-5-1;
 the `claude-api` skill's `shared/model-migration.md` (Fable 5.1 sections).
 
+## Opus 5.5 conducts execution (Geoff, 2026-09-22)
+
+The 2026-08-21 "Fable conducts" rule above is narrowed to the phases that need Fable. Fable
+runs the brainstorm, authors the plan, and takes the one adjudication an Opus verdict hedges
+on. The executing session runs on `claude-opus-5-5` at effort `medium`. Why: during execution
+the conductor consumes structured reports and rules on escalations, which is the workload
+Anthropic's own guidance routes to Opus 5.5 by default, while every loop tick re-buys the
+whole conversation, so the conductor's context is the largest single Fable spend a pass has;
+Opus 5.5 is $4/$20 per MTok with a published meter, where Fable's Max metering is not
+published (see "The pool-metering unknown"). Opus 5.5 also carries 1M context and the
+documented long-run behavior the pass shape needs. Geoff confirmed this against his own
+research on 2026-09-22; the first execution under it is retire-2b in cairn-cms, scored the
+usual way plus a count of `fable` upshifts.
+
+Two guards. Reviewers pin Opus 5.5 as well, so a conductor overruling a reviewer verdict
+states why in STATUS and upshifts the decision to `fable` when the overruled finding is
+correctness-critical. And a decision that needs more than Opus 5.5 gives it is one dispatch
+to `fable`, never a session model switch; the session model changes only at a pass boundary,
+from the STATUS resume prompt.
+
 ## Interaction is front-loaded, never minimized (Geoff, 2026-09-04)
 
 Until 2026-09-04 the pass-end score counted every question, approval, and

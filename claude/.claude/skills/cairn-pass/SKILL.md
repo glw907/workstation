@@ -305,9 +305,11 @@ declaring done, including the ones a reviewer or the user changed mid-pass, and 
 about branch topology (a deferred merge changes where the next pass branches from, and a cold
 session will branch off `main` by default and build against the wrong engine).
 
-Plan and execution share the session regardless of model (revised 2026-08-21; supersedes the
-2026-07-26 Opus-executes rule): a plan written here gets executed here. The pre-bake always
-happens first, as crash insurance whether or not a clear follows. Do **not** run the
+The model splits by phase (Geoff, 2026-09-22; supersedes the 2026-08-21 same-session rule):
+Fable runs the brainstorm, authors the plan, and takes any adjudication an Opus verdict hedges
+on; the session that executes the approved plan is a fresh `claude-opus-5-5` session at effort
+`medium`, started from the STATUS resume prompt. A decision beyond Opus 5.5 is one `fable`
+dispatch, never a session switch. The pre-bake always happens first, since it is the handoff. Do **not** run the
 `superpowers:writing-plans` "which execution method?" question (these defaults answer it).
 
 Every plan file's header carries a token ceiling and a checkpoint interval (default four
@@ -320,14 +322,15 @@ write STATUS.md (task ledger, decisions taken, spend, next task), then continue.
   Refresh the relevant `cairn-*` memory so a cold session recalls the initiative. Leave the
   tree clean. Anything load-bearing must live in the plan, the spec, STATUS.md, or memory,
   never only in the conversation.
-- **Then proceed straight into "Starting a plan" above**, in this same session. If a context
-  clear intervenes anyway, give the exact resume prompt and the launch directory (inside
-  `cairn-cms`, so its hooks and memory load). Example: "Execute the component grammar plan
-  (`docs/superpowers/plans/<file>.md`)."
+- **Then hand off to the executing session.** Give the exact resume prompt and the launch
+  directory (inside `cairn-cms`, so its hooks and memory load), and name the model: the
+  execution session starts on `claude-opus-5-5` (`claude --model claude-opus-5-5`). Example:
+  "Execute the component grammar plan (`docs/superpowers/plans/<file>.md`)." A Fable session
+  that has approved a plan does not execute it.
 
-Continuing in the same session is for work *within* one pass (a plan drafted here, executed here).
-It is not a reason to skip the prep above: prep the clear at the pass boundary either way, then
-continue or hand off. See the `clear-context-before-implementing-plans` memory for the
+Continuing in the same session is for work *within* one phase (a segment boundary inside an
+executing pass). It is not a reason to skip the prep above: prep the clear at the pass boundary
+either way, then hand off. See the `clear-context-before-implementing-plans` memory for the
 same-session default's history and `cairn-pass-ends-with-context-clear-prep` for this rule.
 
 ## Execution discipline (lessons from Plan 07)
