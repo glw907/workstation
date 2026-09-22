@@ -1,0 +1,17 @@
+[Unit]
+Description=cairn health sweep (Geoff's registry)
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/cairn-tripwire
+# 2400s sits above cairn's own whole-run cap (min(480s x sites, 1920s), so
+# 1920s at any registry past four sites) with headroom, matching
+# tool/docs/tripwire.md's systemd example. TimeoutStartSec, not
+# RuntimeMaxSec, is what actually bounds a Type=oneshot unit
+# (systemd.service(5)); a run systemd kills at this cap exits however
+# SIGKILL leaves it, never one of cairn's own four codes, so the cap has to
+# sit above --timeout rather than race it.
+TimeoutStartSec=2400
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict

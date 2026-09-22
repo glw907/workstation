@@ -1,0 +1,14 @@
+[Unit]
+Description=Run the cairn health sweep daily
+
+[Timer]
+OnCalendar=daily
+# A run missed while the machine was suspended fires once on resume, instead
+# of silently skipping a day.
+Persistent=true
+# Spreads the daily firing across a window instead of every run landing on
+# the exact same second (vps-conventions: every timer carries this).
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

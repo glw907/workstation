@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# cairn-tripwire: the command cairn-tripwire.service runs instead of `cairn
+# health` directly. A systemd user unit starts with no shell profile, so this
+# wrapper sources the workstation's one credential store itself
+# (~/.local/secrets) rather than the scheduler reading a second
+# EnvironmentFile, which would duplicate CAIRN_CF_ACCOUNT_ID,
+# CAIRN_CF_READ_TOKEN, and CAIRN_GH_READ_TOKEN into a file of their own.
+# `cairn health --quiet` prints nothing on an OK sweep and the site's report
+# on anything else, so the unit's own journal is already the alert body.
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "$HOME/.local/secrets"
+
+for var in CAIRN_CF_ACCOUNT_ID CAIRN_CF_READ_TOKEN CAIRN_GH_READ_TOKEN; do
+    if [ -z "${!var:-}" ]; then
+        echo "cairn-tripwire: $var is empty after sourcing ~/.local/secrets" >&2
+        exit 3
+    fi
+done
+
+exec "$HOME/.local/bin/cairn" health --quiet

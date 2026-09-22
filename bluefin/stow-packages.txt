@@ -9,5 +9,6 @@ contacts
 git
 kitty
 mise
+systemd
 upkeep
 vale
