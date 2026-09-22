@@ -290,6 +290,18 @@ correctness-critical. And a decision that needs more than Opus 5.5 gives it is o
 to `fable`, never a session model switch; the session model changes only at a pass boundary,
 from the STATUS resume prompt.
 
+## Opus 5.5 drafts published docs pages (Geoff, 2026-09-22)
+
+The docs page chain's drafter defaults to `claude-opus-5-5` (`drafterModel` in
+`docs-page-chain.js`); the editor, grader, and fact read stay on Opus 5.5 in fresh contexts.
+Evidence: draft docs pass A's Sonnet drafts escalated all three pages after two rounds and each
+needed a conductor-directed third round, so a Sonnet draft cost more in Opus review rounds and
+Fable attention than it saved. Agent-facing prose (facts bullets, HISTORY entries, stale-step
+fixes on frozen pages, post-mortems) stays with the Sonnet implementer; it is gated, not
+register-graded. Fable never drafts a page routinely; its docs role is the adjudication of a
+page the chain escalates twice. First run under it: draft docs pass B; if its redraft rate does
+not drop, revisit drafter-and-editor sharing one model.
+
 ## Interaction is front-loaded, never minimized (Geoff, 2026-09-04)
 
 Until 2026-09-04 the pass-end score counted every question, approval, and
