@@ -127,6 +127,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CAIRN_CF_READ_TOKEN | ✓     | —        | —    | —        | —          |
 | CAIRN_GH_READ_TOKEN | ✓     | —        | —    | —        | —          |
 | CAIRN_DOCS_READER_OAUTH_TOKEN | ✓ | — | — | — | — |
+| CAIRN_SCRATCH_CF_TOKEN | ✓ | — | — | — | — |
 | CF_ZT_TOKEN         | ✓     | —        | —    | —        | —          |
 | CF_ACCESS_CLIENT_SECRET | ✓ | —        | —    | —        | —          |
 | ANTHROPIC_API_KEY   | ✓     | —        | ✓    | ✓        | —          |
@@ -266,6 +267,18 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   Tunnel: Edit (closed the same day, the musicbox `CF_ZT_TOKEN` blocker above). The token
   cannot edit its own permissions (confirmed: `GET /user/tokens/{id}` 403s even for this
   token against itself), so any future scope gap needs the same dashboard-edit path.
+
+### CAIRN_SCRATCH_CF_TOKEN
+- **Grants**: Cloudflare account-owned token "cairn-scratch-b docs readers", minted by Geoff
+  2026-09-23 (token id `f3598b65…`) for the cairn-cms docs-reset operator reader. One policy:
+  Individual Workers, `cairn-scratch-b` only, role Metadata Read-only. Verified 2026-09-23:
+  200 on the Worker's settings, 403 on another Worker's settings and on its own script content,
+  401 on D1. The account-level Workers Logs telemetry query returned 403; docs reset pass 1
+  Task 3 confirms whether `cairn logs` works under it. Local only; no Worker consumes it.
+- **Rotate or revoke**: no TTL (the dashboard's TTL edit set a one-day window; recreated without
+  one). Deleted at docs reset pass 2a's close with the scratch site's teardown, which replaces an
+  expiry. Replace by minting a new account-owned token with the same single policy and
+  `secret-receive CAIRN_SCRATCH_CF_TOKEN`.
 
 ### CAIRN_DOCS_READER_OAUTH_TOKEN
 - **Grants**: a long-lived Claude Code OAuth token minted by Geoff with `claude setup-token`
