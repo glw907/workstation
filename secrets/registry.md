@@ -126,6 +126,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CAIRN_CF_ACCOUNT_ID | ✓     | —        | —    | —        | —          |
 | CAIRN_CF_READ_TOKEN | ✓     | —        | —    | —        | —          |
 | CAIRN_GH_READ_TOKEN | ✓     | —        | —    | —        | —          |
+| CAIRN_DOCS_READER_OAUTH_TOKEN | ✓ | — | — | — | — |
 | CF_ZT_TOKEN         | ✓     | —        | —    | —        | —          |
 | CF_ACCESS_CLIENT_SECRET | ✓ | —        | —    | —        | —          |
 | ANTHROPIC_API_KEY   | ✓     | —        | ✓    | ✓        | —          |
@@ -265,6 +266,16 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   Tunnel: Edit (closed the same day, the musicbox `CF_ZT_TOKEN` blocker above). The token
   cannot edit its own permissions (confirmed: `GET /user/tokens/{id}` 403s even for this
   token against itself), so any future scope gap needs the same dashboard-edit path.
+
+### CAIRN_DOCS_READER_OAUTH_TOKEN
+- **Grants**: a long-lived Claude Code OAuth token minted by Geoff with `claude setup-token`
+  (2026-09-23) on his own plan, for the cairn-cms docs-reset reader agents only. The reader
+  runner passes it into each podman container as `CLAUDE_CODE_OAUTH_TOKEN`; no credential file
+  is mounted, so readers never see `~/.claude/.credentials.json` or its MCP tokens, and nothing
+  refreshes. Local only; no Worker consumes it.
+- **Rotate or revoke**: run `claude setup-token` again and re-store with
+  `secret-receive CAIRN_DOCS_READER_OAUTH_TOKEN`; revoking it does not touch Geoff's own login.
+  Revoke it if a reader transcript is ever found carrying it.
 
 ### CAIRN_CF_READ_TOKEN / CAIRN_CF_ACCOUNT_ID / CAIRN_GH_READ_TOKEN
 - **Grants**: the Go `cairn` operator tool's read-only credentials (cairn-cms `tool/`), minted
