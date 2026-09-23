@@ -270,6 +270,22 @@ https://code.claude.com/docs/en/sub-agents; https://code.claude.com/docs/en/env-
 https://code.claude.com/docs/en/costs; https://artificialanalysis.ai/articles/claude-fable-5-1;
 the `claude-api` skill's `shared/model-migration.md` (Fable 5.1 sections).
 
+## Aligned with Anthropic's model guidance (Geoff, 2026-09-23)
+
+Anthropic's models overview and "Choosing the right model" (read 2026-09-23): "If you're unsure
+which model to use, start with Claude Opus 5.5 for most workloads"; Opus 5.5 is "for long-running
+agentic coding and knowledge work" and vision-heavy workflows; Fable 5.1 is for demanding
+reasoning and long-horizon agentic work, "or when your evals on Claude Opus 5.5 at higher effort
+still fall short"; Sonnet 5 is "speed and capability for everyday coding"; Haiku 4.5 is lowest
+latency and cost, including sub-agent tasks; and "tuning effort is often a better lever than
+switching models", starting from each model's default (Opus 5.5 `medium`, Sonnet 5 and Fable 5.1
+`high`). Changes made to match: Opus 5.5 now runs brainstorms as well as plans and conducting;
+Fable 5.1 is reached only after Opus 5.5 at `xhigh` (then `max`) falls short; `visual-verifier`
+moved from Fable 5.1 to Opus 5.5 at `high`; `cairn-implementer` and `site-implementer` pin effort
+`high`; the no-`low` rule is scoped to Fable 5.1, with `low` allowed for mechanical subagents.
+Unchanged because already aligned: Sonnet implements, Opus 5.5 reviews, Haiku searches, the main
+session defaults to `medium`.
+
 ## Opus 5.5 authors plans (Geoff, 2026-09-23)
 
 Plan authorship moves from Fable to `claude-opus-5-5` at effort `high`; Fable keeps the

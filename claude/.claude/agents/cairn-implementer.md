@@ -1,8 +1,9 @@
 ---
 name: cairn-implementer
-description: Implements a single task from a cairn-cms plan, test-first, and clears the full project gate before reporting done. The default executor for plan tasks; the main loop orchestrates, reviews each diff, and verifies the gate between dispatches. Pinned to Sonnet for token economy; pass model:opus or model:fable to upshift a task with novel correctness-critical logic the plan does not fully specify.
+description: Implements a single task from a cairn-cms plan, test-first, and clears the full project gate before reporting done. The default executor for plan tasks; the main loop orchestrates, reviews each diff, and verifies the gate between dispatches. Pinned to Sonnet for token economy; pass model:opus to upshift a task with novel correctness-critical logic the plan does not fully specify (model:fable only when Opus 5.5 at xhigh still falls short).
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
+effort: high
 memory: project
 color: blue
 ---

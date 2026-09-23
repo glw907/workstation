@@ -3,6 +3,7 @@ name: site-implementer
 description: Implements a single task from a site pass plan (ecnordic-ski, 907-life, …) and clears the repo's full gate before reporting done. The default executor for site-pass plan tasks; the main loop orchestrates, reviews each diff, and verifies the gate between dispatches. Pinned to Sonnet for token economy; pass model:opus or model:fable to upshift a task with novel correctness-critical logic the plan does not fully specify.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
+effort: high
 memory: project
 color: green
 ---

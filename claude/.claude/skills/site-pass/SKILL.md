@@ -65,8 +65,8 @@ Constraints while executing, in this session regardless of model:
   [{id, title, criteria, files, notes}]}`.
 - Implement a task inline, or upshift a dispatch to `model: opus`, only
   for novel correctness-critical logic the plan does not fully specify;
-  `model: fable` only when an Opus verdict itself hedges on something that
-  matters.
+  `model: fable` only when Opus 5.5 at `xhigh` still falls short on something
+  that matters.
 - At each checkpoint, at any split, and before any question to the user,
   write STATUS.md (task ledger, decisions taken, spend, next task), then
   continue.

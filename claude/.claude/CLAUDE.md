@@ -216,16 +216,17 @@ serialize only under real contention or dependency, and name the contended resou
 mark independent tasks so pass-execute's parallel mode can take them.
 
 A coding project runs from brainstorm through post-mortem in one session, and the model
-splits by phase (Geoff, 2026-09-22; plan authorship moved 2026-09-23): **Fable brainstorms and
-adjudicates; Opus 5.5 authors plans and conducts execution.** Fable runs the brainstorm and
-takes the one adjudication an Opus verdict hedges on. Opus 5.5 at effort `high` authors the plan
-from the approved spec, and the pass close counts its planning misses as the check. Once the plan is approved, the session that executes it runs on
+follows Anthropic's model guidance (Geoff, 2026-09-23: "start with Claude Opus 5.5 for most
+workloads"; Fable 5.1 when Opus 5.5 at `xhigh` or `max` still falls short). **Opus 5.5
+brainstorms, authors plans, and conducts execution; Fable 5.1 is the escalation.** Opus 5.5 at
+effort `high` runs the brainstorm and authors the plan from the approved spec, and the pass close
+counts its planning misses as the check. Once the plan is approved, the session that executes it runs on
 `claude-opus-5-5` at effort `medium`: it dispatches the chains, reads the structured reports,
 rules on escalations, and runs the close; a new pass starts as a fresh Opus 5.5 session from
-the STATUS resume prompt. A conductor that meets a decision needing more than Opus 5.5 gives
-it upshifts that one dispatch to `fable` rather than switching the session. Reviewers pin Opus
-5.5 too, so a conductor overruling a reviewer verdict states why in STATUS and upshifts to
-`fable` when the overruled finding is correctness-critical. The
+the STATUS resume prompt. A decision Opus 5.5 cannot settle is re-run on Opus 5.5 at `xhigh`
+(then `max`); only if that still falls short does it go to one `fable` dispatch, never a session
+switch. Reviewers pin Opus 5.5 too, so a conductor overruling a reviewer verdict states why in
+STATUS, and a correctness-critical overrule takes the same `xhigh`-then-`fable` path. The
 plan-approval gate is the single human gate. **The
 conductor is thin:** during execution it never reads a source file, a diff, a test log, or a
 gate transcript. It consumes structured agent reports and decides only what needs judgment
@@ -250,10 +251,13 @@ Every dispatch names a model and an effort: `sonnet` by default, `haiku` for mec
 search, `claude-opus-5-5` for reviewers (cross-model diversity). A dispatch without a model
 falls to `CLAUDE_CODE_SUBAGENT_MODEL=sonnet` (settings `env`); a frontmatter pin or a
 per-dispatch model wins, so upshifts pass `model` explicitly: `opus` for novel
-correctness-critical logic the plan does not specify, `fable` only when an Opus verdict
-hedges on something that matters. Effort defaults to `medium` (settings, Geoff 2026-09-04);
-raise it to `high` for plan authorship, adjudication, and research turns, never lower it to
-`low` (Fable 5.1 at `low` answers from memory); `max` is for one adjudication. `/effort`
+correctness-critical logic the plan does not specify, then higher effort, and `fable` only when
+Opus 5.5 at `xhigh` still falls short. Effort follows each model's Anthropic default, adjusted
+by evidence: the Opus 5.5 main session runs at `medium` (its default; settings); Sonnet
+implementers pin `high` (Sonnet 5's default, and Anthropic's floor for intelligence-sensitive
+work); reviewers, plan authorship, adjudication, and research run at `high`; `low` is for
+mechanical subagents only, and never on Fable 5.1 (it answers from memory at `low`); `max` is
+for one adjudication. `/effort`
 persists to settings.json; reset it at session end. Subagents start with zero context:
 pre-extract what the task needs. When a dispatch runs slow, expensive, or weak, check which
 model ran.

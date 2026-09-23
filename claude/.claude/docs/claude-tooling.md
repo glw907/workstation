@@ -46,11 +46,14 @@ machine.** The manifests record intent; the script reports what happened.
 - **A restart loads new servers; skills and agents load live.** Restart at a session
   boundary, never mid-run (a Workflow run dies with its session).
 
-Model pins (2026-09-22): every reviewer agent under `agents/` and every workflow script under
+Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; see
+`model-economy.md`): every reviewer agent under `agents/` and every workflow script under
 `workflows/` names `claude-opus-5-5` explicitly (`diff-reviewer`, the four domain reviewers,
-`engine-triage`, `go-architecture-reader`, `figure-verifier`, `prose-voice-reviewer`,
-`cairn-register-editor`; `pass-execute.js`, `pass-execute-chains.js`, `docs-page-chain.js`).
-Implementers stay on `sonnet`; the docs page chain drafts published pages on `claude-opus-5-5` (its `drafterModel` default, Geoff 2026-09-22). A frontmatter pin is read at session start, so a repin reaches a
+`engine-triage`, `go-architecture-reader`, `figure-verifier`, `visual-verifier`,
+`prose-voice-reviewer`, `cairn-register-editor`; `pass-execute.js`, `pass-execute-chains.js`,
+`docs-page-chain.js`). No agent pins Fable 5.1; it is reached only by a per-dispatch escalation.
+Implementers stay on `sonnet` at effort `high`; the docs page chain drafts published pages on
+`claude-opus-5-5` (its `drafterModel` default, Geoff 2026-09-22). A frontmatter pin is read at session start, so a repin reaches a
 running session only through a per-dispatch `model`; verify a repin from a fresh headless session
 by grepping the subagent transcript's `"model"` field, never from the agent's own answer.
 
