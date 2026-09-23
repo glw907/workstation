@@ -39,7 +39,10 @@ log() {
     fi
 }
 
+# A test run points CLAUDE_AWAKE_POWER_SUPPLY at a fake sysfs dir; its readings are fixtures,
+# so it logs but never reaches the real desktop.
 notify() {
+    [[ -n "${CLAUDE_AWAKE_POWER_SUPPLY:-}" ]] && return 0
     if command -v notify-send >/dev/null 2>&1; then
         notify-send -a claude-awake -u critical "Claude sleep hold released" "$*" 2>/dev/null || true
     fi
