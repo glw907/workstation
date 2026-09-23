@@ -216,9 +216,10 @@ serialize only under real contention or dependency, and name the contended resou
 mark independent tasks so pass-execute's parallel mode can take them.
 
 A coding project runs from brainstorm through post-mortem in one session, and the model
-splits by phase (Geoff, 2026-09-22): **Fable plans and adjudicates; Opus 5.5 conducts
-execution.** Fable runs the brainstorm, authors the plan, and takes the one adjudication an
-Opus verdict hedges on. Once the plan is approved, the session that executes it runs on
+splits by phase (Geoff, 2026-09-22; plan authorship moved 2026-09-23): **Fable brainstorms and
+adjudicates; Opus 5.5 authors plans and conducts execution.** Fable runs the brainstorm and
+takes the one adjudication an Opus verdict hedges on. Opus 5.5 at effort `high` authors the plan
+from the approved spec, and the pass close counts its planning misses as the check. Once the plan is approved, the session that executes it runs on
 `claude-opus-5-5` at effort `medium`: it dispatches the chains, reads the structured reports,
 rules on escalations, and runs the close; a new pass starts as a fresh Opus 5.5 session from
 the STATUS resume prompt. A conductor that meets a decision needing more than Opus 5.5 gives

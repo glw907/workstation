@@ -270,6 +270,18 @@ https://code.claude.com/docs/en/sub-agents; https://code.claude.com/docs/en/env-
 https://code.claude.com/docs/en/costs; https://artificialanalysis.ai/articles/claude-fable-5-1;
 the `claude-api` skill's `shared/model-migration.md` (Fable 5.1 sections).
 
+## Opus 5.5 authors plans (Geoff, 2026-09-23)
+
+Plan authorship moves from Fable to `claude-opus-5-5` at effort `high`; Fable keeps the
+brainstorm and the adjudication of a hedged Opus verdict. Why: once a spec has been through
+adversarial review, the hard reasoning lives in the spec, and turning it into tasks with
+acceptance criteria is the agentic work Anthropic measured Opus 5.5 on; Anthropic's guidance is
+to start with Opus 5.5 and move to Fable only when Opus 5.5 at higher effort falls short; and
+the Fable pool is better spent where judgment is new. The check: each pass close records its
+planning misses (ambiguities that surfaced after approval), compared against Fable-authored
+passes (draft-docs pass A had three). A rising miss count reopens this rule. First plan under
+it: the cairn-cms docs-reset pass 1 plan.
+
 ## Opus 5.5 conducts execution (Geoff, 2026-09-22)
 
 The 2026-08-21 "Fable conducts" rule above is narrowed to the phases that need Fable. Fable

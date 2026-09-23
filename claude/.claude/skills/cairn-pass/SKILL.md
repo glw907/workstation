@@ -305,9 +305,10 @@ declaring done, including the ones a reviewer or the user changed mid-pass, and 
 about branch topology (a deferred merge changes where the next pass branches from, and a cold
 session will branch off `main` by default and build against the wrong engine).
 
-The model splits by phase (Geoff, 2026-09-22; supersedes the 2026-08-21 same-session rule):
-Fable runs the brainstorm, authors the plan, and takes any adjudication an Opus verdict hedges
-on; the session that executes the approved plan is a fresh `claude-opus-5-5` session at effort
+The model splits by phase (Geoff, 2026-09-22; supersedes the 2026-08-21 same-session rule;
+plan authorship moved to Opus 5.5 on 2026-09-23): Fable runs the brainstorm and takes any
+adjudication an Opus verdict hedges on; `claude-opus-5-5` at effort `high` authors the plan, and
+the close counts its planning misses; the session that executes the approved plan is a fresh `claude-opus-5-5` session at effort
 `medium`, started from the STATUS resume prompt. A decision beyond Opus 5.5 is one `fable`
 dispatch, never a session switch. The pre-bake always happens first, since it is the handoff. Do **not** run the
 `superpowers:writing-plans` "which execution method?" question (these defaults answer it).
