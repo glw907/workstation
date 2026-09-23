@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# awake: run a command while holding the laptop awake, then release.
+#
+# Usage: awake [--who NAME] [--why TEXT] -- <command...>
+#
+# Holds two sleep inhibitors for exactly as long as the command runs, because GNOME's idle
+# logic honors its own session inhibitors while logind honors systemd ones:
+#   systemd-inhibit --what=sleep --mode=block
+#   gnome-session-inhibit --inhibit suspend
+# It inhibits `suspend` only, never `idle`: an idle inhibitor keeps the display awake for the
+# whole hold, while `suspend` alone blocks auto-suspend and still lets the screen blank.
+#
+# The command replaces this process (exec), so its exit status, signals, and PID pass
+# through unchanged. Each inhibitor anchors on `tail --pid`, which exits within a second of
+# the command, and the inhibitor goes with it. With no GNOME session (headless, ssh, a
+# timer) the GNOME channel is skipped and the systemd one is kept. An inhibitor that cannot
+# be taken warns on stderr and the command runs anyway: awake never fails a command.
+#
+# The lid switch is a separate lock (see ~/.claude/docs/unattended-work-guards.md); awake
+# does not take it.
+set -euo pipefail
+
+who="awake"
+why=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --who) who="${2:?--who needs a value}"; shift 2 ;;
+        --why) why="${2:?--why needs a value}"; shift 2 ;;
+        --) shift; break ;;
+        -h|--help) sed -n '2,20{s/^# \{0,1\}//;p}' "$0"; exit 0 ;;
+        *) echo "awake: unknown option '$1' (usage: awake [--who NAME] [--why TEXT] -- cmd...)" >&2; exit 2 ;;
+    esac
+done
+[[ $# -gt 0 ]] || { echo "awake: no command given" >&2; exit 2; }
+why="${why:-$*}"
+why="${why:0:120}"
+
+warn() { echo "awake: $*" >&2; }
+
+# GLib falls back to the standard socket, but set it so an ssh shell reaches the session bus.
+if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "${XDG_RUNTIME_DIR:-/nonexistent}/bus" ]]; then
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
+fi
+
+me=$$
+anchors=()
+
+# Start one inhibitor in the background, anchored to this PID so it outlives no command.
+# The anchor's descriptors go to /dev/null so it never holds the command's pipes open.
+hold() {
+    "$@" tail --pid="$me" -f /dev/null </dev/null >/dev/null 2>&1 &
+    anchors+=("$!:$1")
+}
+
+if command -v systemd-inhibit >/dev/null 2>&1; then
+    hold systemd-inhibit --what=sleep --mode=block --who="$who" --why="$why"
+else
+    warn "systemd-inhibit not found; running without the logind sleep inhibitor"
+fi
+
+if command -v gnome-session-inhibit >/dev/null 2>&1 &&
+    busctl --user --no-pager status org.gnome.SessionManager >/dev/null 2>&1; then
+    hold gnome-session-inhibit --inhibit suspend --app-id="$who" --reason="$why"
+fi
+
+# An inhibitor that failed to register exits at once; give each a moment, then report.
+if [[ ${#anchors[@]} -gt 0 ]]; then
+    sleep 0.3
+    for a in "${anchors[@]}"; do
+        kill -0 "${a%%:*}" 2>/dev/null || warn "${a#*:} could not take its inhibitor; running anyway"
+    done
+fi
+
+exec "$@"

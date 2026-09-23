@@ -311,10 +311,10 @@ explicit opt-in ("use a workflow"). When a task would clearly benefit (a large a
 review gate, a repo-wide audit or migration, deep research) suggest it in one sentence with
 the shape and rough scale.
 
-**Guards on long unattended work, both mandatory.** Past ~30 minutes, arm the runaway guard.
-On battery, arm the battery watchdog. GNOME suspends after 15 idle minutes on battery; check
-`journalctl` for suspends before calling it stalled. Full procedures:
-`~/.claude/docs/unattended-work-guards.md` (read before arming either).
+**Guards on long unattended work.** Past ~30 minutes, arm the runaway guard. Sleep is
+tool-held (a hook-fed lease for every Claude session, 10% battery floor; `cairn-run-gate`;
+`awake --` for other work): verify with `systemd-inhibit --list`, `journalctl -t claude-awake`.
+Procedures: `~/.claude/docs/unattended-work-guards.md`.
 
 ## Initiative-scoped sessions
 

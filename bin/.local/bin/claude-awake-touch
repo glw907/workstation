@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# claude-awake-touch: Claude Code hook that keeps the sleep-inhibitor lease fresh.
+#
+# Wired on PreToolUse (all tools), UserPromptSubmit, SubagentStart, and SubagentStop in
+# ~/.claude/settings.json. It refreshes the lease file's mtime and, when no holder owns the
+# lock, starts claude-awake-holder detached. It runs on every tool call in every session, so
+# it is fail-open by construction: no `set -e`, no stdin read, no network, every stream to
+# /dev/null, and an unconditional `exit 0`. A broken step skips the refresh and never
+# reaches Claude.
+{
+    dir="${CLAUDE_AWAKE_DIR:-${XDG_RUNTIME_DIR:-/tmp/claude-awake-$(id -u)}/claude-awake}"
+    mkdir -p "$dir" && touch "$dir/lease"
+    # A held lock means a holder is running; flock -n never waits.
+    if flock -n "$dir/holder.lock" true; then
+        holder="$(dirname "$0")/claude-awake-holder"
+        [ -x "$holder" ] || holder=claude-awake-holder
+        setsid -f "$holder" </dev/null
+    fi
+} >/dev/null 2>&1
+exit 0

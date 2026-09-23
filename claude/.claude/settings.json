@@ -42,6 +42,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claude-awake-touch",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "SessionStart": [
@@ -87,6 +97,41 @@
             "command": "claude-context-budget --hook",
             "timeout": 10,
             "statusMessage": "Checking context-file budgets"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claude-awake-touch",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claude-awake-touch",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claude-awake-touch",
+            "timeout": 5
           }
         ]
       }

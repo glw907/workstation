@@ -19,6 +19,8 @@
 # it never waits behind a browser gate, and it runs under a smaller cap (2G high, 3G max, 1G
 # swap) so one light gate beside one heavy gate still fits in RAM. Light gates serialize among
 # themselves. CAIRN_GATE_PARALLEL=1 skips every lock and is kept for callers that set it.
+# Sleep: the gate runs under `awake`, which holds a sleep inhibitor (who "cairn-gate-<lane>")
+# for the gate's own run and releases it when the gate exits; see it in `systemd-inhibit --list`.
 # Exit status: the gate's when it has finished; 75 while it is still running.
 set -u
 gate="${1:?gate string required}"
@@ -63,11 +65,18 @@ if [ ! -e "$pidfile" ]; then
   else
     lock=(flock "$gatedir/machine.lock")
   fi
+  # Hold the laptop awake for exactly as long as the gate itself runs (inside the lock and
+  # the scope, so a queued gate holds nothing). A suspend mid-gate froze an overnight gate on
+  # 2026-09-23. awake never fails the command; empty prefix where it is absent.
+  keep_awake=()
+  if command -v awake >/dev/null 2>&1; then
+    keep_awake=(awake --who "cairn-gate-$lane" --why "cairn-run-gate in ${PWD##*/}: ${gate:0:80}" --)
+  fi
   # Stamp when the run was queued and when it got the lock, so the result can say how long the
   # gate waited on another gate. The stamp runs inside the lock, before the gate itself.
   date +%s >"$state/queued"
   echo "$lane" >"$state/lane"
-  ( "${lock[@]}" "${scope[@]}" bash -c 'date +%s >"$1"; exec bash -c "$2"' _ "$state/acquired" "$gate" >"$log" 2>&1; echo $? >"$statusfile" ) </dev/null &
+  ( "${lock[@]}" "${scope[@]}" "${keep_awake[@]}" bash -c 'date +%s >"$1"; exec bash -c "$2"' _ "$state/acquired" "$gate" >"$log" 2>&1; echo $? >"$statusfile" ) </dev/null &
   echo $! >"$pidfile"
   echo "gate started (log: $log)"
 fi

@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+# claude-awake-holder: hold the laptop awake while any Claude session is active.
+#
+# Started (detached) by the claude-awake-touch hook, which refreshes the lease file on every
+# tool call. One holder runs per user, enforced with flock. It holds both sleep inhibitors
+# through `awake` (who "claude-awake") while the lease is fresh, polls it, and exits, which
+# releases both, once the lease is older than the stale window.
+#
+# Battery floor: every CLAUDE_AWAKE_BATTERY_S it reads the power supplies. When no supply of
+# type Mains reads online and the battery is at or below the floor, it logs, notifies,
+# records the floor, and exits so the machine may sleep. While the floor is recorded, a new
+# holder refuses to arm until capacity recovers above the floor.
+#
+# Every arm and release logs one line: `journalctl -t claude-awake`.
+#
+# Environment (defaults in brackets; overrides exist for testing):
+#   CLAUDE_AWAKE_DIR           state dir [$XDG_RUNTIME_DIR/claude-awake]
+#   CLAUDE_AWAKE_STALE_S       lease age that releases the hold [1200]
+#   CLAUDE_AWAKE_POLL_S        lease poll interval [60]
+#   CLAUDE_AWAKE_BATTERY_S     battery poll interval [120]
+#   CLAUDE_AWAKE_FLOOR         battery floor, percent [10]
+#   CLAUDE_AWAKE_POWER_SUPPLY  power-supply sysfs dir [/sys/class/power_supply]
+set -euo pipefail
+
+dir="${CLAUDE_AWAKE_DIR:-${XDG_RUNTIME_DIR:-/tmp/claude-awake-$(id -u)}/claude-awake}"
+lease="$dir/lease"
+floor_mark="$dir/battery-floor"
+stale_s="${CLAUDE_AWAKE_STALE_S:-1200}"
+poll_s="${CLAUDE_AWAKE_POLL_S:-60}"
+battery_s="${CLAUDE_AWAKE_BATTERY_S:-120}"
+floor="${CLAUDE_AWAKE_FLOOR:-10}"
+psdir="${CLAUDE_AWAKE_POWER_SUPPLY:-/sys/class/power_supply}"
+
+log() {
+    if command -v systemd-cat >/dev/null 2>&1; then
+        echo "$*" | systemd-cat -t claude-awake -p info || true
+    else
+        logger -t claude-awake "$*" 2>/dev/null || true
+    fi
+}
+
+notify() {
+    if command -v notify-send >/dev/null 2>&1; then
+        notify-send -a claude-awake -u critical "Claude sleep hold released" "$*" 2>/dev/null || true
+    fi
+}
+
+# Lowest battery capacity across batteries, or empty when there is no battery.
+battery_capacity() {
+    local s cap min=""
+    for s in "$psdir"/*; do
+        [[ "$(cat "$s/type" 2>/dev/null)" == Battery ]] || continue
+        cap="$(cat "$s/capacity" 2>/dev/null)" || continue
+        [[ "$cap" =~ ^[0-9]+$ ]] || continue
+        if [[ -z "$min" || "$cap" -lt "$min" ]]; then min="$cap"; fi
+    done
+    echo "$min"
+}
+
+# Mains is "any supply whose type reads Mains reads online 1", never a name glob: a USB-C
+# supply can read online while the battery drains.
+on_mains() {
+    local s
+    for s in "$psdir"/*; do
+        [[ "$(cat "$s/type" 2>/dev/null)" == Mains && "$(cat "$s/online" 2>/dev/null)" == 1 ]] && return 0
+    done
+    return 1
+}
+
+# True when on battery at or below the floor.
+below_floor() {
+    local cap
+    on_mains && return 1
+    cap="$(battery_capacity)"
+    [[ -n "$cap" && "$cap" -le "$floor" ]]
+}
+
+lease_age() {
+    local m
+    m="$(stat -c %Y "$lease" 2>/dev/null)" || { echo 999999; return; }
+    echo $(($(date +%s) - m))
+}
+
+hold_loop() {
+    local last_battery=0 age now cap
+    while true; do
+        age="$(lease_age)"
+        if [[ "$age" -ge "$stale_s" ]]; then
+            log "released: lease stale (${age}s old, window ${stale_s}s)"
+            exit 0
+        fi
+        now="$(date +%s)"
+        if [[ $((now - last_battery)) -ge "$battery_s" ]]; then
+            last_battery="$now"
+            if below_floor; then
+                cap="$(battery_capacity)"
+                date +%s >"$floor_mark"
+                log "released: battery floor (${cap}% on battery, floor ${floor}%); the machine may now sleep"
+                notify "Battery at ${cap}% with no mains power. The sleep inhibitor is released so the laptop can suspend. Save state now."
+                exit 0
+            fi
+        fi
+        sleep "$poll_s"
+    done
+}
+
+if [[ "${1:-}" == --hold ]]; then
+    hold_loop
+fi
+
+mkdir -p "$dir"
+exec 9>"$dir/holder.lock"
+flock -n 9 || exit 0
+
+if [[ -e "$floor_mark" ]]; then
+    cap="$(battery_capacity)"
+    if [[ -n "$cap" && "$cap" -le "$floor" ]]; then
+        exit 0
+    fi
+    rm -f "$floor_mark"
+    log "battery floor cleared (${cap:-no battery}% > ${floor}%); arming again"
+fi
+if below_floor; then
+    date +%s >"$floor_mark"
+    log "not arming: battery at $(battery_capacity)% on battery, floor ${floor}%"
+    exit 0
+fi
+
+command -v awake >/dev/null 2>&1 || { log "not arming: awake not on PATH"; exit 0; }
+log "armed: lease fresh; holding sleep inhibitors until it is ${stale_s}s old"
+# The lock descriptor survives exec, so the singleton holds for the whole hold loop.
+exec awake --who claude-awake --why "Claude session active (lease refreshed by tool calls)" -- "$0" --hold
