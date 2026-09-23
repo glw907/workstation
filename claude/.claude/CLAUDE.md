@@ -215,7 +215,16 @@ product forks. Parallelize wherever tasks are genuinely independent (Geoff, 2026
 serialize only under real contention or dependency, and name the contended resource. Plans
 mark independent tasks so pass-execute's parallel mode can take them.
 
-Fable conducts coding projects from brainstorm through post-mortem in one session. The
+A coding project runs from brainstorm through post-mortem in one session, and the model
+splits by phase (Geoff, 2026-09-22): **Fable plans and adjudicates; Opus 5.5 conducts
+execution.** Fable runs the brainstorm, authors the plan, and takes the one adjudication an
+Opus verdict hedges on. Once the plan is approved, the session that executes it runs on
+`claude-opus-5-5` at effort `medium`: it dispatches the chains, reads the structured reports,
+rules on escalations, and runs the close; a new pass starts as a fresh Opus 5.5 session from
+the STATUS resume prompt. A conductor that meets a decision needing more than Opus 5.5 gives
+it upshifts that one dispatch to `fable` rather than switching the session. Reviewers pin Opus
+5.5 too, so a conductor overruling a reviewer verdict states why in STATUS and upshifts to
+`fable` when the overruled finding is correctness-critical. The
 plan-approval gate is the single human gate. **The
 conductor is thin:** during execution it never reads a source file, a diff, a test log, or a
 gate transcript. It consumes structured agent reports and decides only what needs judgment
@@ -224,7 +233,7 @@ diffs or grinding edits inline flags itself and dispatches.
 
 Each plan task runs as a chain. The repo's Sonnet implementer returns a fixed shape (files
 touched, gate result, decisions the plan did not cover, anything it could not do). The
-`diff-reviewer` agent (`claude-opus-5`) reads the diff against the task's acceptance criteria
+`diff-reviewer` agent (`claude-opus-5-5`) reads the diff against the task's acceptance criteria
 and returns accept, fix, or escalate with `file:line` findings. The repo's full gate runs
 inside the chain, never in the main loop. One re-dispatch on `fix`; a second `fix` is the
 conductor's decision. Domain reviewers still fan out at pass end. Below six tasks, dispatch
@@ -237,7 +246,7 @@ contract-and-criteria, mechanics-and-feasibility, and domain-risk, with stalenes
 the drafter's own pre-flight and the fold capped at one dispatch (Geoff, 2026-09-12).
 
 Every dispatch names a model and an effort: `sonnet` by default, `haiku` for mechanical
-search, `claude-opus-5` for reviewers (cross-model diversity). A dispatch without a model
+search, `claude-opus-5-5` for reviewers (cross-model diversity). A dispatch without a model
 falls to `CLAUDE_CODE_SUBAGENT_MODEL=sonnet` (settings `env`); a frontmatter pin or a
 per-dispatch model wins, so upshifts pass `model` explicitly: `opus` for novel
 correctness-critical logic the plan does not specify, `fable` only when an Opus verdict
