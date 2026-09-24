@@ -179,7 +179,8 @@ inline: a skill on disk reaches every agent while an MCP server reaches only the
 take the skill first; and every cairn-family admin is DaisyUI, so prefer a stock DaisyUI
 component over a home-grown one unless the engine's rulings ledger records the defect that
 forced it (the official DaisyUI skill is the reference, the licensed Blueprint server the
-pre-cut audit; the admin design system wins over both on conflict).
+pre-cut audit; the admin design system wins over both on conflict). `cairn-docs-drafter` and
+`docs-page-chain-v2.js` (docs reset pass 1, 2026-09-23) are recorded there too.
 
 ## Visual fidelity (all projects, 2026-07-05)
 
