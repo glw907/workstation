@@ -12,22 +12,35 @@
 // is not a Workflow step (it drives headless containers and needs a working directory this
 // sandboxed script does not have).
 //
-//   Stage 1 (args.stage: 1). Per page: a drafter writes the page at its final path and runs the
-//   page gate; a register editor and a fact read run together (as v1 runs them), each with zero
-//   context. The editor carries the profile, the omission checklist, the page's extraChecks, and a
-//   request for one to three real reader jobs (it is the only stage-1 read left to originate
-//   them). The fact read is unchanged from v1: it traces every claim on the page to an input and
-//   flags a claim, command, or transcript with no source behind it. Stage 1 never redrafts and
-//   never scores a third-party profile grader (removed; the editor's own "Profile" section covers
-//   profile grading). It ends by dispatching one write of a single JSON handoff file, one per
-//   batch, and returns that file's path.
+//   Stage 1 (args.stage: 1). Per page: a drafter writes the page at its final path; a register
+//   editor and a fact read run together (as v1 runs them), each with zero context; then the page
+//   gate of record runs. The editor carries the profile, the omission checklist, the page's
+//   extraChecks, and a request for one to three real reader jobs, each with its reader class (it
+//   is the only stage-1 read left to originate them). The fact read traces every claim on the
+//   page to an input and flags a claim, command, or transcript with no source behind it, as v1's
+//   does. Stage 1 never redrafts and never scores a third-party profile grader (removed; the
+//   editor's own "Profile" section covers profile grading). It ends by dispatching one write of a
+//   single JSON handoff file, one per batch, and returns that file's path.
+//
+//   NO SELF-VERIFIED FACTS. The drafter and the redraft file a fact the page needs only as a
+//   `[candidate]` bullet in the facts container and never retag any bullet. The independent fact
+//   read (stage 1) and the applied-findings read (stage 2, for the bullets the redraft filed)
+//   trace each candidate filed this run against its cited code and, where the code supports it
+//   exactly, retag it `[verified]` with a code Source (`path:line` or a `src/` `path#Symbol`,
+//   followed by a quoted anchor, per the site repo's docs/internal/facts/README.md), or leave it
+//   `[candidate]` with a reason. Both reads report what they retagged and what they left, and
+//   flag, as blocking, any bullet the drafting chain retagged itself. The page gate
+//   (with `check:provenance`) runs only after those retags, never inside the drafter, so the
+//   drafter is never tempted to clear a provenance failure by grading its own citations. Pages in
+//   flight at once can edit the same facts file; each read edits only the bullets it names.
 //
 //   Each handoff page carries the page args verbatim (id, path, track, brief, inputs, exemplars,
-//   pinned, extraChecks), the stage-1 gate result (gate, gateCommand, gateTail), one flat
-//   `findings` list, the editor's omissions, the proposed reader jobs, and an empty
-//   `struckReaderFindings` list. Every finding carries a stable id stage 1 assigns: `gate` (a
-//   stage-1 gate that was not "pass", with its tail), `ed-<n>` (register editor), `fact-<n>`
-//   (fact read), `om-<n>` (an omission-checklist item reported missing, always blocking).
+//   pinned, extraChecks), the gate-of-record result (gate, gateCommand, gateTail), the bullets
+//   the drafter filed and the fact read's retag report, one flat `findings` list, the editor's
+//   omissions, the proposed reader jobs, and an empty `struckReaderFindings` list. Every finding
+//   carries a stable id stage 1 assigns: `gate` (a gate of record that was not "pass", with its
+//   tail), `ed-<n>` (register editor), `fact-<n>` (fact read), `om-<n>` (an omission-checklist
+//   item reported missing, always blocking).
 //
 //   The handoff never lands in the site repository's docs tree (a page task must not carry an
 //   untracked file into `docs/`): it is written to
@@ -41,7 +54,10 @@
 //   `"struck": true` on any finding in a page's `findings` to drop it, or add a reader-defect id
 //   (below) to that page's `struckReaderFindings`. Stage 2 filters every struck finding out of
 //   the redraft and the applied-findings read. The `gate` finding cannot be struck: a red gate is
-//   always grounds for the redraft, and the redraft's own gate must pass.
+//   always grounds for the redraft, and the redraft's own gate must pass. A reader stall the
+//   job's class cannot avoid (a docs-only reader told to run a command it has no shell for) is a
+//   harness defect, not a page defect: the conductor strikes it through `struckReaderFindings`,
+//   and fixes the entry's class for the next batch.
 //
 //   THE READER STAGE (the conductor, outside the Workflow). Build one runner batch from the
 //   handoff and run it in cairn-cms:
@@ -49,7 +65,8 @@
 //       "budgetTokens": <the plan's reader budget>,
 //       "jobs": [ one per readerJobs entry of every handed-off page:
 //         { "id": "<the readerJobs id, already `<pageId>--<n>`>",
-//           "class": "docs-only" (or the class the plan names),
+//           "class": "<the readerJobs entry's class: docs-only, docs-and-binary, docs-and-site,
+//                     or repository>",
 //           "model": "claude-opus-5-5",
 //           "arrival": "<the readerJobs entry's arrival>",
 //           "job": "<its task> You're done once <its doneSignal>. Quote the exact lines you relied
@@ -72,9 +89,10 @@
 //   when its outcome is not "done", `rd-<jobId>-stall-<k>` per stall, `rd-<jobId>-assumed-<k>`
 //   per assumption; a clean done job yields nothing. Per page, a redraft applies every
 //   unstruck finding (blocking or advisory) and every unstruck reader defect, with the stage-1
-//   gate tail when that gate was red; the page gate runs again; a fresh applied-findings read
-//   grades the redraft against those findings by id (applied, not applied, applied wrongly),
-//   checks the extraChecks again, and flags any new text the redraft introduced. The page
+//   gate tail when that gate was red; a fresh applied-findings read grades the redraft against
+//   those findings by id (applied, not applied, applied wrongly), checks the extraChecks again,
+//   traces the candidates the redraft filed, and flags any new text the redraft introduced
+//   (a retag by the redraft included); then the page gate of record runs again. The page
 //   escalates unless every blocking finding and every reader defect comes back with a matching
 //   perFinding entry marked "applied", no new blocking text appears, and the redraft's gate
 //   passes. The blocking flags are the script's own, never the ones the read echoes back. This
@@ -146,8 +164,9 @@ export const meta = {
   description: "Drafts docs pages through cairn-docs-drafter, gate, a register editor read, and a fact read; hands off to the reader runner; redrafts on the editor's and fact read's findings plus the verified reader reports, then checks what the redraft applied.",
   whenToUse: "A draft-docs pass plan names this workflow's v2 stages for its page tasks.",
   phases: [
-    { title: "Draft", detail: "one drafter per page, page gate inside" },
-    { title: "Read", detail: "register editor (omission checklist, reader-job proposals) and fact read, in parallel" },
+    { title: "Draft", detail: "one drafter per page; new facts filed only as candidates" },
+    { title: "Read", detail: "register editor (omission checklist, classed reader-job proposals) and fact read (traces and retags candidates), in parallel" },
+    { title: "Gate", detail: "the page gate of record, after the retags" },
     { title: "Handoff", detail: "stage 1 writes the JSON handoff file (cache path) for the reader runner" },
     { title: "Load", detail: "stage 2 loads the handoff and the verified reader reports" },
     { title: "Redraft", detail: "one round on the editor's and fact read's findings, a red stage-1 gate, and the verified reader reports" },
@@ -156,18 +175,28 @@ export const meta = {
   ]
 };
 
+// The drafter's report. It runs no page gate (the gate of record runs after the independent
+// retags), so it reports the facts it filed as candidates instead.
 const DRAFT_SCHEMA = {
   type: "object",
   properties: {
     path: { type: "string" },
-    gate: { type: "string", enum: ["pass", "fail", "not run"] },
-    gateCommand: { type: "string" },
-    gateTail: { type: "string" },
     bulletsFiled: { type: "array", items: { type: "string" } },
     frictionFiled: { type: "array", items: { type: "string" } },
     couldNotDo: { type: "array", items: { type: "string" } }
   },
-  required: ["path", "gate", "gateCommand"]
+  required: ["path", "bulletsFiled"]
+};
+
+// The page gate of record.
+const GATE_SCHEMA = {
+  type: "object",
+  properties: {
+    gate: { type: "string", enum: ["pass", "fail", "not run"] },
+    gateCommand: { type: "string" },
+    gateTail: { type: "string" }
+  },
+  required: ["gate", "gateCommand", "gateTail"]
 };
 
 const FINDING = {
@@ -195,11 +224,12 @@ const READER_JOB = {
   type: "object",
   properties: {
     id: { type: "string" },
+    class: { type: "string", enum: ["docs-only", "docs-and-binary", "docs-and-site", "repository"] },
     arrival: { type: "string" },
     task: { type: "string" },
     doneSignal: { type: "string" }
   },
-  required: ["id", "arrival", "task", "doneSignal"]
+  required: ["id", "class", "arrival", "task", "doneSignal"]
 };
 
 // The register editor's stage-1 read: the same ranked findings as v1, plus the omission
@@ -216,15 +246,29 @@ const EDITOR_SCHEMA = {
   required: ["verdict", "findings", "omissions", "readerJobs", "summary"]
 };
 
-// The fact read's stage-1 verdict: unchanged from v1.
+// A candidate bullet a read retagged [verified], and one it left [candidate].
+const RETAGGED = {
+  type: "object",
+  properties: { id: { type: "string" }, source: { type: "string" } },
+  required: ["id", "source"]
+};
+const LEFT_CANDIDATE = {
+  type: "object",
+  properties: { id: { type: "string" }, reason: { type: "string" } },
+  required: ["id", "reason"]
+};
+
+// The fact read's stage-1 verdict: v1's, plus the retag report on the candidates filed this run.
 const READ_SCHEMA = {
   type: "object",
   properties: {
     verdict: { type: "string", enum: ["accept", "fix"] },
     findings: { type: "array", items: FINDING },
+    retagged: { type: "array", items: RETAGGED },
+    leftCandidate: { type: "array", items: LEFT_CANDIDATE },
     summary: { type: "string" }
   },
-  required: ["verdict", "findings", "summary"]
+  required: ["verdict", "findings", "retagged", "leftCandidate", "summary"]
 };
 
 // The applied-findings read after a redraft: a verdict per prior finding, keyed by the finding's
@@ -245,9 +289,11 @@ const APPLIED_SCHEMA = {
       }
     },
     newIssues: { type: "array", items: FINDING },
+    retagged: { type: "array", items: RETAGGED },
+    leftCandidate: { type: "array", items: LEFT_CANDIDATE },
     summary: { type: "string" }
   },
-  required: ["perFinding", "newIssues", "summary"]
+  required: ["perFinding", "newIssues", "retagged", "leftCandidate", "summary"]
 };
 
 const PATH_RESULT = { type: "object", properties: { path: { type: "string" } }, required: ["path"] };
@@ -298,6 +344,9 @@ const HANDOFF_PAGE = {
     gate: { type: "string", enum: ["pass", "fail", "not run"] },
     gateCommand: { type: "string" },
     gateTail: { type: "string" },
+    bulletsFiled: STRINGS,
+    factRetagged: { type: "array", items: { ...RETAGGED, additionalProperties: false } },
+    factLeftCandidate: { type: "array", items: { ...LEFT_CANDIDATE, additionalProperties: false } },
     findings: { type: "array", items: HANDOFF_FINDING },
     omissions: { type: "array", items: OMISSION_ITEM },
     readerJobs: { type: "array", items: READER_JOB },
@@ -305,7 +354,8 @@ const HANDOFF_PAGE = {
   },
   required: [
     "id", "path", "track", "briefPath", "status", "reason", "brief", "inputs", "exemplars",
-    "pinned", "extraChecks", "gate", "gateCommand", "gateTail", "findings", "omissions",
+    "pinned", "extraChecks", "gate", "gateCommand", "gateTail", "bulletsFiled", "factRetagged",
+    "factLeftCandidate", "findings", "omissions",
     "readerJobs", "struckReaderFindings"
   ]
 };
@@ -439,14 +489,47 @@ Exemplars to imitate for anatomy and register:
 ${exemplarBlock(p)}
 ${p.pinned && p.pinned.length ? `\nPinned heading slugs this page must keep, verbatim: ${p.pinned.join(", ")}\n` : ""}
 ${round > 1 ? `\nFindings to apply, from the page gate, the register editor, the fact read, the omission checklist, and real readers who attempted this page (apply every one, blocking or advisory):\n${redraftInputs}\n` : ""}
-A fact the page needs that no input records is filed as a [candidate] bullet against code on
-main in the facts container (name it in bulletsFiled); something no source can supply goes to
-docs/internal/docs-friction-log.md (name it in frictionFiled). Commit nothing; leave the tree
-with your edits in place.
+${FILE_CANDIDATES_RULE}
+Something no source can supply goes to docs/internal/docs-friction-log.md (name it in
+frictionFiled). Commit nothing; leave the tree with your edits in place.
 
-${gateLine(p)}
+Do not run the page gate or check:provenance: the gate of record runs after an independent fact
+read has traced your candidates, and a provenance failure on a candidate you cited is expected
+until then. You may run \`npm run check:facts\` and \`npm run check:vale\` to check your own work.
 
 Return the structured report only.`;
+}
+
+const FILE_CANDIDATES_RULE = `A fact the page needs that no input records is filed as a new bullet
+against code on main in the facts container, tagged \`[candidate: ...]\` and nothing else, with the
+code Source you believe supports it; name each in bulletsFiled as "<facts file> <its f: id>". Never
+change the tag of any bullet, one you filed or one already there: an independent read traces your
+candidates and retags the ones the code supports. You may cite your own candidates in the brief.`;
+
+// Which runner class a reader job needs (scripts/docs-readers/classes/).
+const READER_CLASS_RULE = `Give each job the reader class its task needs, as \`class\`: "docs-only" when
+the reader only reads and answers (no shell, no files); "docs-and-binary" when it runs read-only
+cairn CLI operator commands (cairn doctor, cairn auth check) against a scratch site;
+"docs-and-site" when it installs, edits, or builds a scaffolded site with its npm scripts;
+"repository" when it works in the cairn-cms source tree itself.`;
+
+// The independent trace of this run's candidates. `watch` lists bullets the drafting chain must
+// not have retagged: its own filings, plus (in stage 2) the ones the stage-1 fact read left.
+function retagRule(filed, who, watch, flagAs) {
+  return `Candidates ${who} filed this run:
+${bulletList(filed.length ? filed : ["(none)"])}
+For each one, trace the claim against the code its Source cites. Where the code supports it
+exactly, retag it [verified] in place with a code Source, per docs/internal/facts/README.md:
+path:line or path:line-line (or a src/ path#Symbol declaration), followed by a quoted anchor, a
+code span in parentheses copied verbatim from those lines. Report it in \`retagged\` with that
+Source. Otherwise leave it [candidate: <what was and was not checked>] and report it in
+\`leftCandidate\` with the reason. Edit only those bullets.
+
+First, before you edit anything, check these bullets in the facts container:
+${bulletList(watch.length ? watch : ["(none)"])}
+Any of them whose tag is no longer [candidate] was retagged by ${who} itself, which it must never
+do: report each as ${flagAs} naming the bullet, restore its [candidate] tag, then trace it with
+the rest.`;
 }
 
 function editorPrompt(p) {
@@ -466,10 +549,11 @@ ${OMISSION_CHECKLIST}
 Also propose one to three real reader jobs a reader-runner batch should attempt against this
 page, as \`readerJobs\`: an arrival (one or two second-person sentences on the situation the
 reader arrives in), a task phrased the way this profile's audience would phrase it, using only
-what the page itself tells them, and a stated done signal a script can check.`;
+what the page itself tells them, and a stated done signal a script can check.
+${READER_CLASS_RULE}`;
 }
 
-function factPrompt(p) {
+function factPrompt(p, filed) {
   return `Fact read of ${p.path} in ${WT}. Trace every claim on the page (each step, command,
 transcript, figure, warning, success signal, and prose assertion) to one of these sources:
 ${bulletList(p.inputs)}
@@ -477,11 +561,14 @@ A claim with no bullet or ratified disposition behind it is a blocking finding (
 what the source lacks). A bullet or skeleton step in the sources that the page dropped is a
 blocking finding naming the bullet. A command or example that differs from its manifest entry by
 one character is blocking. A sentence composed by joining two neighboring manifest entries into
-one claim neither entry states on its own is blocking. Verdict "fix" if any blocking finding
-exists; otherwise "accept" with the count of claims traced.`;
+one claim neither entry states on its own is blocking. A bullet the drafter filed this run
+counts as a source only once you have traced it below. Verdict "fix" if any blocking finding
+exists; otherwise "accept" with the count of claims traced.
+
+${retagRule(filed, "the drafter", filed, "a blocking finding")}`;
 }
 
-function appliedFindingsPrompt(p, priorFindings) {
+function appliedFindingsPrompt(p, priorFindings, filed, stillCandidate) {
   return `Fresh read of the redraft of ${p.path} in ${WT}. You were not the agent that wrote it
 and were not shown these findings until now. For EVERY prior finding below, one \`perFinding\`
 entry carrying the finding's id exactly as shown in the first brackets: read the current page and
@@ -492,7 +579,19 @@ id you leave out is treated as not applied.
 ${priorFindings || "(no prior finding; only the stage-1 gate was red)"}
 ${extraChecksBlock(p, "Also verify each of these still holds on the redraft; a failed one goes in `newIssues` as blocking:")}
 Also flag any new text the redraft introduced beyond what these findings called for, as
-\`newIssues\`, each with a \`blocking\` flag. This is the only redraft this page gets.`;
+\`newIssues\`, each with a \`blocking\` flag. This is the only redraft this page gets.
+
+${retagRule(filed, "the redraft", [...filed, ...stillCandidate], "a blocking \`newIssues\` entry")}`;
+}
+
+function gatePrompt(p) {
+  return `Run the page gate of record for ${p.path} in ${WT}, from that worktree. Edit nothing.
+${gateLine(p)}
+Return gate "pass" or "fail", the exact command, and the last twenty lines as gateTail.`;
+}
+
+async function runGate(p, label) {
+  return agent(gatePrompt(p), { label, phase: "Gate", schema: GATE_SCHEMA, model: "sonnet", effort: "low", agentType: "general-purpose" });
 }
 
 function findingLine(f) {
@@ -527,12 +626,16 @@ async function draftAndRead(p) {
   // context; only the profile grader is gone.
   const [editor, fact] = await parallel([
     () => agent(editorPrompt(p), { label: `editor:${p.id}`, phase: "Read", schema: EDITOR_SCHEMA, model: REVIEWER, agentType: "cairn-register-editor" }),
-    () => agent(factPrompt(p), { label: `fact:${p.id}`, phase: "Read", schema: READ_SCHEMA, model: REVIEWER, agentType: "general-purpose" })
+    () => agent(factPrompt(p, d1.bulletsFiled || []), { label: `fact:${p.id}`, phase: "Read", schema: READ_SCHEMA, model: REVIEWER, agentType: "general-purpose" })
   ]);
   if (!editor) return { ...record, status: "escalate", reason: "editor read returned nothing" };
   if (!fact) return { ...record, status: "escalate", reason: "fact read returned nothing" };
   record.editor = editor;
   record.fact = fact;
+  // The gate of record runs only after the fact read's retags have landed.
+  const g = await runGate(p, `gate:${p.id}`);
+  if (!g) return { ...record, status: "escalate", reason: "the gate run returned nothing" };
+  record.gate = g;
   record.status = "handed-off";
   return record;
 }
@@ -540,13 +643,13 @@ async function draftAndRead(p) {
 // One handoff page: the page args verbatim, so stage 2 rebuilds the page from them, plus the
 // stage-1 results with a stable id on every finding.
 function handoffPage(p, r) {
-  const d = r.draft || null;
+  const g = r.gate || null;
   const findings = [];
-  if (d && d.gate !== "pass") {
+  if (g && g.gate !== "pass") {
     findings.push(handoffFinding("gate", "page gate", {
-      location: d.gateCommand,
-      finding: `the stage-1 page gate was "${d.gate}"`,
-      tail: d.gateTail || "(no gate tail reported)",
+      location: g.gateCommand,
+      finding: `the stage-1 page gate was "${g.gate}"`,
+      tail: g.gateTail || "(no gate tail reported)",
       blocking: true
     }));
   }
@@ -567,12 +670,15 @@ function handoffPage(p, r) {
     exemplars: (p.exemplars || []).map((e) => ({ path: e.path, text: e.text })),
     pinned: p.pinned || [],
     extraChecks: p.extraChecks || [],
-    gate: d ? d.gate : "not run",
-    gateCommand: d ? d.gateCommand : "",
-    gateTail: (d && d.gateTail) || "",
+    gate: g ? g.gate : "not run",
+    gateCommand: g ? g.gateCommand : "",
+    gateTail: (g && g.gateTail) || "",
+    bulletsFiled: (r.draft && r.draft.bulletsFiled) || [],
+    factRetagged: r.fact ? r.fact.retagged.map((x) => ({ id: x.id, source: x.source })) : [],
+    factLeftCandidate: r.fact ? r.fact.leftCandidate.map((x) => ({ id: x.id, reason: x.reason })) : [],
     findings,
     omissions,
-    readerJobs: r.editor ? r.editor.readerJobs.map((j, i) => ({ id: `${p.id}--${i + 1}`, arrival: j.arrival, task: j.task, doneSignal: j.doneSignal })) : [],
+    readerJobs: r.editor ? r.editor.readerJobs.map((j, i) => ({ id: `${p.id}--${i + 1}`, class: j.class, arrival: j.arrival, task: j.task, doneSignal: j.doneSignal })) : [],
     struckReaderFindings: []
   };
 }
@@ -712,9 +818,17 @@ async function redraftPage(page, jobs) {
   if (!d2) return { ...record, status: "escalate", reason: "redrafter returned nothing" };
   record.draft = d2;
 
-  const applied = await agent(appliedFindingsPrompt(page, graded.map(findingLine).join("\n")), { label: `applied:${page.id}`, phase: "Applied", schema: APPLIED_SCHEMA, model: REVIEWER, agentType: "cairn-register-editor" });
+  // A general-purpose agent, not the read-only register editor: this read edits the facts
+  // container when it retags the redraft's candidates.
+  const redraftFiled = d2.bulletsFiled || [];
+  const stillCandidate = (page.factLeftCandidate || []).map((x) => x.id);
+  const appliedPrompt = appliedFindingsPrompt(page, graded.map(findingLine).join("\n"), redraftFiled, stillCandidate);
+  const applied = await agent(appliedPrompt, { label: `applied:${page.id}`, phase: "Applied", schema: APPLIED_SCHEMA, model: REVIEWER, agentType: "general-purpose" });
   if (!applied) return { ...record, status: "escalate", reason: "applied-findings read returned nothing" };
   record.applied = applied;
+  const g2 = await runGate(page, `regate:${page.id}`);
+  if (!g2) return { ...record, status: "escalate", reason: "the gate run returned nothing" };
+  record.gate = g2;
 
   // The blocking flags are the script's own; the read's echo is never trusted. Every blocking
   // finding and every reader defect needs a matching entry marked "applied".
@@ -727,12 +841,12 @@ async function redraftPage(page, jobs) {
   const newBlocking = (applied.newIssues || []).filter((f) => f.blocking);
   // Two-round cap: this is the one redraft this page gets, so anything still unresolved here
   // escalates to the conductor rather than triggering a third round.
-  if (omitted.length || unresolved.length || newBlocking.length || d2.gate !== "pass") {
+  if (omitted.length || unresolved.length || newBlocking.length || g2.gate !== "pass") {
     const why = [];
     if (omitted.length) why.push(`the applied read omitted blocking finding(s) ${omitted.join(", ")}`);
     if (unresolved.length) why.push(`${unresolved.length} blocking finding(s) not applied`);
     if (newBlocking.length) why.push(`${newBlocking.length} new blocking issue(s)`);
-    if (d2.gate !== "pass") why.push(`the redraft's gate was "${d2.gate}"${redGate ? " (the stage-1 gate was red too)" : ""}`);
+    if (g2.gate !== "pass") why.push(`the redraft's gate was "${g2.gate}"${redGate ? " (the stage-1 gate was red too)" : ""}`);
     return { ...record, status: "escalate", reason: `${why.join("; ")} after the one redraft round`, omitted, unresolved, newBlocking };
   }
   record.status = "accepted";

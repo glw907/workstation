@@ -75,7 +75,7 @@ check("every v1 gate also appears in v2 (the cairn-run-gate page-gate line)", ()
 });
 
 check("v2 keeps the fact read (only the profile grader is removed)", () => {
-  assert.match(SRC, /function factPrompt\(p\)/);
+  assert.match(SRC, /function factPrompt\(p, filed\)/);
   assert.match(SRC, /READ_SCHEMA/);
   assert.match(SRC, /label: `fact:\$\{p\.id\}`/);
 });
@@ -175,14 +175,16 @@ const EDITOR_FINDINGS = [
 ];
 const FACT_FINDINGS = [{ location: "para 3", finding: "composed from two manifest entries no source states together", blocking: true }];
 const CLEAN_EDITOR = (jobs = []) => ({ verdict: "accept", findings: [], omissions: [], readerJobs: jobs, summary: "clean" });
-const CLEAN_FACT = { verdict: "accept", findings: [], summary: "clean" };
-const JOB = (id) => ({ id, arrival: "Your site stopped updating.", task: "run cairn doctor", doneSignal: "it prints a verdict" });
+const CLEAN_FACT = { verdict: "accept", findings: [], retagged: [], leftCandidate: [], summary: "clean" };
+const GATE_PASS = { gate: "pass", gateCommand: "cairn-run-gate '...'", gateTail: "gate exit: 0" };
+const JOB = (id) => ({ id, class: "docs-and-binary", arrival: "Your site stopped updating.", task: "run cairn doctor", doneSignal: "it prints a verdict" });
 
 // Stage-1 stubs. `over` replaces a label's response.
 function stage1Stubs(over = {}) {
   return (prompt, opts) => {
     if (opts.label in over) return over[opts.label];
-    if (opts.label === `draft:${PAGE.id}`) return { path: PAGE.path, gate: "pass", gateCommand: "cairn-run-gate '...'" };
+    if (opts.label === `draft:${PAGE.id}`) return { path: PAGE.path, bulletsFiled: [] };
+    if (opts.label === `gate:${PAGE.id}`) return GATE_PASS;
     if (opts.label === `editor:${PAGE.id}`) {
       return {
         verdict: "fix",
@@ -195,7 +197,7 @@ function stage1Stubs(over = {}) {
         summary: "two findings, one omission"
       };
     }
-    if (opts.label === `fact:${PAGE.id}`) return { verdict: "fix", findings: FACT_FINDINGS, summary: "one blocking" };
+    if (opts.label === `fact:${PAGE.id}`) return { verdict: "fix", findings: FACT_FINDINGS, retagged: [], leftCandidate: [], summary: "one blocking" };
     if (opts.label === "handoff-write") return { path: "/home/u/.cache/docs-page-chain/handoffs/fixture-run-9-20260923-120000.json" };
     throw new Error(`unexpected stage-1 agent call: ${opts.label}`);
   };
@@ -250,7 +252,8 @@ function stage2Stubs(handoff, dir, over = {}) {
     if (opts.label in over) return typeof over[opts.label] === "function" ? over[opts.label](prompt, opts) : over[opts.label];
     if (opts.label === "load-handoff") return { pages: handoff.pages };
     if (opts.label === "load-reader-results") return loadResultsLikeTheAgent(prompt, dir);
-    if (opts.label.startsWith("redraft:")) return { path: PAGE.path, gate: "pass", gateCommand: "cairn-run-gate '...'" };
+    if (opts.label.startsWith("redraft:")) return { path: PAGE.path, bulletsFiled: [] };
+    if (opts.label.startsWith("regate:")) return GATE_PASS;
     throw new Error(`unexpected stage-2 agent call: ${opts.label}`);
   };
 }
@@ -262,6 +265,8 @@ function appliedAll(overrides = {}, drop = []) {
     return {
       perFinding: ids.map((id) => ({ id, status: overrides[id] || "applied", evidence: "checked" })),
       newIssues: [],
+      retagged: [],
+      leftCandidate: [],
       summary: "graded"
     };
   };
@@ -334,7 +339,7 @@ await checkAsync("finding 1: stage 2 rebuilds the page from the handoff (brief, 
   assert.match(redraft, /- docs\/superpowers\/plans\/x\.mining\.md#is-it-working/);
   assert.match(redraft, /<example path="docs\/admin\/other\.md">/);
   assert.match(redraft, /#check-your-site/);
-  assert.match(redraft, /make -C \/tmp\/wt\/tool check/, "a pinned page keeps the tool gate on the redraft");
+  assert.match(labelled(h, "regate:")[0].prompt, /make -C \/tmp\/wt\/tool check/, "a pinned page keeps the tool gate on the redraft's gate");
 });
 
 await checkAsync("the redraft applies every finding (advisory and fact read included) plus verified reader defects; a blocking finding not applied escalates without a third round", async () => {
@@ -361,7 +366,7 @@ await checkAsync("the redraft applies every finding (advisory and fact read incl
 
 await checkAsync("finding 2: a red stage-1 gate with no findings is redrafted with its tail, not accepted; a red redraft gate escalates", async () => {
   const { handoff } = await runStage1({
-    [`draft:${PAGE.id}`]: { path: PAGE.path, gate: "fail", gateCommand: "cairn-run-gate 'x'", gateTail: "check:provenance: sentence 4 has no fact id" },
+    [`gate:${PAGE.id}`]: { gate: "fail", gateCommand: "cairn-run-gate 'x'", gateTail: "check:provenance: sentence 4 has no fact id" },
     [`editor:${PAGE.id}`]: CLEAN_EDITOR(),
     [`fact:${PAGE.id}`]: CLEAN_FACT
   });
@@ -375,7 +380,7 @@ await checkAsync("finding 2: a red stage-1 gate with no findings is redrafted wi
   assert.equal(result.pages[0].status, "accepted", "accepted once the redraft's gate passes");
 
   const h2 = stubHarness(stage2Stubs(handoff, dir, {
-    [`redraft:${PAGE.id}`]: { path: PAGE.path, gate: "fail", gateCommand: "x" },
+    [`regate:${PAGE.id}`]: { gate: "fail", gateCommand: "x", gateTail: "red" },
     [APPLIED]: appliedAll()
   }));
   assert.equal((await go(S2({ resultsDir: dir }), h2)).pages[0].status, "escalate");
@@ -479,6 +484,85 @@ await checkAsync("a stage-1 escalated page escalates in stage 2 without a redraf
   const result = await go(S2({ resultsDir: dir }), h);
   assert.equal(result.pages[0].status, "escalate");
   assert.equal(labelled(h, "redraft:").length, 0);
+});
+
+// ---------------------------------------------------------------------------------------------
+// Dry-run gap 1: no self-verified facts. Gap 2: reader class.
+// ---------------------------------------------------------------------------------------------
+
+const FILED = ["docs/internal/facts/admin.md f:doctor-exit", "docs/internal/facts/admin.md f:doctor-flag"];
+
+await checkAsync("gap 1: the drafter files candidates only and runs no gate; the fact read traces them, retags one and leaves one; the gate runs after it", async () => {
+  const { h, handoff } = await runStage1({
+    [`draft:${PAGE.id}`]: { path: PAGE.path, bulletsFiled: FILED },
+    [`fact:${PAGE.id}`]: {
+      verdict: "accept", findings: [],
+      retagged: [{ id: "f:doctor-exit", source: "tool/cmd/cairn/doctor.go:41 (`os.Exit(0)`)" }],
+      leftCandidate: [{ id: "f:doctor-flag", reason: "the cited line defines no such flag" }],
+      summary: "traced"
+    }
+  });
+  const draft = labelled(h, "draft:")[0].prompt;
+  assert.match(draft, /tagged `\[candidate: \.\.\.\]` and nothing else/);
+  assert.match(draft, /Never\nchange the tag of any bullet/);
+  assert.doesNotMatch(draft, /cairn-run-gate/, "the drafter never runs the gate of record");
+  const fact = labelled(h, "fact:")[0].prompt;
+  for (const b of FILED) assert.ok(fact.includes(b), `the fact read is handed ${b}`);
+  assert.match(fact, /retag it \[verified\] in place with a code Source/);
+  assert.match(fact, /quoted anchor/);
+  assert.match(fact, /leftCandidate/);
+  assert.match(fact, /whose tag is no longer \[candidate\] was retagged by the drafter itself/);
+  const order = h.calls.map((c) => c.opts.label);
+  assert.ok(order.indexOf(`gate:${PAGE.id}`) > order.indexOf(`fact:${PAGE.id}`), "the gate runs after the fact read's retags");
+  assert.match(labelled(h, "gate:")[0].prompt, /check:provenance/);
+  const hp = handoff.pages[0];
+  assert.deepEqual(hp.bulletsFiled, FILED);
+  assert.deepEqual(hp.factRetagged.map((x) => x.id), ["f:doctor-exit"]);
+  assert.deepEqual(hp.factLeftCandidate.map((x) => x.id), ["f:doctor-flag"]);
+});
+
+await checkAsync("gap 1: a redraft's attempt to retag is flagged by the applied read as a blocking new issue, and the page escalates", async () => {
+  const { handoff } = await runStage1({
+    [`draft:${PAGE.id}`]: { path: PAGE.path, bulletsFiled: FILED },
+    [`fact:${PAGE.id}`]: { ...CLEAN_FACT, findings: FACT_FINDINGS, verdict: "fix",
+      retagged: [{ id: "f:doctor-exit", source: "tool/cmd/cairn/doctor.go:41 (`os.Exit(0)`)" }],
+      leftCandidate: [{ id: "f:doctor-flag", reason: "no such flag" }] }
+  });
+  const dir = writeResultsDir([]);
+  const redraftFiled = ["docs/internal/facts/admin.md f:doctor-json"];
+  const h = stubHarness(stage2Stubs(handoff, dir, {
+    [`redraft:${PAGE.id}`]: { path: PAGE.path, bulletsFiled: redraftFiled },
+    [APPLIED]: (prompt) => {
+      const base = appliedAll()(prompt);
+      return {
+        ...base,
+        newIssues: [{ location: "admin.md f:doctor-flag", finding: "retagged [verified] by the redraft itself; restored to [candidate]", blocking: true }],
+        leftCandidate: [{ id: "f:doctor-json", reason: "not traced to code" }]
+      };
+    }
+  }));
+  const result = await go(S2({ resultsDir: dir }), h);
+  const applied = labelled(h, "applied:")[0].prompt;
+  assert.ok(applied.includes(redraftFiled[0]), "the applied read traces the redraft's candidates");
+  assert.match(applied, /- f:doctor-flag/, "the stage-1 leftover candidate is on the self-retag watch list");
+  assert.match(applied, /retagged by the redraft itself[\s\S]*blocking `newIssues` entry/);
+  assert.equal(labelled(h, "applied:")[0].opts.agentType, "general-purpose", "the read that retags is not the read-only editor");
+  const order = h.calls.map((c) => c.opts.label);
+  assert.ok(order.indexOf(`regate:${PAGE.id}`) > order.indexOf(APPLIED), "the redraft's gate runs after the applied read's retags");
+  assert.equal(result.pages[0].status, "escalate");
+  assert.equal(result.pages[0].newBlocking.length, 1);
+});
+
+await checkAsync("gap 2: a readerJobs entry carries its class through the handoff; the editor is told how to pick one", async () => {
+  const { h, handoff } = await runStage1({
+    [`editor:${PAGE.id}`]: CLEAN_EDITOR([{ ...JOB("a"), class: "docs-only" }, { ...JOB("b"), class: "docs-and-site" }]),
+    [`fact:${PAGE.id}`]: CLEAN_FACT
+  });
+  const editor = labelled(h, "editor:")[0].prompt;
+  for (const c of ["docs-only", "docs-and-binary", "docs-and-site", "repository"]) assert.ok(editor.includes(`"${c}"`), `the class rule names ${c}`);
+  assert.deepEqual(handoff.pages[0].readerJobs.map((j) => [j.id, j.class]), [["is-it-working--1", "docs-only"], ["is-it-working--2", "docs-and-site"]]);
+  assert.match(SRC, /"class": "<the readerJobs entry's class/);
+  assert.match(SRC, /struck by the conductor|strikes it through `struckReaderFindings`/);
 });
 
 for (const d of tempDirs) rmSync(d, { recursive: true, force: true });
