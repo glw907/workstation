@@ -4,30 +4,49 @@
 // draft-docs pass B and C plans and the `register-check` skill depend on; nothing points at v2
 // until a plan names it. Task 4's baseline record ruled which of the spec's pass 1 item 6 changes
 // this file builds; everything else is deferred (`docs/internal/record/2026-09-23-docs-reset-baseline.md`).
+// Only the profile grader is removed from v1's three-way stage-1 read; the fact read stays (it is
+// the stage that caught pass A's P1, a sentence the drafter composed by joining neighboring
+// manifest entries, which no register or reader-job read would have caught on its own).
 //
 // PROTOCOL: two stages, run as two separate Workflow invocations around the reader runner, which
 // is not a Workflow step (it drives headless containers and needs a working directory this
 // sandboxed script does not have).
 //
 //   Stage 1 (args.stage: 1). Per page: a drafter writes the page at its final path and runs the
-//   page gate; a register editor reads it once, adversarially, carrying the profile, the omission
-//   checklist, and a request for real reader jobs. Stage 1 never redrafts and never scores a
-//   third-party profile grader (removed; the editor's own "Profile" section covers it). It ends by
-//   dispatching one write to a JSON handoff file at `docs/internal/handoffs/<runId>.json` in the
-//   worktree, holding every page's draft, editor findings and omissions, and proposed reader jobs,
-//   and returns that file's path.
+//   page gate; a register editor and a fact read run together (as v1 runs them), each with zero
+//   context. The editor carries the profile, the omission checklist, and a request for one to
+//   three real reader jobs (it is the only stage-1 read left to originate them). The fact read is
+//   unchanged from v1: it traces every claim on the page to an input and flags a claim, command,
+//   or transcript with no source behind it. Stage 1 never redrafts and never scores a third-party
+//   profile grader (removed; the editor's own "Profile" section covers profile grading). It ends
+//   by dispatching one write of a single JSON handoff file, one per batch, holding every page's
+//   draft, the editor's findings and omissions, the fact read's findings, and the proposed reader
+//   jobs, and returns that file's path.
+//
+//   The handoff never lands in the site repository's docs tree (a page task must not carry an
+//   untracked file into `docs/`): it is written to
+//   `$XDG_CACHE_HOME/docs-page-chain/handoffs/<runId>.json`, or `~/.cache/docs-page-chain/handoffs/<runId>.json`
+//   when `XDG_CACHE_HOME` is unset, resolved by the write agent's own shell at write time (the
+//   script itself has no environment or filesystem access). Stage 1 returns the exact path the
+//   write agent used.
 //
 //   Outside the Workflow, the conductor runs `scripts/docs-readers/run.ts` in cairn-cms over the
 //   handoff's jobs and writes each job's verified report under a results directory.
 //
 //   Stage 2 (args.stage: 2, args.handoffPath, args.resultsDir). Per page: a fresh read loads the
-//   handoff and the verified reader reports; a redraft applies every finding the editor marked
-//   (blocking or advisory) and every reader-verified defect, unless the conductor struck one; the
-//   page gate runs again; a fresh applied-findings read grades the redraft against the prior
-//   findings (applied, not applied, applied wrongly) and flags any new text the redraft
-//   introduced. A blocking finding marked anything but "applied" is unresolved. This is the only
-//   redraft round: a page still unresolved after it escalates to the conductor and is never sent
-//   to a third round.
+//   handoff (from the cache path stage 1 returned) and the verified reader reports; a redraft
+//   applies every finding the editor and the fact read marked (blocking or advisory) and every
+//   reader-verified defect, unless the conductor struck one; the page gate runs again; a fresh
+//   applied-findings read grades the redraft against the prior findings (applied, not applied,
+//   applied wrongly) and flags any new text the redraft introduced. A blocking finding marked
+//   anything but "applied" is unresolved. This is the only redraft round: a page still unresolved
+//   after it escalates to the conductor and is never sent to a third round.
+//
+// Other decisions carried from the first build of this file: the register editor, not a separate
+// agent, proposes the reader jobs (nothing else is left in stage 1 to originate them); one
+// handoff file covers the whole batch, not one per page; every filesystem read or write the
+// script itself cannot do (workflow scripts carry no Node.js or filesystem API) is done by a
+// `general-purpose` agent dispatch, never assumed.
 //
 // Invocation from the conductor session (copy this file to the session scratchpad first; the
 // Workflow tool refuses a `~/.claude/workflows` scriptPath):
@@ -82,12 +101,12 @@
 
 export const meta = {
   name: "docs-page-chain-v2",
-  description: "Drafts docs pages through cairn-docs-drafter, gate, and a register editor read; hands off to the reader runner; redrafts on the editor's findings and the verified reader reports, then checks what the redraft applied.",
+  description: "Drafts docs pages through cairn-docs-drafter, gate, a register editor read, and a fact read; hands off to the reader runner; redrafts on the editor's and fact read's findings plus the verified reader reports, then checks what the redraft applied.",
   whenToUse: "A draft-docs pass plan names this workflow's v2 stages for its page tasks.",
   phases: [
     { title: "Draft", detail: "one drafter per page, page gate inside" },
-    { title: "Read", detail: "register editor with the omission checklist and reader-job proposals" },
-    { title: "Handoff", detail: "stage 1 writes the JSON handoff file for the reader runner" },
+    { title: "Read", detail: "register editor (omission checklist, reader-job proposals) and fact read, in parallel" },
+    { title: "Handoff", detail: "stage 1 writes the JSON handoff file (cache path) for the reader runner" },
     { title: "Load", detail: "stage 2 loads the handoff and the verified reader reports" },
     { title: "Redraft", detail: "one round on the editor's findings and the reader reports" },
     { title: "Applied", detail: "a fresh read grades what the redraft actually applied" },
@@ -152,6 +171,17 @@ const EDITOR_SCHEMA = {
     summary: { type: "string" }
   },
   required: ["verdict", "findings", "omissions", "readerJobs", "summary"]
+};
+
+// The fact read's stage-1 verdict: unchanged from v1.
+const READ_SCHEMA = {
+  type: "object",
+  properties: {
+    verdict: { type: "string", enum: ["accept", "fix"] },
+    findings: { type: "array", items: FINDING },
+    summary: { type: "string" }
+  },
+  required: ["verdict", "findings", "summary"]
 };
 
 // The applied-findings read after a redraft: a verdict per prior finding, never a fresh grade.
@@ -310,6 +340,18 @@ page, as \`readerJobs\`: a task phrased the way this profile's audience would ph
 only what the page itself tells them, with a stated done signal a script can check.`;
 }
 
+function factPrompt(p) {
+  return `Fact read of ${p.path} in ${WT}. Trace every claim on the page (each step, command,
+transcript, figure, warning, success signal, and prose assertion) to one of these sources:
+${(p.inputs || []).map((i) => `- ${i}`).join("\n")}
+A claim with no bullet or ratified disposition behind it is a blocking finding (location, claim,
+what the source lacks). A bullet or skeleton step in the sources that the page dropped is a
+blocking finding naming the bullet. A command or example that differs from its manifest entry by
+one character is blocking. A sentence composed by joining two neighboring manifest entries into
+one claim neither entry states on its own is blocking. Verdict "fix" if any blocking finding
+exists; otherwise "accept" with the count of claims traced.`;
+}
+
 function appliedFindingsPrompt(p, priorFindings) {
   return `Fresh read of the redraft of ${p.path} in ${WT}. You were not the agent that wrote it
 and were not shown these findings until now. For each prior finding below, read the current page
@@ -337,9 +379,16 @@ async function draftAndRead(p) {
   const d1 = await agent(draftPrompt(p, 1), { label: `draft:${p.id}`, phase: "Draft", schema: DRAFT_SCHEMA, model: DRAFTER, agentType: DRAFTER_TYPE });
   if (!d1) return { ...record, status: "escalate", reason: "drafter returned nothing" };
   record.draft = d1;
-  const editor = await agent(editorPrompt(p), { label: `editor:${p.id}`, phase: "Read", schema: EDITOR_SCHEMA, model: REVIEWER, agentType: "cairn-register-editor" });
+  // The register editor and the fact read run together, as v1 runs them, each on Opus with zero
+  // context; only the profile grader is gone.
+  const [editor, fact] = await parallel([
+    () => agent(editorPrompt(p), { label: `editor:${p.id}`, phase: "Read", schema: EDITOR_SCHEMA, model: REVIEWER, agentType: "cairn-register-editor" }),
+    () => agent(factPrompt(p), { label: `fact:${p.id}`, phase: "Read", schema: READ_SCHEMA, model: REVIEWER, agentType: "general-purpose" })
+  ]);
   if (!editor) return { ...record, status: "escalate", reason: "editor read returned nothing" };
+  if (!fact) return { ...record, status: "escalate", reason: "fact read returned nothing" };
   record.editor = editor;
+  record.fact = fact;
   record.status = "handed-off";
   return record;
 }
@@ -372,19 +421,23 @@ async function stage1() {
       draft: r.draft || null,
       editorFindings: r.editor ? r.editor.findings : [],
       omissions: r.editor ? r.editor.omissions : [],
+      factFindings: r.fact ? r.fact.findings : [],
       readerJobs: r.editor ? r.editor.readerJobs.map((j) => ({ ...j, id: `${r.id}:${j.id}` })) : []
     }))
   };
-  const handoffPath = `docs/internal/handoffs/${a.runId || "docs-page-chain"}.json`;
+  const runId = a.runId || "docs-page-chain";
   phase("Handoff");
   const written = await agent(
-    `Write the file ${handoffPath} in ${WT} with exactly this JSON content, creating any parent
-directories that do not exist yet. Overwrite the file if it exists. Do not reformat or reorder
-the content.
+    `Resolve the handoff path: if the environment variable XDG_CACHE_HOME is set and non-empty,
+use "$XDG_CACHE_HOME/docs-page-chain/handoffs/${runId}.json"; otherwise use
+"$HOME/.cache/docs-page-chain/handoffs/${runId}.json". This path is outside any git checkout, so
+run it from your own shell, never from inside ${WT}. Create any parent directories that do not
+exist yet, then write that file with exactly this JSON content, overwriting it if it exists and
+never reformatting or reordering the content:
 
 ${JSON.stringify(handoff, null, 2)}
 
-Return only the path you wrote.`,
+Return only the absolute path you wrote.`,
     { label: "handoff-write", phase: "Handoff", schema: PATH_RESULT, agentType: "general-purpose" }
   );
   if (!written) throw new Error("docs-page-chain-v2 stage 1: the handoff write returned nothing");
@@ -403,8 +456,10 @@ Return only the path you wrote.`,
 
 async function loadHandoff(handoffPath) {
   return agent(
-    `Read the JSON file ${handoffPath} in ${WT} and return its \`pages\` array exactly as
-written, with no summarizing or reformatting.`,
+    `Read the JSON file at the absolute path ${handoffPath}. It is outside any git checkout (a
+cache path, not part of the worktree), so read it from your own shell rather than assuming it
+sits under a repository. Return its \`pages\` array exactly as written, with no summarizing or
+reformatting.`,
     { label: "load-handoff", phase: "Load", schema: HANDOFF_LOAD_SCHEMA, agentType: "general-purpose" }
   );
 }
@@ -425,12 +480,14 @@ async function redraftPage(page, readerResults) {
     return { ...record, status: "escalate", reason: `stage 1 status was "${page.status}", not handed off` };
   }
   const editorFindings = page.editorFindings || [];
+  const factFindings = page.factFindings || [];
   const missingOmissions = (page.omissions || []).filter((o) => o.status === "missing");
   const verifiedReports = readerResults.filter((r) => r.pageId === page.id && r.verified);
   const unverified = readerResults.filter((r) => r.pageId === page.id && !r.verified).length;
 
   const priorFindings = [
     findingsBlock("register editor", editorFindings),
+    findingsBlock("fact read", factFindings),
     missingOmissions.length
       ? findingsBlock("omission checklist", missingOmissions.map((o) => ({ location: o.item, finding: o.evidence || "missing", blocking: true, rewrite: undefined })))
       : "",
@@ -439,7 +496,7 @@ async function redraftPage(page, readerResults) {
       : ""
   ].filter(Boolean).join("\n");
 
-  if (!editorFindings.length && !missingOmissions.length && !verifiedReports.length) {
+  if (!editorFindings.length && !factFindings.length && !missingOmissions.length && !verifiedReports.length) {
     record.status = "accepted";
     record.note = unverified ? `${unverified} unverified reader run(s) excluded from evidence` : undefined;
     return record;
@@ -454,6 +511,7 @@ async function redraftPage(page, readerResults) {
 
   const flatPrior = [
     ...editorFindings.map((f) => ({ ...f })),
+    ...factFindings.map((f) => ({ ...f })),
     ...missingOmissions.map((o) => ({ location: o.item, finding: `omission checklist: ${o.item}`, blocking: true }))
   ];
   const priorText = flatPrior.map((f) => `- [${f.blocking ? "BLOCKING" : "advisory"}] ${f.location}: ${f.finding}`).join("\n") +

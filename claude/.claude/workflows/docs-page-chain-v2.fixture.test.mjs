@@ -71,6 +71,18 @@ check("every v1 gate also appears in v2 (the cairn-run-gate page-gate line)", ()
   assert.match(SRC, /\$\{LANE\}cairn-run-gate '\$\{gateFor\(p\)\}'/);
 });
 
+check("v2 keeps the fact read (only the profile grader is removed)", () => {
+  assert.match(SRC, /function factPrompt\(p\)/);
+  assert.match(SRC, /READ_SCHEMA/);
+  assert.match(SRC, /label: `fact:\$\{p\.id\}`/);
+});
+
+check("the handoff write resolves the cache path, never a path under the worktree", () => {
+  assert.match(SRC, /XDG_CACHE_HOME/);
+  assert.match(SRC, /docs-page-chain\/handoffs/);
+  assert.match(SRC, /\.cache\/docs-page-chain\/handoffs/);
+});
+
 // ---------------------------------------------------------------------------------------------
 // Load the script body as a callable async function, `agent()` stubbed.
 // ---------------------------------------------------------------------------------------------
@@ -109,7 +121,8 @@ const BASE_ARGS = {
   runId: "fixture-run"
 };
 
-await checkAsync("stage 1 editor dispatch prompt carries the omission checklist and asks for reader jobs", async () => {
+await checkAsync("stage 1 dispatches a fact read alongside the editor, and the editor prompt carries the omission checklist and asks for reader jobs", async () => {
+  let factCalled = false;
   const h = stubHarness((prompt, opts) => {
     if (opts.label === "draft:is-it-working") {
       return { path: PAGE.path, gate: "pass", gateCommand: "cairn-run-gate '...'" };
@@ -129,13 +142,27 @@ await checkAsync("stage 1 editor dispatch prompt carries the omission checklist 
         summary: "one blocking finding, one omission"
       };
     }
+    if (opts.label === "fact:is-it-working") {
+      factCalled = true;
+      assert.match(prompt, /Fact read of/);
+      assert.match(prompt, /joining two neighboring manifest entries/);
+      return {
+        verdict: "fix",
+        findings: [{ location: "para 3", finding: "composed from two manifest entries no source states together", blocking: true }],
+        summary: "one blocking finding"
+      };
+    }
     if (opts.label === "handoff-write") {
-      return { path: "docs/internal/handoffs/fixture-run.json" };
+      assert.match(prompt, /XDG_CACHE_HOME/);
+      assert.match(prompt, /docs-page-chain\/handoffs\/fixture-run\.json/);
+      assert.doesNotMatch(prompt, /\/tmp\/wt\/docs-page-chain\/handoffs/, "the handoff must not be written under the worktree");
+      return { path: "/home/glw907/.cache/docs-page-chain/handoffs/fixture-run.json" };
     }
     throw new Error(`unexpected agent call: ${opts.label}`);
   });
   const result = await run({ ...BASE_ARGS, stage: 1, pages: [PAGE] }, h.agent, h.parallel, h.phase, h.log, h.budget, h.workflow);
-  assert.equal(result.handoffPath, "docs/internal/handoffs/fixture-run.json");
+  assert.ok(factCalled, "stage 1 must dispatch a fact read");
+  assert.equal(result.handoffPath, "/home/glw907/.cache/docs-page-chain/handoffs/fixture-run.json");
   assert.equal(result.pages[0].status, "handed-off");
   assert.equal(result.readerJobCount, 1);
 });
@@ -151,6 +178,9 @@ await checkAsync("applied-findings read returns a verdict per finding on a fixtu
       { location: "para 2", finding: "missing a failure mode", blocking: true, rewrite: "add it" },
       { location: "para 4", finding: "a tricolon", blocking: false, rewrite: "cut to one item" }
     ],
+    factFindings: [
+      { location: "para 3", finding: "composed from two manifest entries no source states together", blocking: true }
+    ],
     omissions: [{ item: "version and platform scope", status: "missing", evidence: "no version line" }],
     readerJobs: []
   };
@@ -165,18 +195,21 @@ await checkAsync("applied-findings read returns a verdict per finding on a fixtu
     if (opts.label && opts.label.startsWith("redraft:")) {
       redraftCalls += 1;
       // the redraft prompt must apply every finding, blocking or advisory (item 3's ruling),
-      // and must carry the verified reader report.
+      // must carry the fact read's finding, and must carry the verified reader report.
       assert.match(prompt, /applying every finding below, blocking or advisory/);
       assert.match(prompt, /a tricolon/);
+      assert.match(prompt, /composed from two manifest entries/);
       assert.match(prompt, /doctor command in step 3 fails/);
       return { path: PAGE.path, gate: "pass", gateCommand: "cairn-run-gate '...'" };
     }
     if (opts.label && opts.label.startsWith("applied:")) {
       appliedCalls += 1;
+      assert.match(prompt, /composed from two manifest entries/, "the fact read's finding must reach the applied-findings read too");
       return {
         perFinding: [
           { location: "para 2", finding: "missing a failure mode", blocking: true, status: "not applied", evidence: "still absent" },
-          { location: "para 4", finding: "a tricolon", blocking: false, status: "applied", evidence: "cut to one item" }
+          { location: "para 4", finding: "a tricolon", blocking: false, status: "applied", evidence: "cut to one item" },
+          { location: "para 3", finding: "composed from two manifest entries no source states together", blocking: true, status: "applied", evidence: "split into two sentences" }
         ],
         newIssues: [],
         summary: "one blocking finding not applied"
