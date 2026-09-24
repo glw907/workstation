@@ -35,6 +35,11 @@ artifacts. github.com/glw907/workstation.
   (including `figure-verifier`), and the two skills (`cairn-figure`; `writing-voice`'s
   renamed author-facing section).
 
+- **Spec and plan review skill (2026-09-23)**: `spec-plan-review` encodes the dubplate rung 6
+  review process (lenses, a fold that may refuse, a verification read, prose last). The
+  dubplate-owed `pass-execute.js` edit is done: `stopOnEscalate` (default true, sequential runs)
+  ends a run at the first unaccepted task and marks the rest skipped.
+
 ## Immediate next action
 
 Plan two of the cairn documentation standard: its handoff is

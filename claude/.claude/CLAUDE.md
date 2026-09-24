@@ -243,9 +243,9 @@ the chain per task with the Agent tool; at six or more, or when the plan marks t
 independent, run `~/.claude/workflows/pass-execute.js` (a plan
 naming the mode is the opt-in). A pass's close task is authored by one fold agent, which
 commits its draft and then folds, with one independent `diff-reviewer` read over the fold's
-diff (Geoff, 2026-09-12). The default plan-review fan-out is three disjoint lenses,
-contract-and-criteria, mechanics-and-feasibility, and domain-risk, with staleness moved into
-the drafter's own pre-flight and the fold capped at one dispatch (Geoff, 2026-09-12).
+diff (Geoff, 2026-09-12). Spec and plan reviews run through the `spec-plan-review` skill
+(plans: three disjoint lenses, staleness in the drafter's pre-flight); findings rank
+by consequence, and a fold may refuse one whose fix costs more than the risk it removes.
 
 Every dispatch names a model and an effort: `sonnet` by default, `haiku` for mechanical
 search, `claude-opus-5-5` for reviewers (cross-model diversity). A dispatch without a model

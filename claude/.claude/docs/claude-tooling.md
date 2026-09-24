@@ -85,6 +85,9 @@ commit skills and manifest together.
   workstation CLAUDE.md "DaisyUI tooling" section.
 - **Dependency upgrades:** the authored `dependency-upgrade` skill (2026-09-14), the procedure every
   bump in every repo follows; the global CLAUDE.md "Dependencies" section is the standing rule.
+- **Spec and plan review:** the authored `spec-plan-review` skill (2026-09-23), the lens fan-out,
+  fold, verification read, and prose review every spec or plan takes before owner approval; the
+  global CLAUDE.md "Conducting a pass" section points at it.
 - **Svelte:** the official server (user scope, remote).
 - **Playwright:** Microsoft's server (user scope, stdio).
 - **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook.
