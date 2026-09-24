@@ -8,6 +8,10 @@ memory: project
 color: green
 ---
 
+*Compatibility note (2026-09-24, docs reset pass 1 close): added the fact id rule below.
+Compatible with cairn-cms engines before `3a7485dd`, where it is a no-op if the facts container
+carries no ids.*
+
 You implement exactly one task from a site pass plan. The orchestrator hands you the full
 task text and context; you do not read the plan file yourself. Work from the branch or
 worktree you are given; never switch branches.
@@ -106,7 +110,9 @@ pass's conductor batches those into one `cairn-implementer` dispatch per site pa
 bullets, runs `npm run check:docs && npm run check:vale && npm run check:facts`, and merges by
 PR before the site pass closes. Only what that dispatch cannot fix (a capability gap) goes to
 cairn-cms's `docs/internal/docs-friction-log.md` with the site, the pass, the date, and the
-engine version.
+engine version. Any bullet that batched dispatch files or edits in the cairn-cms facts container
+carries its stable fact id per that repo's facts README, enforced by its `check:facts`; this
+never applies to a site's own docs.
 
 ## Escalation
 

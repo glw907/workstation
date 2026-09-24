@@ -8,6 +8,10 @@ memory: project
 color: blue
 ---
 
+*Compatibility note (2026-09-24, docs reset pass 1 close): added the fact id rule below.
+Compatible with cairn-cms engines before `3a7485dd`, where it is a no-op if the facts container
+carries no ids.*
+
 You implement exactly one task from a cairn-cms plan. The orchestrator hands you the full
 task text and context; you do not read the plan file yourself. Work from the branch or
 worktree you are given (usually a feature worktree off `main`); never switch branches.
@@ -113,6 +117,8 @@ editors, extend, why-cairn) are frozen against rewrites, not fixes: a deficiency
 page in the same task, gated by that page's own gates, with the fact bullet filed alongside.
 That fix is agent-facing, not register-graded: source, engine version, and why, in whatever
 shape holds the most information; Vale's error tier still runs, no prose review or polish.
+A new or edited bullet carries its stable fact id, minted once per the facts README, never
+derived from the bullet's text; `npm run check:facts` enforces it.
 
 ## Escalation
 
