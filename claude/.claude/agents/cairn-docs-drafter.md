@@ -63,5 +63,6 @@ reference to something the page itself defines). Save the list to
 `<track>` is the page's docs track (`admin`, `editors`, `extend`, `reference`, or
 `front-door`), taken from the brief.
 
-Run the page's gate as the dispatch tells you, report the exact command and its result, and
-return your structured report. Do not commit.
+Do not run the page gate: it runs after an independent read has traced the facts you filed,
+so a provenance failure on your own new facts is expected until then. File a new fact only as
+`[candidate]`, and never change the tag of any fact. Return your structured report. Do not commit.

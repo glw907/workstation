@@ -28,11 +28,16 @@
 //   trace each candidate filed this run against its cited code and, where the code supports it
 //   exactly, retag it `[verified]` with a code Source (`path:line` or a `src/` `path#Symbol`,
 //   followed by a quoted anchor, per the site repo's docs/internal/facts/README.md), or leave it
-//   `[candidate]` with a reason. Both reads report what they retagged and what they left, and
-//   flag, as blocking, any bullet the drafting chain retagged itself. The page gate
-//   (with `check:provenance`) runs only after those retags, never inside the drafter, so the
-//   drafter is never tempted to clear a provenance failure by grading its own citations. Pages in
-//   flight at once can edit the same facts file; each read edits only the bullets it names.
+//   `[candidate]` with a reason. Both reads report what they retagged and what they left. Before
+//   editing, each compares the tag of every fact the page's brief cites against HEAD and flags,
+//   as blocking, any change no read reported (this read's own retags come after the check; stage
+//   2 also accepts the handoff's `factRetagged`), restoring the HEAD tag. A retag of a bullet the
+//   page does not cite cannot help its provenance, so no cross-page attribution is needed. The
+//   page gate (with `check:provenance`) runs only after those retags, never inside the drafter, so
+//   the drafter is never tempted to clear a provenance failure by grading its own citations. The
+//   gate runs `check:provenance -- <the page's own brief>`, never the all-briefs form, so a page
+//   is not failed by another in-flight page's brief. Pages in flight at once can edit the same
+//   facts file; each read edits only the bullets it names.
 //
 //   Each handoff page carries the page args verbatim (id, path, track, brief, inputs, exemplars,
 //   pinned, extraChecks), the gate-of-record result (gate, gateCommand, gateTail), the bullets
@@ -125,6 +130,7 @@
 //       valeErrorRules: "<the error-tier rule list, verbatim>",
 //       drafterModel: "claude-opus-5-5",   // optional
 //       reviewModel: "claude-opus-5-5",    // optional
+//       gateModel: "sonnet", gateEffort: "low",   // optional; the gate-of-record agent
 //       runId: "<optional prefix, e.g. the plan task id; lowercased to [a-z0-9-]>",
 //       pages: [
 //         {
@@ -401,6 +407,8 @@ const DRAFTER = a.drafterModel || "claude-opus-5-5";
 const DRAFTER_TYPE = a.drafterType || "cairn-docs-drafter";
 const TOOL_GATE = a.toolGate || null;   // appended for a page carrying `pinned`, e.g. "make -C <wt>/tool check"
 const REVIEWER = a.reviewModel || "claude-opus-5-5";
+const GATE_MODEL = a.gateModel || "sonnet";
+const GATE_EFFORT = a.gateEffort || "low";
 const STAGE = a.stage;
 const PAGES = a.pages || [];
 const RUN_ID = String(a.runId || "").toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "docs-page-chain";
@@ -433,8 +441,10 @@ ${a.valeErrorRules || "(run `npm run check:vale` and fix every error-tier findin
 
 // v2's page gate always adds `check:provenance` (validates the drafter's sentence-to-fact brief),
 // on top of the caller's own gate string and, when the page is `pinned`, the tool gate.
+// It names the page's own brief: several pages are drafted at once, and the bare all-briefs form
+// would fail page A on page B's in-flight brief.
 const gateFor = (p) => {
-  const parts = [GATE, "npm run check:provenance"];
+  const parts = [GATE, `npm run check:provenance -- ${briefPathFor(p)}`];
   if (p.pinned && p.pinned.length && TOOL_GATE) parts.push(TOOL_GATE);
   return parts.join(" && ");
 };
@@ -513,23 +523,27 @@ cairn CLI operator commands (cairn doctor, cairn auth check) against a scratch s
 "docs-and-site" when it installs, edits, or builds a scaffolded site with its npm scripts;
 "repository" when it works in the cairn-cms source tree itself.`;
 
-// The independent trace of this run's candidates. `watch` lists bullets the drafting chain must
-// not have retagged: its own filings, plus (in stage 2) the ones the stage-1 fact read left.
-function retagRule(filed, who, watch, flagAs) {
-  return `Candidates ${who} filed this run:
+// The independent trace of this run's candidates, and the self-retag check over every fact the
+// page's brief cites. Only a read may retag; `legit` lists the retags earlier reads reported.
+function retagRule(p, filed, who, legit, flagAs) {
+  return `First, before you edit anything, check for self-retags. Read the page's brief,
+${briefPathFor(p)}, and collect every fact id its sentences cite (skip "no-claim"). For each,
+find its bullet under docs/internal/facts/ and compare its tag at HEAD (\`git show
+HEAD:<facts file>\`) with its current tag. These retags were reported by an earlier read and are
+legitimate:
+${bulletList(legit.length ? legit : ["(none)"])}
+Any other tag change was made by the drafting chain (${who} or an earlier draft), which must
+never retag: report each as ${flagAs} naming the bullet, and restore its HEAD tag (a bullet
+that is new since HEAD goes back to [candidate: ...]).
+
+Then trace the candidates ${who} filed this run:
 ${bulletList(filed.length ? filed : ["(none)"])}
 For each one, trace the claim against the code its Source cites. Where the code supports it
 exactly, retag it [verified] in place with a code Source, per docs/internal/facts/README.md:
 path:line or path:line-line (or a src/ path#Symbol declaration), followed by a quoted anchor, a
 code span in parentheses copied verbatim from those lines. Report it in \`retagged\` with that
 Source. Otherwise leave it [candidate: <what was and was not checked>] and report it in
-\`leftCandidate\` with the reason. Edit only those bullets.
-
-First, before you edit anything, check these bullets in the facts container:
-${bulletList(watch.length ? watch : ["(none)"])}
-Any of them whose tag is no longer [candidate] was retagged by ${who} itself, which it must never
-do: report each as ${flagAs} naming the bullet, restore its [candidate] tag, then trace it with
-the rest.`;
+\`leftCandidate\` with the reason. Edit no bullet beyond these and the restores above.`;
 }
 
 function editorPrompt(p) {
@@ -565,10 +579,10 @@ one claim neither entry states on its own is blocking. A bullet the drafter file
 counts as a source only once you have traced it below. Verdict "fix" if any blocking finding
 exists; otherwise "accept" with the count of claims traced.
 
-${retagRule(filed, "the drafter", filed, "a blocking finding")}`;
+${retagRule(p, filed, "the drafter", [], "a blocking finding")}`;
 }
 
-function appliedFindingsPrompt(p, priorFindings, filed, stillCandidate) {
+function appliedFindingsPrompt(p, priorFindings, filed, legit) {
   return `Fresh read of the redraft of ${p.path} in ${WT}. You were not the agent that wrote it
 and were not shown these findings until now. For EVERY prior finding below, one \`perFinding\`
 entry carrying the finding's id exactly as shown in the first brackets: read the current page and
@@ -581,7 +595,7 @@ ${extraChecksBlock(p, "Also verify each of these still holds on the redraft; a f
 Also flag any new text the redraft introduced beyond what these findings called for, as
 \`newIssues\`, each with a \`blocking\` flag. This is the only redraft this page gets.
 
-${retagRule(filed, "the redraft", [...filed, ...stillCandidate], "a blocking \`newIssues\` entry")}`;
+${retagRule(p, filed, "the redraft", legit, "a blocking \`newIssues\` entry")}`;
 }
 
 function gatePrompt(p) {
@@ -591,7 +605,7 @@ Return gate "pass" or "fail", the exact command, and the last twenty lines as ga
 }
 
 async function runGate(p, label) {
-  return agent(gatePrompt(p), { label, phase: "Gate", schema: GATE_SCHEMA, model: "sonnet", effort: "low", agentType: "general-purpose" });
+  return agent(gatePrompt(p), { label, phase: "Gate", schema: GATE_SCHEMA, model: GATE_MODEL, effort: GATE_EFFORT, agentType: "general-purpose" });
 }
 
 function findingLine(f) {
@@ -821,8 +835,8 @@ async function redraftPage(page, jobs) {
   // A general-purpose agent, not the read-only register editor: this read edits the facts
   // container when it retags the redraft's candidates.
   const redraftFiled = d2.bulletsFiled || [];
-  const stillCandidate = (page.factLeftCandidate || []).map((x) => x.id);
-  const appliedPrompt = appliedFindingsPrompt(page, graded.map(findingLine).join("\n"), redraftFiled, stillCandidate);
+  const legit = (page.factRetagged || []).map((x) => x.id);
+  const appliedPrompt = appliedFindingsPrompt(page, graded.map(findingLine).join("\n"), redraftFiled, legit);
   const applied = await agent(appliedPrompt, { label: `applied:${page.id}`, phase: "Applied", schema: APPLIED_SCHEMA, model: REVIEWER, agentType: "general-purpose" });
   if (!applied) return { ...record, status: "escalate", reason: "applied-findings read returned nothing" };
   record.applied = applied;

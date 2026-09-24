@@ -511,7 +511,10 @@ await checkAsync("gap 1: the drafter files candidates only and runs no gate; the
   assert.match(fact, /retag it \[verified\] in place with a code Source/);
   assert.match(fact, /quoted anchor/);
   assert.match(fact, /leftCandidate/);
-  assert.match(fact, /whose tag is no longer \[candidate\] was retagged by the drafter itself/);
+  assert.match(fact, /Read the page's brief,\ndocs\/internal\/briefs\/admin\/is-it-working\.json, and collect every fact id/);
+  assert.match(fact, /git show\nHEAD:<facts file>/);
+  assert.match(fact, /legitimate:\n- \(none\)/, "in stage 1 no earlier read has retagged anything");
+  assert.match(fact, /made by the drafting chain \(the drafter or an earlier draft\)[\s\S]*a blocking finding naming the bullet, and restore its HEAD tag/);
   const order = h.calls.map((c) => c.opts.label);
   assert.ok(order.indexOf(`gate:${PAGE.id}`) > order.indexOf(`fact:${PAGE.id}`), "the gate runs after the fact read's retags");
   assert.match(labelled(h, "gate:")[0].prompt, /check:provenance/);
@@ -544,8 +547,8 @@ await checkAsync("gap 1: a redraft's attempt to retag is flagged by the applied 
   const result = await go(S2({ resultsDir: dir }), h);
   const applied = labelled(h, "applied:")[0].prompt;
   assert.ok(applied.includes(redraftFiled[0]), "the applied read traces the redraft's candidates");
-  assert.match(applied, /- f:doctor-flag/, "the stage-1 leftover candidate is on the self-retag watch list");
-  assert.match(applied, /retagged by the redraft itself[\s\S]*blocking `newIssues` entry/);
+  assert.match(applied, /legitimate:\n- f:doctor-exit\n/, "the stage-1 fact read's retag is the one legitimate change");
+  assert.match(applied, /made by the drafting chain \(the redraft or an earlier draft\)[\s\S]*blocking `newIssues` entry naming the bullet, and restore its HEAD tag/);
   assert.equal(labelled(h, "applied:")[0].opts.agentType, "general-purpose", "the read that retags is not the read-only editor");
   const order = h.calls.map((c) => c.opts.label);
   assert.ok(order.indexOf(`regate:${PAGE.id}`) > order.indexOf(APPLIED), "the redraft's gate runs after the applied read's retags");
@@ -563,6 +566,65 @@ await checkAsync("gap 2: a readerJobs entry carries its class through the handof
   assert.deepEqual(handoff.pages[0].readerJobs.map((j) => [j.id, j.class]), [["is-it-working--1", "docs-only"], ["is-it-working--2", "docs-and-site"]]);
   assert.match(SRC, /"class": "<the readerJobs entry's class/);
   assert.match(SRC, /struck by the conductor|strikes it through `struckReaderFindings`/);
+});
+
+await checkAsync("round 3 fix 2: the redraft retags an OLDER bullet the page cites; the applied read checks every cited fact against HEAD, flags it blocking, and restores it", async () => {
+  const { handoff } = await runStage1({
+    [`fact:${PAGE.id}`]: { ...CLEAN_FACT, verdict: "fix", findings: FACT_FINDINGS }
+  });
+  const dir = writeResultsDir([]);
+  const h = stubHarness(stage2Stubs(handoff, dir, {
+    [APPLIED]: (prompt) => ({
+      ...appliedAll()(prompt),
+      newIssues: [{ location: "docs/internal/facts/admin.md f:site-url", finding: "cited by the brief; tag changed from [candidate: page only] at HEAD to [verified] with no read reporting it; restored to the HEAD tag", blocking: true }]
+    })
+  }));
+  const result = await go(S2({ resultsDir: dir }), h);
+  const applied = labelled(h, "applied:")[0].prompt;
+  assert.match(applied, /candidates the redraft filed this run:\n- \(none\)/, "the redraft filed nothing; the bullet is an older one");
+  assert.match(applied, /collect every fact id its sentences cite/);
+  assert.match(applied, /git show\nHEAD:<facts file>/);
+  assert.match(applied, /restore its HEAD tag/);
+  assert.equal(result.pages[0].status, "escalate");
+  assert.match(result.pages[0].newBlocking[0].finding, /restored to the HEAD tag/);
+});
+
+await checkAsync("round 3 fix 1: two pages in flight; each gate runs check:provenance on its own brief only", async () => {
+  const PAGE_B = { ...PAGE, id: "fix-a-file", path: "docs/admin/fix-a-file.md", pinned: [] };
+  const h = stubHarness((prompt, opts) => {
+    const id = opts.label.split(":")[1];
+    if (opts.label.startsWith("draft:")) return { path: `docs/admin/${id}.md`, bulletsFiled: id === PAGE_B.id ? ["docs/internal/facts/admin.md f:untraced"] : [] };
+    if (opts.label.startsWith("editor:")) return CLEAN_EDITOR();
+    if (opts.label.startsWith("fact:")) return id === PAGE_B.id ? { ...CLEAN_FACT, leftCandidate: [{ id: "f:untraced", reason: "no code supports it" }] } : CLEAN_FACT;
+    if (opts.label.startsWith("gate:")) {
+      // page B's brief cites an untraced candidate, so only a gate naming B's brief can fail on it
+      return prompt.includes("briefs/admin/fix-a-file.json") ? { gate: "fail", gateCommand: "x", gateTail: "f:untraced is a candidate" } : GATE_PASS;
+    }
+    if (opts.label === "handoff-write") return { path: "/h.json" };
+    throw new Error(`unexpected: ${opts.label}`);
+  });
+  const result = await go({ ...BASE_ARGS, stage: 1, inFlight: 2, pages: [PAGE, PAGE_B] }, h);
+  const gateA = h.calls.find((c) => c.opts.label === `gate:${PAGE.id}`).prompt;
+  const gateB = h.calls.find((c) => c.opts.label === `gate:${PAGE_B.id}`).prompt;
+  assert.match(gateA, /npm run check:provenance -- docs\/internal\/briefs\/admin\/is-it-working\.json/);
+  assert.doesNotMatch(gateA, /fix-a-file/, "page A's gate never names page B's brief");
+  assert.doesNotMatch(gateA, /check:provenance( &&|')/, "never the bare all-briefs form");
+  assert.match(gateB, /npm run check:provenance -- docs\/internal\/briefs\/admin\/fix-a-file\.json/);
+  const byId = Object.fromEntries(result.pages.map((p) => [p.id, p]));
+  assert.equal(byId[PAGE.id].findings, 0, "page A carries no gate finding from page B's brief");
+  assert.equal(byId[PAGE_B.id].findings, 1, "page B's own gate is red on its own untraced candidate");
+});
+
+await checkAsync("the gate agent honors gateModel and gateEffort, defaulting to sonnet / low", async () => {
+  const { h } = await runStage1();
+  const g = labelled(h, "gate:")[0].opts;
+  assert.equal(g.model, "sonnet");
+  assert.equal(g.effort, "low");
+  const h2 = stubHarness(stage1Stubs());
+  await go({ ...BASE_ARGS, stage: 1, pages: [PAGE], gateModel: "haiku", gateEffort: "medium" }, h2);
+  const g2 = labelled(h2, "gate:")[0].opts;
+  assert.equal(g2.model, "haiku");
+  assert.equal(g2.effort, "medium");
 });
 
 for (const d of tempDirs) rmSync(d, { recursive: true, force: true });
