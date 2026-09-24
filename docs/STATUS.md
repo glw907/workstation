@@ -43,9 +43,8 @@ artifacts. github.com/glw907/workstation.
 ## Immediate next action
 
 Plan two of the cairn documentation standard: its handoff is
-`docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`. Once the cairn
-overnight workflow has ended, also run the infra round's deferred task 9 (`pass-execute.js`
-and its skill text).
+`docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`. The infra round's deferred task 9 landed at `ce70b5f` (2026-09-23), with
+`pass-execute.js`'s stop-on-escalate option.
 
 Owed, from the infra round's handoff: `cairn-cms/CLAUDE.md`'s own four-line pick and budget
 trim; poplar's `go-architecture-reader` adoption; whether `aksailingclub-org`, `xcathletes-org`,
