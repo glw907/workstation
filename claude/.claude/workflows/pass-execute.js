@@ -2,10 +2,11 @@
 // review, fix-loop, gate. The conductor invokes this instead of dispatching
 // the chain per task inline.
 //
-// Invocation from the conductor session:
+// Invocation from the conductor session: by name, never by path and never from a scratchpad
+// copy (a copy would make a later edit to this file invisible to the run).
 //
 //   Workflow({
-//     scriptPath: "~/.claude/workflows/pass-execute.js",
+//     name: "pass-execute",
 //     args: {
 //       repo: "/home/glw907/Projects/<repo>",
 //       gate: "npm run check && npm test",
@@ -17,15 +18,30 @@
 //                                         // when every blocking finding is commentOnly.
 //                                         // Absent means every round runs the full gate,
 //                                         // which is the unchanged behavior.
+//       stopOnEscalate: true,             // optional; sequential runs only, defaults to true.
+//                                         // See "Stop on an unaccepted task" below.
+//       commonNotes: "...",               // optional; appended after every task's own
+//                                         // `notes` line in the implement prompt. Absent
+//                                         // adds nothing, matching today's prompts.
 //       tasks: [
 //         { id: "1", title: "...", criteria: "...", files: ["..."], notes: "..." }
 //       ]
 //     }
 //   })
 //
+// `repo` is prompt text only: the runner never reads or writes that path itself, it only
+// hands the string to the dispatched agents. Every gate string (`gate`, `reducedGate`, a
+// task's own `gate`) is absolute per tree, since the runner has no working directory of its
+// own to resolve a relative one against.
+//
 // The conductor reads only the returned per-task records. It never reads a
 // diff, a gate transcript, or an agent's full report; the review step already
 // did that.
+//
+// One invocation runs one segment. The runner has no mid-run conductor hook, so a pass
+// carrying conductor checkpoint or segment boundaries is launched one invocation per segment;
+// the conductor's checkpoint and any batched simplifier round fall between invocations, not
+// inside one.
 //
 // Gate tier (Geoff, 2026-09-15): when `<a.repo>/scripts/checks/gate-tier.mjs` exists, the gate
 // string for a task is chosen from its committed diff rather than fixed by the plan. A task may
@@ -40,9 +56,17 @@
 // implementer prefix every cairn-run-gate call with CAIRN_GATE_LANE=light, for a gate that launches
 // no browser. Unset means the default heavy lane.
 
+// Stop on an unaccepted task (2026-09-23): in a sequential run, a task whose final status is not
+// "accepted" (a reviewer escalate, a fix verdict still standing after maxFix rounds, an accept
+// without a passing gate, or a failed dispatch) ends the run, because every later task would
+// build and commit on top of an unaccepted one. The run returns that task's record and marks
+// every task after it "skipped". Set `stopOnEscalate: false` to run the whole list regardless.
+// A parallel run never stops early, since its tasks are independent by the plan's own marking.
+// pass-execute-chains.js already halts a chain the same way.
+
 export const meta = {
   name: "pass-execute",
-  description: "Runs a pass plan's tasks through implementer, diff-reviewer, and gate in a chain.",
+  description: "Runs a pass plan's tasks through implementer, diff-reviewer, and gate in a chain. One invocation runs one segment; a pass with conductor boundaries is launched once per segment.",
   whenToUse: "A pass plan names the workflow mode, or the pass has six or more tasks, or the plan marks tasks independent.",
   phases: [
     { title: "Implement", detail: "one implementer dispatch per task, plus fix rounds" },
@@ -173,9 +197,10 @@ function implementPrompt(t, a, blocking, baseSha) {
     `Acceptance criteria: ${t.criteria}`,
     t.files ? `Files: ${t.files.join(", ")}` : "Files: not specified",
     t.notes ? `Notes: ${t.notes}` : "",
+    a.commonNotes ? `Notes: ${a.commonNotes}` : "",
     `Gate command: ${t.gate || a.gate}`,
     `Before running the gate, check whether scripts/checks/gate-tier.mjs exists in this repo. If it does, run \`${classifierCmd}\` from the repo root, after your commits and before the gate, and run the gate string it prints on stdout instead of the Gate command above (report gateTier: "${t.gateTier ? "pin" : "computed"}" and gateCommand as that exact string). If the script is absent, exits non-zero, or prints nothing, run the Gate command above unchanged (report gateTier: "default" and gateCommand as that string).`,
-    "Run the gate through `" + lanePrefix + "cairn-run-gate '<the gate string>'`" + laneNote + " (it blocks to completion and prints the tail); never poll a log; report its exact result.",
+    "Run the gate through `" + lanePrefix + "cairn-run-gate '<the gate string>'`" + laneNote + ": exit 75 means still running, so re-issue the exact same command until it prints \"gate exit:\" with the tail; a report that the gate process vanished without a status means the run was lost, so start a fresh run rather than report red; never run it in the background and never poll a log; report its exact result.",
     "Skip agent-memory maintenance for this dispatch."
   ];
   if (blocking && blocking.length > 0) {
@@ -363,13 +388,14 @@ async function runTask(t, a) {
 }
 
 function tally(results) {
-  const t = { accepted: 0, needsDecision: 0, escalated: 0, failed: 0, deferred: 0 };
+  const t = { accepted: 0, needsDecision: 0, escalated: 0, failed: 0, deferred: 0, skipped: 0 };
   for (const r of results) {
     if (r.status === "accepted") t.accepted += 1;
     else if (r.status === "needs-decision") t.needsDecision += 1;
     else if (r.status === "escalated") t.escalated += 1;
     else if (r.status === "failed") t.failed += 1;
     else if (r.status === "deferred") t.deferred += 1;
+    else if (r.status === "skipped") t.skipped += 1;
   }
   return t;
 }
@@ -401,8 +427,9 @@ async function main() {
     );
     results = results.filter(Boolean);
   } else {
+    const stopOnEscalate = args.stopOnEscalate !== false;
     results = [];
-    for (const t of args.tasks) {
+    for (const [i, t] of args.tasks.entries()) {
       if (isDeferred()) {
         log(`task ${t.id} (${t.title}): deferred for budget`);
         results.push({ id: t.id, title: t.title, status: "deferred", fixRounds: 0, implementer: null, review: null });
@@ -410,13 +437,20 @@ async function main() {
       }
       const record = await runTask(t, args);
       results.push(record);
+      if (stopOnEscalate && record.status !== "accepted") {
+        log(`stopping after task ${t.id} (${record.status}); remaining tasks skipped`);
+        for (const rest of args.tasks.slice(i + 1)) {
+          results.push({ id: rest.id, title: rest.title, status: "skipped", fixRounds: 0, implementer: null, review: null });
+        }
+        break;
+      }
     }
   }
 
   phase("Report");
 
   const finalTally = tally(results);
-  log(`tally: accepted ${finalTally.accepted}, needs-decision ${finalTally.needsDecision}, escalated ${finalTally.escalated}, failed ${finalTally.failed}, deferred ${finalTally.deferred}`);
+  log(`tally: accepted ${finalTally.accepted}, needs-decision ${finalTally.needsDecision}, escalated ${finalTally.escalated}, failed ${finalTally.failed}, deferred ${finalTally.deferred}, skipped ${finalTally.skipped}`);
 
   return { tasks: results, tally: finalTally, spent: budget.spent() };
 }
