@@ -276,9 +276,9 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   401 on D1. The account-level Workers Logs telemetry query returned 403; docs reset pass 1
   Task 3 confirms whether `cairn logs` works under it. Local only; no Worker consumes it.
 - **Rotate or revoke**: no TTL (the dashboard's TTL edit set a one-day window; recreated without
-  one). Deleted at docs reset pass 2a's close with the scratch site's teardown, which replaces an
-  expiry. Replace by minting a new account-owned token with the same single policy and
-  `secret-receive CAIRN_SCRATCH_CF_TOKEN`.
+  one). Deleted at the close of the last docs reset drafting pass that runs `docs-and-binary`
+  readers, with the scratch site's teardown, which replaces an expiry. Replace by minting a new
+  account-owned token with the same single policy and `secret-receive CAIRN_SCRATCH_CF_TOKEN`.
 
 ### CAIRN_DOCS_READER_OAUTH_TOKEN
 - **Grants**: a long-lived Claude Code OAuth token minted by Geoff with `claude setup-token`
