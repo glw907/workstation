@@ -53,10 +53,8 @@ Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; see
 `prose-voice-reviewer`, `cairn-register-editor`; `pass-execute.js`, `pass-execute-chains.js`,
 `docs-page-chain.js`). `cairn-docs-drafter` (the docs reset pass 1 drafter agent, `effort: high`)
 also pins `claude-opus-5-5` explicitly and carries no `skills:` line; its profile and exemplars
-arrive in the dispatch prompt. `docs-page-chain-v2.js` (a copy of `docs-page-chain.js`, Task 8 of
-the 2026-09-23 docs reset pass 1 plan) differs only in defaulting `drafterType` to
-`cairn-docs-drafter`; `docs-page-chain.js` itself and its callers are untouched until pass 2a
-rules. No agent pins Fable 5.1; it is reached only by a per-dispatch escalation.
+arrive in the dispatch prompt. `docs-page-chain-v2.js` (the reader-runner chain) was retired with
+the docs reader harness on 2026-09-26. No agent pins Fable 5.1; it is reached only by a per-dispatch escalation.
 Implementers stay on `sonnet` at effort `high`; the docs page chain drafts published pages on
 `claude-opus-5-5` (its `drafterModel` default, Geoff 2026-09-22). A frontmatter pin is read at session start, so a repin reaches a
 running session only through a per-dispatch `model`; verify a repin from a fresh headless session
