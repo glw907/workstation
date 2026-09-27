@@ -325,7 +325,7 @@ function implementPrompt(t, a, blocking, baseSha) {
     `Repo: ${a.repo}`,
     `Task ${t.id}: ${t.title}`,
     `Acceptance criteria: ${t.criteria}`,
-    t.files ? `Files: ${t.files.join(", ")}` : "Files: not specified",
+    t.files ? `Files: ${[].concat(t.files).join(", ")}` : "Files: not specified",
     t.notes ? `Notes: ${t.notes}` : "",
     a.commonNotes ? `Notes: ${a.commonNotes}` : "",
     cls ? `Pass class: ${cls.name}. Test mandate: ${cls.mandate}` : "",
