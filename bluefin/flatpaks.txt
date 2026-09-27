@@ -17,3 +17,4 @@ org.gajim.Gajim
 io.github.screwys.Rufin
 md.obsidian.Obsidian
 org.jeffvli.feishin
+com.valvesoftware.Steam
