@@ -323,6 +323,7 @@ function implementPrompt(t, a, blocking, baseSha) {
   const classifierCmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${pinFlag}`;
   const lines = [
     `Repo: ${a.repo}`,
+    `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
     `Task ${t.id}: ${t.title}`,
     `Acceptance criteria: ${t.criteria}`,
     t.files ? `Files: ${[].concat(t.files).join(", ")}` : "Files: not specified",
@@ -378,6 +379,7 @@ function reviewPrompt(t, a, implReport, resolvedGate, reduced) {
       : "";
   return [
     `Repo: ${a.repo}`,
+    `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
     `Task ${t.id}: ${t.title}`,
     `Acceptance criteria: ${t.criteria}`,
     `The gate string this task ran: ${ranCommand}`,
@@ -441,6 +443,7 @@ async function resolveGate(t, a, baseSha, label) {
   const probe = await agent(
     [
       `Repo: ${a.repo}`,
+    `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
       `Check whether the file scripts/checks/gate-tier.mjs exists there.`,
       `If it does not, report exists: false and gate: "".`,
       `If it does, run exactly \`${cmd}\` from the repo root and report exists: true and gate: "<its exact stdout, trimmed>". On a non-zero exit or empty stdout, report exists: true and gate: "".`,
