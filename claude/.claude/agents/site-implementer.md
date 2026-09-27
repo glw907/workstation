@@ -103,9 +103,9 @@ dispatch says a fix round is comment-only, run the reduced gate it names, not th
 ## The facts container
 
 Each cairn-cms narrative arm is frozen against rewrites only until that arm's own stage merges
-(extend's at the 2b merge); before an arm's stage merges, follow its admin or extend pages
-exactly as written and fix or file every divergence between a page and reality, per the spec's
-"Edits after the chain" rule: a changed or new claim cites a citable fact, a new fact is filed
+(extend's at the 2b merge); during the site round, follow the admin and extend pages exactly as
+written and fix or file every divergence between a page and reality, per the spec's "Edits after
+the chain" rule: a changed or new claim cites a citable fact, a new fact is filed
 `[candidate]`, the page's brief is updated in the same change, and `npm run check:provenance` is
 the tripwire. Before opening a cairn-cms worktree, run the one-executor check: `pgrep -f` the
 worktree path, and `git status` for warm changes you did not author. Edit on a branch
