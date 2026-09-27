@@ -62,7 +62,9 @@ the drafter's pre-flight, not a lens. Every plan lens also checks the four plann
 - The ask: correctness gaps ranked by consequence, not polish. Each finding carries a severity
   (blocker, major, minor), the location (`file:line`), the defect, and a proposed fold.
 - Mark any finding whose resolution is a product or priority choice as **OWNER FORK**, with the
-  options and a recommendation. A reviewer never rules a fork.
+  options and a recommendation. A reviewer never rules a fork. A question with one clearly
+  correct answer (a ratified standard, a conformance text, or a proven defect settles it) is
+  not a fork: propose that answer as the fold.
 - The output file: `docs/superpowers/research/<date>-<target>-review-<lens>.md` (or the repo's
   equivalent). The reviewer writes only that file.
 - When a code lane shares the tree: write your own file only, never commit, never touch any
@@ -83,6 +85,11 @@ One fold agent (`claude-opus-5-5`, effort `high`) takes every review file. Its d
 - Fix convergent defects (several lenses reaching one root) at the root, not per finding.
 - **Never rule an owner fork.** Consolidate every fork into one numbered rulings section in the
   document, each a yes-or-no question with a recommendation and what each answer builds.
+- **Never make a ruling out of a settled question.** When one answer is clearly the
+  architecturally correct one, the document takes it as its own decision and records why. The
+  owner's rulings hold only genuine forks: product or taste choices, trade-offs with no dominant
+  answer, and risks only the owner can accept (Geoff, 2026-09-25: "You don't need to ask
+  questions for the sake of ceremony").
 - When the revision silently changes a ratified document's meaning, record it as an owed
   erratum in the fold record. The fold does not edit the ratified document.
 - Write only the target and the fold record. Never commit when a code lane shares the tree.
