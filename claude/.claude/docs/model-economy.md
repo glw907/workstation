@@ -1,378 +1,188 @@
-# Model economy: pricing, history, and mechanics
+# Model economy: current rules, pricing, and history
 
-The on-demand expansion of CLAUDE.md's `## Model economy` section. Read this
-when the inline rule isn't enough context to make a call: why the seat split
-exists, what things cost, and how the Fable overflow mechanics work. The
-inline section in CLAUDE.md is binding; this doc is background.
+The on-demand expansion of CLAUDE.md's "Conducting a pass", "Process proportionality", and
+"Pass sizing" sections. CLAUDE.md states the rules; this doc records the current state in one
+place, the reasons behind it, and the history a later decision would be wrong to rediscover.
+Where the two disagree, CLAUDE.md wins and this doc is stale.
 
-## Pricing and rate buckets
+## Current state (2026-09-27)
 
-Fable output costs $50/MTok (2x Opus 5, ~3x Sonnet 5, 10x Haiku 4.5) on the
-tightest rate-limit bucket. That gap is why the seat split exists at all: a
-Fable conductor doing execution-shaped work (dispatch grinding, gate-running,
-bulk reads) is paying the most expensive tier for work that doesn't need it.
+Seats, per Anthropic's model guidance (Geoff, 2026-09-23):
 
-Reviewers pin `claude-opus-5-5` (dated-ID pins repointed 2026-07-26; same price
-as 4.8, better recall and precision, separate rate bucket). Beside a Fable
-planner and Sonnet implementers, the Opus gate buys cross-model diversity
-against correlated self-review blind spots; under a Fable conductor the Opus
-reviewer is both the fresh-context gate and the diff reader the thin
-conductor never is.
+| Seat | Model | Effort |
+|---|---|---|
+| Brainstorm | `claude-opus-5-5` | `high` |
+| Plan authorship | `claude-opus-5-5` | `high` |
+| Conducting execution (the main session) | `claude-opus-5-5` | `medium` |
+| Implementers (`cairn-implementer`, `site-implementer`) | `sonnet` | `high` |
+| Reviewers (`diff-reviewer`, domain reviewers, verifiers, graders) | `claude-opus-5-5` | `medium` |
+| Security review (`web-auth-security-reviewer`) | `claude-opus-5-5` | `high` |
+| Published docs drafts (`docs-page-chain.js` `drafterModel`) | `claude-opus-5-5` | `high` |
+| Mechanical search | `haiku` | `low` |
+| Escalation only | Fable 5.1 | `high` or above |
 
-## Fable conducts (revised 2026-08-21)
+- **Fable 5.1 is reached only after Opus 5.5 at `xhigh`, then `max`, falls short.** It is one
+  per-dispatch escalation, never a session model switch and never a frontmatter pin. The
+  session model changes only at a pass boundary, from the STATUS resume prompt.
+- **Reviewer effort is `medium`.** Anthropic's Opus 5.5 prompting guide says the default
+  `medium` matches Opus 5 at `high`, and reserves higher effort for measured gains
+  (https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5).
+  Security review keeps `high`: a missed auth defect costs more than the extra tokens.
+- **Reviewer overrules.** Reviewers and the conductor share a model, so an overruled verdict is
+  stated with its reason in STATUS, and a correctness-critical overrule takes the
+  `xhigh`-then-`fable` path.
+- **The conductor is thin.** During execution it never reads a source file, a diff, a test log,
+  or a gate transcript. It rules on structured reports: accept, re-dispatch with a correction,
+  split, upshift, or stop.
+- **The per-task chain replaces the conductor's diff read.** Implementer, then `diff-reviewer`
+  against the task's acceptance criteria, then the repo's full gate, all inside the chain. One
+  re-dispatch on `fix`; a second `fix` is the conductor's decision. Domain reviewers fan out at
+  pass end.
+- **The pass class sets the ceremony** (commit `319c2a8`, Geoff 2026-09-27). A plan header
+  declares `Pass class:` (`auth-data`, `engine-logic`, `paint`, `sweep`, `docs`, `tool`), and a
+  task may override it. The class sets the per-task gate, the reviewer's blocking bar, the test
+  mandate, and the settle and close steps. The table lives in the `cairn-pass` skill.
+  `pass-execute.js` and `pass-execute-chains.js` take `passClass` and render the mandate and
+  the bar into the prompts; this doc never delivers the rule.
+- **Undeclared dispatches fall to `sonnet`.** `CLAUDE_CODE_SUBAGENT_MODEL=sonnet` sits in
+  `~/.claude/settings.json` `env`. It reaches only dispatches with no model of their own:
+  `general-purpose`, `claude`, unpinned custom agents, and Workflow `agent()` without `model`.
+  Frontmatter pins and per-dispatch `model` both win over it.
+- **`low` effort is for mechanical subagents only, never Fable 5.1.** `max` is for one
+  adjudication, and it is session-only. `/effort` persists per model into `settings.json`
+  through the stow symlink, so reset it at session end.
+- **Brainstorm length is never a cost to trim, for product and taste questions.** Scope,
+  priority, product forks, taste, and budget get extended front-loaded back-and-forth. Method,
+  idiom, and architecture calls are Claude's, decided from published evidence, a framework's
+  documented convention, or an architectural best practice (Geoff, 2026-09-24 and 2026-09-26).
+  Bring those as one design for approval and flag only the contestable points.
 
-The 2026-07-26 ratification split the seat: Fable planned and judged, an
-Opus 5 conductor executed. The split existed because execution is long,
-tool-heavy, and cache-read-dominated, and that cost compounds fastest under
-Fable's 2x API price. Routing execution to Opus 5 halved the rate on the
-most expensive part of a pass.
+### The pass-end score
 
-Four drivers, all confirmed by Geoff on 2026-08-21, reversed it. Opus 5
-execution sessions made poorer dispatch and triage calls than the plan
-quality deserved. The plan-approval handoff (fresh session, resume prompt,
-re-reading artifacts) cost attention and tokens. Passes should run longer
-without Geoff present. The Fable allowance has not been the constraint in
-practice.
+Score both budgets at every close. Tokens are measured against the plan's ceiling (`/cost`).
+Attended time is measured as two counts:
 
-Fable now conducts a coding project from brainstorm through post-mortem in
-one session. The plan-approval gate stays the single human gate; it is no
-longer a model boundary. The handoff to a fresh Opus 5 session is gone.
+- **Planning misses:** each ambiguity that surfaced after approval that a planning question
+  would have caught. A rising count reopens the Opus-authors-plans rule.
+- **Execution sittings:** each time Geoff was pulled in after approval. One combined
+  checkpoint question counts once.
 
-**The conductor is thin.** During execution, Fable never reads a source
-file, a diff, a test log, or a gate transcript. It consumes structured
-reports from agents and makes only the decisions that need judgment: accept,
-re-dispatch with a correction, split, upshift, stop. A conductor caught
-reading diffs or grinding edits inline flags itself and dispatches.
+Planning questions never count against the score. Record the numbers even when they look bad.
 
-**The per-task chain replaces the conductor's own diff read.** Each plan
-task runs implementer, then diff reviewer, then gate. The repo's
-Sonnet-pinned implementer returns a fixed shape: files touched, gate result,
-decisions the plan did not cover, anything it could not do. The
-`diff-reviewer` agent (`claude-opus-5-5`) takes the task's acceptance criteria
-and the implementer's report, reads the diff, and returns a verdict (accept,
-fix, escalate) with blocking findings at `file:line`. One re-dispatch on
-`fix`; a second `fix` verdict goes to the conductor as a decision. The
-repo's full gate runs inside the chain, never in the main loop. Domain
-reviewers (svelte, a11y, security, workers) still fan out at pass end.
+## Pricing and the allowance
 
-## The allowance fact (verified 2026-08-21)
+| Measure | Fable 5.1 | Opus 5.5 | Opus 5 |
+|---|---|---|---|
+| Input / output, per MTok | $10 / $50 | $4 / $20 | $5 / $25 |
+| Cache read, per MTok | $0.25 | not recorded here (claude.com/pricing) | $0.50 |
+| Batch | half of base | half of base | half of base |
 
-On Max, Fable 5 draws from the same weekly pool as every other model and may
-consume up to 50% of it. Past that cap, usage falls to credits at API rates
-or a model switch. The help page states no per-model weighting, and none
-could be verified
-(https://support.claude.com/en/articles/15424964-claude-fable-5-on-your-plan,
-verified 2026-08-21).
-
-The 50% cap on the weekly pool is the binding constraint, not API price. The
-design that follows from it minimizes Fable's context size, never the
-number of Fable turns: a thin conductor that reads structured reports
-instead of diffs spends less pool per turn, so it can run more turns before
-hitting the cap.
-
-## Beyond the allocation: the overflow playbook
-
-Beyond the weekly allocation, Fable runs on usage credits at API rates
-($10/$50). `~/.claude/docs/fable-post-cutoff-system.md` governs this as the
-OVERFLOW playbook: batch-first (50% discount), per-dispatch one-shots, and
-the SUGGESTION RULES baked there (never silently spend Fable credits, never
-silently absorb Fable-tier work; propose job + mode + size in one sentence
-and let Geoff decide).
+- **The Max allowance (verified 2026-08-21, unchanged for 5.1).** Fable draws from the same
+  weekly pool as every model and may take up to 50% of it; past that, usage falls to credits at
+  API rates. Anthropic publishes no per-model draw rate, and `/usage` shows no per-model
+  share, so the metering cannot be measured here
+  (https://support.claude.com/en/articles/15424964-claude-fable-5-on-your-plan). The design
+  therefore minimizes Fable's context, never its turns.
+- **Overflow.** Beyond the allocation, Fable runs on credits. `fable-post-cutoff-system.md` is
+  the overflow playbook: batch-first, per-dispatch one-shots, and never silently spend or
+  silently absorb Fable-tier work. Propose job, mode, and size in one sentence and let Geoff
+  decide.
+- **Fable 5.1's saving is effort-dependent.** Anthropic estimates 25% to 45% below Fable 5.
+  Artificial Analysis measured 5.1 at `max` about 20% more per task, from roughly 1.7 times the
+  output tokens (https://artificialanalysis.ai/articles/claude-fable-5-1).
 
 ## The self-check, with its origin incident
 
-The self-check inverts under a Fable conductor. A conductor caught reading
-a source file, a diff, a test log, or a gate transcript during execution, or
-grinding mechanical edits inline, flags itself immediately and dispatches
-the work to the appropriate agent instead of continuing to do it inline.
-
-This rule's root incident predates the inversion but still names the
-failure mode it guards against: an ecxc session silently burned ~1M tokens
-on 2026-07-13 doing execution-shaped work in the main loop. The flag came
-from Geoff, not the conductor. That order, Geoff catching it instead of the
-conductor self-reporting, is the defect the self-check exists to close.
+A conductor caught reading a source file, a diff, a test log, or a gate transcript during
+execution, or grinding mechanical edits inline, flags itself and dispatches. Root incident: an
+ecxc session silently burned about 1M tokens on 2026-07-13 doing execution-shaped work in the
+main loop, and Geoff caught it before the conductor did. That order is the defect the
+self-check closes.
 
 ## Pass sizing: the poplar 1b narrative
 
-CLAUDE.md's Pass sizing rule states the practice; this is the incident that
-produced it. Geoff has no direct insight into when a pass is overloading.
-He sees per-item summaries in which every addition reads as small and
-adjacent; the orchestrator holds the whole dispatch list. Detecting
-accumulation and raising it unprompted is the orchestrator's duty, and a
-pass that quietly doubles costs far more than one split early. Three
-failure modes, all named from poplar pass 1b:
+CLAUDE.md's Pass sizing rule states the practice; this is the incident that produced it. Geoff
+sees per-item summaries in which every addition reads as small; the orchestrator holds the
+whole dispatch list, so detecting accumulation is its duty. Three failure modes, all from
+poplar pass 1b:
 
-- **A grant is not headroom.** "Use a workflow", "we can spread this over
-  several passes", "you have latitude" authorize a mechanism or a boundary,
-  never more work. Restate what a grant does and does not authorize before
-  acting on it.
-- **Accretion by adjacency.** Work joins a task because it sits next to what
-  that task already does. Each addition is defensible alone and none is
-  weighed against the total. Pass 1b's conformance task took a coverage
-  ledger, an unowned method, two doc corrections and two late defect fixes
-  on top of a full plate, and Geoff had to raise the size question twice
-  before the orchestrator said anything.
-- **Splitting tasks instead of splitting the pass (Geoff, 2026-07-30).** A
-  pass can be split at a logical point, and repeated task splits are the
-  signal that it should be. Pass 1b split task 6 into 6a/6b, task 7 into
-  7a/7b and task 11 into 11a/11b, turning twelve planned tasks into fifteen.
-  Every split was individually correct; each was made because that task had
-  outgrown its own written boundary. The orchestrator read them as three
-  separate incidents and never considered splitting the pass, until Geoff
-  asked whether it had run too long. Splitting a task keeps the work inside
-  the pass; only splitting the pass lets work leave, which is why
-  task-splitting is the more comfortable move: it looks like sizing
-  discipline while changing nothing about the commitment.
+- **A grant is not headroom.** "Use a workflow", "spread this over several passes", or "you
+  have latitude" authorize a mechanism or a boundary, never more work. Restate what a grant
+  authorizes before acting on it.
+- **Accretion by adjacency.** Pass 1b's conformance task took a coverage ledger, an unowned
+  method, two doc corrections, and two late defect fixes on top of a full plate. Geoff raised
+  the size question twice before the orchestrator did.
+- **Splitting tasks instead of the pass (Geoff, 2026-07-30).** Pass 1b split tasks 6, 7, and 11,
+  turning twelve tasks into fifteen. Each split was correct alone; none prompted a pass split
+  until Geoff asked. A task split keeps work inside the pass; only a pass split lets it leave.
 
-Practice: count your own splits before answering "is this pass too long".
-The count is the evidence and it is sitting in your dispatch history. A
-second task split inside one pass is the prompt to propose splitting the
-pass; a third means the proposal is overdue. A pass that exists because its
-predecessor burst its scope is already on notice and gets watched harder,
-not less. When proposing, name the cut point (usually the last clean
-self-contained task), name what each half carries, and give the follow-up
-pass a number rather than leaving its work homeless. Also: state a task's
-deliverable count when dispatching it, and say plainly when it passes
-roughly four distinct deliverables or when anything is added after
-dispatch. Route discovered work to the pass that first leans on it, not the
-pass that found it. Prefer turning a discovered artifact into a standing
-input that later passes consume over making it a task now. Never add scope
-to a task already in flight unless it would otherwise build against
-something known wrong, and say so explicitly when doing it. Closing out and
-refreshing beats pushing a long session further: both output quality and
-token cost favor the clean boundary.
+Practice: count your own splits before answering "is this pass too long". A second task split
+is the prompt to propose a pass split; a third means it is overdue. A pass born of a burst
+predecessor gets watched harder. When proposing, name the cut point, what each half carries,
+and the follow-up pass's number. State each task's deliverable count at dispatch, and say so
+when it passes about four or grows after dispatch. Route discovered work to the pass that first
+leans on it. Never add scope to a task in flight unless it would otherwise build against
+something known wrong, and say so when you do.
 
-## Research basis (2026-08-21)
+## History
 
-- Anthropic's multi-agent research system
-  (https://www.anthropic.com/engineering/multi-agent-research-system): the
-  lead runs on the frontier model, workers run cheaper, and the pattern
-  still costs about 15x a single agent's tokens.
-- When and how to use multi-agent systems
-  (https://claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them):
-  split work by information boundary, not by task count.
-- Sub-agents docs (https://code.claude.com/docs/en/sub-agents): a fresh
-  (non-fork) subagent returns only its final message to the caller.
-- Workflows docs (https://code.claude.com/docs/en/workflows): intermediate
-  results stay in script variables rather than the caller's context; the
-  tool's cost warning is advisory, not a hard limit.
-- Model config docs (https://code.claude.com/docs/en/model-config): `effort`
-  is set per agent and is cheaper to tune than a model swap.
-- GitHub issue 41143
-  (https://github.com/anthropics/claude-code/issues/41143): `maxTurns` is
+Compressed; newest first. Each entry keeps what a later decision would be wrong to rediscover.
+
+- **2026-09-27, ceremony scales by kind of change.** Theme identity pass A, a CSS retheme, ran
+  the full engine gate on every task (7 to 11 minutes each), carried about 4.4 test lines per
+  source line, reran the full gate on every test-only fix round, and projected 8 to 10
+  unattended hours. The diff reviewer also blocked on coverage granularity. Size alone had
+  never scaled the chain down, so the pass class was added. `pass-gate-economy.md` records the
+  gate side.
+- **2026-09-23, aligned with Anthropic's model guidance.** Anthropic's "Choosing the right
+  model" says to start with Opus 5.5 for most workloads and reach Fable 5.1 "when your evals on
+  Claude Opus 5.5 at higher effort still fall short", and that tuning effort is often a better
+  lever than switching models. Opus 5.5 took the brainstorm; `visual-verifier` moved from Fable
+  to Opus 5.5; implementers pinned effort `high`; the no-`low` rule narrowed to Fable.
+- **2026-09-23, Opus 5.5 authors plans.** After adversarial spec review the hard reasoning lives
+  in the spec, and turning it into tasks is the agentic work Opus 5.5 was measured on. The
+  check is the planning-miss count, against the Fable-authored draft-docs pass A (three misses).
+- **2026-09-22, Opus 5.5 conducts execution.** The conductor's context is re-bought every loop
+  tick, making it a pass's largest single spend; Opus 5.5 has a published meter and 1M context,
+  where Fable's Max metering is unpublished. First run: cairn retire-2b.
+- **2026-09-22, Opus 5.5 drafts published docs pages.** Draft-docs pass A's three Sonnet drafts
+  all escalated after two rounds and each needed a conductor-directed third round, so a Sonnet
+  draft cost more in review than it saved. Agent-facing prose (facts bullets, HISTORY entries,
+  post-mortems) stays with the Sonnet implementer.
+- **2026-09-04, Fable 5.1 and the subagent default.** `CLAUDE_CODE_SUBAGENT_MODEL` moved from a
+  `.bashrc` export of `inherit` to a `settings.json` `env` value of `sonnet`, because a settings
+  value outranks the shell and reapplies to running sessions. Forcing it onto `Explore` or
+  `Plan` would also override every frontmatter pin. At `low` effort 5.1 searches less and
+  answers from memory, which is why research-shaped turns raise effort.
+- **2026-09-04, interaction is front-loaded, never minimized.** The earlier score counted every
+  question as a defect, which pushed the conductor to guess at planning time, the one place a
+  wrong guess costs a whole pass. Geoff retracted it; the score now separates planning misses
+  from execution sittings.
+- **2026-08-21, Fable conducts.** The 2026-07-26 split (Fable plans, an Opus 5 session executes)
+  was reversed because Opus 5 execution made poor dispatch and triage calls and the
+  plan-approval handoff cost attention. That rule held until 2026-09-22. The thin-conductor
+  rule and the per-task chain date from it and survive every later change.
+- **2026-07-26, reviewers pin Opus.** Beside Sonnet implementers, an Opus reviewer buys
+  cross-model diversity against correlated self-review blind spots, and is the diff reader the
+  thin conductor never is.
+
+## Research basis
+
+- Multi-agent research system
+  (https://www.anthropic.com/engineering/multi-agent-research-system): the lead runs on the
+  frontier model and workers run cheaper, yet the pattern costs about 15 times a single
+  agent's tokens.
+- When to use multi-agent systems
+  (https://claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them): split work
+  by information boundary, not by task count.
+- Sub-agents (https://code.claude.com/docs/en/sub-agents): a fresh subagent returns only its
+  final message.
+- Workflows (https://code.claude.com/docs/en/workflows): intermediate results stay in script
+  variables; the cost warning is advisory.
+- Model config (https://code.claude.com/docs/en/model-config): `effort` is set per agent and is
+  cheaper to tune than a model swap.
+- GitHub issue 41143 (https://github.com/anthropics/claude-code/issues/41143): `maxTurns` is
   documented but not reliably enforced.
-
-## Fable 5.1 (noted 2026-09-04)
-
-Fable 5.1 shipped 2026-09-01 (Mythos 5.1 alongside; no Opus or Sonnet
-5.1). Same $10/$50 per MTok as Fable 5, with cache reads cut 75%. This
-favors long conducting sessions, whose meters are dominated by
-cache-read compounding. Geoff moved sessions to 5.1 on 2026-09-04.
-Reviewer pins stay `claude-opus-5-5` and implementer aliases stay
-`sonnet` (both still their tiers' heads); a dispatch without a model
-now falls to `sonnet` through the settings `env` entry (decisions
-below).
-
-### Prices and benchmarks (verified 2026-09-04)
-
-| Measure | Fable 5.1 | Fable 5 | Opus 5 |
-|---|---|---|---|
-| Input / output, per MTok | $10 / $50 | $10 / $50 | $5 / $25 |
-| Cache read, per MTok | $0.25 | $1.00 | $0.50 |
-| Batch input / output, per MTok | $5 / $25 | $5 / $25 | $2.50 / $12.50 |
-| Terminal-Bench 4.0 | 55.8% | 42.0% | 52.3% |
-
-Prices: the 5.1 row from Anthropic's announcement and the "What's new"
-page (cache reads at 0.025 times base input; batch at half); the Fable 5
-and Opus 5 rows from claude.com/pricing (batch is 50% off base). The
-benchmark row is Anthropic's own table from the announcement. Effort
-levels are not published, and the margin is effort-sensitive. Anthropic
-estimates Fable 5.1 costs about 25% less than Fable 5 for typical
-workloads and up to about 45% less for highly agentic work. One
-independent per-task measurement points the other way. Artificial
-Analysis measured $3.76 per Intelligence Index task at `max` effort
-against Fable 5's $3.14, about 20% more, because 5.1 emits roughly 1.7
-times the output tokens. The saving is effort-dependent, which is why
-the effort rule keeps `high` as the standing level.
-
-### The pool-metering unknown
-
-The support page says Fable models "draw from your plan's regular weekly
-usage limits and use them faster than other Claude models" and that Fable
-5 and 5.1 "work the same way on your plan". No Anthropic page states how
-the draw is computed, and Claude Code's `/usage` shows plan bars shared
-across all models plus attribution by skill, subagent, plugin, and MCP
-server, with no per-model share. The question cannot be measured from this
-machine, so the thin-conductor rule stays as strict as under Fable 5. The
-monthly review records the overall 7-day bar and the behavior flags as a
-trend (spec checklist, item 4); if Anthropic publishes the metering basis,
-that item is replaced.
-
-### Decisions taken 2026-09-04
-
-- `CLAUDE_CODE_SUBAGENT_MODEL` moved from a `.bashrc` export of `inherit`
-  to a `settings.json` `env` entry of `sonnet`. A settings value outranks
-  the shell and is reapplied to running sessions when the file changes. It
-  reaches only dispatches that carry no model of their own:
-  `general-purpose`, `claude`, custom agents without a pin, and Workflow
-  `agent()` without `model`. It does not reach the built-in `Explore`
-  (already capped at Opus) or `Plan`; forcing it onto them would also
-  override every frontmatter pin. The plugin `code-simplifier` is pinned
-  `opus` in its own frontmatter and was never at Fable price.
-- Effort: `medium` is the committed default (Geoff, 2026-09-04, on the
-  outside evidence in `2026-09-04-fable-5-1-outside-evidence.md`); raise
-  to `high` for plan authorship, adjudication, and research-shaped turns
-  rather than lowering, because Fable 5.1 at `low` searches less and
-  answers from memory; `max` only for one adjudication, and it is
-  session-only. `/effort` saves the level per model into `settings.json`
-  through the stow symlink, so a raised session is visible drift until
-  reset.
-- Reviewer pins stay `claude-opus-5-5`: half the output price, fresh-context
-  work that is not cache-heavy, cross-model diversity, and Anthropic's own
-  recommendation to start with Opus 5 for most workloads. Implementers
-  stay `sonnet`; `pass-execute.js` implementers fall to the variable only
-  when a plan omits `t.model`, and both repo implementer agents are pinned.
-  Collapsing the upshift ladder (Fable at `medium` instead of Opus for a
-  novel-logic task) needs a per-task cost measurement this machine cannot
-  yet make.
-
-### 5.1 behavior deltas that matter to conducting
-
-Anthropic's "What's new" page lists seven behavior differences from Fable
-5; four bear on this workstation. In long agent loops 5.1 may issue one
-tool call per turn where implied reads could be batched. It writes fewer
-user-facing progress updates during long tool-calling turns. At `low`
-effort it calls a search or retrieval tool less often and answers from
-memory, which is the premise of the "raise effort for research-shaped
-turns" rule. It is more likely to rewrite a whole file where a targeted
-edit would do, which matters only when the conductor edits inline. The
-prompting page adds that at `xhigh` and `max` it can draft a long
-deliverable in its thinking and write it out again in the reply, costing
-extra output tokens and time; that is the `max` adjudication turn the
-effort rule allows. Claude Code's own turn prompts appear to carry
-equivalent batching and progress reminders (observed in-session
-2026-09-04; not documented, and not verified as the same text). The
-public prompting page expects Fable 5 prompts to carry
-over unchanged; the bundled `claude-api` skill's long-running-agent notes
-say prior-model prompts and skills are often too prescriptive and reduce
-output quality. The prompt-audit report at
-`~/.dotfiles/docs/superpowers/plans/2026-09-04-prompt-audit-report.md`
-and the site-pass experiment (HISTORY 2026-09-04) test which reading holds
-here.
-
-Sources: https://www.anthropic.com/claude-fable-and-mythos-5-1;
-https://platform.claude.com/docs/en/models/fable-5-1/whats-new-fable-5-1;
-https://platform.claude.com/docs/en/models/fable-5-1/migration-guide;
-https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1;
-https://claude.com/pricing;
-https://support.claude.com/en/articles/15424964-claude-fable-5-on-your-plan;
-https://code.claude.com/docs/en/sub-agents; https://code.claude.com/docs/en/env-vars;
-https://code.claude.com/docs/en/costs; https://artificialanalysis.ai/articles/claude-fable-5-1;
-the `claude-api` skill's `shared/model-migration.md` (Fable 5.1 sections).
-
-## Aligned with Anthropic's model guidance (Geoff, 2026-09-23)
-
-Anthropic's models overview and "Choosing the right model" (read 2026-09-23): "If you're unsure
-which model to use, start with Claude Opus 5.5 for most workloads"; Opus 5.5 is "for long-running
-agentic coding and knowledge work" and vision-heavy workflows; Fable 5.1 is for demanding
-reasoning and long-horizon agentic work, "or when your evals on Claude Opus 5.5 at higher effort
-still fall short"; Sonnet 5 is "speed and capability for everyday coding"; Haiku 4.5 is lowest
-latency and cost, including sub-agent tasks; and "tuning effort is often a better lever than
-switching models", starting from each model's default (Opus 5.5 `medium`, Sonnet 5 and Fable 5.1
-`high`). Changes made to match: Opus 5.5 now runs brainstorms as well as plans and conducting;
-Fable 5.1 is reached only after Opus 5.5 at `xhigh` (then `max`) falls short; `visual-verifier`
-moved from Fable 5.1 to Opus 5.5 at `high`; `cairn-implementer` and `site-implementer` pin effort
-`high`; the no-`low` rule is scoped to Fable 5.1, with `low` allowed for mechanical subagents.
-Unchanged because already aligned: Sonnet implements, Opus 5.5 reviews, Haiku searches, the main
-session defaults to `medium`.
-
-## Opus 5.5 authors plans (Geoff, 2026-09-23)
-
-Plan authorship moves from Fable to `claude-opus-5-5` at effort `high`; Fable keeps the
-brainstorm and the adjudication of a hedged Opus verdict. Why: once a spec has been through
-adversarial review, the hard reasoning lives in the spec, and turning it into tasks with
-acceptance criteria is the agentic work Anthropic measured Opus 5.5 on; Anthropic's guidance is
-to start with Opus 5.5 and move to Fable only when Opus 5.5 at higher effort falls short; and
-the Fable pool is better spent where judgment is new. The check: each pass close records its
-planning misses (ambiguities that surfaced after approval), compared against Fable-authored
-passes (draft-docs pass A had three). A rising miss count reopens this rule. First plan under
-it: the cairn-cms docs-reset pass 1 plan.
-
-## Opus 5.5 conducts execution (Geoff, 2026-09-22)
-
-The 2026-08-21 "Fable conducts" rule above is narrowed to the phases that need Fable. Fable
-runs the brainstorm, authors the plan, and takes the one adjudication an Opus verdict hedges
-on. The executing session runs on `claude-opus-5-5` at effort `medium`. Why: during execution
-the conductor consumes structured reports and rules on escalations, which is the workload
-Anthropic's own guidance routes to Opus 5.5 by default, while every loop tick re-buys the
-whole conversation, so the conductor's context is the largest single Fable spend a pass has;
-Opus 5.5 is $4/$20 per MTok with a published meter, where Fable's Max metering is not
-published (see "The pool-metering unknown"). Opus 5.5 also carries 1M context and the
-documented long-run behavior the pass shape needs. Geoff confirmed this against his own
-research on 2026-09-22; the first execution under it is retire-2b in cairn-cms, scored the
-usual way plus a count of `fable` upshifts.
-
-Two guards. Reviewers pin Opus 5.5 as well, so a conductor overruling a reviewer verdict
-states why in STATUS and upshifts the decision to `fable` when the overruled finding is
-correctness-critical. And a decision that needs more than Opus 5.5 gives it is one dispatch
-to `fable`, never a session model switch; the session model changes only at a pass boundary,
-from the STATUS resume prompt.
-
-## Opus 5.5 drafts published docs pages (Geoff, 2026-09-22)
-
-The docs page chain's drafter defaults to `claude-opus-5-5` (`drafterModel` in
-`docs-page-chain.js`); the editor, grader, and fact read stay on Opus 5.5 in fresh contexts.
-Evidence: draft docs pass A's Sonnet drafts escalated all three pages after two rounds and each
-needed a conductor-directed third round, so a Sonnet draft cost more in Opus review rounds and
-Fable attention than it saved. Agent-facing prose (facts bullets, HISTORY entries, stale-step
-fixes on frozen pages, post-mortems) stays with the Sonnet implementer; it is gated, not
-register-graded. Fable never drafts a page routinely; its docs role is the adjudication of a
-page the chain escalates twice. First run under it: draft docs pass B; if its redraft rate does
-not drop, revisit drafter-and-editor sharing one model.
-
-## Interaction is front-loaded, never minimized (Geoff, 2026-09-04)
-
-Until 2026-09-04 the pass-end score counted every question, approval, and
-correction as an interaction point and called a question that did not change
-the outcome a defect. Geoff retracted that framing as too blunt. The goal was
-always interaction that is batched and, preferably, front-loaded. Extended
-back-and-forth on requirements and design is wanted, and it is worth the time
-to remove every ambiguity before a plan is approved.
-
-The old rule carried the wrong incentive. A defect-per-question score pushed
-the conductor toward guessing at planning time, the one place a wrong guess
-costs a whole pass, while the questions it discouraged were the cheap ones.
-The score now separates the phases. Planning misses count each ambiguity that
-surfaced after approval and a planning question would have caught. Execution
-sittings count each time Geoff was pulled in after approval, with one combined
-checkpoint question counting once. Planning questions never count against the
-score.
-
-Cadence follows the same split. Before approval, ask one question at a time
-by default, with a recommendation attached; a few tightly related questions
-may share a message. After approval, judgment calls batch into one combined
-question at a checkpoint, and only a genuine blocker or scope change stops the
-pass early. CLAUDE.md carries the rule in "Conducting a pass" and "Process
-proportionality"; the `geoff-works-autonomously` memory carries the standing
-preference.
-
-## Ceremony scales by kind of change (Geoff, 2026-09-27)
-
-Process proportionality once scaled only by size: a small task skipped the ceremony, and every
-other task took the same chain. A plan now declares a pass class (`auth-data`, `engine-logic`,
-`paint`, `sweep`, `docs`, `tool`), and a task may override it. The class sets the per-task gate,
-the reviewer's model and blocking bar, the test mandate, and the close steps. The `cairn-pass`
-skill holds the table, and `pass-gate-economy.md` records the gate side.
-
-The evidence came from an independent evaluation of theme identity pass A, a CSS retheme. That
-pass carried about 4.4 test lines per source line and ran the full engine gate on every task.
-Each run took 7 to 11 minutes. Every test-only fix round reran the same gate, and the pass
-projected 8 to 10 unattended hours. The diff reviewer also blocked on coverage granularity
-because the criteria were fine-grained, so the token cost followed the gate cost. Under the class
-rule, a `paint` task runs a targeted gate and a reviewer that blocks only on a behavior defect or
-an unmet outcome. Its coverage notes batch to the segment boundary, and the owner glances at
-captures mid-pass instead of only at the end.
-
-The rule reaches agents through the runners, never through this file. `pass-execute.js` and
-`pass-execute-chains.js` take `passClass`, render the mandate and the bar into the prompts, and
-enforce the coverage demotion and the test-only reduced gate in code.
+- Opus 5.5 prompting guide
+  (https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5):
+  default `medium` effort; higher effort only for measured gains.

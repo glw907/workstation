@@ -20,7 +20,7 @@ machine.** The manifests record intent; the script reports what happened.
 | MCP servers, project scope | a repo's `.mcp.json` | that repo | the repo's own CLAUDE.md names it |
 | Secrets a server needs | the age store, `~/.local/secrets` | `~/.dotfiles/secrets/registry.md` | `secret-receive`, `sync.sh` |
 | Memory | `~/.claude/projects/<repo>/memory/` | `MEMORY.md` index per repo | the session |
-| Workflows | `~/.claude/workflows/` (copied to a session scratchpad to run) | the directory | the Workflow tool |
+| Workflows | `~/.claude/workflows/` (invoked by name, never from a scratchpad copy) | the directory | the Workflow tool |
 
 ## Rules
 

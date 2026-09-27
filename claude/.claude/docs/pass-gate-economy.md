@@ -48,9 +48,10 @@ approved, all cheap in tokens:
   single-deliverable tasks into a neighbor (each task pays about thirty minutes of fixed
   overhead).
 - **Orchestrator hygiene:** halt agents PREPEND to STATUS, never rewrite it; a merge step brings
-  `main` in first with fixed resolution rules (STATUS takes main's, HISTORY keeps both); the
-  Workflow tool refuses a `~/.claude/workflows` scriptPath (copy to the session scratchpad);
-  repeated protocol text in args goes in one field the chains script appends at prompt time.
+  `main` in first with fixed resolution rules (STATUS takes main's, HISTORY keeps both); a
+  workstation workflow is invoked by name, never from a scratchpad copy, so every run executes
+  the committed script; repeated protocol text in args goes in one field the chains script
+  appends at prompt time.
 - **One full gate per machine at a time, and every gate memory-capped** (born 2026-09-14: the
   motion pass's two chains ran their full gates side by side, each with headless Chromium,
   the kernel OOM-killed a browser six times, and systemd-oomd then killed GNOME Shell, which
@@ -68,3 +69,11 @@ approved, all cheap in tokens:
   one-minute Go gate queued behind another session's e2e gates on nearly every task of cairn
   Go tool pass A, two to three hours in all. A resumed pass lands the chain that was nearest
   done first, then launches the rest.
+- **code-simplifier runs once per pass or branch, at the close** (Geoff, 2026-09-27), and only
+  when the pass changed TypeScript, Svelte, or Go. It no longer runs before every commit: a
+  per-commit pass re-reads the same files each task and buys nothing the close run misses.
+  Docs-only and CSS-only passes skip it.
+- **The close ritual calls one `npm run check:close`** (cairn-cms, 2026-09-27) instead of a
+  hand-kept list of check scripts. The script runs CI's check list in CI order, minus the unit
+  and e2e suites, so a check added to CI is added to the script in the same change and the close
+  can no longer drift behind CI.
