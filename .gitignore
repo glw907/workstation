@@ -47,3 +47,6 @@ secrets/*.decrypted
 # Tool caches (each also self-ignores, but do not depend on that)
 .pytest_cache/
 .ruff_cache/
+
+# Claude Code runtime cache of claude.ai-synced skills
+claude/.claude/skills/synced/
