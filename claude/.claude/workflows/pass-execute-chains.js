@@ -20,6 +20,13 @@
 // implementer prefix every cairn-run-gate call with CAIRN_GATE_LANE=light, for a gate that launches
 // no browser (a Go `make check`, a lint-only run). Unset means the default heavy lane.
 
+// Pass class (Geoff, 2026-09-27): `args.passClass` or a task's `passClass` selects the test mandate,
+// the reviewer's blocking bar and model, and whether a test-only fix round takes the reduced gate
+// (`t.reducedGate`, `args.reducedGate`, or the 2026-09-09 ruling's string plus `npm run check`).
+// Coverage-only findings under a non-blocking class move to nonBlocking and return as
+// `batchedNotes`. Full rationale in pass-execute.js; without a passClass every prompt is the
+// pre-class one.
+
 export const meta = {
   name: "pass-execute-chains",
   description: "Runs a pass plan's chains in parallel worktrees, tasks sequential within each chain",
@@ -79,7 +86,9 @@ const REVIEW_SCHEMA = {
           location: { type: "string" },
           finding: { type: "string" },
           fix: { type: "string" },
-          commentOnly: { type: "boolean" }
+          commentOnly: { type: "boolean" },
+          testOnly: { type: "boolean" },
+          coverageOnly: { type: "boolean" }
         },
         required: ["location", "finding", "fix"]
       }
@@ -101,11 +110,109 @@ const REVIEW_SCHEMA = {
   required: ["verdict", "summary", "blocking", "nonBlocking", "gate", "unspecified"]
 };
 
+const DEFAULT_REVIEWER_MODEL = "claude-opus-5-5";
+
+// The class table. `mandate` goes to the implementer, `bar` to the reviewer; `coverageBlocks`
+// false demotes coverageOnly findings; `testOnlyReduces` lets a test-only fix round take the
+// reduced gate. Keep in step with pass-execute.js.
+const PASS_CLASSES = {
+  "auth-data": {
+    mandate: "Test-first: write or confirm the failing test before the change. For each auth, signing, session, D1, or commit-path branch you add, apply a mutation, confirm a test fails, revert it, and record it in mutationLedger. The pass end adds a web-auth-security-reviewer read and a live admin smoke.",
+    bar: "Block on any behavior defect, unmet outcome, or coverage gap: an untested branch in auth, signing, sessions, D1, or the commit path is itself a defect.",
+    coverageBlocks: true,
+    testOnlyReduces: false,
+    reviewerModel: DEFAULT_REVIEWER_MODEL
+  },
+  "engine-logic": {
+    mandate: "Test-first: write or confirm the failing test before the change.",
+    bar: "Block on behavior defects and unmet outcomes. A coverage gap blocks only where the untested path is reachable behavior; a gap on an unreachable or purely defensive path is not blocking (list it in nonBlocking, or mark it coverageOnly: true and the runner moves it there).",
+    coverageBlocks: false,
+    testOnlyReduces: true,
+    reviewerModel: DEFAULT_REVIEWER_MODEL
+  },
+  paint: {
+    mandate: "One cascade test per rule: the rule renders, and a utility class beats it. Add a per-state table only where the framework restates values per state. Keep tests table-driven, and add no tests beyond these. Your gate is the targeted gate named above; the full suite runs at the segment boundary or on CI.",
+    bar: "Block only on a behavior defect or an unmet outcome. Test coverage, granularity, and test shape never block: list them in nonBlocking (a blocking finding marked coverageOnly: true is moved there by the runner) and the conductor batches them to the segment boundary.",
+    coverageBlocks: false,
+    testOnlyReduces: true,
+    reviewerModel: DEFAULT_REVIEWER_MODEL
+  },
+  sweep: {
+    mandate: "Mechanical change only: existing tests stay green, and add no new test unless the plan names one.",
+    bar: "Run each grep-based post-condition the criteria name and report its count. Block only on a failed post-condition, a behavior change, or an unmet outcome; coverage notes go to nonBlocking.",
+    coverageBlocks: false,
+    testOnlyReduces: true,
+    reviewerModel: "sonnet"
+  },
+  docs: {
+    mandate: "No test mandate: the docs gates are the proof.",
+    bar: "Block on a factual error against the code, a failing docs gate, or an unmet outcome. Prose register belongs to the register chain, not this review.",
+    coverageBlocks: false,
+    testOnlyReduces: true,
+    reviewerModel: DEFAULT_REVIEWER_MODEL
+  },
+  tool: {
+    mandate: "Follow go-conventions: test-first for behavior, table-driven tests, wrapped errors, the Go comment standard. A TUI change owes a tui-visual-verify capture at the close.",
+    bar: "Block on behavior defects, unmet outcomes, go-conventions violations, and coverage gaps on reachable behavior.",
+    coverageBlocks: true,
+    testOnlyReduces: true,
+    reviewerModel: DEFAULT_REVIEWER_MODEL,
+    gateLane: "light"
+  }
+};
+
+const CLASS_DEFAULT_REDUCED_GATE = "`npm run check && npm run check:comments && npm run check:symbols && npm run check:docs` plus the unit test files that cover the touched files";
+
+function classOf(t, a) {
+  const name = t.passClass || a.passClass;
+  return name ? { name, ...PASS_CLASSES[name] } : null;
+}
+
+/**
+ * Returns the reduced gate a fix round runs, or null for the full gate. Without a class this is
+ * the pre-class rule: every finding commentOnly takes the 2026-09-09 ruling's reduced gate.
+ */
+function reducedGateFor(t, a, cls, blocking) {
+  if (!blocking || blocking.length === 0) {
+    return null;
+  }
+  if (!cls) {
+    return blocking.every((b) => b.commentOnly) ? CLASS_DEFAULT_REDUCED_GATE : null;
+  }
+  const reducible = (b) => b.commentOnly || (cls.testOnlyReduces && b.testOnly);
+  if (!blocking.every(reducible)) {
+    return null;
+  }
+  return t.reducedGate || a.reducedGate || CLASS_DEFAULT_REDUCED_GATE;
+}
+
+/**
+ * Under a class whose coverage does not block, moves coverageOnly findings out of blocking and
+ * turns a `fix` verdict left with nothing blocking into `accept`. Returns the demoted findings.
+ */
+function applyClassBar(review, cls) {
+  if (!cls || cls.coverageBlocks || !review || !Array.isArray(review.blocking)) {
+    return [];
+  }
+  const demoted = review.blocking.filter((b) => b.coverageOnly);
+  if (demoted.length === 0) {
+    return [];
+  }
+  review.blocking = review.blocking.filter((b) => !b.coverageOnly);
+  review.nonBlocking = [...(review.nonBlocking || []), ...demoted.map((b) => ({ location: b.location, finding: b.finding }))];
+  if (review.verdict === "fix" && review.blocking.length === 0) {
+    review.verdict = "accept";
+    review.demotedFrom = "fix";
+  }
+  return demoted;
+}
+
 function implementPrompt(t, chain, a, blocking, baseSha) {
+  const cls = classOf(t, a);
   const onMain = chain.repo === a.mainCheckout;
   const paintFlag = t.paint != null ? ` --paint ${t.paint ? "yes" : "no"}` : "";
   const pinFlag = t.gateTier ? ` --pin ${t.gateTier}` : "";
-  const light = (t.gateLane || a.gateLane) === "light";
+  const light = (t.gateLane || a.gateLane || (cls && cls.gateLane)) === "light";
   const lanePrefix = light ? "CAIRN_GATE_LANE=light " : "";
   const laneNote = light ? " (keep the CAIRN_GATE_LANE=light prefix on the first call and on every re-issue: this gate launches no browser, so it takes the light lane and does not queue behind a browser gate)" : "";
   const classifierCmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${pinFlag}`;
@@ -123,6 +230,7 @@ function implementPrompt(t, chain, a, blocking, baseSha) {
     `Acceptance criteria (condensed): ${t.criteria}${a.paintProtocol ? " " + a.paintProtocol : ""}`,
     t.files ? `Files: ${t.files.join(", ")}` : "",
     t.notes ? `Notes: ${t.notes}` : "",
+    cls ? `Pass class: ${cls.name}. Test mandate: ${cls.mandate}` : "",
     ``,
     `Gate command: ${t.gate || a.gate}`,
     `Before running the gate, check whether scripts/checks/gate-tier.mjs exists in this repo. If it does, run \`${classifierCmd}\` from the repo root, after your commits and before the gate, and run the gate string it prints on stdout instead of the Gate command above (report gateTier: "${t.gateTier ? "pin" : "computed"}" and gateCommand as that exact string). If the script is absent, exits non-zero, or prints nothing, run the Gate command above unchanged (report gateTier: "default" and gateCommand as that string).`,
@@ -136,17 +244,34 @@ function implementPrompt(t, chain, a, blocking, baseSha) {
     for (const b of blocking) {
       lines.push(`- ${b.location}: ${b.finding}. Fix: ${b.fix}`);
     }
-    if (blocking.every(b => b.commentOnly)) {
+    const reduced = reducedGateFor(t, a, cls, blocking);
+    if (reduced && !cls) {
       lines.push("Every finding above is COMMENT-ONLY (the fix changes comment or doc text, never code behavior). For this fix round the gate is reduced by the conductor's 2026-09-09 ruling: run `npm run check:comments && npm run check:symbols && npm run check:docs` plus the unit test files that cover the touched files, through cairn-run-gate, and report that reduced gate as the gate result; do not run the full gate string.");
+    } else if (reduced) {
+      const gateText = reduced === CLASS_DEFAULT_REDUCED_GATE ? reduced : `\`${reduced}\``;
+      lines.push(`Every finding above is COMMENT-ONLY or TEST-ONLY (the fix changes comment or doc text, or test files alone, never source behavior). For this fix round the gate is reduced: run ${gateText}, through cairn-run-gate, and report that exact string as gateCommand and its result as the gate result; do not run the full gate string. If your fix diff touches any source line outside tests and comments, run the full gate string instead.`);
     }
   }
   return lines.filter(Boolean).join("\n");
 }
 
-function reviewPrompt(t, chain, a, implReport, resolvedGate) {
+function reviewClassLines(cls, reduced) {
+  const lines = [
+    `Pass class: ${cls.name}. Blocking bar: ${cls.bar}`,
+    `For each blocking finding set commentOnly: true when its fix changes only comment or doc text; set testOnly: true when its fix changes only test files; set coverageOnly: true when the finding concerns test coverage or granularity with no behavior defect. A fix round whose findings are all comment-only${cls.testOnlyReduces ? " or test-only" : ""} runs a reduced gate, so mark them honestly.`
+  ];
+  if (reduced) {
+    lines.push(`This is such a fix round: the expected gate is the reduced gate (${reduced}), so a gate string that differs from the full gate is not a mismatch. If the fix diff touches any source line outside tests and comments, the full gate was owed: treat that as blocking.`);
+  }
+  return lines;
+}
+
+function reviewPrompt(t, chain, a, implReport, resolvedGate, reduced) {
+  const cls = classOf(t, a);
   const ranCommand = implReport.gateCommand || t.gate || a.gate;
+  const classReduced = cls && reduced;
   const mismatch =
-    resolvedGate.gate && implReport.gateCommand && implReport.gateCommand !== resolvedGate.gate
+    !classReduced && resolvedGate.gate && implReport.gateCommand && implReport.gateCommand !== resolvedGate.gate
       ? `MISMATCH: the runner independently resolved a different gate string ("${resolvedGate.gate}") than the implementer reports running. Treat this mismatch itself as a blocking finding.`
       : "";
   return [
@@ -156,7 +281,9 @@ function reviewPrompt(t, chain, a, implReport, resolvedGate) {
     `Plan file: ${a.planPath}`,
     `Task ${t.id}: ${t.title}`,
     `Read the plan's "Task ${t.id}" section (its acceptance criteria are the contract) plus the "Global constraints" section before verdicting.`,
-    `For each blocking finding set commentOnly: true when its fix changes only comment or doc text and no code behavior; a fix round whose findings are all comment-only runs a reduced gate (check:comments, check:symbols, check:docs, the touched files' unit tests) by the conductor's 2026-09-09 ruling, so mark it honestly. If you are reviewing such a fix round, the reduced gate is the expected gate.`,
+    ...(cls
+      ? reviewClassLines(cls, reduced)
+      : [`For each blocking finding set commentOnly: true when its fix changes only comment or doc text and no code behavior; a fix round whose findings are all comment-only runs a reduced gate (check:comments, check:symbols, check:docs, the touched files' unit tests) by the conductor's 2026-09-09 ruling, so mark it honestly. If you are reviewing such a fix round, the reduced gate is the expected gate.`]),
     `Acceptance criteria (condensed): ${t.criteria}${a.paintProtocol ? " " + a.paintProtocol : ""}`,
     `The task's diff is exactly the commits the implementer reports below (diff each against its parent; the worktree has no other writers).`,
     `The gate string this task ran: ${ranCommand}`,
@@ -232,6 +359,9 @@ function logGateTier(t, resolved) {
 async function runTask(t, chain, a) {
   const maxFix = a.maxFix == null ? 1 : a.maxFix;
   const phaseName = `Chain ${chain.id}`;
+  const cls = classOf(t, a);
+  const reviewerModel = a.reviewerModel || (cls ? cls.reviewerModel : DEFAULT_REVIEWER_MODEL);
+  const batchedNotes = [];
 
   const baseSha = await recordBaseSha(chain, phaseName, `base:${t.id}`);
 
@@ -251,10 +381,10 @@ async function runTask(t, chain, a) {
   let resolvedGate = await resolveGate(t, chain, a, baseSha, phaseName, `gatetier:${t.id}`);
   logGateTier(t, resolvedGate);
 
-  let review = await agent(reviewPrompt(t, chain, a, implReport, resolvedGate), {
+  let review = await agent(reviewPrompt(t, chain, a, implReport, resolvedGate, null), {
     label: `review:${t.id}`,
     phase: phaseName,
-    model: "claude-opus-5-5",
+    model: reviewerModel,
     agentType: a.reviewer || "diff-reviewer",
     schema: REVIEW_SCHEMA
   });
@@ -263,10 +393,12 @@ async function runTask(t, chain, a) {
     log(`task ${t.id}: reviewer failed to return a verdict`);
     return { id: t.id, title: t.title, status: "failed", fixRounds: 0, implementer: implReport, review: null };
   }
+  batchedNotes.push(...applyClassBar(review, cls));
 
   let fixRounds = 0;
   while (review.verdict === "fix" && fixRounds < maxFix) {
     fixRounds += 1;
+    const reduced = reducedGateFor(t, a, cls, review.blocking);
     implReport = await agent(implementPrompt(t, chain, a, review.blocking, baseSha), {
       label: `impl:${t.id}:fix${fixRounds}`,
       phase: phaseName,
@@ -283,10 +415,10 @@ async function runTask(t, chain, a) {
     resolvedGate = await resolveGate(t, chain, a, baseSha, phaseName, `gatetier:${t.id}:fix${fixRounds}`);
     logGateTier(t, resolvedGate);
 
-    review = await agent(reviewPrompt(t, chain, a, implReport, resolvedGate), {
+    review = await agent(reviewPrompt(t, chain, a, implReport, resolvedGate, reduced), {
       label: `review:${t.id}:fix${fixRounds}`,
       phase: phaseName,
-      model: "claude-opus-5-5",
+      model: reviewerModel,
       agentType: a.reviewer || "diff-reviewer",
       schema: REVIEW_SCHEMA
     });
@@ -295,11 +427,13 @@ async function runTask(t, chain, a) {
       log(`task ${t.id}: reviewer failed on fix round ${fixRounds}`);
       return { id: t.id, title: t.title, status: "failed", fixRounds, implementer: implReport, review: null };
     }
+    batchedNotes.push(...applyClassBar(review, cls));
   }
 
   const status = taskStatus(review, implReport);
-  log(`task ${t.id} (${t.title}): ${status}, verdict ${review.verdict}, fixRounds ${fixRounds}`);
-  return { id: t.id, title: t.title, status, fixRounds, implementer: implReport, review };
+  log(`task ${t.id} (${t.title}): ${status}, verdict ${review.verdict}, fixRounds ${fixRounds}${cls ? `, class ${cls.name}, ${batchedNotes.length} coverage notes batched` : ""}`);
+  const record = { id: t.id, title: t.title, status, fixRounds, implementer: implReport, review };
+  return cls ? { ...record, passClass: cls.name, batchedNotes } : record;
 }
 
 async function runChain(chain, a) {
@@ -336,6 +470,12 @@ async function main() {
   }
   if (!args.gate || !args.implementer || !args.planPath) {
     throw new Error("args.gate, args.implementer, and args.planPath are required");
+  }
+  const classes = [args.passClass, ...args.chains.flatMap((c) => (c.tasks || []).map((t) => t && t.passClass))];
+  for (const c of classes) {
+    if (c && !PASS_CLASSES[c]) {
+      throw new Error(`unknown passClass "${c}"; expected one of ${Object.keys(PASS_CLASSES).join(", ")}`);
+    }
   }
 
   const chainResults = await parallel(args.chains.map((c) => () => runChain(c, args)));
