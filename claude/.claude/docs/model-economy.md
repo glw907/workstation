@@ -355,3 +355,24 @@ question at a checkpoint, and only a genuine blocker or scope change stops the
 pass early. CLAUDE.md carries the rule in "Conducting a pass" and "Process
 proportionality"; the `geoff-works-autonomously` memory carries the standing
 preference.
+
+## Ceremony scales by kind of change (Geoff, 2026-09-27)
+
+Process proportionality once scaled only by size: a small task skipped the ceremony, and every
+other task took the same chain. A plan now declares a pass class (`auth-data`, `engine-logic`,
+`paint`, `sweep`, `docs`, `tool`), and a task may override it. The class sets the per-task gate,
+the reviewer's model and blocking bar, the test mandate, and the close steps. The `cairn-pass`
+skill holds the table, and `pass-gate-economy.md` records the gate side.
+
+The evidence came from an independent evaluation of theme identity pass A, a CSS retheme. That
+pass carried about 4.4 test lines per source line and ran the full engine gate on every task.
+Each run took 7 to 11 minutes. Every test-only fix round reran the same gate, and the pass
+projected 8 to 10 unattended hours. The diff reviewer also blocked on coverage granularity
+because the criteria were fine-grained, so the token cost followed the gate cost. Under the class
+rule, a `paint` task runs a targeted gate and a reviewer that blocks only on a behavior defect or
+an unmet outcome. Its coverage notes batch to the segment boundary, and the owner glances at
+captures mid-pass instead of only at the end.
+
+The rule reaches agents through the runners, never through this file. `pass-execute.js` and
+`pass-execute-chains.js` take `passClass`, render the mandate and the bar into the prompts, and
+enforce the coverage demotion and the test-only reduced gate in code.

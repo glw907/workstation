@@ -45,23 +45,45 @@ re-deriving the design.
    the protocol).
 2. Confirm you are in a feature worktree off `main`, not the `main` checkout itself.
    STATUS.md lists the active worktrees.
-3. Each task runs as a chain. `cairn-implementer` (pinned Sonnet for token economy) writes
-   or confirms the failing test first, makes it green, clears the full gate (`npm run check`
-   0/0, `npm test` exit 0), and returns files touched, the gate result, and anything it could
-   not do. The `diff-reviewer` agent (`claude-opus-5-5`) then reads the diff against the task's
-   acceptance criteria and returns accept, fix, or escalate with `file:line` findings; the
-   conductor does not read the diff itself. One re-dispatch on `fix`; a second `fix` verdict
-   goes to the conductor as a decision. Below six tasks, dispatch the chain per task with the
-   Agent tool. At six or more, or when the plan marks tasks independent, run
-   `~/.claude/workflows/pass-execute.js` with `{repo: "cairn-cms", gate: "npm run check &&
-   npm test", implementer: "cairn-implementer", tasks: [{id, title, criteria, files, notes}]}`.
+3. Each task runs as a chain. `cairn-implementer` (pinned Sonnet for token economy) meets
+   the class's test mandate, clears the class's per-task gate, and returns files touched, the
+   gate result, and anything it could not do. The reviewer then reads the diff against the
+   task's acceptance criteria at the class's blocking bar and returns accept, fix, or escalate
+   with `file:line` findings; the conductor does not read the diff itself. One re-dispatch on
+   `fix`; a second `fix` verdict goes to the conductor as a decision. Below six tasks, dispatch
+   the chain per task with the Agent tool, pasting the class's mandate and bar into the
+   prompts. At six or more, or when the plan marks tasks independent, run
+   `~/.claude/workflows/pass-execute.js` with `{repo, gate, implementer: "cairn-implementer",
+   passClass, reducedGate?, tasks: [{id, title, criteria, files, notes, passClass?, gate?}]}`.
    Implement a task inline, or upshift the dispatch to `model: opus`, only for novel
    correctness-critical logic the plan does not fully specify; `model: fable` only when an
    Opus verdict itself hedges on something that matters.
 
+### Pass class (Geoff, 2026-09-27)
+
+The ceremony scales by the kind of change, not only its size. The plan header declares
+`Pass class: <class>`; a task that differs carries its own `Pass class:` line. The class sets
+the per-task gate, the review depth and blocking bar, the test mandate, and the settle and
+close steps. A misfit class is a plan-review finding in both directions.
+
+| Class | Per-task gate | Review and blocking bar | Test mandate | Settle and close |
+| --- | --- | --- | --- | --- |
+| `auth-data` (auth, signing, sessions, D1, the commit path) | full engine gate | Opus; coverage gaps block | test-first, a mutation proof, `web-auth-security-reviewer` at pass end | live admin smoke |
+| `engine-logic` (engine TypeScript behavior) | engine gate | Opus; blocks on behavior defects and unmet outcomes, coverage gaps only on reachable behavior | test-first | none extra |
+| `paint` (CSS, theme, visual) | a targeted gate the plan names per task (type check, the touched files' component tests, CSS unit tests); full suite at segment boundaries or on CI | Opus (or Sonnet); blocks only on a behavior defect or unmet outcome, coverage notes batched to the boundary | one cascade test per rule (renders, a utility beats it); state tables only where the framework restates values per state; table-driven | an async owner glance at captures mid-pass, a fresh-context visual read, the owner sitting |
+| `sweep` (mechanical markup or rename) | type check plus the component project | Sonnet; grep-based post-conditions | existing tests stay green | spot captures |
+| `docs` | the docs tier | the register chain | none | none |
+| `tool` (the Go `cairn` tool) | `make -C tool check`, light lane | Opus | `go-conventions` | `tui-visual-verify` |
+
+The runner renders each class's mandate and bar into the prompts, demotes coverage-only
+findings for the classes whose coverage does not block (returned as `batchedNotes`), and
+reduces the gate on a comment-only or test-only fix round (all but `auth-data`); its header
+comment is the spec. With no class, the runner behaves as before 2026-09-27.
+
 > **Gate economy (Geoff, 2026-09-09).** The per-task gate omits the showcase e2e for
 > paint-neutral tasks; paint tasks keep it; the pass-end ritual and CI run the full suite.
-> Comment-only fix rounds run the reduced gate; the engine's `npm test` runs only when a task
+> Comment-only fix rounds (and, under a pass class other than `auth-data`, test-only ones) run
+> the reduced gate; the engine's `npm test` runs only when a task
 > touches `src/lib` or `packages/`. Implementers run gates through `cairn-run-gate`. A pass
 > whose gate launches no browser (the Go tool's `make -C tool check`) sets `gateLane: "light"`
 > in the runner's args, or it queues behind every other session's browser gate. The engine's
@@ -84,7 +106,12 @@ re-deriving the design.
 
 ## Ending a plan: consolidation ritual
 
-No plan is done until every step has run.
+No plan is done until every step has run. The pass class keys the steps: the simplifier
+(step 1) runs only when TS, Svelte, or Go changed, once at the close for `paint` and never at
+an intermediate segment boundary for `paint` or `sweep`; step 2 runs in full for every class
+that changed engine code (the full suite a `paint` or `sweep` pass deferred from its tasks
+runs here); the review fan-out (step 3) matches the class; the live admin smoke (step 4) runs
+only for `auth-data`. A mixed pass runs the union of its tasks' classes.
 
 ### 1. Simplify
 
@@ -133,16 +160,19 @@ how `0.60.0` shipped a broken consumer build.
 Fan out the relevant review subagents in parallel and fold their findings in
 before committing. Match the subagent to what the plan touched:
 `svelte-reviewer`, `cloudflare-workers-reviewer`, `web-auth-security-reviewer`
-(always for auth, session, cookie, token, or signing changes),
-`daisyui-a11y-reviewer`. They complement `/code-review`, not replace it.
+(always for `auth-data`, and for any auth, session, cookie, token, or signing change),
+`daisyui-a11y-reviewer` (for `paint`, with the fresh-context `visual-verifier` read), a
+`go-architecture-reader` per touched package for `tool`. A `docs` pass takes the register
+chain instead. They complement `/code-review`, not replace it.
 
 ### 4. Live admin smoke
 
-For any plan touching the `/admin` surface, run the live admin smoke against a
+For an `auth-data` pass, run the live admin smoke against a
 real Worker (`wrangler dev`). Under the rebuilt self-owned auth, mint a session
 by inserting a D1 session row directly (no better-auth cookie, no email loop);
 the final magic-link click in a browser stays a user step. Follow
-`cairn-cms/docs/internal/admin-smoke-test.md`. Record results as evidence. Skip for plans that do not touch `/admin`.
+`cairn-cms/docs/internal/admin-smoke-test.md`. Record results as evidence. Other classes skip it,
+even when they touch `/admin` (a `paint` pass proves the admin through its captures and visual read).
 
 ### 5. Documentation
 
@@ -321,7 +351,7 @@ write STATUS.md (task ledger, decisions taken, spend, next task), then continue.
 
 - **Pre-bake the durable artifacts.** Commit the plan (push if the user wants it pushed).
   Update STATUS.md so its **immediate next action** line names the new plan, its path, and
-  the method (main-loop execution, test-first, full gate per task, on a worktree off `main`).
+  the method (the pass class, the class's per-task gate, on a worktree off `main`).
   Record initiative state, sequencing, and next actions in STATUS.md and `ROADMAP.md`, never in
   memory: memory is for what the repo cannot hold (Geoff's preferences, corrections, and the why
   behind a ruling no doc records), and a memory that mirrors STATUS goes stale beside it (Geoff,

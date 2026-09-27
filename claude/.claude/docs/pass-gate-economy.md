@@ -12,6 +12,19 @@ approved, all cheap in tokens:
 - **Comment-only fix rounds run a reduced gate** (the comment linters, the doc link gate, and
   the touched files' unit tests). The reviewer marks each blocking finding `commentOnly`; the
   chains scripts route on it.
+- **The pass class sets the ceremony** (Geoff, 2026-09-27). A plan header declares `Pass class:`
+  (`auth-data`, `engine-logic`, `paint`, `sweep`, `docs`, `tool`), a task may override it, and
+  the class picks the per-task gate, the review bar, the test mandate, and the close steps; the
+  table lives in the `cairn-pass` skill. Both runners take `passClass` in their args and render
+  it: the mandate into the implementer prompt, the bar into the reviewer prompt. Under every
+  class but `auth-data`, a fix round whose findings are all `commentOnly` or `testOnly` runs the
+  reduced gate, and under `engine-logic`, `paint`, `sweep`, and `docs` a `coverageOnly` finding
+  moves to nonBlocking and returns as `batchedNotes` for the segment boundary. Born of the
+  theme identity pass A evaluation (2026-09-27): a CSS retheme ran the full engine gate on every
+  task (7 to 11 minutes, 5,167 node tests plus about 1,600 serialized browser component tests),
+  carried about 4.4 test lines per source line, and reran that full gate on every test-only fix
+  round, for a projected 8 to 10 unattended hours. Size alone never scaled the chain down; the
+  kind of change now does.
 - **Scope the engine test suite to the blast radius.** A task whose Files touch nothing under
   the engine's source runs the consumer's own unit suite, not the engine's.
 - **A pre-flight checklist in every task's notes prevents the fix rounds** B2 kept paying for:
