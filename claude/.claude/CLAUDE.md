@@ -71,7 +71,7 @@ messaging. Read `~/.claude/docs/bluefin-admin.md` before browser or extension wo
 
 ## Git Conventions
 
-- **Before committing code changes, dispatch the `code-simplifier` subagent** over the changed code. It refines recently-changed code preserving behavior; apply its refinements, then commit. Docs-only commits don't need it. Skip only when explicitly told to. (poplar keeps its own Go-aware `simplify` skill.)
+- **`code-simplifier` runs once per pass or branch, at the close,** over changed TS, Svelte, or Go; never per commit or at an intermediate boundary, never for docs. (poplar keeps its own Go-aware `simplify` skill.)
 - Imperative mood: "Add feature" not "Added feature"
 - Co-authored footer: `Co-Authored-By: Claude <noreply@anthropic.com>`
 - Commit specific files, not `git add -A`
@@ -212,8 +212,8 @@ itself and dispatches.
 Each plan task runs as a chain: the repo's Sonnet implementer returns a fixed shape (files
 touched, gate result, uncovered decisions, anything it could not do); `diff-reviewer`
 (`claude-opus-5-5`) reads the diff against the task's acceptance criteria and returns accept,
-fix, or escalate with `file:line` findings; the repo's full gate runs inside the chain, never in
-the main loop. One re-dispatch on `fix`; a second is the conductor's decision. Domain reviewers
+fix, or escalate with `file:line` findings; the pass class's gate runs inside the chain, never in
+the main loop. Pass machinery lives in the `pass-core` skill. One re-dispatch on `fix`; a second is the conductor's decision. Domain reviewers
 still fan out at pass end. Below six tasks, dispatch the chain per task with the Agent tool; at
 six or more, or when the plan marks tasks independent, run `~/.claude/workflows/pass-execute.js`
 (naming the mode is the opt-in). A pass's close task is authored by one fold agent, which
@@ -345,9 +345,12 @@ the points a reasonable reviewer might contest. Questions to Geoff are for produ
 priority, scope, and budget.
 
 Plans specify outcomes, constraints, and acceptance criteria per task, never implementation
-code. Small tasks skip the ceremony: a change touching a handful of files, fully specified by
+code. Ceremony scales by kind as well as size: a plan declares a pass class (`auth-data`,
+`engine-logic`, `paint`, `sweep`, `docs`, `tool`) that sets each task's gate, review bar, test
+mandate, and close steps (table: `pass-core`). Superpowers skills yield to it: TDD's write-first
+applies to `engine-logic` and `auth-data` only, and plans stay outcome-only. Small tasks skip the ceremony: a change touching a handful of files, fully specified by
 the request or existing tests, adding no new public surface, schema, or auth behavior, goes
-straight through the gates and code-simplifier.
+straight through the gates.
 
 Score both budgets at pass end: tokens against the plan's ceiling (`/cost`), and attended time
 as planning misses and execution sittings, defined in `~/.claude/docs/model-economy.md`. Record
