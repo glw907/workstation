@@ -126,7 +126,7 @@ CI, local Playwright reuses a stale preview server (`reuseExistingServer` is on 
 local "all green" can pass against a stale build. Before calling a pass releasable, either push the
 branch for a CI `e2e` run or force a from-scratch consumer build: `rm -rf
 examples/showcase/{node_modules,package-lock.json}`, then a fresh install and `npm run build`. This is
-how `0.60.0` shipped a broken consumer build; see the `cairn-0-60-e2e-dist-build-failure` memory.
+how `0.60.0` shipped a broken consumer build.
 
 ### 3. Review gate
 
@@ -220,7 +220,7 @@ fixes every doc its change touched, including the inbound references on other pa
   hardening initiative had to prune a stale friction log for exactly this), so prune as you go.
 
 A docs-only pass skips the engine check and test (step 2) but still does this step, including the doc
-gates. See the `docs-is-a-pass-dimension` memory.
+gates.
 
 ### 6. Update tracking
 
@@ -234,8 +234,7 @@ or initiative has landed and is worth publishing. Otherwise hold and batch — `
 completed passes accumulate unpublished and a later publish rolls the window. When a cut IS warranted, the
 release is its own procedure: invoke the **`cairn-release`** skill, which carries the gate, the free-number
 check, the rolled notes, the OIDC publish, and the verify. Do not inline release mechanics here. See also the
-"Releases (cadence and scheme)" section in cairn-cms `CLAUDE.md` and the `cairn-release-process-and-versioning`
-memory.
+"Releases (cadence and scheme)" section in cairn-cms `CLAUDE.md`.
 
 Append the post-mortem to the active plan file (what was built, what was verified
 with evidence, decisions locked in, blockers). Then update `cairn-cms/docs/STATUS.md`,
@@ -303,7 +302,7 @@ clean, and the last thing the user reads is the exact resume prompt plus the lau
 plainly that the pass is closed and context is ready to clear. Anything load-bearing that exists
 only in the conversation at that moment is a defect: **the test is that a session starting cold from
 the resume prompt reaches the same next action, with the same constraints, having read only the
-plan, the spec, STATUS, and memory.** Walk the pass's own decisions against that test before
+plan, the spec, STATUS, ROADMAP, and memory.** Walk the pass's own decisions against that test before
 declaring done, including the ones a reviewer or the user changed mid-pass, and including anything
 about branch topology (a deferred merge changes where the next pass branches from, and a cold
 session will branch off `main` by default and build against the wrong engine).
@@ -323,9 +322,11 @@ write STATUS.md (task ledger, decisions taken, spend, next task), then continue.
 - **Pre-bake the durable artifacts.** Commit the plan (push if the user wants it pushed).
   Update STATUS.md so its **immediate next action** line names the new plan, its path, and
   the method (main-loop execution, test-first, full gate per task, on a worktree off `main`).
-  Refresh the relevant `cairn-*` memory so a cold session recalls the initiative. Leave the
-  tree clean. Anything load-bearing must live in the plan, the spec, STATUS.md, or memory,
-  never only in the conversation.
+  Record initiative state, sequencing, and next actions in STATUS.md and `ROADMAP.md`, never in
+  memory: memory is for what the repo cannot hold (Geoff's preferences, corrections, and the why
+  behind a ruling no doc records), and a memory that mirrors STATUS goes stale beside it (Geoff,
+  2026-09-27). Leave the tree clean. Anything load-bearing must live in the plan, the spec,
+  STATUS.md, or ROADMAP.md, never only in the conversation.
 - **Then hand off to the executing session.** Give the exact resume prompt and the launch
   directory (inside `cairn-cms`, so its hooks and memory load), and name the model: the
   execution session starts on `claude-opus-5-5` (`claude --model claude-opus-5-5`). Example:
@@ -334,8 +335,7 @@ write STATUS.md (task ledger, decisions taken, spend, next task), then continue.
 
 Continuing in the same session is for work *within* one phase (a segment boundary inside an
 executing pass). It is not a reason to skip the prep above: prep the clear at the pass boundary
-either way, then hand off. See the `clear-context-before-implementing-plans` memory for the
-same-session default's history and `cairn-pass-ends-with-context-clear-prep` for this rule.
+either way, then hand off.
 
 ## Execution discipline (lessons from Plan 07)
 
@@ -343,7 +343,7 @@ same-session default's history and `cairn-pass-ends-with-context-clear-prep` for
   independent tasks, or a worktree-isolated change), wait for each result and verify its commit
   (git log and status) before depending on it. On an API overload or 5xx, wait and retry once
   deliberately; never fire a second dispatch while one may still be in flight, because a cleared
-  overload fires every queued retry at once. See the `plan-execution-dispatch-discipline` memory.
+  overload fires every queued retry at once.
 - **Verify a plan's factual claims about existing code before dispatch, not at review.** A plan
   that ports or mirrors sibling code states facts a grep can check: a count of literals, an error
   code's meaning, which path a CLI writes to, a response's shape. Each one that is wrong costs a
