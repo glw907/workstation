@@ -71,10 +71,11 @@ must carry, who reads it, and what its type does not already cover. The outline 
 against that brief before any sentence is drafted or reviewed, because prose work on a page
 whose shape is wrong is wasted, and a page with no brief has no outline to check against.
 
-Draft one section per read. A page for an outside reader is never drafted end to end in an
-autonomous run: stop after each section and let a reader see it before the next one starts.
-An unread run is how a page can pass every mechanical gate and still fail the reader who
-opens it first.
+Draft one section per read for the cairn front door only (`why-cairn.md`, `docs/README.md`, the
+arm READMEs); a front-door page is never drafted end to end in an autonomous run: stop after each
+section and let a reader see it before the next one starts. An unread run is how a page can pass
+every mechanical gate and still fail the reader who opens it first. Every other page, including a
+cairn narrative arm, is drafted whole by its chain.
 
 ## The em dash
 

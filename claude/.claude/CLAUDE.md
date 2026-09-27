@@ -423,8 +423,8 @@ The highest-frequency tells, inline so they are unmissable:
   spaces); editor copy Microsoft; replies and commits go without. Overuse is a tell anywhere.
 - The cairn documentation standard governs every published docs page; see
   `~/Projects/cairn-cms/docs/superpowers/specs/2026-09-08-docs-standard-design.md`.
-- Any page an outside reader opens leads with a one-paragraph brief and carries one section
-  per read; do not make a reader assemble the page's point from its parts.
+- The cairn front door (`why-cairn.md`, `docs/README.md`, the arm READMEs) leads with a
+  one-paragraph brief, one section per read; other pages draft whole.
 - A claim about the owner, or about cairn's own stance, resolves to a line in an owner brief,
   never to an inference from other prose.
 - `tellgrader --profile docs-register` reports cadence measures for an opted-in repo; every

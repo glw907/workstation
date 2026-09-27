@@ -150,13 +150,16 @@ Documentation is a pass dimension, not a follow-up. Before the pass is done, upd
 whatever it changed. The standing principle is that docs stay current and never drift, so a pass
 fixes every doc its change touched, including the inbound references on other pages.
 
-- **Container first, reference page second, narrative arms frozen against rewrites, open to
-  fixes.** A public-behavior change files its bullet in `docs/internal/facts/<arm>.md`, gated
-  by `check:facts`, then updates the reference page if public API. No pass rewrites the admin,
-  editors, extend, or why-cairn narrative; a discovered deficiency (missing step, wrong warning,
+- **Container first, reference page second, narrative arms frozen against rewrites until each
+  arm's own stage merges (extend's at the 2b merge), open to fixes in the meantime.** A
+  public-behavior change files its bullet in `docs/internal/facts/<arm>.md`, gated by
+  `check:facts`, then updates the reference page if public API. No pass rewrites an arm's
+  narrative before its own stage merges; a discovered deficiency (missing step, wrong warning,
   stale command) is fixed on the page in the same pass, gated by its own gates, bullet filed
   alongside, agent-facing not register-graded: source, engine version, why, Vale's error tier
-  only, no prose review, since the site round rewrites the human page from it.
+  only, no prose review. A site pass's own docs edits land on a `site-docs/<site>-<pass>` branch
+  off cairn-cms `main`, merged by PR under the docs gate; a site edit to an arm whose stage is
+  still in flight is filed, never fixed, and feeds that stage's page inputs (see `site-pass`).
 - Update the relevant `docs/` track: the reference page for any public-API change; the admin,
   editors, or extend narrative only as the freeze bullet above allows (a discovered deficiency
   fixed on the page, never a rewrite). Update `CHANGELOG.md` and the per-version record

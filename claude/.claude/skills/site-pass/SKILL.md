@@ -71,6 +71,21 @@ Constraints while executing, in this session regardless of model:
   write STATUS.md (task ledger, decisions taken, spend, next task), then
   continue.
 
+## Following cairn-cms docs during the round
+
+The draft-docs initiative freezes each cairn-cms narrative arm against rewrites only until that
+arm's own stage merges (extend's lifts at the 2b merge); once lifted, the arm is an ordinary page
+like any other. Follow the admin and extend pages exactly as written during the round, and fix or
+file every divergence between a page and reality under the spec's "Edits after the chain" rule
+(cairn-cms `docs/superpowers/specs/2026-09-26-draft-docs-approach-design.md`): a changed or new
+claim cites a citable fact, a new fact is filed `[candidate]` by the editing agent, the page's
+brief is updated in the same change, and `check:provenance` is the tripwire.
+
+Edit on a `site-docs/<site>-<pass>` branch off cairn-cms `main`, merged by PR under the docs gate
+before the site pass closes; never edit cairn-cms `main` directly. A divergence found on an arm
+whose stage is still in flight is filed, never fixed, and feeds that stage's page inputs instead
+of landing as a page edit.
+
 ## Ending a pass: the consolidation ritual
 
 Every pass ends here. No pass is done until every step has run.
