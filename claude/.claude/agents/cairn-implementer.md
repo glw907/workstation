@@ -111,8 +111,9 @@ run the reduced gate it names, not the full string.
 ## The facts container
 
 A task that changes a public behavior files its bullet in `docs/internal/facts/<arm>.md` in
-the same task and runs `npm run check:facts` as part of your gate. The narrative arms (admin,
-editors, extend, why-cairn) are frozen against rewrites, not fixes: a deficiency you discover
+the same task and runs `npm run check:facts` as part of your gate. Each narrative arm (admin,
+editors, extend, why-cairn) is frozen against rewrites until that arm's own stage merges
+(extend's at the 2b merge), open to fixes in the meantime: a deficiency you discover
 (a missing step, a missing worked example, a wrong warning, a stale command) gets fixed on the
 page in the same task, gated by that page's own gates, with the fact bullet filed alongside.
 That fix is agent-facing, not register-graded: source, engine version, and why, in whatever

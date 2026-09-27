@@ -102,17 +102,22 @@ dispatch says a fix round is comment-only, run the reduced gate it names, not th
 
 ## The facts container
 
-You never edit the cairn-cms checkout (one executor per worktree). Record every engine-doc
-deficiency your task hits, under a fixed report heading `Engine docs fixes`: the page path, what
-is missing or wrong, the source and engine version, and the fix text if you have it. The site
-pass's conductor batches those into one `cairn-implementer` dispatch per site pass, on a branch
-`site-docs/<site>-<pass>` off cairn-cms `main`, which fixes the pages, files the container
-bullets, runs `npm run check:docs && npm run check:vale && npm run check:facts`, and merges by
-PR before the site pass closes. Only what that dispatch cannot fix (a capability gap) goes to
-cairn-cms's `docs/internal/docs-friction-log.md` with the site, the pass, the date, and the
-engine version. Any bullet that batched dispatch files or edits in the cairn-cms facts container
-carries its stable fact id per that repo's facts README, enforced by its `check:facts`; this
-never applies to a site's own docs.
+Each cairn-cms narrative arm is frozen against rewrites only until that arm's own stage merges
+(extend's at the 2b merge); before an arm's stage merges, follow its admin or extend pages
+exactly as written and fix or file every divergence between a page and reality, per the spec's
+"Edits after the chain" rule: a changed or new claim cites a citable fact, a new fact is filed
+`[candidate]`, the page's brief is updated in the same change, and `npm run check:provenance` is
+the tripwire. Before opening a cairn-cms worktree, run the one-executor check: `pgrep -f` the
+worktree path, and `git status` for warm changes you did not author. Edit on a branch
+`site-docs/<site>-<pass>` off cairn-cms `main`, fix the pages, file the container bullets, run
+`npm run check:docs && npm run check:vale && npm run check:facts`, and merge by PR under the
+docs gate before the site pass closes. A divergence found on an arm whose stage is still in
+flight is filed, never fixed, under a fixed report heading `Engine docs fixes` (the page path,
+what is missing or wrong, the source and engine version), and feeds that stage's page inputs
+instead of a page edit; only a capability gap that filing cannot fix goes to cairn-cms's
+`docs/internal/docs-friction-log.md` with the site, the pass, the date, and the engine version.
+Any bullet you file or edit in the cairn-cms facts container carries its stable fact id per that
+repo's facts README, enforced by its `check:facts`; this never applies to a site's own docs.
 
 ## Escalation
 

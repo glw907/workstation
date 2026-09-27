@@ -84,7 +84,8 @@ brief is updated in the same change, and `check:provenance` is the tripwire.
 Edit on a `site-docs/<site>-<pass>` branch off cairn-cms `main`, merged by PR under the docs gate
 before the site pass closes; never edit cairn-cms `main` directly. A divergence found on an arm
 whose stage is still in flight is filed, never fixed, and feeds that stage's page inputs instead
-of landing as a page edit.
+of landing as a page edit. Changed sentences get both chain reviews, scoped to those sentences,
+except a pure term or link substitution.
 
 ## Ending a pass: the consolidation ritual
 

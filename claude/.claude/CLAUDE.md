@@ -424,7 +424,7 @@ The highest-frequency tells, inline so they are unmissable:
 - The cairn documentation standard governs every published docs page; see
   `~/Projects/cairn-cms/docs/superpowers/specs/2026-09-08-docs-standard-design.md`.
 - The cairn front door (`why-cairn.md`, `docs/README.md`, the arm READMEs) leads with a
-  one-paragraph brief, one section per read; other pages draft whole.
+  one-paragraph brief and is drafted one section per read; every other page is drafted whole.
 - A claim about the owner, or about cairn's own stance, resolves to a line in an owner brief,
   never to an inference from other prose.
 - `tellgrader --profile docs-register` reports cadence measures for an opted-in repo; every
