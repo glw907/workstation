@@ -27,8 +27,19 @@ the risk this process is built around:
 2. **One fold.** A single agent records a disposition per finding and revises the document.
 3. **One verification read.** A fresh agent checks the fold.
 4. **A narrow second fold**, only when the verification read finds a blocker or a major.
-5. **A prose review, last.**
-6. **The owner sitting**, on the consolidated rulings section.
+5. **The owner sitting**, on the consolidated rulings section.
+
+No prose, register, or conformance review runs on a spec or plan (Geoff, 2026-09-08: specs
+are not register-graded).
+
+**Review depth scales by pass class** (the table in `pass-core`). `auth-data`,
+`engine-logic`, and any spec that introduces new mechanism take the full sequence. A `paint`,
+`sweep`, or `docs` plan takes one lens that folds its own findings, with no separate fold
+agent; the verification read runs only if that lens found a blocker. Four lenses is a hard
+cap, never exceeded (one recent spec drew nine). Evidence: theme identity pass A produced about
+3,400 lines of review and fold before any code, and none of its three lenses flagged the
+over-ceremony an independent evaluation later found (the full engine gate on every CSS task,
+4.4:1 test-to-source lines).
 
 The conductor dispatches every step and commits every file. It reads the reports, never the
 review files in full, unless a verdict hedges.
@@ -46,7 +57,15 @@ review files in full, unless a verdict hedges.
 
 **A plan gets three lenses**, the disjoint set in the global CLAUDE.md: contract-and-criteria,
 mechanics-and-feasibility, and domain-risk. Staleness (does the plan still match the tree) is
-the drafter's pre-flight, not a lens. Every plan lens also checks the four planning-miss items:
+the drafter's pre-flight, not a lens. Every plan lens also checks proportionality and the four
+planning-miss items:
+
+- The declared pass class, and any per-task override, fits the change's real risk. A CSS task
+  classed `auth-data` is a finding; so is a signing change classed `paint`.
+- Each task's gate, review bar, test mandate, and settle steps match its class, and the plan
+  justifies any deviation.
+- Owner time sits where the acceptance criterion is. For `paint`, taste is the criterion, so
+  the plan puts an owner glance mid-pass, not only at the end.
 
 - Every library or stdlib behavior a task relies on is quoted from the docs or the source
   (`go doc`, a man page, the module cache), never recalled.
@@ -59,7 +78,9 @@ the drafter's pre-flight, not a lens. Every plan lens also checks the four plann
 
 - The target path and commit, and the lens.
 - The Anthropic warning above, quoted with its source URL.
-- The ask: correctness gaps ranked by consequence, not polish. Each finding carries a severity
+- The ask: correctness gaps ranked by consequence, and over-ceremony ranked by its cost in
+  clock time and tokens ("full engine gate on nine CSS tasks, ~1.5 h, catches nothing the
+  targeted gate misses"), not polish. Each finding carries a severity
   (blocker, major, minor), the location (`file:line`), the defect, and a proposed fold.
 - Mark any finding whose resolution is a product or priority choice as **OWNER FORK**, with the
   options and a recommendation. A reviewer never rules a fork. A question with one clearly
@@ -81,7 +102,9 @@ One fold agent (`claude-opus-5-5`, effort `high`) takes every review file. Its d
   it), refused (a one-line reason), or owner fork (the numbered ruling it became). Duplicate
   findings across lenses fold once and list every ID.
 - **A fold may refuse** a finding whose fix costs more than the risk it removes. The reason is
-  one line. A fold that refuses nothing across dozens of findings should say why.
+  one line. A fold that refuses nothing across dozens of findings should say why. An
+  over-ceremony finding is weighed by its cost; refusing one names what the extra ceremony
+  catches.
 - Fix convergent defects (several lenses reaching one root) at the root, not per finding.
 - **Never rule an owner fork.** Consolidate every fork into one numbered rulings section in the
   document, each a yes-or-no question with a recommendation and what each answer builds.
@@ -106,19 +129,12 @@ against the fold record and the reviews. Its questions:
 
 It writes `<date>-<target>-fold-verification.md` with the same finding shape. On a blocker or
 major, dispatch **one narrow second fold** limited to those findings. Minors go to the fold
-record as owed, or to the prose review if they are wording.
-
-## Step 4: the prose review
-
-Dispatch `prose-voice-reviewer` last, once per revision. Ask it to check invented or misquoted
-specifics and cross-section contradictions before style. The agent is read-only and returns the
-file content in its report, so the conductor saves it to
-`<date>-<target>-prose-review.md` and folds it (or dispatches a small fold).
+record as owed.
 
 ## Commits
 
 The conductor commits each stage after its agents finish: the reviews, the fold (target plus
-record), the verification, the second fold, the prose review. Path-limited commits, never
+record), the verification, the second fold. Path-limited commits, never
 `git add -A`, because a code lane may hold warm files in the same tree.
 
 ## Common mistakes
@@ -130,5 +146,6 @@ record), the verification, the second fold, the prose review. Path-limited commi
 | Fold picks an answer to an owner fork | It consolidates and recommends; the owner rules |
 | Mechanics lens reasons from memory | Scratch module, probe, or a quoted doc line, cited |
 | Skipping the verification read because the fold "looks complete" | The fold is where new unquoted mechanisms appear |
-| Prose review run first | Facts settle before style, so prose runs last |
+| Reviewing only for missing rigor | Over-ceremony is a finding too, ranked by its cost |
+| Full review set on a `paint`, `sweep`, or `docs` plan | One self-folding lens; depth follows the pass class |
 | Reviewers commit into a shared tree | Only the conductor commits |
