@@ -55,12 +55,6 @@ absolute string wins).
 
 ## Open items
 
-- **Claude infra follow-ups (Geoff approved 2026-09-27).** (1) Slim `claude/.claude/CLAUDE.md`
-  (about 6.1K tokens against the hook's 6,000-token budget): move rarely-needed sections (gws,
-  poplar, most of Secrets, visual fidelity, engine UI mechanics, model-selection detail) to skills
-  or docs with one-line pointers. (2) Add the proportionality check to `spec-plan-review` (review
-  depth by pass class; over-ceremony ranked by cost; mid-pass owner glance for `paint`); the
-  permission classifier blocked an agent's edit, so it needs Geoff's approval on dispatch.
 Strategic and standing items live in `ROADMAP.md` (history purge decision,
 musicbox repo split, devcontainers, kitty-harness replacement, custom uBlue
 image, restore split, the cairn documentation standard).
