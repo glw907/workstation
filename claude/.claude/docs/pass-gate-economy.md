@@ -15,7 +15,7 @@ approved, all cheap in tokens:
 - **The pass class sets the ceremony** (Geoff, 2026-09-27). A plan header declares `Pass class:`
   (`auth-data`, `engine-logic`, `paint`, `sweep`, `docs`, `tool`), a task may override it, and
   the class picks the per-task gate, the review bar, the test mandate, and the close steps; the
-  table lives in the `cairn-pass` skill. Both runners take `passClass` in their args and render
+  table lives in the `pass-core` skill. Both runners take `passClass` in their args and render
   it: the mandate into the implementer prompt, the bar into the reviewer prompt. Under every
   class but `auth-data`, a fix round whose findings are all `commentOnly` or `testOnly` runs the
   reduced gate, and under `engine-logic`, `paint`, `sweep`, and `docs` a `coverageOnly` finding

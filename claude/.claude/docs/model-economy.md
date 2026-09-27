@@ -41,7 +41,7 @@ Seats, per Anthropic's model guidance (Geoff, 2026-09-23):
 - **The pass class sets the ceremony** (commit `319c2a8`, Geoff 2026-09-27). A plan header
   declares `Pass class:` (`auth-data`, `engine-logic`, `paint`, `sweep`, `docs`, `tool`), and a
   task may override it. The class sets the per-task gate, the reviewer's blocking bar, the test
-  mandate, and the settle and close steps. The table lives in the `cairn-pass` skill.
+  mandate, and the settle and close steps. The table lives in the `pass-core` skill.
   `pass-execute.js` and `pass-execute-chains.js` take `passClass` and render the mandate and
   the bar into the prompts; this doc never delivers the rule.
 - **Undeclared dispatches fall to `sonnet`.** `CLAUDE_CODE_SUBAGENT_MODEL=sonnet` sits in
