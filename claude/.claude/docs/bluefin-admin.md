@@ -1,8 +1,9 @@
 # Bluefin DX admin reference: thinkpad-x1
 
 Standing reference for administering the Bluefin DX system (stable stream, Fedora 44
-base). Read this before installing software, editing `/etc`, running an update, or
-touching browser configuration on this machine.
+base). Read this before installing software, editing `/etc`, running an update,
+touching browser configuration, installing or receiving a secret, or using `gws` on
+this machine.
 
 The Mint-era `chromium-browser.md` was retired 2026-08-30 (recoverable from git
 history); this file's Browsers section is the authority. The old file's
@@ -213,3 +214,50 @@ separate, narrower, still-open gotcha.
 
 If `claude-sudo-setup` or the `sudo -A` flow fails after a fresh install, check this
 gotcha before assuming the askpass script itself is broken.
+
+## Secrets: installing, receiving, and 1Password
+
+Moved from the global CLAUDE.md "Secrets" section (2026-09-27); CLAUDE.md keeps the
+never-commit rules and a pointer here.
+
+- **1Password: sudo semantics, never a loop.** The first `op` call per session
+  authenticates it; fetch once (`op item get <id> --format json`) and parse locally.
+  `claude-block-op` denies 3+ `op` calls in a minute (once per session, like sudo).
+  Passkeys route through the browser for Geoff's touch, never read directly.
+- **Installing a NEW long-lived secret, every project (Geoff, 2026-07-13): the
+  workstation age store is the origin, never a loose file, never only `wrangler secret
+  put`.** Flow: `~/.dotfiles/scripts/secrets/secret-set.sh NAME --value|--file|--b64-file`
+  (writes `values.age`, regenerates `~/.local/secrets`), document scope and rotation in
+  `~/.dotfiles/secrets/registry.md`, add the worker to `sync.sh`'s WORKER_SECRETS routing
+  if it consumes one, then `sync.sh --worker NAME` and `sync.sh --verify`. Delete any
+  loose key file; the upstream issuer (GCP IAM, GitHub App settings, ...) mints
+  replacements. Exception: ASC secrets use `aksailingclub-legacy/secrets/`; per-site
+  rotatable HMAC keys (MAGIC_LINK_SECRET, SESSION_SECRET) stay worker-only.
+- **Receiving a secret value FROM Geoff (Geoff, 2026-08-31): run `secret-receive NAME
+  [--hint …|--op REF]`**, a desktop paste dialog (or 1Password read) piped into the age
+  store. Never paste-into-chat or hand-run commands. Wire the name first (manifest,
+  registry `pending`, consumer config); flip the registry checkmark after the mint.
+- **Check the stores before claiming a secret is missing**, in order: `npx wrangler
+  secret list` (per worker), `~/.local/secrets`, the age registry
+  (`~/.dotfiles/secrets/registry.md`), per-project stores (a repo's `secrets/` dir plus
+  sync script; ASC's is `aksailingclub-legacy/secrets/`), and
+  `cloudflare-estate-inventory.md`. None found is the finding, not "Geoff owes a paste."
+  Name-only checks, never print values.
+
+## Google Docs / Drive (gws)
+
+Moved from the global CLAUDE.md (2026-09-27). `gws` (Google Workspace CLI, Homebrew
+`googleworkspace-cli`) is the path to Google Docs, Drive, and Sheets, never an MCP server.
+Personal docs: OAuth as Geoff's own Google account (`gws auth login -s docs,drive`; the
+Desktop OAuth client pair lives in the age store as `GOOGLE_WORKSPACE_CLI_CLIENT_ID` /
+`_CLIENT_SECRET`). ASC docs only: the club service account via
+`GOOGLE_APPLICATION_CREDENTIALS`, which `gws` also honors; unset it if it shadows the
+personal login. Formatting edits go through `docs documents batchUpdate` after a `get` for
+indexes; `--dry-run` first on any write. Patterns: the `google-docs-formatting` memory.
+
+## Email (poplar)
+
+Moved from the global CLAUDE.md (2026-09-27). poplar is a bubbletea terminal email client
+built from `~/Projects/poplar/`; binary `~/.local/bin/poplar` (`make install`). Fastmail via
+JMAP, `$FASTMAIL_API_TOKEN` in `~/.local/secrets`. API reference:
+`~/.claude/instructions/fastmail-api.md`.
