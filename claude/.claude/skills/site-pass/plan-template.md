@@ -1,11 +1,13 @@
 # Pass <n>: <topic>
 
-> **For agentic workers:** Orchestrate this plan task-by-task from the main
-> loop: dispatch each task to a `site-implementer` subagent, review its diff,
-> and verify the gate before the next dispatch. `site-implementer` is pinned
-> to Sonnet in its own frontmatter; pass `model: opus` only to upshift a task
-> with novel correctness-critical logic the plan does not fully specify
-> (`model: fable` only when an Opus verdict itself hedges). Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** Execute per the `site-pass` and `pass-core` skills: each task
+> runs as the chain (`site-implementer`, then `diff-reviewer`, then the gate); the conductor
+> never reads the diff. Tasks state outcomes and acceptance criteria, never implementation code.
+
+**Pass class:** one of `auth-data`, `engine-logic`, `paint`, `sweep`, `docs`, `tool` (see
+`pass-core`). A task that differs carries its own `Pass class:` line.
+
+**Token ceiling:** <n>. **Checkpoint interval:** four tasks.
 
 **Goal:** One sentence stating what this pass produces.
 
@@ -34,21 +36,20 @@ mdsvex. Note any new deps.
 **Files:**
 - Create/Modify: `exact/path/to/file`
 
-- [ ] Step 1: ...
-- [ ] Step 2: Run `npm run check` (expected: no errors)
-- [ ] Step 3: Commit
+**Outcome:** what is true when this task is done.
+
+**Acceptance criteria:**
+- [ ] ...
 
 ---
 
 ## Pass-end checklist
 
-- [ ] `code-simplifier` agent on changed code
+- [ ] `code-simplifier` once, only if TS or Svelte changed (see `pass-core` for the class rule)
 - [ ] Quality gate: `npm run check` (0/0), `npm test` (exit 0), `npm run build`
-- [ ] Review gate: fan out the reviewers matching what the pass touched
-      (svelte-reviewer, daisyui-a11y-reviewer, cloudflare-workers-reviewer,
-      web-auth-security-reviewer; content-review for site content)
+- [ ] Review gate: the reviewers the pass class and touched files call for
 - [ ] Update `docs/architecture.md`
-- [ ] Update `docs/STATUS.md` (mark done, write next starter prompt)
+- [ ] Update `docs/STATUS.md` (present tense, next resume prompt) and `docs/HISTORY.md`
 - [ ] Archive plan: `git mv docs/superpowers/plans/<this>.md docs/superpowers/archive/plans/`
 - [ ] Archive spec (if one exists): `git mv docs/superpowers/specs/<this>-design.md docs/superpowers/archive/specs/`
-- [ ] Commit and push, then roll into the next pass in this session
+- [ ] Commit and push, then hand off with the resume prompt (the next plan is brainstormed in a fresh session)
