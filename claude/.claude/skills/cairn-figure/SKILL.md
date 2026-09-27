@@ -92,7 +92,7 @@ can run now. Do not go looking for `npm run check:figures` before pass 2a lands 
 ## Verification: the figure-verifier agent
 
 Until the gates land, and after, the judgment layer for a figure is the `figure-verifier`
-agent (`~/.claude/agents/figure-verifier.md`, `model: claude-opus-5`, read-only). Dispatch it
+agent (`~/.claude/agents/figure-verifier.md`, `model: claude-opus-5-5`, read-only). Dispatch it
 after a page carrying a figure is drafted or edited, before a human reads the page. It grades
 every figure on the page against the two figure tests above and the register's visual-layer
 rulings, and returns one of five verdicts per figure, each with a `file:line`: earns its

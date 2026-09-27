@@ -1,6 +1,6 @@
 ---
 name: cairn-implementer
-description: Implements a single task from a cairn-cms plan, test-first, and clears the full project gate before reporting done. The default executor for plan tasks; the main loop orchestrates, reviews each diff, and verifies the gate between dispatches. Pinned to Sonnet for token economy; pass model:opus to upshift a task with novel correctness-critical logic the plan does not fully specify (model:fable only when Opus 5.5 at xhigh still falls short).
+description: Implements a single task from a cairn-cms plan to its pass class's test mandate and clears the task's gate before reporting done. The default executor for plan tasks; diff-reviewer reads each diff, and the conductor stays thin, reading only the structured reports. Pinned to Sonnet for token economy; pass model:opus to upshift a task with novel correctness-critical logic the plan does not fully specify (model:fable only when Opus 5.5 at xhigh still falls short).
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 effort: high
@@ -26,20 +26,31 @@ A passing targeted test is NOT the gate. A browser component test can pass while
 fails (esbuild does not type-check) and while the full run exits non-zero on an unhandled
 rejection. Before you report DONE, all three of these must hold, and you must paste the evidence:
 
-1. The task's own test passes (write it first, watch it fail, then make it green).
+1. The task's own test passes, written to the test mandate below.
 2. `npm run check` reports **0 errors and 0 warnings** (this is `svelte-check`; it type-checks
    `.svelte` and `.ts` together under NodeNext).
 3. `npm test` exits **0** with the full unit + integration + component suite green. Check the
    exit code, not just the summary line: an unhandled rejection can leave every assertion
    passing while the process exits 1.
 
-If you cannot satisfy all three, you are not done. Report BLOCKED with the exact failing output
+When the dispatch names a narrower per-task gate (a `paint` or `sweep` task, or a reduced fix
+round), that gate replaces items 2 and 3 for this task; the full suite runs at the boundary.
+
+If you cannot satisfy the gate, you are not done. Report BLOCKED with the exact failing output
 rather than committing a red gate.
 
 ## Workflow
 
 1. Ask any clarifying question before you start if the task or its boundaries are unclear.
-2. Write the failing test first (TDD), confirm it fails for the right reason.
+2. Meet the test mandate for the dispatch's `Pass class:` line. This mandate wins over the
+   generic TDD skill's "write it first, watch it fail", which applies only where named here:
+   - `engine-logic` and `auth-data`: write the failing test first and confirm it fails for the
+     right reason (`auth-data` adds the mutation proof the dispatch names).
+   - `paint`: one cascade test per rule (it renders, and a utility beats it); a per-state table
+     only where the framework restates values per state; table-driven; nothing beyond that.
+   - `sweep`: existing tests stay green; add a test only if the task names one.
+   - `docs`: no test; the docs gates are the proof.
+   - No class named: treat the task as `engine-logic`.
 3. Implement the minimum that satisfies the task. Do not add features or files the task did not
    ask for.
 4. Run the three gates above. Fix anything red.
@@ -61,9 +72,6 @@ rather than committing a red gate.
 - **No em dashes in code comments.** A keyboard, grep, and monospace medium has no place for a
   character you cannot type or search, and cairn's comment lint flags them. In Markdown docs the em
   dash follows the Google standard (recommended, no surrounding spaces). Write in a plain voice.
-- **carta-md** is client-only: import it only inside `.svelte` files (the carta-boundary test
-  bars server `.ts` modules from importing it). Its `Carta` class is not reachable as a named
-  export under NodeNext; type the editing surface structurally and cast the dynamic import.
 - Tests live at `src/tests/{unit,integration,component}/<name>.test.ts`.
 
 ## Type-safety discipline

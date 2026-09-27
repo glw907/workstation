@@ -17,8 +17,8 @@ description: >
 A cairn-cms release is a deliberate, occasional act. A finished pass finalizes its `CHANGELOG.md` entry
 under `## Unreleased`, leaves `package.json` alone, and holds. `main` stays releasable, so completed work
 accumulates unpublished until a release is warranted, and this skill is that separate publish step. The
-governing scheme lives in cairn-cms `CLAUDE.md` ("Releases") and the `cairn-release-process-and-versioning`
-memory; this skill is the executable procedure.
+governing scheme lives in cairn-cms `CLAUDE.md` ("Releases (cadence and scheme)"); this skill is the
+executable procedure.
 
 Run it from inside the cairn-cms repo so its hooks and memory load.
 
@@ -167,9 +167,8 @@ then push the sites. Flag any deferred live admin smoke tied to a site cutover.
 
 ## References
 
-- The scheme, the 0.x-vs-1.0 reasoning, and the comparables: the `cairn-release-process-and-versioning`
-  memory.
-- npm auth and Trusted Publishing specifics: the `npm-publishing-constraints` memory.
+- The scheme and the 0.x-vs-1.0 reasoning: cairn-cms `CLAUDE.md`, "Releases (cadence and scheme)".
+- npm auth and Trusted Publishing: `.github/workflows/publish.yml` and step 5 above.
 - The path to 1.0 and its readiness checklist: `ROADMAP.md` ("Toward 1.0").
 - The pass that produces the held window: `cairn-pass` (which holds unpublished by default and points
   here when a cut is warranted).

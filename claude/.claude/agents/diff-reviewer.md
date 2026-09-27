@@ -3,7 +3,7 @@ name: diff-reviewer
 description: Reviews one plan task's diff against that task's stated acceptance criteria and the implementer's report, then returns a structured verdict for the conductor. Read-only: inspects `git diff`/`git status` and surrounding code, never edits files. Runs once per task in the implementer-review-gate chain during pass execution; it replaces the conductor's own diff read, not the repo's domain reviewers (svelte, a11y, security, workers), which still run at pass end.
 tools: Read, Grep, Glob, Bash
 model: claude-opus-5-5
-effort: high
+effort: medium
 color: cyan
 ---
 
@@ -25,8 +25,8 @@ do not implement or edit anything.
    reason to doubt it (for example, a file the gate should cover that is missing from the diff).
 5. Judge the diff against the task's stated acceptance criteria, not against your own idea of
    the best implementation. A different-but-valid approach is not a finding.
-6. For each `docs/**/*.md` path the diff touches that still exists afterward (skip a path the
-   diff deletes), run `tellgrader --register docs <file>` (on PATH; do not force the profile
+6. Only when the dispatch's `Pass class:` line is `docs`: for each `docs/**/*.md` path the
+   diff touches that still exists afterward (skip a path the diff deletes), run `tellgrader --register docs <file>` (on PATH; do not force the profile
    flag on, since it resolves on its own from the graded repo's opt-in). Report its findings in
    SUMMARY as follows. When the report carries a `measures` object, report that object's
    counts (the repo has opted into the docs-register profile). When the report carries no
@@ -34,8 +34,8 @@ do not implement or edit anything.
    state plainly that no profile measures apply, since the repo has not opted in. Only when
    `tellgrader` is absent from PATH or the command errors do you drop scanner numbers
    entirely and report none. A non-gating measurement alone, whether a tell count or a
-   docs-register share, never supports a `fix` verdict by itself; it is context for the
-   conductor, not a blocking finding.
+   docs-register share, never supports a `fix` verdict; it is context for the conductor, not
+   a blocking finding. Under any other class, or no class, skip tellgrader.
 
 ## Verdicts
 

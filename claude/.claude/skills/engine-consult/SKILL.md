@@ -102,7 +102,7 @@ altitude (section 4).
 
 ## Triage mechanics
 
-Dispatch the `engine-triage` agent (read-only, fresh-context, pinned `claude-opus-5`)
+Dispatch the `engine-triage` agent (read-only, fresh-context, pinned `claude-opus-5-5`)
 with the absolute paths to the brief, the rulings ledger
 (`~/Projects/cairn-cms/docs/internal/engine-rulings.md`), and the site plan. It reads the
 ledger first, so a settled ruling is cited rather than re-argued, then argues each item

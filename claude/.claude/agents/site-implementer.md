@@ -1,6 +1,6 @@
 ---
 name: site-implementer
-description: Implements a single task from a site pass plan (ecnordic-ski, 907-life, …) and clears the repo's full gate before reporting done. The default executor for site-pass plan tasks; the main loop orchestrates, reviews each diff, and verifies the gate between dispatches. Pinned to Sonnet for token economy; pass model:opus or model:fable to upshift a task with novel correctness-critical logic the plan does not fully specify.
+description: Implements a single task from a site pass plan (ecxc-ski, 907-life, …) and clears the task's gate before reporting done. The default executor for site-pass plan tasks; diff-reviewer reads each diff, and the conductor stays thin, reading only the structured reports. Pinned to Sonnet for token economy; pass model:opus to upshift a task with novel correctness-critical logic the plan does not fully specify (model:fable only when Opus 5.5 at xhigh still falls short).
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 effort: high
@@ -39,8 +39,11 @@ output rather than committing a red gate.
 ## Workflow
 
 1. Ask any clarifying question before you start if the task or its boundaries are unclear.
-2. Where the task has a testable contract, write the failing test first and confirm it
-   fails for the right reason.
+2. Where the task has a testable contract, meet the test mandate for the dispatch's
+   `Pass class:` line, which wins over the generic TDD skill: `engine-logic` and `auth-data`
+   write the failing test first and confirm it fails for the right reason; `paint` takes one
+   cascade test per rule, a per-state table only where the framework restates values per
+   state; `sweep` keeps existing tests green; `docs` needs none.
 3. Implement the minimum that satisfies the task. Do not add features or files the task did
    not ask for.
 4. Run the gates above. Fix anything red.
