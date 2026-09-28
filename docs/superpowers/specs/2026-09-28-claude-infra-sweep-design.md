@@ -8,8 +8,10 @@ amendments to the style-guide-sync plan). Finding ids below are the audit's. The
 is `/var/home/glw907/Projects/cairn-cms/.claude/worktrees/style-guide-sync/docs/superpowers/plans/2026-09-28-style-guide-sync.md`.
 
 **Status:** revised after the four-lens review (anthropic, contract, mechanics, consistency under
-`docs/superpowers/research/2026-09-28-infra-sweep-review-*.md`). Fold record:
-`docs/superpowers/research/2026-09-28-infra-sweep-fold.md`. Ready for Geoff's read.
+`docs/superpowers/research/2026-09-28-infra-sweep-review-*.md`), then a second, narrow fold
+after the fold verification (`docs/superpowers/research/2026-09-28-infra-sweep-fold-verification.md`).
+Fold record, both folds: `docs/superpowers/research/2026-09-28-infra-sweep-fold.md`. Ready for
+Geoff's read.
 
 ## Goals
 
@@ -26,10 +28,12 @@ infrastructure, so the fixes hold without a repeat by hand.
 **Success tests.**
 
 - After A-core and B (the concrete test is under "Pass B acceptance"): the baseline holds zero
-  entries lettered A or B; a dry render of the style-guide-sync plan's real two-chain arguments
-  passes its named checks; and the three workarounds (the chain W `notes` override of the
-  implementer's definition of done, any `reducedGate` pin added for AW-01, and W6's deferral of
-  the tooling check to the boundary) are absent from the amended plan.
+  entries lettered `A-core` or `B`, and a dry render of a fixture built from the style-guide-sync
+  plan's two-chain arguments passes its named checks.
+- At the style-guide-sync pre-flight (amendment 10): the same render over the amended plan's real
+  arguments passes, and the two workarounds (the chain W `notes` override of the implementer's
+  definition of done, and W6's deferral of the tooling check to the boundary) are absent from
+  the amended plan.
 - After the style-guide-sync close: every runner halt, escalation, or `fix` reason maps to "not
   infra" (amendment 9).
 - After E: the duplicate-paragraph and reference baselines are empty. Entries keyed to a pass F
@@ -148,9 +152,14 @@ repairs it.
 
 - A runner never assumes npm and never rejects a plan for a missing `reducedGate`. The runners
   have no filesystem access (`pass-execute.js:37-40`, `:57-58`), so they cannot probe for a
-  `package.json`. A reduced round's gate resolves in one order: an explicit `reducedGate`, else
-  the gate the task or args name, else the repo-neutral class default `pass-execute.js:246`
-  already holds (AW-01). Probes for the classifier run only when it exists (AW-13).
+  `package.json`. A reduced round's gate resolves as an explicit `reducedGate`, else the
+  repo-neutral class default `pass-execute.js:246` already holds: "the repo's type check plus
+  only the test files this fix round touched" (AW-01). It never falls back to the named full
+  gate, since every plan names one and that fallback would repeal two rulings: the
+  2026-09-09 "Gate economy on a pass" ruling, "Comment-only fix rounds run a reduced gate"
+  (`pass-gate-economy.md:12`), and the 2026-09-27 class ruling, "a fix round whose findings are
+  all `commentOnly` or `testOnly` runs the reduced gate" (`pass-gate-economy.md:19-21`). Probes
+  for the classifier run only when it exists (AW-13).
 - An agent or skill never cites a repo-relative path that resolves in exactly one repo bare. It
   writes the path absolute, or prefixed with its repo (`cairn-cms/docs/...`). A generic
   convention path that resolves in several repos, or a placeholder path, stays bare (AW-14,
@@ -184,27 +193,30 @@ One file, `claude/.claude/tooling/ratchet-baseline.json`, read by both tools.
 
 - **Registry.** The file's `checks` map lists every check id and the tool that implements it.
   Each tool reports the ids it implements; a registered id no tool implements, or an entry under
-  an unregistered id, is a configuration error. The registry is append-only.
+  an unregistered id, is a configuration error. The registry is append-only: an id leaves use by
+  taking the `retired` state, which requires no implementing tool and admits no entries, and
+  deleting a registry id fails.
 - **Entry shape.** Check id, file (relative to its root), a fingerprint that survives edits and
   line moves (the phrase, the unresolved path, the cited heading; a duplicate-pair entry is keyed
   on its sorted file pair and stores its overlap count), the owning finding id, and the pass
-  letter that removes it. A cross-repo entry also carries its repo.
+  label that removes it (`A-core`, `A-rest`, `B`, `C`, `D`, `E`, or `F`). A cross-repo entry also
+  carries its repo.
 - **Seeding.** Each seeded entry maps to an audit finding id. A violation the audit did not name
-  gets an id `GA-nn`, a one-line defect, and a pass letter. The seeding pass's close prints a
+  gets an id `GA-nn`, a one-line defect, and a pass label. The seeding pass's close prints a
   summary of `GA-nn` counts per check (and per file pair for duplicates); Geoff sees only entries
   with no plausible owning pass.
 - **Per-commit enforcement.** `scripts/githooks/pre-commit` compares the staged baseline with
   HEAD's copy, before its `exec gitleaks` line and without losing gitleaks' fail-closed exit. This
   behaves the same on `main`, on a branch, and in a worktree. It fails on an added entry under an
-  id already in HEAD's registry, on a rising overlap count, and on a removed registry id. It
-  passes removals, falling counts, re-keys, and entries under an id absent from HEAD's registry.
-  A HEAD with no baseline counts as all-new, which covers A-core's own bootstrap.
+  id already in HEAD's registry or retired there, on a rising overlap count, and on a removed
+  registry id. It passes removals, falling counts, re-keys, and entries under an id absent from
+  HEAD's registry. A HEAD with no baseline counts as all-new, which covers A-core's own bootstrap.
 - **One growth event.** A commit that registers a new check id may add that id's entries. A
-  changed rule or threshold for an existing check is a new check id; the old id's entries leave in
-  the same commit.
-- **Re-key.** An entry may change its `file` in the commit whose staged diff records that file's
-  rename, with fingerprint and count unchanged. Duplicate-pair entries are keyed on the file pair,
-  so an edit inside a still-duplicated pair keeps its entry.
+  changed rule or threshold for an existing check is a new check id; the old id turns `retired`
+  and its entries leave in the same commit.
+- **Re-key.** A same-commit remove-and-add of the same check id and fingerprint, with the count
+  unchanged, counts as a re-key, whatever git's rename detection reports. Duplicate-pair entries
+  are keyed on the file pair, so an edit inside a still-duplicated pair keeps its entry.
 - **The gate.** `scripts/check.sh` fails on a violation no entry matches (new), on an entry no
   violation matches ("remove this baseline entry"), and on working-tree growth against HEAD under
   the hook's rules.
@@ -227,9 +239,6 @@ code, report line) with one fixture per row. No simplifier at close (Python and 
 Findings closed outright: PS-01, CS-9, AW-16. The pre-bake points dotfiles STATUS at this sweep
 and drops the owed aksailingclub-org pointer line.
 
-**A0 (conductor, before AC3 seeds).** Run `/doctor prompt-audit` once over `~/.claude`. Each
-finding the checks do not cover becomes a `GA-nn` entry or a C or D item, listed in the close.
-
 ### AC1. The ratchet
 
 Files: `claude/.claude/tooling/ratchet-baseline.json`, the shared baseline logic (one module or
@@ -238,7 +247,8 @@ fixtures under `tests/`.
 
 Outcomes: everything in "The ratchet baseline" above. Fixtures cover growth on HEAD under a
 registered id (fails), growth under an emptied registered id (fails), growth under a newly
-registered id (passes), a removed registry id (fails), a rename re-key (passes), a stale entry, a
+registered id (passes), growth under a retired id (fails), a removed registry id (fails), a
+re-key across a heavily edited move (passes), a stale entry, a
 grown count, an empty baseline, the malformed states, and a many-bad run.
 
 ### AC2. `claude-tooling-sync`
@@ -297,7 +307,7 @@ never starts red.
 baseline; every fixture passing; `claude-tooling-sync verify` green on the merged `main`. The
 close prints one row per baselined audit id with its seeded entry count; a zero passes only with
 a named reason (for example, "cross-repo, seeds in A-rest"). The close also prints the baseline
-summary per pass letter and the `GA-nn` summary.
+summary per pass label and the `GA-nn` summary.
 
 ## Pass B: the execution path
 
@@ -306,7 +316,8 @@ summary per pass letter and the `GA-nn` summary.
 `git revert -m 1`. **Per task:** gate `bash scripts/check.sh`, light lane; `diff-reviewer`
 against the task's acceptance. B1 and B2 are test-first; B3 and B4 take mechanical acceptance
 (retired phrases and grep post-conditions), with no register chain. The close runs the
-simplifier over B1's JavaScript (S5). Each task that fixes a baselined finding removes its
+simplifier over B's changed JavaScript: B1's runners and `.mjs` tests and B2's
+`docs-page-chain.js` (S5). Each task that fixes a baselined finding removes its
 entries in the same commit, and each row that retires text appends its phrase in that commit
 (RC3). Implementer-definition edits land here so the style-guide-sync plan's W5 branches from
 them.
@@ -320,22 +331,23 @@ helpers extracted through markers and `new Function`, since the runners carry a 
 
 | Finding | Outcome |
 |---|---|
-| AW-01 | Both runners resolve a reduced round's gate as: explicit `reducedGate`, else the named gate, else the repo-neutral class default (`pass-execute.js:246`). Chains drops its npm constant (`:164`). No plan is rejected for a missing `reducedGate` |
+| AW-01 | Both runners resolve a reduced round's gate as an explicit `reducedGate`, else the repo-neutral class default (`pass-execute.js:246`), never the named full gate (RC4). Chains drops its npm constant (`:164`). No plan is rejected for a missing `reducedGate` |
 | AW-02 | Chains uses the same gate matcher as `pass-execute.js`: a wrapper, a `cd` prefix, and multi-line stdout all match |
 | AW-03 | Any reduced round is exempt from the MISMATCH block; no prompt carries both MISMATCH-blocking and "reduced is expected" |
 | AW-04 (runner side) | The hardcoded npm sentence in the no-class comment-only round (`pass-execute-chains.js:249`) goes; that round renders the gate resolved above |
 | AW-05 | The unread severity field is deleted from the schema and from the prompt |
 | AW-06 | The header describes the runner generally; "committed in this repo" becomes "an absolute path"; the "Ruled inputs" section is optional |
 | AW-12 | Chains `IMPL_SCHEMA` carries `mutationLedger`, so the `auth-data` mandate can be met |
-| AW-13 | An optional `args.classifier` boolean skips the probe. Absent, one existence probe on `model: "haiku"` runs per chain repo and is cached; per-task tier probes run only when the classifier exists; the classifier paragraph renders only then |
+| AW-13 | `classifier` is a per-chain boolean: a chain's own value, else `args.classifier`, else one cached existence probe on `model: "haiku"` for that chain's repo. `false` skips the probe; per-task tier probes run only when the classifier exists; the classifier paragraph renders only then |
 | DC-04 (tool half) | Each runner prints the runaway-guard NOTE at launch, naming the wake-up the guards doc names |
 | AW-11 (interim) | A parity test holds `PASS_CLASSES`, the reduced-gate default, and the gate matcher equal across both runners, and holds `pass-core`'s table to the class-name set, the reviewer model, and the gate lane; the runner merge waits for pass E |
 
 Test assertions: the parity above; every field a mandate cites exists in `IMPL_SCHEMA`; every
 `REVIEW_SCHEMA` field is read; the matcher accepts the three forms; a no-class reduced round
-renders no MISMATCH line and no npm command; the three-step reduced-gate resolution; a run with
-`classifier: false` spawns no probe, and one without spawns exactly one per chain repo; no
-`agent(` call lacks `model:`; the launch NOTE prints.
+renders no MISMATCH line and no npm command; the two-step reduced-gate resolution, with a named
+gate and no `reducedGate` rendering the class default; per chain, a chain with
+`classifier: false` spawns no probe and a chain without the field spawns exactly one, in the same
+invocation; no `agent(` call lacks `model:`; the launch NOTE prints.
 
 ### B2. Gate tool
 
@@ -362,47 +374,50 @@ Files: `claude/.claude/agents/cairn-implementer.md`, `site-implementer.md`, `dif
 | AW-23 | The dated compatibility note is deleted from both implementers |
 | AW-04 (reviewer side) | `diff-reviewer` says "the reduced gate the dispatch names" and defines none of its own |
 | AW-05 (reviewer side) | The severity-as-routing claim is deleted |
-| DC-29 (agent side) | The hardcoded `Co-Authored-By: Claude <noreply@anthropic.com>` footers (`cairn-implementer.md:58`, `site-implementer.md:51`) become "the repo's commit conventions", as `pass-execute-chains.js:238` already says |
+| DC-29 (agent side) | The hardcoded `Co-Authored-By: Claude <noreply@anthropic.com>` footers (`cairn-implementer.md:58`, `site-implementer.md:51`) take the wording `pass-execute-chains.js:238` already uses: "the repo's git conventions (imperative mood, specific files, the repo's co-author footer)" |
 
-Mechanical acceptance: the fixed npm definition-of-done list, the dated note, and the generic
-footer string enter the retired-phrase list with their witnesses and have no hit.
+Mechanical acceptance: the fixed npm definition-of-done list and the dated note enter the
+retired-phrase list with their witnesses and have no hit. The generic footer string retires in
+B4, where its last hits leave.
 
 ### B4. Global CLAUDE.md, pass skills, and the spent workflow
 
 Files: `claude/.claude/CLAUDE.md`, `claude/.claude/skills/pass-core/SKILL.md`,
 `claude/.claude/skills/site-pass/SKILL.md`, `claude/.claude/skills/cairn-pass/SKILL.md`,
 `claude/.claude/skills/go-ship/SKILL.md`, `claude/.claude/docs/model-economy.md`,
+`claude/.claude/docs/voice/commit-and-pr.md`,
 `claude/.claude/workflows/cairn-overnight-to-release.js` (deleted), `docs/HISTORY.md`.
 
 | Finding | Outcome |
 |---|---|
 | `0a2e391` repair | The implementer diffs `a7dd5ad` against `0a2e391` over `claude/.claude/CLAUDE.md` and separates deliberate slimming from lost rulings. Each lost ruling is restored to its owning home; the report lists every one found |
-| DC-01 (+PS-13) | The Git Conventions bullet restores `a7dd5ad`'s text, so the rule stays in CLAUDE.md for branch work outside passes: code-simplifier runs once per pass or branch at its close over changed TypeScript (including JavaScript, S5), Svelte, or Go; never per commit or at an intermediate boundary; never for docs. It points at `pass-core` for the pass procedure. The small-task line reads "straight through the gates". `pass-core`'s simplify step names the S5 languages. `go-ship` runs the repo's own `simplify` skill when one exists (poplar) and `code-simplifier:code-simplifier` otherwise, once, as its close step |
+| DC-01 (+PS-13) | The Git Conventions bullet restores `a7dd5ad`'s text, so the rule stays in CLAUDE.md for branch work outside passes: code-simplifier runs once per pass or branch at its close over changed TypeScript (including JavaScript, S5), Svelte, or Go; never per commit or at an intermediate boundary; never for docs. It points at `pass-core` for the pass procedure. The small-task line reads "straight through the gates". `pass-core`'s simplify step names the S5 languages. `go-ship` runs the repo's own `simplify` skill when `<repo>/.claude/skills/simplify/` exists (poplar) and `code-simplifier:code-simplifier` otherwise, once, as its close step; the path check is the test, since the bundled `/simplify` always resolves by name |
 | Superpowers yield (`GA` id assigned at seeding) | "Superpowers skills yield to the pass class: TDD's write-first applies to `engine-logic` and `auth-data` only, and plans stay outcome-only" is restored in `pass-core` beside the class table |
 | DC-03 (+PS-16) | The global CLAUDE.md chain sentence restores `a7dd5ad`'s "the pass class's gate runs inside the chain" with its `pass-core` pointer; `site-pass` and `model-economy.md:38` say the same. Repo copies are pass F |
 | DC-04 (text half) | The unattended-work line says the tools hold the sleep inhibitor and the session arms the runaway guard and the wake-up the guards doc names at launch. It names no mechanism, so C2's `/goal` evaluation needs no edit here |
 | PS-14 | `pass-core`'s escalation points at `model-economy.md` "Current state" (which includes `max`) and restates no ladder; A-rest repoints it at `seats.json`. cairn CLAUDE.md is pass F |
 | PS-22 | `cairn-pass` close drops the separate `npm run check`, since `check:close` runs it |
-| DC-29 | The co-author footer bullet is deleted (S7) |
+| DC-29 | The co-author footer bullet is deleted (S7). The example trailer at `commit-and-pr.md:93` becomes the model-named form, `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` |
 | DC-30 | The pre-bake step says to update STATUS, and memory only for a preference or a ruling's why |
 | AW-07 | `cairn-overnight-to-release.js` and its skill-listing entry are deleted; "sleep 30" leaves the baseline |
 | History | `docs/HISTORY.md` records `0a2e391` as a one-executor-rule incident: two sessions edited the global CLAUDE.md at once, and the later commit reverted three rulings |
 
 Retired phrases appended here: "Before committing code changes, dispatch" and "the repo's full
 gate runs inside the chain" are already seeded by A-core; B4 adds "straight through the gates and
-code-simplifier" and the footer bullet's text.
+code-simplifier" and the generic footer string `Co-Authored-By: Claude <noreply@anthropic.com>`,
+whose last hits (`CLAUDE.md:68`, `cairn-overnight-to-release.js:76`, `commit-and-pr.md:93`) leave
+in B4's commits.
 
 ### Pass B acceptance
 
 - `bash scripts/check.sh` green; the runner and gate tests passing;
   `claude-tooling-sync verify` green on the merged `main`.
-- A baseline query returns zero entries lettered A or B.
-- A dry render (the B1 test harness) of both style-guide-sync segments with the amended plan's
-  real arguments, chains R and W in one invocation, asserts: W's prompts name no npm command;
-  every W reduced round renders `bash scripts/check.sh`; no reduced round carries a
-  MISMATCH-blocking line; W spawns no classifier probe; R's existence probe runs once, on
-  `haiku`.
-- A grep of the amended plan confirms the three named workarounds are gone.
+- A baseline query returns zero entries lettered `A-core` or `B`.
+- One fixture in B1's harness, not a second test file, carries the style-guide-sync plan's
+  chain arguments as amendment 1 sets them: chains R and W in one invocation, W with
+  `classifier: false`. It asserts: W's prompts name no npm command; every W reduced round
+  renders the class default and no npm command; no reduced round carries a MISMATCH-blocking
+  line; W spawns no classifier probe; R's existence probe runs once, on `haiku`.
 
 ## Amendments to the style-guide-sync plan
 
@@ -413,12 +428,14 @@ DC-27 (W4), DC-28 (W4 per S3), and AW-24 with DC-26 and CS-15 (W2, W4).
 
 1. The Gates block drops only the `notes` sentence overriding the implementer's definition of
    done (AW-19); the notes keep the absolute spec path. Chain W sets no `reducedGate`: its
-   reduced rounds run the named gate `bash scripts/check.sh` (AW-01).
+   reduced rounds run the class default (AW-01). Chain W sets `classifier: false` (AW-13).
 2. W6 appends its phrases to `claude/.claude/tooling/retired-phrases.txt` and adds fixtures for
    them. It adds no second check to `scripts/check.sh`; A-core's scanner covers W6's scope for
-   retired phrases. W6 carries no test-first mandate, since its fixtures prove phrases, not new
-   logic. R8's list header names `claude/.claude/tooling/retired-phrases.txt`, and R8 matches as
-   a literal, case-insensitive substring, like its twin.
+   retired phrases. W6's class changes from `engine-logic` to `sweep`, whose mandate ("existing
+   tests stay green, and add no new test unless the plan names one") fits fixtures that prove
+   phrases, not new logic; the plan names the fixtures. R8's list header names
+   `claude/.claude/tooling/retired-phrases.txt`, and R8 matches as a literal, case-insensitive
+   substring, like its twin.
 3. W6's acceptance runs `bin/.local/bin/claude-tooling-sync lint --root <worktree>` inside the
    chain. The segment B boundary step 3 (`claude-tooling-sync verify`) stays as a post-merge
    confirmation of the machine checks.
@@ -430,12 +447,16 @@ DC-27 (W4), DC-28 (W4 per S3), and AW-24 with DC-26 and CS-15 (W2, W4).
    references go in pass F.
 7. The chain W worktree is created from dotfiles `main` after B merges. P1's claim check re-runs,
    since B moves line numbers in files W edits (`cairn-implementer.md`, `site-implementer.md`,
-   `CLAUDE.md`, `docs-page-chain.js`).
+   `CLAUDE.md`, `docs-page-chain.js`, `docs/voice/commit-and-pr.md`).
 8. Each W task that clears a baselined entry (a retired phrase or a self-mode dead reference, for
    example AW-08 in W3) removes that entry in the same commit, and
    `claude/.claude/tooling/ratchet-baseline.json` joins that task's Files.
 9. The close maps every runner halt, escalation, or `fix` reason to an audit id or to "not
    infra". The sweep's first goal holds when none maps to an audit id.
+10. A pre-flight step after P1, before segment A dispatches, re-runs B1's style-guide-sync
+    fixture render against the amended plan's real Gates-block arguments and greps the amended
+    plan for the two workarounds named under "Success tests". Either failing halts the pass
+    before dispatch.
 
 ## Pass A-rest: the guard's remaining checks (planned later)
 
@@ -472,6 +493,9 @@ A-core. Each new check registers its id and seeds its entries in the same commit
 - **The remaining reference checks.** Heading citation in both house forms, `` `file.md`
   ("Heading") `` and `` `file.md` "Heading" `` (DC-13, DC-15, DC-18); memory citation (DC-09);
   relative link (DC-10); orphan doc (DC-17).
+- **`/doctor prompt-audit` before seeding.** The conductor runs it once over `~/.claude` before
+  A-rest's first seed. Each finding the checks do not cover becomes a `GA-nn` entry or a C or D
+  item, listed in the close.
 - **Wiring.** `pass-core`'s close gains one step: the reference checker in cross-repo mode over the
   closing worktree, `claude-tooling-sync verify` for that repo's agents, and the context budget;
   `cairn-pass` and `site-pass` supply the commands; the supersession step (RC3) lands in the same
@@ -599,9 +623,9 @@ widen a pass; none adds a pass.
 2. Subagent context (A-rest, E; **scope**). Subagents load the CLAUDE.md chain unless the
    definition sets `omitClaudeMd` (<https://code.claude.com/docs/en/features-overview>). E
    decides the field per agent and records it in `seats.json`, which the seat check reads.
-3. Anthropic's audit (A-core, E, F). `/doctor prompt-audit` finds "instructions written for
+3. Anthropic's audit (A-rest, E, F). `/doctor prompt-audit` finds "instructions written for
    older models, references to files or commands that don't exist, and files that contradict
-   each other" (<https://code.claude.com/docs/en/memory>). A-core runs it once before seeding
+   each other" (<https://code.claude.com/docs/en/memory>). A-rest runs it once before seeding
    and turns its uncovered findings into `GA-nn` entries or C and D items. E runs it at close.
    Each F chore runs it and the `/doctor` trim proposal. It is an input, never a gate.
 4. Attribution (B3, B4). CLAUDE.md commit rules compete with built-in guidance; "set the
@@ -653,9 +677,6 @@ widen a pass; none adds a pass.
   (under six tasks), not through `pass-execute-chains`, and each dispatch names the gate
   `bash scripts/check.sh` explicitly, overriding the implementer's npm definition of done until
   B3 lands.
-- **Pinned-gate reduced rounds get slower.** Under AW-01's resolution, a task that names its gate
-  and no `reducedGate` runs that full gate on a reduced round. A cairn plan that wants a cheaper
-  reduced round sets `reducedGate` explicitly.
 - **The duplicate-paragraph threshold** can be noisy or blind. Calibration with positives and a
   named negative set bounds both; a threshold change is a new check id.
 - **Cross-repo checks** make a repo's close depend on the dotfiles tree. The close runs the

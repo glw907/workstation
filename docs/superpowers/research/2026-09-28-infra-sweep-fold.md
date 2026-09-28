@@ -179,3 +179,45 @@ wants the cheaper round sets `reducedGate`.
   aksailingclub-org pointer line. A-core pre-bake.
 - The spec's first draft stated the DC-01 CLAUDE.md bullet "predates" the ruling; it is a
   regression. Corrected in this revision.
+
+## Second fold
+
+Input: `2026-09-28-infra-sweep-fold-verification.md` (0 blockers, 4 majors, 10 minors). One narrow
+fold agent (`claude-opus-5-5`, high), scoped by the conductor to M1 to M4, eight minors, and the
+A0 move. Each item was checked against the tree before folding:
+
+- `pass-execute.js:246` holds `CLASS_DEFAULT_REDUCED_GATE`, "the repo's type check plus only the
+  test files this fix round touched".
+- `pass-gate-economy.md:12` carries "Comment-only fix rounds run a reduced gate" under the global
+  CLAUDE.md's "Gate economy on a pass (Geoff, 2026-09-09)"; `:15-21` carries the 2026-09-27 class
+  ruling, "a fix round whose findings are all `commentOnly` or `testOnly` runs the reduced gate".
+- `pass-execute-chains.js:238` reads "the repo's git conventions (imperative mood, specific files,
+  the repo's co-author footer)".
+- The generic footer string appears at `CLAUDE.md:68`, `cairn-overnight-to-release.js:76`,
+  `docs/voice/commit-and-pr.md:93`, `cairn-implementer.md:58`, and `site-implementer.md:51`.
+- The style-guide-sync plan's Gates block sets no `reducedGate` and no `classifier`; W6 is class
+  `engine-logic`, whose runner mandate is test-first.
+- `~/Projects/poplar/.claude/skills/simplify/` exists; no other project carries one.
+
+| Id | Disposition |
+|---|---|
+| M1 | Folded: RC4, B1 AW-01 row and test assertions, B acceptance, amendment 1. The order is an explicit `reducedGate`, else the class default at `pass-execute.js:246`, never the named full gate. RC4 quotes both reduced-gate rulings. The first fold's "Pinned-gate reduced rounds get slower" risk is deleted. This preserves the ratified rulings, so it is no owner fork; the first fold's "Rulings for Geoff" note on the named-gate default is superseded |
+| M2 | Folded: B1 AW-13 row (per-chain field, else `args.classifier`, else one probe for that chain's repo); B1 test asserts both chains in one invocation; amendment 1 sets `classifier: false` on chain W; B acceptance restates the probe checks per chain |
+| M3 | Folded: Goals success tests split at the merge; B acceptance tests one fixture in B1's harness built from the plan's chain arguments as amended; new amendment 10 moves the real-plan render and the workaround grep into the style-guide-sync pre-flight |
+| M4 | Folded: B3 changes the agent footers but no longer retires the string; B4 retires it, adds `docs/voice/commit-and-pr.md` to its Files with a model-named example trailer; amendment 7 lists that file |
+| m1 | Folded: registry ids take a `retired` state (no implementer, no entries); deletion still fails; a changed rule retires the old id; AC1 fixture for growth under a retired id |
+| m2 | Folded as the simpler form: a same-commit remove-and-add of the same check id and fingerprint, count unchanged, is a re-key, independent of git's rename detection. Accepted cost: moving a hit from one file to another in one commit also passes, with no net growth |
+| m4 | Folded: amendment 2 sets W6's class to `sweep`, whose mandate admits the fixtures the plan names. `tool` was rejected: its mandate is Go-specific |
+| m5 | Folded: the vacuous `reducedGate` workaround is dropped; two workarounds remain |
+| m7 | Folded: B3 quotes `pass-execute-chains.js:238` exactly |
+| m8 | Folded: `go-ship` tests for `<repo>/.claude/skills/simplify/` |
+| m9 | Folded: the B close simplifies B's changed JavaScript, B1's runners and tests and B2's `docs-page-chain.js` |
+| m10 | Folded: entries carry a pass label (`A-core`, `A-rest`, `B` to `F`); B's query reads "zero entries lettered `A-core` or `B`" |
+| Over-ceremony 1 | Folded: A0 leaves A-core; A-rest runs `/doctor prompt-audit` before its first seed; Anthropic practice item 3 updated |
+| Over-ceremony 2 | Folded with M3: one fixture, no second test file |
+
+Not folded, outside this fold's brief: m3 (wrapped phrases; the line-based limit stands
+unstated), m6 (the harness running the runner body under a stubbed `agent`, `parallel`, and
+`log`; B1's probe-count assertions already need it, so the plan should state it), the Q2 note that
+AC1 registers no id before its tool, and the Q4 note that a `GA-nn` on the sync path lettered C
+escapes B's query. Refused: none.
