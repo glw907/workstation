@@ -1,0 +1,5 @@
+{
+  "comment": "Known violations that may shrink and never grow; ratchet.py beside this file documents the format and rules.",
+  "checks": {},
+  "entries": []
+}
