@@ -60,6 +60,12 @@ ruling or product fork in the plan's "Rulings for Geoff" section blocks the task
 and a fundamental architectural question the review reveals, one the spec did not settle, halts
 the pass for Geoff.
 
+**An owner sitting asks only forks (Geoff, 2026-09-28).** A sitting page or checkpoint question
+puts to Geoff only taste, product, priority, and scope calls with no dominant answer. A defect,
+an accessibility fix, an in-spec keep, or a restated plan decision is the conductor's call: the
+page lists it as decided, with its disposition, and never as a question. A dispatch that builds
+a sitting page says so. (S3 of theme identity pass A asked 22 questions where three were forks.)
+
 **Plans stay outcome-only.** Each task states outcomes, constraints, acceptance criteria,
 files, and its pass class, never implementation code. This overrides `writing-plans`'
 full-code steps. Skip its "which execution method?" question; this skill answers it.
