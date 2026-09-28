@@ -185,9 +185,9 @@ sudo -A udevadm trigger`.
 Before-and-after renders, mockups, screenshots, and HTML pages built for a visual decision
 open in the desktop browser by default, one tab per state, so he can tab between states, zoom,
 and compare at full size. Send them as files in the conversation as well only when he is away
-from the workstation. One-off review tools (artifacts, sitting pages, mockups) open in
-Chromium and are built for it alone, with no cross-browser testing (Geoff, 2026-09-28: they are
-one-off tools). Firefox stays the daily browser for everything else he reads. For a page Claude
+from the workstation. Artifacts are one-off tools: they open in Chromium and get no
+cross-browser work. Sitting pages and mockups open in Firefox, his daily browser, so a
+rendering issue there surfaces during the review (Geoff, 2026-09-28). For a page Claude
 must drive itself through claude-in-chrome: the extension connects only once Chromium is running,
 and it refuses `file://` URLs, so serve the directory from the scratchpad with
 `python3 -m http.server <port> --bind 127.0.0.1` and open `http://127.0.0.1:<port>/...`, one
