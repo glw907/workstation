@@ -185,8 +185,10 @@ sudo -A udevadm trigger`.
 Before-and-after renders, mockups, screenshots, and HTML pages built for a visual decision
 open in the desktop browser by default, one tab per state, so he can tab between states, zoom,
 and compare at full size. Send them as files in the conversation as well only when he is away
-from the workstation. Firefox is for anything Geoff reads. Chromium is for a page Claude must
-drive itself through claude-in-chrome: the extension connects only once Chromium is running,
+from the workstation. One-off review tools (artifacts, sitting pages, mockups) open in
+Chromium and are built for it alone, with no cross-browser testing (Geoff, 2026-09-28: they are
+one-off tools). Firefox stays the daily browser for everything else he reads. For a page Claude
+must drive itself through claude-in-chrome: the extension connects only once Chromium is running,
 and it refuses `file://` URLs, so serve the directory from the scratchpad with
 `python3 -m http.server <port> --bind 127.0.0.1` and open `http://127.0.0.1:<port>/...`, one
 `navigate` plus `tabs_create_mcp` per state. `tabs_create_mcp` can fail transiently while a

@@ -32,8 +32,9 @@ the other's commit, verify it, report verified.
 - **Key paths**: `~/Projects/` (repos), `~/.dotfiles/`, `~/.local/bin/` (scripts)
 - **Dev tools**: Node via mise, Python via uv, Go via Homebrew, Java 17 for Android
   (`~/Android/`, `ANDROID_HOME` set in `.bashrc`)
-- **Browsers**: Firefox is the daily browser, so every artifact or page Geoff opens is built
-  and checked Firefox-first; Claude Code drives Chromium (`chromium-browser`). Never a Flatpak build of either (the sandbox blocks native messaging); read
+- **Browsers**: Firefox is the daily browser; Claude Code drives Chromium (`chromium-browser`).
+  One-off review tools (artifacts, sitting pages, mockups) open in Chromium and need no
+  cross-browser work (Geoff, 2026-09-28). Never a Flatpak build of either (the sandbox blocks native messaging); read
   `~/.claude/docs/bluefin-admin.md` before browser work.
 
 ## Sysadmin Preferences
