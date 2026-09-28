@@ -39,6 +39,7 @@ run "tellgrader go check" make -C claude/.claude/skills/writing-voice/evals/tell
 run "ruff docstring rules (python)" bash scripts/check-py-comments.sh
 run "vale-hook test suite" uv run --with pytest --no-project python -m pytest tests/ -q
 run "vale style fixtures" bash tests/vale/run-fixtures.sh
+run "docs-page-chain derivation test" node tests/docs-page-chain-derivation.test.mjs
 run "gitleaks working-tree scan" gitleaks dir . --no-banner --redact
 
 echo ""
