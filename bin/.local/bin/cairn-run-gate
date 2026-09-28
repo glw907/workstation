@@ -87,7 +87,13 @@ while [ ! -e "$statusfile" ] && [ "$waited" -lt "$wait_s" ]; do
   sleep 5
   waited=$((waited + 5))
   if ! kill -0 "$pid" 2>/dev/null && [ ! -e "$statusfile" ]; then
-    sleep 2
+    # The status file can land a few seconds after the recorded pid exits (the scope and flock
+    # layers finish after it), so allow a grace period before calling the gate lost.
+    grace=0
+    while [ ! -e "$statusfile" ] && [ "$grace" -lt 15 ]; do
+      sleep 1
+      grace=$((grace + 1))
+    done
     break
   fi
 done
