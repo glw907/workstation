@@ -35,7 +35,12 @@ effort has no per-dispatch override); upshift AC1 and B4 to `model: opus`. Revie
 **Owner time:** none planned. One optional batched question at the A-core boundary (the `GA-nn`
 triage); a ruling question stops only its task.
 
-## Dispatch overrides (every implementer dispatch through the B merge)
+## Dispatch overrides (every dispatch through the B merge)
+
+Every dispatch names `<wt>`, the absolute worktree path, and works only there: implementers,
+each `diff-reviewer` read (per task, the merge read, and the B3 and B4 grep post-conditions, all
+run against `<wt>`, never `~/.dotfiles`), and the B-close `code-simplifier`, whose changes an
+implementer then commits under override 1's gate. Items 1 to 6 below apply to implementers.
 
 Agent definitions load from `~/.claude/agents`, a symlink into `~/.dotfiles` `main`, so B3's
 edits go live only at the B merge. Until then each dispatch carries this list, stated as
@@ -56,9 +61,10 @@ overriding the agent file:
 
 - **The in-flight probe.** (1) No live gate: no `${TMPDIR:-/tmp}/cairn-gate-$(id -u)/*/pid` whose
   pid passes `kill -0`, and `systemd-inhibit --list` shows no `cairn-gate` hold. (2) No live
-  agent in another session: no `~/.claude/projects/*/*/subagents/**/agent-*.jsonl` modified in
-  the last 25 minutes outside this session's directory. (3) `git -C ~/.dotfiles status
-  --porcelain` is empty. (4) `pgrep -f <wt>` is empty. Before a pass, (3) and (4) block and (1)
+  agent in another session: `find ~/.claude/projects -path '*/subagents/*' -name 'agent-*.jsonl'
+  -mmin -25 -not -path "*/$CLAUDE_CODE_SESSION_ID/*"` prints nothing. (3) `git -C ~/.dotfiles
+  status --porcelain` is empty. (4) `pgrep -f` with a bracket pattern that cannot match its own
+  shell (`'/Projects/.worktrees/[d]otfiles-infra-a'`, `-b` for pass B) is empty. Before a pass, (3) and (4) block and (1)
   and (2) are recorded; before a merge, all four block. On a positive, wait and re-probe; one
   still positive after an hour goes into STATUS as the question. `0a2e391` is why.
 - **Mixed-version guarantee.** A run the probe misses survives a merge: an in-flight workflow keeps
@@ -73,9 +79,15 @@ overriding the agent file:
   the pass branch in the worktree, keeps every main-side line the task outcomes do not replace,
   lists each resolved hunk, and runs the gate (skipped when `main` has not moved); (3)
   `diff-reviewer` reads that merge commit against "no main-side line lost"; (4) the probe again,
-  then the conductor runs `git merge --no-ff` in `~/.dotfiles`, conflict-free by construction
-  (if `main` moved again, back to step 2); (5) `bash scripts/check.sh` and `claude-tooling-sync
-  verify` on `main`. A red result reverts the merge and returns to step 2.
+  then the conductor runs `git merge --no-ff --no-commit` in `~/.dotfiles`, conflict-free by
+  construction (if `main` moved again, `git merge --abort` and back to step 2); (5) on that
+  uncommitted merge tree, `CAIRN_GATE_LANE=light cairn-run-gate 'bash
+  ~/.dotfiles/scripts/check.sh'` and `claude-tooling-sync verify`. Green: `git commit` (which runs
+  the ratchet hook on the merge) and record the SHA. Red: `git merge --abort`, never a revert,
+  since a reverted merge cannot be re-merged; the red cause goes to an implementer on the pass
+  branch, then back to step 2.
+- **Boundary records.** At each boundary, the merge-integration implementer (step 2) writes the
+  pass's `docs/HISTORY.md` and `docs/STATUS.md` entries on the pass branch, so they merge with it.
 - **Rollback** is plain `git revert -m 1 <merge sha>`, never `--no-commit` then `git commit`
   (a plain commit runs the ratchet hook). Reverting A-core after B merged requires reverting B's
   merge first; STATUS records both SHAs and the order.
@@ -210,7 +222,10 @@ B1's harness. The harness runs the runner body with `agent`, `parallel`, and `lo
 probe-count assertions depend on it.
 Acceptance: all B1 test assertions pass; Review focus 4.
 
-**B2. Gate tool.** Class `engine-logic`. Files: the spec's B2, plus `scripts/check.sh`. Outcomes:
+**B2. Gate tool.** Class `engine-logic`. Files: the spec's B2, plus `scripts/check.sh`,
+`claude/.claude/agents/site-implementer.md` (the vanished clause near `:101`), and
+`claude/.claude/workflows/pass-execute.js` (near `:336`), which B1 also edits, so B2 runs after
+B1's commit. Outcomes:
 the spec's B2; the poll interval and grace period are injectable through the environment.
 Acceptance: B2's test assertions, run by `check.sh` with short injected sleeps; a state directory
 written by the old script (no vanish counter; a live pid, a finished run, a dead pid without
