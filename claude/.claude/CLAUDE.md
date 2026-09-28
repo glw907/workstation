@@ -191,12 +191,12 @@ workflow by name, never a scratchpad copy. Full rule set: `~/.claude/docs/pass-g
 
 ## A rule lives where it executes (Geoff, 2026-09-20)
 
-A rule reaches an agent only through its definition, its dispatch prompt, the runner that
-builds the prompt, or a tool's own output; a side doc alone reaches nobody. Land a new rule in
-the execution path in the same session, strongest form first: the tool enforces it, else the
-runner renders it into the prompt, else the agent definition or skill states it. Read a tool's
-`--help` once before relying on it for a whole pass, and act on a tool's NOTE in an agent's
-report before the next dispatch.
+A rule reaches an agent only through its definition, its dispatch prompt, its runner, or a
+tool's output; a side doc reaches nobody. Land a rule the same session, strongest form first:
+tool, runner, agent definition or skill, then CLAUDE.md (Geoff, 2026-09-27). Anything recorded
+routes by default: initiative state to STATUS, ROADMAP, or HISTORY; a repo fact to its docs; a
+workstation fact to `~/.claude/docs`. Memory holds only a preference or a ruling's why that no
+file can. Act on a tool's NOTE before the next dispatch.
 
 ## Compact instructions
 

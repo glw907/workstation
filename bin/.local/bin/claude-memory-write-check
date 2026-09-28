@@ -8,4 +8,4 @@ case "$path" in
   "$HOME"/.claude/projects/*/memory/*|/var"$HOME"/.claude/projects/*/memory/*) ;;
   *) exit 0 ;;
 esac
-jq -n '{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: "Memory write check: if this records a rule, land it first in its execution path (the global or repo CLAUDE.md, a skill, an agent definition, a gate or test, or a tool), per the global CLAUDE.md \"A rule lives where it executes\". Memory holds only what no repo or workstation file can: a preference, or the why behind a ruling. A project memory reaches no other project."}}'
+jq -n --arg msg "Memory write check. Route this record first: a rule goes in its execution path (a tool, runner, or hook; else a skill or agent definition; else the global or repo CLAUDE.md); initiative state goes in STATUS, ROADMAP, or HISTORY; a repo fact goes in that repo's docs; a workstation fact goes in ~/.claude/docs. Memory holds only a preference or the why behind a ruling that no file can hold, and a project memory reaches no other project." '{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: $msg}}'

@@ -106,6 +106,8 @@ not specify; `model: fable` only when Opus 5.5 at `xhigh` still falls short.
   `sonnet` pre-flight that lists every checkable claim the segment's tasks make about existing
   code (counts, error meanings, paths, shapes) and checks each at HEAD. Amend the plan, then
   dispatch. A wrong claim found at review costs a full fix round.
+- **Read a tool's `--help` once** before a pass relies on it, and act on a tool's NOTE in
+  an agent's report before the next dispatch.
 - **Verify locked build assumptions** (an export map, a module-resolution mechanism) against
   the real toolchain at the first task that touches them.
 - **Vale findings are tiered.** Only an error-tier finding drives a fix; warnings and
