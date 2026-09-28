@@ -1,60 +1,87 @@
 # Claude infra sweep
 
-Design basis for the plans of passes A and B, and the outcome frame for passes C, D, E, and F.
-Evidence: the read-only audit at
+Design basis for the plans of passes A-core and B, and the outcome frame for passes A-rest, C,
+D, E, and F. Evidence: the read-only audit at
 `/var/home/glw907/.dotfiles/claude/.claude/docs/record/2026-09-28-claude-infra-audit.md`
 (87 findings, root causes RC1 to RC8, the guard proposal, pass triage A to F, and the section 6
 amendments to the style-guide-sync plan). Finding ids below are the audit's. The downstream plan
 is `/var/home/glw907/Projects/cairn-cms/.claude/worktrees/style-guide-sync/docs/superpowers/plans/2026-09-28-style-guide-sync.md`.
 
-**Status:** draft for adversarial review through `spec-plan-review`. The "Anthropic practice"
-section is a stub the review fills.
+**Status:** revised after the four-lens review (anthropic, contract, mechanics, consistency under
+`docs/superpowers/research/2026-09-28-infra-sweep-review-*.md`). Fold record:
+`docs/superpowers/research/2026-09-28-infra-sweep-fold.md`. Ready for Geoff's read.
 
 ## Goals
 
 Geoff, 2026-09-28, after reading the audit: "let's actually run that first, and then implement
 this plan using the improved and correct infra." And: "If the changes are anything but small and
-simple, a spec with adversarial review."
-
-The sweep has three goals.
+simple, a spec with adversarial review." The sweep front-loads its complexity into
+infrastructure, so the fixes hold without a repeat by hand.
 
 1. The style-guide-sync plan runs on infra that carries no defect the audit named on its path.
-2. Each mechanical defect class gets a check that fails on a new instance, so the sweep does not
-   have to be repeated by hand.
+2. Each mechanical defect class gets a check that fails on a new instance.
 3. Each rule has one owner, placed where it executes, and every other home becomes a pointer or
    is deleted.
 
 **Success tests.**
 
-- After A and B: the style-guide-sync run (chains R and W, the join, the close) hits no infra
-  defect the audit named. Every workaround the plan carries for one (the chain W `notes` override
-  of the implementer's definition of done, any `reducedGate` pin added for AW-01, W6's deferral
-  of `claude-tooling-sync verify` to the boundary) is removed from the plan before it runs.
-- After E: the duplicate-paragraph baseline and the reference baselines are empty, or each
-  remaining entry is a sanctioned parity copy. Entries keyed to a pass F chore that has not run
-  yet are the one allowed remainder, and they are listed by repo in E's close.
-- Throughout: the ratchet baseline's size is the remaining work. It never grows after pass A
-  seeds it.
+- After A-core and B (the concrete test is under "Pass B acceptance"): the baseline holds zero
+  entries lettered A or B; a dry render of the style-guide-sync plan's real two-chain arguments
+  passes its named checks; and the three workarounds (the chain W `notes` override of the
+  implementer's definition of done, any `reducedGate` pin added for AW-01, and W6's deferral of
+  the tooling check to the boundary) are absent from the amended plan.
+- After the style-guide-sync close: every runner halt, escalation, or `fix` reason maps to "not
+  infra" (amendment 9).
+- After E: the duplicate-paragraph and reference baselines are empty. Entries keyed to a pass F
+  chore that has not run yet are the one allowed remainder, listed by repo in E's close. The
+  global CLAUDE.md and each in-scope repo CLAUDE.md is at or under 200 lines, or carries a
+  recorded reason.
+- Throughout: the ratchet baseline's size is the remaining work. It grows only in a commit that
+  registers a new check id.
 
-## Sequence (rulings S1 to S3)
+## Sequence and rulings
 
-**S1 (Geoff, 2026-09-28).** One spec covers the whole sweep. The order is:
+**S1 (Geoff, 2026-09-28), as amended by S4.** One spec covers the whole sweep. The order is:
 
-1. Pass A, the guard (dotfiles).
+1. Pass A-core, the guard's mechanics (dotfiles).
 2. Pass B, the execution path (dotfiles).
 3. The style-guide-sync plan, amended per "Amendments to the style-guide-sync plan" below.
-4. Passes C and D in parallel (dotfiles, disjoint files).
-5. Pass E, consolidation (dotfiles).
-6. Pass F, one chore per repo, any time after A; cairn-cms only after the style-guide-sync merge.
+4. Pass A-rest, the guard's remaining checks (dotfiles).
+5. Passes C and D in parallel (dotfiles, disjoint files).
+6. Pass E, consolidation (dotfiles).
+7. Pass F, one chore per repo, any time after A-rest; cairn-cms only after the style-guide-sync
+   merge.
 
-A and B are planned in full now. C, D, E, and F are planned later, each from its outcome list
-here plus the baseline as it stands then.
+A-core and B are planned in full now. A-rest, C, D, E, and F are planned later, each from its
+outcome list here plus the baseline as it stands then.
 
 **S2 (Geoff).** Poplar's vendored glw907 Vale overlay is canonical. Drop the references to a
 missing canonical style and a re-sync script (DC-25's gap, DC-12). Lands in pass F.
 
 **S3 (Geoff).** DC-28's three voice files outside W4's Files are folded into the
 style-guide-sync plan's W4, not left to pass C.
+
+**S4 (Geoff, 2026-09-28). Pass A splits.** A-core runs before B and carries the baseline
+mechanics (per-commit enforcement against HEAD and a checks registry), retired phrases, dead
+references, `--root`, skill-name collisions, and unmanifested licensed skills. A-rest runs after
+style-guide-sync, before C and D, and carries the duplicate-paragraph check (file-pair keying
+with a falling overlap count), cross-repo mode, the seat check with `seats.json`, and the rest.
+The duplicate-paragraph check, and the fingerprint problems it brings, leave the sync's path.
+
+**S5 (Geoff, 2026-09-28). Simplifier languages.** The code-simplifier ruling's "TypeScript"
+includes JavaScript (`.js`, `.mjs`). Python and bash stay out. `pass-core`'s simplify step
+states it.
+
+**S6 (Geoff, 2026-09-28). Model invocation.** `disable-model-invocation: true` goes on `go-ship`
+only. `cairn-release` stays model-invocable.
+
+**S7 (Geoff, 2026-09-28). DC-29.** The global CLAUDE.md co-author bullet is deleted, and the
+model-named trailer applies. The trailer's documented owner is the `attribution` setting in
+`settings.json` (verified: the memory page directs commit rules to "set the attribution text
+with [`attribution`](/docs/en/settings-reference#attribution)"). `claude/.claude/settings.json`
+sets no `attribution` key today, so Claude Code's default, the model-named trailer, applies once
+the bullet goes; nothing is written there. The hardcoded generic footers in
+`cairn-implementer.md:58` and `site-implementer.md:51` go in B3.
 
 **Ruling 12 of style-guide-sync (Geoff).** "The cairn overlay or the cairn docs voice is
 absolutely a house voice, so the workstation charter is wrong." A repo may carry a named house
@@ -72,53 +99,62 @@ structural response. The other four get a smaller one.
 
 - The owner is chosen by where the rule executes, in the workstation order: a tool or its output,
   a runner, an agent definition or skill, then CLAUDE.md. `~/.claude/docs` holds rationale only.
-  The audit's section 4 table is the ownership map; pass E executes it, and passes B, C, and D
-  execute the rows their findings touch.
+  Within CLAUDE.md-class text, Anthropic's order routes the rest: a procedure to a skill, a rule
+  that matters only for certain files to `.claude/rules/` with `paths:`, and only facts every
+  session needs to a CLAUDE.md. The audit's section 4 table is the ownership map; pass E
+  executes it, and passes B, C, and D execute the rows their findings touch.
 - Where two executors genuinely need the same text at write time (the two implementer
   definitions), the copies are sanctioned: declared in a parity list and held byte-identical by a
   check.
-- Every other copy is found by the duplicate-paragraph check (pass A) and baselined until its
+- Every other copy is found by the duplicate-paragraph check (A-rest) and baselined until its
   pass removes it.
 - Rules that a tool enforces move into that tool's output. `cairn-run-gate` prints the vanished-run
-  instruction (AW-17), and the runners print the runaway-guard and `/loop` NOTE at launch
-  (DC-04), so prompts and CLAUDE.md stop restating them.
+  instruction (AW-17), and the runners print the runaway-guard NOTE at launch (DC-04), so prompts
+  and CLAUDE.md stop restating them.
 
 ### RC2. No reference-integrity check (about 18 findings)
 
-**Response: the pass A guard.** Dead paths, cited headings, cited memories, relative links,
-orphan docs, pointerless "the spec", vendored sibling names. Each is a check with a ratchet
-baseline (see Pass A).
+**Response: the guard.** Dead paths and retired phrases in A-core; cited headings, cited
+memories, relative links, orphan docs, vendored sibling names, and cross-repo references in
+A-rest. Each is a check with a ratchet baseline. `/doctor prompt-audit` is an input to the
+guard, never a gate (see "Anthropic practice").
 
 ### RC3. A new ruling lands in one home and older homes are never swept
 
 **Response: the supersession sweep rule.** Any commit that lands a ruling superseding existing
 text adds the superseded phrases to the retired-phrase list in the same commit, and removes or
-marks (`retired-ok`) every hit. The rule is placed where it executes, strongest form first:
+marks (`retired-ok`) every hit. Two homes carry it, strongest first:
 
-1. **Tool.** The retired-phrase check (pass A) fails on any listed phrase outside a `retired-ok`
+1. **Tool.** The retired-phrase check (A-core) fails on any listed phrase outside a `retired-ok`
    line. Its failure message states the rule, so the fixer learns it at the point of failure.
-2. **Tool NOTE.** The dotfiles `scripts/githooks/pre-commit` prints a NOTE when a staged diff
-   under `claude/.claude/` adds a dated ruling marker (`(Geoff, YYYY-MM-DD`) and leaves
-   `retired-phrases.txt` untouched. It does not block, because not every ruling supersedes text;
-   the workstation rule "act on a tool's NOTE before the next dispatch" makes it binding in
-   practice.
-3. **Skill.** The `pass-core` close skeleton gains one step: each ruling folded this pass that
+2. **Skill.** The `pass-core` close skeleton gains one step: each ruling folded this pass that
    supersedes text carries its retired phrases in the same commit. The cairn-cms twin list (the
    style-guide-sync plan's R8) takes the same step through `cairn-pass`.
 
-No CLAUDE.md line is added; the three homes above reach every executor that lands a ruling.
+No CLAUDE.md line and no commit-hook NOTE are added.
+
+The strongest evidence for RC3 is a regression. `a7dd5ad` (2026-09-27 13:39) landed three
+rulings in the global CLAUDE.md: the simplifier once per pass or branch, "the pass class's gate
+runs inside the chain", and "Superpowers skills yield to it: TDD's write-first applies to
+`engine-logic` and `auth-data` only, and plans stay outcome-only." Five minutes later `0a2e391`
+("Slim the global CLAUDE.md"), written from a pre-`a7dd5ad` base, restored the per-commit
+simplifier bullet and "the repo's full gate", and dropped the superpowers-yield sentence, which
+now exists nowhere. Two sessions edited one file at once: a one-executor-rule failure. B4
+repairs it.
 
 ### RC4. cairn-cms shape assumed by workstation-wide infra
 
 **Response: repo-neutral runners, agents, and skills.**
 
-- A runner never assumes npm. When a task's gate cannot be inferred for the checkout (no
-  `package.json`, no classifier), the runner requires an explicit gate and reduced gate and
-  rejects the run at launch if either is missing (AW-01). Probes run only when the classifier
-  exists (AW-13).
-- An agent or skill never cites a repo-relative path bare. It writes the path absolute, or
-  prefixed with its repo (`cairn-cms/docs/...`), which the reference check resolves under
-  `~/Projects/<repo>` (AW-14, AW-15, PS-21).
+- A runner never assumes npm and never rejects a plan for a missing `reducedGate`. The runners
+  have no filesystem access (`pass-execute.js:37-40`, `:57-58`), so they cannot probe for a
+  `package.json`. A reduced round's gate resolves in one order: an explicit `reducedGate`, else
+  the gate the task or args name, else the repo-neutral class default `pass-execute.js:246`
+  already holds (AW-01). Probes for the classifier run only when it exists (AW-13).
+- An agent or skill never cites a repo-relative path that resolves in exactly one repo bare. It
+  writes the path absolute, or prefixed with its repo (`cairn-cms/docs/...`). A generic
+  convention path that resolves in several repos, or a placeholder path, stays bare (AW-14,
+  AW-15, PS-21).
 - A skill that needs a repo's layout reads it from that repo's CLAUDE.md or STATUS and has an
   explicit branch for its absence (PS-08, PS-09, PS-10; pass C).
 - An agent's definition of done is the gate its dispatch names, never a fixed npm list (AW-19).
@@ -126,201 +162,197 @@ No CLAUDE.md line is added; the three homes above reach every executor that land
 ### Smaller causes
 
 - **RC5, context the executor lacks.** A `context: fork` skill takes explicit arguments and ends at
-  its report (PS-06, PS-20); the fork-skill lint (pass A) holds the line. A zero-context agent
-  gets paths, never "the spec" (AW-18). A report shape conflicting with a runner's schema yields
-  to the schema (AW-19).
+  its report (PS-06, PS-20); the fork-skill lint (A-rest) holds the line. A zero-context agent
+  gets paths, never "the spec" (AW-18, fixed by hand in C). A report shape conflicting with a
+  runner's schema yields to the schema (AW-19).
 - **RC6, vendored skills with no overlay.** The vendored manifest gains a description override and
   a local precedence note applied on fetch (CS-8, CS-10, CS-17), and `fetch_skill` rewrites
   sibling names (CS-6). Pass D.
 - **RC7, dated facts in present tense.** Files that load on every dispatch carry no toolchain
   version, engine pin, or token id as current fact; they point at the source that states it
-  (CS-3, CS-4, CS-12, DC-07, DC-11, DC-14, AW-23). The quoted-version-pin check (pass A, close
-  steps) guards the repo CLAUDE.md case.
+  (CS-3, CS-4, CS-12, DC-07, DC-11, DC-14, AW-23). A-rest's quoted-version check fails any quoted
+  version range in a repo CLAUDE.md.
 - **RC8, always-loaded context carrying on-demand content.** Cairn-only and pass-only sections
-  leave the global CLAUDE.md for their owners (DC-19, DC-21); `claude-context-budget` runs over
-  every `@`-import at close and weekly (DC-02); long always-listed descriptions are capped (pass A
-  check, fixes in C and D).
+  leave the global CLAUDE.md, routed by Anthropic's order (DC-19, DC-21); the context budget
+  gains a 200-line cap per file (DC-02); long always-listed descriptions are capped (A-rest
+  check, fixes in C and D). Every subagent loads the CLAUDE.md chain unless its definition sets
+  `omitClaudeMd`; E decides the field per agent.
 
-## Pass A: the guard
-
-**Class** `engine-logic`. **Repo** `~/.dotfiles`, worktree
-`~/Projects/.worktrees/dotfiles-infra-a` on branch `infra-sweep-a`, merged `--no-ff` to `main`.
-**Gate** `bash scripts/check.sh`, light lane. Three tasks, sequential. Findings closed outright:
-PS-01, CS-9, AW-16. Every other mechanically detectable finding enters the baseline.
-
-### The ratchet baseline
+## The ratchet baseline (A-core)
 
 One file, `claude/.claude/tooling/ratchet-baseline.json`, read by both tools.
 
-- **Entry shape.** Check id, file (relative to its root), a fingerprint that survives line moves
-  (the unresolved path, the phrase, the cited heading, the paragraph pair's shingle hash), the
-  owning finding id, and the pass letter that removes it.
-- **Seeding.** Pass A seeds the file with today's violations. Each maps to an audit finding id.
-  A violation the audit did not name gets an id `GA-nn`, a one-line defect, and a pass letter,
-  and pass A's close lists every `GA-nn` for review.
-- **Shrink only.** The checker compares the file to its copy at `git merge-base HEAD main`. An
-  added entry fails. The one sanctioned growth is a commit that adds a new check id: entries for
-  that id may appear in the same commit that introduces the check, and never later.
-- **Stale entries fail.** An entry whose violation no longer exists fails with "remove this
-  baseline entry." The baseline therefore always equals the remaining work.
+- **Registry.** The file's `checks` map lists every check id and the tool that implements it.
+  Each tool reports the ids it implements; a registered id no tool implements, or an entry under
+  an unregistered id, is a configuration error. The registry is append-only.
+- **Entry shape.** Check id, file (relative to its root), a fingerprint that survives edits and
+  line moves (the phrase, the unresolved path, the cited heading; a duplicate-pair entry is keyed
+  on its sorted file pair and stores its overlap count), the owning finding id, and the pass
+  letter that removes it. A cross-repo entry also carries its repo.
+- **Seeding.** Each seeded entry maps to an audit finding id. A violation the audit did not name
+  gets an id `GA-nn`, a one-line defect, and a pass letter. The seeding pass's close prints a
+  summary of `GA-nn` counts per check (and per file pair for duplicates); Geoff sees only entries
+  with no plausible owning pass.
+- **Per-commit enforcement.** `scripts/githooks/pre-commit` compares the staged baseline with
+  HEAD's copy, before its `exec gitleaks` line and without losing gitleaks' fail-closed exit. This
+  behaves the same on `main`, on a branch, and in a worktree. It fails on an added entry under an
+  id already in HEAD's registry, on a rising overlap count, and on a removed registry id. It
+  passes removals, falling counts, re-keys, and entries under an id absent from HEAD's registry.
+  A HEAD with no baseline counts as all-new, which covers A-core's own bootstrap.
+- **One growth event.** A commit that registers a new check id may add that id's entries. A
+  changed rule or threshold for an existing check is a new check id; the old id's entries leave in
+  the same commit.
+- **Re-key.** An entry may change its `file` in the commit whose staged diff records that file's
+  rename, with fingerprint and count unchanged. Duplicate-pair entries are keyed on the file pair,
+  so an edit inside a still-duplicated pair keeps its entry.
+- **The gate.** `scripts/check.sh` fails on a violation no entry matches (new), on an entry no
+  violation matches ("remove this baseline entry"), and on working-tree growth against HEAD under
+  the hook's rules.
 - **Failure states.** File absent: fail (config error). Present and empty: pass. Malformed (bad
-  JSON, missing field, unknown check id, unknown finding id format): fail, naming the entry.
-- **Exit codes**, shared by both tools: `0` clean, `1` violations, `2` configuration error
-  (a missing or malformed list, baseline, or parity file). A run reports every violation grouped
-  by check with a count per check, never only the first.
+  JSON, missing field, unregistered id, bad finding-id format): fail, naming the entry.
+- **Exit codes**, shared by both tools: `0` clean, `1` violations, `2` configuration error (a
+  missing or malformed list, baseline, registry, manifest, or parity file, or an unknown
+  argument). A run reports every violation grouped by check with a count per check, never only
+  the first.
+- **Roots.** Home, the projects root, and the memory root are injectable in both tools; every
+  fixture sets them, and one fixture asserts no read outside the fixture root.
 
-### Task A1. `claude-tooling-sync` checks
+## Pass A-core: the guard's mechanics
 
-**Outcomes.**
+**Repo** `~/.dotfiles`, worktree `~/Projects/.worktrees/dotfiles-infra-a` on branch
+`infra-sweep-a`, merged `--no-ff` to `main`; the merge SHA is recorded for `git revert -m 1`.
+**Per task:** gate `bash scripts/check.sh`, light lane; `diff-reviewer` against the task's
+acceptance; test-first with fixtures. The plan carries one failure-state table (state, tool, exit
+code, report line) with one fixture per row. No simplifier at close (Python and bash, S5).
+Findings closed outright: PS-01, CS-9, AW-16. The pre-bake points dotfiles STATUS at this sweep
+and drops the owed aksailingclub-org pointer line.
 
-Files: `bin/.local/bin/claude-tooling-sync`, `claude/.claude/tooling/` (manifest, `seats.json`,
-the baseline), `claude/.claude/skills/ship/` renamed to `go-ship/`, fixtures under `tests/`.
+**A0 (conductor, before AC3 seeds).** Run `/doctor prompt-audit` once over `~/.claude`. Each
+finding the checks do not cover becomes a `GA-nn` entry or a C or D item, listed in the close.
 
-- **`--root <tree>`** selects the tree to verify; the default is the script's own repo, and the
-  docstring matches (AW-16). A worktree can be verified before merge.
+### AC1. The ratchet
+
+Files: `claude/.claude/tooling/ratchet-baseline.json`, the shared baseline logic (one module or
+two parsers of one format; the plan decides), `scripts/githooks/pre-commit`, `scripts/check.sh`,
+fixtures under `tests/`.
+
+Outcomes: everything in "The ratchet baseline" above. Fixtures cover growth on HEAD under a
+registered id (fails), growth under an emptied registered id (fails), growth under a newly
+registered id (passes), a removed registry id (fails), a rename re-key (passes), a stale entry, a
+grown count, an empty baseline, the malformed states, and a many-bad run.
+
+### AC2. `claude-tooling-sync`
+
+Files: `bin/.local/bin/claude-tooling-sync`, `claude/.claude/tooling/` (manifest),
+`claude/.claude/skills/ship/` renamed to `go-ship/`, `scripts/check.sh`, fixtures.
+
+- **`lint --root <tree>`**, a tree-only subcommand: the manifest checks and the unmanifested
+  third-party skill check. `check.sh` calls it by repo-relative path
+  (`bin/.local/bin/claude-tooling-sync lint --root .`), so a worktree runs its own copy against
+  its own tree (AW-16). Unknown arguments exit 2.
+- **`verify`** keeps the machine checks (`~/.claude.json`, `claude plugin list`) and gains the
+  skill-name collision check. `check-drift` runs it; A-rest wires it into closes.
 - **Skill name collision.** A personal skill whose name equals any
   `~/Projects/*/.claude/skills/<name>` fails, since personal shadows project. Fixed now: the
-  personal `ship` becomes `go-ship` with the generic triggers dropped (PS-01).
+  personal `ship` becomes `go-ship`, its generic triggers dropped and
+  `disable-model-invocation: true` set (PS-01, S6). This clears the three `ship` collisions
+  (ecxc-ski, aksailingclub-sveltekit, aksailingclub-legacy).
 - **Unmanifested third-party skill.** A `skills/<dir>` carrying a `LICENSE*` with no manifest
   entry fails. Fixed now: `vhs-cli-demos` gets its manifest entry (CS-9).
-- **Vendored sibling names.** A backticked "`<name>` skill" in a vendored skill must name an
-  installed skill. Baselined (CS-6, pass D).
-- **Description override and cap.** A manifest `description` override must match the installed
-  file. A description without a `paths:` gate over 500 characters fails. Baselined (CS-8, CS-17,
-  PS-28).
-- **Fork-skill lint.** A `context: fork` skill body may not contain "under discussion", "during
-  the session", "delegated", or an instruction to ask the user. Baselined (PS-06, PS-20).
-- **Seat check.** A machine-readable seat table at `claude/.claude/tooling/seats.json`, derived
-  from `model-economy.md` "Current state", which then points at it for the values and keeps the
-  why. Every user-scoped and project-scoped agent's `model` and `effort` must match its seat.
-  Baselined (DC-11 in F, PS-15 in C). An agent with no seat fails.
 
-**Rule per failure state.** Seat table or manifest absent or malformed: exit 2. An agent file with
-unparseable frontmatter: a violation naming the file.
+Acceptance: `bin/.local/bin/claude-tooling-sync lint --root <worktree>` green;
+`claude-tooling-sync verify` green on the merged `main`; manifest absent and malformed fixtures
+exit 2.
 
-**Where it runs.** `scripts/check.sh` calls `claude-tooling-sync verify --root .` for the checks
-over the dotfiles tree, including the collision check (its fix is always in dotfiles, because the
-personal skill is the shadowing party). Project-agent seats run under `check-drift` (already
-calls verify) and at the close steps, since a project's agent is fixed in that project.
-
-**Fixtures.** For each check, one fixture tree that must fire and one that must pass, plus the
-absent, empty, and malformed states of `seats.json` and the baseline, a stale baseline entry, and
-a grown baseline.
-
-### Task A2. `scripts/check-claude-refs.py`
+### AC3. `scripts/check-claude-refs.py`, self mode
 
 Python, under `python-conventions` (PEP 257, the ruff D config `check.sh` already runs). Wired
 into `scripts/check.sh`. Scan scope: `claude/.claude/agents`, authored `skills` (excluding
 vendored and `skills/synced/`), `workflows`, `docs` (excluding `docs/record/`), `output-styles`,
 `instructions`, and `CLAUDE.md`; excluding `evals/research/`, dated files, the list files, and
-the fixtures. This scope matches the style-guide-sync plan's W6 scope, so W6 needs no second
-scanner.
+the fixtures. The retired-phrase check alone also scans vendored skills, which matches W6's
+scope (only `skills/synced/` excluded).
 
-**Two modes.** Self mode (`check.sh`) resolves references inside the dotfiles tree, `~/.claude`,
-and absolute paths outside `~/Projects`. Cross-repo mode (`--repo <name>`) resolves every
-reference from the dotfiles tree into `~/Projects/<name>` and the checks over that repo's own
-CLAUDE.md. Principle: a check whose failure is caused by another repo's change runs at that
-repo's close and weekly, so the dotfiles gate never goes red on another repo's state, and the
-close of the repo that moved a file catches the break it caused.
-
-**Checks, each a rule plus its failure states.**
+**Self mode** resolves inside the tree under test. A `~/.claude/<stowed dir>/...` path is
+rewritten to `<root>/claude/.claude/<dir>/...` and a `~/.local/bin/<x>` path to
+`<root>/bin/.local/bin/<x>` before resolving, so a worktree that deletes or adds a doc is judged
+on its own tree. Other absolute paths outside `~/Projects` resolve as written. Paths into
+`~/Projects` and bare repo-relative paths belong to cross-repo mode (A-rest).
 
 | Check | Rule | Baselined findings |
 |---|---|---|
-| Dead reference | every backticked path resolves; absolute and `~/` as written; a repo-relative path in an agent or skill must be absolute or repo-prefixed, and a bare one fails | AW-08, AW-14, AW-15, PS-03, PS-21, CS-3 and CS-4 (paths), DC-08, DC-12, DC-13 (paths) |
-| Heading citation | a quoted phrase after a cited file (`` `file.md` ("Heading") ``) matches a heading in that file | DC-13, DC-15, DC-18 |
-| Memory citation | "`<name>` memory" resolves to `~/.claude/projects/*/memory/<name>.md` | DC-09 |
-| Relative link | every `[x](relative)` under `docs/` resolves | DC-10 |
-| Orphan doc | each file under `docs/` (excluding `record/`) and `instructions/` is cited by a CLAUDE.md, skill, agent, or workflow | DC-17 |
-| Pointerless spec | "the spec" or "the plan" in an agent definition has a path on the same line | AW-18 |
-| Retired phrase | a phrase in `claude/.claude/tooling/retired-phrases.txt` fails outside a `retired-ok` line, case-insensitive; the list's header names its cairn-cms twin | DC-01, DC-04, DC-06, DC-30, PS-04, PS-05, AW-07 ("sleep 30"), CS-4 ("currently 1.26") |
-| Duplicate paragraph | 12-word shingle overlap above a threshold between any two of agents, authored SKILL.md files, output styles, CLAUDE.md, and docs; pairs in the parity list must be byte-identical between their markers | AW-04, AW-20, AW-21, AW-22, AW-24, CS-13, DC-21, DC-22, DC-28, PS-25 |
+| Dead reference (self mode) | every backticked path in self-mode reach resolves | PS-03, CS-3 and CS-4 (paths), DC-08, and whichever of AW-08 falls in self-mode reach; the cross-repo ids seed in A-rest |
+| Retired phrase | a phrase in `claude/.claude/tooling/retired-phrases.txt` fails outside a `retired-ok` line | DC-01, DC-03, DC-04, DC-06, DC-30, PS-04, PS-05, AW-07 ("sleep 30"), CS-4 ("currently 1.26") |
 
-Failure states specific to A2:
+**Retired-phrase list.** One literal phrase per line, matched as a case-insensitive substring,
+`#` comments allowed, no length rule. Absent: exit 2. No phrase: exit 2 (a vacuous tripwire).
+The header names its cairn-cms twin (the style-guide-sync plan's R8), which uses the same
+semantics. A-core seeds only phrases already superseded by a ratified ruling; the plan names each
+with a witness `file:line`, including "Before committing code changes, dispatch" (DC-01) and "the
+repo's full gate runs inside the chain" (DC-03, specific enough to spare `pass-core`'s class
+table). The style-guide-sync phrases are appended by W6 once W2 to W5 remove them, so the list
+never starts red.
 
-- **Retired-phrase list** absent: exit 2. Present with no phrase: exit 2 (an empty list is a
-  vacuous tripwire). A phrase shorter than three words is allowed only when marked exact.
-- **Parity list** (`claude/.claude/tooling/parity.json`) absent: exit 2. Empty: pass. A declared
-  copy whose marker is missing in either file: violation. Copies differing by a byte: violation
-  showing the first differing line.
-- **Duplicate threshold.** Calibrated so every "confirmed" duplication row in the audit's section 4
-  fires and the sanctioned implementer checklist, once declared, passes. The calibration evidence
-  goes in the script's header.
-- **Many bad.** All violations reported, grouped, with counts; the summary line names the
-  baseline's remaining size per pass letter.
-
-Seeded phrases: pass A seeds only phrases already superseded by a ratified ruling (the RC3 rows
-above). The style-guide-sync phrases ("no house voice" and the rest) are appended by W6 once W2 to
-W5 remove them, so the list never starts red.
-
-**Fixtures** under `tests/claude-refs/`, run by the pytest step `check.sh` already carries: per
-check, a must-fire and a must-pass tree; absent and empty retired-phrase list; absent, empty, and
-malformed parity list; a parity pair differing by one byte; a `retired-ok` exemption; a bare
-repo-relative path in an agent; a baseline that grew, one with a stale entry, and one that is
-empty.
-
-### Task A3. Close-step and weekly wiring
-
-**Outcomes.**
-
-- `pass-core`'s close skeleton gains a step: run the reference checker in cross-repo mode over the
-  closing repo, `claude-tooling-sync verify` for that repo's project agents, and
-  `claude-context-budget` over the repo's CLAUDE.md and every `@`-imported file. `cairn-pass` and
-  `site-pass` supply the commands.
-- The same step checks each dependency range quoted in the repo's CLAUDE.md against its
-  `package.json` (DC-14's class).
-- The `pass-core` close skeleton gains the supersession step (RC3, item 3), and
-  `scripts/githooks/pre-commit` gains the ruling NOTE (RC3, item 2).
-- `check-drift` runs the cross-repo mode and the context budget for every repo under `~/Projects`
-  that has a CLAUDE.md, with repo-scoped entries in the same baseline.
-
-**Acceptance for pass A.** `bash scripts/check.sh` green on the worktree with the seeded baseline;
-every fixture above passing; `claude-tooling-sync verify --root <worktree>` green; `check-drift`
-green on the merged `main`; the baseline summary printed in the close, per pass letter and per
-finding id, with every `GA-nn` listed.
+**Acceptance for A-core.** `bash scripts/check.sh` green on the worktree with the seeded
+baseline; every fixture passing; `claude-tooling-sync verify` green on the merged `main`. The
+close prints one row per baselined audit id with its seeded entry count; a zero passes only with
+a named reason (for example, "cross-repo, seeds in A-rest"). The close also prints the baseline
+summary per pass letter and the `GA-nn` summary.
 
 ## Pass B: the execution path
 
 **Repo** `~/.dotfiles`, worktree `~/Projects/.worktrees/dotfiles-infra-b` on branch
-`infra-sweep-b`, created from `main` after pass A merges. **Gate** `bash scripts/check.sh`, light
-lane. Twenty findings plus AW-11's interim parity test. Implementer-definition edits land here so
-the style-guide-sync plan's W5 branches from them. Each finding's entries leave the baseline in
-the commit that fixes it.
+`infra-sweep-b`, created from `main` after A-core merges; the merge SHA is recorded for
+`git revert -m 1`. **Per task:** gate `bash scripts/check.sh`, light lane; `diff-reviewer`
+against the task's acceptance. B1 and B2 are test-first; B3 and B4 take mechanical acceptance
+(retired phrases and grep post-conditions), with no register chain. The close runs the
+simplifier over B1's JavaScript (S5). Each task that fixes a baselined finding removes its
+entries in the same commit, and each row that retires text appends its phrase in that commit
+(RC3). Implementer-definition edits land here so the style-guide-sync plan's W5 branches from
+them.
 
-### B1. Runners (`engine-logic`)
+### B1. Runners
 
 Files: `claude/.claude/workflows/pass-execute.js`, `claude/.claude/workflows/pass-execute-chains.js`,
-new tests under `tests/` in the pattern of `tests/docs-page-chain-derivation.test.mjs`, run by
-`check.sh`.
+new tests under `tests/` in the pattern of `tests/docs-page-chain-derivation.test.mjs` (tables and
+helpers extracted through markers and `new Function`, since the runners carry a top-level
+`return`), run by `check.sh`.
 
 | Finding | Outcome |
 |---|---|
-| AW-01 | No npm default. A checkout with no `package.json` and no explicit `reducedGate` is rejected at launch with a named reason; the class default applies only where its commands exist |
+| AW-01 | Both runners resolve a reduced round's gate as: explicit `reducedGate`, else the named gate, else the repo-neutral class default (`pass-execute.js:246`). Chains drops its npm constant (`:164`). No plan is rejected for a missing `reducedGate` |
 | AW-02 | Chains uses the same gate matcher as `pass-execute.js`: a wrapper, a `cd` prefix, and multi-line stdout all match |
 | AW-03 | Any reduced round is exempt from the MISMATCH block; no prompt carries both MISMATCH-blocking and "reduced is expected" |
-| AW-04 (runner side) | One reduced-gate constant per runner, rendered into every prompt that names it |
+| AW-04 (runner side) | The hardcoded npm sentence in the no-class comment-only round (`pass-execute-chains.js:249`) goes; that round renders the gate resolved above |
 | AW-05 | The unread severity field is deleted from the schema and from the prompt |
 | AW-06 | The header describes the runner generally; "committed in this repo" becomes "an absolute path"; the "Ruled inputs" section is optional |
 | AW-12 | Chains `IMPL_SCHEMA` carries `mutationLedger`, so the `auth-data` mandate can be met |
-| AW-13 | The classifier probe runs once per run, only when the classifier exists, on `model: "haiku"`; the classifier paragraph renders only when it exists |
-| DC-04 (tool half) | Each runner prints the runaway-guard and `/loop` NOTE at launch |
-| AW-11 (interim) | A parity test holds `PASS_CLASSES` deep-equal across both runners and the `pass-core` table; the merge waits for pass E |
+| AW-13 | An optional `args.classifier` boolean skips the probe. Absent, one existence probe on `model: "haiku"` runs per chain repo and is cached; per-task tier probes run only when the classifier exists; the classifier paragraph renders only then |
+| DC-04 (tool half) | Each runner prints the runaway-guard NOTE at launch, naming the wake-up the guards doc names |
+| AW-11 (interim) | A parity test holds `PASS_CLASSES`, the reduced-gate default, and the gate matcher equal across both runners, and holds `pass-core`'s table to the class-name set, the reviewer model, and the gate lane; the runner merge waits for pass E |
 
-Test assertions (the audit's runner row): parity; every field a mandate cites exists in
-`IMPL_SCHEMA`; every `REVIEW_SCHEMA` field is read; the matcher accepts the three forms; a
-no-class reduced round renders no MISMATCH line; a no-classifier run spawns no probe; no `agent(`
-call lacks `model:`; a no-`package.json` run with no `reducedGate` is rejected.
+Test assertions: the parity above; every field a mandate cites exists in `IMPL_SCHEMA`; every
+`REVIEW_SCHEMA` field is read; the matcher accepts the three forms; a no-class reduced round
+renders no MISMATCH line and no npm command; the three-step reduced-gate resolution; a run with
+`classifier: false` spawns no probe, and one without spawns exactly one per chain repo; no
+`agent(` call lacks `model:`; the launch NOTE prints.
 
-### B2. Gate tool (`engine-logic`)
+### B2. Gate tool
 
-Files: `bin/.local/bin/cairn-run-gate`, its test.
+Files: `bin/.local/bin/cairn-run-gate`, its test, `claude/.claude/workflows/docs-page-chain.js`
+(the exit-75 restatement at `:198`).
 
 | Finding | Outcome |
 |---|---|
-| AW-17 | A vanished gate run exits with its own code (distinct from 0, 1, and 75) and prints the instruction to re-issue; no prompt carries a vanished clause |
-| AW-20 | The gate protocol lives in `cairn-run-gate`'s output. Each runner prompt and implementer carries one line: run the gate through `cairn-run-gate` and follow its output. The restated paragraphs in `cairn-implementer.md` and `site-implementer.md` are deleted; `pass-gate-economy.md` keeps the rationale |
+| AW-17 | A vanished gate run exits 75 with the line "gate vanished; re-issue starts a fresh run" and prints no `gate exit:`, so the existing "on 75, re-issue until `gate exit:`" instruction covers it. A vanish counter in the state directory bounds the loop: the third consecutive vanish prints `gate exit: 1 (vanished 3 times)` and exits 1 |
+| AW-20 | The gate protocol lives in `cairn-run-gate`'s output. Each runner prompt and implementer carries one line: run the gate through `cairn-run-gate` and follow its output. The restated paragraphs in `cairn-implementer.md`, `site-implementer.md`, and `docs-page-chain.js:198` go; `pass-gate-economy.md` keeps the rationale |
 
-### B3. Agent definitions (`docs`)
+Test assertions: a staged state directory with a dead pid and no status file exits 75 with the
+vanish line; three consecutive vanishes print the terminal `gate exit: 1`; a gate that itself
+exits 75 is distinguishable by its `gate exit:` line; no runner prompt carries a vanished
+clause.
+
+### B3. Agent definitions
 
 Files: `claude/.claude/agents/cairn-implementer.md`, `site-implementer.md`, `diff-reviewer.md`.
 
@@ -330,88 +362,179 @@ Files: `claude/.claude/agents/cairn-implementer.md`, `site-implementer.md`, `dif
 | AW-23 | The dated compatibility note is deleted from both implementers |
 | AW-04 (reviewer side) | `diff-reviewer` says "the reduced gate the dispatch names" and defines none of its own |
 | AW-05 (reviewer side) | The severity-as-routing claim is deleted |
+| DC-29 (agent side) | The hardcoded `Co-Authored-By: Claude <noreply@anthropic.com>` footers (`cairn-implementer.md:58`, `site-implementer.md:51`) become "the repo's commit conventions", as `pass-execute-chains.js:238` already says |
 
-### B4. Global CLAUDE.md and pass skills (`docs`)
+Mechanical acceptance: the fixed npm definition-of-done list, the dated note, and the generic
+footer string enter the retired-phrase list with their witnesses and have no hit.
+
+### B4. Global CLAUDE.md, pass skills, and the spent workflow
 
 Files: `claude/.claude/CLAUDE.md`, `claude/.claude/skills/pass-core/SKILL.md`,
 `claude/.claude/skills/site-pass/SKILL.md`, `claude/.claude/skills/cairn-pass/SKILL.md`,
-`claude/.claude/skills/go-ship/SKILL.md` (renamed in A).
+`claude/.claude/skills/go-ship/SKILL.md`, `claude/.claude/docs/model-economy.md`,
+`claude/.claude/workflows/cairn-overnight-to-release.js` (deleted), `docs/HISTORY.md`.
 
 | Finding | Outcome |
 |---|---|
-| DC-01 (+PS-13) | code-simplifier runs once per pass or branch, at the close, only when TypeScript, Svelte, or Go changed (the 2026-09-27 ruling; see "Owner decisions"). `pass-core` owns it. The per-commit bullet and the "straight through the gates and code-simplifier" wording in the global CLAUDE.md become one pointer line. `go-ship` dispatches `code-simplifier:code-simplifier` once as its close step. The superseded phrasing enters the retired-phrase list |
-| DC-03 (+PS-16) | "The repo's full gate" per task becomes "the class's per-task gate (`pass-core`)" in the global CLAUDE.md and `site-pass`. Repo copies are pass F |
-| DC-04 (text half) | The unattended-work line says the tools hold the sleep inhibitor, and the session arms the runaway guard and a `/loop` wake-up at launch |
-| PS-14 | `pass-core`'s escalation points at `model-economy.md` "Current state" (which includes `max`) and restates no ladder. cairn CLAUDE.md is pass F |
+| `0a2e391` repair | The implementer diffs `a7dd5ad` against `0a2e391` over `claude/.claude/CLAUDE.md` and separates deliberate slimming from lost rulings. Each lost ruling is restored to its owning home; the report lists every one found |
+| DC-01 (+PS-13) | The Git Conventions bullet restores `a7dd5ad`'s text, so the rule stays in CLAUDE.md for branch work outside passes: code-simplifier runs once per pass or branch at its close over changed TypeScript (including JavaScript, S5), Svelte, or Go; never per commit or at an intermediate boundary; never for docs. It points at `pass-core` for the pass procedure. The small-task line reads "straight through the gates". `pass-core`'s simplify step names the S5 languages. `go-ship` runs the repo's own `simplify` skill when one exists (poplar) and `code-simplifier:code-simplifier` otherwise, once, as its close step |
+| Superpowers yield (`GA` id assigned at seeding) | "Superpowers skills yield to the pass class: TDD's write-first applies to `engine-logic` and `auth-data` only, and plans stay outcome-only" is restored in `pass-core` beside the class table |
+| DC-03 (+PS-16) | The global CLAUDE.md chain sentence restores `a7dd5ad`'s "the pass class's gate runs inside the chain" with its `pass-core` pointer; `site-pass` and `model-economy.md:38` say the same. Repo copies are pass F |
+| DC-04 (text half) | The unattended-work line says the tools hold the sleep inhibitor and the session arms the runaway guard and the wake-up the guards doc names at launch. It names no mechanism, so C2's `/goal` evaluation needs no edit here |
+| PS-14 | `pass-core`'s escalation points at `model-economy.md` "Current state" (which includes `max`) and restates no ladder; A-rest repoints it at `seats.json`. cairn CLAUDE.md is pass F |
 | PS-22 | `cairn-pass` close drops the separate `npm run check`, since `check:close` runs it |
-| DC-29 | The co-author footer bullet is deleted; the harness attribution owns the trailer (pending the owner confirmation below) |
+| DC-29 | The co-author footer bullet is deleted (S7) |
 | DC-30 | The pre-bake step says to update STATUS, and memory only for a preference or a ruling's why |
+| AW-07 | `cairn-overnight-to-release.js` and its skill-listing entry are deleted; "sleep 30" leaves the baseline |
+| History | `docs/HISTORY.md` records `0a2e391` as a one-executor-rule incident: two sessions edited the global CLAUDE.md at once, and the later commit reverted three rulings |
 
-### B5. Delete the spent workflow
-
-AW-07: `claude/.claude/workflows/cairn-overnight-to-release.js` is deleted, and its skill-listing
-entry goes with it. "sleep 30" leaves the baseline.
+Retired phrases appended here: "Before committing code changes, dispatch" and "the repo's full
+gate runs inside the chain" are already seeded by A-core; B4 adds "straight through the gates and
+code-simplifier" and the footer bullet's text.
 
 ### Pass B acceptance
 
-`bash scripts/check.sh` green; every B entry gone from the baseline; the runner tests passing;
-`claude-tooling-sync verify` green on the merged `main`. A dry launch of `pass-execute-chains`
-against a dotfiles worktree with no `reducedGate` is rejected at launch with the AW-01 reason, and
-with an explicit one it renders prompts carrying no npm command.
+- `bash scripts/check.sh` green; the runner and gate tests passing;
+  `claude-tooling-sync verify` green on the merged `main`.
+- A baseline query returns zero entries lettered A or B.
+- A dry render (the B1 test harness) of both style-guide-sync segments with the amended plan's
+  real arguments, chains R and W in one invocation, asserts: W's prompts name no npm command;
+  every W reduced round renders `bash scripts/check.sh`; no reduced round carries a
+  MISMATCH-blocking line; W spawns no classifier probe; R's existence probe runs once, on
+  `haiku`.
+- A grep of the amended plan confirms the three named workarounds are gone.
 
 ## Amendments to the style-guide-sync plan
 
-Applied by that plan's conductor at pre-flight, after B merges. These are the audit's section 6
-items plus rulings S2 and S3.
+Applied by that plan's conductor at pre-flight, after B merges. The audit's section 6 items plus
+S2, S3, and the ratchet's effect on chain W. The plan owns eight audit ids: PS-07 (W4), DC-25
+(W4 per ruling 12; the poplar gap goes to F per S2), AW-09 (W1, W3), AW-08 (W3), AW-10 (W1),
+DC-27 (W4), DC-28 (W4 per S3), and AW-24 with DC-26 and CS-15 (W2, W4).
 
-1. Chain W needs no `reducedGate` workaround (AW-01) and no `notes` override of the implementer's
-   definition of done (AW-19). Both come out of the plan's Gates block.
-2. W6 appends its phrases to pass A's `retired-phrases.txt` and adds fixtures for them. It adds no
-   second check to `scripts/check.sh`; pass A's scanner already covers W6's scope.
-3. W6's acceptance runs `claude-tooling-sync verify --root <worktree>` inside the chain, and the
-   segment B boundary step 3 stays as a post-merge confirmation.
+1. The Gates block drops only the `notes` sentence overriding the implementer's definition of
+   done (AW-19); the notes keep the absolute spec path. Chain W sets no `reducedGate`: its
+   reduced rounds run the named gate `bash scripts/check.sh` (AW-01).
+2. W6 appends its phrases to `claude/.claude/tooling/retired-phrases.txt` and adds fixtures for
+   them. It adds no second check to `scripts/check.sh`; A-core's scanner covers W6's scope for
+   retired phrases. W6 carries no test-first mandate, since its fixtures prove phrases, not new
+   logic. R8's list header names `claude/.claude/tooling/retired-phrases.txt`, and R8 matches as
+   a literal, case-insensitive substring, like its twin.
+3. W6's acceptance runs `bin/.local/bin/claude-tooling-sync lint --root <worktree>` inside the
+   chain. The segment B boundary step 3 (`claude-tooling-sync verify`) stays as a post-merge
+   confirmation of the machine checks.
 4. The plan keeps invoking `pass-execute-chains` by name; the runner merge (AW-11) waits for pass E.
-5. S3: W4's Files gain the three voice files outside it (DC-28), with the measures section
-   removed and the Go register's missing repo and wrong linter corrected.
+5. S3: W4's Files gain the three voice files outside it (DC-28). All five voice files drop their
+   measures sections and keep one pointer line to `MEASURES.md`, and the Go register's missing
+   repo and wrong linter are corrected. W4's acceptance checks all five.
 6. S2: DC-25's poplar gap is out of W4. Poplar's overlay is ruled canonical and its stale
    references go in pass F.
 7. The chain W worktree is created from dotfiles `main` after B merges. P1's claim check re-runs,
    since B moves line numbers in files W edits (`cairn-implementer.md`, `site-implementer.md`,
-   `CLAUDE.md`).
+   `CLAUDE.md`, `docs-page-chain.js`).
+8. Each W task that clears a baselined entry (a retired phrase or a self-mode dead reference, for
+   example AW-08 in W3) removes that entry in the same commit, and
+   `claude/.claude/tooling/ratchet-baseline.json` joins that task's Files.
+9. The close maps every runner halt, escalation, or `fix` reason to an audit id or to "not
+   infra". The sweep's first goal holds when none maps to an audit id.
+
+## Pass A-rest: the guard's remaining checks (planned later)
+
+Outcome level. After style-guide-sync, before C and D. Same repo, gate, and per-task shape as
+A-core. Each new check registers its id and seeds its entries in the same commit.
+
+- **Duplicate paragraph.** 12-word shingle overlap above a threshold between any two of agents,
+  authored SKILL.md files, output styles, CLAUDE.md, and docs. Entries keyed on the sorted file
+  pair with the count of over-threshold paragraph pairs, which may only fall; an N-way copy is one
+  cluster. `claude/.claude/tooling/parity.json` declares sanctioned copies, pairs or N-way groups,
+  held byte-identical between markers (absent: exit 2; empty: pass; a missing marker or a differing
+  byte: violation showing the first differing line). Calibrated against the self-mode
+  duplicate-paragraph ids (AW-04, AW-20, AW-21, AW-22, CS-13, DC-21) plus a named negative set
+  (shared frontmatter, template headings, the implementer report block); the calibration evidence
+  and the new-`GA-nn` count go in the script header. A threshold change is a new check id.
+  Baselined: AW-04, AW-20, AW-21, AW-22, CS-13, DC-21, DC-22, PS-25.
+- **Cross-repo mode.** `--repo <name>` with `--repo-root <path>`, so a close checks its own
+  worktree. Scope is an explicit repo list in the tooling config (the six pass F repos); any other
+  repo is reported, never baselined. A stale cross-repo entry is a NOTE, pruned by the next
+  dotfiles commit. Checks: a bare repo-relative path fails when it resolves in exactly one repo
+  (prefix it) or in none (dead); a multi-repo path or a placeholder (`<`, `{`, `YYYY`) passes
+  (AW-14, AW-15, PS-21, DC-12, DC-13). A quoted version range in a repo CLAUDE.md fails (DC-14).
+  The context budget becomes a baselined check id with a 200-line cap per CLAUDE.md, lettered E
+  for the global file and F per repo (DC-02).
+- **Seat check.** `claude/.claude/tooling/seats.json` maps each agent to its seat: `model`,
+  `effort` (a missing `effort:` is a violation), a one-line `why` for each non-default effort, and
+  `omitClaudeMd` (decided in E). `model-economy.md` "Current state" keeps its heading and the why,
+  and points at `seats.json` for values; `pass-core` and the global CLAUDE.md model line cite
+  `seats.json` directly. Seats in in-scope repos run under `check-drift` and at closes. Baselined:
+  DC-11 (F), and the project agents lacking `effort` (F).
+- **The remaining `claude-tooling-sync` checks.** Description override matches the installed file;
+  a description with no `paths:` gate over 500 characters fails (CS-8, CS-17, PS-28); the
+  fork-skill lint (PS-06, PS-20); vendored sibling names (CS-6).
+- **The remaining reference checks.** Heading citation in both house forms, `` `file.md`
+  ("Heading") `` and `` `file.md` "Heading" `` (DC-13, DC-15, DC-18); memory citation (DC-09);
+  relative link (DC-10); orphan doc (DC-17).
+- **Wiring.** `pass-core`'s close gains one step: the reference checker in cross-repo mode over the
+  closing worktree, `claude-tooling-sync verify` for that repo's agents, and the context budget;
+  `cairn-pass` and `site-pass` supply the commands; the supersession step (RC3) lands in the same
+  skeleton. `check-drift` gains `--only claude`, runs cross-repo mode and the context budget over
+  the repo list, and both passes' acceptances use `check-drift --only claude`, since machine drift
+  keeps the full `check-drift` red for reasons outside this sweep.
 
 ## Passes C, D, E, F (planned later)
 
 Outcome level only. Each is planned from this list plus the baseline at its start.
 
-**Pass C: process skills and workstation docs** (after style-guide-sync, which edits
-`register-check`). Split at the natural seam.
+**Pass C: process skills and workstation docs** (after A-rest). Split at the natural seam.
 - C1, cairn-facing skills: PS-02 and PS-04 (the release and consult gates become
   `npm run check:close`), PS-03, PS-05 (alt rules point at the register's Visuals), PS-06 (explicit
   args; the caller binds tells), PS-17 (one "Facts consulted" definition, added to the plan
   template), PS-18 (delete the pass-end draft clause), PS-19, PS-28, AW-14, AW-15.
 - C2, site and generic skills plus docs: PS-08 (absent-guide branch), PS-09 (paths from the site's
   CLAUDE.md or STATUS), PS-10 (`backlog: false`, `backlog_path`), PS-11 (close to HISTORY.md, read
-  existing tiers), PS-12 (delete), PS-15 (spec-plan-review reviewers to the seat table's
-  `medium`), PS-20, PS-21, AW-18, DC-06, DC-07, DC-08, DC-09 (inventory side), DC-16, DC-17
-  (delete; the `--name` fact moves to the inventory), DC-23.
+  existing tiers), PS-12 (delete), PS-15 (`spec-plan-review`'s reviewer and verification-reader
+  lines, `:95` and `:124`, to `medium`; the fold agent at `:99` authors and stays `high`), PS-20,
+  PS-21, AW-18, DC-06, DC-07, DC-08, DC-09 (inventory side), DC-16, DC-17 (delete, citing the
+  2026-09-12 infra round's task 4 as superseded and retiring its phrasing; the `--name` fact moves
+  to the inventory), DC-23. C2 also evaluates `/goal`, with the pass acceptance as its condition,
+  against the `/loop` wake-up, and records the result in the guards doc.
+- Trigger checks: each skill whose description C trims and that a CLAUDE.md rule depends on
+  (`dependency-upgrade`, `visual-fidelity`, `cairn-release`) gets three should-trigger and two
+  should-not prompts in fresh `claude -p` sessions, before and after the trim.
 
-**Pass D: convention skills and the vendored manifest** (parallel with C; disjoint files; its
-`claude-tooling-sync` changes build on A's). CS-1 (`SilenceErrors: true`), CS-2 (precedence line
-in go-conventions; elm dropped from the cobra `_why`), CS-3, CS-4 (no pinned Go version; narrowed
-tag rule), CS-5, CS-6 (`fetch_skill` rewrite, then refetch), CS-7 (call `kitty-headless-shot`
-directly), CS-8 and CS-10 (manifest overlays), CS-11 (copy-in source is cairn's
-`eslint.config.js`), CS-12, CS-13, CS-17, DC-10 (+CS-14; `bubbletea-conventions.md` moves to
-poplar as history, checklists fold into elm-conventions).
+**Pass D: convention skills and the vendored manifest** (parallel with C; disjoint files). CS-1
+(`SilenceErrors: true`), CS-2 (precedence line in go-conventions; elm dropped from the cobra
+`_why`), CS-3, CS-4 (no pinned Go version; narrowed tag rule), CS-5, CS-6 (`fetch_skill` rewrite,
+then refetch), CS-7 (call `kitty-headless-shot` directly), CS-8 and CS-10 (manifest overlays), CS-11
+(copy-in source is cairn's `eslint.config.js`), CS-12, CS-13, CS-17, DC-10 (+CS-14;
+`bubbletea-conventions.md` moves to poplar as history, and its checklists land in a reference file
+under `elm-conventions/`, one level from SKILL.md). `go-conventions` and `elm-conventions` each end
+under 500 body lines, reference material moved one level down. Trigger checks as in C for
+`go-conventions` and `tui-visual-verify`.
 
-**Pass E: consolidation to owners** (after C and D). AW-11 (+PS-23; chains becomes a mode of
-`pass-execute.js`, with the skill listing and plan template updated, and the parity test
-retired), AW-21 (implementer copies declared in the parity list; measures to `MEASURES.md`),
-AW-22 (engine-triage owns the standard), DC-19, DC-21 (+PS-24; "Conducting a pass" cut to the
-budgets, the model line, and "invoke pass-core"), DC-22 (+PS-26, workstation side), PS-25
-(workstation side). Close checks the E success test.
+**Pass E: consolidation to owners** (after C and D).
+- AW-11 (+PS-23; chains becomes a mode of `pass-execute.js`, with the skill listing and plan
+  template updated, and the parity test retired), AW-21 (implementer copies declared in the parity
+  list; measures to `MEASURES.md`), AW-22 (engine-triage owns the standard), DC-22 (+PS-26,
+  workstation side), PS-25 (workstation side).
+- DC-19 and DC-21 (+PS-24) are routed sentence by sentence. E's close carries a ledger mapping
+  every sentence of each moved section to its new home: a procedure to a skill (the pass rules to
+  `pass-core`, including the 2026-09-03 parallelize ruling, the 2026-09-12 segmentation ruling, the
+  80%-of-ceiling procedure, the fold-agent close, "anything load-bearing lives in an artifact", the
+  idle-gap close, and the thin-conductor self-flag); a file-specific rule to `.claude/rules/` with
+  `paths:`; an every-session fact to a CLAUDE.md. A sentence dropped outright is an owed erratum
+  for Geoff, never a silent deletion; the reviewer checks the ledger. The DaisyUI-first sentence
+  goes to cairn-cms and each site (their CLAUDE.md or `site-pass`), the manifest sentence stays
+  global, and the `claude-tooling.md:95-96` heading citation updates in the same commit. The Git
+  Conventions section is trimmed against Claude Code's built-in git instructions.
+- `claude-tooling-sync` and the reference checker learn `.claude/rules/` (a new artifact kind here).
+- `omitClaudeMd` is decided per agent and recorded in `seats.json`. Candidates: the drafter,
+  `diff-reviewer`, `visual-verifier`, and `figure-verifier`, whose dispatches carry their inputs.
+- The close runs `/doctor prompt-audit` as a confirmation read and checks E's success test,
+  including the 200-line target.
 
-**Pass F: repo CLAUDE.md files** (one small chore per repo, each under its own one-executor
-check, straight through the repo's gate).
+**Pass F: repo CLAUDE.md files** (one small chore per repo after A-rest, each under its own
+one-executor check, straight through the repo's gate). Each chore runs `/doctor prompt-audit` and
+the `/doctor` trim proposal over that repo's CLAUDE.md and triages them, and brings the file to
+200 lines or a recorded reason.
 
 | Repo | Findings |
 |---|---|
@@ -424,59 +547,129 @@ check, straight through the repo's gate).
 
 ## Owner decisions
 
-**DC-01 is decided from the ratified rulings.** The 2026-09-27 ruling (`pass-gate-economy.md`,
-`pass-core` close step 1) is newer and explicit: once per pass or branch, at the close, only for
-TypeScript, Svelte, or Go. It names the per-commit form and retires it. The global CLAUDE.md
-bullet predates it. No question.
+**DC-01 is decided from the ratified rulings.** The 2026-09-27 ruling first landed in the global
+CLAUDE.md at `a7dd5ad`, in Git Conventions, which governs every commit: "`code-simplifier` runs
+once per pass or branch, at the close, over changed TS, Svelte, or Go; never per commit or at an
+intermediate boundary, never for docs." `pass-gate-economy.md:72` and `pass-core`'s close step 1
+carry it. The per-commit bullet is `0a2e391`'s regression, not older text (RC3). S5 settles the
+languages.
 
 **PS-15 is decided from the seat table.** Reviewers sit at `medium` (Geoff, 2026-09-23); the
-skill's `high` has no recorded reason. No question.
+skill's reviewer `high` has no recorded reason. The fold agent is an authoring seat and stays
+`high`.
 
-**One confirmation, DC-29 (taste).** Deleting the global CLAUDE.md footer bullet lets the
-harness's model-named trailer (`Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`) replace
-the generic `Co-Authored-By: Claude <noreply@anthropic.com>` in every repo. Recommendation: delete
-the bullet. The harness knows the model, and the model name in history supports the model-economy
-audits. If Geoff prefers the generic form, the bullet stays and the harness defers to it.
+**DC-29, S6, and S5** are Geoff's rulings of 2026-09-28, recorded under "Sequence and rulings".
 
 ## Anthropic practice
 
-Stub. The adversarial review's best-practices lens fills this section with current Anthropic
-guidance published since the Opus 5.5 release, each item with its source URL and the part of this
-design it confirms or changes. Not written from memory.
+Fetched 2026-09-28 against Claude Code v2.1.284. Full quotes and grading:
+`docs/superpowers/research/2026-09-28-infra-sweep-review-anthropic.md`. Items marked **scope**
+widen a pass; none adds a pass.
+
+**Confirmed.**
+
+- One owner per rule, tool output first. "If a rule must hold every time, make it a hook rather
+  than a prompt instruction." "Hook output lands in context."
+  (<https://code.claude.com/docs/en/features-overview>) RC1 and RC3 stand.
+- No contradicting homes. "If two rules contradict each other, Claude may pick one
+  arbitrarily." (<https://code.claude.com/docs/en/memory>) RC3's supersession sweep stands.
+- No dated facts. "Don't include information that will become outdated."
+  (<https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>) RC7
+  stands.
+- Description cap. The native listing truncates at 1,536 characters and drops the
+  least-invoked descriptions first on overflow (<https://code.claude.com/docs/en/skills>). The
+  500-character cap stands.
+- Reviewers at `medium`. Opus 5.5 "at its default `medium` effort ... matched or beat Claude
+  Opus 5 at `high`."
+  (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5>)
+  PS-15 stands.
+- Emphasis. "If you emphasize many lines, none of them stands out."
+  (<https://code.claude.com/docs/en/best-practices>) The infra carries two `MANDATORY` lines.
+  No trimming pass.
+
+**Changed.**
+
+1. CLAUDE.md size (E, F; **scope**). "Target under 200 lines per CLAUDE.md file"; imports
+   "still load and enter the context window at launch"; a procedure or file-specific rule
+   moves "to a skill or a path-scoped rule instead" (<https://code.claude.com/docs/en/memory>).
+   E routes DC-19 and DC-21 content by that order, using `.claude/rules/` with `paths:` where
+   content is file-specific. E's success test adds: each in-scope CLAUDE.md at or under 200
+   lines, or a recorded reason. A-rest's budget check gains the 200-line cap. The tools learn
+   `.claude/rules/`.
+2. Subagent context (A-rest, E; **scope**). Subagents load the CLAUDE.md chain unless the
+   definition sets `omitClaudeMd` (<https://code.claude.com/docs/en/features-overview>). E
+   decides the field per agent and records it in `seats.json`, which the seat check reads.
+3. Anthropic's audit (A-core, E, F). `/doctor prompt-audit` finds "instructions written for
+   older models, references to files or commands that don't exist, and files that contradict
+   each other" (<https://code.claude.com/docs/en/memory>). A-core runs it once before seeding
+   and turns its uncovered findings into `GA-nn` entries or C and D items. E runs it at close.
+   Each F chore runs it and the `/doctor` trim proposal. It is an input, never a gate.
+4. Attribution (B3, B4). CLAUDE.md commit rules compete with built-in guidance; "set the
+   attribution text with `attribution`" (<https://code.claude.com/docs/en/memory>). The footer
+   bullet goes, and the default model-named trailer applies (S7).
+5. Reference depth (A-rest). "Keep references one level deep"
+   (<https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>).
+   `pass-core` and CLAUDE.md cite `seats.json` for values and `model-economy.md` for the why.
+6. Skill size (D). "Keep `SKILL.md` under 500 lines" (<https://code.claude.com/docs/en/skills>).
+   D lands DC-10's checklists in a reference file under `elm-conventions/` and splits
+   `go-conventions`.
+7. Trigger checks (C, D; **scope**). "Seeing a skill trigger tells you Claude found it, not
+   that it did what you intended" (<https://code.claude.com/docs/en/skills>). Each trimmed
+   skill that a CLAUDE.md rule depends on gets three should-trigger and two should-not prompts
+   in fresh `claude -p` sessions, before and after the trim.
+8. Delegation (B). "Do not delegate work you can finish yourself in a handful of tool calls"
+   (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>).
+   B5 merged into B4.
+9. Unattended completion (B4, C2). `/goal` defers evaluation while a subagent or background
+   command runs and issues check-ins (<https://code.claude.com/docs/en/goal>). B4's DC-04
+   text stays tool-neutral. C2 evaluates `/goal` against the `/loop` wake-up and records the
+   result in the guards doc.
+10. Effort record (A-rest). Current guidance starts well-specified Sonnet 5.5 coding at `medium`
+    and reserves `xhigh` and `max` for measured gains
+    (<https://platform.claude.com/docs/en/build-with-claude/effort>). `seats.json` carries a
+    one-line `why` per non-default effort. The effort sweep itself is filed to the dotfiles
+    `ROADMAP.md` for `model-economy.md`'s owner.
+11. Side-effect skills. `disable-model-invocation: true` for workflows with side effects
+    (<https://code.claude.com/docs/en/best-practices>): set on `go-ship` only (S6).
 
 ## Out of scope
 
 - Any change to cairn-cms code, docs, or its own checks. Its retired-phrase twin and `check:close`
   belong to the style-guide-sync plan (R8) and the repo.
-- Re-auditing. Violations found while seeding become `GA-nn` entries; they are not fixed in A.
+- Re-auditing. Violations found while seeding become `GA-nn` entries; they are not fixed in the
+  seeding pass.
 - The skill and agent content rewrites beyond each finding's disposition.
 - A new implementer for the dotfiles repo.
+- A write-time `PostToolUse` hook for the reference checks; closes and the weekly run catch the
+  same defects.
 - Scheduled cloud agents; `check-drift`'s weekly timer is the periodic trigger.
 
 ## Risks
 
 - **Runner edits go live on merge.** A workflow invoked by name reads the stowed copy on `main`.
   B merges only after `pgrep` and journal checks show no running `pass-execute*` or
-  `docs-page-chain` run.
-- **A and B run on today's defective runners.** Both passes run per task with the Agent tool (under
-  six tasks), not through `pass-execute-chains`, and each dispatch names the gate
-  `bash scripts/check.sh` explicitly, overriding the implementer's npm definition of done until B3
-  lands.
-- **The duplicate-paragraph threshold** can be noisy or blind. Calibration against the audit's
-  confirmed rows bounds both; a threshold change is a baseline-seeding event for that check only.
+  `docs-page-chain` run. Rollback is `git revert -m 1` on the recorded merge SHA.
+- **A-core and B run on today's defective runners.** Both passes run per task with the Agent tool
+  (under six tasks), not through `pass-execute-chains`, and each dispatch names the gate
+  `bash scripts/check.sh` explicitly, overriding the implementer's npm definition of done until
+  B3 lands.
+- **Pinned-gate reduced rounds get slower.** Under AW-01's resolution, a task that names its gate
+  and no `reducedGate` runs that full gate on a reduced round. A cairn plan that wants a cheaper
+  reduced round sets `reducedGate` explicitly.
+- **The duplicate-paragraph threshold** can be noisy or blind. Calibration with positives and a
+  named negative set bounds both; a threshold change is a new check id.
 - **Cross-repo checks** make a repo's close depend on the dotfiles tree. The close runs the
-  checker from the dotfiles `main` checkout, read-only.
-- **Shrink-only on a stale branch.** A long-lived branch compares against an old merge base.
-  Rebasing on `main` before merge is part of each pass's close.
-- **Contention with the style-guide-sync worktree.** It must not exist until B merges, or it is
-  recreated from the new `main`.
+  checker from the dotfiles `main` checkout, read-only, against its own worktree through
+  `--repo-root`.
+- **Concurrent edits to one file.** `0a2e391` is the precedent. Each pass runs the one-executor
+  check before dispatch, and the per-commit ratchet catches a baseline regrown by a stale base.
+- **Contention with the style-guide-sync worktree.** The chain W dotfiles worktree must not exist
+  until B merges, or it is recreated from the new `main`.
 
 ## Open for the plan
 
-- The vanished-run exit code's value and the existing callers that branch on exit codes.
 - Whether `check-claude-refs.py` and `claude-tooling-sync` share a baseline module or each parse
-  the JSON (one format either way).
-- The implementer seat for pass A and B tasks: `cairn-implementer` with the explicit gate, or
+  the JSON (one format and one registry either way).
+- The implementer seat for A-core and B tasks: `cairn-implementer` with the explicit gate, or
   `general-purpose` on `sonnet` with the implementer's report shape pasted in.
-- How pass F's repo-keyed entries are labelled so E's success test can separate them.
-- Token ceiling and checkpoint interval for A and for B, per the global rule.
+- Token ceiling and checkpoint interval for A-core and for B, per the global rule.
