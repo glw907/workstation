@@ -19,8 +19,9 @@ Modes, both run with the standard library alone:
 
 Growth rules: a new entry under an id already registered in HEAD fails, unless it re-keys a
 removed entry with the same check, fingerprint, and count; a rising count fails; a removed
-registry id fails; an entry under a retired id fails. Removals, falling counts, and entries
-under an id new in the change pass, so a commit that registers an id may seed its entries.
+registry id fails; an entry under a retired id fails; a retired id returning to active fails.
+Removals, falling counts, and entries under an id new in the change pass, so a commit that
+registers an id may seed its entries.
 
 Tool protocol: the gate runs ``<tool> ratchet-report --root <root>`` (plus any injected
 ``--home``, ``--projects-root``, ``--memory-root``), and the tool prints the JSON that
@@ -186,12 +187,18 @@ def parse(text, source):
 def growth(head, new):
     """Return ``(check, message)`` for each way ``new`` grows past ``head``.
 
-    ``head`` is None when HEAD holds no baseline, which counts every entry as new.
+    ``head`` is None when HEAD holds no baseline, which counts every entry as new. A registry
+    id retired in ``head`` may not return to active in ``new``, whether or not it carries
+    entries.
     """
     new_checks, new_entries = new
     head_checks, head_entries = head or ({}, {})
     found = [(cid, f"registry is append-only: {cid} was removed")
              for cid in head_checks if cid not in new_checks]
+    found += [(cid, f"registry is append-only: retired id {cid} returned to active")
+              for cid in head_checks
+              if cid in new_checks and head_checks[cid]["state"] == "retired"
+              and new_checks[cid]["state"] != "retired"]
     removed = [e for k, e in head_entries.items() if k not in new_entries]
     for k, e in new_entries.items():
         cid = e["check"]
@@ -239,7 +246,8 @@ def run_tools(root, checks, root_flags):
     """Run each registered tool once; return its violations under the active ids.
 
     Raises ConfigError for a registered id no tool implements, a tool that fails or prints
-    no report, and a reported id or violation outside the active registry.
+    no report, a report whose "implements" or "violations" field is not shaped as documented,
+    and a reported id or violation outside the active registry.
     """
     active = {cid: reg["tool"] for cid, reg in checks.items() if reg["state"] == "active"}
     by_tool = defaultdict(list)
@@ -266,12 +274,21 @@ def run_tools(root, checks, root_flags):
         if not isinstance(data, dict):
             problems.append(f"{tool}: the ratchet report must be an object")
             continue
-        implements = set(data.get("implements", []))
+        implements_raw = data.get("implements", [])
+        if not isinstance(implements_raw, list) or not all(
+                isinstance(cid, str) for cid in implements_raw):
+            problems.append(f'{tool}: "implements" must be a list of strings')
+            continue
+        violations_raw = data.get("violations", [])
+        if not isinstance(violations_raw, list):
+            problems.append(f'{tool}: "violations" must be a list')
+            continue
+        implements = set(implements_raw)
         problems += [f'check id "{cid}": no tool implements it ({tool} does not report it)'
                      for cid in ids if cid not in implements]
         problems += [f'{tool}: implements "{cid}", which the registry does not list as active'
                      for cid in sorted(implements - set(active))]
-        for v in data.get("violations", []):
+        for v in violations_raw:
             shape = (_shape_problems(v, ENTRY_FIELDS - {"finding", "pass", "defect"})
                      if isinstance(v, dict) else ["not an object"])
             if not shape and v["check"] not in implements:

@@ -23,6 +23,15 @@
     "vale-fix": { "repo": "vale-cli/agent-tools", "path": "skills/fix", "rename": "vale-fix", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13" },
     "vale-setup": { "repo": "vale-cli/agent-tools", "path": "skills/setup", "rename": "vale-setup", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13" },
     "vale-triage": { "repo": "vale-cli/agent-tools", "path": "skills/triage", "rename": "vale-triage", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13" },
-    "vale-vocab": { "repo": "vale-cli/agent-tools", "path": "skills/vocab", "rename": "vale-vocab", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13" }
+    "vale-vocab": { "repo": "vale-cli/agent-tools", "path": "skills/vocab", "rename": "vale-vocab", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13" },
+    "vhs-cli-demos": {
+      "repo": "gfargo/skills",
+      "path": "plugins/terminal/skills/vhs-cli-demos",
+      "branch": "main",
+      "commit": "81d33466f7c4",
+      "license": "MIT",
+      "installed": "2026-08-18",
+      "_why": "Deterministic VHS tape authoring and gifsicle optimization for TUI screenshots and demo GIFs; vendored since the parent terminal plugin duplicates the already-installed tui-design skill."
+    }
   }
 }

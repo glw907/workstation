@@ -279,6 +279,15 @@ def test_r12_head_without_baseline_accepts_the_seeded_file(fx, head):
     assert proc.returncode == 0, out(proc)
 
 
+def test_retired_id_returning_to_active_fails(fx):
+    checks = {**ACTIVE, "old": {"state": "retired"}}
+    seed(fx, [], checks)
+    fx.baseline({**ACTIVE, "old": {"tool": "tools/stub-tool"}}, [])
+    proc = fx.hook_commit()
+    assert proc.returncode == 1
+    assert "registry is append-only: retired id old returned to active" in out(proc)
+
+
 def test_hook_rejects_a_malformed_staged_baseline(fx):
     seed(fx, [])
     fx.write(BASELINE, "{not json")
@@ -420,6 +429,28 @@ def test_a_count_below_its_entry_asks_to_lower_the_entry(fx):
     proc = fx.ratchet("check", "--root", ".")
     assert proc.returncode == 1
     assert "lower this baseline entry's count to 2: docs/a.md + docs/b.md" in out(proc)
+
+
+def test_malformed_report_implements_not_a_list_is_a_config_error(fx):
+    seed(fx, [])
+    tool = fx.root / "tools" / "stub-tool"
+    tool.write_text('#!/usr/bin/env python3\nprint(\'{"implements": "demo", "violations": []}\')\n')
+    tool.chmod(tool.stat().st_mode | stat.S_IXUSR)
+    proc = fx.ratchet("check", "--root", ".")
+    assert proc.returncode == 2
+    assert "configuration error" in out(proc)
+    assert '"implements" must be a list of strings' in out(proc)
+
+
+def test_malformed_report_violations_not_a_list_is_a_config_error(fx):
+    seed(fx, [])
+    tool = fx.root / "tools" / "stub-tool"
+    tool.write_text('#!/usr/bin/env python3\nprint(\'{"implements": ["demo"], "violations": 5}\')\n')
+    tool.chmod(tool.stat().st_mode | stat.S_IXUSR)
+    proc = fx.ratchet("check", "--root", ".")
+    assert proc.returncode == 2
+    assert "configuration error" in out(proc)
+    assert '"violations" must be a list' in out(proc)
 
 
 def test_r13_baseline_absent(fx):
