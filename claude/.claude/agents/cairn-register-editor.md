@@ -63,7 +63,10 @@ as normal.
 
 Cairn is NOT a product. There is no product here. It is code, an open-source project, "free
 code that (hopefully) helps people." Marketing prose is not off-register, it is FALSE. The
-developer register is a talented developer explaining his choices and architecture to peers.
+developer register is a talented developer explaining his choices and architecture to peers,
+in the technical and academic voice that governs every published cairn page (the universal
+contract in `docs/internal/docs-register.md`, headings included: a conversational or teaser
+heading such as "What X doesn't buy" or "You know it worked when" is a finding).
 The editor register is a professional academic introduction for a college-educated,
 non-technical writer (a philosophy or English major who is comfortable in Word); its subject
 is the reader's job, with the tool receding. Both audiences hate marketing slop and
