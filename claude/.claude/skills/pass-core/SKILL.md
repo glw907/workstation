@@ -48,7 +48,12 @@ and needs no local explanation, while a bespoke solution must be documented, enf
 re-learned.
 
 **The spec is the owner's gate; a reviewed plan runs (Geoff, 2026-09-27).** Geoff reads every
-spec himself. A plan does not wait for his read: once it clears `spec-plan-review` at its
+spec himself, with one standing exception (Geoff, 2026-09-13, reaffirmed 2026-09-28): a pass
+that is a local implementation of a chosen published standard (the admin motion pass
+transcribing IBM Carbon's productive motion set is the example) skips his spec read. That spec
+instead takes an adversarial review for fidelity to the standard's published values,
+completeness over its case list, charter fit, and plannability, and the approval gate asks him
+only for the plan's task list and ceiling. A plan does not wait for his read: once it clears `spec-plan-review` at its
 class's full depth, with blockers and majors closed and the verification read clean, the
 conductor executes it and names it in the next sitting's summary. Two things still stop it. A
 ruling or product fork in the plan's "Rulings for Geoff" section blocks the tasks it governs,
