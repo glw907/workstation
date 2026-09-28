@@ -324,6 +324,7 @@ function implementPrompt(t, a, blocking, baseSha) {
   const lines = [
     `Repo: ${a.repo}`,
     `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
+    `Never use git stash: the stash stack is shared by every worktree and concurrent session. To set work aside, copy files to your scratchpad or make a WIP commit. Keep scratch and debug files in your scratchpad, never in the repo.`,
     `Task ${t.id}: ${t.title}`,
     `Acceptance criteria: ${t.criteria}`,
     t.files ? `Files: ${[].concat(t.files).join(", ")}` : "Files: not specified",
@@ -443,7 +444,7 @@ async function resolveGate(t, a, baseSha, label) {
   const probe = await agent(
     [
       `Repo: ${a.repo}`,
-    `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
+      `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
       `Check whether the file scripts/checks/gate-tier.mjs exists there.`,
       `If it does not, report exists: false and gate: "".`,
       `If it does, run exactly \`${cmd}\` from the repo root and report exists: true and gate: "<its exact stdout, trimmed>". On a non-zero exit or empty stdout, report exists: true and gate: "".`,
