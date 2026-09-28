@@ -108,6 +108,27 @@ token, for example) comes back empty unless a command sources it explicitly per 
 `bash -c 'source ~/.local/secrets && echo -n $VAR'`. Working directory persists between Bash
 tool calls; sourced files and exported variables do not.
 
+The Bash tool runs each command through a wrapper shell (`bash -c ... eval`) whose argv carries
+the command text, so `pgrep -f PATTERN` or `pkill -f PATTERN` matches that wrapper whenever
+PATTERN appears in the command itself. `pkill` then kills its own shell (exit 144; found
+2026-09-15 when an overnight `pkill -f` killed the command that issued it), and `pgrep`
+reports a phantom process. Build the pattern so its literal text never appears: a bracket
+class (`pgrep -f 'chromium_headless_shel[l]'`), two variables joined at run time
+(`a=theme; b=-identity; pgrep -f "$a$b"`), or `pgrep -x`/`pkill -x` on the binary name. Treat a
+lone `pgrep` hit that is the query itself as no match.
+
+## /tmp is a quota'd tmpfs
+
+`/tmp` is a tmpfs mounted with `usrquota`: 8G total, 6275M per user. Claude session
+scratchpads (`/tmp/claude-1000/`) and the Go toolchain's build and link directory (`$TMPDIR`)
+both live there. Near the quota, a Go build fails with `link: mapping output file failed: disk
+quota exceeded` while `df` shows free space and a large write into the repo succeeds;
+`GOTMPDIR` does not help, since the failing write is the linker's own output mapping (seen
+2026-09-21, when two stale 1.1G repo copies from a leak check had the user at 6168M). On that
+error, run `quota -s -f /tmp`; if `space` is near `limit`, find the bulk with
+`du -sh /tmp/* | sort -h | tail` and delete stale scratch (old session scratchpads, experiment
+copies). A long session that writes gigabytes to its scratchpad eats the same quota.
+
 ## Update cadence and rollback
 
 Updates are checked automatically every 6 hours; a fetched system image applies at
@@ -158,6 +179,18 @@ sudo -A udevadm trigger`.
   Flatpak's sandbox blocks that for both. This isn't a preference, it's a hard
   incompatibility — don't suggest a Flatpak browser as a fallback for anything that
   needs either integration.
+
+### Showing Geoff a visual (Geoff, 2026-09-13, every repo)
+
+Before-and-after renders, mockups, screenshots, and HTML pages built for a visual decision
+open in the desktop browser by default, one tab per state, so he can tab between states, zoom,
+and compare at full size. Send them as files in the conversation as well only when he is away
+from the workstation. Firefox is for anything Geoff reads. Chromium is for a page Claude must
+drive itself through claude-in-chrome: the extension connects only once Chromium is running,
+and it refuses `file://` URLs, so serve the directory from the scratchpad with
+`python3 -m http.server <port> --bind 127.0.0.1` and open `http://127.0.0.1:<port>/...`, one
+`navigate` plus `tabs_create_mcp` per state. `tabs_create_mcp` can fail transiently while a
+tab is being dragged; retry it alone.
 
 Chromium policy files (telemetry, extensions, 1Password) are captured at
 `bluefin/etc/chromium-policies/` and installed to `/etc/chromium/policies/managed/`.

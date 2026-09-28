@@ -79,6 +79,44 @@ ruling record is the cairn-cms docs register, Visuals section
 (`~/Projects/cairn-cms/docs/internal/docs-register.md`) and the sitting behind it
 (`~/Projects/cairn-cms/docs/internal/record/2026-08-15-docs-visual-layer-rulings.md`).
 
+## Hand-authored SVG: the method that held up
+
+Harvested from the 2026-09-04 figures pipeline and front-door proposal before both were
+deleted (the initiative was declared dead on 2026-09-12; the frozen case record
+`~/Projects/cairn-cms/docs/internal/record/2026-09-04-cairn-case/` stays as history). Start
+from these rules when a page needs SVG, and never resurrect the deleted files from a session
+history.
+
+- **One authoring source, one emitter.** A single source file carries a shared `<style>` block
+  and one nested `<svg>` per figure; an emitter script promotes each to its own shipped file,
+  so palette, type stack, and ownership registers cannot drift between figures.
+- **Measure text floors from the rendered DOM** at the width the figure is read at: 12 CSS px
+  minimum (the anatomy figure landed at 12.15 px in a 720 px column at 0.90 scale, the concept
+  figure at 14 px full width). Character counts mislead at these sizes. A figure wider than the
+  column scrolls inside its `overflow-x: auto` figure rather than shrinking below the floor.
+- **Three ownership registers, one boundary stroke.** cairn-owned is a solid border plus a left
+  rule bar; developer-owned is a dashed border; outside actors (GitHub, Cloudflare) are a dotted
+  border with a pill radius. The app outline is a heavy solid stroke belonging to no owner,
+  because the boundary is the figure's subject and must stay the most visible line; drawing it
+  dashed would say the whole app is the developer's.
+- **Containment over legend.** In an anatomy figure, draw `src/content/` across the seam between
+  the cairn band and the developer band; containment is a relation the reader reads without a
+  legend. (The scaffold puts the adapter at `src/theme/cairn.config.ts`.)
+- **An `<img>` exposes only its alt.** A page embeds an SVG figure with `<img>`, so the SVG's own
+  `<title>` and `<desc>` are not exposed to assistive technology. Ship each SVG with a companion
+  note carrying the alt (about 150 characters), the caption, and the full text alternative.
+
+## Comparison figures
+
+A concept figure draws one system with its boundary (Geoff, 2026-09-04). A two-panel contrast
+argues by box count, which the eye reads before any label, and a box costs the same ink
+whether a vendor sells it or a developer writes it. Costs, drawbacks, and comparisons belong to
+the page prose, never the drawing, and that prose follows the register's comparisons rule (the
+cairn-cms docs register, "The front door": the alternative is drawn as a competent setup with
+its real advantages, cairn's own trade-offs beside them). Where a figure must show a contrast,
+no adjective grades either side, no vendor is named, and every sub-label is verifiable as a
+general statement.
+
 ## The gates do not exist yet
 
 `check:figures` and `check:visuals` are cairn-cms's mechanical floor for this standard:

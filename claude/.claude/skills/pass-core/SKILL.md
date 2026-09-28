@@ -33,7 +33,19 @@ Brainstorm scope: probe until the plan carries no open readings. On product, tas
 priority, scope, and budget questions, the brainstorm's length is never a cost to trim
 (Geoff, 2026-09-04). Method, idiom, and architecture questions are Claude's to decide from
 published evidence, the framework's convention, or best practice (Geoff, 2026-09-24/26);
-bring them as one design for approval and flag only the contestable points.
+bring them as one design for approval and flag only the contestable points. Design-system
+taste is Claude's too, the one exception to "taste goes to Geoff" (2026-09-27: "I'm not a big
+UI/UX guy, so I'm counting on you to make the system clean, simple, logical, and flexible"):
+token names, lever sets, and theme structure are decided from evidence, such as a harvest of
+the sites' real designs. A STATUS resume prompt saying "settle X with Geoff" does not override
+this when X is method; decide it, show the whole design, and ask one approval.
+
+Conform to conventions (Geoff, 2026-09-13). When a design fork has a widely used convention or
+a published standard on one side, take it unless it conflicts with the charter or a measured
+defect, and record the reason whenever the work departs from it. A documented exception beats a bespoke
+mechanism: a convention is borrowable by a developer extending the work, survives upgrades,
+and needs no local explanation, while a bespoke solution must be documented, enforced, and
+re-learned.
 
 **The spec is the owner's gate; a reviewed plan runs (Geoff, 2026-09-27).** Geoff reads every
 spec himself. A plan does not wait for his read: once it clears `spec-plan-review` at its
@@ -108,6 +120,15 @@ not specify; `model: fable` only when Opus 5.5 at `xhigh` still falls short.
   dispatch. A wrong claim found at review costs a full fix round.
 - **Read a tool's `--help` once** before a pass relies on it, and act on a tool's NOTE in
   an agent's report before the next dispatch.
+- **Verification a plan parks "for the owner" is Claude's (Geoff, 2026-09-21).** Run the
+  release candidate, the real-terminal check, the flag, or the theme yourself (the real
+  binary against Geoff's sites with the stored read credentials, a TUI through
+  `tui-visual-verify`), grade it fresh-context, and hand over the evidence. Only what this
+  machine cannot run (macOS launchd, Windows Task Scheduler) stays reasoned and disclosed. An
+  owner gate keeps the irreversible act (tag push, release, merge) and his go, never test
+  labour. Copy and taste questions are asked while he is present, a few at a time with
+  rendered previews, never parked for a later "editorial gate"; a string he words himself is
+  used verbatim.
 - **Verify locked build assumptions** (an export map, a module-resolution mechanism) against
   the real toolchain at the first task that touches them.
 - **Vale findings are tiered.** Only an error-tier finding drives a fix; warnings and

@@ -41,6 +41,15 @@ Gate notes for the args:
   `npm test -w packages/create-cairn-site`. The engine's root `npm test` drives Chromium and is
   never light.
 - The `tool` class gate is `make -C tool check`.
+- A lone unrelated test-file failure, or a component run printing `Cannot connect to the
+  server in 60 seconds`, is a known workstation trap before it is a regression:
+  `docs/internal/durable-gotchas.md` carries the rerun rule and the serialized heavy gate.
+
+The chassis (the showcase's `examples/showcase/src/chassis/` and `templates/waymark/`) is the
+code a developer copies, so whatever it does becomes their idiom, and its quality bar equals the
+engine's (Geoff, 2026-09-01). A chassis task takes the same pass class, review bar, and plan
+review an engine change of its kind would take, never a lighter tier: exemplar-grade code and
+the full cleanliness treatment.
 
 ## Closing a pass
 
