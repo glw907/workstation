@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# PreToolUse hook (Write|Edit): when the target is a file under a project's memory directory,
+# inject a reminder that a rule belongs in its execution path, not in memory. Never blocks.
+set -euo pipefail
+path=$(jq -r '.tool_input.file_path // empty')
+case "$path" in
+  "$HOME"/.claude/projects/*/memory/MEMORY.md|/var"$HOME"/.claude/projects/*/memory/MEMORY.md) exit 0 ;;
+  "$HOME"/.claude/projects/*/memory/*|/var"$HOME"/.claude/projects/*/memory/*) ;;
+  *) exit 0 ;;
+esac
+jq -n '{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: "Memory write check: if this records a rule, land it first in its execution path (the global or repo CLAUDE.md, a skill, an agent definition, a gate or test, or a tool), per the global CLAUDE.md \"A rule lives where it executes\". Memory holds only what no repo or workstation file can: a preference, or the why behind a ruling. A project memory reaches no other project."}}'
