@@ -30,7 +30,9 @@ the risk this process is built around:
 5. **The owner sitting**, on the consolidated rulings section.
 
 No prose, register, or conformance review runs on a spec or plan (Geoff, 2026-09-08: specs
-are not register-graded).
+are not register-graded). A spec or plan is written in whatever voice is most effective for
+Claude Code; the published-docs standards govern public-facing writing only (Geoff,
+2026-09-28).
 
 **Review depth scales by pass class** (the table in `pass-core`). `auth-data`,
 `engine-logic`, and any spec that introduces new mechanism take the full sequence. A `paint`,
