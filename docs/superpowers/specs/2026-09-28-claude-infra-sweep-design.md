@@ -415,9 +415,9 @@ in B4's commits.
 - A baseline query returns zero entries lettered `A-core` or `B`.
 - One fixture in B1's harness, not a second test file, carries the style-guide-sync plan's
   chain arguments as amendment 1 sets them: chains R and W in one invocation, W with
-  `classifier: false`. It asserts: W's prompts name no npm command; every W reduced round
-  renders the class default and no npm command; no reduced round carries a MISMATCH-blocking
-  line; W spawns no classifier probe; R's existence probe runs once, on `haiku`.
+  `classifier: false` and `reducedGate: "bash scripts/check.sh"`. It asserts: W's prompts
+  name no npm command; every W reduced round renders `bash scripts/check.sh` and no npm
+  command; no reduced round carries a MISMATCH-blocking line; W spawns no classifier probe; R's existence probe runs once, on `haiku`.
 
 ## Amendments to the style-guide-sync plan
 
@@ -427,8 +427,11 @@ S2, S3, and the ratchet's effect on chain W. The plan owns eight audit ids: PS-0
 DC-27 (W4), DC-28 (W4 per S3), and AW-24 with DC-26 and CS-15 (W2, W4).
 
 1. The Gates block drops only the `notes` sentence overriding the implementer's definition of
-   done (AW-19); the notes keep the absolute spec path. Chain W sets no `reducedGate`: its
-   reduced rounds run the class default (AW-01). Chain W sets `classifier: false` (AW-13).
+   done (AW-19); the notes keep the absolute spec path. Chain W sets
+   `reducedGate: "bash scripts/check.sh"`, in the same form as its named `gate` (AW-01). This
+   is step 1 of the resolution order, so both rulings hold: dotfiles has no separate type
+   check and W's docs rounds touch no test file, so the class default would run nothing, and
+   the light-lane gate is cheap. Chain W sets `classifier: false` (AW-13).
 2. W6 appends its phrases to `claude/.claude/tooling/retired-phrases.txt` and adds fixtures for
    them. It adds no second check to `scripts/check.sh`; A-core's scanner covers W6's scope for
    retired phrases. W6's class changes from `engine-logic` to `sweep`, whose mandate ("existing
