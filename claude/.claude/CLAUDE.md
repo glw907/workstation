@@ -161,7 +161,7 @@ context: pre-extract what they need. Slow, expensive, or weak: check which model
 **The conductor is thin:** it never reads a source file, a diff, a test log, or a gate
 transcript during execution, deciding only accept, re-dispatch with a correction, split,
 upshift, or stop; one caught reading diffs or grinding edits inline flags itself and
-dispatches. The plan-approval gate is the single human gate.
+dispatches. The spec read is the human gate; a reviewed plan runs.
 
 Each plan task runs as a chain: the repo's Sonnet implementer returns a fixed shape (files
 touched, gate result, uncovered decisions, anything it could not do); `diff-reviewer` reads the

@@ -35,6 +35,14 @@ priority, scope, and budget questions, the brainstorm's length is never a cost t
 published evidence, the framework's convention, or best practice (Geoff, 2026-09-24/26);
 bring them as one design for approval and flag only the contestable points.
 
+**The spec is the owner's gate; a reviewed plan runs (Geoff, 2026-09-27).** Geoff reads every
+spec himself. A plan does not wait for his read: once it clears `spec-plan-review` at its
+class's full depth, with blockers and majors closed and the verification read clean, the
+conductor executes it and names it in the next sitting's summary. Two things still stop it. A
+ruling or product fork in the plan's "Rulings for Geoff" section blocks the tasks it governs,
+and a fundamental architectural question the review reveals, one the spec did not settle, halts
+the pass for Geoff.
+
 **Plans stay outcome-only.** Each task states outcomes, constraints, acceptance criteria,
 files, and its pass class, never implementation code. This overrides `writing-plans`'
 full-code steps. Skip its "which execution method?" question; this skill answers it.
