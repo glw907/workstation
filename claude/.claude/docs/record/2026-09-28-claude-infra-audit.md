@@ -392,3 +392,11 @@ scans its CLAUDE.md.
 A, then B, then style-guide-sync, then C and D in parallel, then E. F runs per repo any time
 after A, except cairn-cms after the style-guide-sync merge. Each pass closes by removing its
 findings from the ratchet baseline, so the baseline's size is the remaining work.
+
+## Erratum (2026-09-28, after review)
+
+Section 1's DC-01 row, "code-simplifier per commit (global CLAUDE.md) against once per pass", was
+not stale text: `0a2e391` ("Slim the global CLAUDE.md") was written from a base older than
+`a7dd5ad` and reverted that ruling, DC-03's, and the "superpowers skills yield" ruling (TDD
+write-first only for `engine-logic` and `auth-data`), which this audit missed. Pass B4 of the
+sweep restores them.

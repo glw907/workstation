@@ -42,16 +42,19 @@ artifacts. github.com/glw907/workstation.
 
 ## Immediate next action
 
-Plan two of the cairn documentation standard: its handoff is
-`docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`. The infra round's deferred task 9 landed at `ce70b5f` (2026-09-23), with
-`pass-execute.js`'s stop-on-escalate option.
+Claude infra sweep, passes A-core then B: plan
+`docs/superpowers/plans/2026-09-28-infra-sweep-a-core-b.md` (spec
+`docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, audit
+`claude/.claude/docs/record/2026-09-28-claude-infra-audit.md`). Conducted from a cairn-cms session
+started 2026-09-28; task ledger below. After B merges, the cairn-cms style-guide-sync plan is
+re-baselined on the corrected infra, then A-rest, C and D, E, and the per-repo F chores follow.
 
-Owed, from the infra round's handoff: `cairn-cms/CLAUDE.md`'s own four-line pick and budget
-trim; poplar's `go-architecture-reader` adoption; whether `aksailingclub-org`, `xcathletes-org`,
-or `cairn-pub` wants a `CLAUDE.md` pointer at `~/.claude/instructions/`; whether the
-overnight-run runaway guard should become an armable script in `bin/.local/bin/`; the
-dubplate-implementer worktree gate-string note (a worktree lane must be told the dispatch's own
-absolute string wins).
+Ledger: pre-bake done; AC1 next.
+
+Owed, still open from the infra round's handoff: `cairn-cms/CLAUDE.md`'s own four-line pick and
+budget trim; poplar's `go-architecture-reader` adoption; whether the overnight-run runaway guard
+should become an armable script in `bin/.local/bin/`; the dubplate-implementer worktree
+gate-string note.
 
 ## Open items
 
