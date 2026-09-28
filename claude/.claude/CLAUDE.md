@@ -32,10 +32,10 @@ the other's commit, verify it, report verified.
 - **Key paths**: `~/Projects/` (repos), `~/.dotfiles/`, `~/.local/bin/` (scripts)
 - **Dev tools**: Node via mise, Python via uv, Go via Homebrew, Java 17 for Android
   (`~/Android/`, `ANDROID_HOME` set in `.bashrc`)
-- **Browsers**: Firefox (layered RPM) is the daily browser; Chromium (layered RPM, binary
-  `chromium-browser`) is the one Claude Code drives. Never a Flatpak build of either: the
-  sandbox blocks native messaging. Read `~/.claude/docs/bluefin-admin.md` before browser or
-  extension work.
+- **Browsers**: Firefox (layered RPM) is the daily browser, so every artifact or page Geoff
+  opens is built and checked Firefox-first; Chromium (`chromium-browser`) is the one Claude Code
+  drives. Never a Flatpak build of either (the sandbox blocks native messaging); read
+  `~/.claude/docs/bluefin-admin.md` before browser work.
 
 ## Sysadmin Preferences
 
