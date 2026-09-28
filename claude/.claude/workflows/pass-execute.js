@@ -385,6 +385,10 @@ function reviewPrompt(t, a, implReport, resolvedGate, reduced) {
     return new RegExp(`^${pattern}$`).test(gateCore(ran));
   };
   const classReduced = cls && reduced;
+  // WATCH: a gate string that adds a test file the criteria permit (a new sibling test on the
+  // unit leg) differs from the resolved string, so it reads as a MISMATCH the reviewer escalates
+  // (theme identity pass A, segment B). If it recurs, let the resolved gate accept an added test
+  // path under the task's Files.
   const mismatch =
     !classReduced && resolvedGate.gate && implReport.gateCommand && !gateMatches(implReport.gateCommand, resolvedGate.gate)
       ? `MISMATCH: the runner independently resolved a different gate string ("${resolvedGate.gate}") than the implementer reports running. Treat this mismatch itself as a blocking finding.`
