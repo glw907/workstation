@@ -371,11 +371,22 @@ function reviewPrompt(t, a, implReport, resolvedGate, reduced) {
   const gateCore = (s) => {
     const last = String(s).trim().split("\n").pop().trim();
     const wrapped = last.match(/cairn-run-gate\s+'([^']+)'/);
-    return wrapped ? wrapped[1] : last;
+    const cmd = wrapped ? wrapped[1] : last;
+    // An absolute repo path and a repo-relative one name the same target; so does extra spacing.
+    return cmd.split(`${a.repo}/`).join("").replace(/\s+/g, " ").trim();
+  };
+  // A task gate may carry a `<placeholder>` the implementer fills in (for example
+  // `<the touched unit test files>`); the placeholder matches any non-empty text.
+  const gateMatches = (ran, resolved) => {
+    const pattern = gateCore(resolved)
+      .split(/<[^<>]+>/)
+      .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join(".+?");
+    return new RegExp(`^${pattern}$`).test(gateCore(ran));
   };
   const classReduced = cls && reduced;
   const mismatch =
-    !classReduced && resolvedGate.gate && implReport.gateCommand && gateCore(implReport.gateCommand) !== gateCore(resolvedGate.gate)
+    !classReduced && resolvedGate.gate && implReport.gateCommand && !gateMatches(implReport.gateCommand, resolvedGate.gate)
       ? `MISMATCH: the runner independently resolved a different gate string ("${resolvedGate.gate}") than the implementer reports running. Treat this mismatch itself as a blocking finding.`
       : "";
   return [
