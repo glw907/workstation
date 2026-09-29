@@ -26,8 +26,6 @@ fixture can point them at an injected tree; verify also takes --projects-root (d
 ${VAR} form and resolve at runtime from ~/.local/secrets. See
 ~/.claude/docs/claude-tooling.md for the rules.
 """
-from __future__ import annotations
-
 import argparse
 import json
 import subprocess

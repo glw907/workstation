@@ -67,10 +67,18 @@ by grepping the subagent transcript's `"model"` field, never from the agent's ow
 ```
 claude-tooling-sync apply                 # add manifest servers missing at user scope
 claude-tooling-sync verify                # drift report; exit 1 on drift (check-drift runs it)
+claude-tooling-sync verify --home <dir> --projects-root <dir>  # point verify at an injected tree
 claude-tooling-sync update-skills [name]  # re-fetch vendored skills, rewrite the pinned commit
+claude-tooling-sync lint --root <tree>    # tree-only manifest and unmanifested-skill checks;
+                                           # check.sh runs `lint --root .` from a worktree's own
+                                           # checkout, never through ~/.claude
 claude mcp list                           # connection health per server
 claude plugin details <plugin>            # a plugin's components and token cost
 ```
+
+`verify` also fails when a personal skill's name equals a `~/Projects/*/.claude/skills/<name>`
+project skill (personal shadows project); `--projects-root` points the collision check at an
+injected tree instead of the real `~/Projects`.
 
 Adding a user-scope server: write its entry in `mcp-servers.json` (with a `_why`), run
 `apply`, verify with `claude mcp get <name>` (with the secrets sourced), add the CLAUDE.md
