@@ -212,8 +212,16 @@ an explicit opt-in flag. `kitty-headless-shot --help` is the spec. Run
 the first deliberate use of the distrobox tier on this workstation, so it is also the
 precedent: a container is the right home for an X/Wayland server, Mesa, and
 ImageMagick when the host's own copies can't do the job headless (the host's
-ImageMagick has no X11 delegate wired up, and a GNOME screenshot portal or D-Bus route
-is denied or interactive).
+ImageMagick has no X11 delegate wired up).
+
+A live-desktop capture does work (verified 2026-09-29): call
+`org.freedesktop.portal.Screenshot.Screenshot` with `interactive: false` and wait for
+the `Request.Response` signal. The permission store already grants unsandboxed apps
+(`flatpak permissions screenshot`), so no prompt appears. It captures the whole screen
+and writes `~/Pictures/Screenshot-N.png`, so move the file out afterward. GNOME
+focus-stealing prevention stops a script from raising a window, so ask Geoff to bring
+the window forward and take one capture after he confirms. Never run a capture loop:
+he asked for it to stop.
 
 ## SELinux for restored data
 
