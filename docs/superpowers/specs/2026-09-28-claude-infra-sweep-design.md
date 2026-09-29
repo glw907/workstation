@@ -483,7 +483,10 @@ A-core. Each new check registers its id and seeds its entries in the same commit
   (prefix it) or in none (dead); a multi-repo path or a placeholder (`<`, `{`, `YYYY`) passes
   (AW-14, AW-15, PS-21, DC-12, DC-13). A quoted version range in a repo CLAUDE.md fails (DC-14).
   The context budget becomes a baselined check id with a 200-line cap per CLAUDE.md, lettered E
-  for the global file and F per repo (DC-02).
+  for the global file and F per repo (DC-02), plus a combined budget over everything a session
+  loads before its first turn (the global CLAUDE.md, its `@`-imports, the output style, and the
+  in-scope repo's CLAUDE.md), so growth one reasonable line at a time fails the gate at the line
+  that crosses it.
 - **Seat check.** `claude/.claude/tooling/seats.json` maps each agent to its seat: `model`,
   `effort` (a missing `effort:` is a violation), a one-line `why` for each non-default effort, and
   `omitClaudeMd` (decided in E). `model-economy.md` "Current state" keeps its heading and the why,
@@ -499,6 +502,21 @@ A-core. Each new check registers its id and seeds its entries in the same commit
 - **`/doctor prompt-audit` before seeding.** The conductor runs it once over `~/.claude` before
   A-rest's first seed. Each finding the checks do not cover becomes a `GA-nn` entry or a C or D
   item, listed in the close.
+- **Monthly drift routine (Geoff, 2026-09-28).** A scheduled cloud agent, made through the
+  `schedule` skill, runs monthly: `/doctor prompt-audit` over `~/.claude`, the ratchet summary per
+  check id and pass label, and a comparison of the baseline's size against the previous run's
+  recorded size. It emails Geoff only when the baseline grew, a check id's count rose, or the
+  audit reports a finding no check covers; a quiet month sends nothing. Its state (last size and
+  counts) lives where the routine can read it back, and its prompt names this spec and the audit
+  record as context. Acceptance: one dry run on today's tree reports no drift, and one run
+  against a planted baseline growth reports it.
+- **Release trigger for Anthropic practice (Geoff, 2026-09-28).** The existing monthly Claude Code
+  guidance-schema routine (`trig_01UyjoYo9hbGqm7qTeb7HGVH`, recorded in cairn-cms STATUS) widens:
+  when a new Claude model or Claude Code release has shipped since its last run, it re-fetches the
+  pages this spec's "Anthropic practice" section cites, grades the infra against them the way the
+  review's Anthropic-practice lens did, and emails only a new or changed practice with the file it
+  affects. Guidance changes with releases, not the calendar; the monthly cadence only checks
+  whether a release happened.
 - **Wiring.** `pass-core`'s close gains one step: the reference checker in cross-repo mode over the
   closing worktree, `claude-tooling-sync verify` for that repo's agents, and the context budget;
   `cairn-pass` and `site-pass` supply the commands; the supersession step (RC3) lands in the same
