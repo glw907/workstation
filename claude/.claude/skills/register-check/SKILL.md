@@ -24,10 +24,9 @@ Gate 2, not automatic defects.
 
 ## Gate 2: register (the editor's ear)
 
-Dispatch the `cairn-register-editor` agent on the target(s). Its definition carries the tell
-catalogue, the frame rules, the sanctioned-phrase list, and the corpus pointers; give it only
-the file paths and any session-specific sanctioned phrases the definition doesn't know yet.
-It returns ranked findings with proposed rewrites.
+Dispatch the `cairn-register-editor` agent on the target(s). It reads the register's briefs
+itself and loads no corpus; give it the file paths, each file's track, and any session-specific
+sanctioned phrases the definition doesn't know yet. It returns ranked findings with proposed rewrites.
 
 ## Gate 3: logic and facts (the Russell and empirical dimension)
 

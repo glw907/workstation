@@ -113,8 +113,10 @@ editors, extend, why-cairn) is frozen against rewrites until that arm's own stag
 (extend's at the 2b merge), open to fixes in the meantime: a deficiency you discover
 (a missing step, a missing worked example, a wrong warning, a stale command) gets fixed on the
 page in the same task, gated by that page's own gates, with the fact bullet filed alongside.
-That fix is agent-facing, not register-graded: source, engine version, and why, in whatever
-shape holds the most information; Vale's error tier still runs, no prose review or polish.
+On a published page the fix is written to the track's drafting brief in the cairn-cms
+`docs/internal/docs-register.md`, with no register review or polish, and Vale's error tier still
+runs. On an internal doc the fix is agent-facing: source, engine version, and why, in whatever
+shape holds the most information.
 A new or edited bullet carries its stable fact id, minted once per the facts README, never
 derived from the bullet's text; `npm run check:facts` enforces it.
 
