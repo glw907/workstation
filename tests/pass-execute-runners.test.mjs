@@ -45,10 +45,10 @@ async function runChecks() {
 // -------------------------------------------------------------------------------------------
 
 const INTERNALS = [
-  "main", "PASS_CLASSES", "CLASS_DEFAULT_REDUCED_GATE", "gateCore", "gateMatches",
-  "classOf", "reducedGateFor", "applyClassBar", "taskStatus", "IMPL_SCHEMA", "REVIEW_SCHEMA",
-  "recordBaseSha", "resolveGate", "resolveClassifier", "implementPrompt", "reviewPrompt",
-  "validateArgs", "runTask", "runChain", "tally"
+  "main", "PASS_CLASSES", "CLASS_DEFAULT_REDUCED_GATE", "DEFAULT_REVIEWER_MODEL", "gateCore",
+  "gateMatches", "classOf", "reducedGateFor", "applyClassBar", "taskStatus", "IMPL_SCHEMA",
+  "REVIEW_SCHEMA", "recordBaseSha", "resolveGate", "resolveClassifier", "implementPrompt",
+  "reviewPrompt", "validateArgs", "runTask", "runChain", "tally"
 ];
 
 function loadFactory(src) {
@@ -159,10 +159,13 @@ function extractCall(src, startIndex) {
   throw new Error(`unbalanced parens scanning from index ${startIndex}`);
 }
 
-// A dispatch that names `agentType` (the implementer) is exempt: its model comes from the
-// implementer's own frontmatter pin unless the task overrides it with `t.model`, which the
-// conditional-spread pattern keeps out of the call's own literal text. Every other agent( call
-// (a probe, a reviewer dispatch) still owes a literal model: in its own call text.
+// Only the implementer dispatch (the two `agent(implementPrompt(...), { ..., ...implOpts })`
+// calls per runner, first round and fix round) is exempt, and only because of its `...implOpts`
+// spread: an unset t.model leaves the implementer's own frontmatter pin standing, and a set
+// t.model reaches the call through that spread rather than a literal `model:` key, so the call's
+// own text can carry no literal model: for either case. Every other agent( call, including both
+// reviewer dispatches in each runner (which always pass a literal `model: reviewerModel`), still
+// owes a literal model: in its own call text.
 function agentCallsMissingModel(src) {
   const offenders = [];
   const re = /(^|[^.\w])agent\(/g;
@@ -170,7 +173,7 @@ function agentCallsMissingModel(src) {
   while ((m = re.exec(src))) {
     const start = m.index + m[0].length - "agent(".length;
     const callText = extractCall(src, start);
-    if (/\bagentType\s*:/.test(callText)) {
+    if (/\.\.\.implOpts\b/.test(callText)) {
       continue;
     }
     if (!/\bmodel\s*:/.test(callText)) {
@@ -585,7 +588,7 @@ check("pass-execute.js: classifier absent spawns exactly one cached probe across
 // General robustness: every agent( call names a model; the launch NOTE prints at main()'s start.
 // -------------------------------------------------------------------------------------------
 
-check("no agent( call lacks an explicit model:, except an implementer dispatch (agentType) left to its own frontmatter pin (both runners)", () => {
+check("no agent( call lacks an explicit model:, except an implementer dispatch (...implOpts) left to its own frontmatter pin (both runners)", () => {
   for (const [name, src] of [["pass-execute.js", SEQ_SRC], ["pass-execute-chains.js", CHAINS_SRC]]) {
     const offenders = agentCallsMissingModel(src);
     assert.deepEqual(offenders, [], `${name}: agent( calls at line(s) ${offenders.join(", ")} name no model`);
@@ -614,6 +617,8 @@ check("the implementer dispatch omits model when t.model is unset, and passes it
   assert.equal(impl1.opts.agentType, "cairn-implementer");
   assert.ok(!("model" in impl1.opts), "an undeclared task must not override the implementer's own frontmatter model pin");
   assert.equal(impl2.opts.model, "opus", "a task's own model override must reach the dispatch");
+  const review1 = agent.calls.find((c) => c.label === "review:1");
+  assert.equal(review1.opts.model, bundle.DEFAULT_REVIEWER_MODEL, "the reviewer dispatch always carries a literal model, unlike the exempt implementer dispatch");
 });
 
 check("the implementer dispatch omits model when t.model is unset, and passes it verbatim when set (pass-execute-chains.js)", async () => {
@@ -639,6 +644,8 @@ check("the implementer dispatch omits model when t.model is unset, and passes it
   assert.equal(impl1.opts.agentType, "cairn-implementer");
   assert.ok(!("model" in impl1.opts), "an undeclared task must not override the implementer's own frontmatter model pin");
   assert.equal(impl2.opts.model, "opus", "a task's own model override must reach the dispatch");
+  const review1 = agent.calls.find((c) => c.label === "review:1");
+  assert.equal(review1.opts.model, bundle.DEFAULT_REVIEWER_MODEL, "the reviewer dispatch always carries a literal model, unlike the exempt implementer dispatch");
 });
 
 check("the launch NOTE prints, naming the runaway guard and the wake-up (pass-execute.js)", async () => {

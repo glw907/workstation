@@ -14,6 +14,8 @@
 //       reviewer: "diff-reviewer",       // optional, defaults below
 //       maxFix: 1,                        // optional, defaults below
 //       parallel: false,                  // optional, defaults to sequential
+//       classifier: true,                 // optional; an explicit boolean skips the gate-tier
+//                                         // existence probe (see "Classifier caching" below).
 //       reducedGate: "...",               // optional; the gate string a fix round runs
 //                                         // when every blocking finding is commentOnly
 //                                         // (or, under a passClass, commentOnly/testOnly).
@@ -87,6 +89,12 @@
 // at about 4.4 test lines per source line, and every test-only fix round reran the full gate.
 // Without a passClass every prompt and verdict is exactly the pre-class behavior.
 // Keep PASS_CLASSES in step with pass-execute-chains.js.
+
+// Classifier caching (AW-13): `args.classifier`, when explicit, else one cached existence probe
+// (`model: "haiku"`) for whether `args.repo` carries `scripts/checks/gate-tier.mjs`, run once
+// for the whole run and reused for every task, rather than once per task. `classifier: false`
+// skips the probe entirely: no per-task tier probe ever runs, and the implementer prompt
+// renders no classifier paragraph.
 
 export const meta = {
   name: "pass-execute",
