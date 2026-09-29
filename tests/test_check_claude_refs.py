@@ -23,6 +23,46 @@ PY = shutil.which("python3") or sys.executable
 CHECKS = {"dead-reference": {"tool": "scripts/check-claude-refs.py"},
           "retired-phrase": {"tool": "scripts/check-claude-refs.py"}}
 
+# Runs a script under an audit hook that records every path it opens, lists, or hands to a
+# subprocess, minus the interpreter's own install tree. Mirrors tests/test_ratchet.py's
+# AUDIT_WRAPPER (M2's pattern), reused here for check-claude-refs.py directly.
+AUDIT_WRAPPER = r"""
+import atexit, json, os, runpy, sys, sysconfig
+log = os.environ["RATCHET_AUDIT_LOG"]
+own = {os.path.realpath(sysconfig.get_paths()[k])
+       for k in ("stdlib", "platstdlib", "purelib", "platlib")}
+seen = []
+def note(p):
+    if isinstance(p, int) or p is None:
+        return
+    p = os.path.realpath(os.path.abspath(os.fsdecode(p)))
+    if p.startswith("/dev/") or any(p == o or p.startswith(o + os.sep) for o in own):
+        return
+    seen.append(p)
+def hook(event, args):
+    if event == "open" or event in ("os.listdir", "os.scandir"):
+        if args:
+            note(args[0])
+    elif event == "subprocess.Popen":
+        note(args[2])
+        for a in ([] if isinstance(args[1], (str, bytes)) else list(args[1])[1:]):
+            if isinstance(a, (str, bytes)) and os.fsdecode(a).startswith("/"):
+                note(a)
+target = sys.argv[1]
+sys.argv = sys.argv[1:]
+atexit.register(lambda: open(log, "w").write(json.dumps(seen)))
+sys.addaudithook(hook)
+runpy.run_path(target, run_name="__main__")
+"""
+
+
+def outside_reads(log, allowed):
+    """Return every audited path not under one of the allowed roots."""
+    allowed = [os.path.realpath(a) for a in allowed]
+    paths = json.loads(Path(log).read_text())
+    return sorted({p for p in paths
+                   if not any(p == a or p.startswith(a + os.sep) for a in allowed)})
+
 
 def entry(check, file, fingerprint, finding="GA-01", label="C", defect="an example defect"):
     """Build one baseline entry for the given check, file, and fingerprint."""
@@ -58,6 +98,11 @@ class Fixture:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text)
 
+    def write_in_home(self, rel, text):
+        path = self.home / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+
     def write_bin(self, name):
         path = self.root / "bin" / ".local" / "bin" / name
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -77,6 +122,27 @@ class Fixture:
             [PY, str(RATCHET), "check", "--root", str(self.root), "--home", str(self.home)],
             capture_output=True, text=True, env=env)
 
+    def audited_check(self):
+        """Run the fixture's own check-claude-refs.py ratchet-report under the audit wrapper.
+
+        Passes --projects-root and --memory-root (M2's roots contract) and asserts every path
+        the run opens, lists, or hands to a subprocess sits under the fixture root, proving self
+        mode reaches nothing outside it even with those extra roots injected.
+        """
+        log = self.tmp / "audit.json"
+        projects, memory = self.tmp / "projects", self.tmp / "memory"
+        module = self.root / "scripts" / "check-claude-refs.py"
+        env = {**os.environ, "HOME": str(self.home), "GIT_CONFIG_NOSYSTEM": "1",
+               "RATCHET_AUDIT_LOG": str(log)}
+        proc = subprocess.run(
+            [PY, "-c", AUDIT_WRAPPER, str(module), "ratchet-report",
+             "--root", str(self.root), "--home", str(self.home),
+             "--projects-root", str(projects), "--memory-root", str(memory)],
+            capture_output=True, text=True, env=env)
+        stray = outside_reads(log, [self.tmp])
+        assert not stray, f"read outside the fixture root: {stray}"
+        return proc
+
 
 @pytest.fixture
 def fx(tmp_path):
@@ -94,6 +160,13 @@ def out(proc):
 
 def test_f1_doc_deleted_only_in_the_fixture_tree_is_a_dead_path(fx):
     fx.write("claude/.claude/docs/a.md", "See `~/.claude/docs/gone.md` for detail.\n")
+    # The real workstation's ~/.claude is a stow symlink into ~/.dotfiles main, so a naive
+    # --home resolution finds a deleted-only-in-the-worktree doc anyway (Review focus 3). Seed
+    # both shapes a home-based resolution could hit, so this row only passes when resolution
+    # goes through root's self-mode rewrite, never through home.
+    fx.write_in_home(".claude/docs/gone.md", "still present via a literal ~/.claude/... home\n")
+    fx.write_in_home(".dotfiles/claude/.claude/docs/gone.md",
+                     "still present via the dotfiles checkout under home\n")
     fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 1
@@ -179,10 +252,31 @@ def test_f8_retired_phrase_under_skills_synced_and_dead_path_under_docs_record_b
     fx.phrases("sleep 30\n")
     fx.write("claude/.claude/skills/synced/example/SKILL.md",
              "---\nname: example\n---\n\nPoll it with `sleep 30` between checks.\n")
-    fx.write("claude/.claude/docs/record/2026-01-01-old-note.md",
+    # An undated name isolates the docs/record exclusion: a dated file would also be caught by
+    # the separate "dated path component" exclusion, so this row would pass even if the
+    # docs/record exclusion broke.
+    fx.write("claude/.claude/docs/record/old-note.md",
              "See `~/.claude/docs/gone.md` for the old plan.\n")
     fx.baseline([])
     proc = fx.check()
+    assert proc.returncode == 0, out(proc)
+
+
+# ---- Self-mode reach: stowed dirs only, and no read outside the fixture root ----
+
+
+def test_a_non_stowed_claude_projects_path_is_out_of_self_mode_reach(fx):
+    fx.write("claude/.claude/docs/a.md",
+             "See `~/.claude/projects/some-session.jsonl` for the transcript.\n")
+    fx.baseline([])
+    proc = fx.check()
+    assert proc.returncode == 0, out(proc)
+
+
+def test_audited_run_with_injected_roots_reads_nothing_outside_the_fixture_root(fx):
+    fx.write("claude/.claude/docs/a.md", "nothing to see\n")
+    fx.baseline([])
+    proc = fx.audited_check()
     assert proc.returncode == 0, out(proc)
 
 

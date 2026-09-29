@@ -3,11 +3,14 @@
 # case-insensitive substring, tolerant of a line-wrap inside the phrase. `#` starts a comment.
 # An empty list (after stripping comments) is a configuration error: a vacuous tripwire.
 #
-# The cairn-cms twin (the style-guide-sync plan's R8) uses the same semantics, over its own
-# list at cairn-cms's own path.
+# The cairn-cms twin (the style-guide-sync plan's R8) uses the same semantics over its own list
+# at cairn-cms's own path, and should adopt this list's line-wrap tolerance too.
 #
 # Every ruling that supersedes text adds the superseded phrase here in the same commit (the
-# supersession sweep rule); the pass that fixes the last hit removes the phrase in that commit.
+# supersession sweep rule). A phrase stays listed permanently: the commit that fixes the last
+# hit removes that phrase's baseline entries, never the phrase itself. A retired phrase has no
+# hit when the scanner reports zero matches and the baseline holds no entry with that phrase as
+# its fingerprint.
 
 # DC-01: the 2026-09-27 ruling moved code-simplifier to once per pass or branch, at the close;
 # 0a2e391 reverted it to a per-commit bullet. Fixed in pass B4.

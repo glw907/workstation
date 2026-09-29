@@ -11,9 +11,12 @@ and ``.js``; ``.json`` and other data files never carry prose citations or retir
 
 ``dead-reference``: every single-backtick span in a scanned ``.md`` file that looks like a path
 (it starts with ``~`` or ``/``) must resolve. This is self mode: a ``~/.claude/<dir>/...`` span
-rewrites to ``<root>/claude/.claude/<dir>/...`` and a ``~/.local/bin/<x>`` span to
-``<root>/bin/.local/bin/<x>``, so a worktree that adds or deletes a doc is judged on its own
-tree. A span into ``~/Projects`` (tilde or the injected home's literal expansion) or a bare
+rewrites to ``<root>/claude/.claude/<dir>/...`` only when ``<dir>`` is a stowed entry (the
+scanned dirs, ``tooling``, or the bare ``CLAUDE.md``); an unstowed ``~/.claude`` subpath (for
+example ``~/.claude/projects/...``, Claude Code's own session state) is out of self-mode reach
+and is never checked. A ``~/.local/bin/<x>`` span rewrites to ``<root>/bin/.local/bin/<x>``, so
+a worktree that adds or deletes a doc is judged on its own tree. A span into ``~/Projects``
+(tilde or the injected home's literal expansion) or a bare
 repo-relative span (no leading ``~`` or ``/``) belongs to cross-repo mode and is never checked
 here. A span carrying a placeholder (``<``, ``{``, ``*``, or an ellipsis) always passes,
 unchecked. A bare single-segment absolute span with no further ``/`` (``/loop``, ``/etc``) is
@@ -62,6 +65,7 @@ IMPLEMENTS = (DEAD_REFERENCE, RETIRED_PHRASE)
 
 RETIRED_PHRASES_PATH = "claude/.claude/tooling/retired-phrases.txt"
 CLAUDE_DIR = ("agents", "skills", "workflows", "docs", "output-styles", "instructions")
+STOWED_CLAUDE_ENTRIES = CLAUDE_DIR + ("tooling", "CLAUDE.md")
 SCAN_EXTENSIONS = (".md", ".js")
 
 BACKTICK_SPAN = re.compile(r"`([^`\n]+)`")
@@ -133,7 +137,11 @@ def is_in_home_projects(candidate, home):
 def resolve_self_mode(raw, root, home):
     """Return the Path a self-mode span resolves to, or None if out of self-mode reach.
 
-    ``~/.claude/<dir>/...`` and ``~/.local/bin/<x>`` rewrite under ``root``. A span into
+    ``~/.claude/<dir>/...`` rewrites under ``root`` only when ``<dir>`` is one of the stowed
+    entries (``STOWED_CLAUDE_ENTRIES``: the scanned dirs, ``tooling``, and the bare
+    ``CLAUDE.md``); a span into an unstowed ``~/.claude`` subpath (``~/.claude/projects/...``,
+    Claude Code's own session state) is out of self-mode reach and returns None, never resolved
+    against the real filesystem. ``~/.local/bin/<x>`` also rewrites under ``root``. A span into
     ``~/Projects`` (tilde or the home's literal absolute form) and a bare repo-relative span
     belong to cross-repo mode and return None. A placeholder span, a protocol-relative URL
     (``//host/...``), and a bare single-segment absolute span (no further ``/``, a slash
@@ -143,7 +151,11 @@ def resolve_self_mode(raw, root, home):
     if PLACEHOLDER.search(raw) or raw.startswith("//"):
         return None
     if raw.startswith("~/.claude/"):
-        return root / "claude" / ".claude" / raw[len("~/.claude/"):]
+        rest = raw[len("~/.claude/"):]
+        top = rest.split("/", 1)[0]
+        if top not in STOWED_CLAUDE_ENTRIES:
+            return None
+        return root / "claude" / ".claude" / rest
     if raw.startswith("~/.local/bin/"):
         return root / "bin" / ".local" / "bin" / raw[len("~/.local/bin/"):]
     if raw.startswith("~/Projects/") or raw == "~/Projects":
