@@ -49,7 +49,7 @@ Claude infra sweep, passes A-core then B: plan
 started 2026-09-28; task ledger below. After B merges, the cairn-cms style-guide-sync plan is
 re-baselined on the corrected infra, then A-rest, C and D, E, and the per-repo F chores follow.
 
-Ledger: pre-bake done; AC1 next.
+Ledger: A-core done (AC1 `97cdbe7`, AC2 `1e2ed74`, AC3 `1bd1549`); merging to `main`, then B1.
 
 Owed, still open from the infra round's handoff: `cairn-cms/CLAUDE.md`'s own four-line pick and
 budget trim; poplar's `go-architecture-reader` adoption; whether the overnight-run runaway guard

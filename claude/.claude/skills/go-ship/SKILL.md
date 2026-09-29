@@ -1,14 +1,13 @@
 ---
-name: ship
+name: go-ship
 description: >
   Use when Go implementation work is done and ready to ship. Runs the
   full quality pipeline: make check, /simplify, commit, push, and
-  make install. Trigger on: "ship it", "ship", "done, ship",
-  "review commit and install", "finish up", or when the user indicates
-  Go work is complete and wants the standard ship workflow.
+  make install.
+disable-model-invocation: true
 ---
 
-# Ship
+# Go ship
 
 Simplify, commit, push, and install a Go project in one pass. Go
 conventions are enforced by the `go-conventions` skill plus project

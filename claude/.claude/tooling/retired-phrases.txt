@@ -1,0 +1,50 @@
+# Phrases superseded by a ratified ruling. scripts/check-claude-refs.py fails on any listed
+# phrase outside a line also carrying the literal marker `retired-ok`; the match is a
+# case-insensitive substring, tolerant of a line-wrap inside the phrase. `#` starts a comment.
+# An empty list (after stripping comments) is a configuration error: a vacuous tripwire.
+#
+# The cairn-cms twin (the style-guide-sync plan's R8) uses the same semantics over its own list
+# at cairn-cms's own path, and should adopt this list's line-wrap tolerance too.
+#
+# Every ruling that supersedes text adds the superseded phrase here in the same commit (the
+# supersession sweep rule). A phrase stays listed permanently: the commit that fixes the last
+# hit removes that phrase's baseline entries, never the phrase itself. A retired phrase has no
+# hit when the scanner reports zero matches and the baseline holds no entry with that phrase as
+# its fingerprint.
+
+# DC-01: the 2026-09-27 ruling moved code-simplifier to once per pass or branch, at the close;
+# 0a2e391 reverted it to a per-commit bullet. Fixed in pass B4.
+Before committing code changes, dispatch
+
+# DC-03: the 2026-09-27 ruling replaced "the repo's full gate" per task with the pass class's
+# per-task gate, routed through pass-core. Fixed in pass B4.
+the repo's full gate runs inside the chain
+
+# DC-04: the sleep inhibitor has been tool-held since 2026-09-23; no session arms it by hand.
+# Fixed in pass B4.
+arm the runaway guard and the sleep inhibitor
+
+# DC-30: the memory rule holds only a preference or a ruling's why, never a blanket "refresh
+# memory" pre-bake step. Fixed in pass B4.
+point STATUS at it, refresh memory
+
+# DC-06: the global CLAUDE.md "Conducting a pass" section and model-economy.md now hold the
+# conductor seat rule for the whole pass, not only post-cutoff; Fable does not always conduct.
+# Fixed in pass C.
+Fable now conducts plan through execution in one session
+
+# PS-04: the six checks this once called "CI-only" all run in `npm run check:close` now.
+# Fixed in pass C.
+the six CI-only checks the local ritual otherwise skips
+
+# PS-05: check:figures and check:visuals exist; the heading claiming otherwise is stale.
+# Fixed in pass C.
+The gates do not exist yet
+
+# AW-07: the spent cairn-overnight-to-release.js workflow polls with a raw sleep instead of
+# cairn-run-gate. Fixed (by deletion) in pass B4.
+sleep 30
+
+# CS-4: the installed Go toolchain has moved past the pinned "currently 1.26" claim; go-conventions
+# takes no pinned version. Fixed in pass D.
+currently 1.26

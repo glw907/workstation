@@ -9,37 +9,70 @@ and is the manifest.
 Commands:
   apply            add every manifest MCP server missing from user scope (idempotent)
   verify           report drift: servers missing or extra at user scope, skills missing
-                   or without SKILL.md, plugins enabled but not installed; exit 1 on drift
+                   or without SKILL.md, plugins enabled but not installed, a personal
+                   skill whose name shadows a project skill; exit 1 on drift
   update-skills [NAME ...]
                    re-fetch vendored skills from their source repos at the default
                    branch and rewrite the pinned commit in the manifest
+  lint --root TREE
+                   tree-only checks against TREE's own copy: vendored-skills.json is
+                   well formed, and every skills/<dir> carrying a LICENSE* file has a
+                   manifest entry. Runs from a worktree's own checkout (check.sh calls
+                   it as `claude-tooling-sync lint --root .`), never through ~/.claude.
 
-Secrets never appear here: env values stay in ${VAR} form and resolve at runtime from
-~/.local/secrets. See ~/.claude/docs/claude-tooling.md for the rules.
+apply, verify, and update-skills take --home (default the real home directory) so a
+fixture can point them at an injected tree; verify also takes --projects-root (default
+<home>/Projects) for the collision check. Secrets never appear here: env values stay in
+${VAR} form and resolve at runtime from ~/.local/secrets. See
+~/.claude/docs/claude-tooling.md for the rules.
 """
+import argparse
 import json
-import os
 import subprocess
 import sys
+from collections import defaultdict
 from pathlib import Path
 
-HOME = Path.home()
-TOOLING = HOME / ".dotfiles" / "claude" / ".claude" / "tooling"
-SKILLS = HOME / ".dotfiles" / "claude" / ".claude" / "skills"
-CLAUDE_JSON = HOME / ".claude.json"
-SETTINGS = HOME / ".dotfiles" / "claude" / ".claude" / "settings.json"
+MANIFEST_FIELDS = ("repo", "path", "branch", "commit", "license")
+
+
+class ConfigError(Exception):
+    """A missing or malformed manifest, or a malformed entry: exit 2."""
+
+    def __init__(self, problems):
+        super().__init__("\n".join(problems))
+        self.problems = problems
+
+
+class Paths:
+    """The manifest and machine-state locations under one home directory."""
+
+    def __init__(self, home):
+        self.home = home
+        self.tooling = home / ".dotfiles" / "claude" / ".claude" / "tooling"
+        self.skills = home / ".dotfiles" / "claude" / ".claude" / "skills"
+        self.claude_json = home / ".claude.json"
+        self.settings = home / ".dotfiles" / "claude" / ".claude" / "settings.json"
 
 
 def load(path):
-    with open(path) as f:
-        return json.load(f)
+    """Parse path as JSON; raise ConfigError naming the path on any failure."""
+    try:
+        text = path.read_text()
+    except OSError as err:
+        raise ConfigError([f"{path}: {err.strerror}"]) from None
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as err:
+        raise ConfigError([f"{path}: bad JSON: {err}"]) from None
 
 
-def user_servers():
-    """Return the user-scope MCP servers as Claude Code stores them."""
-    if not CLAUDE_JSON.exists():
-        return {}
-    return load(CLAUDE_JSON).get("mcpServers", {}) or {}
+def require_object(data, key, source):
+    """Return data[key] if data and data[key] are objects, else raise ConfigError."""
+    value = data.get(key) if isinstance(data, dict) else None
+    if not isinstance(data, dict) or not isinstance(value, dict):
+        raise ConfigError([f'{source}: missing object "{key}"'])
+    return value
 
 
 def spec_of(entry):
@@ -47,9 +80,18 @@ def spec_of(entry):
     return {k: v for k, v in entry.items() if not k.startswith("_")}
 
 
-def apply():
-    manifest = load(TOOLING / "mcp-servers.json")["servers"]
-    present = user_servers()
+def user_servers(paths):
+    """Return the user-scope MCP servers as Claude Code stores them."""
+    if not paths.claude_json.exists():
+        return {}
+    return load(paths.claude_json).get("mcpServers", {}) or {}
+
+
+def apply(paths):
+    """Add every manifest MCP server missing from user scope."""
+    manifest_path = paths.tooling / "mcp-servers.json"
+    manifest = require_object(load(manifest_path), "servers", manifest_path)
+    present = user_servers(paths)
     added = 0
     for name, entry in manifest.items():
         if name in present:
@@ -63,10 +105,45 @@ def apply():
     return 0
 
 
-def verify():
+def personal_skill_names(paths):
+    """Return the names of skills authored or vendored on this workstation."""
+    if not paths.skills.is_dir():
+        return []
+    return sorted(d.name for d in paths.skills.iterdir() if d.is_dir())
+
+
+def project_skill_owners(projects_root):
+    """Map a project skill's name to every `<project>/.claude/skills/<name>` carrying it."""
+    owners = defaultdict(list)
+    if projects_root.is_dir():
+        for project in sorted(projects_root.iterdir()):
+            skills_dir = project / ".claude" / "skills"
+            if not skills_dir.is_dir():
+                continue
+            for d in sorted(skills_dir.iterdir()):
+                if d.is_dir():
+                    owners[d.name].append(d)
+    return owners
+
+
+def check_collisions(paths, projects_root):
+    """Print and return whether a personal skill shadows a project skill of the same name."""
+    owners = project_skill_owners(projects_root)
     fail = False
-    manifest = load(TOOLING / "mcp-servers.json")["servers"]
-    present = user_servers()
+    for name in personal_skill_names(paths):
+        for project_dir in owners.get(name, []):
+            print(f"  x {paths.skills / name}: personal skill shadows project skill "
+                  f"{project_dir}")
+            fail = True
+    return fail
+
+
+def verify(paths, projects_root):
+    """Report drift between the manifests, user scope, and installed plugins."""
+    fail = False
+    mcp_path = paths.tooling / "mcp-servers.json"
+    manifest = require_object(load(mcp_path), "servers", mcp_path)
+    present = user_servers(paths)
     print("User-scope MCP servers (claude/tooling/mcp-servers.json):")
     for name in manifest:
         if name in present:
@@ -79,10 +156,11 @@ def verify():
             print(f"  x {name}: at user scope, not in the manifest (record it or `claude mcp remove -s user {name}`)")
             fail = True
 
-    skills = load(TOOLING / "vendored-skills.json")["skills"]
+    skills_path = paths.tooling / "vendored-skills.json"
+    skills = require_object(load(skills_path), "skills", skills_path)
     print("Vendored skills (claude/tooling/vendored-skills.json):")
     for name in skills:
-        d = SKILLS / name
+        d = paths.skills / name
         if (d / "SKILL.md").exists():
             print(f"  + {name}")
         else:
@@ -90,7 +168,8 @@ def verify():
             fail = True
 
     print("Plugins (settings.json enabledPlugins against `claude plugin list`):")
-    enabled = [k for k, v in load(SETTINGS).get("enabledPlugins", {}).items() if v]
+    settings = load(paths.settings) if paths.settings.exists() else {}
+    enabled = [k for k, v in settings.get("enabledPlugins", {}).items() if v]
     out = subprocess.run(["claude", "plugin", "list"], capture_output=True, text=True).stdout
     for key in enabled:
         if key in out:
@@ -98,22 +177,31 @@ def verify():
         else:
             print(f"  x {key}: enabled in settings.json but not installed")
             fail = True
+
+    print(f"Skill name collisions (personal skills against {projects_root}):")
+    if check_collisions(paths, projects_root):
+        fail = True
+    else:
+        print("  + no personal skill shadows a project skill")
+
     return 1 if fail else 0
 
 
 def gh_json(endpoint):
+    """Run `gh api <endpoint>` and parse its JSON stdout."""
     out = subprocess.run(["gh", "api", endpoint], capture_output=True, text=True, check=True).stdout
     return json.loads(out)
 
 
-def fetch_skill(name, entry):
+def fetch_skill(paths, name, entry):
+    """Copy a vendored skill's files from its source repo at the manifest's branch."""
     repo, path, branch = entry["repo"], entry["path"], entry["branch"]
     head = gh_json(f"repos/{repo}/commits/{branch}")["sha"][:12]
     tree = gh_json(f"repos/{repo}/git/trees/{branch}?recursive=1")["tree"]
     files = [t["path"] for t in tree if t["type"] == "blob" and t["path"].startswith(path + "/")]
     if not files:
         raise SystemExit(f"{name}: no files under {path} in {repo}@{branch}")
-    dest = SKILLS / entry.get("rename", name)
+    dest = paths.skills / entry.get("rename", name)
     dest.mkdir(parents=True, exist_ok=True)
     for p in files:
         rel = p[len(path) + 1:]
@@ -132,13 +220,15 @@ def fetch_skill(name, entry):
     return head, len(files)
 
 
-def update_skills(names):
-    manifest_path = TOOLING / "vendored-skills.json"
+def update_skills(paths, names):
+    """Re-fetch the named vendored skills (or all of them) and rewrite their pinned commit."""
+    manifest_path = paths.tooling / "vendored-skills.json"
     manifest = load(manifest_path)
-    targets = names or list(manifest["skills"])
+    skills = require_object(manifest, "skills", manifest_path)
+    targets = names or list(skills)
     for name in targets:
-        entry = manifest["skills"][name]
-        head, count = fetch_skill(name, entry)
+        entry = skills[name]
+        head, count = fetch_skill(paths, name, entry)
         entry["commit"] = head
         print(f"  + {name}: {count} files from {entry['repo']}@{head}")
     with open(manifest_path, "w") as f:
@@ -148,21 +238,81 @@ def update_skills(names):
     return 0
 
 
-def main(argv):
-    if not argv or argv[0] in ("-h", "--help"):
-        print(__doc__)
-        return 0
-    cmd, rest = argv[0], argv[1:]
-    if cmd == "apply":
-        return apply()
-    if cmd == "verify":
-        return verify()
-    if cmd == "update-skills":
-        return update_skills(rest)
-    print(f"unknown command: {cmd}", file=sys.stderr)
-    print(__doc__)
-    return 2
+def lint(root):
+    """Check a tree's own vendored-skills.json shape and its unmanifested third-party skills."""
+    manifest_path = root / "claude" / ".claude" / "tooling" / "vendored-skills.json"
+    skills_dir = root / "claude" / ".claude" / "skills"
+    skills = require_object(load(manifest_path), "skills", manifest_path)
+
+    problems = []
+    manifest_dirs = set()
+    for name, entry in skills.items():
+        if not isinstance(entry, dict):
+            problems.append(f'{manifest_path}: "{name}": entry must be an object')
+            continue
+        for field in MANIFEST_FIELDS:
+            if not isinstance(entry.get(field), str) or not entry[field]:
+                problems.append(f'{manifest_path}: "{name}": missing field "{field}"')
+        manifest_dirs.add(entry.get("rename", name))
+    if problems:
+        raise ConfigError(problems)
+
+    fail = False
+    if skills_dir.is_dir():
+        for d in sorted(skills_dir.iterdir()):
+            if not d.is_dir():
+                continue
+            if any(d.glob("LICENSE*")) and d.name not in manifest_dirs:
+                print(f"  x {d}: third-party (carries a LICENSE file), no entry in "
+                      f"{manifest_path.relative_to(root)}")
+                fail = True
+    if not fail:
+        print("  + every licensed skills/<dir> has a vendored-skills.json entry")
+    return 1 if fail else 0
+
+
+def build_parser():
+    """Build the argument parser; argparse itself exits 2 with usage on an unknown argument."""
+    parser = argparse.ArgumentParser(prog="claude-tooling-sync",
+                                     description=__doc__.splitlines()[0])
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    for name, help_text in (("apply", "add every manifest MCP server missing from user scope"),
+                            ("verify", "report drift, including a skill-name collision")):
+        p = sub.add_parser(name, help=help_text)
+        p.add_argument("--home", type=Path, default=Path.home())
+        if name == "verify":
+            p.add_argument("--projects-root", type=Path, default=None)
+
+    update = sub.add_parser("update-skills", help="re-fetch vendored skills")
+    update.add_argument("--home", type=Path, default=Path.home())
+    update.add_argument("names", nargs="*")
+
+    lint_cmd = sub.add_parser("lint", help="tree-only manifest and unmanifested-skill checks")
+    lint_cmd.add_argument("--root", type=Path, required=True)
+
+    return parser
+
+
+def main(argv=None):
+    """Dispatch to the named command; return its exit code."""
+    args = build_parser().parse_args(argv)
+    try:
+        if args.command == "apply":
+            return apply(Paths(args.home.resolve()))
+        if args.command == "verify":
+            paths = Paths(args.home.resolve())
+            projects_root = (args.projects_root or (paths.home / "Projects")).resolve()
+            return verify(paths, projects_root)
+        if args.command == "update-skills":
+            return update_skills(Paths(args.home.resolve()), args.names)
+        return lint(args.root.resolve())
+    except ConfigError as err:
+        print(f"{args.command}: configuration error", file=sys.stderr)
+        for problem in err.problems:
+            print(f"  {problem}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())

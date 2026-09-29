@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
-# Pre-commit gate for this repo: block secret-shaped staged content.
-# Wired via `git config core.hooksPath scripts/githooks` (bootstrap sets it).
+# Pre-commit gate for this repo: hold the ratchet baseline, then block secret-shaped staged
+# content. Wired via `git config core.hooksPath scripts/githooks` (bootstrap sets it).
 # gitleaks comes from the Brewfile; a missing binary fails the commit closed,
 # since this repo is public and the hook is the last local line of defense.
 if ! command -v gitleaks >/dev/null; then
     echo "pre-commit: gitleaks not found (brew install gitleaks)" >&2
     exit 1
+fi
+# The ratchet step runs only when the baseline is staged, and reads only its index and HEAD
+# copies (never the working tree), with system python3 and the standard library. Its module
+# is located beside this hook, never through ~/.claude. Any nonzero exit blocks the commit
+# before gitleaks runs; the exec below stays the last line either way.
+baseline=claude/.claude/tooling/ratchet-baseline.json
+if ! git diff --cached --quiet -- "$baseline"; then
+    python3 "$(dirname "$0")/../../claude/.claude/tooling/ratchet.py" hook || exit $?
 fi
 exec gitleaks git --staged --no-banner --redact
