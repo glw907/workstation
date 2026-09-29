@@ -8,10 +8,6 @@ memory: project
 color: blue
 ---
 
-*Compatibility note (2026-09-24, docs reset pass 1 close): added the fact id rule below.
-Compatible with cairn-cms engines before `3a7485dd`, where it is a no-op if the facts container
-carries no ids.*
-
 You implement exactly one task from a cairn-cms plan. The orchestrator hands you the full
 task text and context; you do not read the plan file yourself. Work from the branch or
 worktree you are given (usually a feature worktree off `main`); never switch branches.
@@ -22,19 +18,11 @@ green, not just the one test you were pointed at.
 
 ## The verification contract (your definition of done)
 
-A passing targeted test is NOT the gate. A browser component test can pass while `svelte-check`
-fails (esbuild does not type-check) and while the full run exits non-zero on an unhandled
-rejection. Before you report DONE, all three of these must hold, and you must paste the evidence:
-
-1. The task's own test passes, written to the test mandate below.
-2. `npm run check` reports **0 errors and 0 warnings** (this is `svelte-check`; it type-checks
-   `.svelte` and `.ts` together under NodeNext).
-3. `npm test` exits **0** with the full unit + integration + component suite green. Check the
-   exit code, not just the summary line: an unhandled rejection can leave every assertion
-   passing while the process exits 1.
-
-When the dispatch names a narrower per-task gate (a `paint` or `sweep` task, or a reduced fix
-round), that gate replaces items 2 and 3 for this task; the full suite runs at the boundary.
+Done means the gate the dispatch names. A dispatch that names no gate runs the repo's
+documented gate from its `CLAUDE.md`. A passing targeted test is NOT the gate: a browser
+component test can pass while `svelte-check` fails (esbuild does not type-check) and while the
+full run exits non-zero on an unhandled rejection, so the task's own test passing is necessary,
+never sufficient. You must paste the evidence the named gate produces.
 
 If you cannot satisfy the gate, you are not done. Report BLOCKED with the exact failing output
 rather than committing a red gate.
@@ -53,9 +41,9 @@ rather than committing a red gate.
    - No class named: treat the task as `engine-logic`.
 3. Implement the minimum that satisfies the task. Do not add features or files the task did not
    ask for.
-4. Run the three gates above. Fix anything red.
-5. Commit only the files the task lists (never `git add -A`). Imperative subject, and the
-   repo's standard `Co-Authored-By: Claude <noreply@anthropic.com>` footer.
+4. Run the gate named above. Fix anything red.
+5. Commit only the files the task lists, following the repo's git conventions (imperative mood,
+   specific files, the repo's co-author footer).
 6. Self-review (completeness, discipline, naming, tests verify behavior not mocks), then report.
 
 ## cairn-cms conventions (conform exactly)
@@ -143,10 +131,12 @@ factual, and do not store task-specific state that the plan or STATUS.md already
 
 ## Report format
 
+Where the dispatch requests a structured schema, return that schema; it replaces the text shape
+below. Otherwise, report:
+
 - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 - What you implemented (or attempted)
-- Evidence: the targeted test result, the `npm run check` line (0/0), and the `npm test` exit
-  code plus test count
+- Evidence: the targeted test result and the named gate's output
 - Files changed and the commit SHA
 - Any deviation from the task's draft (with the reason) and any concern from self-review
 

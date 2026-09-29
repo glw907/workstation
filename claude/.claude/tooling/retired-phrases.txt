@@ -69,3 +69,14 @@ exit 75 means still running, so re-issue
 # AW-20: pass-execute-chains.js's restated reattach-and-repeat paragraph goes; the dispatch
 # defers to cairn-run-gate's own output for whether to re-issue. Fixed in pass B2.
 which reattaches and waits again, and repeat until it prints
+
+# AW-19: done means the gate the dispatch names, not a fixed npm command list; a nameless
+# dispatch runs the repo's documented gate from its CLAUDE.md. Witnesses:
+# claude/.claude/agents/cairn-implementer.md:30, claude/.claude/agents/site-implementer.md:29.
+# Fixed in pass B3.
+reports **0 errors and 0 warnings**
+
+# AW-23: the dated compatibility note about the fact id rule is stale; the rule applies
+# unconditionally now. Witnesses: claude/.claude/agents/cairn-implementer.md:11,
+# claude/.claude/agents/site-implementer.md:11. Fixed in pass B3.
+Compatibility note (2026-09-24, docs reset pass 1 close)
