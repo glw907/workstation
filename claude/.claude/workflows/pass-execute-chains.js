@@ -202,21 +202,31 @@ function classOf(t, a) {
 }
 
 /**
- * Returns the reduced gate a fix round runs, or null for the full gate. Without a class this is
- * the pre-class rule: `args.reducedGate` set and every finding commentOnly.
+ * Returns the reduced gate a fix round runs, or null for the full gate. Without a class, an
+ * all-commentOnly round still reduces, to `t.reducedGate`, `a.reducedGate`, or the class
+ * default (Geoff's 2026-09-09 ruling: a fix round never falls through to the full gate for want
+ * of an explicit `a.reducedGate`).
  */
 function reducedGateFor(t, a, cls, blocking) {
   if (!blocking || blocking.length === 0) {
     return null;
   }
   if (!cls) {
-    return a.reducedGate && blocking.every((b) => b.commentOnly) ? a.reducedGate : null;
+    return blocking.every((b) => b.commentOnly) ? (t.reducedGate || a.reducedGate || CLASS_DEFAULT_REDUCED_GATE) : null;
   }
   const reducible = (b) => b.commentOnly || (cls.testOnlyReduces && b.testOnly);
   if (!blocking.every(reducible)) {
     return null;
   }
   return t.reducedGate || a.reducedGate || CLASS_DEFAULT_REDUCED_GATE;
+}
+
+/**
+ * Renders a resolved reduced-gate value for prose: the class default reads as its own sentence,
+ * an explicit gate string is backtick-quoted as a command.
+ */
+function renderGateText(g) {
+  return g === CLASS_DEFAULT_REDUCED_GATE ? g : `\`${g}\``;
 }
 
 /**
@@ -281,7 +291,7 @@ function implementPrompt(t, chain, a, blocking, baseSha, classifierExists) {
     }
     const reduced = reducedGateFor(t, a, cls, blocking);
     if (reduced && !cls) {
-      lines.push(`Every finding above is COMMENT-ONLY (the fix changes comment or doc text, never code behavior). For this fix round the gate is reduced: run \`${reduced}\` through cairn-run-gate and report that reduced gate as the gate result; do not run the full gate string. If your fix diff touches any non-comment line, run the full gate string instead.`);
+      lines.push(`Every finding above is COMMENT-ONLY (the fix changes comment or doc text, never code behavior). For this fix round the gate is reduced: run ${renderGateText(reduced)} through cairn-run-gate and report that reduced gate as the gate result; do not run the full gate string. If your fix diff touches any non-comment line, run the full gate string instead.`);
     } else if (reduced) {
       const gateText = reduced === CLASS_DEFAULT_REDUCED_GATE ? reduced : `\`${reduced}\``;
       lines.push(`Every finding above is COMMENT-ONLY or TEST-ONLY (the fix changes comment or doc text, or test files alone, never source behavior). For this fix round the gate is reduced: run ${gateText}, through cairn-run-gate, and report that exact string as gateCommand and its result as the gate result; do not run the full gate string. If your fix diff touches any source line outside tests and comments, run the full gate string instead.`);
@@ -318,6 +328,16 @@ function gateMatches(ran, resolved, repo) {
 }
 // === END GATE MATCHER ===
 
+/**
+ * The no-class reviewer instruction: always names the reduced gate a comment-only round would
+ * take (`t.reducedGate`, `a.reducedGate`, or the class default), never conditioned on whether
+ * this particular round is one.
+ */
+function noClassReviewLine(t, a) {
+  const g = t.reducedGate || a.reducedGate || CLASS_DEFAULT_REDUCED_GATE;
+  return `For each blocking finding set commentOnly: true when its fix changes only comment or doc text and no code behavior; a fix round whose findings are all comment-only runs the reduced gate ${renderGateText(g)}, so mark it honestly. If you are reviewing such a fix round, that reduced gate is the expected gate.`;
+}
+
 function reviewClassLines(cls, reduced) {
   const lines = [
     `Pass class: ${cls.name}. Blocking bar: ${cls.bar}`,
@@ -347,9 +367,7 @@ function reviewPrompt(t, chain, a, implReport, resolvedGate, reduced) {
     `Read the plan's "Task ${t.id}" section (its acceptance criteria are the contract) plus the "Global constraints" section before verdicting.`,
     ...(cls
       ? reviewClassLines(cls, reduced)
-      : [a.reducedGate
-          ? `For each blocking finding set commentOnly: true when its fix changes only comment or doc text and no code behavior; a fix round whose findings are all comment-only runs the reduced gate \`${a.reducedGate}\`, so mark it honestly. If you are reviewing such a fix round, that reduced gate is the expected gate.`
-          : ""]),
+      : [noClassReviewLine(t, a)]),
     `Acceptance criteria (condensed): ${t.criteria}${a.paintProtocol ? " " + a.paintProtocol : ""}`,
     `The task's diff is exactly the commits the implementer reports below (diff each against its parent; the worktree has no other writers).`,
     `The gate string this task ran: ${ranCommand}`,
@@ -455,9 +473,10 @@ async function runTask(t, chain, a, classifierExists) {
   const phaseName = `Chain ${chain.id}`;
   const cls = classOf(t, a);
   const reviewerModel = a.reviewerModel || (cls ? cls.reviewerModel : DEFAULT_REVIEWER_MODEL);
-  // A task may name an implementer model override (t.model), else the workstation default: an
-  // undeclared dispatch falls to sonnet.
-  const implModel = t.model || "sonnet";
+  // A task may name an implementer model override (t.model); a dispatch's model option takes
+  // precedence over the agent definition's pinned model, so an undeclared task must pass no
+  // model at all and let the implementer's own frontmatter pin stand.
+  const implOpts = t.model ? { model: t.model } : {};
   const batchedNotes = [];
 
   const baseSha = await recordBaseSha(chain, phaseName, `base:${t.id}`);
@@ -466,8 +485,8 @@ async function runTask(t, chain, a, classifierExists) {
     label: `impl:${t.id}`,
     phase: phaseName,
     agentType: a.implementer,
-    model: implModel,
-    schema: IMPL_SCHEMA
+    schema: IMPL_SCHEMA,
+    ...implOpts
   });
 
   if (!implReport) {
@@ -500,8 +519,8 @@ async function runTask(t, chain, a, classifierExists) {
       label: `impl:${t.id}:fix${fixRounds}`,
       phase: phaseName,
       agentType: a.implementer,
-      model: implModel,
-      schema: IMPL_SCHEMA
+      schema: IMPL_SCHEMA,
+      ...implOpts
     });
 
     if (!implReport) {

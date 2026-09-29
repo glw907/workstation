@@ -159,6 +159,10 @@ function extractCall(src, startIndex) {
   throw new Error(`unbalanced parens scanning from index ${startIndex}`);
 }
 
+// A dispatch that names `agentType` (the implementer) is exempt: its model comes from the
+// implementer's own frontmatter pin unless the task overrides it with `t.model`, which the
+// conditional-spread pattern keeps out of the call's own literal text. Every other agent( call
+// (a probe, a reviewer dispatch) still owes a literal model: in its own call text.
 function agentCallsMissingModel(src) {
   const offenders = [];
   const re = /(^|[^.\w])agent\(/g;
@@ -166,6 +170,9 @@ function agentCallsMissingModel(src) {
   while ((m = re.exec(src))) {
     const start = m.index + m[0].length - "agent(".length;
     const callText = extractCall(src, start);
+    if (/\bagentType\s*:/.test(callText)) {
+      continue;
+    }
     if (!/\bmodel\s*:/.test(callText)) {
       offenders.push(src.slice(0, start).split("\n").length);
     }
@@ -338,6 +345,78 @@ check("a no-class reduced round renders no MISMATCH line and no npm command (pas
 });
 
 // -------------------------------------------------------------------------------------------
+// AW-01 fix round: a no-class fix round whose findings are all commentOnly must still resolve
+// to `t.reducedGate || a.reducedGate || CLASS_DEFAULT_REDUCED_GATE`, never fall through to the
+// full gate for want of an explicit `a.reducedGate` (Geoff's 2026-09-09 ruling).
+// -------------------------------------------------------------------------------------------
+
+check("reducedGateFor (no class): an all-commentOnly round with no reducedGate named anywhere resolves the class default, never null; t.reducedGate wins over a.reducedGate", () => {
+  for (const factory of [seqFactory, chainsFactory]) {
+    const { bundle } = load(factory);
+    const blocking = [{ location: "x", finding: "y", fix: "z", commentOnly: true }];
+    assert.equal(bundle.reducedGateFor({ id: "t1" }, {}, null, blocking), bundle.CLASS_DEFAULT_REDUCED_GATE);
+    assert.equal(
+      bundle.reducedGateFor(
+        { id: "t2", reducedGate: "bash scripts/check.sh" },
+        { reducedGate: "some other gate" },
+        null,
+        blocking
+      ),
+      "bash scripts/check.sh"
+    );
+  }
+});
+
+check("a no-class all-commentOnly round with no reducedGate renders the class default sentence, not the full gate (pass-execute.js)", () => {
+  const { bundle } = load(seqFactory);
+  const t = { id: "1", title: "T", criteria: "C" };
+  const a = { repo: "/repo", gate: "full gate", implementer: "i" };
+  const blocking = [{ location: "x", finding: "y", fix: "z", commentOnly: true }];
+  const reduced = bundle.reducedGateFor(t, a, null, blocking);
+  assert.equal(reduced, bundle.CLASS_DEFAULT_REDUCED_GATE);
+  const implPrompt = bundle.implementPrompt(t, a, blocking, "deadbeef", false);
+  assert.doesNotMatch(implPrompt, /npm/i);
+  assert.match(implPrompt, /the repo's type check plus only the test files this fix round touched/);
+  const implReport = {
+    gate: "pass", gateOutput: "", gateCommand: "some gate the implementer ran",
+    filesTouched: [], unspecifiedDecisions: [], couldNotDo: [], summary: ""
+  };
+  const resolvedGate = { gate: "some other resolved gate", source: "fallback", tier: "default" };
+  const fixRoundReview = bundle.reviewPrompt(t, a, implReport, resolvedGate, reduced);
+  assert.doesNotMatch(fixRoundReview, /MISMATCH/);
+  assert.doesNotMatch(fixRoundReview, /npm/i);
+  assert.match(fixRoundReview, /the repo's type check plus only the test files this fix round touched/);
+  // The reviewer's first-round prompt (before any fix round; reduced is not yet known) must
+  // still name the resolved reduced gate, so the reviewer knows what a reduced round would be.
+  const firstRoundReview = bundle.reviewPrompt(t, a, implReport, resolvedGate, null);
+  assert.match(firstRoundReview, /the repo's type check plus only the test files this fix round touched/);
+});
+
+check("a no-class all-commentOnly round with no reducedGate renders the class default sentence, not the full gate (pass-execute-chains.js)", () => {
+  const { bundle } = load(chainsFactory);
+  const t = { id: "1", title: "T", criteria: "C" };
+  const chain = { id: "C", repo: "/repo", branch: "chain-c" };
+  const a = { gate: "full gate", implementer: "i", planPath: "/p" };
+  const blocking = [{ location: "x", finding: "y", fix: "z", commentOnly: true }];
+  const reduced = bundle.reducedGateFor(t, a, null, blocking);
+  assert.equal(reduced, bundle.CLASS_DEFAULT_REDUCED_GATE);
+  const implPrompt = bundle.implementPrompt(t, chain, a, blocking, "deadbeef", false);
+  assert.doesNotMatch(implPrompt, /npm/i);
+  assert.match(implPrompt, /the repo's type check plus only the test files this fix round touched/);
+  const implReport = {
+    gate: "pass", gateOutput: "", gateCommand: "some gate the implementer ran", commits: [],
+    filesTouched: [], unspecifiedDecisions: [], couldNotDo: [], summary: ""
+  };
+  const resolvedGate = { gate: "some other resolved gate", source: "fallback", tier: "default" };
+  const fixRoundReview = bundle.reviewPrompt(t, chain, a, implReport, resolvedGate, reduced);
+  assert.doesNotMatch(fixRoundReview, /MISMATCH/);
+  assert.doesNotMatch(fixRoundReview, /npm/i);
+  assert.match(fixRoundReview, /the repo's type check plus only the test files this fix round touched/);
+  const firstRoundReview = bundle.reviewPrompt(t, chain, a, implReport, resolvedGate, null);
+  assert.match(firstRoundReview, /the repo's type check plus only the test files this fix round touched/);
+});
+
+// -------------------------------------------------------------------------------------------
 // AW-06: the plan-file line names an absolute path, never "committed in this repo"; the
 // "Ruled inputs" section reads as optional.
 // -------------------------------------------------------------------------------------------
@@ -430,27 +509,145 @@ check("style-guide-sync fixture: chains R and W in one invocation", async () => 
     assert.doesNotMatch(c.prompt, /npm/i, `W's "${c.label}" prompt must name no npm command`);
   }
   const fixPrompt = agent.calls.find((c) => c.label === "impl:w1:fix1");
-  assert.match(fixPrompt.prompt, /bash scripts\/check\.sh/);
+  // Assert the reduced-round sentence itself, not merely that the gate string appears anywhere
+  // in the prompt (the "Gate command: bash scripts/check.sh" line would also satisfy a bare
+  // substring match; this fails if W's reduced resolution falls back to the class default).
+  assert.match(fixPrompt.prompt, /gate is reduced: run `bash scripts\/check\.sh`/);
   const fixReview = agent.calls.find((c) => c.label === "review:w1:fix1");
   assert.doesNotMatch(fixReview.prompt, /MISMATCH/, "a reduced round must carry no MISMATCH-blocking line");
+});
+
+// -------------------------------------------------------------------------------------------
+// AW-13 mirrored onto pass-execute.js: one args.classifier boolean skips the probe entirely;
+// absent runs one cached haiku existence probe for the whole run, never one per task.
+// -------------------------------------------------------------------------------------------
+
+check("resolveClassifier (pass-execute.js): args.classifier value skips the probe; absent runs exactly one", async () => {
+  const { bundle, agent } = load(seqFactory, {}, [["classifier", () => ({ exists: true })]]);
+  assert.equal(await bundle.resolveClassifier({ classifier: false }), false);
+  assert.equal(await bundle.resolveClassifier({ classifier: true }), true);
+  assert.equal(agent.calls.length, 0, "an explicit args.classifier value must spawn no probe");
+  const probed = await bundle.resolveClassifier({});
+  assert.equal(probed, true);
+  assert.equal(agent.calls.length, 1);
+  assert.equal(agent.calls[0].opts.model, "haiku");
+});
+
+check("pass-execute.js implementPrompt renders the classifier paragraph only when classifierExists is true", () => {
+  const { bundle } = load(seqFactory);
+  const t = { id: "1", title: "T", criteria: "c" };
+  const a = { repo: "/repo", gate: "g", implementer: "i" };
+  assert.match(bundle.implementPrompt(t, a, null, "deadbeef", true), /gate-tier\.mjs/);
+  assert.doesNotMatch(bundle.implementPrompt(t, a, null, "deadbeef", false), /gate-tier\.mjs/);
+});
+
+check("pass-execute.js resolveGate: classifierExists false returns the fallback and spawns no probe", async () => {
+  const { bundle, agent } = load(seqFactory, {}, []);
+  const resolved = await bundle.resolveGate({ id: "1" }, { gate: "g" }, "deadbeef", false, "gatetier:1");
+  assert.deepEqual(resolved, { gate: "g", source: "fallback", tier: "default" });
+  assert.equal(agent.calls.length, 0);
+});
+
+check("pass-execute.js: classifier absent spawns exactly one cached probe across two tasks and no per-task gate-tier probe follows a classifier: false run", async () => {
+  const argsNoField = {
+    repo: "/repo", gate: "g", implementer: "i",
+    tasks: [
+      { id: "1", title: "T1", criteria: "c" },
+      { id: "2", title: "T2", criteria: "c" }
+    ]
+  };
+  const routesNoField = [
+    ["classifier", () => ({ exists: false })],
+    ["base:", baseShaHandler],
+    ["impl:", () => implOk()],
+    ["review:", () => acceptReview()]
+  ];
+  const { bundle: bNoField, agent: agentNoField } = load(seqFactory, argsNoField, routesNoField);
+  await bNoField.main();
+  const classifierCalls = agentNoField.calls.filter((c) => c.label === "classifier");
+  assert.equal(classifierCalls.length, 1, "an absent args.classifier must spawn exactly one cached probe across every task");
+
+  const argsFalse = { ...argsNoField, classifier: false };
+  const routesFalse = [
+    ["base:", baseShaHandler],
+    ["impl:", () => implOk()],
+    ["review:", () => acceptReview()]
+  ];
+  const { bundle: bFalse, agent: agentFalse } = load(seqFactory, argsFalse, routesFalse);
+  await bFalse.main();
+  const classifierCallsFalse = agentFalse.calls.filter((c) => c.label === "classifier");
+  assert.equal(classifierCallsFalse.length, 0, "classifier: false must spawn no existence probe at all");
+  const gatetierCallsFalse = agentFalse.calls.filter((c) => c.label.startsWith("gatetier:"));
+  assert.equal(gatetierCallsFalse.length, 0, "classifier: false must skip every per-task gate-tier probe too");
 });
 
 // -------------------------------------------------------------------------------------------
 // General robustness: every agent( call names a model; the launch NOTE prints at main()'s start.
 // -------------------------------------------------------------------------------------------
 
-check("no agent( call lacks an explicit model: (both runners)", () => {
+check("no agent( call lacks an explicit model:, except an implementer dispatch (agentType) left to its own frontmatter pin (both runners)", () => {
   for (const [name, src] of [["pass-execute.js", SEQ_SRC], ["pass-execute-chains.js", CHAINS_SRC]]) {
     const offenders = agentCallsMissingModel(src);
     assert.deepEqual(offenders, [], `${name}: agent( calls at line(s) ${offenders.join(", ")} name no model`);
   }
 });
 
-check("the launch NOTE prints, naming the runaway guard and the wake-up (pass-execute.js)", async () => {
-  const args = { repo: "/repo", gate: "g", implementer: "i", tasks: [{ id: "1", title: "T", criteria: "c" }] };
+check("the implementer dispatch omits model when t.model is unset, and passes it verbatim when set (pass-execute.js)", async () => {
+  const args = {
+    repo: "/repo", gate: "g", implementer: "cairn-implementer", classifier: false,
+    tasks: [
+      { id: "1", title: "T1", criteria: "c" },
+      { id: "2", title: "T2", criteria: "c", model: "opus" }
+    ]
+  };
   const routes = [
     ["base:", baseShaHandler],
-    ["gatetier:", () => ({ exists: false, gate: "" })],
+    ["impl:1", () => implOk()],
+    ["impl:2", () => implOk()],
+    ["review:1", () => acceptReview()],
+    ["review:2", () => acceptReview()]
+  ];
+  const { bundle, agent } = load(seqFactory, args, routes);
+  await bundle.main();
+  const impl1 = agent.calls.find((c) => c.label === "impl:1");
+  const impl2 = agent.calls.find((c) => c.label === "impl:2");
+  assert.equal(impl1.opts.agentType, "cairn-implementer");
+  assert.ok(!("model" in impl1.opts), "an undeclared task must not override the implementer's own frontmatter model pin");
+  assert.equal(impl2.opts.model, "opus", "a task's own model override must reach the dispatch");
+});
+
+check("the implementer dispatch omits model when t.model is unset, and passes it verbatim when set (pass-execute-chains.js)", async () => {
+  const chain = {
+    id: "C", repo: "/repo", branch: "chain-c", classifier: false,
+    tasks: [
+      { id: "1", title: "T1", criteria: "c" },
+      { id: "2", title: "T2", criteria: "c", model: "opus" }
+    ]
+  };
+  const args = { gate: "g", implementer: "cairn-implementer", planPath: "/p", chains: [chain] };
+  const routes = [
+    ["base:", baseShaHandler],
+    ["impl:1", () => implOk()],
+    ["impl:2", () => implOk()],
+    ["review:1", () => acceptReview()],
+    ["review:2", () => acceptReview()]
+  ];
+  const { bundle, agent } = load(chainsFactory, args, routes);
+  await bundle.main();
+  const impl1 = agent.calls.find((c) => c.label === "impl:1");
+  const impl2 = agent.calls.find((c) => c.label === "impl:2");
+  assert.equal(impl1.opts.agentType, "cairn-implementer");
+  assert.ok(!("model" in impl1.opts), "an undeclared task must not override the implementer's own frontmatter model pin");
+  assert.equal(impl2.opts.model, "opus", "a task's own model override must reach the dispatch");
+});
+
+check("the launch NOTE prints, naming the runaway guard and the wake-up (pass-execute.js)", async () => {
+  const args = {
+    repo: "/repo", gate: "g", implementer: "i", classifier: false,
+    tasks: [{ id: "1", title: "T", criteria: "c" }]
+  };
+  const routes = [
+    ["base:", baseShaHandler],
     ["impl:", () => implOk()],
     ["review:", () => acceptReview()]
   ];
