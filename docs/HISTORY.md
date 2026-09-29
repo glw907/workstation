@@ -3,6 +3,33 @@
 Per-pass ledger, newest first. Current state lives in `docs/STATUS.md`;
 strategic initiatives spanning passes live in `ROADMAP.md`.
 
+## 2026-09-28 -- Claude infra sweep, pass A-core
+
+Plan `docs/superpowers/plans/2026-09-28-infra-sweep-a-core-b.md`, spec
+`docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, audit
+`claude/.claude/docs/record/2026-09-28-claude-infra-audit.md`. Three tasks landed the guard's
+core on branch `infra-sweep-a`. AC1 (`97cdbe7`, Opus) added the shared ratchet module, the
+append-only checks registry, and the per-commit baseline step in `scripts/githooks/pre-commit`
+ahead of `exec gitleaks`, with 39 fixtures and a mutation proof per rule. AC2 (`1e2ed74`) gave
+`claude-tooling-sync` an injectable home, a tree-only `lint --root`, and a skill-name collision
+check in `verify`; it hardened the ratchet (a retired id cannot return to active; malformed
+tool reports exit 2), manifested `vhs-cli-demos` (CS-9), and renamed the personal `ship` skill
+to `go-ship` with `disable-model-invocation: true` (PS-01). AC3 (`635cb55`, `69fb6ba`, fix round
+`1bd1549`) added `scripts/check-claude-refs.py` with self-mode dead-reference and retired-phrase
+checks and seeded the baseline: nine retired phrases (five labelled B) and six dead-reference
+entries `GA-01` to `GA-05`.
+
+The `ship` rename changes behavior elsewhere: `/ship` in ecxc-ski and both aksailingclub repos
+now runs each repo's own project skill (ecxc-ski's deploys production), and "ship it" no longer
+auto-fires the Go workflow in poplar; type `/go-ship` there.
+
+Review: AC1 and AC2 accepted first time; AC3 took one fix round (F1 could not fail on a
+home-versus-root resolution bug, F8's record exclusion was masked by the dated-file exclusion,
+and the phrase-list header would have retired a phrase once fixed, disarming the tripwire).
+Geoff ruled GA-01 at the boundary: the Android lines in the global CLAUDE.md and `.bashrc` go in
+pass C. A later pass should not rediscover: the in-flight probe's `pgrep` must run as its own
+command, since a shell line that also names the worktree path matches itself.
+
 ## 2026-09-12 -- Claude infra round
 
 Plan `docs/superpowers/plans/2026-09-12-claude-infra-round.md` (revision 2, ratified at
