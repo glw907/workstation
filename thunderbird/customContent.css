@@ -1,0 +1,163 @@
+/* Local overrides for Thunderbird's own about: pages, loaded by userContent.css.
+ *
+ * Settings, the address book and account settings load as content documents,
+ * so userChrome.css and customChrome.css never reach them. This file gives
+ * those pages the same palette as customChrome.css, limited to the pages
+ * below so email bodies and web pages are untouched. */
+
+@-moz-document url-prefix("about:preferences"), url-prefix("about:settings"), url-prefix("about:addressbook"), url-prefix("about:accountsettings"), url-prefix("about:import"), url-prefix("about:accountsetup"), url-prefix("chrome://messenger/content/am-"), url-prefix("chrome://messenger/content/preferences/") {
+
+	/* Neutral Adwaita surfaces in place of Thunderbird's zinc and blue-slate grays. */
+	:root {
+		--layout-background-0: var(--gnome-window-background) !important;
+		--layout-background-1: var(--gnome-view-background) !important;
+		--layout-background-2: color-mix(in srgb, var(--gnome-window-color) 8%, var(--gnome-window-background)) !important;
+		--layout-background-3: color-mix(in srgb, var(--gnome-window-color) 12%, var(--gnome-window-background)) !important;
+		--layout-background-4: color-mix(in srgb, var(--gnome-window-color) 18%, var(--gnome-window-background)) !important;
+		--layout-color-0: var(--gnome-window-color) !important;
+		--layout-color-1: var(--gnome-window-color) !important;
+		--layout-color-2: color-mix(in srgb, var(--gnome-window-color) 75%, transparent) !important;
+		--layout-color-3: color-mix(in srgb, var(--gnome-window-color) 55%, transparent) !important;
+		--layout-border-0: var(--gnome-border-color) !important;
+		--layout-border-1: color-mix(in srgb, var(--gnome-window-color) 25%, transparent) !important;
+		--layout-border-2: color-mix(in srgb, var(--gnome-window-color) 35%, transparent) !important;
+		--background-color-canvas: var(--gnome-window-background) !important;
+		--background-color-box: var(--gnome-view-background) !important;
+		--panel-background-color: var(--gnome-menu-background) !important;
+	}
+
+	/* List views (contact list, tree views): the theme's neutral selection look. */
+	:root {
+		--tree-view-bg: var(--gnome-view-background) !important;
+		--tree-view-color: var(--gnome-view-color) !important;
+		--treeitem-border-radius: var(--gnome-button-radius) !important;
+		--treeitem-background-hover: var(--gnome-hover-color) !important;
+		--treeitem-background-selected: var(--gnome-active-color) !important;
+		--treeitem-background-active: var(--gnome-active-color) !important;
+		--listbox-hover: var(--gnome-hover-color) !important;
+		--listbox-selected-bg: var(--gnome-selected-color) !important;
+		--listbox-focused-selected-bg: var(--gnome-selected-color) !important;
+		--listbox-selected-color: var(--gnome-view-color) !important;
+		--listbox-border-radius: var(--gnome-button-radius) !important;
+		--unread-color: var(--gnome-view-color) !important;
+		--tree-view-header-hover-bg: var(--gnome-hover-color) !important;
+		--tree-view-header-hover-active-bg: var(--gnome-active-color) !important;
+		--tree-row-delete-button-color: var(--gnome-destructive) !important;
+	}
+
+	/* Accent: primary buttons, links, focus rings, selected category. */
+	:root {
+		--button-primary-background-color: var(--gnome-accent-bg) !important;
+		--button-primary-hover-background-color: color-mix(in srgb, var(--gnome-accent-bg) 88%, white) !important;
+		--button-primary-active-background-color: color-mix(in srgb, var(--gnome-accent-bg) 80%, black) !important;
+		--button-primary-border-color: color-mix(in srgb, var(--gnome-accent-bg) 85%, black) !important;
+		--button-primary-text-color: #fff !important;
+		--color-accent-primary: var(--gnome-accent-bg) !important;
+		--color-accent-primary-hover: color-mix(in srgb, var(--gnome-accent-bg) 88%, white) !important;
+		--color-accent-primary-active: color-mix(in srgb, var(--gnome-accent-bg) 80%, black) !important;
+		--color-accent-primary-selected: var(--gnome-active-color) !important;
+		--color-accent-primary-selected-unfocused: var(--gnome-selected-color) !important;
+		--text-color-accent-primary-selected: var(--gnome-window-color) !important;
+		--in-content-accent-color: var(--gnome-accent-bg) !important;
+		--in-content-focus-outline-color: var(--gnome-focus-border-color) !important;
+		--focus-outline-color: var(--gnome-focus-border-color) !important;
+		--button-link-text-color: var(--gnome-accent) !important;
+		--link-color: var(--gnome-accent) !important;
+	}
+
+	/* Design-system tokens: Bolt blue to the accent, semantic roles to the
+	 * desktop success, warning and error colors, blue-slate to neutral. */
+	:root {
+		--color-primary-default: var(--gnome-accent-bg) !important;
+		--color-primary-hover: color-mix(in srgb, var(--gnome-accent-bg) 88%, white) !important;
+		--color-primary-pressed: color-mix(in srgb, var(--gnome-accent-bg) 80%, black) !important;
+		--color-primary-soft: color-mix(in srgb, var(--gnome-accent-bg) 18%, var(--gnome-window-background)) !important;
+		--color-text-brand: var(--gnome-accent) !important;
+		--color-text-highlight: var(--gnome-accent) !important;
+		--primary: var(--gnome-accent) !important;
+
+		--color-success-default: var(--gnome-success-bg) !important;
+		--color-success-pressed: var(--gnome-success) !important;
+		--color-success-soft: color-mix(in srgb, var(--gnome-success-bg) 18%, var(--gnome-window-background)) !important;
+		--color-text-success: var(--gnome-success) !important;
+		--color-warning-default: var(--gnome-warning-bg) !important;
+		--color-warning-pressed: var(--gnome-warning) !important;
+		--color-warning-soft: color-mix(in srgb, var(--gnome-warning-bg) 18%, var(--gnome-window-background)) !important;
+		--color-text-warning: var(--gnome-warning) !important;
+		--color-critical-default: var(--gnome-error-bg) !important;
+		--color-critical-pressed: var(--gnome-error) !important;
+		--color-critical-soft: color-mix(in srgb, var(--gnome-error-bg) 18%, var(--gnome-window-background)) !important;
+		--color-text-critical: var(--gnome-error) !important;
+		--button-destructive-background-color: var(--gnome-destructive-bg) !important;
+		--button-destructive-hover-background-color: color-mix(in srgb, var(--gnome-destructive-bg) 88%, white) !important;
+		--button-destructive-active-background-color: color-mix(in srgb, var(--gnome-destructive-bg) 80%, black) !important;
+		--button-destructive-border-color: color-mix(in srgb, var(--gnome-destructive-bg) 85%, black) !important;
+
+		--color-surface-base: var(--gnome-view-background) !important;
+		--color-surface-subtle: color-mix(in srgb, var(--gnome-window-color) 6%, var(--gnome-window-background)) !important;
+		--color-surface-raised: color-mix(in srgb, var(--gnome-window-color) 8%, var(--gnome-window-background)) !important;
+		--color-surface-lower: var(--gnome-window-background) !important;
+		--color-surface-deep: color-mix(in srgb, var(--gnome-window-color) 12%, var(--gnome-window-background)) !important;
+		--color-surface-border: var(--gnome-border-color) !important;
+		--color-surface-border-intense: color-mix(in srgb, var(--gnome-window-color) 30%, transparent) !important;
+		--color-text-base: var(--gnome-window-color) !important;
+		--color-text-secondary: color-mix(in srgb, var(--gnome-window-color) 75%, transparent) !important;
+		--color-text-muted: color-mix(in srgb, var(--gnome-window-color) 60%, transparent) !important;
+	}
+
+	/* Account list: default-account star follows the accent, not orange. */
+	:root {
+		--default-account-icon-fill: var(--gnome-accent) !important;
+		--default-account-icon-stroke: var(--gnome-accent) !important;
+	}
+
+	/* Settings: selected view-style tile in the accent, search hint and
+	 * external-key pill as tinted and accent chips instead of yellow and blue. */
+	radio[selected]:has(.radio-icon) {
+		border-color: var(--gnome-accent-bg) !important;
+		outline-color: var(--gnome-accent-bg) !important;
+	}
+
+	.search-tooltip {
+		background: color-mix(in srgb, var(--gnome-warning-bg) 25%, var(--gnome-window-background)) !important;
+		border-color: var(--gnome-warning-bg) !important;
+		color: var(--gnome-window-color) !important;
+	}
+
+	.external-pill {
+		background-color: var(--gnome-accent-bg) !important;
+		color: #fff !important;
+	}
+
+	/* Form validation text. */
+	description.error {
+		color: var(--gnome-error) !important;
+	}
+
+	/* CardDAV sync error banner. */
+	#carddav-statusArea[status="error"] {
+		background: color-mix(in srgb, var(--gnome-warning-bg) 25%, var(--gnome-window-background)) !important;
+		border-color: var(--gnome-warning-bg) !important;
+		color: var(--gnome-window-color) !important;
+	}
+
+	/* Contact editor destructive icons. */
+	:root {
+		--vcard-delete-button-color: var(--gnome-destructive) !important;
+		--vcard-remove-color: var(--gnome-destructive) !important;
+		--recipient-avatar-color: var(--gnome-window-color) !important;
+		--recipient-avatar-background-color: var(--gnome-button-background) !important;
+	}
+
+	/* Delete-account button: the desktop destructive color. */
+	#deleteAccount {
+		--button-background-color: var(--gnome-destructive-bg) !important;
+		--button-background-color-hover: color-mix(in srgb, var(--gnome-destructive-bg) 88%, white) !important;
+		--button-background-color-active: color-mix(in srgb, var(--gnome-destructive-bg) 80%, black) !important;
+	}
+
+	/* OpenPGP key expiry text. */
+	.expiration-date-container.key-expired description {
+		color: var(--gnome-error) !important;
+	}
+}

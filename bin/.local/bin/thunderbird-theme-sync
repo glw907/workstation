@@ -9,15 +9,20 @@ set -euo pipefail
 # The theme (rafaelmardojai/thunderbird-gnome-theme) is plain CSS copied into
 # each Thunderbird profile's chrome/ folder, so nothing updates it for us. The
 # local layer lives in ~/.dotfiles/thunderbird/:
-#   customChrome.css  color overrides; the theme imports it last and its
-#                     installer never ships one, so it survives updates
-#   patches/*.patch   fixes carried until upstream merges them
+#   customChrome.css   overrides for the main window; the theme imports it
+#                      last and never ships one
+#   customContent.css  overrides for Settings, the address book, and account
+#                      settings, which load as content pages that
+#                      userChrome.css never reaches
+#   patches/*.patch    fixes carried until upstream merges them
 #
 # A sync resets the clone to upstream main, applies each carried patch
 # (reporting any upstream has since merged), runs the theme's installer
-# against the Flatpak profile folder, then copies customChrome.css in. Quit
-# Thunderbird first; it reads userChrome only at startup. Run it after a
-# Thunderbird update that breaks the look, or whenever upstream moves.
+# against the Flatpak profile folder, copies both override files in, and
+# rewrites the profile's userChrome.css and userContent.css so they import
+# exactly the theme and the overrides. Quit Thunderbird first; it reads its
+# stylesheets only at startup. Run it after a Thunderbird update that breaks
+# the look, or whenever upstream moves.
 
 LAYER="$HOME/.dotfiles/thunderbird"
 CLONE="$HOME/.local/share/thunderbird-gnome-theme"
@@ -32,6 +37,14 @@ profiles() {
     done
 }
 
+# The profile's top-level stylesheets. The theme's installer appends its own
+# import lines; writing these whole keeps them exact across reinstalls.
+chrome_imports()  { echo '@import "thunderbird-gnome-theme/userChrome.css";'; }
+content_imports() {
+    echo '@import "thunderbird-gnome-theme/userContent.css";'
+    echo '@import "thunderbird-gnome-theme/customContent.css";'
+}
+
 check() {
     local fail=0 p dest
     [[ -d "$CLONE/.git" ]] || { echo "x theme clone missing at $CLONE"; return 1; }
@@ -40,8 +53,13 @@ check() {
         if [[ ! -d "$dest" ]]; then
             echo "x $(basename "$p"): theme not installed"; fail=1; continue
         fi
-        if ! diff -q "$LAYER/customChrome.css" "$dest/customChrome.css" >/dev/null 2>&1; then
-            echo "x $(basename "$p"): customChrome.css differs from the dotfiles copy"; fail=1
+        for f in customChrome.css customContent.css; do
+            if ! diff -q "$LAYER/$f" "$dest/$f" >/dev/null 2>&1; then
+                echo "x $(basename "$p"): $f differs from the dotfiles copy"; fail=1
+            fi
+        done
+        if ! diff -q <(content_imports) "$p/chrome/userContent.css" >/dev/null 2>&1; then
+            echo "x $(basename "$p"): userContent.css doesn't import the overrides"; fail=1
         fi
         if ! diff -rq "$CLONE/theme" "$dest/theme" >/dev/null 2>&1; then
             echo "x $(basename "$p"): installed theme differs from the clone"; fail=1
@@ -76,11 +94,14 @@ sync() {
     done
 
     # The installer probes $(tty) for colors; give it no terminal to probe.
-    (cd "$CLONE" && ./scripts/install.sh -f "$TB_DIR" -t adwaita </dev/null >/dev/null 2>&1)
+    # Its -t flag imports color files the theme no longer ships, so omit it.
+    (cd "$CLONE" && ./scripts/install.sh -f "$TB_DIR" </dev/null >/dev/null 2>&1)
 
     local p
     while read -r p; do
-        cp "$LAYER/customChrome.css" "$p/chrome/thunderbird-gnome-theme/customChrome.css"
+        cp "$LAYER/customChrome.css" "$LAYER/customContent.css" "$p/chrome/thunderbird-gnome-theme/"
+        chrome_imports > "$p/chrome/userChrome.css"
+        content_imports > "$p/chrome/userContent.css"
     done < <(profiles)
     check
 }

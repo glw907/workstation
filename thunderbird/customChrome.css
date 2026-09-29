@@ -1,6 +1,80 @@
 /* Local overrides loaded last by thunderbird-gnome-theme.
- * Maps the Thunderbird colors the theme leaves alone onto the GNOME
- * accent, so new mail and message bars follow the desktop palette. */
+ *
+ * The theme covers the mail chrome. This file maps the Thunderbird colors
+ * it leaves alone onto the desktop palette:
+ *   - accent (slate): primary buttons, focus rings, new and unread markers,
+ *     links, progress, calendar selection.
+ *   - neutral Adwaita surfaces: account hub, settings, dialogs.
+ *   - monochrome folder and account icons.
+ *   - libadwaita-style tinted banners for success, warning and error.
+ * User-chosen colors (calendars, tags, address-book categories) stay as set.
+ * Every value follows the desktop in light and dark through --gnome-*. */
+
+/* Accent: primary buttons, links, focus rings. The theme points
+ * --selected-item-color at a neutral gray, so restore the accent where
+ * Thunderbird derives these from it. */
+:root {
+	--button-primary-background-color: var(--gnome-accent-bg) !important;
+	--button-primary-hover-background-color: color-mix(in srgb, var(--gnome-accent-bg) 88%, white) !important;
+	--button-primary-active-background-color: color-mix(in srgb, var(--gnome-accent-bg) 80%, black) !important;
+	--button-primary-border-color: color-mix(in srgb, var(--gnome-accent-bg) 85%, black) !important;
+	--button-primary-text-color: #fff !important;
+	--color-accent-primary: var(--gnome-accent-bg) !important;
+	--color-accent-primary-hover: color-mix(in srgb, var(--gnome-accent-bg) 88%, white) !important;
+	--color-accent-primary-active: color-mix(in srgb, var(--gnome-accent-bg) 80%, black) !important;
+	--button-link-text-color: var(--gnome-accent) !important;
+	--button-link-active-text-color: color-mix(in srgb, var(--gnome-accent) 80%, var(--gnome-window-color)) !important;
+	--link-color: var(--gnome-accent) !important;
+	--focus-outline-color: var(--gnome-focus-border-color) !important;
+	--toolbar-field-focus-border-color: var(--gnome-focus-border-color) !important;
+	--item-focus-selected-border-color: var(--gnome-focus-border-color) !important;
+	--dialog-highlight-color: var(--gnome-accent-bg) !important;
+	--tbHighlightBackground: var(--gnome-accent-bg) !important;
+	--linkColor: var(--gnome-accent) !important;
+	--barColor: var(--gnome-accent-bg) !important;
+}
+
+/* Design-system tokens: Bolt blue to the accent, semantic roles to the
+ * desktop success, warning and error colors, blue-slate surfaces to the
+ * neutral window, view and card backgrounds. Feeds the account hub,
+ * settings banners, badges and status glyphs. */
+:root {
+	--color-primary-default: var(--gnome-accent-bg) !important;
+	--color-primary-hover: color-mix(in srgb, var(--gnome-accent-bg) 88%, white) !important;
+	--color-primary-pressed: color-mix(in srgb, var(--gnome-accent-bg) 80%, black) !important;
+	--color-primary-soft: color-mix(in srgb, var(--gnome-accent-bg) 18%, var(--gnome-window-background)) !important;
+	--color-text-brand: var(--gnome-accent) !important;
+	--color-text-highlight: var(--gnome-accent) !important;
+	--primary: var(--gnome-accent) !important;
+
+	--color-success-default: var(--gnome-success-bg) !important;
+	--color-success-pressed: var(--gnome-success) !important;
+	--color-success-soft: color-mix(in srgb, var(--gnome-success-bg) 18%, var(--gnome-window-background)) !important;
+	--color-text-success: var(--gnome-success) !important;
+	--color-warning-default: var(--gnome-warning-bg) !important;
+	--color-warning-pressed: var(--gnome-warning) !important;
+	--color-warning-soft: color-mix(in srgb, var(--gnome-warning-bg) 18%, var(--gnome-window-background)) !important;
+	--color-text-warning: var(--gnome-warning) !important;
+	--color-critical-default: var(--gnome-error-bg) !important;
+	--color-critical-pressed: var(--gnome-error) !important;
+	--color-critical-soft: color-mix(in srgb, var(--gnome-error-bg) 18%, var(--gnome-window-background)) !important;
+	--color-text-critical: var(--gnome-error) !important;
+	--button-destructive-background-color: var(--gnome-destructive-bg) !important;
+	--button-destructive-hover-background-color: color-mix(in srgb, var(--gnome-destructive-bg) 88%, white) !important;
+	--button-destructive-active-background-color: color-mix(in srgb, var(--gnome-destructive-bg) 80%, black) !important;
+	--button-destructive-border-color: color-mix(in srgb, var(--gnome-destructive-bg) 85%, black) !important;
+
+	--color-surface-base: var(--gnome-view-background) !important;
+	--color-surface-subtle: color-mix(in srgb, var(--gnome-window-color) 6%, var(--gnome-window-background)) !important;
+	--color-surface-raised: color-mix(in srgb, var(--gnome-window-color) 8%, var(--gnome-window-background)) !important;
+	--color-surface-lower: var(--gnome-window-background) !important;
+	--color-surface-deep: color-mix(in srgb, var(--gnome-window-color) 12%, var(--gnome-window-background)) !important;
+	--color-surface-border: var(--gnome-border-color) !important;
+	--color-surface-border-intense: color-mix(in srgb, var(--gnome-window-color) 30%, transparent) !important;
+	--color-text-base: var(--gnome-window-color) !important;
+	--color-text-secondary: color-mix(in srgb, var(--gnome-window-color) 75%, transparent) !important;
+	--color-text-muted: color-mix(in srgb, var(--gnome-window-color) 60%, transparent) !important;
+}
 
 /* New mail: subjects, folder names, and count badges. */
 :root {
@@ -10,15 +84,222 @@
 	--folderpane-unread-new-count-background: var(--gnome-accent-bg) !important;
 }
 
-/* New-message star: accent instead of yellow and amber. */
+/* Folder and account icons: monochrome like the GNOME sidebar. The user's
+ * per-account color on the inbox icon is kept; error states stay red. */
+:root {
+	--folder-color-inbox: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-draft: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-sent: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-archive: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-spam: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-trash: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-template: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-newsletter: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-rss: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-outbox: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-folder: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-folder-filter: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-folder-rss: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-warning: var(--gnome-error) !important;
+}
+
+#folderTree li[data-server-type]:not([data-has-error="true"], .tls-error) > .container > .icon {
+	--icon-color: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+}
+
+#folderTree .new-icon {
+	fill: var(--gnome-accent) !important;
+	stroke: var(--gnome-accent) !important;
+}
+
+/* Folder pane count pills: neutral. */
+:root {
+	--folderpane-unread-count-background: var(--gnome-button-active-background) !important;
+	--folderpane-unread-count-text: var(--gnome-window-color) !important;
+	--folderpane-total-count-background: var(--gnome-button-background) !important;
+	--folderpane-total-count-text: var(--gnome-window-color) !important;
+}
+
+/* Thread list: unread and new markers in accent, junk in the error color,
+ * neutral header and delete colors. Row selection stays the theme's gray. */
+#threadTree tr.card-layout[data-properties~="unread"] {
+	--read-status-fill: var(--gnome-accent) !important;
+	--read-status-stroke: var(--gnome-accent) !important;
+}
+
 tr[data-properties~="new"] {
 	--read-status-fill: var(--gnome-accent) !important;
 	--read-status-stroke: var(--gnome-accent) !important;
 }
 
-/* Warning bars (remote content and similar): a muted amber tint in place
- * of #ffe900, matching how the theme styles the other message bars. */
+tr[data-properties~="new"] .subject-line img,
+.card-layout[data-properties~="hasNew"] button.twisty::before {
+	fill: var(--gnome-accent) !important;
+	stroke: var(--gnome-accent) !important;
+}
+
+.card-layout[data-properties~="hasUnread"] button.twisty::before {
+	fill: var(--gnome-accent) !important;
+	stroke: var(--gnome-accent) !important;
+}
+
+:root {
+	--thread-pane-spam-fill: var(--gnome-error) !important;
+	--thread-pane-spam-stroke: var(--gnome-error) !important;
+	--tree-card-border-hover-spam: color-mix(in srgb, var(--gnome-error) 50%, transparent) !important;
+	--tree-card-border-selected-spam: color-mix(in srgb, var(--gnome-error) 50%, transparent) !important;
+	--thread-card-focus-spam: color-mix(in srgb, var(--gnome-error) 50%, transparent) !important;
+	--tree-row-delete-button-color: var(--gnome-destructive) !important;
+	--tree-view-header-hover-bg: var(--gnome-hover-color) !important;
+	--tree-view-header-active-bg: var(--gnome-active-color) !important;
+	--unread-color: var(--gnome-view-color) !important;
+	--row-grouped-header-bg-color: var(--gnome-window-background) !important;
+}
+
+#threadTree tr.card-layout[data-properties~="junk"] .card-container :is(.sender, .date, .subject) {
+	color: var(--gnome-error) !important;
+}
+
+/* Message header and avatars: neutral. */
+:root {
+	--recipient-avatar-color: var(--gnome-window-color) !important;
+	--recipient-avatar-background-color: var(--gnome-button-background) !important;
+}
+
+/* Message bars: tinted banners with normal window text instead of solid
+ * saturated fills. Warning (remote content), success, and error. */
 notification-message[type="warning"] {
-	--message-bar-background-color: color-mix(in srgb, #cd9309 25%, var(--gnome-window-background)) !important;
+	--message-bar-background-color: color-mix(in srgb, var(--gnome-warning-bg) 25%, var(--gnome-window-background)) !important;
 	--message-bar-text-color: var(--gnome-window-color) !important;
+}
+
+notification-message[type="success"] {
+	--message-bar-background-color: color-mix(in srgb, var(--gnome-success-bg) 25%, var(--gnome-window-background)) !important;
+	--message-bar-text-color: var(--gnome-window-color) !important;
+	--icon-color-success: var(--gnome-success) !important;
+}
+
+notification-message[type="error"],
+notification-message[type="critical"] {
+	--message-bar-background-color: color-mix(in srgb, var(--gnome-error-bg) 25%, var(--gnome-window-background)) !important;
+	--message-bar-text-color: var(--gnome-window-color) !important;
+	--icon-color-critical: var(--gnome-error) !important;
+}
+
+/* Compose: address pills follow the accent and the error color. */
+.address-pill {
+	--icon-color: var(--gnome-accent) !important;
+}
+
+/* Address book: destructive icons, CardDAV error banner, panels. */
+:root {
+	--vcard-delete-button-color: var(--gnome-destructive) !important;
+	--vcard-remove-color: var(--gnome-destructive) !important;
+}
+
+#carddav-statusArea[status="error"] {
+	background: color-mix(in srgb, var(--gnome-warning-bg) 25%, var(--gnome-window-background)) !important;
+	border-color: var(--gnome-warning-bg) !important;
+	color: var(--gnome-window-color) !important;
+}
+
+/* Calendar and tasks: accent for selection and drag, semantic task states,
+ * neutral week labels. Calendar colors stay as the user set them. */
+:root {
+	--viewDayLabelSelectedBackground: var(--gnome-accent-bg) !important;
+	--viewDragboxBackground: var(--gnome-accent-bg) !important;
+	--viewDropshadowBackground: var(--gnome-accent-bg) !important;
+	--viewMonthWeekLabelBackground: var(--gnome-button-background) !important;
+	--mmDayWeekColor: color-mix(in srgb, var(--gnome-window-color) 55%, transparent) !important;
+	--mmDayBusyColor: var(--gnome-accent-bg) !important;
+	--imip-button-background: var(--gnome-button-background) !important;
+}
+
+calendar-month-day-box-item[selected="true"].calendar-color-box,
+calendar-event-box[selected="true"].calendar-color-box,
+calendar-editable-item[selected="true"].calendar-color-box {
+	background-color: var(--gnome-accent-bg) !important;
+}
+
+.calendar-task-tree > treechildren::-moz-tree-cell-text(inprogress) {
+	color: var(--gnome-success) !important;
+}
+
+.calendar-task-tree > treechildren::-moz-tree-row(inprogress, selected, focus) {
+	background-color: var(--gnome-success-bg) !important;
+}
+
+.calendar-task-tree > treechildren::-moz-tree-cell-text(overdue) {
+	color: var(--gnome-error) !important;
+}
+
+.calendar-task-tree > treechildren::-moz-tree-row(overdue, selected, focus) {
+	background-color: var(--gnome-error-bg) !important;
+}
+
+.invitation-table .added,
+.invitation-table .modified {
+	color: var(--gnome-error) !important;
+}
+
+.invitation-table .removed {
+	color: color-mix(in srgb, var(--gnome-window-color) 55%, transparent) !important;
+}
+
+#counter-proposal-box {
+	background: color-mix(in srgb, var(--gnome-accent-bg) 25%, var(--gnome-window-background)) !important;
+	color: var(--gnome-window-color) !important;
+}
+
+#reminder-notifications > notification[type="warning"] .messageImage {
+	fill: var(--gnome-warning-bg) !important;
+}
+
+/* Settings, dialogs, legacy XUL dialogs: neutral surfaces, tinted tooltips
+ * and warnings, accent external pills. */
+:root {
+	--box-background-color: var(--gnome-window-background) !important;
+	--box-text-color: var(--gnome-window-color) !important;
+	--field-background-color: var(--gnome-view-background) !important;
+	--field-text-color: var(--gnome-window-color) !important;
+	--appmenu-warning-background-color: color-mix(in srgb, var(--gnome-warning-bg) 20%, transparent) !important;
+	--appmenu-warning-hover-background-color: color-mix(in srgb, var(--gnome-warning-bg) 30%, transparent) !important;
+	--appmenu-warning-active-background-color: color-mix(in srgb, var(--gnome-warning-bg) 40%, transparent) !important;
+}
+
+.search-tooltip {
+	background: color-mix(in srgb, var(--gnome-warning-bg) 25%, var(--gnome-window-background)) !important;
+	border-color: var(--gnome-warning-bg) !important;
+	color: var(--gnome-window-color) !important;
+}
+
+.external-pill {
+	background-color: var(--gnome-accent-bg) !important;
+	color: #fff !important;
+}
+
+description.error {
+	color: var(--gnome-error) !important;
+}
+
+/* App menu: neutral divider under the sign-in header. */
+#syncSeparator {
+	background: var(--gnome-border-color) !important;
+}
+
+/* Badges on the spaces toolbar and unified toolbar; status-bar progress;
+ * secure-connection lock. */
+:root {
+	--spaces-button-badge-bg-color: var(--gnome-accent-bg) !important;
+	--spaces-button-badge-text-color: #fff !important;
+	--toolbar-button-badge-bg-color: var(--gnome-accent-bg) !important;
+	--toolbar-button-badge-text-color: #fff !important;
+}
+
+progress::-moz-progress-bar {
+	background-color: var(--gnome-accent-bg) !important;
+}
+
+.secure-connection-icon {
+	fill: var(--gnome-success) !important;
 }

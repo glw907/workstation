@@ -11,15 +11,19 @@ package: `thunderbird-theme-sync` copies it into the Thunderbird profile.
 
 | Path | Contents |
 |------|----------|
-| `customChrome.css` | Color overrides that map Thunderbird's own colors onto the GNOME palette and the desktop accent |
+| `customChrome.css` | Color overrides for the main window, mapping Thunderbird's own colors onto the GNOME palette and the desktop accent |
+| `customContent.css` | The same palette for Settings, the address book, and account settings, which load as content pages that `userChrome.css` never reaches |
 | `patches/*.patch` | Fixes carried until the theme merges them upstream; each file's header names its upstream PR |
 
 ## How it fits together
 
 The theme is plain CSS. Its installer copies it into the profile's `chrome/`
 folder and sets two prefs in `user.js`. The theme imports `customChrome.css`
-last and never ships one, so the file survives theme updates. Thunderbird
-updates don't touch the profile at all.
+last and never ships one. It has no such hook for content pages, so the sync
+writes the profile's `userContent.css` itself, importing the theme and then
+`customContent.css`. `customContent.css` scopes every rule to Thunderbird's own
+pages with `@-moz-document`, so email bodies keep their own colors.
+Thunderbird updates don't touch the profile at all.
 
 | Location | Role |
 |----------|------|
@@ -31,7 +35,7 @@ updates don't touch the profile at all.
 
 To change a color:
 
-1. Edit `customChrome.css` here.
+1. Edit `customChrome.css` or `customContent.css` here.
 2. Quit Thunderbird.
 3. Run `thunderbird-theme-sync`.
 4. Start Thunderbird. It reads the CSS only at startup.
@@ -39,7 +43,7 @@ To change a color:
 To pick up upstream theme fixes, or to repair the look after a Thunderbird
 update, quit Thunderbird and run `thunderbird-theme-sync`. It resets the clone
 to upstream `main`, applies each carried patch, reinstalls the theme, and copies
-`customChrome.css` in. `workstation-update` runs it too.
+both override files in. `workstation-update` runs it too.
 
 To check the install without changing anything, run
 `thunderbird-theme-sync --check`. `check-drift` runs the same check weekly.
