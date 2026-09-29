@@ -18,4 +18,4 @@ io.github.screwys.Rufin
 md.obsidian.Obsidian
 org.jeffvli.feishin
 com.valvesoftware.Steam
-org.mozilla.thunderbird_esr
+org.mozilla.thunderbird
