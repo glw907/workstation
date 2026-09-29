@@ -3,6 +3,30 @@
 Per-pass ledger, newest first. Current state lives in `docs/STATUS.md`;
 strategic initiatives spanning passes live in `ROADMAP.md`.
 
+## 2026-09-28 -- Incident: `0a2e391` reverted three rulings (repaired in pass B, task B4)
+
+A one-executor-rule failure: two sessions edited `claude/.claude/CLAUDE.md` at once on
+2026-09-27. `a7dd5ad` (13:39) landed three rulings: `code-simplifier` runs once per pass or
+branch at its close, never per commit; the pass class's gate runs inside the chain, with the
+`pass-core` pointer; and superpowers skills yield to the pass class (TDD's write-first applies
+to `engine-logic` and `auth-data` only, and plans stay outcome-only). Five minutes later
+`0a2e391` ("Slim the global CLAUDE.md to about 4.1K tokens"), drafted from a pre-`a7dd5ad`
+copy, committed its slimming on top and silently restored the per-commit simplifier bullet,
+"and code-simplifier" on the small-task line, and "the repo's full gate runs inside the chain",
+and dropped the superpowers-yield sentence, which then existed nowhere. The 2026-09-28 infra
+audit missed the yield loss; the sweep spec's review found it.
+
+B4 diffed `a7dd5ad` against `0a2e391` hunk by hunk: every other hunk was deliberate slimming
+whose detail already lived in `bluefin-admin.md`, `claude-md-archive.md`, `model-economy.md`,
+or a skill, and was kept. The three rulings went back to their owning homes (the Git
+Conventions bullet and `pass-core`'s close step; the chain sentence, `site-pass`, and
+`model-economy.md`; `pass-core` beside the class table), and the reverted phrases entered the
+retired-phrase list, so the ratchet now fails a commit that brings them back from a stale base.
+A later pass should not rediscover: a slimming or rewrite of a shared file starts from its
+committed text read fresh, after the one-executor check. The three reverts did show in
+`0a2e391`'s own diff against its parent, but among about 420 changed lines of slimming, where
+no one read them as reverts.
+
 ## 2026-09-28 -- Claude infra sweep, pass A-core
 
 Plan `docs/superpowers/plans/2026-09-28-infra-sweep-a-core-b.md`, spec
