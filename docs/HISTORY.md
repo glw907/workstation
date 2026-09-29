@@ -3,6 +3,64 @@
 Per-pass ledger, newest first. Current state lives in `docs/STATUS.md`;
 strategic initiatives spanning passes live in `ROADMAP.md`.
 
+## 2026-09-28 -- Claude infra sweep, pass B
+
+Plan `docs/superpowers/plans/2026-09-28-infra-sweep-a-core-b.md`, spec
+`docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`. Four tasks plus a close
+simplifier round landed on branch `infra-sweep-b`, merged into `main`. B1 (`f680528`, fix
+rounds `ca744d0` and `bfa0775`) fixed the pass runners: the no-class reduced round had fallen
+back to the full gate instead of reducing, `pass-execute.js` still probed for a classifier on
+every task instead of once, and the model-scan exemption that should cover only the implementer
+dispatch was also skipping reviewer dispatches. B2 (`416c418`, fix round `ee74ec9`) bounded
+`cairn-run-gate`'s vanish loop and consolidated the gate protocol; the runner prompts still
+restated the exit-75 reattach protocol inline instead of deferring to `cairn-run-gate`'s own
+output. B3 (`e437742`) fixed the agent definitions per AW-19, AW-23, AW-04, AW-05, and DC-29,
+accepted first time. B4 (`6b96e2a`, `aae6c1c`, `a29fe6d`, `39d4c44`) deleted the spent
+cairn-overnight-to-release workflow (AW-07), restored the three rulings `0a2e391` reverted in
+the global CLAUDE.md, fixed the stale guard, pre-bake, escalation, gate, and footer lines, and
+recorded `0a2e391` as a one-executor-rule incident, accepted first time. The close round
+(`b066c60`) simplified the pass runners' reduced-gate resolution, extracting
+`configuredReducedGate()` and routing the class-default gate text through `renderGateText()`
+consistently.
+
+Ratchet baseline after pass B: C 7, A-rest 2, D 1; zero entries remain tagged A-core or B.
+
+A later pass should not rediscover: agent definitions load from dotfiles `main`, so a pass's
+own agent-definition edits reach no dispatch until the merge lands, and every dispatch that
+runs through the merge boundary must carry its own overrides rather than trust the definition
+on disk. A runner-prompt fix must be checked on the rendered prompt text a task actually
+receives, not by grepping the runner source for the old string.
+
+Filed for pass C: `0a2e391` narrowed "one question at a time by default, grouping only a few
+tightly related ones" to "one question at a time" (global CLAUDE.md, around line 250); check
+whether that narrowing was itself a ruling before treating it as settled. The `d48cea9`
+method-calls examples list exists nowhere now; consider `model-economy.md` as its home. Geoff
+ruled the Android lines (GA-01, the global CLAUDE.md and `.bashrc`) go in pass C.
+
+## 2026-09-28 -- Incident: `0a2e391` reverted three rulings (repaired in pass B, task B4)
+
+A one-executor-rule failure: two sessions edited `claude/.claude/CLAUDE.md` at once on
+2026-09-27. `a7dd5ad` (13:39) landed three rulings: `code-simplifier` runs once per pass or
+branch at its close, never per commit; the pass class's gate runs inside the chain, with the
+`pass-core` pointer; and superpowers skills yield to the pass class (TDD's write-first applies
+to `engine-logic` and `auth-data` only, and plans stay outcome-only). Five minutes later
+`0a2e391` ("Slim the global CLAUDE.md to about 4.1K tokens"), drafted from a pre-`a7dd5ad`
+copy, committed its slimming on top and silently restored the per-commit simplifier bullet,
+"and code-simplifier" on the small-task line, and "the repo's full gate runs inside the chain",
+and dropped the superpowers-yield sentence, which then existed nowhere. The 2026-09-28 infra
+audit missed the yield loss; the sweep spec's review found it.
+
+B4 diffed `a7dd5ad` against `0a2e391` hunk by hunk: every other hunk was deliberate slimming
+whose detail already lived in `bluefin-admin.md`, `claude-md-archive.md`, `model-economy.md`,
+or a skill, and was kept. The three rulings went back to their owning homes (the Git
+Conventions bullet and `pass-core`'s close step; the chain sentence, `site-pass`, and
+`model-economy.md`; `pass-core` beside the class table), and the reverted phrases entered the
+retired-phrase list, so the ratchet now fails a commit that brings them back from a stale base.
+A later pass should not rediscover: a slimming or rewrite of a shared file starts from its
+committed text read fresh, after the one-executor check. The three reverts did show in
+`0a2e391`'s own diff against its parent, but among about 420 changed lines of slimming, where
+no one read them as reverts.
+
 ## 2026-09-28 -- Claude infra sweep, pass A-core
 
 Plan `docs/superpowers/plans/2026-09-28-infra-sweep-a-core-b.md`, spec

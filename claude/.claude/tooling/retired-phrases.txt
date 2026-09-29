@@ -48,3 +48,46 @@ sleep 30
 # CS-4: the installed Go toolchain has moved past the pinned "currently 1.26" claim; go-conventions
 # takes no pinned version. Fixed in pass D.
 currently 1.26
+
+# AW-17: cairn-run-gate now exits 75 with its own vanish line instead of falling through to a
+# reported failure; site-implementer.md's and pass-execute.js's paragraphs describing the old
+# fallback go. Fixed in pass B2.
+the gate process vanished without a status means the run was lost
+
+# AW-20: the gate protocol lives in cairn-run-gate's own output; cairn-implementer.md's restated
+# paragraph goes. Fixed in pass B2.
+it reattaches and waits again. Repeat until it prints
+
+# AW-20: docs-page-chain.js's restated exit-75 paragraph goes; the gate runner defers to
+# cairn-run-gate's own output. Fixed in pass B2.
+never poll a log. Report the exact command and the last twenty lines as your report's gate fields
+
+# AW-20: pass-execute.js's restated exit-75 clause goes; the dispatch defers to cairn-run-gate's
+# own output for whether to re-issue. Fixed in pass B2.
+exit 75 means still running, so re-issue
+
+# AW-20: pass-execute-chains.js's restated reattach-and-repeat paragraph goes; the dispatch
+# defers to cairn-run-gate's own output for whether to re-issue. Fixed in pass B2.
+which reattaches and waits again, and repeat until it prints
+
+# AW-19: done means the gate the dispatch names, not a fixed npm command list; a nameless
+# dispatch runs the repo's documented gate from its CLAUDE.md. Witnesses:
+# claude/.claude/agents/cairn-implementer.md:30, claude/.claude/agents/site-implementer.md:29.
+# Fixed in pass B3.
+reports **0 errors and 0 warnings**
+
+# AW-23: the dated compatibility note about the fact id rule is stale; the rule applies
+# unconditionally now. Witnesses: claude/.claude/agents/cairn-implementer.md:11,
+# claude/.claude/agents/site-implementer.md:11. Fixed in pass B3.
+Compatibility note (2026-09-24, docs reset pass 1 close)
+
+# DC-01 (small-task line): the 2026-09-27 ruling runs code-simplifier once per pass or branch at
+# its close, so a small task goes straight through the gates alone; 0a2e391 restored the
+# per-task simplifier clause. Witness: claude/.claude/CLAUDE.md:261. Fixed in pass B4.
+straight through the gates and code-simplifier
+
+# DC-29: the harness's default attribution (the model-named trailer) owns the commit footer; the
+# generic footer string goes (Geoff, 2026-09-28, S7). Witnesses: claude/.claude/CLAUDE.md:68,
+# claude/.claude/workflows/cairn-overnight-to-release.js:76,
+# claude/.claude/docs/voice/commit-and-pr.md:93. Fixed in pass B4.
+Co-Authored-By: Claude <noreply@anthropic.com>

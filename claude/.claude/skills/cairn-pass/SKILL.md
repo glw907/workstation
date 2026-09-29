@@ -57,9 +57,9 @@ Run `pass-core`'s ritual. The cairn-specific parts of each step:
 
 ### Gate (step 2)
 
-`npm run check` (0 errors, 0 warnings), `npm test` (exits 0), then `npm run check:close`,
-which runs the CI check list minus e2e. A `docs` pass skips `npm test` but still runs
-`check:close`.
+`npm test` (exits 0), then `npm run check:close`, which runs `npm run check` (0 errors, 0
+warnings) and the rest of the CI check list minus e2e. A `docs` pass skips `npm test` but still
+runs `check:close`.
 
 Prove the consumer build, not only `npm test`: the package ships TypeScript inside `.svelte`,
 so a consumer-bundler break shows only when a consumer builds. Before calling a pass

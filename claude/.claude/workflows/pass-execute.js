@@ -14,11 +14,16 @@
 //       reviewer: "diff-reviewer",       // optional, defaults below
 //       maxFix: 1,                        // optional, defaults below
 //       parallel: false,                  // optional, defaults to sequential
+//       classifier: true,                 // optional; an explicit boolean skips the gate-tier
+//                                         // existence probe (see "Classifier caching" below).
 //       reducedGate: "...",               // optional; the gate string a fix round runs
 //                                         // when every blocking finding is commentOnly
 //                                         // (or, under a passClass, commentOnly/testOnly).
-//                                         // Absent, and no passClass, means every round
-//                                         // runs the full gate, the unchanged behavior.
+//                                         // Absent, a no-class round whose findings are all
+//                                         // commentOnly still reduces, to the class default
+//                                         // (CLASS_DEFAULT_REDUCED_GATE: the repo's type
+//                                         // check plus the test files the round touched),
+//                                         // never the full gate (Geoff's 2026-09-09 ruling).
 //       passClass: "paint",               // optional; see "Pass class" below. A task's own
 //                                         // `passClass` overrides it for that task.
 //       reviewerModel: "sonnet",          // optional; overrides the class's reviewer model.
@@ -85,6 +90,12 @@
 // Without a passClass every prompt and verdict is exactly the pre-class behavior.
 // Keep PASS_CLASSES in step with pass-execute-chains.js.
 
+// Classifier caching (AW-13): `args.classifier`, when explicit, else one cached existence probe
+// (`model: "haiku"`) for whether `args.repo` carries `scripts/checks/gate-tier.mjs`, run once
+// for the whole run and reused for every task, rather than once per task. `classifier: false`
+// skips the probe entirely: no per-task tier probe ever runs, and the implementer prompt
+// renders no classifier paragraph.
+
 export const meta = {
   name: "pass-execute",
   description: "Runs a pass plan's tasks through implementer, diff-reviewer, and gate in a chain. One invocation runs one segment; a pass with conductor boundaries is launched once per segment.",
@@ -147,6 +158,14 @@ const GATE_TIER_SCHEMA = {
   required: ["exists", "gate"]
 };
 
+const CLASSIFIER_PROBE_SCHEMA = {
+  type: "object",
+  properties: {
+    exists: { type: "boolean" }
+  },
+  required: ["exists"]
+};
+
 const REVIEW_SCHEMA = {
   type: "object",
   properties: {
@@ -166,11 +185,7 @@ const REVIEW_SCHEMA = {
           // files alone; coverageOnly means the finding is test coverage or granularity with
           // no behavior defect.
           testOnly: { type: "boolean" },
-          coverageOnly: { type: "boolean" },
-          severity: {
-            type: "string",
-            enum: ["blocking-correctness", "blocking-contract", "comment-only", "optional"]
-          }
+          coverageOnly: { type: "boolean" }
         },
         required: ["location", "finding", "fix"]
       }
@@ -251,21 +266,35 @@ function classOf(t, a) {
 }
 
 /**
- * Returns the reduced gate a fix round runs, or null for the full gate. Without a class this is
- * the pre-class rule: `args.reducedGate` set and every finding commentOnly.
+ * The reduced gate a task names, most specific first: `t.reducedGate`, then `a.reducedGate`,
+ * then the class default.
+ */
+function configuredReducedGate(t, a) {
+  return t.reducedGate || a.reducedGate || CLASS_DEFAULT_REDUCED_GATE;
+}
+
+/**
+ * Returns the reduced gate a fix round runs, or null for the full gate. A round reduces when
+ * every blocking finding is commentOnly, or, under a class whose `testOnlyReduces` is set,
+ * commentOnly or testOnly. Without a class an all-commentOnly round still reduces (Geoff's
+ * 2026-09-09 ruling: a fix round never falls through to the full gate for want of an explicit
+ * `a.reducedGate`).
  */
 function reducedGateFor(t, a, cls, blocking) {
   if (!blocking || blocking.length === 0) {
     return null;
   }
-  if (!cls) {
-    return a.reducedGate && blocking.every((b) => b.commentOnly) ? a.reducedGate : null;
-  }
-  const reducible = (b) => b.commentOnly || (cls.testOnlyReduces && b.testOnly);
-  if (!blocking.every(reducible)) {
-    return null;
-  }
-  return t.reducedGate || a.reducedGate || CLASS_DEFAULT_REDUCED_GATE;
+  const testOnlyReduces = Boolean(cls && cls.testOnlyReduces);
+  const reducible = (b) => b.commentOnly || (testOnlyReduces && b.testOnly);
+  return blocking.every(reducible) ? configuredReducedGate(t, a) : null;
+}
+
+/**
+ * Renders a resolved reduced-gate value for prose: the class default reads as its own sentence,
+ * an explicit gate string is backtick-quoted as a command.
+ */
+function renderGateText(g) {
+  return g === CLASS_DEFAULT_REDUCED_GATE ? g : `\`${g}\``;
 }
 
 /**
@@ -313,7 +342,7 @@ function validateArgs(a) {
   }
 }
 
-function implementPrompt(t, a, blocking, baseSha) {
+function implementPrompt(t, a, blocking, baseSha, classifierExists) {
   const cls = classOf(t, a);
   const paintFlag = t.paint != null ? ` --paint ${t.paint ? "yes" : "no"}` : "";
   const pinFlag = t.gateTier ? ` --pin ${t.gateTier}` : "";
@@ -332,8 +361,10 @@ function implementPrompt(t, a, blocking, baseSha) {
     a.commonNotes ? `Notes: ${a.commonNotes}` : "",
     cls ? `Pass class: ${cls.name}. Test mandate: ${cls.mandate}` : "",
     `Gate command: ${t.gate || a.gate}`,
-    `Before running the gate, check whether scripts/checks/gate-tier.mjs exists in this repo. If it does, run \`${classifierCmd}\` from the repo root, after your commits and before the gate, and run the gate string it prints on stdout instead of the Gate command above (report gateTier: "${t.gateTier ? "pin" : "computed"}" and gateCommand as that exact string). If the script is absent, exits non-zero, or prints nothing, run the Gate command above unchanged (report gateTier: "default" and gateCommand as that string).`,
-    "Run the gate through `" + lanePrefix + "cairn-run-gate '<the gate string>'`" + laneNote + ": exit 75 means still running, so re-issue the exact same command until it prints \"gate exit:\" with the tail; a report that the gate process vanished without a status means the run was lost, so start a fresh run rather than report red; never run it in the background and never poll a log; report its exact result.",
+    classifierExists
+      ? `Before running the gate, check whether scripts/checks/gate-tier.mjs exists in this repo. If it does, run \`${classifierCmd}\` from the repo root, after your commits and before the gate, and run the gate string it prints on stdout instead of the Gate command above (report gateTier: "${t.gateTier ? "pin" : "computed"}" and gateCommand as that exact string). If the script is absent, exits non-zero, or prints nothing, run the Gate command above unchanged (report gateTier: "default" and gateCommand as that string).`
+      : "",
+    "Run the gate through `" + lanePrefix + "cairn-run-gate '<the gate string>'`" + laneNote + " and follow its own output for whether to re-issue and for the result; never run it in the background and never poll a log; report its exact result.",
     "Skip agent-memory maintenance for this dispatch."
   ];
   if (blocking && blocking.length > 0) {
@@ -343,13 +374,49 @@ function implementPrompt(t, a, blocking, baseSha) {
     }
     const reduced = reducedGateFor(t, a, cls, blocking);
     if (reduced && !cls) {
-      lines.push(`Every finding above is COMMENT-ONLY (the fix changes comment or doc text, never code behavior). For this fix round the gate is reduced: run \`${reduced}\` through cairn-run-gate and report that reduced gate as the gate result; do not run the full gate string. If your fix diff touches any non-comment line, run the full gate string instead.`);
+      lines.push(`Every finding above is COMMENT-ONLY (the fix changes comment or doc text, never code behavior). For this fix round the gate is reduced: run ${renderGateText(reduced)} through cairn-run-gate and report that reduced gate as the gate result; do not run the full gate string. If your fix diff touches any non-comment line, run the full gate string instead.`);
     } else if (reduced) {
-      const gateText = reduced === CLASS_DEFAULT_REDUCED_GATE ? reduced : `\`${reduced}\``;
-      lines.push(`Every finding above is COMMENT-ONLY or TEST-ONLY (the fix changes comment or doc text, or test files alone, never source behavior). For this fix round the gate is reduced: run ${gateText}, through cairn-run-gate, and report that exact string as gateCommand and its result as the gate result; do not run the full gate string. If your fix diff touches any source line outside tests and comments, run the full gate string instead.`);
+      lines.push(`Every finding above is COMMENT-ONLY or TEST-ONLY (the fix changes comment or doc text, or test files alone, never source behavior). For this fix round the gate is reduced: run ${renderGateText(reduced)}, through cairn-run-gate, and report that exact string as gateCommand and its result as the gate result; do not run the full gate string. If your fix diff touches any source line outside tests and comments, run the full gate string instead.`);
     }
   }
   return lines.filter(Boolean).join("\n");
+}
+
+// === GATE MATCHER (tests extract this block; kept identical in pass-execute-chains.js) ===
+/**
+ * Normalizes a gate string for comparison: keeps only its last non-empty line (a probe can
+ * return the classifier's whole stdout, preamble and all), unwraps a `cairn-run-gate '<cmd>'`
+ * call, and treats an absolute repo path and its repo-relative form, or extra spacing, as the
+ * same target.
+ */
+function gateCore(s, repo) {
+  const last = String(s).trim().split("\n").pop().trim();
+  const wrapped = last.match(/cairn-run-gate\s+'([^']+)'/);
+  const cmd = wrapped ? wrapped[1] : last;
+  return cmd.split(`${repo}/`).join("").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * True when the gate string the implementer ran matches the gate string the runner
+ * independently resolved. A task gate may carry a `<placeholder>` the implementer fills in (for
+ * example `<the touched unit test files>`); the placeholder matches any non-empty text.
+ */
+function gateMatches(ran, resolved, repo) {
+  const pattern = gateCore(resolved, repo)
+    .split(/<[^<>]+>/)
+    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join(".+?");
+  return new RegExp(`^${pattern}$`).test(gateCore(ran, repo));
+}
+// === END GATE MATCHER ===
+
+/**
+ * The no-class reviewer instruction: always names the reduced gate a comment-only round would
+ * take (`t.reducedGate`, `a.reducedGate`, or the class default), never conditioned on whether
+ * this particular round is one.
+ */
+function noClassReviewLine(t, a) {
+  return `For each blocking finding set commentOnly: true when its fix changes only comment or doc text and no code behavior; a fix round whose findings are all comment-only runs the reduced gate ${renderGateText(configuredReducedGate(t, a))}, so mark it honestly. If you are reviewing such a fix round, that reduced gate is the expected gate.`;
 }
 
 function reviewClassLines(cls, reduced) {
@@ -366,31 +433,15 @@ function reviewClassLines(cls, reduced) {
 function reviewPrompt(t, a, implReport, resolvedGate, reduced) {
   const cls = classOf(t, a);
   const ranCommand = implReport.gateCommand || t.gate || a.gate;
-  // The probe can return the classifier's whole stdout (preamble, file list, then the command),
-  // and an implementer may report the cairn-run-gate wrapper, so compare on the command alone.
-  const gateCore = (s) => {
-    const last = String(s).trim().split("\n").pop().trim();
-    const wrapped = last.match(/cairn-run-gate\s+'([^']+)'/);
-    const cmd = wrapped ? wrapped[1] : last;
-    // An absolute repo path and a repo-relative one name the same target; so does extra spacing.
-    return cmd.split(`${a.repo}/`).join("").replace(/\s+/g, " ").trim();
-  };
-  // A task gate may carry a `<placeholder>` the implementer fills in (for example
-  // `<the touched unit test files>`); the placeholder matches any non-empty text.
-  const gateMatches = (ran, resolved) => {
-    const pattern = gateCore(resolved)
-      .split(/<[^<>]+>/)
-      .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-      .join(".+?");
-    return new RegExp(`^${pattern}$`).test(gateCore(ran));
-  };
   const classReduced = cls && reduced;
   // WATCH: a gate string that adds a test file the criteria permit (a new sibling test on the
   // unit leg) differs from the resolved string, so it reads as a MISMATCH the reviewer escalates
   // (theme identity pass A, segment B). If it recurs, let the resolved gate accept an added test
   // path under the task's Files.
+  // Any reduced round, class-based or the pre-class a.reducedGate fallback, is exempt from the
+  // mismatch check: its expected gate is the reduced one, not resolvedGate.
   const mismatch =
-    !classReduced && resolvedGate.gate && implReport.gateCommand && !gateMatches(implReport.gateCommand, resolvedGate.gate)
+    !reduced && resolvedGate.gate && implReport.gateCommand && !gateMatches(implReport.gateCommand, resolvedGate.gate, a.repo)
       ? `MISMATCH: the runner independently resolved a different gate string ("${resolvedGate.gate}") than the implementer reports running. Treat this mismatch itself as a blocking finding.`
       : "";
   return [
@@ -403,9 +454,7 @@ function reviewPrompt(t, a, implReport, resolvedGate, reduced) {
     mismatch,
     ...(cls
       ? reviewClassLines(cls, reduced)
-      : [a.reducedGate
-          ? `For each blocking finding set commentOnly: true when its fix changes only comment or doc text and no code behavior; a fix round whose findings are all comment-only runs the reduced gate \`${a.reducedGate}\`, so mark it honestly. If you are reviewing such a fix round, that reduced gate is the expected gate.`
-          : ""]),
+      : [noClassReviewLine(t, a)]),
     "Implementer report (JSON):",
     JSON.stringify(implReport)
   ].filter(Boolean).join("\n");
@@ -437,22 +486,46 @@ function taskStatus(review, implReport) {
 async function recordBaseSha(a, label) {
   const out = await agent(
     `Repo: ${a.repo}\nRun \`git rev-parse HEAD\` there and report exactly that commit SHA, nothing else.`,
-    { label, phase: "Implement", schema: GATE_PROBE_SCHEMA, effort: "low" }
+    { label, phase: "Implement", schema: GATE_PROBE_SCHEMA, model: "haiku", effort: "low" }
   );
   return out && out.sha ? out.sha.trim() : "";
+}
+
+/**
+ * Resolves, once per run, whether args.repo carries the gate-tier classifier script
+ * (scripts/checks/gate-tier.mjs). An explicit `a.classifier` boolean skips the probe entirely;
+ * `classifier: false` means no per-task tier probe ever runs and the implementer prompt renders
+ * no classifier paragraph (AW-13, mirrored from pass-execute-chains.js).
+ */
+async function resolveClassifier(a) {
+  if (typeof a.classifier === "boolean") {
+    return a.classifier;
+  }
+  const probe = await agent(
+    [
+      `Repo: ${a.repo}`,
+      `Check whether the file scripts/checks/gate-tier.mjs exists there. Report exists: true or exists: false.`,
+      `Do not run any other command and never modify a file.`
+    ].join("\n"),
+    { label: "classifier", phase: "Implement", schema: CLASSIFIER_PROBE_SCHEMA, model: "haiku", effort: "low" }
+  );
+  return !!(probe && probe.exists);
 }
 
 /**
  * Resolves the gate string the runner hands the reviewer, independently of
  * whatever the implementer ran. A plan pin (`t.gateTier`) skips the
  * classifier entirely and keeps the task's declared gate string, matching
- * pre-classifier behavior; so does a repo with no classifier script. Any
- * other task asks a probe agent to run the classifier over the task's diff
- * so far (base..HEAD, which grows across fix rounds).
+ * pre-classifier behavior; so does a run whose cached `classifierExists` is
+ * false. Any other task asks a probe agent to run the classifier over the
+ * task's diff so far (base..HEAD, which grows across fix rounds).
  */
-async function resolveGate(t, a, baseSha, label) {
+async function resolveGate(t, a, baseSha, classifierExists, label) {
   if (t.gateTier) {
     return { gate: t.gate || a.gate, source: "pin", tier: t.gateTier };
+  }
+  if (!classifierExists) {
+    return { gate: t.gate || a.gate, source: "fallback", tier: "default" };
   }
   const paintFlag = t.paint != null ? ` --paint ${t.paint ? "yes" : "no"}` : "";
   const cmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}`;
@@ -465,7 +538,7 @@ async function resolveGate(t, a, baseSha, label) {
       `If it does, run exactly \`${cmd}\` from the repo root and report exists: true and gate: "<its exact stdout, trimmed>". On a non-zero exit or empty stdout, report exists: true and gate: "".`,
       `Do not run any other command and never modify a file.`
     ].join("\n"),
-    { label, phase: "Implement", schema: GATE_TIER_SCHEMA, effort: "low" }
+    { label, phase: "Implement", schema: GATE_TIER_SCHEMA, model: "haiku", effort: "low" }
   );
   if (!probe || !probe.exists || !probe.gate) {
     return { gate: t.gate || a.gate, source: "fallback", tier: "default" };
@@ -477,7 +550,7 @@ function logGateTier(t, resolved) {
   log(`task ${t.id}: gate tier ${resolved.tier} (${resolved.source})`);
 }
 
-async function runTask(t, a) {
+async function runTask(t, a, classifierExists) {
   const implementer = a.implementer;
   const reviewer = a.reviewer || "diff-reviewer";
   const maxFix = a.maxFix == null ? 1 : a.maxFix;
@@ -485,13 +558,14 @@ async function runTask(t, a) {
   const reviewerModel = a.reviewerModel || (cls ? cls.reviewerModel : DEFAULT_REVIEWER_MODEL);
   const batchedNotes = [];
 
-  // A task may name an implementer model override (t.model); agent()'s model
-  // option takes precedence over the agent definition's pinned model.
+  // A task may name an implementer model override (t.model); a dispatch's model option takes
+  // precedence over the agent definition's pinned model, so an undeclared task must pass no
+  // model at all and let the implementer's own frontmatter pin stand.
   const implOpts = t.model ? { model: t.model } : {};
 
   const baseSha = await recordBaseSha(a, `base:${t.id}`);
 
-  let implReport = await agent(implementPrompt(t, a, null, baseSha), {
+  let implReport = await agent(implementPrompt(t, a, null, baseSha, classifierExists), {
     label: `impl:${t.id}`,
     phase: "Implement",
     agentType: implementer,
@@ -504,7 +578,7 @@ async function runTask(t, a) {
     return { id: t.id, title: t.title, status: "failed", fixRounds: 0, implementer: null, review: null };
   }
 
-  let resolvedGate = await resolveGate(t, a, baseSha, `gatetier:${t.id}`);
+  let resolvedGate = await resolveGate(t, a, baseSha, classifierExists, `gatetier:${t.id}`);
   logGateTier(t, resolvedGate);
 
   let review = await agent(reviewPrompt(t, a, implReport, resolvedGate, null), {
@@ -525,7 +599,7 @@ async function runTask(t, a) {
   while (review.verdict === "fix" && fixRounds < maxFix) {
     fixRounds += 1;
     const reduced = reducedGateFor(t, a, cls, review.blocking);
-    implReport = await agent(implementPrompt(t, a, review.blocking, baseSha), {
+    implReport = await agent(implementPrompt(t, a, review.blocking, baseSha, classifierExists), {
       label: `impl:${t.id}:fix${fixRounds}`,
       phase: "Implement",
       agentType: implementer,
@@ -538,7 +612,7 @@ async function runTask(t, a) {
       return { id: t.id, title: t.title, status: "failed", fixRounds, implementer: null, review };
     }
 
-    resolvedGate = await resolveGate(t, a, baseSha, `gatetier:${t.id}:fix${fixRounds}`);
+    resolvedGate = await resolveGate(t, a, baseSha, classifierExists, `gatetier:${t.id}:fix${fixRounds}`);
     logGateTier(t, resolvedGate);
 
     review = await agent(reviewPrompt(t, a, implReport, resolvedGate, reduced), {
@@ -585,9 +659,12 @@ function isDeferred() {
 // All async work lives inside main so the top level never uses the `await`
 // keyword directly; the top level only calls and returns main().
 async function main() {
+  log("NOTE: past ~30 minutes unattended, arm the runaway guard with `claude-wf-guard <transcript-dir> <tier> [run-id]` and start /loop with no interval as the wake-up (unattended-work-guards.md); the sleep inhibitor is already tool-enforced.");
   phase("Implement");
 
   validateArgs(args);
+
+  const classifierExists = await resolveClassifier(args);
 
   let results;
 
@@ -598,7 +675,7 @@ async function main() {
           log(`task ${t.id} (${t.title}): deferred for budget`);
           return { id: t.id, title: t.title, status: "deferred", fixRounds: 0, implementer: null, review: null };
         }
-        return runTask(t, args);
+        return runTask(t, args, classifierExists);
       })
     );
     results = results.filter(Boolean);
@@ -611,7 +688,7 @@ async function main() {
         results.push({ id: t.id, title: t.title, status: "deferred", fixRounds: 0, implementer: null, review: null });
         continue;
       }
-      const record = await runTask(t, args);
+      const record = await runTask(t, args, classifierExists);
       results.push(record);
       if (stopOnEscalate && record.status !== "accepted") {
         log(`stopping after task ${t.id} (${record.status}); remaining tasks skipped`);

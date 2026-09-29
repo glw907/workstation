@@ -25,8 +25,8 @@ usually a spec under `docs/superpowers/specs/`.
   asks", produced by the `engine-consult` skill. If it carries neither, run the engine-contact
   enumeration now and append the line to the committed plan. This blocks every
   `site-implementer` dispatch.
-- Run the chain per `pass-core` with `implementer: "site-implementer"` and the repo's full
-  gate.
+- Run the chain per `pass-core` with `implementer: "site-implementer"` and the pass class's
+  per-task gate (table: `pass-core`).
 
 ## Following cairn-cms docs during the round
 

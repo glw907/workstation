@@ -26,8 +26,8 @@ guidance):
 - Execute: a fresh `claude-opus-5-5` session at effort `medium`, started from the
   STATUS resume prompt. The conductor stays thin. It never reads a diff, a source file, or a
   gate log; `diff-reviewer` reads the diff.
-- Escalate: a question Opus 5.5 at `xhigh` cannot settle goes to one `fable` dispatch,
-  never a session switch.
+- Escalate: an unsettled question follows the escalation order in
+  `~/.claude/docs/model-economy.md` "Current state", never a session switch.
 
 Brainstorm scope: probe until the plan carries no open readings. On product, taste,
 priority, scope, and budget questions, the brainstorm's length is never a cost to trim
@@ -90,6 +90,9 @@ the close.
 | `docs` | the docs tier | the register chain | none | none |
 | `tool` (Go) | `make check`, light gate lane | Opus | `go-conventions` | `tui-visual-verify` for a TUI change |
 
+Superpowers skills yield to the pass class: TDD's write-first applies to `engine-logic` and
+`auth-data` only, and plans stay outcome-only.
+
 `~/.claude/workflows/pass-execute.js` renders each class's mandate and bar into the prompts,
 demotes coverage-only findings for classes whose coverage does not block (returned as
 `batchedNotes`), and reduces the gate on a comment-only or test-only fix round (all classes
@@ -118,7 +121,7 @@ Read `~/.claude/docs/pass-gate-economy.md` before the first segment; its rules r
 implementer only through the args.
 
 Upshift a dispatch to `model: opus` only for novel correctness-critical logic the plan does
-not specify; `model: fable` only when Opus 5.5 at `xhigh` still falls short.
+not specify; any further escalation follows `~/.claude/docs/model-economy.md` "Current state".
 
 ### Execution discipline
 
@@ -154,9 +157,10 @@ not specify; `model: fable` only when Opus 5.5 at `xhigh` still falls short.
 No pass is done until every step has run. The repo skill supplies each step's commands.
 
 1. **Simplify, once per pass.** Dispatch `code-simplifier:code-simplifier` (the bare name
-   errors) over the pass's changed code, once at the close, and only when TypeScript, Svelte,
-   or Go changed. It never runs at a segment or task boundary, whatever the class; a `paint`
-   pass that changed TS or Svelte takes it once at the close, and a `docs` pass never does.
+   errors) over the pass's changed code, once at the close, and only when TypeScript
+   (JavaScript included: `.js`, `.mjs`), Svelte, or Go changed; Python and bash never take it.
+   It never runs at a segment or task boundary, whatever the class; a `paint` pass that
+   changed TS or Svelte takes it once at the close, and a `docs` pass never does.
 2. **Full gate.** The repo's full gate, including any suite a `paint` or `sweep` pass deferred
    from its tasks. A test run is green only when it exits 0.
 3. **Review fan-out by class.** `svelte-reviewer` for Svelte or load/action code,

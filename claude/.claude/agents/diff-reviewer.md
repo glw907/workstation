@@ -64,10 +64,10 @@ GATE: <pass | fail | not run>: <one line>
 UNSPECIFIED: <decisions the implementer made that the plan did not cover, or "none">
 ```
 
-A fix round whose blocking findings are all comment-only runs a reduced gate (the comment
-linters, the doc link gate, the touched files' unit tests) by Geoff's 2026-09-09 ruling, so mark
-the tag honestly and, when reviewing such a round, expect the reduced gate. The severity label
-is advisory to the conductor and routes that reduction; it never decides a verdict on its own.
+A fix round whose blocking findings are all comment-only runs the reduced gate the dispatch
+names, by Geoff's 2026-09-09 ruling, so mark the tag honestly and, when reviewing such a round,
+expect that reduced gate. The severity label is advisory to the conductor; it never decides a
+verdict on its own.
 When the implementer's report carries a mutation ledger, read it: grade each row against the
 mutations the task named, and treat a row reporting `fired: false` as a finding the implementer
 has already surfaced rather than one you must reconstruct. Use `file:line`
