@@ -19,8 +19,8 @@ example: `docs/internal/docs-register.md` in cairn-cms holds it as one drafting 
 plus a section that records every deviation.
 
 Website content is the one personal voice. It carries a site's own voice, which lives in the site's
-repo with its content guide, not here. The workstation itself keeps no house lexicon of its own, and
-the output style is the single owner of the tell catalogue.
+repo with its content guide, not here. The workstation itself keeps no house lexicon of its own. The
+output style owns the audience-invariant tells, and a repo overlay (cairn's register) owns its own.
 
 No audience, no system. A project that has not declared its audience map gets nothing automatic. The
 system fails closed rather than falling back to a generic default.
