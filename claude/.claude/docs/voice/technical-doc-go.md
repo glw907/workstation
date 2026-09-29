@@ -2,13 +2,19 @@
 
 The reader is a competent Go developer who knows the stdlib, terminals, and Unix idiom, and
 has not read this codebase. Applies to READMEs, design docs, ADRs, and package-level prose in
-the Go repos (poplar, jrnl-md, displaywidth). Code comments have their own standard in the
+the Go repos (poplar, dubplate, displaywidth). Code comments have their own standard in the
 go-conventions skill (Go Doc Comments); this register covers prose at the document level.
 
 The standard is the **Google Developer Documentation Style Guide**
-(https://developers.google.com/style). The linter is the **Vale Google package**, selected per
-glob in each repo's `.vale.ini`. The exemplar corpus is **Google's own developer documentation**.
+(https://developers.google.com/style). No Go repo selects the Vale Google package today: poplar
+and dubplate lint Go comments with the vendored `glw907` overlay (their `.vale.ini` scopes only
+`*.go`), and displaywidth carries no `.vale.ini`. Prose at the document level takes the Google
+guide by reading, and a repo that adds a `docs/**/*.md` glob selects the Google package there.
+The exemplar corpus is **Google's own developer documentation**.
 This register is the Go-prose arm of the authoring charter (`~/.claude/docs/authoring-charter.md`).
+
+The `tellgrader` cadence measures are report-only and defined in
+`~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`.
 
 ## What the standard asks for
 
@@ -48,12 +54,16 @@ application, not a person, owns the account. You grant the service account roles
 application inherits those permissions when it runs.
 ```
 
-Precise UI and action verbs, no vague "click here" (the standard's UI-verb guidance: select,
-enter, choose):
+Precise UI and action verbs in a numbered procedure, no vague "click here" (the standard's
+UI-verb guidance: select, enter, choose; a sequence of steps is a numbered list):
 
 ```
-In the Google Cloud console, go to the Roles page. Select the role you want to copy, and then
-click Create role from selection. In the Title field, enter a name for the new role.
+To copy a role, do the following:
+
+1. In the Google Cloud console, go to the Roles page.
+2. Select the role you want to copy.
+3. Click Create role from selection.
+4. In the Title field, enter a name for the new role.
 ```
 
 Reference prose for a parameter, declarative and exact, edge case stated plainly (the
@@ -72,17 +82,6 @@ caution style):
 Deleting a bucket is permanent. After you delete a bucket, its name is released and another
 user can claim it. Move any data you want to keep to another bucket before you continue.
 ```
-
-## The docs-register measures
-
-For a file in a repo that has opted in, `tellgrader` reports two cadence measures,
-`hinged_pair_share` and `short_sentence_share`, whose definitions live in
-`~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`.
-
-The measures are report-only. They carry no band and gate nothing, and the hinged-pair
-definition is unsettled; no number here is a threshold. The corpus for this audience is
-held by the consuming repo and reaches a review through the dispatching brief. No file in
-this directory names a cairn corpus entry id.
 
 ## Off-voice contrast
 

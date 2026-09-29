@@ -1,10 +1,13 @@
 # Register: SvelteKit/web developer documentation
 
 The reader is a competent web developer adopting or operating the system, who has not read the
-code. Applies to the developer-facing docs in the web repos (cairn-cms and the SvelteKit
-sites): READMEs, guides, reference pages, explanation pages, and design notes. Code comments
-have their own standard in the ts-conventions and svelte-conventions skills; this register
-covers prose at the document level.
+code. Applies to the developer-facing docs in the web repos (the SvelteKit sites and the
+non-published docs of cairn-cms): READMEs, guides, reference pages, explanation pages, and
+design notes. A published cairn-cms page, and cairn.pub's own prose, does not take its brief
+from this file: it follows the developer brief in cairn-cms `docs/internal/docs-register.md`,
+which supplements the same Google guide with the cairn docs voice. Code comments have their own
+standard in the ts-conventions and svelte-conventions skills; this register covers prose at the
+document level.
 
 The standard is the **Google Developer Documentation Style Guide**
 (https://developers.google.com/style), the same standard as the Go-prose register; this file
@@ -12,6 +15,9 @@ carries the web dialect and its exemplars. The linter is the **Vale Google packa
 per glob in each repo's `.vale.ini`. The exemplar corpus is **Google's own developer
 documentation**. This register is the web-prose arm of the authoring charter
 (`~/.claude/docs/authoring-charter.md`).
+
+The `tellgrader` cadence measures are report-only and defined in
+`~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`.
 
 ## What the standard asks for
 
@@ -54,12 +60,16 @@ complete page, so the content is available before JavaScript loads (which improv
 experience on a slow connection and for search-engine crawlers).
 ```
 
-Precise action verbs for a setup step, second person (the standard's UI- and command-verb
-guidance):
+Precise action verbs for a setup procedure, second person, one action per numbered step (the
+standard's UI- and command-verb guidance, and its rule that a sequence of steps is a numbered
+list):
 
 ```
-To add the integration, install the package and register the plugin. In your terminal, run
-npm install. Then, in vite.config.js, import the plugin and add it to the plugins array.
+To add the integration, install the package and register the plugin:
+
+1. In your terminal, run npm install.
+2. In vite.config.js, import the plugin.
+3. Add the plugin to the plugins array.
 ```
 
 Reference prose for an option, declarative, the default and the edge case stated plainly (the
@@ -78,17 +88,6 @@ Load functions run on the server and in the browser. Do not access private envir
 variables or a database connection in a shared load function, because that code also runs on
 the client. Put server-only data access in a +page.server.js file instead.
 ```
-
-## The docs-register measures
-
-For a file in a repo that has opted in, `tellgrader` reports two cadence measures,
-`hinged_pair_share` and `short_sentence_share`, whose definitions live in
-`~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`.
-
-The measures are report-only. They carry no band and gate nothing, and the hinged-pair
-definition is unsettled; no number here is a threshold. The corpus for this audience is
-held by the consuming repo and reaches a review through the dispatching brief. No file in
-this directory names a cairn corpus entry id.
 
 ## Off-voice contrast
 

@@ -10,6 +10,9 @@ The exemplar corpus is the convention's own published examples and the canonical
 commit-message guidance. This register is the commit arm of the authoring charter
 (`~/.claude/docs/authoring-charter.md`).
 
+The `tellgrader` cadence measures do not apply to a commit message or a PR body; their definitions
+are in `~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`.
+
 ## What the standard asks for
 
 - Structure the subject as `type(scope): description`. The type is one of `feat`, `fix`,
@@ -92,20 +95,6 @@ to your config before upgrading; there is no default.
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ```
-
-## The docs-register measures
-
-The docs-register profile resolves by path, against a repo's declared `include` and
-`exclude` globs, and a commit message or a PR body is never a path on disk that profile
-resolution can match. `tellgrader` never reports `hinged_pair_share` or
-`short_sentence_share` for one, so this section records the measures' existence and this
-register's exemption from them rather than a practice to follow.
-
-The definitions, for a reader who reaches this file from the docs-register measures
-section in a sibling register, live in
-`~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`.
-They are report-only everywhere they do apply, carry no band, and gate nothing, and the
-hinged-pair definition is unsettled; no number in that file is a threshold.
 
 ## Off-voice contrast
 

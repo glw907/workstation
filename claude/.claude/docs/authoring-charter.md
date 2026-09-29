@@ -12,9 +12,15 @@ docs, Microsoft for end-user copy, Go Doc Comments and TSDoc and PEP 257 for cod
 Code best practices for agent-facing files, Conventional Commits for commit messages. Name the
 audience before drafting anything longer than a paragraph, then write to that standard.
 
-One audience is the exception. Website content carries a site's own voice, and that voice lives in the
-site's repo with its content guide, not here. Everywhere else the standard is external, so the
-workstation keeps no house voice of its own, no house lexicon, and no per-model tell catalogue.
+Every audience starts from a published external standard. A repo may carry a named house voice on top
+of it as a recorded overlay. The overlay never replaces the base standard's structure, and each
+departure from the base carries its provenance and Geoff's ruling. Cairn's docs voice is the named
+example: `docs/internal/docs-register.md` in cairn-cms holds it as one drafting brief per base guide
+plus a section that records every deviation.
+
+Website content is the one personal voice. It carries a site's own voice, which lives in the site's
+repo with its content guide, not here. The workstation itself keeps no house lexicon of its own, and
+the output style is the single owner of the tell catalogue.
 
 No audience, no system. A project that has not declared its audience map gets nothing automatic. The
 system fails closed rather than falling back to a generic default.
