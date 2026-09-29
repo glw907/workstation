@@ -177,7 +177,9 @@ No pass is done until every step has run. The repo skill supplies each step's co
    would be wrong to rediscover. An initiative or a standard-setting carry goes to
    `ROADMAP.md`; a shipped roadmap item leaves its live tier. Initiative state never goes to
    memory: memory holds only what the repo cannot (preferences, corrections, the why behind a
-   ruling no doc records).
+   ruling no doc records). When the pass's spec or plan had a full-sequence `spec-plan-review`,
+   the HISTORY entry names any finding its fold refused that turned out to be a real defect
+   during execution, or says none did (the fold-rule trial, Geoff, 2026-09-28).
 7. **Commit** specific files, never `git add -A`. Push or merge per the repo skill.
 8. **Pre-bake and hand off** (below). Always, not on request.
 

@@ -19,7 +19,10 @@ Anthropic's Claude Code best practices (https://code.claude.com/docs/en/best-pra
 the risk this process is built around:
 
 > "A reviewer prompted to find gaps will usually report some, even when the work is sound,
-> because that is what it was asked to do. Chasing every finding leads to over-engineering."
+> because that is what it was asked to do. Chasing every finding leads to over-engineering: extra
+> abstraction layers, defensive code, and tests for cases that can't happen. Tell the reviewer to
+> flag only gaps that affect correctness or the stated requirements, and treat the rest as
+> optional."
 
 ## The sequence
 
@@ -122,6 +125,12 @@ One fold agent (`claude-opus-5-5`, effort `high`) takes every review file. Its d
   questions for the sake of ceremony").
 - When the revision silently changes a ratified document's meaning, record it as an owed
   erratum in the fold record. The fold does not edit the ratified document.
+- **End the fold record with a measures block**, for a full-sequence review: new-mechanism
+  findings folded versus refused (each folded one naming its source and measured defect), the
+  target's line count before and after the fold, and any token-ceiling change. Growth past about
+  25% or a raised ceiling is the signal to revisit this skill's fold rules (Geoff, 2026-09-28;
+  the trial runs three full-sequence reviews). The fourth measure, a refused finding that proved
+  real, is scored at the pass close (`pass-core`, Ledgers).
 - Write only the target and the fold record. Never commit when a code lane shares the tree.
 
 ## Step 3: the verification read
