@@ -40,6 +40,7 @@ run "ruff docstring rules (python)" bash scripts/check-py-comments.sh
 run "vale-hook test suite" uv run --with pytest --no-project python -m pytest tests/ -q
 run "vale style fixtures" bash tests/vale/run-fixtures.sh
 run "docs-page-chain derivation test" node tests/docs-page-chain-derivation.test.mjs
+run "pass-execute runners test" node tests/pass-execute-runners.test.mjs
 run "ratchet baseline" python3 claude/.claude/tooling/ratchet.py check --root .
 run "claude-tooling-sync lint" bin/.local/bin/claude-tooling-sync lint --root .
 run "gitleaks working-tree scan" gitleaks dir . --no-banner --redact

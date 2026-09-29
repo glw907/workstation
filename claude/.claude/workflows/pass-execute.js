@@ -166,11 +166,7 @@ const REVIEW_SCHEMA = {
           // files alone; coverageOnly means the finding is test coverage or granularity with
           // no behavior defect.
           testOnly: { type: "boolean" },
-          coverageOnly: { type: "boolean" },
-          severity: {
-            type: "string",
-            enum: ["blocking-correctness", "blocking-contract", "comment-only", "optional"]
-          }
+          coverageOnly: { type: "boolean" }
         },
         required: ["location", "finding", "fix"]
       }
@@ -352,6 +348,34 @@ function implementPrompt(t, a, blocking, baseSha) {
   return lines.filter(Boolean).join("\n");
 }
 
+// === GATE MATCHER (tests extract this block; kept identical in pass-execute-chains.js) ===
+/**
+ * Normalizes a gate string for comparison: keeps only its last non-empty line (a probe can
+ * return the classifier's whole stdout, preamble and all), unwraps a `cairn-run-gate '<cmd>'`
+ * call, and treats an absolute repo path and its repo-relative form, or extra spacing, as the
+ * same target.
+ */
+function gateCore(s, repo) {
+  const last = String(s).trim().split("\n").pop().trim();
+  const wrapped = last.match(/cairn-run-gate\s+'([^']+)'/);
+  const cmd = wrapped ? wrapped[1] : last;
+  return cmd.split(`${repo}/`).join("").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * True when the gate string the implementer ran matches the gate string the runner
+ * independently resolved. A task gate may carry a `<placeholder>` the implementer fills in (for
+ * example `<the touched unit test files>`); the placeholder matches any non-empty text.
+ */
+function gateMatches(ran, resolved, repo) {
+  const pattern = gateCore(resolved, repo)
+    .split(/<[^<>]+>/)
+    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join(".+?");
+  return new RegExp(`^${pattern}$`).test(gateCore(ran, repo));
+}
+// === END GATE MATCHER ===
+
 function reviewClassLines(cls, reduced) {
   const lines = [
     `Pass class: ${cls.name}. Blocking bar: ${cls.bar}`,
@@ -366,31 +390,15 @@ function reviewClassLines(cls, reduced) {
 function reviewPrompt(t, a, implReport, resolvedGate, reduced) {
   const cls = classOf(t, a);
   const ranCommand = implReport.gateCommand || t.gate || a.gate;
-  // The probe can return the classifier's whole stdout (preamble, file list, then the command),
-  // and an implementer may report the cairn-run-gate wrapper, so compare on the command alone.
-  const gateCore = (s) => {
-    const last = String(s).trim().split("\n").pop().trim();
-    const wrapped = last.match(/cairn-run-gate\s+'([^']+)'/);
-    const cmd = wrapped ? wrapped[1] : last;
-    // An absolute repo path and a repo-relative one name the same target; so does extra spacing.
-    return cmd.split(`${a.repo}/`).join("").replace(/\s+/g, " ").trim();
-  };
-  // A task gate may carry a `<placeholder>` the implementer fills in (for example
-  // `<the touched unit test files>`); the placeholder matches any non-empty text.
-  const gateMatches = (ran, resolved) => {
-    const pattern = gateCore(resolved)
-      .split(/<[^<>]+>/)
-      .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-      .join(".+?");
-    return new RegExp(`^${pattern}$`).test(gateCore(ran));
-  };
   const classReduced = cls && reduced;
   // WATCH: a gate string that adds a test file the criteria permit (a new sibling test on the
   // unit leg) differs from the resolved string, so it reads as a MISMATCH the reviewer escalates
   // (theme identity pass A, segment B). If it recurs, let the resolved gate accept an added test
   // path under the task's Files.
+  // Any reduced round, class-based or the pre-class a.reducedGate fallback, is exempt from the
+  // mismatch check: its expected gate is the reduced one, not resolvedGate.
   const mismatch =
-    !classReduced && resolvedGate.gate && implReport.gateCommand && !gateMatches(implReport.gateCommand, resolvedGate.gate)
+    !reduced && resolvedGate.gate && implReport.gateCommand && !gateMatches(implReport.gateCommand, resolvedGate.gate, a.repo)
       ? `MISMATCH: the runner independently resolved a different gate string ("${resolvedGate.gate}") than the implementer reports running. Treat this mismatch itself as a blocking finding.`
       : "";
   return [
@@ -437,7 +445,7 @@ function taskStatus(review, implReport) {
 async function recordBaseSha(a, label) {
   const out = await agent(
     `Repo: ${a.repo}\nRun \`git rev-parse HEAD\` there and report exactly that commit SHA, nothing else.`,
-    { label, phase: "Implement", schema: GATE_PROBE_SCHEMA, effort: "low" }
+    { label, phase: "Implement", schema: GATE_PROBE_SCHEMA, model: "haiku", effort: "low" }
   );
   return out && out.sha ? out.sha.trim() : "";
 }
@@ -465,7 +473,7 @@ async function resolveGate(t, a, baseSha, label) {
       `If it does, run exactly \`${cmd}\` from the repo root and report exists: true and gate: "<its exact stdout, trimmed>". On a non-zero exit or empty stdout, report exists: true and gate: "".`,
       `Do not run any other command and never modify a file.`
     ].join("\n"),
-    { label, phase: "Implement", schema: GATE_TIER_SCHEMA, effort: "low" }
+    { label, phase: "Implement", schema: GATE_TIER_SCHEMA, model: "haiku", effort: "low" }
   );
   if (!probe || !probe.exists || !probe.gate) {
     return { gate: t.gate || a.gate, source: "fallback", tier: "default" };
@@ -485,9 +493,9 @@ async function runTask(t, a) {
   const reviewerModel = a.reviewerModel || (cls ? cls.reviewerModel : DEFAULT_REVIEWER_MODEL);
   const batchedNotes = [];
 
-  // A task may name an implementer model override (t.model); agent()'s model
-  // option takes precedence over the agent definition's pinned model.
-  const implOpts = t.model ? { model: t.model } : {};
+  // A task may name an implementer model override (t.model), else the workstation default:
+  // an undeclared dispatch falls to sonnet.
+  const implModel = t.model || "sonnet";
 
   const baseSha = await recordBaseSha(a, `base:${t.id}`);
 
@@ -495,8 +503,8 @@ async function runTask(t, a) {
     label: `impl:${t.id}`,
     phase: "Implement",
     agentType: implementer,
-    schema: IMPL_SCHEMA,
-    ...implOpts
+    model: implModel,
+    schema: IMPL_SCHEMA
   });
 
   if (!implReport) {
@@ -529,8 +537,8 @@ async function runTask(t, a) {
       label: `impl:${t.id}:fix${fixRounds}`,
       phase: "Implement",
       agentType: implementer,
-      schema: IMPL_SCHEMA,
-      ...implOpts
+      model: implModel,
+      schema: IMPL_SCHEMA
     });
 
     if (!implReport) {
@@ -585,6 +593,7 @@ function isDeferred() {
 // All async work lives inside main so the top level never uses the `await`
 // keyword directly; the top level only calls and returns main().
 async function main() {
+  log("NOTE: past ~30 minutes unattended, arm the runaway guard with `claude-wf-guard <transcript-dir> <tier> [run-id]` and start /loop with no interval as the wake-up (unattended-work-guards.md); the sleep inhibitor is already tool-enforced.");
   phase("Implement");
 
   validateArgs(args);
