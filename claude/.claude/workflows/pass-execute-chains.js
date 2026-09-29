@@ -202,23 +202,27 @@ function classOf(t, a) {
 }
 
 /**
- * Returns the reduced gate a fix round runs, or null for the full gate. Without a class, an
- * all-commentOnly round still reduces, to `t.reducedGate`, `a.reducedGate`, or the class
- * default (Geoff's 2026-09-09 ruling: a fix round never falls through to the full gate for want
- * of an explicit `a.reducedGate`).
+ * The reduced gate a task names, most specific first: `t.reducedGate`, then `a.reducedGate`,
+ * then the class default.
+ */
+function configuredReducedGate(t, a) {
+  return t.reducedGate || a.reducedGate || CLASS_DEFAULT_REDUCED_GATE;
+}
+
+/**
+ * Returns the reduced gate a fix round runs, or null for the full gate. A round reduces when
+ * every blocking finding is commentOnly, or, under a class whose `testOnlyReduces` is set,
+ * commentOnly or testOnly. Without a class an all-commentOnly round still reduces (Geoff's
+ * 2026-09-09 ruling: a fix round never falls through to the full gate for want of an explicit
+ * `a.reducedGate`).
  */
 function reducedGateFor(t, a, cls, blocking) {
   if (!blocking || blocking.length === 0) {
     return null;
   }
-  if (!cls) {
-    return blocking.every((b) => b.commentOnly) ? (t.reducedGate || a.reducedGate || CLASS_DEFAULT_REDUCED_GATE) : null;
-  }
-  const reducible = (b) => b.commentOnly || (cls.testOnlyReduces && b.testOnly);
-  if (!blocking.every(reducible)) {
-    return null;
-  }
-  return t.reducedGate || a.reducedGate || CLASS_DEFAULT_REDUCED_GATE;
+  const testOnlyReduces = Boolean(cls && cls.testOnlyReduces);
+  const reducible = (b) => b.commentOnly || (testOnlyReduces && b.testOnly);
+  return blocking.every(reducible) ? configuredReducedGate(t, a) : null;
 }
 
 /**
@@ -293,8 +297,7 @@ function implementPrompt(t, chain, a, blocking, baseSha, classifierExists) {
     if (reduced && !cls) {
       lines.push(`Every finding above is COMMENT-ONLY (the fix changes comment or doc text, never code behavior). For this fix round the gate is reduced: run ${renderGateText(reduced)} through cairn-run-gate and report that reduced gate as the gate result; do not run the full gate string. If your fix diff touches any non-comment line, run the full gate string instead.`);
     } else if (reduced) {
-      const gateText = reduced === CLASS_DEFAULT_REDUCED_GATE ? reduced : `\`${reduced}\``;
-      lines.push(`Every finding above is COMMENT-ONLY or TEST-ONLY (the fix changes comment or doc text, or test files alone, never source behavior). For this fix round the gate is reduced: run ${gateText}, through cairn-run-gate, and report that exact string as gateCommand and its result as the gate result; do not run the full gate string. If your fix diff touches any source line outside tests and comments, run the full gate string instead.`);
+      lines.push(`Every finding above is COMMENT-ONLY or TEST-ONLY (the fix changes comment or doc text, or test files alone, never source behavior). For this fix round the gate is reduced: run ${renderGateText(reduced)}, through cairn-run-gate, and report that exact string as gateCommand and its result as the gate result; do not run the full gate string. If your fix diff touches any source line outside tests and comments, run the full gate string instead.`);
     }
   }
   return lines.filter(Boolean).join("\n");
@@ -334,8 +337,7 @@ function gateMatches(ran, resolved, repo) {
  * this particular round is one.
  */
 function noClassReviewLine(t, a) {
-  const g = t.reducedGate || a.reducedGate || CLASS_DEFAULT_REDUCED_GATE;
-  return `For each blocking finding set commentOnly: true when its fix changes only comment or doc text and no code behavior; a fix round whose findings are all comment-only runs the reduced gate ${renderGateText(g)}, so mark it honestly. If you are reviewing such a fix round, that reduced gate is the expected gate.`;
+  return `For each blocking finding set commentOnly: true when its fix changes only comment or doc text and no code behavior; a fix round whose findings are all comment-only runs the reduced gate ${renderGateText(configuredReducedGate(t, a))}, so mark it honestly. If you are reviewing such a fix round, that reduced gate is the expected gate.`;
 }
 
 function reviewClassLines(cls, reduced) {
