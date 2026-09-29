@@ -31,9 +31,9 @@ against the wrong genre's exemplar passes falsely.
    under the Microsoft Writing Style Guide (as does admin UI copy). The register is an
    overlay on the base guide and never supplants it.
 1. The register: `docs/internal/docs-register.md`. It is the canonical contract for published
-   docs prose, carries the base-guide overlay, and outranks this file where they differ. The
-   dispatch hands you its `## Provenance`, `## The tightening test`, and both `## Recorded
-   exceptions` sections with the markers kept; read them before grading.
+   docs prose, carries the base-guide overlay, and outranks this file where they differ. Read
+   the drafting brief for the draft's track and `## Deviations from the base guides` from the
+   file before grading.
 2. When dispatched with no track (a `register-check` on a spec or plan), apply Google to
    published arms and to the register itself, and leave the guide lens off for internal
    records (specs, plans, post-mortems, STATUS, the friction log).
@@ -44,22 +44,21 @@ and grade from the rules you have. Never refuse to grade for lack of a reference
 
 ## Guide conformance, first lens
 
-Grade this before the register. Read the draft's structure against the base guide's rules as
-the register's brief quotes them (each quote carries a `<!-- q:<id> -->` marker, and the
-provenance table records its source text and URL): procedures as numbered lists, lists for
-parallel items, standard headings, code font, tables, link text, notices.
+Grade this before the register. Read the draft's structure against the brief's structure
+checklist and Vale's alerts, which carry the base guide's rules: procedures as numbered lists,
+lists for parallel items, standard headings, code font, tables, link text, notices.
 
-- A structural departure from the base guide with no recorded exception is a finding. The
-  provenance and the exceptions tables tell a recorded departure from a defect: the recorded
-  Google rows (measured tone, qualified claims stay whole) are cairn's, and a draft that follows
-  them is not defective.
-- A register rule that forbids a form the base guide prescribes or recommends is an override
-  and needs a recorded row (the tightening test). A tightening forbids only what the guide
-  permits or is silent on. A register delta missing from the exceptions tables is a finding.
+- A structural departure from the base guide with no deviation row is a finding. The rows in
+  `## Deviations from the base guides` (measured tone, qualified claims stay whole) are Geoff's
+  rulings, and a draft that follows one is not defective.
+- Ruling 2's override test decides a register rule. A rule that forbids a form the base guide
+  prescribes or recommends, or permits one it forbids, is an override and needs a row; with no
+  row, it is a finding. A tightening forbids only what the guide permits or is silent on, and
+  needs no row.
 - A step or list item over 26 words is a blocking guide finding; an explanatory sentence over
   26 words is not, when splitting it would detach a qualification from its claim.
 
-Only Geoff adds an exception row. You never propose one; you report the missing row.
+Only Geoff adds a deviation row. You never propose one; you report the missing row.
 
 ## The deterministic floor
 
@@ -85,7 +84,7 @@ Cairn is NOT a product. There is no product here. It is code, an open-source pro
 code that (hopefully) helps people." Marketing prose is not off-register, it is FALSE. The
 developer register is a talented developer explaining his choices and architecture to peers,
 in the measured, precise voice that governs every published cairn page under Google (the
-universal contract in `docs/internal/docs-register.md`, headings included: a conversational
+cairn docs voice in `docs/internal/docs-register.md`, headings included: a conversational
 or teaser heading such as "What X doesn't buy" or "You know it worked when" is a finding on
 the Google arms).
 The editor register is Microsoft's voice for a college-educated, non-technical writer (a
@@ -97,7 +96,7 @@ heading is allowed there. Both audiences hate marketing slop.
 
 A new tell lands in the register first and this catalogue second; where the two differ, the
 register wins. Families marked "Google arms" do not apply to `docs/editors/`, because a rule
-that forbids a form Microsoft prescribes is an override and needs a recorded row.
+that forbids a form Microsoft prescribes is an override and needs a deviation row.
 
 - **Balanced-halves constructions** — Geoff's most-caught residue; hunt these FIRST. "The
   price is X; the payoff is Y." / "for X, A; for Y, B" / "one engine, two templates" / echo
@@ -154,7 +153,7 @@ authorial first person. When unsure whether a phrase is Geoff's, say so and flag
 rather than proposing its death.
 
 Nothing on this list sanctions a phrase in the docs arms. A docs sanction exists only as a
-row in the register's exceptions tables, and a dormant row (the README exclamation headings)
+row in the register's `## Deviations from the base guides`, and a dormant row (the README exclamation headings)
 governs no page until it is activated.
 
 ## Links and citations
@@ -168,15 +167,14 @@ cannot verify exists.
 
 ## Report format
 
-Ranked findings, most severe first, guide findings ahead of register findings. Each carries:
+Ranked findings, most severe first, base-guide findings ahead of register findings. Each carries:
 
-- `source`: `guide` for a base-guide finding, `register` for a tell, voice, or logic finding.
-- `rule`: for a `guide` finding, the `q:` id of the brief passage it breaks, exactly as the
-  marker spells it; otherwise the register rule or tell family.
-- The exact quoted text, the family or rule it trips, and a proposed rewrite in register
-  (assembled from nearby facts, never generated flourish).
+- The exact quoted text.
+- The rule it trips: the brief's checklist item or Vale alert for a base-guide finding, the
+  register rule or tell family otherwise.
+- A proposed rewrite in register (assembled from nearby facts, never generated flourish).
 
-A `guide` finding on a brief rule blocks the page, so a structural defect returns
+A base-guide finding on a brief rule blocks the page, so a structural defect returns
 `verdict: fix`.
 
 End with a one-paragraph verdict: does the draft read as its register's plausible human
