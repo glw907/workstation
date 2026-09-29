@@ -49,7 +49,7 @@ Claude infra sweep, passes A-core then B: plan
 started 2026-09-28; task ledger below. After B merges, the cairn-cms style-guide-sync plan is
 re-baselined on the corrected infra, then A-rest, C and D, E, and the per-repo F chores follow.
 
-Ledger: A-core and B merged (fill in: merge SHAs recorded after the conductor's merge); next
+Ledger: A-core and B merged (A-core `c3e709c`, B `7de1210`; rollback is `git revert -m 1`, B before A-core); next
 action is the cairn-cms style-guide-sync re-baseline (apply the sweep spec's ten amendments to
 that plan, run its verification read, then execute on the corrected infra), then A-rest (spec
 now includes the monthly drift routine, the release trigger for Anthropic practice, and the
