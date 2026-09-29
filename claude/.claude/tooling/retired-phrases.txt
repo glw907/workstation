@@ -85,3 +85,9 @@ Compatibility note (2026-09-24, docs reset pass 1 close)
 # its close, so a small task goes straight through the gates alone; 0a2e391 restored the
 # per-task simplifier clause. Witness: claude/.claude/CLAUDE.md:261. Fixed in pass B4.
 straight through the gates and code-simplifier
+
+# DC-29: the harness's default attribution (the model-named trailer) owns the commit footer; the
+# generic footer string goes (Geoff, 2026-09-28, S7). Witnesses: claude/.claude/CLAUDE.md:68,
+# claude/.claude/workflows/cairn-overnight-to-release.js:76,
+# claude/.claude/docs/voice/commit-and-pr.md:93. Fixed in pass B4.
+Co-Authored-By: Claude <noreply@anthropic.com>

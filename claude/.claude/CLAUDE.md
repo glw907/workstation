@@ -66,7 +66,6 @@ reconciles, a weekly timer notifies on drift. Repo gate: `scripts/check.sh`. New
   for docs. A pass runs it as `pass-core`'s close step. (poplar keeps its own Go-aware
   `simplify` skill.)
 - Imperative mood: "Add feature" not "Added feature"
-- Co-authored footer: `Co-Authored-By: Claude <noreply@anthropic.com>`
 - Commit specific files, not `git add -A`
 - Never commit .env files or secrets; never force push to main/master
 
@@ -181,9 +180,9 @@ write STATUS at each checkpoint, at any split, and before any question to Geoff.
 ceiling, finish the task, write STATUS, and ask one combined question at the next segment
 boundary. Segment a pass at three to four tasks, every boundary on a green commit; override
 only for an irreversible task, a second `fix` verdict, or a disjoint Files seam (Geoff,
-2026-09-12). Pre-bake before executing (commit the plan, point STATUS at it, refresh memory); anything
-load-bearing lives in an artifact;
-skip the `writing-plans` "which execution method?" question. Close the session rather than
+2026-09-12). Pre-bake before executing: commit the plan and update STATUS to point at it; memory
+takes only a preference or a ruling's why. Anything load-bearing lives in an artifact; skip the
+`writing-plans` "which execution method?" question. Close the session rather than
 re-prime it after an idle gap.
 
 ## Gate economy on a pass (Geoff, 2026-09-09)
@@ -211,8 +210,9 @@ prompt. Drop tool output, diffs, and agent transcripts.
 
 Outside a pass plan that names the workflow mode, the Workflow tool runs only on Geoff's
 explicit opt-in ("use a workflow"); when a task would clearly benefit, suggest it in one
-sentence with shape and scale. Past ~30 minutes of unattended work, arm the runaway guard and
-the sleep inhibitor: `~/.claude/docs/unattended-work-guards.md`.
+sentence with shape and scale. Past ~30 minutes of unattended work, the tools hold the sleep
+inhibitor; at launch, arm the runaway guard and the wake-up that
+`~/.claude/docs/unattended-work-guards.md` names.
 
 ## Initiative-scoped sessions
 

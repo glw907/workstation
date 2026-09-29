@@ -90,7 +90,7 @@ of writing to the wrong branch silently.
 BREAKING CHANGE: publishBranch is now required in cairn.config. Add it
 to your config before upgrading; there is no default.
 
-Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ```
 
 ## The docs-register measures
