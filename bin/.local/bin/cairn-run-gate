@@ -10,6 +10,17 @@
 # again. A finished gate's result is printed once and then cleared, so a later call with
 # the same string starts a fresh run.
 #
+# Vanish: if the tracked pid dies with no status file (an OOM kill outside the scope, a
+# signal that raced the writer, or a state directory an older copy of this script left with
+# no status at all), the run state clears and the call exits 75 with "gate vanished;
+# re-issue starts a fresh run" and prints no "gate exit:" line, so the standing "re-issue on
+# 75 until gate exit:" instruction already covers it. A state directory's vanish count bounds
+# the loop: the third consecutive vanish prints the terminal "gate exit: 1 (vanished 3
+# times)" and exits 1. A gate that itself completes with exit 75 is still distinguishable,
+# since only a real completion prints "gate exit:". CAIRN_GATE_POLL_INTERVAL (default 5) and
+# CAIRN_GATE_GRACE (default 15) set the wait loop's poll and post-death grace seconds; a test
+# shortens both so a staged dead pid resolves in about a second.
+#
 # Usage: cairn-run-gate '<gate string>' [log path]
 # Memory: the gate runs in a transient user scope capped by CAIRN_GATE_MEMORY_HIGH (7G),
 # CAIRN_GATE_MEMORY_MAX (8G), and CAIRN_GATE_SWAP_MAX (4G); override per call as needed.
@@ -25,6 +36,8 @@
 set -u
 gate="${1:?gate string required}"
 wait_s="${CAIRN_GATE_WAIT:-540}"
+poll_s="${CAIRN_GATE_POLL_INTERVAL:-5}"
+grace_s="${CAIRN_GATE_GRACE:-15}"
 key=$(printf '%s\n%s' "$PWD" "$gate" | sha256sum | cut -c1-16)
 gatedir="${TMPDIR:-/tmp}/cairn-gate-$(id -u)"
 state="$gatedir/$key"
@@ -32,6 +45,7 @@ mkdir -p "$state"
 log="${2:-$state/gate.log}"
 pidfile="$state/pid"
 statusfile="$state/status"
+vanishfile="$state/vanished"
 
 if [ ! -e "$pidfile" ]; then
   rm -f "$statusfile"
@@ -84,13 +98,13 @@ fi
 pid=$(cat "$pidfile")
 waited=0
 while [ ! -e "$statusfile" ] && [ "$waited" -lt "$wait_s" ]; do
-  sleep 5
-  waited=$((waited + 5))
+  sleep "$poll_s"
+  waited=$((waited + poll_s))
   if ! kill -0 "$pid" 2>/dev/null && [ ! -e "$statusfile" ]; then
     # The status file can land a few seconds after the recorded pid exits (the scope and flock
     # layers finish after it), so allow a grace period before calling the gate lost.
     grace=0
-    while [ ! -e "$statusfile" ] && [ "$grace" -lt 15 ]; do
+    while [ ! -e "$statusfile" ] && [ "$grace" -lt "$grace_s" ]; do
       sleep 1
       grace=$((grace + 1))
     done
@@ -104,11 +118,25 @@ if [ ! -e "$statusfile" ]; then
     echo "Re-run this exact cairn-run-gate command to keep waiting; do not tail, wc, ps, or sleep on the log."
     exit 75
   fi
-  echo "gate process vanished without a status; treating as failure (log: $log)"
-  status=1
+  # The recorded pid died and no status file ever appeared (an OOM kill outside the scope, a
+  # signal that raced the writer, or a state directory an older cairn-run-gate left with no
+  # status at all). Clear the run state so a re-issued command starts a fresh gate instead of
+  # reattaching to a dead pid, and count consecutive vanishes so a gate command that always
+  # vanishes still terminates instead of looping forever.
+  vanish_count=$(( $(cat "$vanishfile" 2>/dev/null || echo 0) + 1 ))
+  rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane"
+  if [ "$vanish_count" -ge 3 ]; then
+    rm -f "$vanishfile"
+    echo "gate exit: 1 (vanished 3 times)"
+    exit 1
+  fi
+  echo "$vanish_count" >"$vanishfile"
+  echo "gate vanished; re-issue starts a fresh run"
+  exit 75
 else
   status=$(cat "$statusfile")
 fi
+rm -f "$vanishfile"
 
 # Tell whoever ran this gate when it lost real time to the queue. The rule that a browserless
 # gate belongs on the light lane is easy to not know; the wait is where it costs, so say it here.

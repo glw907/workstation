@@ -41,6 +41,7 @@ run "vale-hook test suite" uv run --with pytest --no-project python -m pytest te
 run "vale style fixtures" bash tests/vale/run-fixtures.sh
 run "docs-page-chain derivation test" node tests/docs-page-chain-derivation.test.mjs
 run "pass-execute runners test" node tests/pass-execute-runners.test.mjs
+run "cairn-run-gate vanish handling" bash tests/cairn-run-gate.test.sh
 run "ratchet baseline" python3 claude/.claude/tooling/ratchet.py check --root .
 run "claude-tooling-sync lint" bin/.local/bin/claude-tooling-sync lint --root .
 run "gitleaks working-tree scan" gitleaks dir . --no-banner --redact

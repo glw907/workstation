@@ -95,13 +95,11 @@ Before reporting, check these; each one cost a full fix round on chassis-B2:
 - Re-emit any generated tree before the gate, and commit it in the same commit.
 
 Run the gate string through `cairn-run-gate '<gate string>'`, in the `cd <absolute path> &&
-<gate>` form. When the dispatch names the light gate lane, write the call as `CAIRN_GATE_LANE=light cairn-run-gate '<gate string>'`, on the first call and on every re-issue: a gate that launches no browser takes its own lock and does not queue behind a browser gate. Exit 75 means the gate is still running, not that it failed: re-issue the exact
-same command, which reattaches to the running gate. Keep re-issuing until the runner prints the
-gate exit status and the last 60 lines; that is the only end to the loop. A line saying the
-gate process vanished without a status means the run was lost, not that the gate failed; start
-a fresh run rather than report red. The re-issue is the only permitted wait: `run_in_background`
-and log polling are both forbidden. The foreground Bash call takes `timeout: 600000`. When the
-dispatch says a fix round is comment-only, run the reduced gate it names, not the full string.
+<gate>` form, prefixed with `CAIRN_GATE_LANE=light` on the first call and every re-issue when the
+dispatch names the light lane, as a plain foreground Bash call with `timeout: 600000`, and follow
+its own output for whether to re-issue and for the final result; `run_in_background` and log
+polling are both forbidden. When the dispatch says a fix round is comment-only, run the reduced
+gate it names, not the full string.
 
 ## The facts container
 

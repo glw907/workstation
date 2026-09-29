@@ -48,3 +48,16 @@ sleep 30
 # CS-4: the installed Go toolchain has moved past the pinned "currently 1.26" claim; go-conventions
 # takes no pinned version. Fixed in pass D.
 currently 1.26
+
+# AW-17: cairn-run-gate now exits 75 with its own vanish line instead of falling through to a
+# reported failure; site-implementer.md's and pass-execute.js's paragraphs describing the old
+# fallback go. Fixed in pass B2.
+the gate process vanished without a status means the run was lost
+
+# AW-20: the gate protocol lives in cairn-run-gate's own output; cairn-implementer.md's restated
+# paragraph goes. Fixed in pass B2.
+it reattaches and waits again. Repeat until it prints
+
+# AW-20: docs-page-chain.js's restated exit-75 paragraph goes; the gate runner defers to
+# cairn-run-gate's own output. Fixed in pass B2.
+never poll a log. Report the exact command and the last twenty lines as your report's gate fields

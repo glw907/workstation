@@ -108,13 +108,12 @@ Before reporting, check these; each one cost a full fix round on chassis-B2:
 - Re-emit any generated tree before the gate, and commit it in the same commit.
 
 Run the gate string only through `cairn-run-gate '<gate string>'`, as a plain foreground
-Bash call with `timeout: 600000`. When the dispatch names the light gate lane, write the call as `CAIRN_GATE_LANE=light cairn-run-gate '<gate string>'`, on the first call and on every re-issue: a gate that launches no browser takes its own lock and does not queue behind a browser gate. The runner starts the gate detached and waits up to nine
-minutes. When it prints "gate still running" (exit 75), re-issue the same cairn-run-gate
-command; it reattaches and waits again. Repeat until it prints "gate exit:" with the last 60
-lines. That re-issue is the only permitted wait: never run the gate or a test suite with
-run_in_background, and never tail, wc, cat, ps, or sleep on a log (a transcript of such polls
-is a task failure the conductor halts). When the dispatch says a fix round is comment-only,
-run the reduced gate it names, not the full string.
+Bash call with `timeout: 600000`, prefixed with `CAIRN_GATE_LANE=light` on the first call and
+every re-issue when the dispatch names the light lane, and follow its own output for whether to
+re-issue and for the final result; never run the gate or a test suite with `run_in_background`,
+and never tail, wc, cat, ps, or sleep on a log (a transcript of such polls is a task failure the
+conductor halts). When the dispatch says a fix round is comment-only, run the reduced gate it
+names, not the full string.
 
 ## The facts container
 
