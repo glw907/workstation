@@ -162,8 +162,14 @@ def resolve_self_mode(raw, root, home):
 
 
 def dead_reference_violations(root, home):
-    """Yield ``{"check", "file", "fingerprint"}`` for every unresolved self-mode span."""
+    """Yield ``{"check", "file", "fingerprint"}`` for every unresolved self-mode span.
+
+    Markdown only: a ``.js`` backtick pair is a template literal, not an inline code span, and
+    scanning it for path-shaped text would read JavaScript syntax as prose citations.
+    """
     for path in scan_files(root, include_vendored=False):
+        if path.suffix != ".md":
+            continue
         text = path.read_text(errors="replace")
         rel = str(path.relative_to(root))
         for m in BACKTICK_SPAN.finditer(text):
