@@ -61,3 +61,11 @@ it reattaches and waits again. Repeat until it prints
 # AW-20: docs-page-chain.js's restated exit-75 paragraph goes; the gate runner defers to
 # cairn-run-gate's own output. Fixed in pass B2.
 never poll a log. Report the exact command and the last twenty lines as your report's gate fields
+
+# AW-20: pass-execute.js's restated exit-75 clause goes; the dispatch defers to cairn-run-gate's
+# own output for whether to re-issue. Fixed in pass B2.
+exit 75 means still running, so re-issue
+
+# AW-20: pass-execute-chains.js's restated reattach-and-repeat paragraph goes; the dispatch
+# defers to cairn-run-gate's own output for whether to re-issue. Fixed in pass B2.
+which reattaches and waits again, and repeat until it prints

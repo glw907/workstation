@@ -148,5 +148,12 @@ chains_hits=$(grep -n "vanish" "$REPO_ROOT/claude/.claude/workflows/pass-execute
   "$REPO_ROOT/claude/.claude/workflows/pass-execute-chains.js" 2>/dev/null || true)
 [ -z "$chains_hits" ] || { echo "FAIL: a vanished clause remains in the runners: $chains_hits"; fail=1; }
 
+# --- neither runner restates the exit-75 protocol (AW-20): both defer to cairn-run-gate's own
+# output for whether to re-issue.
+restated_hits=$(grep -ni -e "exit 75 means" -e "reattaches and waits again" \
+  "$REPO_ROOT/claude/.claude/workflows/pass-execute.js" \
+  "$REPO_ROOT/claude/.claude/workflows/pass-execute-chains.js" 2>/dev/null || true)
+[ -z "$restated_hits" ] || { echo "FAIL: a restated exit-75 clause remains in the runners: $restated_hits"; fail=1; }
+
 [ "$fail" -eq 0 ] && echo "cairn-run-gate: OK" || echo "cairn-run-gate: FAILED"
 exit "$fail"

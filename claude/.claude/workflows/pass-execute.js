@@ -360,7 +360,7 @@ function implementPrompt(t, a, blocking, baseSha, classifierExists) {
     classifierExists
       ? `Before running the gate, check whether scripts/checks/gate-tier.mjs exists in this repo. If it does, run \`${classifierCmd}\` from the repo root, after your commits and before the gate, and run the gate string it prints on stdout instead of the Gate command above (report gateTier: "${t.gateTier ? "pin" : "computed"}" and gateCommand as that exact string). If the script is absent, exits non-zero, or prints nothing, run the Gate command above unchanged (report gateTier: "default" and gateCommand as that string).`
       : "",
-    "Run the gate through `" + lanePrefix + "cairn-run-gate '<the gate string>'`" + laneNote + ": exit 75 means still running, so re-issue the exact same command until it prints \"gate exit:\" with the tail; never run it in the background and never poll a log; report its exact result.",
+    "Run the gate through `" + lanePrefix + "cairn-run-gate '<the gate string>'`" + laneNote + " and follow its own output for whether to re-issue and for the result; never run it in the background and never poll a log; report its exact result.",
     "Skip agent-memory maintenance for this dispatch."
   ];
   if (blocking && blocking.length > 0) {
