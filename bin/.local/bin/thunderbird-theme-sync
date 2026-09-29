@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# thunderbird-theme-sync: rebuild the Thunderbird GNOME theme install from
+# upstream plus this repo's local layer.
+# Usage: thunderbird-theme-sync           # update and reinstall
+#        thunderbird-theme-sync --check   # read-only: does the profile match?
+#
+# The theme (rafaelmardojai/thunderbird-gnome-theme) is plain CSS copied into
+# each Thunderbird profile's chrome/ folder, so nothing updates it for us. The
+# local layer lives in ~/.dotfiles/thunderbird/:
+#   customChrome.css  color overrides; the theme imports it last and its
+#                     installer never ships one, so it survives updates
+#   patches/*.patch   fixes carried until upstream merges them
+#
+# A sync resets the clone to upstream main, applies each carried patch
+# (reporting any upstream has since merged), runs the theme's installer
+# against the Flatpak profile folder, then copies customChrome.css in. Quit
+# Thunderbird first; it reads userChrome only at startup. Run it after a
+# Thunderbird update that breaks the look, or whenever upstream moves.
+
+LAYER="$HOME/.dotfiles/thunderbird"
+CLONE="$HOME/.local/share/thunderbird-gnome-theme"
+UPSTREAM="https://github.com/rafaelmardojai/thunderbird-gnome-theme"
+TB_DIR="$HOME/.var/app/org.mozilla.thunderbird/.thunderbird"
+
+# Prints each profile directory listed in profiles.ini, one per line.
+profiles() {
+    [[ -f "$TB_DIR/profiles.ini" ]] || return 0
+    sed -n 's/^Path=//p' "$TB_DIR/profiles.ini" | while read -r p; do
+        [[ "$p" == /* ]] && echo "$p" || echo "$TB_DIR/$p"
+    done
+}
+
+check() {
+    local fail=0 p dest
+    [[ -d "$CLONE/.git" ]] || { echo "x theme clone missing at $CLONE"; return 1; }
+    while read -r p; do
+        dest="$p/chrome/thunderbird-gnome-theme"
+        if [[ ! -d "$dest" ]]; then
+            echo "x $(basename "$p"): theme not installed"; fail=1; continue
+        fi
+        if ! diff -q "$LAYER/customChrome.css" "$dest/customChrome.css" >/dev/null 2>&1; then
+            echo "x $(basename "$p"): customChrome.css differs from the dotfiles copy"; fail=1
+        fi
+        if ! diff -rq "$CLONE/theme" "$dest/theme" >/dev/null 2>&1; then
+            echo "x $(basename "$p"): installed theme differs from the clone"; fail=1
+        fi
+        [[ "$fail" -eq 0 ]] && echo "+ $(basename "$p"): theme and overrides match"
+    done < <(profiles)
+    return "$fail"
+}
+
+sync() {
+    if pgrep -f '/app/lib/thunderbird/thunderbird' >/dev/null; then
+        echo "Thunderbird is running; quit it first." >&2
+        exit 1
+    fi
+    [[ -d "$CLONE/.git" ]] || git clone -q "$UPSTREAM" "$CLONE"
+    git -C "$CLONE" fetch -q origin
+    git -C "$CLONE" reset -q --hard origin/main
+    git -C "$CLONE" clean -qfd
+    echo "Theme at $(git -C "$CLONE" log -1 --format='%h %cs %s')"
+
+    local patch
+    for patch in "$LAYER"/patches/*.patch; do
+        [[ -e "$patch" ]] || continue
+        if git -C "$CLONE" apply --reverse --check "$patch" 2>/dev/null; then
+            echo "Merged upstream, delete it: $(basename "$patch")"
+        elif git -C "$CLONE" apply "$patch"; then
+            echo "Applied $(basename "$patch")"
+        else
+            echo "Patch no longer applies: $(basename "$patch"); resolve before syncing." >&2
+            exit 1
+        fi
+    done
+
+    # The installer probes $(tty) for colors; give it no terminal to probe.
+    (cd "$CLONE" && ./scripts/install.sh -f "$TB_DIR" -t adwaita </dev/null >/dev/null 2>&1)
+
+    local p
+    while read -r p; do
+        cp "$LAYER/customChrome.css" "$p/chrome/thunderbird-gnome-theme/customChrome.css"
+    done < <(profiles)
+    check
+}
+
+case "${1:-}" in
+    --check) check ;;
+    "") sync ;;
+    *) echo "usage: thunderbird-theme-sync [--check]" >&2; exit 2 ;;
+esac

@@ -15,6 +15,7 @@ that bring a fresh Bluefin install to a working state.
 | `secrets/` | Age-encrypted secret store and rotation registry |
 | `docs/` | Repo documentation, including this file's companions |
 | `tests/` | Test suite for the repo's own scripts: pytest for vale-hook, bash fixtures for the vale styles |
+| `thunderbird/` | Local layer over the Thunderbird GNOME theme: color overrides and carried patches, installed by `thunderbird-theme-sync` (see its README) |
 
 The Stow packages are the top-level directories named in
 `bluefin/stow-packages.txt`; every other top-level entry is repo
@@ -52,8 +53,9 @@ Workers by `scripts/secrets/sync.sh`. Architecture, inventory, and rotation:
 
 | Command | Purpose |
 |---------|---------|
-| `check-drift` | Reconcile the repo against the live machine: stow state, layered RPMs, Brewfile, flatpaks, uv tools, staged /etc drops, stray local binaries, git drift |
-| `workstation-update` | Update the tiers `ujust update` does not cover: mise, uv tools, kitty, Android SDK. Run `ujust update` itself separately and interactively |
+| `check-drift` | Reconcile the repo against the live machine: stow state, layered RPMs, Brewfile, flatpaks, uv tools, staged /etc drops, stray local binaries, the Thunderbird theme install, git drift |
+| `workstation-update` | Update the tiers `ujust update` does not cover: mise, uv tools, kitty, Android SDK, the Thunderbird theme. Run `ujust update` itself separately and interactively |
+| `thunderbird-theme-sync` | Reinstall the Thunderbird GNOME theme from upstream plus `thunderbird/`; `--check` is read-only. Quit Thunderbird first |
 | `scripts/check.sh` | The repo gate: shell syntax, ruff docstring rules, the test suite, vale fixtures, gitleaks |
 | `check-drift.timer` | Weekly systemd user timer (the `upkeep` package) running check-drift; desktop notification only when drift exists |
 

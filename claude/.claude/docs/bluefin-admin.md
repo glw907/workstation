@@ -218,10 +218,10 @@ A live-desktop capture does work (verified 2026-09-29): call
 `org.freedesktop.portal.Screenshot.Screenshot` with `interactive: false` and wait for
 the `Request.Response` signal. The permission store already grants unsandboxed apps
 (`flatpak permissions screenshot`), so no prompt appears. It captures the whole screen
-and writes `~/Pictures/Screenshot-N.png`, so move the file out afterward. GNOME
-focus-stealing prevention stops a script from raising a window, so ask Geoff to bring
-the window forward and take one capture after he confirms. Never run a capture loop:
-he asked for it to stop.
+and saves a numbered `Screenshot-` PNG in `~/Pictures`, so move the file out
+afterward. GNOME focus-stealing prevention stops a script from raising a window, so
+ask Geoff to bring the window forward and take one capture after he confirms. Never
+run a capture loop: he asked for it to stop.
 
 ## SELinux for restored data
 
@@ -304,3 +304,11 @@ Moved from the global CLAUDE.md (2026-09-27). poplar is a bubbletea terminal ema
 built from `~/Projects/poplar/`; binary `~/.local/bin/poplar` (`make install`). Fastmail via
 JMAP, `$FASTMAIL_API_TOKEN` in `~/.local/secrets`. API reference:
 `~/.claude/instructions/fastmail-api.md`.
+
+Until poplar is ready, Thunderbird is the desktop client (Geoff, 2026-09-29): the Flathub
+`org.mozilla.thunderbird` monthly channel, signed in to Fastmail with OAuth (no app
+password), styled with the Thunderbird GNOME theme. The theme is CSS in the profile, so
+customize it only through `~/.dotfiles/thunderbird/` and `thunderbird-theme-sync`, never by
+editing the profile's `chrome/` folder directly; `~/.dotfiles/thunderbird/README.md` has
+the layout and tasks. Fixes that belong in the theme go upstream as PRs, after Geoff
+approves each one.

@@ -1,0 +1,24 @@
+/* Local overrides loaded last by thunderbird-gnome-theme.
+ * Maps the Thunderbird colors the theme leaves alone onto the GNOME
+ * accent, so new mail and message bars follow the desktop palette. */
+
+/* New mail: subjects, folder names, and count badges. */
+:root {
+	--new-subject-color: var(--gnome-accent) !important;
+	--new-color: var(--gnome-accent) !important;
+	--new-folder-color: var(--gnome-accent) !important;
+	--folderpane-unread-new-count-background: var(--gnome-accent-bg) !important;
+}
+
+/* New-message star: accent instead of yellow and amber. */
+tr[data-properties~="new"] {
+	--read-status-fill: var(--gnome-accent) !important;
+	--read-status-stroke: var(--gnome-accent) !important;
+}
+
+/* Warning bars (remote content and similar): a muted amber tint in place
+ * of #ffe900, matching how the theme styles the other message bars. */
+notification-message[type="warning"] {
+	--message-bar-background-color: color-mix(in srgb, #cd9309 25%, var(--gnome-window-background)) !important;
+	--message-bar-text-color: var(--gnome-window-color) !important;
+}

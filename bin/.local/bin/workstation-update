@@ -10,7 +10,8 @@ set -euo pipefail
 #
 # This script covers what ujust update does not: mise-managed runtimes, uv
 # tool installs, kitty (deliberately upstream-installed as a test harness,
-# never brewed or flatpaked), and the Android SDK.
+# never brewed or flatpaked), the Android SDK, and the Thunderbird GNOME
+# theme (thunderbird-theme-sync; quit Thunderbird first).
 #
 # Run manually; nothing schedules it. After a brew Go bump, poplar's go.mod
 # toolchain pin is a deliberate per-repo commit, not this script's job.
@@ -79,6 +80,18 @@ if [[ -n "${ANDROID_HOME:-}" ]] && command -v sdkmanager &>/dev/null; then
     fi
 else
     echo -e "${YELLOW}⚠ ANDROID_HOME not set or sdkmanager not found, skipping${NC}"
+fi
+
+# ── Thunderbird theme ────────────────────────────────────────────────────────
+
+section "Thunderbird theme"
+if command -v thunderbird-theme-sync &>/dev/null; then
+    if ! thunderbird-theme-sync; then
+        echo -e "${RED}✗ thunderbird-theme-sync failed (is Thunderbird open?)${NC}"
+        ERRORS+=("thunderbird-theme")
+    fi
+else
+    echo -e "${YELLOW}⚠ thunderbird-theme-sync not on PATH, skipping${NC}"
 fi
 
 # ── Summary ──────────────────────────────────────────────────────────────────

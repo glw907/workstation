@@ -6,9 +6,10 @@ set -uo pipefail
 #
 # Sections: stow state per package, rpm-ostree layered set, Homebrew,
 # flatpaks (against the manifest, with Bluefin's stock set implicit), uv
-# tools, staged /etc drops, untracked ~/.local/bin executables, and git
-# state. Exit 0 only when everything matches; exit 1 with per-item detail
-# otherwise. The manifests record intent; this script reports what happened.
+# tools, staged /etc drops, untracked ~/.local/bin executables, the
+# Thunderbird theme install, and git state. Exit 0 only when everything
+# matches; exit 1 with per-item detail otherwise. The manifests record
+# intent; this script reports what happened.
 
 DOTFILES="$HOME/.dotfiles"
 BLUEFIN="$DOTFILES/bluefin"
@@ -139,6 +140,14 @@ while read -r schema key want; do
         bad "$schema $key is ${live:-unreadable}, manifest says $want"
     fi
 done < <(read_list "$BLUEFIN/gnome-settings.txt")
+
+echo ""
+echo "Thunderbird theme (thunderbird/, via thunderbird-theme-sync):"
+if command -v thunderbird-theme-sync >/dev/null 2>&1; then
+    thunderbird-theme-sync --check | sed 's/^/  /' || fail=1
+else
+    bad "thunderbird-theme-sync not on PATH (stow bin)"
+fi
 
 echo ""
 echo "Git state:"

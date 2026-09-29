@@ -117,7 +117,8 @@ cannot do it. Check `.claude/instructions/api-access.md` per project for the acc
 - **Google Docs / Drive / Sheets**: `gws` CLI, never an MCP server. Auth modes and write
   patterns: `bluefin-admin.md` "Google Docs / Drive (gws)".
 - **Email**: poplar (`~/Projects/poplar/`, Fastmail via JMAP); API reference
-  `~/.claude/instructions/fastmail-api.md`.
+  `~/.claude/instructions/fastmail-api.md`. Thunderbird is the interim desktop client; its
+  theme changes go only through `~/.dotfiles/thunderbird/` (README there).
 
 ## Claude tooling: manifests, scopes, and the DaisyUI-first rule (Geoff, 2026-09-13)
 
