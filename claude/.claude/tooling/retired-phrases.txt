@@ -3,9 +3,6 @@
 # case-insensitive substring, tolerant of a line-wrap inside the phrase. `#` starts a comment.
 # An empty list (after stripping comments) is a configuration error: a vacuous tripwire.
 #
-# The cairn-cms twin (the style-guide-sync plan's R8) uses the same semantics over its own list
-# at cairn-cms's own path, and should adopt this list's line-wrap tolerance too.
-#
 # Every ruling that supersedes text adds the superseded phrase here in the same commit (the
 # supersession sweep rule). A phrase stays listed permanently: the commit that fixes the last
 # hit removes that phrase's baseline entries, never the phrase itself. A retired phrase has no
@@ -91,3 +88,36 @@ straight through the gates and code-simplifier
 # claude/.claude/workflows/cairn-overnight-to-release.js:76,
 # claude/.claude/docs/voice/commit-and-pr.md:93. Fixed in pass B4.
 Co-Authored-By: Claude <noreply@anthropic.com>
+
+# Style-guide-sync ruling 11: the cairn docs voice is one positively defined whole read from the
+# drafting brief, never a stock guide's floor plus additions. retired-ok
+Vale-enforced floor
+
+# Style-guide-sync ruling 11: same supersession as the line above. retired-ok
+a floor is not a ceiling
+
+# Style-guide-sync ruling 5: admin UI copy takes Microsoft's UI-text voice, tightened to
+# professional and restrained, so the academic-register description is retired. retired-ok
+academic introduction
+
+# Style-guide-sync ruling 5: same supersession as the line above. retired-ok
+slightly academic
+
+# Style-guide-sync ruling 3: steps, list items, and task sections stay under 26 words; qualified
+# claims stay whole, so the fixed sentence-length band is retired. retired-ok
+25-40-word
+
+# Style-guide-sync ruling 12: the repo CLAUDE.md Authoring section names the drafting briefs and a
+# published external standard as the base, in place of this phrase. retired-ok
+on top of the Google floor
+
+# Style-guide-sync ruling 4: a UI-only walkthrough is editor-track work, drafted to Microsoft's
+# voice through the editor brief. retired-ok
+admin walkthroughs
+
+# Style-guide-sync ruling 12: every audience starts from a published external standard, and a repo
+# may carry a named house voice as a recorded overlay, so the blanket rule is retired. retired-ok
+no house voice
+
+# Style-guide-sync ruling 12: same supersession as the line above. retired-ok
+not a house voice
