@@ -58,10 +58,6 @@ Avoid these structural habits:
   approach", "the mechanism") where the concrete name was already available. Name the
   function, the file, or the flag instead. This is reported-only, from the 2026-09
   benchmark; no external standard is cited for this one.
-- The page describing itself ("this guide explains", "this section covers") instead
-  of doing the thing it describes. Open with the content, not a description of the
-  content. This is reported-only, from the 2026-09 benchmark; no external standard is
-  cited for this one.
 
 The marketing, slop, and filler words are tells everywhere, and the external standards
 all rule them out. Vale, with the Google package on developer docs and the Microsoft
