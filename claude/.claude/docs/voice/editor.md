@@ -5,7 +5,9 @@ post, someone following a setup guide, a first-time user who has never seen the 
 not read the code and do not want to. Applies to end-user help, editor guides, setup
 walkthroughs, and the in-product copy a non-technical reader sees. The published cairn-cms
 editor docs (`docs/editors/`) follow the editor brief in cairn-cms `docs/internal/docs-register.md`,
-which supplements the same Microsoft guide with the cairn docs voice.
+which supplements the same Microsoft guide with its own tightenings; the cairn docs voice does not
+apply there. Cairn admin UI copy follows the Voice section of cairn-cms
+`docs/internal/admin-design-system.md`.
 
 The standard is the **Microsoft Writing Style Guide**
 (https://learn.microsoft.com/style-guide/welcome/). The linter is the **Vale Microsoft
