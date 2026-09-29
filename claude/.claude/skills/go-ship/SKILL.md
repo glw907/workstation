@@ -2,7 +2,7 @@
 name: go-ship
 description: >
   Use when Go implementation work is done and ready to ship. Runs the
-  full quality pipeline: make check, /simplify, commit, push, and
+  full quality pipeline: make check, the simplifier, commit, push, and
   make install.
 disable-model-invocation: true
 ---
@@ -27,7 +27,12 @@ If vet or tests fail, fix the issues before proceeding.
 
 ### 2. Simplify
 
-Invoke the `simplify` skill (`/simplify`). Fix any issues found, re-run `make check` after fixes.
+Run the simplifier once, as the branch's close step. When
+`<repo>/.claude/skills/simplify/` exists (poplar), invoke that project skill;
+otherwise dispatch `code-simplifier:code-simplifier` over the changed Go. Check
+the path, never the name: the bundled `/simplify` resolves by name in every
+repo, so a by-name call never proves the project skill ran. Fix any issues
+found, and re-run `make check` after fixes.
 
 ### 3. Commit and push
 

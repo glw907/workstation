@@ -6,12 +6,6 @@
   },
   "entries": [
     { "check": "retired-phrase", "file": "claude/.claude/CLAUDE.md",
-      "fingerprint": "Before committing code changes, dispatch",
-      "finding": "DC-01", "pass": "B" },
-    { "check": "retired-phrase", "file": "claude/.claude/CLAUDE.md",
-      "fingerprint": "the repo's full gate runs inside the chain",
-      "finding": "DC-03", "pass": "B" },
-    { "check": "retired-phrase", "file": "claude/.claude/CLAUDE.md",
       "fingerprint": "arm the runaway guard and the sleep inhibitor",
       "finding": "DC-04", "pass": "B" },
     { "check": "retired-phrase", "file": "claude/.claude/CLAUDE.md",

@@ -35,9 +35,9 @@ Seats, per Anthropic's model guidance (Geoff, 2026-09-23):
   or a gate transcript. It rules on structured reports: accept, re-dispatch with a correction,
   split, upshift, or stop.
 - **The per-task chain replaces the conductor's diff read.** Implementer, then `diff-reviewer`
-  against the task's acceptance criteria, then the repo's full gate, all inside the chain. One
-  re-dispatch on `fix`; a second `fix` is the conductor's decision. Domain reviewers fan out at
-  pass end.
+  against the task's acceptance criteria, then the pass class's per-task gate (table:
+  `pass-core`), all inside the chain. One re-dispatch on `fix`; a second `fix` is the
+  conductor's decision. Domain reviewers fan out at pass end.
 - **The pass class sets the ceremony** (commit `319c2a8`, Geoff 2026-09-27). A plan header
   declares `Pass class:` (`auth-data`, `engine-logic`, `paint`, `sweep`, `docs`, `tool`), and a
   task may override it. The class sets the per-task gate, the reviewer's blocking bar, the test

@@ -61,9 +61,10 @@ reconciles, a weekly timer notifies on drift. Repo gate: `scripts/check.sh`. New
 
 ## Git Conventions
 
-- **Before committing code changes, dispatch the `code-simplifier` subagent** over the changed
-  code and apply its refinements. Docs-only commits skip it; skip otherwise only when told to.
-  (poplar keeps its own Go-aware `simplify` skill.)
+- **`code-simplifier` runs once per pass or branch, at its close,** over changed TypeScript
+  (JavaScript included), Svelte, or Go; never per commit or at an intermediate boundary, never
+  for docs. A pass runs it as `pass-core`'s close step. (poplar keeps its own Go-aware
+  `simplify` skill.)
 - Imperative mood: "Add feature" not "Added feature"
 - Co-authored footer: `Co-Authored-By: Claude <noreply@anthropic.com>`
 - Commit specific files, not `git add -A`
@@ -166,9 +167,10 @@ dispatches. The spec read is the human gate; a reviewed plan runs.
 Each plan task runs as a chain: the repo's Sonnet implementer returns a fixed shape (files
 touched, gate result, uncovered decisions, anything it could not do); `diff-reviewer` reads the
 diff against the task's acceptance criteria and returns accept, fix, or escalate with
-`file:line` findings; the repo's full gate runs inside the chain. One re-dispatch on `fix`; a
-second is the conductor's decision. A plan header's `Pass class:` sets the per-task gate,
-review bar, test mandate, and close (table in the `pass-core` skill; Geoff, 2026-09-27).
+`file:line` findings; the pass class's gate runs inside the chain. Pass machinery lives in the
+`pass-core` skill. One re-dispatch on `fix`; a second is the conductor's decision. A plan
+header's `Pass class:` sets the per-task gate, review bar, test mandate, and close (table in the
+`pass-core` skill; Geoff, 2026-09-27).
 Domain reviewers fan out at pass end. Below six tasks, dispatch the chain per task with the
 Agent tool; at six or more, or when the plan marks tasks independent, run
 `~/.claude/workflows/pass-execute.js`. One fold agent authors the close, with one independent
@@ -258,7 +260,7 @@ to Geoff are for product, taste, priority, scope, and budget.
 Plans specify outcomes, constraints, and acceptance criteria per task, never implementation
 code. Small tasks skip the ceremony: a change touching a handful of files, fully specified by
 the request or existing tests, adding no new public surface, schema, or auth behavior, goes
-straight through the gates and code-simplifier. Score both budgets at pass end (tokens against
+straight through the gates. Score both budgets at pass end (tokens against
 the ceiling via `/cost`; attended time as planning misses and execution sittings, defined in
 `model-economy.md`), recording the numbers even when they look bad.
 
