@@ -108,6 +108,11 @@ One fold agent (`claude-opus-5-5`, effort `high`) takes every review file. Its d
   over-ceremony finding is weighed by its cost; refusing one names what the extra ceremony
   catches.
 - Fix convergent defects (several lenses reaching one root) at the root, not per finding.
+- **A fold adds no invented mechanism (Geoff, 2026-09-28: "I want a proven and battle-tested
+  system").** A finding whose fix is new machinery (a validator, a registry, a marker scheme, a
+  planted-defect control) folds only when the fold record names a team or published source that
+  runs that mechanism, and a measured defect, not a hypothetical one, that it answers. Otherwise
+  refuse it or take the conventional fix.
 - **Never rule an owner fork.** Consolidate every fork into one numbered rulings section in the
   document, each a yes-or-no question with a recommendation and what each answer builds.
 - **Never make a ruling out of a settled question.** When one answer is clearly the
