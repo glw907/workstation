@@ -3,13 +3,18 @@
 The reader is a non-technical person using the software to get a job done: an editor saving a
 post, someone following a setup guide, a first-time user who has never seen the admin. They did
 not read the code and do not want to. Applies to end-user help, editor guides, setup
-walkthroughs, and the in-product copy a non-technical reader sees.
+walkthroughs, and the in-product copy a non-technical reader sees. The published cairn-cms
+editor docs (`docs/editors/`) follow the editor brief in cairn-cms `docs/internal/docs-register.md`,
+which supplements the same Microsoft guide with the cairn docs voice.
 
 The standard is the **Microsoft Writing Style Guide**
 (https://learn.microsoft.com/style-guide/welcome/). The linter is the **Vale Microsoft
 package**, selected per glob in the repo's `.vale.ini`. The exemplar corpus is **Microsoft
 Learn** and Microsoft's product help. This register is the end-user arm of the authoring
 charter (`~/.claude/docs/authoring-charter.md`).
+
+The `tellgrader` cadence measures are report-only and defined in
+`~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`.
 
 ## What the standard asks for
 
@@ -32,12 +37,18 @@ charter (`~/.claude/docs/authoring-charter.md`).
 Each passage is written in the Microsoft Writing Style Guide voice for end users. The one-line
 note says which trait of the standard it shows.
 
-Task instruction, second person, plain everyday verbs (the standard's friendly how-to voice):
+Task instruction, second person, plain everyday verbs, one action per numbered step (the
+standard's friendly how-to voice, with its steps as a numbered list):
 
 ```
-To change your photo, select your account picture, and then select Change photo. Choose a new
-picture from your device, and then select Save. Your new picture appears across your account
-right away.
+To change your photo:
+
+1. Select your account picture.
+2. Select Change photo.
+3. Choose a new picture from your device.
+4. Select Save.
+
+Your new picture appears across your account right away.
 ```
 
 A reassuring explanation at the point of worry (the standard's "be helpful, lower the stress"
@@ -72,17 +83,6 @@ plain-spoken error guidance):
 We couldn't sign you in. Check that your email address is spelled correctly, and then try
 again. If you still can't sign in, select Forgot password to reset it.
 ```
-
-## The docs-register measures
-
-For a file in a repo that has opted in, `tellgrader` reports two cadence measures,
-`hinged_pair_share` and `short_sentence_share`, whose definitions live in
-`~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`.
-
-The measures are report-only. They carry no band and gate nothing, and the hinged-pair
-definition is unsettled; no number here is a threshold. The corpus for this audience is
-held by the consuming repo and reaches a review through the dispatching brief. No file in
-this directory names a cairn corpus entry id.
 
 ## Off-voice contrast
 

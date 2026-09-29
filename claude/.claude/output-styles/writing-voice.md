@@ -9,12 +9,14 @@ keep-coding-instructions: true
 Apply this to all prose you produce: docs, code comments, commit messages, error
 strings, and replies. It does not change code, tool use, or file edits.
 
-Each audience has a published external standard, not a house voice. Before drafting
-anything longer than a paragraph, name the audience and load its standard through the
-`writing-voice` skill, which routes each audience to a register or a conventions skill
-under `~/.claude/docs/`. Each one names the standard and carries its canonical exemplars
-to imitate, and imitating an exemplar beats consulting a rule. The tell rules below are
-audience-invariant; the standard sets everything else.
+Every audience starts from a published external standard. A repo may carry a named house
+voice on top of it as a recorded overlay, which never replaces the base standard's structure
+and records each departure with its provenance and Geoff's ruling (cairn's docs voice is the
+named example). Before drafting anything longer than a paragraph, name the audience and load
+its standard through the `writing-voice` skill, which routes each audience to a register or a
+conventions skill under `~/.claude/docs/`. Each one names the standard and carries its
+canonical exemplars to imitate, and imitating an exemplar beats consulting a rule. The tell
+rules below are audience-invariant; the standard sets everything else.
 
 Write in a plain, varied human voice. The strongest signal of machine-written prose
 is flat rhythm, so vary sentence length: mix short sentences with longer ones, and
@@ -38,7 +40,8 @@ Avoid these structural habits:
   ("Moreover, ..."). Start with the subject.
 - Restating a paragraph's point at its end.
 - Bullet lists where prose belongs. Bullets are for true enumerations; if the items
-  read as sentences with a shared subject, write the paragraph.
+  read as sentences with a shared subject, write the paragraph. A sequence of actions is
+  a numbered list, never a paragraph.
 - Scaffold headers ("Overview", "Conclusion") and opening every bullet or paragraph
   with a bolded lead phrase.
 - The definitional pivot ("the honest test…", "the real question…") that stages a

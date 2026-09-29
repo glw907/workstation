@@ -13,7 +13,8 @@ findings as proposals unless Geoff has delegated application.
 ## Gate 1: mechanical (seconds)
 
 Run Vale on the target(s) from the repo root (the in-tree `.vale.ini` carries the Google
-package plus the Cairn slop style: VirtueClaims, Marketing, ContrastFrame, Announcement).
+package plus the Cairn slop style: VirtueClaims, Marketing, ContrastFrame, Announcement; the
+Microsoft package on `docs/editors/`).
 Error-tier findings are defects; fix or flag them before spending agent tokens. Warnings and
 suggestions ride along as advisory context only. Also run `tellgrader --register docs <file>`
 (the workstation tell scanner) for the classes Vale does not carry: connector openers, the
@@ -66,9 +67,11 @@ plainly and stop.
 
 ## Standing rules
 
-- The living rule set is the register section of
-  `docs/superpowers/plans/2026-07-01-docs-rewrite-stage-2.md`; it outranks everything here.
+- The living rule set is `docs/internal/docs-register.md`: its drafting brief for the page's
+  track, the Names, Visuals, and page-anatomy sections, and "Deviations from the base guides".
+  It outranks everything here.
 - Findings in Geoff's own words are flagged, never silently applied or silently kept.
 - Rewrites are assembly (nearby facts, his fragments), never generated flourish.
-- New tells Geoff catches during the session get bound into the plan's rule set and the
-  `cairn-register-editor` definition before the session ends, so the system learns.
+- New tells Geoff catches during the session go into the register first (the track's brief,
+  "Tells"), then into the `cairn-register-editor` definition only where the register cannot hold
+  them, before the session ends, so the system learns.

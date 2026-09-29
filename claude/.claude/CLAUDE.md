@@ -266,17 +266,20 @@ the ceiling via `/cost`; attended time as planning misses and execution sittings
 
 ## Writing voice
 
-Claude writes to a published external standard per audience, not a house voice: the
-`writing-voice` output style carries the core, the `writing-voice` skill routes to each
-standard, and `~/.claude/docs/authoring-charter.md` holds the map. **Name the audience and load
-its standard before drafting**; site content uses the site repo's own content guide. Vale,
-the comment linters, and `tellgrader` are the deterministic net; clean is necessary, never
-sufficient. Draft clean the first time.
+Every audience starts from a published external standard, and a repo may carry a named house
+voice as a recorded overlay that never replaces the base's structure, each departure with
+provenance and Geoff's ruling. The `writing-voice` output style carries the core, the
+`writing-voice` skill routes to each standard, and `~/.claude/docs/authoring-charter.md` holds
+the map. **Name the audience and load its standard before drafting**; site content uses the
+site repo's own content guide. Cairn's docs voice is the named overlay: every published cairn
+page, and cairn.pub's own prose, follows the developer brief (editor docs, the editor brief) in
+`~/Projects/cairn-cms/docs/internal/docs-register.md`. Vale, the comment linters, and
+`tellgrader` are the deterministic net; clean is necessary, never sufficient. Draft clean the
+first time.
 
-The highest-frequency tells:
-- One idea per sentence; no "not X but Y" contrast frame, no reflexive three-item lists, no
-  setup-colon payoff, no participial or connector openers ("Building on this", "Moreover").
-- The em dash is banned in code comments (linter-enforced); developer docs follow Google (no
-  spaces), editor copy Microsoft, replies and commits go without. Overuse is a tell anywhere.
-- Every published cairn docs page follows the cairn documentation standard:
-  `~/Projects/cairn-cms/docs/superpowers/specs/2026-09-08-docs-standard-design.md`.
+The highest-frequency tells: one idea per sentence; no "not X but Y" contrast frame, no
+reflexive three-item lists, no setup-colon payoff, no participial or connector openers
+("Building on this", "Moreover").
+
+The em dash is banned in code comments (linter-enforced); developer docs follow Google (no
+spaces), editor copy Microsoft, replies and commits go without. Overuse is a tell anywhere.

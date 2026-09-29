@@ -54,7 +54,8 @@ output rather than committing a red gate.
   Tailwind values.
 - **No em dashes in code comments.** A keyboard, grep, and monospace medium has no place for them.
   Website content under `src/content/` follows the site's content guide, which sets its own em-dash
-  policy. Write in a plain voice.
+  policy. Write in a plain voice; cairn-cms docs prose follows the track's drafting brief in
+  `docs/internal/docs-register.md` (developer docs or editor docs, by the page's track).
 - **Website content is a different register.** Anything under `src/content/` (pages,
   posts, form copy) uses the site's web-content voice: read `docs/content-guide.md` in
   full before touching it, and run its self-critique pass on what you wrote. Code and
@@ -103,7 +104,8 @@ the chain" rule: a changed or new claim cites a citable fact, a new fact is file
 the tripwire. Before opening a cairn-cms worktree, run the one-executor check: `pgrep -f` the
 worktree path, and `git status` for warm changes you did not author. Edit on a branch
 `site-docs/<site>-<pass>` off cairn-cms `main`, fix the pages, file the container bullets, run
-`npm run check:docs && npm run check:vale && npm run check:facts`, and merge by PR under the
+`npm run check:docs && npm run check:vale && npm run check:facts`, plus
+`npm run check:docs-gate -- --page <page>` for each page you touch, and merge by PR under the
 docs gate before the site pass closes. A divergence found on an arm whose stage is still in
 flight is filed, never fixed, under a fixed report heading `Engine docs fixes` (the page path,
 what is missing or wrong, the source and engine version), and feeds that stage's page inputs

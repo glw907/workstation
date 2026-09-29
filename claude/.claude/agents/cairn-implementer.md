@@ -59,7 +59,9 @@ rather than committing a red gate.
   so they will not catch a dead class; that is your responsibility.)
 - **No em dashes in code comments.** A keyboard, grep, and monospace medium has no place for a
   character you cannot type or search, and cairn's comment lint flags them. In Markdown docs the em
-  dash follows the Google standard (recommended, no surrounding spaces). Write in a plain voice.
+  dash follows the Google standard (recommended, no surrounding spaces). Write in a plain voice;
+  docs prose follows the track's drafting brief in `docs/internal/docs-register.md` (developer docs
+  or editor docs, by the page's track).
 - Tests live at `src/tests/{unit,integration,component}/<name>.test.ts`.
 
 ## Type-safety discipline
