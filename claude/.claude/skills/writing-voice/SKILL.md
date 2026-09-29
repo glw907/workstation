@@ -25,7 +25,7 @@ authoring charter (`~/.claude/docs/authoring-charter.md`).
 | Published cairn-cms docs (`docs/admin/`, `docs/extend/`, `docs/reference/`, the front door, the changelog) and cairn.pub's own prose | Google, with the cairn docs voice overlay | the developer-docs drafting brief in cairn-cms `docs/internal/docs-register.md` |
 | Published cairn-cms editor docs (`docs/editors/`) | Microsoft Writing Style Guide, with the cairn docs voice overlay | the editor-docs drafting brief in cairn-cms `docs/internal/docs-register.md` |
 | Changelog entry, GitHub release note, or upgrade-guide entry | Google Developer Documentation Style Guide (the developer reading the changelog is the same reader as the docs) | `~/.claude/docs/voice/technical-doc-web.md` (Go repo: `technical-doc-go.md`) |
-| End-user and editor product copy, admin walkthroughs | Microsoft Writing Style Guide | `~/.claude/docs/voice/editor.md` |
+| End-user and editor product copy, UI-only walkthroughs with no terminal step | Microsoft Writing Style Guide | `~/.claude/docs/voice/editor.md` |
 | CLAUDE.md, skills, agent definitions, hook text | Anthropic Claude Code best practices | `~/.claude/docs/voice/agent-facing.md` |
 | Commit messages and PR bodies | Conventional Commits and the git-commit canon | `~/.claude/docs/voice/commit-and-pr.md` |
 | Go code comments | Go Doc Comments, Effective Go | the go-conventions skill |
