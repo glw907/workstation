@@ -57,6 +57,10 @@ The full gate must be green at the release commit. Run it (sequentially; `npm te
 - `npm run check:custom-surface` (PASS both trees)
 - `npm run check:comments` (the TSDoc + em-dash gate)
 - the four doc gates: `npm run check:reference`, `check:reference:signatures`, `check:docs`, `check:package`
+- after `npm version`, also bump `packages/cairn-cms-dev` to the same number (`npm version <x.y.z>
+  --no-git-tag-version` in that directory) and run `npm run check:dev-package` and `check:version`:
+  CI's `test` job fails the release commit when the two versions differ (born 2026-09-30, the
+  `0.98.0` cut, which caught it only on CI)
 - the consumer-build proof: a CI `e2e` run, or a from-scratch showcase build (`rm -rf
   examples/showcase/{node_modules,package-lock.json}` then a fresh install and `npm run build`). Local
   Playwright reuses a stale preview off CI, so do not trust a local "all green" alone.
