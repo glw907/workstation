@@ -36,6 +36,12 @@ The friction log `pass-core`'s out-of-scope rule names is `docs/internal/docs-fr
 Add each entry under "Open findings" as a `- **\`perspective\`.**` bullet, commit it on `main`
 at the checkpoint, and name who found it and the date.
 
+The `main` checkout is shared: another session's pass may hold uncommitted edits to
+`docs/STATUS.md` or the friction log there. Before a checkpoint commit on `main`, run
+`git diff <file>` and stage only your own hunks (`git add -p`). If a file carries another
+session's warm edits, coordinate with that session instead of committing them. (A harvest
+checkpoint on 2026-09-29 committed pass C's STATUS edits along with its own.)
+
 Gate notes for the args:
 
 - The per-task gate omits the showcase e2e for paint-neutral tasks; `paint` tasks keep it.
