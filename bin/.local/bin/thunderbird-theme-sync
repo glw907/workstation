@@ -14,14 +14,19 @@ set -euo pipefail
 #   customContent.css  overrides for Settings, the address book, and account
 #                      settings, which load as content pages that
 #                      userChrome.css never reaches
+#   user.js            preferences (the theme's two, plus tag colors),
+#                      copied over the profile's user.js
 #   patches/*.patch    fixes carried until upstream merges them
+#
+# A profile exists only after Thunderbird's first launch, so on a fresh
+# machine: launch Thunderbird, sign in, quit, then run this.
 #
 # A sync resets the clone to upstream main, applies each carried patch
 # (reporting any upstream has since merged), runs the theme's installer
-# against the Flatpak profile folder, copies both override files in, and
-# rewrites the profile's userChrome.css and userContent.css so they import
-# exactly the theme and the overrides. Quit Thunderbird first; it reads its
-# stylesheets only at startup. Run it after a Thunderbird update that breaks
+# against the Flatpak profile folder, copies both override files and user.js
+# in, and rewrites the profile's userChrome.css and userContent.css so they
+# import exactly the theme and the overrides. Quit Thunderbird first; it reads
+# its stylesheets and user.js only at startup. Run it after a Thunderbird update that breaks
 # the look, or whenever upstream moves.
 
 LAYER="$HOME/.dotfiles/thunderbird"
@@ -45,8 +50,17 @@ content_imports() {
     echo '@import "thunderbird-gnome-theme/customContent.css";'
 }
 
+# Fails with a hint when Thunderbird has never run, since there is no
+# profile to install into yet.
+require_profile() {
+    [[ -n "$(profiles)" ]] && return 0
+    echo "x no Thunderbird profile yet: launch Thunderbird once, sign in, quit, then run thunderbird-theme-sync"
+    return 1
+}
+
 check() {
     local fail=0 p dest
+    require_profile || return 1
     [[ -d "$CLONE/.git" ]] || { echo "x theme clone missing at $CLONE"; return 1; }
     while read -r p; do
         dest="$p/chrome/thunderbird-gnome-theme"
@@ -58,6 +72,9 @@ check() {
                 echo "x $(basename "$p"): $f differs from the dotfiles copy"; fail=1
             fi
         done
+        if ! diff -q "$LAYER/user.js" "$p/user.js" >/dev/null 2>&1; then
+            echo "x $(basename "$p"): user.js differs from the dotfiles copy"; fail=1
+        fi
         if ! diff -q <(content_imports) "$p/chrome/userContent.css" >/dev/null 2>&1; then
             echo "x $(basename "$p"): userContent.css doesn't import the overrides"; fail=1
         fi
@@ -74,6 +91,7 @@ sync() {
         echo "Thunderbird is running; quit it first." >&2
         exit 1
     fi
+    require_profile || exit 1
     [[ -d "$CLONE/.git" ]] || git clone -q "$UPSTREAM" "$CLONE"
     git -C "$CLONE" fetch -q origin
     git -C "$CLONE" reset -q --hard origin/main
@@ -102,6 +120,7 @@ sync() {
         cp "$LAYER/customChrome.css" "$LAYER/customContent.css" "$p/chrome/thunderbird-gnome-theme/"
         chrome_imports > "$p/chrome/userChrome.css"
         content_imports > "$p/chrome/userContent.css"
+        cp "$LAYER/user.js" "$p/user.js"
     done < <(profiles)
     check
 }

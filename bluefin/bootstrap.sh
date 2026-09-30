@@ -236,7 +236,7 @@ setup_dx_group() {
 # Firefox (privileged-setup.hooks.d/99-flatpaks.sh) writes prefs into an
 # extension directory and never installs the app.
 setup_remove_conflicting_flatpaks() {
-    echo "== setup: remove Flatpaks superseded by layered RPMs =="
+    echo "== setup: remove superseded Flatpaks (layered RPMs, Thunderbird ESR) =="
     local app
     for app in org.mozilla.firefox com.onepassword.OnePassword; do
         if flatpak info "$app" > /dev/null 2>&1; then
@@ -244,6 +244,17 @@ setup_remove_conflicting_flatpaks() {
             flatpak uninstall --system -y --delete-data "$app" || return 1
         else
             echo "$app not installed, skipping"
+        fi
+    done
+
+    # Bluefin's stock set still names org.mozilla.Thunderbird, which Flathub
+    # end-of-lifed and rebased to org.mozilla.thunderbird_esr. Thunderbird
+    # runs on the monthly channel instead (org.mozilla.thunderbird, in
+    # flatpaks.txt; Geoff, 2026-09-29), so drop the ESR the stock set brings.
+    for app in org.mozilla.Thunderbird org.mozilla.thunderbird_esr; do
+        if flatpak info "$app" > /dev/null 2>&1; then
+            echo "removing $app (ESR; the monthly org.mozilla.thunderbird replaces it)"
+            flatpak uninstall --system -y --delete-data "$app" || return 1
         fi
     done
 
@@ -436,6 +447,16 @@ Browsers:
     /usr/share/applications, not the Flatpak export.
   - `about:support` in Firefox shows an RPM install path, not /app or
     /var/lib/flatpak.
+
+Thunderbird (interim Fastmail client; thunderbird/README.md):
+  - `flatpak list | grep -i thunderbird` shows only org.mozilla.thunderbird
+    (the monthly channel); the stock ESR build is gone.
+  - Launch Thunderbird once and sign in to Fastmail (geoff@907.life, OAuth;
+    no app password). Link calendars (caldav.fastmail.com) and contacts
+    (carddav.fastmail.com) as thunderbird/README.md describes.
+  - Quit Thunderbird, then run `thunderbird-theme-sync`: it installs the GNOME
+    theme, the color overrides, and user.js into the new profile.
+  - `thunderbird-theme-sync --check` prints "theme and overrides match".
 
 Android:
   - `adb devices` sees a plugged-in device (uaccess tagging applies

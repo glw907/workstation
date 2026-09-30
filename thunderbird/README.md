@@ -13,12 +13,14 @@ package: `thunderbird-theme-sync` copies it into the Thunderbird profile.
 |------|----------|
 | `customChrome.css` | Color overrides for the main window, mapping Thunderbird's own colors onto the GNOME palette and the desktop accent |
 | `customContent.css` | The same palette for Settings, the address book, and account settings, which load as content pages that `userChrome.css` never reaches |
+| `user.js` | Preferences Thunderbird applies at every startup: the two the theme needs, plus the Adwaita tag colors |
 | `patches/*.patch` | Fixes carried until the theme merges them upstream; each file's header names its upstream PR |
 
 ## How it fits together
 
 The theme is plain CSS. Its installer copies it into the profile's `chrome/`
-folder and sets two prefs in `user.js`. The theme imports `customChrome.css`
+folder and writes a `user.js`, which the sync replaces with the one here. The
+theme imports `customChrome.css`
 last and never ships one. It has no such hook for content pages, so the sync
 writes the profile's `userContent.css` itself, importing the theme and then
 `customContent.css`. `customContent.css` scopes every rule to Thunderbird's own
@@ -31,6 +33,25 @@ Thunderbird updates don't touch the profile at all.
 | `~/.local/share/thunderbird-gnome-theme/` | Working clone of the upstream theme; disposable, since the sync resets it |
 | `~/.var/app/org.mozilla.thunderbird/.thunderbird/<profile>/chrome/` | What Thunderbird actually loads |
 
+## Setting up a new machine
+
+A Thunderbird profile exists only after the first launch, and the account
+itself can't live in dotfiles: it's an OAuth sign-in, and the mail is on
+Fastmail. `bootstrap.sh setup` installs the monthly Flatpak from
+`bluefin/flatpaks.txt` and removes the ESR build that Bluefin's stock app
+list brings. Its checklist then walks through the rest:
+
+1. Launch Thunderbird. Enter `geoff@907.life`, confirm OAuth2, and sign in on
+   Fastmail's page with the main password and 2FA.
+2. Link calendars: in the Calendar tab, click **Add Calendar…**, choose **On
+   the Network**, enter `geoff@907.life` and `caldav.fastmail.com`, click
+   **Find Calendars**, then **Subscribe**.
+3. Link contacts: in the Address Book tab, choose **New Address Book** > **Add
+   CardDAV Address Book**, enter `geoff@907.life` and `carddav.fastmail.com`,
+   then **Continue**.
+4. Quit Thunderbird (Ctrl+Q; closing the window can leave it running in the
+   background) and run `thunderbird-theme-sync`.
+
 ## Common tasks
 
 To change a color:
@@ -40,10 +61,14 @@ To change a color:
 3. Run `thunderbird-theme-sync`.
 4. Start Thunderbird. It reads the CSS only at startup.
 
+To change a preference such as a tag color, edit `user.js` here, quit
+Thunderbird, and run `thunderbird-theme-sync`. Thunderbird rereads `user.js`
+at every startup, so a value set there wins over a change made in Settings.
+
 To pick up upstream theme fixes, or to repair the look after a Thunderbird
 update, quit Thunderbird and run `thunderbird-theme-sync`. It resets the clone
 to upstream `main`, applies each carried patch, reinstalls the theme, and copies
-both override files in. `workstation-update` runs it too.
+both override files and `user.js` in. `workstation-update` runs it too.
 
 To check the install without changing anything, run
 `thunderbird-theme-sync --check`. `check-drift` runs the same check weekly.
