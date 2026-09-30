@@ -65,7 +65,47 @@ The full gate must be green at the release commit. Run it (sequentially; `npm te
   examples/showcase/{node_modules,package-lock.json}` then a fresh install and `npm run build`). Local
   Playwright reuses a stale preview off CI, so do not trust a local "all green" alone.
 
-## 3. Pick the version (immutable; verify free)
+## 3. Release sweep (capability releases only)
+
+Run this step only for a cut under trigger 2 (a coherent capability or initiative landed). An urgent
+trigger 1 cut skips it, keeps its fast path, and rolls its window into the next sweep. The sweep never
+blocks the cut: a run that finds nothing, finds only gaps it cannot place, or stops at its cap still
+proceeds to step 4.
+
+The sweep catches the docs-code drift that option coverage (`check:options`) cannot see: scaffold
+behavior and changelog-described behavior outside option-bearing types. It finds new gaps; it does not
+re-verify existing facts whose cited files changed.
+
+- **Window.** From the last engine tag whose sweep `docs/HISTORY.md` records, to `main`. Find the tags
+  with `git tag --list 'v[0-9]*' --sort=-v:refname | grep -v -- '-'`: the `v[0-9]*` glob skips the
+  repo's `tool/v*` tags, and the `grep` drops prerelease tags. A cut that ran no sweep leaves no record,
+  so its range rolls into the next window. The first window is seeded at `v0.98.0`, since the planning
+  sweep (`86fd134c`) ran after that cut and no `HISTORY.md` entry records one yet.
+- **Finders.** Work from three inputs: the `docs/internal/api-surface.md` diff over the window, the
+  scaffold's emitted-template diff (`templates/`), and the changelog's `Consumers must:` and behavior
+  lines. One module or one surface per agent context, never a per-file window (the `v0.97.0..v0.98.0`
+  window alone spanned about 192 files). Independent verifiers confirm, correct, or refute each finding
+  against source at `main`; a finder never verifies its own finding.
+- **Filing.** Before an arm merges, place a verified gap on its outline page (`docs/internal/outlines/`).
+  After an arm merges, file it as a fact naming the rebuilt page it affects; the page fix follows in a
+  later pass under "Edits after the chain", and the cut never waits on it. A gap with no page home
+  becomes a friction entry in `docs/internal/docs-friction-log.md`, never a new page. A code defect is
+  a friction entry, never a fact. Commit the filings as docs commits on `main` ahead of the version
+  commit, with `npm run check:facts` green.
+- **Cap.** 1M tokens per cut, counted across every sweep subagent. At the cap, stop, report the modules
+  left unswept, and carry them into the next window's record. Never extend the cap to finish.
+- **Staleness report.** A verifier that meets an existing fact the changed code contradicts reports it.
+  Record the report in the `HISTORY.md` entry: it is the trigger for the deferred fact-staleness
+  mechanism (`docs/superpowers/specs/2026-09-30-docs-code-sync-design.md`, "Deferred, with triggers").
+- **Yield record.** Add a `docs/HISTORY.md` entry per run: the tag the window started from, the verified
+  gaps found beside the modules swept (so window size does not confound the measure), how each gap was
+  filed, the unswept modules, and the tokens spent. The next sweep's window starts at this cut's tag.
+- **Retire rule.** After two consecutive capability releases whose sweeps found zero verified gaps, the
+  sweep moves to on-demand: run it only when a site round finds a doc gap in a surface changed since the
+  last sweep. A steady nonzero yield says option coverage misses a class; name the next mechanism to
+  consider in the entry.
+
+## 4. Pick the version (immutable; verify free)
 
 Published numbers are global and immutable. The pre-rebuild history already burned `0.1`–`0.68`, so never
 assume the next number is free. List the full set and pick the first free one:
@@ -96,7 +136,7 @@ Set the version only now, at the cut (never pre-number a held pass, which mints 
 npm version <x.y.z> --no-git-tag-version   # bumps package.json + the lockfile, no git tag
 ```
 
-## 4. Finalize the CHANGELOG and compose the notes
+## 5. Finalize the CHANGELOG and compose the notes
 
 Rename the held heading `## Unreleased` to `## <x.y.z>` (no date; match the repo's finalized-section
 format, which is the heading then a blank line then the `<!-- release-size: ... -->` marker). Scrub any
@@ -120,7 +160,7 @@ non-value placeholder inside the brackets (an ASCII `...`, a `*`, or a `|`) comp
 breaks `npm run package`. Write the concrete token. A quick check:
 `grep -rnE '[a-z-]+-\[[^]]*(\||\*|\.\.\.)[^]]*\]' docs/ CHANGELOG.md ROADMAP.md`.
 
-## 5. Commit, land on `main`, cut the release
+## 6. Commit, land on `main`, cut the release
 
 Commit the version bump plus the finalized CHANGELOG (plus the post-mortem and STATUS if they are part of
 this cut). Land it on `main` (fast-forward push, never force). Then:
@@ -146,7 +186,7 @@ their shared `<!-- release-size: minor -->` marker once, on whichever heading is
 Under trusted publishing the `--provenance` flag is unnecessary: provenance is automatic (the repo went
 public 2026-07-03 and the old `NPM_CONFIG_PROVENANCE=false` override was removed with it).
 
-## 6. Verify the publish
+## 7. Verify the publish
 
 ```bash
 gh run watch <run-id> --exit-status     # publish.yml must finish green
@@ -175,7 +215,7 @@ created after 2026-05-20 must have at least one allowed action selected (older c
 publish-allowed, so a long-standing one needs no change). Do not bump the version again to retry; fix the
 config and re-run the same release's workflow.
 
-## 7. Hand-off
+## 8. Hand-off
 
 The sites pin `@glw907/cairn-cms` by range and run `npm ci`, so the publish must precede any site code that
 imports new exports. Order: publish, verify on the registry, repoint each site and regenerate its
@@ -185,7 +225,7 @@ then push the sites. Flag any deferred live admin smoke tied to a site cutover.
 ## References
 
 - The scheme and the 0.x-vs-1.0 reasoning: cairn-cms `CLAUDE.md`, "Releases (cadence and scheme)".
-- npm auth and Trusted Publishing: `.github/workflows/publish.yml` and step 5 above.
+- npm auth and Trusted Publishing: `.github/workflows/publish.yml` and step 6 above.
 - The path to 1.0 and its readiness checklist: `ROADMAP.md` ("Toward 1.0").
 - The pass that produces the held window: `cairn-pass` (which holds unpublished by default and points
   here when a cut is warranted).
