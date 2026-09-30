@@ -77,7 +77,7 @@ behavior and changelog-described behavior outside option-bearing types. It finds
 re-verify existing facts whose cited files changed.
 
 - **Window.** From the last engine tag whose sweep `docs/HISTORY.md` records, to `main`. Find the tags
-  with `git tag --list 'v[0-9]*' --sort=-v:refname | grep -v -- '-'`: the `v[0-9]*` glob skips the
+  with `git tag --list 'v[0-9]*' --sort=-v:refname | grep -v -e '-'`: the `v[0-9]*` glob skips the
   repo's `tool/v*` tags, and the `grep` drops prerelease tags. A cut that ran no sweep leaves no record,
   so its range rolls into the next window. The first window is seeded at `v0.98.0`, since the planning
   sweep (`86fd134c`) ran after that cut and no `HISTORY.md` entry records one yet.
