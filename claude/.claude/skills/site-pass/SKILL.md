@@ -30,13 +30,12 @@ usually a spec under `docs/superpowers/specs/`.
 
 ## Following cairn-cms docs during the round
 
-The draft-docs initiative freezes each cairn-cms narrative arm against rewrites only until
-that arm's own stage merges; once lifted, the arm is an ordinary page. Follow the admin and
-extend pages exactly as written, and fix or file every divergence between a page and reality
-under the spec's "Edits after the chain" rule (cairn-cms
-`docs/superpowers/specs/2026-09-26-draft-docs-approach-design.md`): a changed or new claim
-cites a citable fact, a new fact is filed `[candidate]`, the page's brief is updated in the
-same change, and `check:provenance` is the tripwire.
+The draft-docs initiative deleted the cairn-cms admin, editors, and extend arms after the
+harvest; each stays empty until its own stage rebuilds it (cairn-cms `CLAUDE.md`, "Documentation
+is a pass dimension"). Where a rebuilt arm page exists, follow it as written. Where an arm is
+empty, a divergence between the docs and reality is filed into the cairn-cms facts container
+(`docs/internal/facts/`), never fixed on a page; a site edit to an arm whose stage is in flight
+is filed, and feeds that stage's page inputs.
 
 Edit on a `site-docs/<site>-<pass>` branch off cairn-cms `main`, merged by PR under the docs
 gate before the site pass closes; never edit cairn-cms `main` directly. A divergence on an arm
