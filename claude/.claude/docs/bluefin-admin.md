@@ -129,11 +129,34 @@ error, run `quota -s -f /tmp`; if `space` is near `limit`, find the bulk with
 `du -sh /tmp/* | sort -h | tail` and delete stale scratch (old session scratchpads, experiment
 copies). A long session that writes gigabytes to its scratchpad eats the same quota.
 
+## Calm desktop (Geoff, 2026-09-29)
+
+The desktop is calm and low-distraction by default: nothing interrupts unless
+it's critical. Keep it that way in every change.
+
+- Do Not Disturb stays on. GNOME Shell still shows critical-urgency
+  notifications, so critical is the only level that interrupts. Nothing shows
+  on the lock screen.
+- The dock shows no unread badges or notification counters, and no icon
+  wiggles for attention.
+- A new app gets its own interruptions turned off at install: new-item popups,
+  sounds, unread badges, tray nags, and "what's new" or start pages. Record the
+  setting where the app's config lives (Thunderbird's is
+  `~/.dotfiles/thunderbird/user.js`).
+- A script that notifies uses normal urgency for routine news, which lands
+  silently in the notification list. Reserve `--urgency=critical` for things
+  Geoff must act on now, such as a released sleep hold or a failure that loses
+  work. Never repeat or loop a notification, and never add sound.
+- Colors stay muted: GNOME's palette, with the slate accent as the only
+  highlight. The Thunderbird overrides are the worked example.
+- Desktop settings go in `bluefin/gnome-settings.txt`, applied with
+  `/usr/bin/gsettings` (see the next section).
+
 ## gsettings: always /usr/bin/gsettings
 
 Homebrew's `glib` (a dependency of cairo, ffmpeg, and others, so it stays) puts
 its own `gsettings` first on PATH. That build has no dconf module, so every
-`set` silently lands in `~/.config/glib-2.0/settings/keyfile`, which the desktop
+`set` silently lands in a GLib keyfile under `~/.config/glib-2.0/`, which the desktop
 never reads, and every `get` reads the same keyfile back, so a check looks
 green while the live desktop is unchanged. Found 2026-09-29, when the manifest's
 AC-suspend setting had never applied. Call `/usr/bin/gsettings` by full path.

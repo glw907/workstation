@@ -52,6 +52,13 @@ the other's commit, verify it, report verified.
   from there; never edit `/etc` directly. micro is the editor; Neovim is not installed, never
   suggest it.
 
+## Calm desktop (Geoff, 2026-09-29)
+
+The desktop is calm and low-distraction: only critical items interrupt. Do Not Disturb stays
+on, the dock shows no badges, and a new app gets its popups, sounds, and badges off at install.
+A notifying script uses normal urgency unless Geoff must act now. Posture and settings:
+`bluefin-admin.md` "Calm desktop".
+
 ## Dotfiles Management
 
 `~/.dotfiles`, GNU Stow; packages listed in `bluefin/stow-packages.txt`. **Every install
