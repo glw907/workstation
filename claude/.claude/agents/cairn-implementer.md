@@ -121,6 +121,9 @@ runs. On an internal doc the fix is agent-facing: source, engine version, and wh
 shape holds the most information.
 A new or edited bullet carries its stable fact id, minted once per the facts README, never
 derived from the bullet's text; `npm run check:facts` enforces it.
+A task that adds, renames, or removes a member of a public option-bearing type also runs
+`npm run check:options` beside `check:facts`, in the same task, whatever gate the dispatch names. An
+`exclude` row is only for a path a developer never sets, and a new option is never parked `pending`.
 
 ## Escalation
 

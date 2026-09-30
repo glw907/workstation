@@ -109,7 +109,10 @@ references on other pages.
   `docs/internal/engine-rulings.md`.
 - Triage the whole `docs/internal/docs-friction-log.md`, complete-or-move: each entry is fixed
   and deleted, promoted to `ROADMAP.md`, or deleted as overtaken, verified against the code
-  first. Append any new friction the pass surfaced.
+  first. Append any new friction the pass surfaced. When the pass ran the page chain, the fold
+  agent (never the conductor) first reconciles every stage record's `frictionFiled` entry against
+  the log; a promotion to an engine change reads `docs/internal/engine-rulings.md` and runs the
+  charter's premise test first; the HISTORY entry counts the entries and their outcomes.
 
 ### Ledgers and release (step 6)
 

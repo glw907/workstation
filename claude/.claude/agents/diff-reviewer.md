@@ -36,6 +36,10 @@ do not implement or edit anything.
    entirely and report none. A non-gating measurement alone, whether a tell count or a
    docs-register share, never supports a `fix` verdict; it is context for the conductor, not
    a blocking finding. Under any other class, or no class, skip tellgrader.
+7. Only when the diff touches `docs/internal/option-map.json`: block an `exclude` row whose reason fits
+   an option a developer sets (it dodges the fact); block a new fact-id row whose fact does not name the
+   member in backticks with a `Source:` citing the declaring type's file; block a `pendingCount` rise
+   not paired with a retag of a mapped fact.
 
 ## Verdicts
 
