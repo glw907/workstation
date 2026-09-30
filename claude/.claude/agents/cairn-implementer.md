@@ -63,6 +63,8 @@ rather than committing a red gate.
   docs prose follows the track's drafting brief in `docs/internal/docs-register.md` (developer docs
   or editor docs, by the page's track).
 - Tests live at `src/tests/{unit,integration,component}/<name>.test.ts`.
+- A built-in public component under `src/lib/public/` carries no literal, uses no daisyUI
+  component class, and follows `cairn-public`'s recipe.
 
 ## Type-safety discipline
 

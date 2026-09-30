@@ -149,6 +149,19 @@ gh run watch <run-id> --exit-status     # publish.yml must finish green
 npm view @glw907/cairn-cms version      # serves the new number on `latest`
 ```
 
+Then run the audit's public scope over each of the five sites (ecxc-ski, 907-life, aksailingclub-org,
+xcathletes-org, and cairn-pub) and record the counts. In each site's checkout:
+
+```bash
+npm exec --package=@glw907/cairn-cms@<new version> -- cairn-audit
+```
+
+The command writes no `package.json` or lockfile. Record, per site, the advisory count from
+`public-literals`, `theme-conformance`, and `theme-contrast`, plus the site's installed `daisyui` and
+`tailwindcss` versions against the engine's peer ranges (`daisyui` `^5`, `tailwindcss` `^4`). The counts
+are the evidence for the roadmap's promotion entry ("Toward 1.0": promote the two theme rules to error
+at the first minor cut after all five sites report zero).
+
 Then update `docs/STATUS.md` to the shipped state.
 
 If the publish job fails on authorization (an OIDC error rather than a code failure), the trusted-publisher
