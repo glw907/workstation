@@ -32,15 +32,18 @@ usually a spec under `docs/superpowers/specs/`.
 
 The draft-docs initiative deleted the cairn-cms admin, editors, and extend arms after the
 harvest; each stays empty until its own stage rebuilds it (cairn-cms `CLAUDE.md`, "Documentation
-is a pass dimension"). Where a rebuilt arm page exists, follow it as written. Where an arm is
-empty, a divergence between the docs and reality is filed into the cairn-cms facts container
-(`docs/internal/facts/`), never fixed on a page; a site edit to an arm whose stage is in flight
-is filed, and feeds that stage's page inputs.
+is a pass dimension"). Where an arm is empty, a divergence between the docs and reality is filed
+into the cairn-cms facts container (`docs/internal/facts/`), never fixed on a page. Where a
+rebuilt arm page exists, follow it as written, and fix a divergence between the page and reality
+on the page, under the spec's "Edits after the chain" rule (cairn-cms
+`docs/superpowers/specs/2026-09-26-draft-docs-approach-design.md`): the page's brief is updated in
+the same change, the fact bullet is filed alongside, and `check:provenance` in CI is the
+tripwire. An arm whose stage is in flight is the exception: a divergence there is filed, never
+fixed, and feeds that stage's page inputs.
 
 Edit on a `site-docs/<site>-<pass>` branch off cairn-cms `main`, merged by PR under the docs
-gate before the site pass closes; never edit cairn-cms `main` directly. A divergence on an arm
-whose stage is still in flight is filed, never fixed. Changed sentences get both chain
-reviews, scoped to those sentences, except a pure term or link substitution.
+gate before the site pass closes; never edit cairn-cms `main` directly. Changed sentences get both
+chain reviews, scoped to those sentences, except a pure term or link substitution.
 
 ## Closing a pass
 

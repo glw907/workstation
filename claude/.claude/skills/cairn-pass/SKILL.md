@@ -89,11 +89,15 @@ Documentation is a pass dimension. Fix every doc the change touched, including i
 references on other pages.
 
 - A public-behavior change files its bullet in `docs/internal/facts/<arm>.md`, then updates
-  the reference page if it is public API. The deleted narrative arms (admin, editors, extend) are empty
-  until each arm's own stage rebuilds them; a discovered deficiency (missing step, wrong warning,
-  stale command) is filed into the facts container, never fixed on a page. A reference page or an
-  internal doc's fix is made in the same pass, agent-facing for an internal doc, and Vale's error
-  tier still runs. A site pass's docs edits land per `site-pass`.
+  the reference page if it is public API. The admin and editors arms and the front door are
+  empty, and extend holds only its kept pages until stage 2a; each arm stays that way until its own stage
+  rebuilds it. While an arm holds no rebuilt page, a divergence is filed into the facts container.
+  A deficiency found on an existing page (reference, a kept extend record, or a rebuilt arm page)
+  is fixed on the page in the same pass, with its fact bullet filed alongside. On a published page
+  the fix is written to the track's drafting brief, with no register review or polish, and Vale's
+  error tier still runs; an edit to a page with a brief updates the brief in the same change (the
+  parent spec's "Edits after the chain"). An internal doc's fix is agent-facing. A site pass's docs edits land
+  per `site-pass`.
 - Any behavior change updates `CHANGELOG.md` under `## Unreleased` and the per-version record
   (`docs/extend/migration-notes.md`, with `docs/extend/upgrade-cairn.md` its short-task half).
   A breaking change carries one `Consumers must:` line per consumer action.
