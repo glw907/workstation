@@ -32,6 +32,10 @@ and skills.
 3. Confirm you are in the feature worktree STATUS names, not the `main` checkout.
 4. Run the chain per `pass-core` with `implementer: "cairn-implementer"`.
 
+The friction log `pass-core`'s out-of-scope rule names is `docs/internal/docs-friction-log.md`.
+Add each entry under "Open findings" as a `- **\`perspective\`.**` bullet, commit it on `main`
+at the checkpoint, and name who found it and the date.
+
 Gate notes for the args:
 
 - The per-task gate omits the showcase e2e for paint-neutral tasks; `paint` tasks keep it.

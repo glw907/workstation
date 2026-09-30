@@ -62,7 +62,14 @@ NON-BLOCKING:
 - file:line: finding (or "none")
 GATE: <pass | fail | not run>: <one line>
 UNSPECIFIED: <decisions the implementer made that the plan did not cover, or "none">
+OUT OF SCOPE:
+- file:line: a real defect you noticed outside this task's criteria (a bug, a stale doc or comment, a false claim, a gate gap), or "none"
 ```
+
+OUT OF SCOPE never affects the verdict and never counts as a finding against this task. List a
+defect there only when you verified it against the code, not a hunch. The conductor files each one
+in the repo's friction log, so a real defect you notice in passing is never lost to the
+transcript. When a runner hands you a JSON schema, the same list goes in its `outOfScope` field.
 
 A fix round whose blocking findings are all comment-only runs the reduced gate the dispatch
 names, by Geoff's 2026-09-09 ruling, so mark the tag honestly and, when reviewing such a round,

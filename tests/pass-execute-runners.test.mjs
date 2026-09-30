@@ -692,6 +692,40 @@ check("validateArgs never rejects a plan for a missing reducedGate (pass-execute
   assert.doesNotThrow(() => bundle.validateArgs(args));
 });
 
+// A reviewer's outOfScope findings never touch the verdict; the runner keeps every round's
+// findings (a fix round's review replaces the record's `review`) and rolls them up per task.
+const outOfScopeRoutes = [
+  ["base:", baseShaHandler],
+  ["impl:1", () => implOk()],
+  ["review:1:fix", () => ({ ...acceptReview(), outOfScope: [{ location: "b.md:2", finding: "second" }] })],
+  ["review:1", () => ({
+    ...acceptReview(),
+    verdict: "fix",
+    blocking: [{ location: "x.js:1", finding: "f", fix: "fx" }],
+    outOfScope: [{ location: "a.md:1", finding: "first" }]
+  })]
+];
+const expectedOutOfScope = [
+  { task: "1", location: "a.md:1", finding: "first" },
+  { task: "1", location: "b.md:2", finding: "second" }
+];
+
+check("outOfScope findings from every review round reach the run's result (pass-execute.js)", async () => {
+  const args = { repo: "/repo", gate: "g", implementer: "i", classifier: false, tasks: [{ id: "1", title: "T", criteria: "c" }] };
+  const { bundle } = load(seqFactory, args, outOfScopeRoutes);
+  const result = await bundle.main();
+  assert.deepEqual(result.outOfScope, expectedOutOfScope);
+  assert.match(bundle.reviewPrompt(args.tasks[0], args, implOk(), { gate: "g" }, null), /outOfScope/);
+});
+
+check("outOfScope findings from every review round reach the run's result (pass-execute-chains.js)", async () => {
+  const chain = { id: "C", repo: "/repo", branch: "chain-c", classifier: false, tasks: [{ id: "1", title: "T", criteria: "c" }] };
+  const args = { gate: "g", implementer: "i", planPath: "/p", chains: [chain] };
+  const { bundle } = load(chainsFactory, args, outOfScopeRoutes);
+  const result = await bundle.main();
+  assert.deepEqual(result.outOfScope, expectedOutOfScope);
+});
+
 console.log("");
 await runChecks();
 if (failures.length) {

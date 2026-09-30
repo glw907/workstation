@@ -135,7 +135,17 @@ const REVIEW_SCHEMA = {
       }
     },
     gate: { type: "string", enum: ["pass", "fail", "not run"] },
-    unspecified: { type: "array", items: { type: "string" } }
+    unspecified: { type: "array", items: { type: "string" } },
+    // Defects noticed outside the task's criteria. Never blocking; the runner collects them
+    // across fix rounds and returns them so the conductor files each in the repo's friction log.
+    outOfScope: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { location: { type: "string" }, finding: { type: "string" } },
+        required: ["location", "finding"]
+      }
+    }
   },
   required: ["verdict", "summary", "blocking", "nonBlocking", "gate", "unspecified"]
 };
@@ -375,6 +385,7 @@ function reviewPrompt(t, chain, a, implReport, resolvedGate, reduced) {
     `The gate string this task ran: ${ranCommand}`,
     `Reproduce the gate with: ${resolvedGate.gate}`,
     mismatch,
+    "Out of scope: list in outOfScope any real defect you notice outside this task's criteria (a bug, a stale doc or comment, a false claim, a gate gap), one {location, finding} each. It never affects the verdict; the conductor files each one in the repo's friction log.",
     "Implementer report (JSON):",
     JSON.stringify(implReport)
   ].filter(Boolean).join("\n");
@@ -480,6 +491,7 @@ async function runTask(t, chain, a, classifierExists) {
   // model at all and let the implementer's own frontmatter pin stand.
   const implOpts = t.model ? { model: t.model } : {};
   const batchedNotes = [];
+  const outOfScope = [];
 
   const baseSha = await recordBaseSha(chain, phaseName, `base:${t.id}`);
 
@@ -512,6 +524,7 @@ async function runTask(t, chain, a, classifierExists) {
     return { id: t.id, title: t.title, status: "failed", fixRounds: 0, implementer: implReport, review: null };
   }
   batchedNotes.push(...applyClassBar(review, cls));
+  outOfScope.push(...(review.outOfScope || []));
 
   let fixRounds = 0;
   while (review.verdict === "fix" && fixRounds < maxFix) {
@@ -546,11 +559,12 @@ async function runTask(t, chain, a, classifierExists) {
       return { id: t.id, title: t.title, status: "failed", fixRounds, implementer: implReport, review: null };
     }
     batchedNotes.push(...applyClassBar(review, cls));
+  outOfScope.push(...(review.outOfScope || []));
   }
 
   const status = taskStatus(review, implReport);
   log(`task ${t.id} (${t.title}): ${status}, verdict ${review.verdict}, fixRounds ${fixRounds}${cls ? `, class ${cls.name}, ${batchedNotes.length} coverage notes batched` : ""}`);
-  const record = { id: t.id, title: t.title, status, fixRounds, implementer: implReport, review };
+  const record = { id: t.id, title: t.title, status, fixRounds, implementer: implReport, review, outOfScope };
   return cls ? { ...record, passClass: cls.name, batchedNotes } : record;
 }
 
@@ -605,7 +619,7 @@ async function main() {
   const flat = kept.flatMap((c) => c.results);
   const finalTally = tally(flat);
   log(`tally: accepted ${finalTally.accepted}, needs-decision ${finalTally.needsDecision}, escalated ${finalTally.escalated}, failed ${finalTally.failed}, deferred ${finalTally.deferred}`);
-  return { chains: kept, tally: finalTally, spent: budget.spent() };
+  return { chains: kept, tally: finalTally, spent: budget.spent(), outOfScope: flat.flatMap((r) => (r.outOfScope || []).map((o) => ({ task: r.id, ...o }))) };
 }
 
 return main();

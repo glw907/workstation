@@ -134,6 +134,14 @@ not specify; any further escalation follows `~/.claude/docs/model-economy.md` "C
   dispatch. A wrong claim found at review costs a full fix round.
 - **Read a tool's `--help` once** before a pass relies on it, and act on a tool's NOTE in
   an agent's report before the next dispatch.
+- **File every out-of-scope finding the same session (Geoff, 2026-09-29).** A defect any
+  dispatch reports outside its task goes into the repo's friction log at the next checkpoint
+  commit, verified against the code first. That covers a reviewer's OUT OF SCOPE list, a
+  runner's top-level `outOfScope`, and an implementer's or sweep's aside. The repo skill names
+  the log; a repo without one files the finding through `log-issue`. STATUS may point at a filed
+  entry but never holds a finding alone, and a finding that fails verification is dropped with a
+  one-line reason in the checkpoint note. (The draft docs harvest parked four findings in STATUS
+  until Geoff asked; one was false.)
 - **Verification a plan parks "for the owner" is Claude's (Geoff, 2026-09-21).** Run the
   release candidate, the real-terminal check, the flag, or the theme yourself (the real
   binary against Geoff's sites with the stored read credentials, a TUI through
