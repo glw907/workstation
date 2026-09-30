@@ -8,3 +8,16 @@
 # Stock GNOME suspends after 15 idle minutes even on AC power. Battery
 # keeps the stock suspend behavior on purpose.
 org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing'
+
+# A calm, low-distraction desktop (Geoff, 2026-09-29). Do Not Disturb hides
+# notification banners, but GNOME Shell still shows critical-urgency ones, so
+# only critical items interrupt. Nothing shows on the lock screen. Missed
+# notifications still collect in the calendar drop-down.
+org.gnome.desktop.notifications show-banners false
+org.gnome.desktop.notifications show-in-lock-screen false
+
+# The dock shows no unread counts on app icons (Discord, Thunderbird, and the
+# rest), and no icon wiggles to demand attention.
+org.gnome.shell.extensions.dash-to-dock show-icons-emblems false
+org.gnome.shell.extensions.dash-to-dock show-icons-notifications-counter false
+org.gnome.shell.extensions.dash-to-dock dance-urgent-applications false

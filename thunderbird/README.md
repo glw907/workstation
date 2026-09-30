@@ -13,7 +13,7 @@ package: `thunderbird-theme-sync` copies it into the Thunderbird profile.
 |------|----------|
 | `customChrome.css` | Color overrides for the main window, mapping Thunderbird's own colors onto the GNOME palette and the desktop accent |
 | `customContent.css` | The same palette for Settings, the address book, and account settings, which load as content pages that `userChrome.css` never reaches |
-| `user.js` | Preferences Thunderbird applies at every startup: the two the theme needs, plus the Adwaita tag colors |
+| `user.js` | Preferences Thunderbird applies at every startup: the two the theme needs, the Adwaita tag colors, and new-mail popups and sounds turned off |
 | `patches/*.patch` | Fixes carried until the theme merges them upstream; each file's header names its upstream PR |
 
 ## How it fits together

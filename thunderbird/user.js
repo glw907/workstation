@@ -15,3 +15,8 @@ user_pref("mailnews.tags.$label2.color", "#e66100"); // Work, orange 4
 user_pref("mailnews.tags.$label3.color", "#26a269"); // Personal, green 5
 user_pref("mailnews.tags.$label4.color", "#3584e4"); // To Do, blue 3
 user_pref("mailnews.tags.$label5.color", "#9141ac"); // Later, purple 3
+
+// Calm desktop: no new-mail popup or sound. Unread counts stay inside
+// Thunderbird's own folder pane; the dock shows none (bluefin/gnome-settings.txt).
+user_pref("mail.biff.show_alert", false);
+user_pref("mail.biff.play_sound", false);

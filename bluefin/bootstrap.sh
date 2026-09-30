@@ -385,6 +385,25 @@ setup_kitty() {
     ln -sf "$HOME/.local/kitty.app/bin/kitten" "$HOME/.local/bin/kitten"
 }
 
+# Prints a --schemadir option for a schema that ships inside a GNOME Shell
+# extension (dash-to-dock, say), which the global schema cache doesn't
+# include. Prints nothing for any other schema. Same function as check-drift's;
+# duplicated so each script stays standalone.
+schema_dir_opt() {
+    [[ "$1" == org.gnome.shell.extensions.* ]] || return 0
+    local d
+    for d in /usr/share/gnome-shell/extensions/*/schemas \
+             "$HOME"/.local/share/gnome-shell/extensions/*/schemas; do
+        if grep -qs "id=\"$1\"" "$d"/*.gschema.xml; then
+            echo "--schemadir $d"
+            return 0
+        fi
+    done
+}
+
+# Always /usr/bin/gsettings: Homebrew's glib puts its own gsettings first on
+# PATH, and that build has no dconf module, so it silently falls back to a
+# keyfile (~/.config/glib-2.0/settings/keyfile) the desktop never reads.
 setup_gnome_settings() {
     echo "== setup: GNOME settings (gnome-settings.txt) =="
     # Manifest values are the serialized form `gsettings get` prints, which
@@ -392,7 +411,8 @@ setup_gnome_settings() {
     # is needed here.
     local schema key value
     while read -r schema key value; do
-        gsettings set "$schema" "$key" "$value" || return 1
+        # shellcheck disable=SC2046 # the option is two words on purpose
+        /usr/bin/gsettings $(schema_dir_opt "$schema") set "$schema" "$key" "$value" || return 1
     done < <(read_list "$BLUEFIN_DIR/gnome-settings.txt")
 }
 
