@@ -35,13 +35,17 @@ delayed reveal.
 
 Write with no padding. A sentence that restates something the previous sentence already
 said, a hedge that adds no information, and a transition word doing no work are all cuts, not
-style. If a sentence can be removed without losing a fact or a step, remove it.
+style. If a sentence can be removed without losing a fact or a step, remove it. The
+introduction, the section hand-off lead-ins, and the ending the register's page anatomies require
+are not cut under this rule.
 
 Write the page's `sentences` list alongside the page itself, not as an afterthought pass. As
 you write each sentence of the page, record it with the fact id it draws from, from the ids
 the dispatch handed you, or `no-claim` when it carries no traceable fact (a transition, an
-instruction with no external claim, a reference to something the page itself defines). Save
-the list to `docs/internal/briefs/<track>/<page>.json`, shaped exactly:
+instruction with no external claim, a reference to something the page itself defines). An
+anatomy sentence is `no-claim` only when it carries no extractable fact; when it holds one, cite
+that fact's id, since `scripts/checks/check-provenance.mjs` holds that "a no-claim sentence cites
+nothing, so any extractable fact in it fails". Save the list to `docs/internal/briefs/<track>/<page>.json`, shaped exactly:
 
 ```json
 {
