@@ -50,7 +50,11 @@ approved, all cheap in tokens:
 - **Orchestrator hygiene:** halt agents PREPEND to STATUS, never rewrite it; a merge step brings
   `main` in first with fixed resolution rules (STATUS takes main's, HISTORY keeps both); a
   workstation workflow is invoked by name, never from a scratchpad copy, so every run executes
-  the committed script; repeated protocol text in args goes in one field the chains script
+  the committed script, except after the script changed in the same session: by-name resolution
+  can serve a stale copy (2026-10-01, run `wf_55b254af-82a` ran an earlier commit and redrafted six
+  pages), so before relying on the run, `cmp` the persisted script the tool returns against the
+  committed file, and on a mismatch stop it, copy the committed file over that returned path, and
+  relaunch with `scriptPath`; repeated protocol text in args goes in one field the chains script
   appends at prompt time.
 - **One full gate per machine at a time, and every gate memory-capped** (born 2026-09-14: the
   motion pass's two chains ran their full gates side by side, each with headless Chromium,
