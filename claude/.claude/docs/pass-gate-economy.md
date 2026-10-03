@@ -54,7 +54,9 @@ approved, all cheap in tokens:
   can serve a stale copy (2026-10-01, run `wf_55b254af-82a` ran an earlier commit and redrafted six
   pages), so before relying on the run, `cmp` the persisted script the tool returns against the
   committed file, and on a mismatch stop it, copy the committed file over that returned path, and
-  relaunch with `scriptPath`; repeated protocol text in args goes in one field the chains script
+  relaunch with `scriptPath` (when the tool refuses that path, as it did on 2026-10-03 after the
+  session's working directory changed, copy the committed file into the session scratchpad,
+  `cmp` it, and relaunch from there); repeated protocol text in args goes in one field the chains script
   appends at prompt time.
 - **One full gate per machine at a time, and every gate memory-capped** (born 2026-09-14: the
   motion pass's two chains ran their full gates side by side, each with headless Chromium,
