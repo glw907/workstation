@@ -58,7 +58,9 @@ when the page touches them, and why the thing the page covers exists (why cairn 
 before a page that replaces them). A page can serve more than one reader: the add-cairn tutorial's reader
 may want exactly that install, or may be curious to see what cairn does underneath. Name each
 reader's reason, and for a page off the usual path, tell them there that the usual route (the
-setup command) is much easier. The introduction opens on a statement, never an imperative, and may run two or
+setup command) is much easier. That example shows the kind of reasoning, not a template: each
+page's readers and their reasons differ, with no fixed pattern, so work them out for this page
+before writing its opening. The introduction opens on a statement, never an imperative, and may run two or
 three paragraphs when the framing needs them. When the dispatch hands you a framing record for the
 page, the introduction follows it.
 
