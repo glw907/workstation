@@ -55,8 +55,10 @@ pilot intro read thin while the bodies read strong). Frame from the reader: who 
 page, from where, and what they are looking for, so the opening tells them early whether the page
 answers it. Before the page's first task, a reader needs the background it rests on: the general model the page sits in, where SvelteKit and Cloudflare fit
 when the page touches them, and why the thing the page covers exists (why cairn uses magic links,
-before a page that replaces them). A page off the usual path names the usual path first and says
-why this one exists. The introduction opens on a statement, never an imperative, and may run two or
+before a page that replaces them). A page can serve more than one reader: the add-cairn tutorial's reader
+may want exactly that install, or may be curious to see what cairn does underneath. Name each
+reader's reason, and for a page off the usual path, tell them there that the usual route (the
+setup command) is much easier. The introduction opens on a statement, never an imperative, and may run two or
 three paragraphs when the framing needs them. When the dispatch hands you a framing record for the
 page, the introduction follows it.
 
