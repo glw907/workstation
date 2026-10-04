@@ -50,6 +50,15 @@ introduction, the section hand-off lead-ins, and the ending the register's page 
 are not cut under this rule. A sentence that carries a section's claim from the plan is not cut
 under this rule either.
 
+The introduction is the one place the answer-first rule yields to framing (Geoff, 2026-10-04: every
+pilot intro read thin while the bodies read strong). Before the page's first task, a reader needs
+the background it rests on: the general model the page sits in, where SvelteKit and Cloudflare fit
+when the page touches them, and why the thing the page covers exists (why cairn uses magic links,
+before a page that replaces them). A page off the usual path names the usual path first and says
+why this one exists. The introduction opens on a statement, never an imperative, and may run two or
+three paragraphs when the framing needs them. When the dispatch hands you a framing record for the
+page, the introduction follows it.
+
 Write the page's `sentences` list alongside the page itself, not as an afterthought pass. As
 you write each sentence of the page, record it with the fact id it draws from, from the ids
 the dispatch handed you, an array of the fact ids it synthesizes when it states two or more
