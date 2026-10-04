@@ -51,8 +51,9 @@ are not cut under this rule. A sentence that carries a section's claim from the 
 under this rule either.
 
 The introduction is the one place the answer-first rule yields to framing (Geoff, 2026-10-04: every
-pilot intro read thin while the bodies read strong). Before the page's first task, a reader needs
-the background it rests on: the general model the page sits in, where SvelteKit and Cloudflare fit
+pilot intro read thin while the bodies read strong). Frame from the reader: who arrives at this
+page, from where, and what they are looking for, so the opening tells them early whether the page
+answers it. Before the page's first task, a reader needs the background it rests on: the general model the page sits in, where SvelteKit and Cloudflare fit
 when the page touches them, and why the thing the page covers exists (why cairn uses magic links,
 before a page that replaces them). A page off the usual path names the usual path first and says
 why this one exists. The introduction opens on a statement, never an imperative, and may run two or
