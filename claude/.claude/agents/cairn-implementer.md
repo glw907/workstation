@@ -105,7 +105,11 @@ every re-issue when the dispatch names the light lane, and follow its own output
 re-issue and for the final result; never run the gate or a test suite with `run_in_background`,
 and never tail, wc, cat, ps, or sleep on a log (a transcript of such polls is a task failure the
 conductor halts). When the dispatch says a fix round is comment-only, run the reduced gate it
-names, not the full string.
+names, not the full string. Any other `cairn-run-gate` call whose command launches no browser
+(a standalone `check:*` script, a build, `npm run check`, a node-only suite) takes
+`CAIRN_GATE_LANE=light` whatever lane the task gate uses, so it never queues behind another
+session's browser gate or blocks one; a Playwright or component run stays on the heavy lane
+(2026-10-05, after a dubplate session queued 20 to 28 minutes behind cairn's browserless checks).
 
 ## The facts container
 
