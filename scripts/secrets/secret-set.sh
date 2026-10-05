@@ -24,6 +24,7 @@ umask 077  # every temp and cache file is born private, no chmod race
 #                                          #   (use for PEMs / any multi-line material;
 #                                          #    decode with atob()/base64 -d at the consumer)
 #   secret-set.sh --sync                   # just regenerate ~/.local/secrets, no edit
+#   secret-set.sh NAME --delete            # remove NAME from values.age (git keeps history)
 #   secret-set.sh --dry-run NAME --value … # show what would change, write nothing
 #
 # After adding, document the secret in registry.md and (for Workers) add it to the
@@ -45,6 +46,7 @@ MODE=""
 SRC=""
 DRY_RUN=false
 SYNC_ONLY=false
+DELETE=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --stdin)    MODE="stdin";    shift ;;
@@ -52,6 +54,7 @@ while [[ $# -gt 0 ]]; do
         --file)     MODE="file";     SRC="${2:?--file needs a path}";       shift 2 ;;
         --b64-file) MODE="b64-file"; SRC="${2:?--b64-file needs a path}";   shift 2 ;;
         --sync)     SYNC_ONLY=true;  shift ;;
+        --delete)   DELETE=true;     shift ;;
         --dry-run)  DRY_RUN=true;    shift ;;
         -h|--help)  usage 0 ;;
         -*)         die "unknown option: $1" ;;
@@ -113,7 +116,29 @@ fi
 
 [[ -n "$NAME" ]] || die "missing secret NAME (or use --sync). See --help."
 [[ "$NAME" =~ ^[A-Z][A-Z0-9_]*$ ]] || die "NAME must be UPPER_SNAKE_CASE: '$NAME'"
-[[ -n "$MODE" ]] || die "need one of --stdin / --value / --file / --b64-file (or --sync)"
+# --- Delete: drop NAME, verify the new ciphertext no longer carries it ---
+if [[ "$DELETE" == true ]]; then
+    [[ -z "$MODE" ]] || die "--delete takes no value option"
+    grep -q "^${NAME}=" "$DEC" || die "$NAME is not in values.age"
+    grep -v "^${NAME}=" "$DEC" > "$NEW" || true
+    chmod 600 "$NEW"
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "[dry-run] would delete $NAME from values.age and regenerate $LOCAL_SECRETS"
+        exit 0
+    fi
+    age -r "$RECIP" -o "$VALUES.tmp" "$NEW"
+    if ! age --decrypt -i "$CACHE" "$VALUES.tmp" | grep -q "^${NAME}=" \
+        && [[ "$(age --decrypt -i "$CACHE" "$VALUES.tmp" | grep -c '=')" -eq "$(grep -c '=' "$NEW")" ]]; then
+        mv "$VALUES.tmp" "$VALUES"
+    else
+        rm -f "$VALUES.tmp"; die "verification failed: values.age left untouched"
+    fi
+    write_local "$NEW"
+    echo "OK: ${NAME} deleted from values.age + ~/.local/secrets. Remember to update registry.md."
+    exit 0
+fi
+
+[[ -n "$MODE" ]] || die "need one of --stdin / --value / --file / --b64-file (or --sync, --delete)"
 
 # --- Build the value (always single-line) ---
 case "$MODE" in
