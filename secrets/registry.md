@@ -149,23 +149,9 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | TWILIO_API_KEY_SECRET | ✓   | —        | —    | —        | ✓          |
 | TWILIO_AUTH_TOKEN   | ✓     | —        | —    | —        | ✓          |
 | VAPID_PRIVATE_KEY   | ✓     | —        | —    | —        | ✓          |
-| MUSICBOX_TUNNEL_TOKEN | ✓ | —      | —    | —        | —          |
-| ND_PASSWORDENCRYPTIONKEY | ✓ | —       | —    | —        | —          |
 | DUBPLATE_SMTP_PASSWORD | ✓  | —        | —    | —        | —          |
-| MUSICBOX_SMTP_PASSWORD | ✓  | —        | —    | —        | —          |
-| ND_SPOTIFY_ID       | ✓     | —        | —    | —        | —          |
-| ND_SPOTIFY_SECRET   | ✓     | —        | —    | —        | —          |
-| NAVIDROME_ADMIN_USER | ✓    | —        | —    | —        | —          |
-| NAVIDROME_ADMIN_PASSWORD | ✓ | —       | —    | —        | —          |
-| FILEBROWSER_ADMIN_PASSWORD | ✓ | —     | —    | —        | —          |
-| MUSICBOX_R2_ACCESS_KEY_ID | ✓ | —      | —    | —        | —          |
-| MUSICBOX_R2_SECRET_ACCESS_KEY | ✓ | — | —    | —        | —          |
 | MUSIC_R2_RO_ACCESS_KEY_ID | ✓ | —      | —    | —        | —          |
 | MUSIC_R2_RO_SECRET_ACCESS_KEY | ✓ | — | —    | —        | —          |
-| MUSICBOX_HC_BACKUP_URL | ✓ | —      | —    | —        | —          |
-| MUSICBOX_HC_IMPORT_URL | ✓ | —      | —    | —        | —          |
-| MUSICBOX_HC_DISK_URL | ✓   | —      | —    | —        | —          |
-| MUSICBOX_HC_NAVIDROME_URL | ✓ | —    | —    | —        | —          |
 | PINGS_ADMIN_TOKEN | ✓       | —      | —    | —        | —          |
 | DUBPLATE_MAGIC_LINK_SECRET | ✓ | —   | —    | —        | —          |
 | DUBPLATE_SESSION_SECRET | ✓ | —      | —    | —        | —          |
@@ -178,42 +164,19 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 > name for the overlap window (the count doubles during rotation), deploy, then drop `_PREVIOUS`.
 > Rotating the session key signs every member out.
 
-> `DUBPLATE_SMTP_PASSWORD` (Fastmail app password, SMTP scope, minted 2026-08-31 replacing a
-> never-valid predecessor) is canonical; `MUSICBOX_SMTP_PASSWORD` is a same-value alias the
-> still-live shell layer consumes, retiring at the rewrite's T13 rename close. Rotation:
-> Fastmail app-passwords page + secret-receive + deploy.
+> `DUBPLATE_SMTP_PASSWORD` (Fastmail app password, SMTP scope, minted 2026-08-31) is canonical
+> and rendered into dubplate-server's `/etc/dubplate/server.env`. Rotation: Fastmail
+> app-passwords page + secret-receive + deploy.
 
-> **DUBPLATE_* additive block (minted 2026-08-31, rewrite T12; 30 names, all Local-only,
-> rendered to the box env by musicbox/scripts/deploy.sh).** Aliases carrying an existing
-> secret's value under the new name: R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY,
-> NAVIDROME_ADMIN_{USER,PASSWORD}, PING_{BACKUP,DISK,NAVIDROME}_URL, SMTP_PASSWORD (above).
-> The rest are NEW non-secret values (SMTP host/port/user/from, R2 account/bucket/remote,
-> Navidrome URL, config/library paths) that were script constants before the rewrite; the
-> authoritative name list and per-name comments live in musicbox
-> env/musicbox.env.template's T12 block. The MUSICBOX_*/ND-alias generation retires at T13;
-> these DUBPLATE_ names are then the only ones. Uploader Pass A adds (2026-09-01):
-> UPLOADS_DIR, SERVE_BIND_ADDRS (loopback now; the bridge IP joins at U12a), SERVE_PORT,
-> PUBLIC_NAVIDROME_URL, ACCESS_TEAM_DOMAIN (the account's one Zero Trust org), and
-> TRIGGER_DIR (conductor's TriggerDir ruling). DUBPLATE_ACCESS_AUD minted 2026-09-01 at
-> U12a: the AUD of Access app "dubplate uploader" (path-scoped music.907.life/upload, app id
-> b9d9f27d-bfbf-4c66-a437-5b3074785eee); rotate by recreating the app and re-running
-> secret-set.sh. SERVE_BIND_ADDRS gains the pinned compose bridge gateway at U12a deploy.
-> DUBPLATE_SERVE_SITE_NAME minted 2026-09-01 at U12b: non-secret masthead text, in the
-> age store only because the env manifest's values all originate there; change it by
-> re-running secret-set.sh and deploy.sh. Value set to "907 Music" 2026-09-02 (Geoff's
-> pick at the Pass B attended gate; was "Wright Family Music").
-
-> The musicbox rows are Local-only by design: none of these secrets touch a Cloudflare
-> Worker. `MUSICBOX_TUNNEL_TOKEN` and the Navidrome values land on the VPS via
-> `musicbox/scripts/deploy.sh` writing `/etc/musicbox/env` (root:root 0600); the R2 pairs
-> are consumed directly by rclone on the box (`MUSICBOX_R2_*`) and on the workstation
-> (`MUSIC_R2_RO_*`). See `~/Projects/musicbox/docs/STATUS.md` for the current build state.
-
-> The `MUSICBOX_HC_*_URL` and `PINGS_ADMIN_TOKEN` rows are also Local-only: the ping URLs
-> reach the musicbox VPS via its own env, and `PINGS_ADMIN_TOKEN` is consumed by
-> workstation scripts (`scripts/add-check`/`remove-check`) — neither is ever a `pings`
-> Worker secret. Provisioned live 2026-08-31 (pings Task P2b); see
-> `~/Projects/pings/docs/STATUS.md`.
+> **The musicbox stack is retired (Geoff, 2026-10-05).** Navidrome, the cloudflared tunnel,
+> the box's beets, and the old `dubplate` binary's units are gone from the box, and 42 names
+> that only they used were deleted from the store (`secret-set.sh NAME --delete`; dotfiles
+> git keeps the history): the `MUSICBOX_*` and `ND_*` aliases, `NAVIDROME_ADMIN_*`,
+> `FILEBROWSER_ADMIN_PASSWORD`, the tunnel tokens, the `DUBPLATE_PING_*` and `MUSICBOX_HC_*`
+> URLs, and the incumbent `DUBPLATE_*` path and Navidrome rows rendered to the retired
+> `/etc/dubplate/env`. Kept: the `DUBPLATE_R2_*` credentials (the bucket still exists),
+> `MUSIC_R2_RO_*`, the SMTP rows, the two HMAC keys, and `PINGS_ADMIN_TOKEN` (the pings
+> Worker still runs; it holds no dubplate checks now).
 
 > The ecxc worker stopped needing `GITHUB_APP_ID`/`GITHUB_APP_INSTALLATION_ID` as secrets at
 > the Waymark rebuild (2026-07-05): the v2 adapter commits both in `cairn.config.ts` (they
@@ -484,87 +447,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   that never opens the app again never recovers. Rotate only on suspected compromise, and
   change `VAPID_PUBLIC_KEY` in `wrangler.jsonc` in the same deploy.
 
-### MUSICBOX_TUNNEL_TOKEN
-- **Grants**: connects the musicbox VPS's `cloudflared` container to the Cloudflare edge
-  as the named tunnel `musicbox` (config-managed, ingress set via the Cloudflare API —
-  see `musicbox/config/cloudflared-tunnel-config.json`). No inbound port is opened on the
-  box; this token is how it dials out to publish `music.907.life` and `inbox.907.life`.
-- **Used by**: the `cloudflared` service in `musicbox/compose.yaml` (`TUNNEL_TOKEN` env,
-  via `/etc/musicbox/env`, written by `deploy.sh`).
-- **Rotate at**: Cloudflare dashboard/API, `cfd_tunnel/{id}/token` (regenerating
-  invalidates the running container's connection; redeploy after rotating).
-- **Status 2026-08-31**: minted, then rotated same day after an exposure incident (below).
-  Live tunnel `musicbox` is id `b6781175-000b-40c3-a54a-05906ab25037` (`config_src:
-  cloudflare`), created/configured via `CLOUDFLARE_API_TOKEN` (Cloudflare Tunnel:Edit landed
-  on it 2026-08-30); ingress PUT from `musicbox/config/cloudflared-tunnel-config.json` and
-  verified by GET. DNS: `music.907.life` and `inbox.907.life` are proxied CNAMEs to
-  `b6781175-000b-40c3-a54a-05906ab25037.cfargotunnel.com` on zone `907.life`. `cloudflared` is
-  not yet running on the box, so both hostnames 530 until the first real deploy; musicbox
-  `docs/STATUS.md` carries the resume step.
-- **Incident + rotation, 2026-08-31**: the first tunnel (id `66fa450c-5abb-459d-a1f8-b80d8d19e07c`,
-  minted earlier the same day) had its `cfd_tunnel` CREATE response body — which carries the
-  tunnel secret and connector token alongside the id — displayed in full in an agent
-  transcript instead of being narrowed to `.result.id` first. Treated as compromised on
-  disclosure per standing incident doctrine. Remediation: the tunnel was deleted (delete-then-
-  recreate, the cheap definitive path since `cloudflared` was not yet deployed against it —
-  Cloudflare has no API to rotate a tunnel's secret in place), a new tunnel was created under
-  the same name, its ingress re-PUT, both DNS CNAMEs repointed to the new tunnel id, and
-  `MUSICBOX_TUNNEL_TOKEN` overwritten with the new tunnel's token via `secret-set.sh --stdin`
-  (name-only verified, count 1, length 240). The DELETE and the tunnel-recreate POST were both
-  refused by the Claude Code auto-mode classifier when attempted from a subagent session; the
-  rotation completed once retried from the main session with the user present. Lesson for
-  future tunnel work: always pipe a `cfd_tunnel` CREATE (or token-fetch) response through
-  `jq -r '.result.id'` (or the specific field needed) and never display or log the raw body.
-
-### ND_PASSWORDENCRYPTIONKEY
-- **Grants**: nothing external; it is Navidrome's at-rest encryption key for the user
-  passwords it must keep recoverable (Subsonic token auth requires the server to
-  reconstruct the plaintext password, so Navidrome cannot hash-and-forget like a normal
-  auth system). Generated 2026-08-30 with `openssl rand -hex 32`.
-- **Used by**: the Navidrome container in `musicbox/compose.yaml` (`ND_PASSWORDENCRYPTIONKEY`
-  env, via `/etc/musicbox/env`).
-- **Rotate at**: nowhere upstream; generate a fresh value locally. **Rotation makes every
-  stored user password unrecoverable** — Navidrome cannot decrypt passwords written under
-  the old key, so every account (admin and family) needs its password reset after a
-  rotation. Rotate only on suspected compromise.
-
-### NAVIDROME_ADMIN_USER / NAVIDROME_ADMIN_PASSWORD
-- **Grants**: the Navidrome admin account on `music.907.life`, created on first boot.
-  Username fixed to `admin`; password generated 2026-08-30 with `openssl rand -hex 16`.
-  Stored under `NAVIDROME_ADMIN_PASSWORD` (renamed from an earlier
-  `NAVIDROME_ADMIN_PASS` key 2026-08-31 — same value, no rotation — to match the exact
-  name `env/musicbox.env.template` and `deploy.sh` require; the old key can be dropped
-  next rotation).
-- **Used by**: Navidrome first-run bootstrap (`musicbox/compose.yaml` / `deploy.sh`);
-  delivered to Geoff out of band per the spec's unique-password note (Task 8).
-- **Rotate at**: Navidrome's own admin UI (change password), or reset via its CLI on the
-  box; update the store afterward so `deploy.sh` reruns stay accurate. Family accounts
-  (Task 8) are separate logins, not derived from this one.
-
-### FILEBROWSER_ADMIN_PASSWORD
-- **Grants**: FileBrowser Quantum's built-in admin-bootstrap account on
-  `inbox.907.life` (username fixed to `admin`, not configurable). Minted 2026-08-31,
-  discovered as a hard blocker during musicbox's first live deploy: with no value set,
-  the container's own first-run admin creation used a shorter-than-8-char default,
-  which `config/filebrowser.yaml`'s `auth.methods.password.minLength: 8` rejected,
-  crash-looping the container (`store.Users.Save: password must be at least 8
-  characters long`).
-- **Used by**: `musicbox/compose.yaml`'s `filebrowser` service
-  (`FILEBROWSER_ADMIN_PASSWORD` env var, FileBrowser's own native name; config
-  equivalent `auth.methods.password.adminPassword`).
-- **Rotate at**: `secret-set.sh FILEBROWSER_ADMIN_PASSWORD --stdin` then redeploy —
-  FileBrowser re-applies this value to the admin account on every boot. Task 8
-  replaces this bootstrap account with per-contributor accounts.
-
-### MUSICBOX_R2_ACCESS_KEY_ID / MUSICBOX_R2_SECRET_ACCESS_KEY
-- **Grants**: R2 API token "musicbox-vps" — Object Read & Write, scoped to bucket
-  `music-library` only.
-- **Used by**: the musicbox VPS's `music-backup` script (rclone sync of `library/` and
-  `state/` to R2, per the pinned bucket layout in the design spec).
-- **Rotate at**: Cloudflare dashboard > R2 > Manage API tokens (revoke "musicbox-vps",
-  mint a replacement scoped identically, then `secret-set.sh` both halves and rerun
-  `deploy.sh` so the box picks up the new pair).
-
 ### MUSIC_R2_RO_ACCESS_KEY_ID / MUSIC_R2_RO_SECRET_ACCESS_KEY
 - **Grants**: R2 API token "claude-code-thinkpad-x1" — Object Read only, scoped to bucket
   `music-library` only. Deliberately read-only: the workstation mirror pull
@@ -575,24 +457,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 - **Rotate at**: Cloudflare dashboard > R2 > Manage API tokens (revoke
   "claude-code-thinkpad-x1", mint a replacement scoped identically, then `secret-set.sh`
   both halves).
-
-### MUSICBOX_HC_BACKUP_URL / MUSICBOX_HC_IMPORT_URL / MUSICBOX_HC_DISK_URL / MUSICBOX_HC_NAVIDROME_URL
-- **Grants**: a ping-only URL for exactly one dead-man's-switch check on the `pings`
-  Worker (`pings.907.life`) — musicbox's daily backup, hourly import, hourly disk, and
-  Navidrome-heartbeat checks respectively. The threat model is stated plainly in the
-  pings spec: a ping URL is not read-only, so it carries the same sensitivity as the
-  monitored service's own secrets (anyone holding one can keep a dead check reading
-  green forever).
-- **Used by**: the musicbox VPS's timer scripts (`ping_hc`), via `/etc/musicbox/env`.
-  `_DISK_URL` and `_NAVIDROME_URL` were pre-minted (2026-08-31, period 60/grace 15,
-  matching `_IMPORT_URL`'s cadence) so `deploy.sh`'s all-vars-present render gate
-  passes ahead of Task 6's disk-space and Navidrome-heartbeat scripts; each sits
-  unpinged (and past its default one-period arming window) until that task wires a
-  real `ping_hc disk` / `ping_hc navidrome` call — an expected, already-armed alert,
-  not a defect.
-- **Rotate at**: `~/Projects/pings/scripts/remove-check <name>` then
-  `add-check <name> --period ... --grace ...` piped straight into `secret-set.sh
-  <NAME> --stdin` — a fresh slug each time, never edited in place.
 
 ### PINGS_ADMIN_TOKEN
 - **Grants**: the `pings` Worker's `/admin/checks` endpoints (register/deregister a
