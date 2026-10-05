@@ -58,6 +58,16 @@ approved, all cheap in tokens:
   session's working directory changed, copy the committed file into the session scratchpad,
   `cmp` it, and relaunch from there); repeated protocol text in args goes in one field the chains script
   appends at prompt time.
+- **Sessions sharing the heavy lock coordinate** (cairn-cms and dubplate sessions, agreed 2026-10-05 at Geoff's
+  ask). The lock already serializes heavy gates; these four rules make the queue cheap, since an agent waiting on
+  the lock re-issues its gate every ten minutes and each re-issue is a paid turn. (1) Before launching a heavy gate
+  expected to run over 15 minutes, send the other live session one line through `SendMessage` (what, rough length,
+  roughly when), so a short gate can go first rather than queue behind a long one by surprise; a gate under 10
+  minutes needs no message. (2) Never re-run a full gate on an unchanged commit: a segment boundary reuses the last
+  task's full gate when `HEAD` has not moved since it ran. (3) Browserless steps stay on the light lane. (4) When a
+  session knows its next heavy gate is more than about 30 minutes away (an implementer still editing, a review, a
+  CI wait), it says so if the other has heavy work queued, so the other can launch into the gap. `ListAgents` shows
+  the live peer sessions.
 - **One full gate per machine at a time, and every gate memory-capped** (born 2026-09-14: the
   motion pass's two chains ran their full gates side by side, each with headless Chromium,
   the kernel OOM-killed a browser six times, and systemd-oomd then killed GNOME Shell, which

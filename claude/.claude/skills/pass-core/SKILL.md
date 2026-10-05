@@ -125,6 +125,11 @@ not specify; any further escalation follows `~/.claude/docs/model-economy.md` "C
 
 ### Execution discipline
 
+- **Share the heavy gate lock deliberately.** A segment boundary reuses the last task's full gate when `HEAD` has
+  not moved since it ran; never re-run a full gate on an unchanged commit. When another live session shares the
+  machine (`ListAgents`), send it a one-line heads-up before a heavy gate expected over 15 minutes, and say so when
+  your next heavy gate is more than about 30 minutes away. The four rules live in
+  `~/.claude/docs/pass-gate-economy.md` ("Sessions sharing the heavy lock coordinate").
 - **One implementer per dispatch, verified.** Wait for each result and verify its commit
   (`git log`, `git status`) before depending on it. On an API overload or 5xx, wait and retry
   once; never fire a second dispatch while one may still be in flight.
