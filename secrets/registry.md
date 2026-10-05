@@ -167,6 +167,16 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | MUSICBOX_HC_DISK_URL | ✓   | —      | —    | —        | —          |
 | MUSICBOX_HC_NAVIDROME_URL | ✓ | —    | —    | —        | —          |
 | PINGS_ADMIN_TOKEN | ✓       | —      | —    | —        | —          |
+| DUBPLATE_MAGIC_LINK_SECRET | ✓ | —   | —    | —        | —          |
+| DUBPLATE_SESSION_SECRET | ✓ | —      | —    | —        | —          |
+
+> `DUBPLATE_MAGIC_LINK_SECRET` and `DUBPLATE_SESSION_SECRET` (minted 2026-10-05, dubplate rung
+> 5d's first-deploy sitting): the greenfield server's two HMAC keys, 48 random bytes each
+> (`openssl rand -base64 48`). Local-only and box-only: `dubplate/scripts/deploy.sh` renders them
+> into `/etc/dubplate/server.env`. Not Worker secrets, so neither joins `sync.sh`'s
+> `WORKER_SECRETS`. Rotation: mint the new value, move the old one to the matching `_PREVIOUS`
+> name for the overlap window (the count doubles during rotation), deploy, then drop `_PREVIOUS`.
+> Rotating the session key signs every member out.
 
 > `DUBPLATE_SMTP_PASSWORD` (Fastmail app password, SMTP scope, minted 2026-08-31 replacing a
 > never-valid predecessor) is canonical; `MUSICBOX_SMTP_PASSWORD` is a same-value alias the
