@@ -156,6 +156,8 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | DUBPLATE_MAGIC_LINK_SECRET | ✓ | —   | —    | —        | —          |
 | DUBPLATE_SESSION_SECRET | ✓ | —      | —    | —        | —          |
 | PHONEBOOK_PHONE_ADMIN_KITCHEN | ✓ | — | — | — | — |
+| VOIPMS_API_USERNAME | ✓ | — | — | — | — |
+| VOIPMS_API_PASSWORD | ✓ | — | — | — | — |
 
 > `DUBPLATE_MAGIC_LINK_SECRET` and `DUBPLATE_SESSION_SECRET` (minted 2026-10-05, dubplate rung
 > 5d's first-deploy sitting): the greenfield server's two HMAC keys, 48 random bytes each
@@ -478,6 +480,18 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 - **Scope**: local only. Phase 2 of `~/Projects/phonebook` may also serve a phone admin password
   as a Worker secret; that will be its own entry.
 - **Rotation**: change it in the phone's web UI (Security), then `secret-receive` the new value.
+
+### VOIPMS_API_USERNAME / VOIPMS_API_PASSWORD
+- **Grants**: the voip.ms REST/JSON API (`https://voip.ms/api/v1/rest.php`) for Geoff's account,
+  set up 2026-10-07 for `~/Projects/phonebook` phase 2 (sub-accounts). The username is the
+  account login email. The password is the typed **API Password** on the portal's SOAP and
+  REST/JSON API page, not the login password and not the page's **Bearer Token**; `rest.php`
+  ignores a bearer header (`missing_credentials`). Verified with `getIP`, 2026-10-07.
+- **Constraints**: the API answers only whitelisted IPs (the home IP, 206.162.90.105 on
+  2026-10-07; a DHCP change breaks it). Credentials travel as GET query parameters; pass them to
+  curl through `-K -` on stdin. `getSubAccounts` returns SIP passwords, so never print its output.
+- **Rotation**: type a new API Password, click Save API Password, then `secret-receive
+  VOIPMS_API_PASSWORD`.
 
 ## 907-life Worker — Existing Secrets Audit
 
