@@ -58,3 +58,6 @@ brew "gitleaks"     # staged-secret scan in the pre-commit hook and scripts/chec
 brew "shellcheck"   # bash lint; adopted 2026-08-30 after check-drift flagged it installed-unmanifested
 brew "bats-core"    # bash test framework; musicbox scripts run their bats suites on this machine
 brew "libarchive"   # for bsdtar: safe archive extraction in the musicbox inbox scripts
+brew "libxml2"      # xmllint for dubplate's XML contract tier; pinned (`brew pin libxml2`) so the tier's version holds.
+                    # Pinning holds its dependents too (chafa, ffmpeg, gdk-pixbuf, imagemagick, librsvg,
+                    # libxkbcommon, shared-mime-info, xdotool): a bump unpins, upgrades libxml2, then `brew upgrade` them.
