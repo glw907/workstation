@@ -63,10 +63,18 @@ else
 fi
 unset color_prompt force_color_prompt
 
-# If this is an xterm set the title to user@host:dir
+# If this is an xterm, title the tab with the directory the shell started in.
+# The title stays fixed after a cd; programs that set their own title still
+# override it until the next prompt.
 case "$TERM" in
 xterm*|rxvt*)
-    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    if [ "$PWD" = "$HOME" ]; then
+        TAB_TITLE='~'
+    else
+        TAB_TITLE=${PWD##*/}
+        TAB_TITLE=${TAB_TITLE:-/}
+    fi
+    PS1='\[\e]0;${TAB_TITLE}\a\]'"$PS1"
     ;;
 *)
     ;;
