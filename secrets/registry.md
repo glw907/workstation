@@ -155,6 +155,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | PINGS_ADMIN_TOKEN | ✓       | —      | —    | —        | —          |
 | DUBPLATE_MAGIC_LINK_SECRET | ✓ | —   | —    | —        | —          |
 | DUBPLATE_SESSION_SECRET | ✓ | —      | —    | —        | —          |
+| PHONEBOOK_PHONE_ADMIN_KITCHEN | ✓ | — | — | — | — |
 
 > `DUBPLATE_MAGIC_LINK_SECRET` and `DUBPLATE_SESSION_SECRET` (minted 2026-10-05, dubplate rung
 > 5d's first-deploy sitting): the greenfield server's two HMAC keys, 48 random bytes each
@@ -468,6 +469,14 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   any prior copy).
 
 ---
+
+### PHONEBOOK_PHONE_ADMIN_KITCHEN
+- **Grants**: web UI admin login on the kitchen Yealink T54W (192.168.1.181), received from
+  Geoff 2026-10-07 through `secret-receive`. Used by the phonebook project's conductor to drive
+  the phone's web UI (exports, provisioning URL) without a password in the transcript.
+- **Scope**: local only. Phase 2 of `~/Projects/phonebook` may also serve a phone admin password
+  as a Worker secret; that will be its own entry.
+- **Rotation**: change it in the phone's web UI (Security), then `secret-receive` the new value.
 
 ## 907-life Worker — Existing Secrets Audit
 
