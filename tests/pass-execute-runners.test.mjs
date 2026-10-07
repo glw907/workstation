@@ -48,7 +48,8 @@ const INTERNALS = [
   "main", "PASS_CLASSES", "CLASS_DEFAULT_REDUCED_GATE", "DEFAULT_REVIEWER_MODEL", "gateCore",
   "gateMatches", "classOf", "reducedGateFor", "applyClassBar", "taskStatus", "IMPL_SCHEMA",
   "REVIEW_SCHEMA", "recordBaseSha", "resolveGate", "resolveClassifier", "implementPrompt",
-  "reviewPrompt", "validateArgs", "runTask", "runChain", "tally"
+  "reviewPrompt", "validateArgs", "runTask", "runChain", "tally", "gateToRun",
+  "runGateIndependently"
 ];
 
 function loadFactory(src) {
@@ -115,6 +116,7 @@ function load(factory, args = {}, routes = []) {
 
 const SHA = "a".repeat(40);
 const baseShaHandler = () => ({ sha: SHA });
+const gateRunPass = () => ({ command: "g", exitCode: 0, result: "pass", excerpt: "" });
 const acceptReview = () => ({ verdict: "accept", summary: "", blocking: [], nonBlocking: [], gate: "pass", unspecified: [] });
 const implOk = (extra = {}) => ({
   filesTouched: ["x.js"],
@@ -539,6 +541,7 @@ check("style-guide-sync fixture: chains R and W in one invocation", async () => 
     ["base:", baseShaHandler],
     ["gatetier:r", () => ({ exists: false, gate: "" })],
     ["impl:r1", () => implOk()],
+    ["gaterun:", gateRunPass],
     ["review:r1", () => acceptReview()],
     ["impl:r2", () => implOk()],
     ["review:r2", () => acceptReview()],
@@ -615,6 +618,7 @@ check("pass-execute.js: classifier absent spawns exactly one cached probe across
     ["classifier", () => ({ exists: false })],
     ["base:", baseShaHandler],
     ["impl:", () => implOk()],
+    ["gaterun:", gateRunPass],
     ["review:", () => acceptReview()]
   ];
   const { bundle: bNoField, agent: agentNoField } = load(seqFactory, argsNoField, routesNoField);
@@ -626,6 +630,7 @@ check("pass-execute.js: classifier absent spawns exactly one cached probe across
   const routesFalse = [
     ["base:", baseShaHandler],
     ["impl:", () => implOk()],
+    ["gaterun:", gateRunPass],
     ["review:", () => acceptReview()]
   ];
   const { bundle: bFalse, agent: agentFalse } = load(seqFactory, argsFalse, routesFalse);
@@ -659,6 +664,7 @@ check("the implementer dispatch omits model when t.model is unset, and passes it
     ["base:", baseShaHandler],
     ["impl:1", () => implOk()],
     ["impl:2", () => implOk()],
+    ["gaterun:", gateRunPass],
     ["review:1", () => acceptReview()],
     ["review:2", () => acceptReview()]
   ];
@@ -686,6 +692,7 @@ check("the implementer dispatch omits model when t.model is unset, and passes it
     ["base:", baseShaHandler],
     ["impl:1", () => implOk()],
     ["impl:2", () => implOk()],
+    ["gaterun:", gateRunPass],
     ["review:1", () => acceptReview()],
     ["review:2", () => acceptReview()]
   ];
@@ -708,6 +715,7 @@ check("the launch NOTE prints, naming the runaway guard and the wake-up (pass-ex
   const routes = [
     ["base:", baseShaHandler],
     ["impl:", () => implOk()],
+    ["gaterun:", gateRunPass],
     ["review:", () => acceptReview()]
   ];
   const { bundle, log } = load(seqFactory, args, routes);
@@ -725,6 +733,7 @@ check("the launch NOTE prints, naming the runaway guard and the wake-up (pass-ex
   const routes = [
     ["base:", baseShaHandler],
     ["impl:", () => implOk()],
+    ["gaterun:", gateRunPass],
     ["review:", () => acceptReview()]
   ];
   const { bundle, log } = load(chainsFactory, args, routes);
@@ -749,6 +758,7 @@ check("validateArgs never rejects a plan for a missing reducedGate (pass-execute
 const outOfScopeRoutes = [
   ["base:", baseShaHandler],
   ["impl:1", () => implOk()],
+  ["gaterun:", gateRunPass],
   ["review:1:fix", () => ({ ...acceptReview(), outOfScope: [{ location: "b.md:2", finding: "second" }] })],
   ["review:1", () => ({
     ...acceptReview(),
@@ -776,6 +786,137 @@ check("outOfScope findings from every review round reach the run's result (pass-
   const { bundle } = load(chainsFactory, args, outOfScopeRoutes);
   const result = await bundle.main();
   assert.deepEqual(result.outOfScope, expectedOutOfScope);
+});
+
+// -------------------------------------------------------------------------------------------
+// Independent gate runner: a Haiku record replaces the reviewer's own gate reproduction.
+// -------------------------------------------------------------------------------------------
+
+const failRecord = (extra = {}) => ({ command: "g", exitCode: 1, result: "fail", excerpt: "boom", ...extra });
+const gateRunRoutes = (record, extra = []) => [
+  ["base:", baseShaHandler],
+  ["impl:", () => implOk()],
+  ["gaterun:", record],
+  ...extra,
+  ["review:", () => acceptReview()]
+];
+const gateRunTask = { id: "1", title: "T", criteria: "c" };
+const gateRunArgs = { repo: "/repo", gate: "bash gate.sh", implementer: "i" };
+const gateRunChain = { id: "C", repo: "/repo", branch: "b", tasks: [] };
+const gateRunChainsArgs = { gate: "bash gate.sh", implementer: "i", planPath: "/p.md", chains: [gateRunChain] };
+
+async function runSeq(record, { t = gateRunTask, a = gateRunArgs, extra = [] } = {}) {
+  const { bundle, agent } = load(seqFactory, a, gateRunRoutes(record, extra));
+  await bundle.runTask(t, a, false);
+  return agent;
+}
+async function runChains(record, { t = gateRunTask, extra = [] } = {}) {
+  const { bundle, agent } = load(chainsFactory, gateRunChainsArgs, gateRunRoutes(record, extra));
+  await bundle.runTask(t, gateRunChain, gateRunChainsArgs, false);
+  return agent;
+}
+const reviewPromptOf = (agent, label = "review:1") => agent.calls.find((c) => c.label === label).prompt;
+
+for (const [name, run] of [["pass-execute.js", runSeq], ["pass-execute-chains.js", runChains]]) {
+  check(`gate runner: a passing record reaches the reviewer as the gate result (${name})`, async () => {
+    const agent = await run(() => ({ command: "bash gate.sh", exitCode: 0, result: "pass", excerpt: "" }));
+    const run1 = agent.calls.find((c) => c.label === "gaterun:1");
+    assert.equal(run1.opts.model, "haiku");
+    assert.equal(run1.opts.effort, "low");
+    assert.match(run1.prompt, /bash gate\.sh/);
+    const prompt = reviewPromptOf(agent);
+    assert.match(prompt, /Independent gate run/);
+    assert.match(prompt, /exit code 0, result pass/);
+    assert.doesNotMatch(prompt, /Reproduce the gate with/);
+  });
+
+  check(`gate runner: a null record restores the Reproduce wording (${name})`, async () => {
+    const agent = await run(() => null);
+    const prompt = reviewPromptOf(agent);
+    assert.match(prompt, /Reproduce the gate with: bash gate\.sh/);
+    assert.doesNotMatch(prompt, /Independent gate run/);
+  });
+
+  check(`gate runner: a "not run" or inconsistent record falls back (${name})`, async () => {
+    for (const rec of [
+      { command: "g", exitCode: null, result: "not run", excerpt: "" },
+      { command: "g", exitCode: 0, result: "fail", excerpt: "x" },
+      { command: "g", exitCode: 2, result: "pass", excerpt: "" },
+      { command: "g", exitCode: null, result: "pass", excerpt: "" }
+    ]) {
+      const prompt = reviewPromptOf(await run(() => rec));
+      assert.match(prompt, /Reproduce the gate with: bash gate\.sh/, JSON.stringify(rec));
+    }
+  });
+
+  check(`gate runner: a <placeholder> gate dispatches no runner (${name})`, async () => {
+    const agent = await run(() => failRecord(), { t: { ...gateRunTask, gate: "bash t.sh <the touched unit test files>" } });
+    assert.equal(agent.calls.filter((c) => c.label.startsWith("gaterun:")).length, 0);
+    assert.match(reviewPromptOf(agent), /Reproduce the gate with:/);
+  });
+
+  check(`gate runner: the excerpt is capped at 150 lines and 12000 chars (${name})`, async () => {
+    const many = Array.from({ length: 400 }, (_, i) => `line ${i}`).join("\n");
+    const agent = await run(() => failRecord({ excerpt: many }));
+    const prompt = reviewPromptOf(agent);
+    assert.match(prompt, /line 399/);
+    assert.doesNotMatch(prompt, /line 249\b/);
+    assert.match(prompt, /line 250\b/);
+    const wide = Array.from({ length: 150 }, () => "x".repeat(200)).join("\n");
+    const agent2 = await run(() => failRecord({ excerpt: wide }));
+    const excerpt = reviewPromptOf(agent2).split("Failing output, verbatim from the runner:\n")[1].split("\n")[0];
+    assert.ok(excerpt.length <= 12000);
+  });
+}
+
+const commentOnlyFix = [
+  ["review:1:fix", () => acceptReview()],
+  ["review:1", () => ({
+    verdict: "fix", summary: "", nonBlocking: [], gate: "fail", unspecified: [],
+    blocking: [{ location: "x", finding: "y", fix: "z", commentOnly: true }]
+  })]
+];
+const routesWithFix = (record) => [
+  ["base:", baseShaHandler],
+  ["impl:", () => implOk()],
+  ["gaterun:", record],
+  ...commentOnlyFix
+];
+
+check("gate runner (pass-execute.js): a no-class reduced round runs the resolved gate", async () => {
+  const a = { ...gateRunArgs, reducedGate: "bash reduced.sh" };
+  const { bundle, agent } = load(seqFactory, a, routesWithFix(gateRunPass));
+  await bundle.runTask(gateRunTask, a, false);
+  const fixRun = agent.calls.find((c) => c.label === "gaterun:1:fix1");
+  assert.match(fixRun.prompt, /bash gate\.sh/);
+  assert.doesNotMatch(fixRun.prompt, /reduced\.sh/);
+});
+
+check("gate runner (pass-execute.js): a class-reduced round runs the reduced gate and names the full gate as owed", async () => {
+  const a = { ...gateRunArgs, passClass: "engine-logic", reducedGate: "bash reduced.sh" };
+  const { bundle, agent } = load(seqFactory, a, routesWithFix(gateRunPass));
+  await bundle.runTask(gateRunTask, a, false);
+  const fixRun = agent.calls.find((c) => c.label === "gaterun:1:fix1");
+  assert.match(fixRun.prompt, /bash reduced\.sh/);
+  assert.match(reviewPromptOf(agent, "review:1:fix1"), /If the full gate was owed, reproduce it with: bash gate\.sh/);
+});
+
+check("gate runner (pass-execute.js): a class-default reduced gate dispatches no runner", async () => {
+  const a = { ...gateRunArgs, passClass: "engine-logic" };
+  const { bundle, agent } = load(seqFactory, a, routesWithFix(gateRunPass));
+  await bundle.runTask(gateRunTask, a, false);
+  assert.ok(agent.calls.some((c) => c.label === "gaterun:1"), "first round still runs the gate");
+  assert.equal(agent.calls.filter((c) => c.label === "gaterun:1:fix1").length, 0);
+  assert.match(reviewPromptOf(agent, "review:1:fix1"), /Reproduce the full gate, if owed, with: bash gate\.sh/);
+});
+
+check("gate runner (pass-execute-chains.js): every round runs the resolved gate, reduced or not", async () => {
+  const a = { ...gateRunChainsArgs, reducedGate: "bash reduced.sh" };
+  const { bundle, agent } = load(chainsFactory, a, routesWithFix(gateRunPass));
+  await bundle.runTask(gateRunTask, gateRunChain, a, false);
+  const fixRun = agent.calls.find((c) => c.label === "gaterun:1:fix1");
+  assert.match(fixRun.prompt, /bash gate\.sh/);
+  assert.doesNotMatch(fixRun.prompt, /reduced\.sh/);
 });
 
 console.log("");

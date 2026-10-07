@@ -178,6 +178,17 @@ const GATE_TIER_SCHEMA = {
   required: ["exists", "gate"]
 };
 
+const GATE_RUN_SCHEMA = {
+  type: "object",
+  properties: {
+    command: { type: "string" },
+    exitCode: { type: ["integer", "null"] },
+    result: { type: "string", enum: ["pass", "fail", "not run"] },
+    excerpt: { type: "string" }
+  },
+  required: ["command", "exitCode", "result", "excerpt"]
+};
+
 const CLASSIFIER_PROBE_SCHEMA = {
   type: "object",
   properties: {
@@ -500,7 +511,81 @@ function reviewClassLines(cls, reduced) {
   return lines;
 }
 
-function reviewPrompt(t, a, implReport, resolvedGate, reduced) {
+// Longest failing-output excerpt the gate runner's record may carry into the reviewer's prompt.
+const GATE_EXCERPT_LINES = 150;
+const GATE_EXCERPT_CHARS = 12000;
+
+/**
+ * The gate string the independent gate runner executes, or "" when it cannot run one without a
+ * judgment call. A round that takes the class-default reduced gate has only a prose description
+ * ("the repo's type check plus only the test files this fix round touched"), and a pinned or
+ * fallback gate may still carry a `<placeholder>` the implementer fills in; both fall back to the
+ * reviewer reproducing the gate itself.
+ */
+function gateToRun(resolvedGate, reduced, cls) {
+  // Only a class-reduced round runs the reduced gate; a no-class reduced round (comment-only, or
+  // the pre-class a.reducedGate fallback) keeps the resolved gate the reviewer always reproduced.
+  let g = resolvedGate.gate;
+  if (cls && reduced) {
+    g = reduced === CLASS_DEFAULT_REDUCED_GATE ? "" : reduced;
+  }
+  return g && !/<[^<>]+>/.test(g) ? g : "";
+}
+
+/**
+ * Runs the gate the reviewer would otherwise reproduce, on a Haiku agent, so the gate transcript
+ * never lands in Opus context. The agent copies; it never summarizes or decides. Returns a record
+ * of the command, exit code, result, and a capped verbatim excerpt of failing output, or null when
+ * there is nothing to run or the runner fails (the reviewer then reproduces the gate itself).
+ */
+async function runGateIndependently(t, a, cls, gate, label) {
+  if (!gate) {
+    return null;
+  }
+  const light = (t.gateLane || a.gateLane || (cls && cls.gateLane)) === "light";
+  const lanePrefix = light ? "CAIRN_GATE_LANE=light " : "";
+  const out = await agent(
+    [
+      `Repo: ${a.repo}`,
+      `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
+      `Run exactly this gate and nothing else: ${gate}`,
+      "Run it through `" + lanePrefix + "cairn-run-gate '<the gate string>'` (if the string above already begins with cairn-run-gate, run it as given) as a plain foreground Bash call with `timeout: 600000`. On exit 75, re-issue the same call until it prints `gate exit:`. Never run it in the background, never poll a log, and never edit a file.",
+      "Report command as the exact string you ran and exitCode as the number after `gate exit:`, exactly as printed (null when it never printed). Set result to pass when the exit code is 0, fail when it is not, and not run when the runner never printed `gate exit:`.",
+      `On a fail, copy into excerpt the last ${GATE_EXCERPT_LINES} lines of the failing output verbatim. Do not summarize, interpret, reorder, or trim a line. On a pass, excerpt is the empty string.`,
+      "Skip agent-memory maintenance for this dispatch."
+    ].join("\n"),
+    { label, phase: "Review", schema: GATE_RUN_SCHEMA, model: "haiku", effort: "low" }
+  );
+  // A "not run" record, or one whose result contradicts its exit code (null counts as nonzero),
+  // cannot stand in for the gate, so the reviewer reproduces the gate itself.
+  if (!out || out.result === "not run" || (out.exitCode === 0) !== (out.result === "pass")) {
+    return null;
+  }
+  const tail = String(out.excerpt || "").split("\n").slice(-GATE_EXCERPT_LINES).join("\n");
+  return { ...out, excerpt: tail.slice(-GATE_EXCERPT_CHARS) };
+}
+
+/**
+ * The reviewer lines that carry the gate: the runner's independent record when there is one,
+ * else today's "Reproduce the gate" instruction. `fallbackLine` is that instruction.
+ */
+function gateRecordLines(gateRun, fallbackLine, fullGateLine) {
+  if (!gateRun) {
+    return [fallbackLine];
+  }
+  const lines = [
+    `Independent gate run (a separate runner executed ${gateRun.command}): exit code ${gateRun.exitCode}, result ${gateRun.result}. Treat this as the gate result and rerun the gate only if the diff gives you a specific reason to doubt it.`
+  ];
+  if (gateRun.excerpt) {
+    lines.push("Failing output, verbatim from the runner:", gateRun.excerpt);
+  }
+  if (fullGateLine) {
+    lines.push(fullGateLine);
+  }
+  return lines;
+}
+
+function reviewPrompt(t, a, implReport, resolvedGate, reduced, gateRun) {
   const cls = classOf(t, a);
   const ranCommand = implReport.gateCommand || t.gate || a.gate;
   const classReduced = cls && reduced;
@@ -520,7 +605,11 @@ function reviewPrompt(t, a, implReport, resolvedGate, reduced) {
     `Task ${t.id}: ${t.title}`,
     `Acceptance criteria: ${t.criteria}`,
     `The gate string this task ran: ${ranCommand}`,
-    classReduced ? `Reproduce the full gate, if owed, with: ${resolvedGate.gate}` : `Reproduce the gate with: ${resolvedGate.gate}`,
+    ...gateRecordLines(
+      gateRun,
+      classReduced ? `Reproduce the full gate, if owed, with: ${resolvedGate.gate}` : `Reproduce the gate with: ${resolvedGate.gate}`,
+      classReduced ? `The runner executed the reduced gate. If the full gate was owed, reproduce it with: ${resolvedGate.gate}` : ""
+    ),
     mismatch,
     ...(cls
       ? reviewClassLines(cls, reduced)
@@ -654,7 +743,8 @@ async function runTask(t, a, classifierExists) {
   let resolvedGate = await resolveGate(t, a, baseSha, classifierExists, `gatetier:${t.id}`);
   logGateTier(t, resolvedGate);
 
-  let review = await agent(reviewPrompt(t, a, implReport, resolvedGate, null), {
+  let gateRun = await runGateIndependently(t, a, cls, gateToRun(resolvedGate, null, cls), `gaterun:${t.id}`);
+  let review = await agent(reviewPrompt(t, a, implReport, resolvedGate, null, gateRun), {
     label: `review:${t.id}`,
     phase: "Review",
     model: reviewerModel,
@@ -689,7 +779,8 @@ async function runTask(t, a, classifierExists) {
     resolvedGate = await resolveGate(t, a, baseSha, classifierExists, `gatetier:${t.id}:fix${fixRounds}`);
     logGateTier(t, resolvedGate);
 
-    review = await agent(reviewPrompt(t, a, implReport, resolvedGate, reduced), {
+    gateRun = await runGateIndependently(t, a, cls, gateToRun(resolvedGate, reduced, cls), `gaterun:${t.id}:fix${fixRounds}`);
+    review = await agent(reviewPrompt(t, a, implReport, resolvedGate, reduced, gateRun), {
       label: `review:${t.id}:fix${fixRounds}`,
       phase: "Review",
       model: reviewerModel,

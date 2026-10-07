@@ -165,7 +165,7 @@ serializing only under named contention or dependency; plans mark independent ta
 **Models (Geoff, 2026-09-23, per Anthropic's guidance):** Opus 5.5 brainstorms and authors
 plans at `high` and conducts execution on `claude-opus-5-5` at `medium`; an unsettled decision
 re-runs at `xhigh`, then `max`, then one `fable` dispatch, never a session switch. Every
-dispatch names a model and an effort: `sonnet` by default, `haiku` for mechanical search,
+dispatch names a model and an effort: `sonnet` by default, `haiku` for mechanical search and gate runs,
 `claude-opus-5-5` for reviewers. Seat table, effort per seat, overrules, and the Fable
 allowance: `~/.claude/docs/model-economy.md` "Current state". Subagents start with zero
 context: pre-extract what they need. Slow, expensive, or weak: check which model ran.

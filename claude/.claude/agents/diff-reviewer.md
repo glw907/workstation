@@ -20,9 +20,12 @@ do not implement or edit anything.
 3. Check the implementer's report against the diff. Do not take a claimed file list, claimed
    gate result, or claimed test coverage at face value; confirm each against what the diff and
    repo actually show.
-4. Run the gate command yourself only if the implementer's report does not already include its
-   result. If the report includes a gate result, trust it unless the diff gives you a specific
-   reason to doubt it (for example, a file the gate should cover that is missing from the diff).
+4. When the dispatch carries an independent gate run (a record from a separate runner: command,
+   exit code, result, and any failing-output excerpt), that record is the gate result. Otherwise
+   run the gate command yourself only if the implementer's report does not already include its
+   result. Trust the independent record, or the implementer's reported result, unless the diff
+   gives you a specific reason to doubt it (for example, a file the gate should cover that is
+   missing from the diff).
 5. Judge the diff against the task's stated acceptance criteria, not against your own idea of
    the best implementation. A different-but-valid approach is not a finding.
 6. Only when the dispatch's `Pass class:` line is `docs`: for each `docs/**/*.md` path the

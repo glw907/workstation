@@ -5,7 +5,7 @@ The on-demand expansion of CLAUDE.md's "Conducting a pass", "Process proportiona
 place, the reasons behind it, and the history a later decision would be wrong to rediscover.
 Where the two disagree, CLAUDE.md wins and this doc is stale.
 
-## Current state (2026-09-27)
+## Current state (2026-10-07)
 
 Seats, per Anthropic's model guidance (Geoff, 2026-09-23):
 
@@ -18,7 +18,8 @@ Seats, per Anthropic's model guidance (Geoff, 2026-09-23):
 | Reviewers (`diff-reviewer`, domain reviewers, verifiers, graders) | `claude-opus-5-5` | `medium` |
 | Security review (`web-auth-security-reviewer`) | `claude-opus-5-5` | `high` |
 | Published docs drafts (`docs-page-chain.js` `drafterModel`) | `claude-opus-5-5` | `high` |
-| Mechanical search | `haiku` | `low` |
+| Mechanical search | `haiku` (alias resolves to `claude-haiku-5-5`, verified 2026-10-07) | `low` |
+| Gate runner (pass workflows) | `haiku` (Haiku 5.5) | `low` |
 | Escalation only | Fable 5.1 | `high` or above |
 
 - **Fable 5.1 is reached only after Opus 5.5 at `xhigh`, then `max`, falls short.** It is one
@@ -44,6 +45,10 @@ Seats, per Anthropic's model guidance (Geoff, 2026-09-23):
   mandate, and the settle and close steps. The table lives in the `pass-core` skill.
   `pass-execute.js` and `pass-execute-chains.js` take `passClass` and render the mandate and
   the bar into the prompts; this doc never delivers the rule.
+- **The Haiku seat reads and copies, never decides.** The gate runner reports the exit code as
+  printed and copies failing lines verbatim; judgment stays with the Opus reviewer. Keep any
+  Haiku dispatch under 100k tokens of context, because Haiku 5.5's price is 5x above 100k. A
+  bigger job goes to Sonnet or is split.
 - **Undeclared dispatches fall to `sonnet`.** `CLAUDE_CODE_SUBAGENT_MODEL=sonnet` sits in
   `~/.claude/settings.json` `env`. It reaches only dispatches with no model of their own:
   `general-purpose`, `claude`, unpinned custom agents, and Workflow `agent()` without `model`.
@@ -71,11 +76,13 @@ Planning questions never count against the score. Record the numbers even when t
 
 ## Pricing and the allowance
 
-| Measure | Fable 5.1 | Opus 5.5 | Opus 5 |
-|---|---|---|---|
-| Input / output, per MTok | $10 / $50 | $4 / $20 | $5 / $25 |
-| Cache read, per MTok | $0.25 | not recorded here (claude.com/pricing) | $0.50 |
-| Batch | half of base | half of base | half of base |
+| Measure | Fable 5.1 | Opus 5.5 | Opus 5 | Sonnet 5.5 | Haiku 5.5 |
+|---|---|---|---|---|---|
+| Input / output, per MTok | $10 / $50 | $4 / $20 | $5 / $25 | $2 / $10 | $0.10 / $0.50 up to 100k context, $0.50 / $2.50 above |
+| Cache read, per MTok | $0.25 | not recorded here (claude.com/pricing) | $0.50 | $0.10 (halved from $0.20 on 2026-10-07) | $0.01 up to 100k, $0.05 above |
+| Batch | half of base | half of base | half of base | not recorded here | not recorded here |
+
+Haiku 5.5 source: https://www.anthropic.com/claude-haiku-5-5.
 
 - **The Max allowance (verified 2026-08-21, unchanged for 5.1).** Fable draws from the same
   weekly pool as every model and may take up to 50% of it; past that, usage falls to credits at
@@ -128,6 +135,17 @@ something known wrong, and say so when you do.
 
 Compressed; newest first. Each entry keeps what a later decision would be wrong to rediscover.
 
+- **2026-10-07, the gate run moved to a Haiku runner.** The `diff-reviewer` was told to
+  reproduce the gate, so every task and every fix round put the full gate transcript into Opus
+  context. `pass-execute.js` and `pass-execute-chains.js` now dispatch a Haiku 5.5 runner at
+  `low` effort after `resolveGate`, on the first round and on every fix round. It runs the gate
+  the reviewer would have reproduced and returns the command, exit code, result, and a capped
+  verbatim excerpt of failing output. The reviewer treats that record as the gate result and
+  reruns only on a specific reason to doubt it. The runner runs the reduced gate only in a
+  class-reduced round of `pass-execute.js`; elsewhere it runs the resolved gate, so coverage
+  never shrinks. A class-default reduced gate (prose only) and a gate carrying a `<placeholder>`
+  skip the runner, so the reviewer reproduces the gate as before; so does a runner that returns
+  nothing, a "not run" record, or a record whose result contradicts its exit code.
 - **2026-09-27, ceremony scales by kind of change.** Theme identity pass A, a CSS retheme, ran
   the full engine gate on every task (7 to 11 minutes each), carried about 4.4 test lines per
   source line, reran the full gate on every test-only fix round, and projected 8 to 10
