@@ -314,30 +314,55 @@ function implementPrompt(t, chain, a, blocking, baseSha, classifierExists) {
 }
 
 // === GATE MATCHER (tests extract this block; kept identical in pass-execute.js) ===
+/** Variables an implementer may set ahead of a gate command without changing what the gate proves. */
+const GATE_ENV_ALLOWLIST = ["CAIRN_GATE_LANE", "CI", "E2E_PORT"];
+
+/**
+ * Drops leading allowlisted assignments from a gate's steps: a whole step of `VAR=value` or
+ * `export VAR=value`, or a `VAR=value ` prefix on the first real command. Stripping stops at the
+ * first step that is not an allowlisted assignment, so a `cd`, any other command, or an
+ * unlisted variable stays in place and fails the comparison.
+ */
+function stripGateAssignments(steps) {
+  const out = [...steps];
+  const lead = /^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)=("[^"]*"|\S*)(?:\s+|$)/;
+  while (out.length > 0) {
+    const m = out[0].match(lead);
+    if (!m || !GATE_ENV_ALLOWLIST.includes(m[1])) break;
+    const rest = out[0].slice(m[0].length).trim();
+    if (rest) out[0] = rest;
+    else out.shift();
+  }
+  return out;
+}
+
 /**
  * Normalizes a gate string for comparison: keeps only its last non-empty line (a probe can
  * return the classifier's whole stdout, preamble and all), unwraps a `cairn-run-gate '<cmd>'`
- * call, and treats an absolute repo path and its repo-relative form, or extra spacing, as the
- * same target.
+ * call (discarding anything before it, such as the `cd <repo> &&` the runner tells implementers
+ * to run), treats an absolute repo path and its repo-relative form, or extra spacing, as the
+ * same target, and drops leading allowlisted assignments. Returns the `&&` steps joined by " && ".
  */
 function gateCore(s, repo) {
   const last = String(s).trim().split("\n").pop().trim();
   const wrapped = last.match(/cairn-run-gate\s+'([^']+)'/);
   const cmd = wrapped ? wrapped[1] : last;
-  return cmd.split(`${repo}/`).join("").replace(/\s+/g, " ").trim();
+  const flat = cmd.split(`${repo}/`).join("").replace(/\s+/g, " ").trim();
+  return stripGateAssignments(flat.split(/\s*&&\s*/)).join(" && ");
 }
 
 /**
  * True when the gate string the implementer ran matches the gate string the runner
- * independently resolved. A task gate may carry a `<placeholder>` the implementer fills in (for
- * example `<the touched unit test files>`); the placeholder matches any non-empty text.
+ * independently resolved: equal after normalization, or the same gate steps followed by extra
+ * `&&` steps. A task gate may carry a `<placeholder>` the implementer fills in (for example
+ * `<the touched unit test files>`); the placeholder matches any non-empty text.
  */
 function gateMatches(ran, resolved, repo) {
   const pattern = gateCore(resolved, repo)
     .split(/<[^<>]+>/)
     .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
     .join(".+?");
-  return new RegExp(`^${pattern}$`).test(gateCore(ran, repo));
+  return new RegExp(`^${pattern}(?: && .+)?$`).test(gateCore(ran, repo));
 }
 // === END GATE MATCHER ===
 

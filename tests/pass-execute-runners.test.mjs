@@ -232,6 +232,41 @@ check("the gate matcher accepts the three named forms: a cairn-run-gate wrapper,
   }
 });
 
+check("the gate matcher accepts allowlisted assignments and extra trailing steps, and discards the pre-wrapper prefix", () => {
+  for (const factory of [seqFactory, chainsFactory]) {
+    const { bundle } = load(factory);
+    const g = "npm run check && npm test";
+    const m = (ran, resolved = g) => bundle.gateMatches(ran, resolved, "/repo");
+    assert.ok(m(`cairn-run-gate 'CAIRN_GATE_LANE=light ${g}'`), "assignment prefix inside the quotes");
+    assert.ok(m(`cairn-run-gate 'CI=1 E2E_PORT=4173 ${g}'`), "two assignments");
+    assert.ok(m(`cairn-run-gate 'export CI=1 && ${g}'`), "export step");
+    assert.ok(m(`cairn-run-gate 'CAIRN_GATE_LANE=light && ${g}'`), "assignment step");
+    assert.ok(m(`CAIRN_GATE_LANE=light ${g}`), "assignment on an unwrapped command");
+    assert.ok(m(`cairn-run-gate '${g} && git status'`), "extra trailing step");
+    assert.ok(m(`cd /repo && cairn-run-gate '${g}'`), "cd before the wrapper is discarded");
+    assert.ok(m(`cd /repo && CAIRN_GATE_LANE=light cairn-run-gate '${g}'`), "assignment before the wrapper is discarded");
+    assert.ok(m(`cairn-run-gate 'CI=1 npm run check && npm test && echo done'`, g), "prefix plus trailing step");
+  }
+});
+
+check("the gate matcher rejects a cd step, an unlisted assignment, another command, and a dropped step inside the quotes", () => {
+  for (const factory of [seqFactory, chainsFactory]) {
+    const { bundle } = load(factory);
+    const g = "npm run check && npm test";
+    const m = (ran, resolved = g) => bundle.gateMatches(ran, resolved, "/repo");
+    assert.ok(!m(`cairn-run-gate 'cd /elsewhere && ${g}'`), "extra leading cd");
+    assert.ok(!m(`cairn-run-gate 'pushd /elsewhere && ${g}'`), "extra leading pushd");
+    assert.ok(!m(`cairn-run-gate 'echo hi && ${g}'`), "extra leading command");
+    assert.ok(!m(`cairn-run-gate 'FOO=1 ${g}'`), "unlisted assignment prefix");
+    assert.ok(!m(`cairn-run-gate 'export FOO=1 && ${g}'`), "unlisted export step");
+    assert.ok(!m(`cairn-run-gate 'CI=1 FOO=1 ${g}'`), "unlisted assignment after an allowed one");
+    assert.ok(!m(`cairn-run-gate 'npm run check'`), "dropped gate step");
+    assert.ok(!m(`cairn-run-gate 'CI=1 npm run check'`), "dropped gate step with assignment");
+    assert.ok(!m(`cairn-run-gate 'npm run lint && npm test'`), "different command");
+    assert.ok(!m(`cd /elsewhere && cairn-run-gate 'cd /elsewhere && ${g}'`), "inner cd still rejected");
+  }
+});
+
 check("pass-core's class table matches PASS_CLASSES: the class-name set, the reviewer model, and the gate lane", () => {
   const rowRe = /^\|\s*`([a-z-]+)`[^|]*\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|\s*$/gm;
   const rows = [...PASS_CORE_SRC.matchAll(rowRe)];
