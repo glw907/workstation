@@ -66,6 +66,14 @@ an accessibility fix, an in-spec keep, or a restated plan decision is the conduc
 page lists it as decided, with its disposition, and never as a question. A dispatch that builds
 a sitting page says so. (S3 of theme identity pass A asked 22 questions where three were forks.)
 
+**A pass meant to run unattended plans out every stop (Geoff, 2026-10-07: a pass should handle a 10+ hour unattended
+run).** The plan settles, before execution: a hard token ceiling with a stop-and-write-STATUS rule, so no budget
+question arrives mid-run; which verdicts the conductor rules on alone (a runner artifact, a flake the rerun rule covers)
+and which stop the run (a real defect after its one fix round, an architectural fork); and owner-gated steps (reads,
+smokes, the merge) batched at the end. At launch the conductor arms the fallback `/loop` wake-up (a connection drop
+otherwise waits for a human), the lid-switch hold, and the stall guard, in daytime too
+(`~/.claude/docs/unattended-work-guards.md`).
+
 **Plans stay outcome-only.** Each task states outcomes, constraints, acceptance criteria,
 files, and its pass class, never implementation code. This overrides `writing-plans`'
 full-code steps. Skip its "which execution method?" question; this skill answers it.
