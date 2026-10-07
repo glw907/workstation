@@ -267,6 +267,23 @@ check("the gate matcher rejects a cd step, an unlisted assignment, another comma
   }
 });
 
+check("the gate matcher bounds trailing steps to plain && steps and keeps placeholders from swallowing steps", () => {
+  for (const factory of [seqFactory, chainsFactory]) {
+    const { bundle } = load(factory);
+    const g = "npm run check && npm test";
+    const m = (ran, resolved = g) => bundle.gateMatches(ran, resolved, "/repo");
+    assert.ok(m(`${g} && echo ok`), "plain trailing step");
+    assert.ok(!m(`${g} && true || true`), "|| hides a failure");
+    assert.ok(!m(`${g} && x; true`), "semicolon");
+    assert.ok(!m(`${g} && x | cat`), "pipe");
+    assert.ok(!m(`${g} && x # c`), "comment");
+    const p = "npx vitest run <the touched unit test files> && npm run check && npm test";
+    assert.ok(m("npx vitest run a.test.ts b.test.ts && npm run check && npm test && echo ok", p), "placeholder plus trailing step");
+    assert.ok(!m("npx vitest run a.test.ts && npm run check", p), "placeholder gate with dropped step");
+    assert.ok(!m(`npx vitest run "a && npm run check && npm test && x"`, p), "quoted placeholder swallowing steps");
+  }
+});
+
 check("pass-core's class table matches PASS_CLASSES: the class-name set, the reviewer model, and the gate lane", () => {
   const rowRe = /^\|\s*`([a-z-]+)`[^|]*\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|\s*$/gm;
   const rows = [...PASS_CORE_SRC.matchAll(rowRe)];

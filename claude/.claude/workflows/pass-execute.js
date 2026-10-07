@@ -440,8 +440,8 @@ function gateMatches(ran, resolved, repo) {
   const pattern = gateCore(resolved, repo)
     .split(/<[^<>]+>/)
     .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-    .join(".+?");
-  return new RegExp(`^${pattern}(?: && .+)?$`).test(gateCore(ran, repo));
+    .join("[^|;#'\"`&]+?");
+  return new RegExp(`^${pattern}(?: && [^|;#'"\`&]+)*$`).test(gateCore(ran, repo));
 }
 // === END GATE MATCHER ===
 
