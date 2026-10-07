@@ -155,6 +155,14 @@ not specify; any further escalation follows `~/.claude/docs/model-economy.md` "C
   entry but never holds a finding alone, and a finding that fails verification is dropped with a
   one-line reason in the checkpoint note. (The draft docs harvest parked four findings in STATUS
   until Geoff asked; one was false.)
+- **Harvest cairn friction in every cairn-family repo (Geoff, 2026-10-07).** In cairn-cms,
+  the sites, cairn-themes, and cairn-pub, every dispatch also reports friction with cairn itself:
+  a docs gap or error, a suggested engine improvement, or a DX snag. `pass-execute` and
+  `pass-execute-chains` ask for it whenever the repo path matches the cairn family and return each
+  item in `outOfScope` tagged `cairn: true`. A hand-dispatched prompt asks for it in one line.
+  The conductor verifies each item against the cairn-cms tree and files it under "Open findings"
+  in cairn-cms's `docs/internal/docs-friction-log.md`, whatever the repo's own log, with a
+  perspective tag, the finder, and the date. That checkout is shared, so stage only your own hunk.
 - **Verification a plan parks "for the owner" is Claude's (Geoff, 2026-09-21).** Run the
   release candidate, the real-terminal check, the flag, or the theme yourself (the real
   binary against Geoff's sites with the stored read credentials, a TUI through

@@ -33,6 +33,14 @@
 // `classifier: false` skips the probe entirely: no per-task tier probe ever runs for that chain,
 // and the implementer prompt renders no classifier paragraph.
 
+// Cairn friction (Geoff, 2026-10-07): in a cairn-family repo, every dispatch also harvests
+// friction with cairn itself: a docs gap, a suggested engine improvement, or a DX snag met while
+// using a cairn surface. The implementer reports it in `cairnFriction`, the reviewer in
+// `outOfScope` with `cairn: true`, and both land in the record's `outOfScope` tagged
+// `cairn: true`, so the conductor verifies each and files it in cairn-cms's
+// `docs/internal/docs-friction-log.md`. `args.cairnFriction` (boolean) overrides the repo-path
+// test in CAIRN_FAMILY.
+
 export const meta = {
   name: "pass-execute-chains",
   description: "Runs a pass plan's chains in parallel worktrees, tasks sequential within each chain",
@@ -50,6 +58,18 @@ const IMPL_SCHEMA = {
     gate: { type: "string", enum: ["pass", "fail", "not run"] },
     gateOutput: { type: "string" },
     commits: { type: "array", items: { type: "string" } },
+    cairnFriction: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          location: { type: "string" },
+          finding: { type: "string" },
+          kind: { type: "string", enum: ["docs", "engine", "dx"] }
+        },
+        required: ["location", "finding"]
+      }
+    },
     unspecifiedDecisions: { type: "array", items: { type: "string" } },
     couldNotDo: { type: "array", items: { type: "string" } },
     summary: { type: "string" },
@@ -142,7 +162,7 @@ const REVIEW_SCHEMA = {
       type: "array",
       items: {
         type: "object",
-        properties: { location: { type: "string" }, finding: { type: "string" } },
+        properties: { location: { type: "string" }, finding: { type: "string" }, cairn: { type: "boolean" } },
         required: ["location", "finding"]
       }
     }
@@ -264,6 +284,20 @@ function applyClassBar(review, cls) {
   return demoted;
 }
 
+const CAIRN_FAMILY = /cairn|907-life|ecxc-ski|aksailingclub|xcathletes/;
+
+function harvestsCairnFriction(a, repo) {
+  return a.cairnFriction != null ? a.cairnFriction : CAIRN_FAMILY.test(repo || a.repo || "");
+}
+
+const CAIRN_FRICTION_ASK = "Cairn friction: this repo builds on cairn (@glw907/cairn-cms, its tools, docs, and theme contract). List in cairnFriction any friction with cairn you met during this task: a docs gap or error, a suggested engine improvement, or a DX snag. Give each a location (a cairn doc path, export, tool, or the file:line where it bit), the finding, and a kind of docs, engine, or dx. Report only what you met, never a hunch; an empty list is fine. It never affects the verdict.";
+
+const CAIRN_REVIEW_ASK = "Cairn friction: this repo builds on cairn. Also list in outOfScope, with cairn: true, any friction with cairn the diff shows (a docs gap, an engine improvement, a DX snag the implementer worked around). The conductor files those in cairn-cms's friction log.";
+
+function implFriction(implReport) {
+  return ((implReport && implReport.cairnFriction) || []).map((f) => ({ ...f, cairn: true }));
+}
+
 function implementPrompt(t, chain, a, blocking, baseSha, classifierExists) {
   const cls = classOf(t, a);
   const onMain = chain.repo === a.mainCheckout;
@@ -296,7 +330,8 @@ function implementPrompt(t, chain, a, blocking, baseSha, classifierExists) {
     `Run the gate ONLY through \`${lanePrefix}cairn-run-gate '<the gate string>'\`${laneNote} as a plain foreground Bash call with \`timeout: 600000\`, and follow its own output for whether to re-issue and for the result: never run the gate or any test yourself with run_in_background, and never tail, wc, cat, ps, or sleep on a log. A transcript containing such polling calls is a task failure the conductor halts. Report the runner's exact exit line.`,
     `Commit at each step boundary the plan marks "Commit", following the repo's git conventions (imperative mood, specific files, the repo's co-author footer). Report every commit SHA you made in the commits field.`,
     `Scope expectation: this is one focused task; sweeps rewrite comments, casts, and whitespace and never behavior unless the plan section says a step is behavioral; if you find yourself changing logic the plan does not name as changing, stop and report it in unspecifiedDecisions instead.`,
-    `Skip agent-memory maintenance for this dispatch.`
+    `Skip agent-memory maintenance for this dispatch.`,
+    harvestsCairnFriction(a, chain.repo) ? CAIRN_FRICTION_ASK : ""
   ];
   if (blocking && blocking.length > 0) {
     lines.push("The previous attempt failed review. Fix exactly these blocking findings (fix commits on top, do not rewrite history):");
@@ -411,6 +446,7 @@ function reviewPrompt(t, chain, a, implReport, resolvedGate, reduced) {
     `Reproduce the gate with: ${resolvedGate.gate}`,
     mismatch,
     "Out of scope: list in outOfScope any real defect you notice outside this task's criteria (a bug, a stale doc or comment, a false claim, a gate gap), one {location, finding} each. It never affects the verdict; the conductor files each one in the repo's friction log.",
+    harvestsCairnFriction(a, chain.repo) ? CAIRN_REVIEW_ASK : "",
     "Implementer report (JSON):",
     JSON.stringify(implReport)
   ].filter(Boolean).join("\n");
@@ -549,7 +585,7 @@ async function runTask(t, chain, a, classifierExists) {
     return { id: t.id, title: t.title, status: "failed", fixRounds: 0, implementer: implReport, review: null };
   }
   batchedNotes.push(...applyClassBar(review, cls));
-  outOfScope.push(...(review.outOfScope || []));
+  outOfScope.push(...(review.outOfScope || []), ...implFriction(implReport));
 
   let fixRounds = 0;
   while (review.verdict === "fix" && fixRounds < maxFix) {
@@ -584,7 +620,7 @@ async function runTask(t, chain, a, classifierExists) {
       return { id: t.id, title: t.title, status: "failed", fixRounds, implementer: implReport, review: null };
     }
     batchedNotes.push(...applyClassBar(review, cls));
-  outOfScope.push(...(review.outOfScope || []));
+  outOfScope.push(...(review.outOfScope || []), ...implFriction(implReport));
   }
 
   const status = taskStatus(review, implReport);

@@ -136,7 +136,7 @@ DaisyUI: prefer a stock component over a home-grown one unless the rulings ledge
 defect that forced it (the official DaisyUI skill is the reference, the licensed Blueprint
 server the pre-cut audit; the admin design system wins over both on conflict).
 
-## cairn-family UI work
+## cairn-family work
 
 - **Visual fidelity (2026-07-05)**: UI work that must match a reference invokes the
   `visual-fidelity` skill at the start and gates on `visual-verifier`; nothing deploys to
@@ -144,6 +144,10 @@ server the pre-cut audit; the admin design system wins over both on conflict).
 - **Engine-level UI mechanics (Geoff, 2026-07-30, 2026-08-26)**: a UI mechanic belongs to
   cairn, a design choice to the site; "this repo has patched this before" is a filing trigger,
   never a reason to patch faster. Protocol: `~/.claude/docs/engine-ui-mechanics.md`.
+- **Cairn friction harvest (Geoff, 2026-10-07)**: any work touching cairn, in any repo, logs
+  the friction it meets with cairn: docs gaps, engine improvements, and DX snags alike. Verify
+  each against cairn-cms, then file it in cairn-cms's `docs/internal/docs-friction-log.md`. Pass
+  mechanics: `pass-core`.
 
 ## Claude Code Agent Usage
 

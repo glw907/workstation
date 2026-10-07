@@ -96,6 +96,14 @@
 // skips the probe entirely: no per-task tier probe ever runs, and the implementer prompt
 // renders no classifier paragraph.
 
+// Cairn friction (Geoff, 2026-10-07): in a cairn-family repo, every dispatch also harvests
+// friction with cairn itself: a docs gap, a suggested engine improvement, or a DX snag met while
+// using a cairn surface. The implementer reports it in `cairnFriction`, the reviewer in
+// `outOfScope` with `cairn: true`, and both land in the record's `outOfScope` tagged
+// `cairn: true`, so the conductor verifies each and files it in cairn-cms's
+// `docs/internal/docs-friction-log.md`. `args.cairnFriction` (boolean) overrides the repo-path
+// test in CAIRN_FAMILY.
+
 export const meta = {
   name: "pass-execute",
   description: "Runs a pass plan's tasks through implementer, diff-reviewer, and gate in a chain. One invocation runs one segment; a pass with conductor boundaries is launched once per segment.",
@@ -132,6 +140,18 @@ const IMPL_SCHEMA = {
           fired: { type: "boolean" }
         },
         required: ["mutation", "fired"]
+      }
+    },
+    cairnFriction: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          location: { type: "string" },
+          finding: { type: "string" },
+          kind: { type: "string", enum: ["docs", "engine", "dx"] }
+        },
+        required: ["location", "finding"]
       }
     },
     unspecifiedDecisions: { type: "array", items: { type: "string" } },
@@ -209,7 +229,7 @@ const REVIEW_SCHEMA = {
       type: "array",
       items: {
         type: "object",
-        properties: { location: { type: "string" }, finding: { type: "string" } },
+        properties: { location: { type: "string" }, finding: { type: "string" }, cairn: { type: "boolean" } },
         required: ["location", "finding"]
       }
     }
@@ -352,6 +372,20 @@ function validateArgs(a) {
   }
 }
 
+const CAIRN_FAMILY = /cairn|907-life|ecxc-ski|aksailingclub|xcathletes/;
+
+function harvestsCairnFriction(a, repo) {
+  return a.cairnFriction != null ? a.cairnFriction : CAIRN_FAMILY.test(repo || a.repo || "");
+}
+
+const CAIRN_FRICTION_ASK = "Cairn friction: this repo builds on cairn (@glw907/cairn-cms, its tools, docs, and theme contract). List in cairnFriction any friction with cairn you met during this task: a docs gap or error, a suggested engine improvement, or a DX snag. Give each a location (a cairn doc path, export, tool, or the file:line where it bit), the finding, and a kind of docs, engine, or dx. Report only what you met, never a hunch; an empty list is fine. It never affects the verdict.";
+
+const CAIRN_REVIEW_ASK = "Cairn friction: this repo builds on cairn. Also list in outOfScope, with cairn: true, any friction with cairn the diff shows (a docs gap, an engine improvement, a DX snag the implementer worked around). The conductor files those in cairn-cms's friction log.";
+
+function implFriction(implReport) {
+  return ((implReport && implReport.cairnFriction) || []).map((f) => ({ ...f, cairn: true }));
+}
+
 function implementPrompt(t, a, blocking, baseSha, classifierExists) {
   const cls = classOf(t, a);
   const paintFlag = t.paint != null ? ` --paint ${t.paint ? "yes" : "no"}` : "";
@@ -375,7 +409,8 @@ function implementPrompt(t, a, blocking, baseSha, classifierExists) {
       ? `Before running the gate, check whether scripts/checks/gate-tier.mjs exists in this repo. If it does, run \`${classifierCmd}\` from the repo root, after your commits and before the gate, and run the gate string it prints on stdout instead of the Gate command above (report gateTier: "${t.gateTier ? "pin" : "computed"}" and gateCommand as that exact string). If the script is absent, exits non-zero, or prints nothing, run the Gate command above unchanged (report gateTier: "default" and gateCommand as that string).`
       : "",
     "Run the gate through `" + lanePrefix + "cairn-run-gate '<the gate string>'`" + laneNote + " and follow its own output for whether to re-issue and for the result; never run it in the background and never poll a log; report its exact result.",
-    "Skip agent-memory maintenance for this dispatch."
+    "Skip agent-memory maintenance for this dispatch.",
+    harvestsCairnFriction(a, a.repo) ? CAIRN_FRICTION_ASK : ""
   ];
   if (blocking && blocking.length > 0) {
     lines.push("The previous attempt failed review. Fix exactly these blocking findings:");
@@ -491,6 +526,7 @@ function reviewPrompt(t, a, implReport, resolvedGate, reduced) {
       ? reviewClassLines(cls, reduced)
       : [noClassReviewLine(t, a)]),
     "Out of scope: list in outOfScope any real defect you notice outside this task's criteria (a bug, a stale doc or comment, a false claim, a gate gap), one {location, finding} each. It never affects the verdict; the conductor files each one in the repo's friction log.",
+    harvestsCairnFriction(a, a.repo) ? CAIRN_REVIEW_ASK : "",
     "Implementer report (JSON):",
     JSON.stringify(implReport)
   ].filter(Boolean).join("\n");
@@ -631,7 +667,7 @@ async function runTask(t, a, classifierExists) {
     return { id: t.id, title: t.title, status: "failed", fixRounds: 0, implementer: implReport, review: null };
   }
   batchedNotes.push(...applyClassBar(review, cls));
-  outOfScope.push(...(review.outOfScope || []));
+  outOfScope.push(...(review.outOfScope || []), ...implFriction(implReport));
 
   let fixRounds = 0;
   while (review.verdict === "fix" && fixRounds < maxFix) {
@@ -666,7 +702,7 @@ async function runTask(t, a, classifierExists) {
       return { id: t.id, title: t.title, status: "failed", fixRounds, implementer: implReport, review: null };
     }
     batchedNotes.push(...applyClassBar(review, cls));
-  outOfScope.push(...(review.outOfScope || []));
+  outOfScope.push(...(review.outOfScope || []), ...implFriction(implReport));
   }
 
   const status = taskStatus(review, implReport);
