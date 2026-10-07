@@ -471,8 +471,9 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 ---
 
 ### PHONEBOOK_PHONE_ADMIN_KITCHEN
-- **Grants**: web UI admin login on the kitchen Yealink T54W (192.168.1.181), received from
-  Geoff 2026-10-07 through `secret-receive`. Used by the phonebook project's conductor to drive
+- **Grants**: web UI admin login on both Yealink T54Ws, kitchen (192.168.1.181) and office
+  (192.168.1.118), which share one password (Geoff, 2026-10-07). Received through
+  `secret-receive`; the name predates learning the office phone shares it. Used by the phonebook project's conductor to drive
   the phone's web UI (exports, provisioning URL) without a password in the transcript.
 - **Scope**: local only. Phase 2 of `~/Projects/phonebook` may also serve a phone admin password
   as a Worker secret; that will be its own entry.
