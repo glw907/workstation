@@ -128,13 +128,15 @@ Four owner rulings ride beside the brief's list (Geoff, 2026-10-07):
   its people, or its vocabulary, such as clubs, instructors, classes, or dues. Propose a generic
   name for the kind of feature. Flag a page that opens on an invented scenario or cast instead of
   the job.
-- **No assumed coding agent.** A page never assumes the reader uses a coding agent, or which one,
-  and never addresses coding agents ("You should not assume that an implementor is using Claude";
-  "A page shouldn't even assume that a reader IS using a coding agent"; "If we want to address
-  coding agents, we can create separate docs specifically for that."). Flag agent content woven
-  into a task or explanation page; it belongs in docs dedicated to it. A page may name an
-  agent-specific file it must document, such as a file-tree entry, in one line that labels the
-  tool and links the dedicated doc or reference.
+- **No assumed coding assistant.** The general docs assume the reader uses no coding assistant, and
+  a separate section covers Claude Code ("You should not assume that an implementor is using
+  Claude."; "A page shouldn't even assume that a reader IS using a coding agent."; "we don't have
+  to assume any other agent than claude code."; "we _should_ assume in the general docs that a user
+  is not using a coding assistance, and then we can write a separate section for claude code.").
+  Flag agent content woven into a task or explanation page; it belongs in the Claude Code section.
+  Flag any other agent or an AGENTS.md. A page may name an agent-specific file it must document,
+  such as a file-tree entry, in one line that labels the tool and links the dedicated doc or
+  reference.
 
 ## Logic and truth-adjacent checks (the Russell dimension)
 

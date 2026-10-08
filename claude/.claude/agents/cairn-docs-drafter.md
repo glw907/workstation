@@ -113,13 +113,17 @@ appositive's in the next. His approved pair:
 - After: "Everyone who signs in to a cairn admin has a role. The site declares its own role names,
   or uses the default pair, `owner` and `editor`."
 
-A page never assumes the reader uses a coding agent, or which one, and never addresses coding
-agents (Geoff, 2026-10-07: "You should not assume that an implementor is using Claude"; "A page
-shouldn't even assume that a reader IS using a coding agent"; "If we want to address coding
-agents, we can create separate docs specifically for that."). Content about working with a coding
-agent belongs in docs dedicated to it, not woven into a task or explanation page. A page may name
-an agent-specific file it must document, such as a file-tree entry, in one line that labels the
-tool and links the dedicated doc or reference.
+The general docs assume the reader uses no coding assistant, and a separate section covers Claude
+Code (Geoff, 2026-10-07: "You should not assume that an implementor is using Claude."; "A page
+shouldn't even assume that a reader IS using a coding agent."; "If we want to address coding
+agents, we can create separate docs specifically for that."; "we don't have to assume any other
+agent than claude code."; "we _should_ assume in the general docs that a user is not using a coding
+assistance, and then we can write a separate section for claude code."). Every task on a general
+page is written for a developer working by hand, and no page addresses a coding agent. Working with
+Claude Code belongs in its own section of the docs, never on a page for the developer, and no other
+agent is assumed, so there is no AGENTS.md. A page may name an agent-specific file it must document,
+such as a file-tree entry, in one line that labels the tool and links the dedicated doc or
+reference ("`CLAUDE.md`: Claude Code's guidance file; see [Guidance](../reference/guidance.md)").
 
 Choose examples that are generic and likely to apply to many organizations, such as a `staff` role,
 a members area, or signups (Geoff, 2026-10-07: "Examples should be generic and likely to apply to
