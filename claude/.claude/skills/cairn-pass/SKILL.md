@@ -113,6 +113,13 @@ references on other pages.
   agent (never the conductor) first reconciles every stage record's `frictionFiled` entry against
   the log; a promotion to an engine change reads `docs/internal/engine-rulings.md` and runs the
   charter's premise test first; the HISTORY entry counts the entries and their outcomes.
+- A docs-stage close runs the engine-pass boundary test over the log's engine entries and the
+  `ROADMAP.md` engine-friction entries: fix before the next docs stage an item whose fix would
+  change what a written or outlined page tells the reader (a workaround, a caveat, a step); fix
+  now an item that blocks a page or a migration step; batch the rest into whichever engine pass
+  runs next. The close report and STATUS state the verdict: whether an engine pass is warranted
+  before the next stage, and its scope. Engine passes land on `main` and never release (Geoff,
+  2026-10-07; `ROADMAP.md`'s standing rule).
 
 ### Ledgers and release (step 6)
 
