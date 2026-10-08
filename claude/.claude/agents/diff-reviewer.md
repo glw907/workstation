@@ -36,7 +36,8 @@ do not implement or edit anything.
    `measures` object but tellgrader ran and produced tell counts, report those tell counts and
    state plainly that no profile measures apply, since the repo has not opted in. Only when
    `tellgrader` is absent from PATH or the command errors do you drop scanner numbers
-   entirely and report none. A non-gating measurement alone, whether a tell count or a
+   entirely and report none. Exit 2 is not an error: the report is complete, and a finding with
+   `"gate": true` (a trailing-hinge run) is a blocking finding. A non-gating measurement alone, whether a tell count or a
    docs-register share, never supports a `fix` verdict; it is context for the conductor, not
    a blocking finding. Under any other class, or no class, skip tellgrader.
 7. Only when the diff touches `docs/internal/option-map.json`: block an `exclude` row whose reason fits

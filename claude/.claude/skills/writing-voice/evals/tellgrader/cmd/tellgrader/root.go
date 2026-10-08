@@ -22,8 +22,12 @@ func newRootCmd() *cobra.Command {
 	var f flags
 
 	cmd := &cobra.Command{
-		Use:           "tellgrader --register <name> file...",
-		Short:         "Scan prose for AI-writing tells and report cadence statistics as JSON",
+		Use:   "tellgrader --register <name> file...",
+		Short: "Scan prose for AI-writing tells and report cadence statistics as JSON",
+		Long: "Scan prose for AI-writing tells and report cadence statistics as JSON.\n\n" +
+			"Exit status: 0 when no finding gates, 1 on a usage or read error, and 2 when a\n" +
+			"finding gates (\"gate\": true). Only trailing-hinge-run gates, and only under the\n" +
+			"docs-register profile; the JSON report is printed either way.",
 		Args:          cobra.ArbitraryArgs,
 		RunE:          func(cmd *cobra.Command, args []string) error { return run(args, &f) },
 		SilenceUsage:  true,
@@ -74,10 +78,40 @@ func run(paths []string, f *flags) error {
 
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
+	var out any = reports
 	if len(reports) == 1 {
-		return enc.Encode(reports[0])
+		out = reports[0]
 	}
-	return enc.Encode(reports)
+	if err := enc.Encode(out); err != nil {
+		return err
+	}
+	return gateFailures(reports)
+}
+
+// gateError reports gating findings. The JSON report is already on stdout,
+// so main exits with gateExitCode rather than the usage-error code 1, letting
+// a caller tell a failed gate from a failed run.
+type gateError struct{ count int }
+
+const gateExitCode = 2
+
+func (e gateError) Error() string {
+	return fmt.Sprintf("tellgrader: %d gating finding(s); see \"gate\": true in the report", e.count)
+}
+
+func gateFailures(reports []*tellscan.Report) error {
+	n := 0
+	for _, r := range reports {
+		for _, f := range r.Findings {
+			if f.Gate {
+				n++
+			}
+		}
+	}
+	if n == 0 {
+		return nil
+	}
+	return gateError{count: n}
 }
 
 // runHook is advisory-only and fails open: it returns no error, so a

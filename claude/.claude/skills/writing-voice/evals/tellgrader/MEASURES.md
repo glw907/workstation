@@ -154,6 +154,48 @@ implementations agree only on the `and`/`or` case: "It listed a, b, and c." excl
 both, but "It listed a, b, but the plan failed." hinges under `measure-prose.mjs` and does
 not hinge under `tellgrader`, because the earlier comma excludes it there.
 
+## The trailing-hinge run (a gating tell)
+
+**Provenance.** Geoff, 2026-10-07, ruling on a cairn docs paragraph he called "really awkward AI
+cadence": the pattern, "or at least excessive, repetitive use of it", lives in the writing
+infrastructure. The `hinged_pair_share` measure above missed most of that paragraph and gates
+nothing, so this check is separate from it.
+
+**The tell.** Sentence after sentence carries one fact in a main clause, then a tail hung off the
+end by a comma and a hinge word: a reason, a consequence, or a cross-reference. The sentences run
+to about the same length, and none gives the reader a break. One such sentence is fine. The defect
+is the run.
+
+**The rule** (`internal/tellscan/hinge.go`):
+
+- A sentence has a **trailing hinge** when it contains a comma, whitespace, and then one of `so
+  that`, `so`, `since`, `because`, `which`, `while`, `as`, `where`, `whereas`, `although`, or
+  `though`, followed by whitespace, and at least three words precede that comma. The three-word
+  floor keeps an introductory clause ("Since then, ...") from reading as a tail. The coordinators
+  `and`, `but`, `or`, and `for` are excluded on purpose. They join two clauses rather than trail
+  one, and the hinged-pair measure already counts them. No appositive heuristic runs: telling
+  ", the only X the Y names," from an introductory phrase takes a parser.
+- A **trailing-hinge run** is three or more consecutive trailing-hinge sentences in one paragraph.
+  A plain sentence between them resets the count, and a paragraph break ends it.
+- **Paragraphs** come from the prose selector above (headings and list items removed), with front
+  matter, table rows (a line starting with `|`), and HTML lines (starting with `<`) also dropped. A
+  blank or whitespace-only line ends a paragraph. Sentences are `splitSentences`' own.
+- The finding reports as `trailing-hinge-run` at the paragraph's first line. Its excerpt names the
+  run length and the paragraph's sentence-length coefficient of variation.
+
+**Gating.** The finding reports in every register. Under the docs-register profile it carries
+`"gate": true`, and the CLI exits 2 after printing the report (1 stays a usage or read error). It
+is the only gating tell. The `--hook` path forces the profile off, so the hook stays advisory.
+
+**The uniform-paragraph count.** Alongside the run, `counts.uniform-paragraph` counts paragraphs of
+four or more sentences whose sentence-length coefficient of variation falls below 0.25. It is a
+count with no finding and no line, since four-sentence reference paragraphs trip it too often to
+grade on alone.
+
+**The fixtures.** `hinge_test.go` carries the flagged paragraph, which must trip, and Geoff's
+accepted rewrite, which must not, plus single hinges, two-hinge runs, list items, introductory
+clauses, and fenced code, none of which trip.
+
 ## The `~/.claude` symlink caveat
 
 `~/.claude` is a symlink into this dotfiles repo, so a file edited through it resolves home

@@ -75,6 +75,10 @@ type Finding struct {
 	Check   string `json:"check"`
 	Line    int    `json:"line"`
 	Excerpt string `json:"excerpt"`
+	// Gate marks a finding that fails the run: the CLI exits non-zero when
+	// any finding carries it. Only trailing-hinge-run gates, and only under
+	// the docs-register profile.
+	Gate bool `json:"gate,omitempty"`
 }
 
 // Report carries the scan result for one input. Counts records every
@@ -157,6 +161,16 @@ func Scan(input string, opts Options) *Report {
 		})
 	}
 
+	profile := resolveProfile(opts.Path, opts.HomeDir, opts.Profile)
+	hingeRuns, uniform := paragraphFindings(prose, profile == ProfileDocsRegister)
+	for _, f := range hingeRuns {
+		r.Counts[f.Check]++
+		r.Findings = append(r.Findings, f)
+	}
+	if uniform > 0 {
+		r.Counts["uniform-paragraph"] = uniform
+	}
+
 	sentences := splitSentences(prose)
 	r.Words = wordCount(prose)
 	r.Sentences = len(sentences)
@@ -174,7 +188,7 @@ func Scan(input string, opts Options) *Report {
 		r.TellsPer1000Words = float64(len(r.Findings)) / float64(r.Words) * 1000
 	}
 
-	if profile := resolveProfile(opts.Path, opts.HomeDir, opts.Profile); profile != "" {
+	if profile != "" {
 		measureSentences, hingedShare, shortShare := measureShares(prose)
 		r.Profile = profile
 		r.Measures = &Measures{

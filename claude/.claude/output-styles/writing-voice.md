@@ -38,6 +38,10 @@ Avoid these structural habits:
   like "including", or write the items as their own sentences.
 - Opening with a participial bridge ("Building on this, ...") or a connector
   ("Moreover, ..."). Start with the subject.
+- The trailing hinge: sentence after sentence that states one fact, then hangs a reason,
+  consequence, or link off the end (", since ...", ", which ...", ", so ...", ", because
+  ..."). One is fine; a run is the tell (Geoff, 2026-10-07). Fold the reason into the main
+  clause, drop it, give the link its own sentence, or break the run with a short sentence.
 - Restating a paragraph's point at its end.
 - Bullet lists where prose belongs. Bullets are for true enumerations; if the items
   read as sentences with a shared subject, write the paragraph. A sequence of actions is

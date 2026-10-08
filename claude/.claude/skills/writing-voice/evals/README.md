@@ -10,7 +10,9 @@ produces better prose than drafting bare, on the same model and the same tasks.
   register, its external standard, and four judge-gradeable assertions.
 - `tellgrader/`: a Go CLI that scans a draft for the deterministic tells (contrast frames,
   connector openers, em-dash misuse, slop lexicon, scaffold headers, bold-lead bullets,
-  flat cadence) and reports JSON. `make -C tellgrader check` is its gate.
+  flat cadence, trailing-hinge runs) and reports JSON. A trailing-hinge run under the
+  docs-register profile gates: the CLI exits 2 (`tellgrader/MEASURES.md`). `make -C
+  tellgrader check` is its gate.
 - `results/`: one dated directory per benchmark run holding `benchmark.json`,
   `benchmark.md`, and analyst notes. This is the trend line; compare across dates.
 - `research/`: the external evidence base behind the grader's checks and lexicon

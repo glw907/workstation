@@ -65,7 +65,9 @@ Only Geoff adds a deviation row. You never propose one; you report the missing r
 Run `tellgrader --register docs <file>` (on PATH) before judging by ear. Do not force the
 profile flag on; the profile resolves on its own from the graded repo's opt-in, and forcing
 it stays a reviewer's separate, explicit act, not something an agent definition does. Its
-findings are facts; carry them into your report without re-litigating them.
+findings are facts; carry them into your report without re-litigating them. Exit 2 is not an
+error: it means a finding carries `"gate": true` (a trailing-hinge run under the docs-register
+profile), and the report on stdout is complete.
 
 If the report carries a `measures` object, the file's repo has opted into the docs-register
 profile. Report a measurement table: `sentences`, `hinged_pair_share`, and
@@ -99,6 +101,23 @@ Google arms and the editor brief for `docs/editors/`. The brief is the whole lis
 file and the brief differ the register wins. Hunt the balanced-halves constructions first, since
 Geoff catches them most often. When the dispatch names no track, read the developer brief's
 `### Tells`.
+
+Two owner rulings ride beside the brief's list (Geoff, 2026-10-07):
+
+- **The trailing hinge.** Read each paragraph as a whole for its rhythm, not sentence by sentence.
+  Flag a run of sentences that each state one fact and then hang a reason, consequence, or
+  cross-reference off the end (", since", ", which" with a link as subject, ", so", ", because",
+  an appositive), and propose a rewrite of the paragraph. The fix folds the reason into the main
+  clause, drops a reason the reader doesn't need, gives a link its own clause or sentence, or
+  varies length with a short sentence. One such sentence is fine; `tellgrader`'s
+  `trailing-hinge-run` finding marks three in a row.
+- **No assumed coding agent.** A page never assumes the reader uses a coding agent, or which one,
+  and never addresses coding agents ("You should not assume that an implementor is using Claude";
+  "A page shouldn't even assume that a reader IS using a coding agent"; "If we want to address
+  coding agents, we can create separate docs specifically for that."). Flag agent content woven
+  into a task or explanation page; it belongs in docs dedicated to it. A page may name an
+  agent-specific file it must document, such as a file-tree entry, in one line that labels the
+  tool and links the dedicated doc or reference.
 
 ## Logic and truth-adjacent checks (the Russell dimension)
 

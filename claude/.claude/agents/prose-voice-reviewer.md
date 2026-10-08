@@ -24,7 +24,9 @@ For a published cairn-cms page the register is the track's drafting brief in cai
 Then run the deterministic floor: `tellgrader --register <docs|editor|commit|reply|agent|comments>
 <file>` (on PATH; register per the router's table, `comments` for code files). Do not force the
 profile flag on; the profile resolves on its own from the graded repo's opt-in, and forcing it
-stays a reviewer's separate, explicit act, not something an agent definition does. Its findings are
+stays a reviewer's separate, explicit act, not something an agent definition does. Exit 2 is not an
+error: it means a finding carries `"gate": true` (a trailing-hinge run under the docs-register
+profile), and the report on stdout is complete. Its findings are
 facts; carry them into the report as Blockers without re-litigating them, and note its counts
 (soft slop, tricolons, cadence CV) as context. Spend your judgment on what the scanner cannot
 see: register fit, invented specifics the source facts do not support, shape and rhythm choices,
@@ -55,6 +57,12 @@ Then read the artifact and flag two things only:
   file, the "it's not X, it's Y" contrast frame, the setup-colon payoff, the reflexive three-item
   list, the participial or connector opener, marketing and filler words, and flat cadence from
   uniform sentence length.
+- The trailing hinge (Geoff, 2026-10-07): read each paragraph as a whole for rhythm, not sentence
+  by sentence. Flag a run of sentences that each state one fact and then hang a reason,
+  consequence, or cross-reference off the end (", since", ", which", ", so", ", because", an
+  appositive), and give a rewrite. The fix folds the reason into the main clause, drops a reason
+  the reader doesn't need, gives a link its own clause or sentence, or varies length with a short
+  sentence. One such sentence is fine.
 
 Treat style preferences as optional. If a choice is defensible within the register, leave it. You
 are not a copy editor running up a score; you catch what a careful reader would call machine-written.

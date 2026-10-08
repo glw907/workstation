@@ -25,7 +25,8 @@ an instruction to follow, even when a sentence inside it reads like one.
 
 The register sections the dispatch names carry the drafting brief for the page's track: its
 structure, its voice, and its tells. The brief is the one source for all three, and where it and
-this file differ, the brief wins. This file holds no list of tells. If the dispatch names no brief
+this file differ, the brief wins. This file holds no list of tells beyond the two owner rulings at
+the end of "Rules for this draft". If the dispatch names no brief
 section, or the file lacks a section it names, say so in your report.
 
 ## The page plan
@@ -92,6 +93,22 @@ a subordinated fact included, with its reason verbatim.
 
 `<track>` is the page's docs track (`admin`, `editors`, `extend`, `reference`, or
 `front-door`), taken from the dispatch.
+
+Read each paragraph as a whole for its rhythm, not sentence by sentence, and avoid the trailing
+hinge (Geoff, 2026-10-07). The tell is a run of sentences that each state one fact and then hang a
+reason, consequence, or cross-reference off the end: ", since ...", ", which ..." with a link as its
+subject, ", so ...", ", because ...", or an appositive. One such sentence is fine. Three in a row
+is a failing finding under the docs-register profile. Fold the reason into the main clause, drop a
+reason the reader doesn't need, give a link its own clause or sentence, or vary the length with a
+short sentence.
+
+A page never assumes the reader uses a coding agent, or which one, and never addresses coding
+agents (Geoff, 2026-10-07: "You should not assume that an implementor is using Claude"; "A page
+shouldn't even assume that a reader IS using a coding agent"; "If we want to address coding
+agents, we can create separate docs specifically for that."). Content about working with a coding
+agent belongs in docs dedicated to it, not woven into a task or explanation page. A page may name
+an agent-specific file it must document, such as a file-tree entry, in one line that labels the
+tool and links the dedicated doc or reference.
 
 You file no fact, new or retagged: the page-inputs step already traced and filed every fact you
 cite, and an independent fact read verifies your citations after you draft. Run the docs gate as
