@@ -75,6 +75,32 @@ func TestTrailingHingeRun(t *testing.T) {
 				"which clears the draft.\n\nThe draft returns from the branch, since saves commit there.\n",
 		},
 		{
+			name: "three as-well-as sentences do not trip",
+			input: "The guard refuses stale sessions, as well as expired tokens. The editor reloads the page, " +
+				"as well as the draft list. The store keeps the branch, as well as the commit history.\n",
+		},
+		{
+			name: "three subordinate as tails trip",
+			input: "The guard refuses the request, as the session expired. The editor reloads the page, " +
+				"as the draft is stale. The store keeps the branch, as saves commit there.\n",
+			wantLine: 1,
+		},
+		{
+			name: "front matter is excluded",
+			input: "---\ndescription: The guard refuses the request, because the session expired. The editor reloads " +
+				"the page, which clears the draft. The store keeps the branch, since saves commit there.\n---\n",
+		},
+		{
+			name: "table rows are excluded",
+			input: "| The guard refuses the request, because the session expired. The editor reloads the page, " +
+				"which clears the draft. The store keeps the branch, since saves commit there. |\n",
+		},
+		{
+			name: "HTML lines are excluded",
+			input: "<p>The guard refuses the request, because the session expired. The editor reloads the page, " +
+				"which clears the draft. The store keeps the branch, since saves commit there.</p>\n",
+		},
+		{
 			name:  "fenced code is not prose",
 			input: "```\na = 1, so b runs. c = 2, so d runs. e = 3, so f runs.\n```\n",
 		},
@@ -106,6 +132,8 @@ func TestHasTrailingHinge(t *testing.T) {
 		{"It pins Node 24, the only version named, since it ships no engines field", true},
 		{"Its last step runs the check, which the guidance tree explains", true},
 		{"The workflow installs no browser, so the rendered check cannot run", true},
+		{"The guard refuses stale sessions, as well as expired tokens", false},
+		{"The guard refuses the request, as the session expired", true},
 		{"The deploy waits, so that the cache warms first", true},
 		{"The page loads, whereas the editor stays closed", true},
 		{"The workflow runs install, check, and check:cairn on every push", false},

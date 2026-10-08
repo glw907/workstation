@@ -173,7 +173,9 @@ is the run.
   `though`, followed by whitespace, and at least three words precede that comma. The three-word
   floor keeps an introductory clause ("Since then, ...") from reading as a tail. The coordinators
   `and`, `but`, `or`, and `for` are excluded on purpose. They join two clauses rather than trail
-  one, and the hinged-pair measure already counts them. No appositive heuristic runs: telling
+  one, and the hinged-pair measure already counts them. The idiom ", as well as" is excluded
+  too, since it coordinates a second item rather than trailing a reason (only that idiom: a
+  bare ", as" tail still counts). No appositive heuristic runs: telling
   ", the only X the Y names," from an introductory phrase takes a parser.
 - A **trailing-hinge run** is three or more consecutive trailing-hinge sentences in one paragraph.
   A plain sentence between them resets the count, and a paragraph break ends it.
@@ -194,7 +196,8 @@ grade on alone.
 
 **The fixtures.** `hinge_test.go` carries the flagged paragraph, which must trip, and Geoff's
 accepted rewrite, which must not, plus single hinges, two-hinge runs, list items, introductory
-clauses, and fenced code, none of which trip.
+clauses, fenced code, ", as well as" sentences, front matter, table rows, and HTML lines, none of
+which trip, and three ", as" subordinate tails, which do.
 
 ## The `~/.claude` symlink caveat
 

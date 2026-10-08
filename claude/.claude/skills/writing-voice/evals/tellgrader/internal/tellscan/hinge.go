@@ -11,7 +11,12 @@ import (
 // main clause. The coordinators "and", "but", "or", and "for" are left out on
 // purpose: they join clauses rather than trail one, and the hinged-pair
 // measure already counts them.
+//
+// The idiom ", as well as" is also left out: it coordinates a second item
+// and trails nothing, though its "as" matches the alternation.
 var trailingHingeRe = regexp.MustCompile(`,\s+(?:so that|so|since|because|which|while|as|where|whereas|although|though)\s`)
+
+var asWellAsRe = regexp.MustCompile(`^,\s+as\s+well\s+as\s`)
 
 // minHingeRun is the number of consecutive trailing-hinge sentences in one
 // paragraph that makes a run. One or two read as ordinary prose; the tell is
@@ -76,6 +81,9 @@ func proseParagraphs(prose string) []paragraph {
 // subordinate tail off a main clause of at least minLeadWords words.
 func hasTrailingHinge(sentence string) bool {
 	for _, loc := range trailingHingeRe.FindAllStringIndex(sentence, -1) {
+		if asWellAsRe.MatchString(sentence[loc[0]:]) {
+			continue
+		}
 		if len(strings.Fields(sentence[:loc[0]])) >= minLeadWords {
 			return true
 		}
