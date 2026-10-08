@@ -88,7 +88,7 @@ Constraints on top of that gate:
 3. **Shape, not just membership.** Accepted functionality is re-derived in the form
    easiest for any site, never transplanted from the requesting site's implementation,
    even when that leaves the requesting site doing some hand-rolling. Worked example: the
-   StatusChip absorption takes ASC's ratified grammar but re-tunes every measured value
+   StatusChip absorption takes one site's measured grammar but re-tunes every measured value
    against the engine's own themes.
 4. **The standard applies retroactively** (the audit, below).
 
