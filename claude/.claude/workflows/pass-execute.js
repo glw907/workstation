@@ -480,7 +480,7 @@ function gateCore(s, repo) {
  * True when the gate string the implementer ran matches the gate string the runner
  * independently resolved: equal after normalization, or the same gate steps followed by extra
  * `&&` steps. A task gate may carry a `<placeholder>` the implementer fills in (for example
- * `<the touched unit test files>`); the placeholder matches any non-empty text.
+ * `<the touched unit test files>`); the placeholder matches one or more characters other than `|`, `;`, `#`, quotes, backticks, and `&`.
  */
 function gateMatches(ran, resolved, repo) {
   const pattern = gateCore(resolved, repo)
