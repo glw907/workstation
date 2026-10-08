@@ -46,6 +46,18 @@ Diagrams render in cairn's own theme: the stock `neutral` mermaid render never s
 diagram the themed render cannot carry at the polish bar is hand-authored SVG, never a
 drawing-tool screenshot.
 
+## Interface figures: live first
+
+A figure that shows cairn's own interface (an admin screen, a control, a state) is a live
+reproduction that renders the actual component, never a screenshot, wherever the
+reproduction seam can carry it (Pass D, 2026-08-14; reaffirmed by Geoff, 2026-10-08: "As much as
+possible, we should be building components live for the docs rather than using
+screenshots"). A screenshot goes stale silently; the component cannot. Until the seam ships
+(ROADMAP: the engine pass before stage 4), outline the figure as a reproduction and file what
+it needs from the seam in cairn-cms's friction log. A screenshot is the exception, taken only
+for what no component renders (a browser chrome, an email client, a third-party console), and
+the page records why.
+
 ## The text-alternative and containment rules
 
 See the register's Visuals section
