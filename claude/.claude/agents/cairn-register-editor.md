@@ -122,11 +122,12 @@ Four owner rulings ride beside the brief's list (Geoff, 2026-10-07):
 - **Generic examples.** Examples are generic and likely to apply to many organizations, such as a
   `staff` role, a members area, or signups ("Examples should be generic and likely to apply to many
   organizations."). Flag any example, role name, route, or scenario that only makes sense with
-  outside context about a particular site ("VERY strange. Where the heck does that come from?";
-  "If this relates to the ASC's site, an implementer will have ZERO context."). No example carries
-  a consumer site's domain: its organization type, its people, or its vocabulary, such as clubs,
-  instructors, classes, or dues. Propose a generic name for the kind of feature. Flag a page that
-  opens on an invented scenario or cast instead of the job.
+  outside context about a particular site ("Talking about classes and club members here seems VERY
+  strange. Where the heck does that come from?"; "If this relates to the ASC's site, an implementer
+  will have ZERO context."). No example carries a consumer site's domain: its organization type,
+  its people, or its vocabulary, such as clubs, instructors, classes, or dues. Propose a generic
+  name for the kind of feature. Flag a page that opens on an invented scenario or cast instead of
+  the job.
 - **No assumed coding agent.** A page never assumes the reader uses a coding agent, or which one,
   and never addresses coding agents ("You should not assume that an implementor is using Claude";
   "A page shouldn't even assume that a reader IS using a coding agent"; "If we want to address

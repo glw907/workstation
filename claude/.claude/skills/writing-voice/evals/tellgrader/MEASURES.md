@@ -187,7 +187,8 @@ is the run.
 
 **Gating.** The finding reports in every register. Under the docs-register profile it carries
 `"gate": true`, and the CLI exits 2 after printing the report (1 stays a usage or read error). It
-and the appositive stack below are the only gating tells. The `--hook` path forces the profile off, so the hook stays advisory.
+and the appositive stack below are the only gating tells. The `--hook` path forces the profile off,
+so the hook stays advisory.
 
 **The uniform-paragraph count.** Alongside the run, `counts.uniform-paragraph` counts paragraphs of
 four or more sentences whose sentence-length coefficient of variation falls below 0.25. It is a
@@ -246,8 +247,9 @@ true`, and the CLI exits 2. The `--hook` path stays advisory.
 
 **The fixtures.** `appositive_test.go` carries the flagged sentence, which must trip, and the
 approved rewrite, which must not. A `who` clause also trips. None of these trip: a plain `which`
-clause, an appositive without a relative clause, a serial list, an introductory phrase, a list in
-parentheses, list items, table rows, HTML lines, fenced code, or front matter.
+clause, an appositive without a relative clause, a serial list, a lead clause under three words,
+an introductory phrase, a list in parentheses, list items, table rows, HTML lines, fenced code, or
+front matter.
 
 ## The `~/.claude` symlink caveat
 

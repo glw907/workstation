@@ -50,6 +50,10 @@ func TestAppositiveStack(t *testing.T) {
 			input: "In the admin, a theme reaches the editor's preview frame, which renders the entry.\n",
 		},
 		{
+			name:  "short lead clause is not a renamed noun",
+			input: "Use it, the default, which ships first.\n",
+		},
+		{
 			name:  "list inside parentheses does not trip",
 			input: "A zone spelling (a colonless offset, a lowercase Z) is normalized first, which keeps parsing stable.\n",
 		},

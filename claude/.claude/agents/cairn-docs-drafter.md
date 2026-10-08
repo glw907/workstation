@@ -121,15 +121,16 @@ agent belongs in docs dedicated to it, not woven into a task or explanation page
 an agent-specific file it must document, such as a file-tree entry, in one line that labels the
 tool and links the dedicated doc or reference.
 
-Choose examples that are generic and likely to apply to many organizations, such as a `staff`
-role, a members area, or signups (Geoff, 2026-10-07: "Examples should be generic and likely to
-apply to many organizations."). Every example, role name, route, and scenario makes sense to a
-reader with zero context about any particular site. The rule came from an "instructors who need a
-screen for their classes or club members" example that leaked from a consumer site ("VERY strange.
-Where the heck does that come from?"; "If this relates to the ASC's site, an implementer will have
-ZERO context."). No example carries a consumer site's domain: its organization type, its people,
-or its vocabulary, such as clubs, instructors, classes, or dues. Name a kind of feature in generic
-terms. A page never opens on an invented scenario or cast; it opens on the job.
+Choose examples that are generic and likely to apply to many organizations, such as a `staff` role,
+a members area, or signups (Geoff, 2026-10-07: "Examples should be generic and likely to apply to
+many organizations."). Every example, role name, route, and scenario makes sense to a reader with
+zero context about any particular site. The rule came from an "instructors who need a screen for
+their classes or club members" example that leaked from a consumer site ("Talking about classes and
+club members here seems VERY strange. Where the heck does that come from?"; "If this relates to the
+ASC's site, an implementer will have ZERO context."). No example carries a consumer site's domain:
+its organization type, its people, or its vocabulary, such as clubs, instructors, classes, or dues.
+Name a kind of feature in generic terms. A page never opens on an invented scenario or cast; it
+opens on the job.
 
 You file no fact, new or retagged: the page-inputs step already traced and filed every fact you
 cite, and an independent fact read verifies your citations after you draft. Run the docs gate as
