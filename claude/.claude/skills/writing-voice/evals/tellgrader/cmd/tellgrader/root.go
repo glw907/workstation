@@ -26,8 +26,8 @@ func newRootCmd() *cobra.Command {
 		Short: "Scan prose for AI-writing tells and report cadence statistics as JSON",
 		Long: "Scan prose for AI-writing tells and report cadence statistics as JSON.\n\n" +
 			"Exit status: 0 when no finding gates, 1 on a usage or read error, and 2 when a\n" +
-			"finding gates (\"gate\": true). Only trailing-hinge-run gates, and only under the\n" +
-			"docs-register profile; the JSON report is printed either way.",
+			"finding gates (\"gate\": true). Only trailing-hinge-run and appositive-stack gate,\n" +
+			"and only under the docs-register profile; the JSON report is printed either way.",
 		Args:          cobra.ArbitraryArgs,
 		RunE:          func(cmd *cobra.Command, args []string) error { return run(args, &f) },
 		SilenceUsage:  true,

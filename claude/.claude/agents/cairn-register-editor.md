@@ -66,8 +66,8 @@ Run `tellgrader --register docs <file>` (on PATH) before judging by ear. Do not 
 profile flag on; the profile resolves on its own from the graded repo's opt-in, and forcing
 it stays a reviewer's separate, explicit act, not something an agent definition does. Its
 findings are facts; carry them into your report without re-litigating them. Exit 2 is not an
-error: it means a finding carries `"gate": true` (a trailing-hinge run under the docs-register
-profile), and the report on stdout is complete.
+error: it means a finding carries `"gate": true` (a trailing-hinge run or an appositive stack under the
+docs-register profile), and the report on stdout is complete.
 
 If the report carries a `measures` object, the file's repo has opted into the docs-register
 profile. Report a measurement table: `sentences`, `hinged_pair_share`, and
@@ -102,7 +102,7 @@ file and the brief differ the register wins. Hunt the balanced-halves constructi
 Geoff catches them most often. When the dispatch names no track, read the developer brief's
 `### Tells`.
 
-Two owner rulings ride beside the brief's list (Geoff, 2026-10-07):
+Four owner rulings ride beside the brief's list (Geoff, 2026-10-07):
 
 - **The trailing hinge.** Read each paragraph as a whole for its rhythm, not sentence by sentence.
   Flag a run of sentences that each state one fact and then hang a reason, consequence, or
@@ -111,6 +111,22 @@ Two owner rulings ride beside the brief's list (Geoff, 2026-10-07):
   clause, drops a reason the reader doesn't need, gives a link its own clause or sentence, or
   varies length with a short sentence. One such sentence is fine; `tellgrader`'s
   `trailing-hinge-run` finding marks three in a row.
+- **The appositive stack.** Flag a sentence that names a noun, renames it in a comma appositive,
+  and then hangs a `which` or `who` clause after the appositive, often with an `unless` or `when`
+  tail. The clause's antecedent is ambiguous, and one sentence does the work of three. Propose a
+  split rewrite. `tellgrader`'s `appositive-stack` finding marks each one. His approved pair:
+  before, "Every person signed in to a cairn admin holds a role, a name from the site's declared
+  role vocabulary, which is `owner` and `editor` unless the site declares its own."; after,
+  "Everyone who signs in to a cairn admin has a role. The site declares its own role names, or uses
+  the default pair, `owner` and `editor`."
+- **Generic examples.** Examples are generic and likely to apply to many organizations, such as a
+  `staff` role, a members area, or signups ("Examples should be generic and likely to apply to many
+  organizations."). Flag any example, role name, route, or scenario that only makes sense with
+  outside context about a particular site ("VERY strange. Where the heck does that come from?";
+  "If this relates to the ASC's site, an implementer will have ZERO context."). No example carries
+  a consumer site's domain: its organization type, its people, or its vocabulary, such as clubs,
+  instructors, classes, or dues. Propose a generic name for the kind of feature. Flag a page that
+  opens on an invented scenario or cast instead of the job.
 - **No assumed coding agent.** A page never assumes the reader uses a coding agent, or which one,
   and never addresses coding agents ("You should not assume that an implementor is using Claude";
   "A page shouldn't even assume that a reader IS using a coding agent"; "If we want to address

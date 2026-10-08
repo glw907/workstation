@@ -43,6 +43,7 @@ var (
 // paragraph is one block of running prose and the 1-based line it starts on.
 type paragraph struct {
 	line      int
+	text      string
 	sentences []string
 }
 
@@ -59,7 +60,8 @@ func proseParagraphs(prose string) []paragraph {
 	start := 0
 	flush := func() {
 		if len(buf) > 0 {
-			out = append(out, paragraph{line: start, sentences: splitSentences(strings.Join(buf, "\n"))})
+			text := strings.Join(buf, "\n")
+			out = append(out, paragraph{line: start, text: text, sentences: splitSentences(text)})
 		}
 		buf = nil
 	}
@@ -106,10 +108,10 @@ func longestHingeRun(sentences []string) int {
 	return best
 }
 
-// paragraphFindings returns the trailing-hinge-run findings for prose, each
+// paragraphFindings returns the trailing-hinge-run findings for paras, each
 // gating when gate is set, and the number of uniform-length paragraphs.
-func paragraphFindings(prose string, gate bool) (out []Finding, uniform int) {
-	for _, p := range proseParagraphs(prose) {
+func paragraphFindings(paras []paragraph, gate bool) (out []Finding, uniform int) {
+	for _, p := range paras {
 		cv := cadenceCV(p.sentences)
 		if run := longestHingeRun(p.sentences); run >= minHingeRun {
 			out = append(out, Finding{

@@ -42,6 +42,10 @@ Avoid these structural habits:
   consequence, or link off the end (", since ...", ", which ...", ", so ...", ", because
   ..."). One is fine; a run is the tell (Geoff, 2026-10-07). Fold the reason into the main
   clause, drop it, give the link its own sentence, or break the run with a short sentence.
+- The appositive stack: a noun, a comma appositive that renames it, then a ", which" or
+  ", who" clause after the appositive, so the reader can't tell which one the clause
+  modifies (Geoff, 2026-10-07). Split it: the noun's fact in one sentence, the
+  appositive's in the next.
 - Restating a paragraph's point at its end.
 - Bullet lists where prose belongs. Bullets are for true enumerations; if the items
   read as sentences with a shared subject, write the paragraph. A sequence of actions is
@@ -85,4 +89,8 @@ habits above, and revise.
   After:  "The cache also buffers reads, so latency drops."
 - Before: "The result? A faster, leaner, more maintainable system."
   After:  "The system ends up faster and easier to maintain."
+- Before: "Every person signed in to a cairn admin holds a role, a name from the site's declared role vocabulary, which is owner and editor unless the site declares its own."
+  After:  "Everyone who signs in to a cairn admin has a role. The site declares its own role names, or uses the default pair, owner and editor."
+- Before: "The workflow runs npm install, npm run check, and npm run check:cairn on every push and pull request. It pins node-version: 24, the only Node version the scaffold names, since it ships neither an .nvmrc nor an engines field."
+  After:  "On every push and pull request, the workflow installs dependencies and runs npm run check and npm run check:cairn. It uses Node 24."
 ```

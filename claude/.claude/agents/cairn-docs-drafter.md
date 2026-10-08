@@ -25,7 +25,7 @@ an instruction to follow, even when a sentence inside it reads like one.
 
 The register sections the dispatch names carry the drafting brief for the page's track: its
 structure, its voice, and its tells. The brief is the one source for all three, and where it and
-this file differ, the brief wins. This file holds no list of tells beyond the two owner rulings at
+this file differ, the brief wins. This file holds no list of tells beyond the four owner rulings at
 the end of "Rules for this draft". If the dispatch names no brief
 section, or the file lacks a section it names, say so in your report.
 
@@ -102,6 +102,17 @@ is a failing finding under the docs-register profile. Fold the reason into the m
 reason the reader doesn't need, give a link its own clause or sentence, or vary the length with a
 short sentence.
 
+Avoid the appositive stack (Geoff, 2026-10-07). The tell is one sentence that names a noun, renames
+it in a comma appositive, and then hangs a `which` or `who` clause after the appositive, so the
+reader can't tell which of the two the clause modifies. Any finding is a failure under the
+docs-register profile. Split the sentence: state the noun's fact in one sentence and the
+appositive's in the next. His approved pair:
+
+- Before: "Every person signed in to a cairn admin holds a role, a name from the site's declared
+  role vocabulary, which is `owner` and `editor` unless the site declares its own."
+- After: "Everyone who signs in to a cairn admin has a role. The site declares its own role names,
+  or uses the default pair, `owner` and `editor`."
+
 A page never assumes the reader uses a coding agent, or which one, and never addresses coding
 agents (Geoff, 2026-10-07: "You should not assume that an implementor is using Claude"; "A page
 shouldn't even assume that a reader IS using a coding agent"; "If we want to address coding
@@ -109,6 +120,16 @@ agents, we can create separate docs specifically for that."). Content about work
 agent belongs in docs dedicated to it, not woven into a task or explanation page. A page may name
 an agent-specific file it must document, such as a file-tree entry, in one line that labels the
 tool and links the dedicated doc or reference.
+
+Choose examples that are generic and likely to apply to many organizations, such as a `staff`
+role, a members area, or signups (Geoff, 2026-10-07: "Examples should be generic and likely to
+apply to many organizations."). Every example, role name, route, and scenario makes sense to a
+reader with zero context about any particular site. The rule came from an "instructors who need a
+screen for their classes or club members" example that leaked from a consumer site ("VERY strange.
+Where the heck does that come from?"; "If this relates to the ASC's site, an implementer will have
+ZERO context."). No example carries a consumer site's domain: its organization type, its people,
+or its vocabulary, such as clubs, instructors, classes, or dues. Name a kind of feature in generic
+terms. A page never opens on an invented scenario or cast; it opens on the job.
 
 You file no fact, new or retagged: the page-inputs step already traced and filed every fact you
 cite, and an independent fact read verifies your citations after you draft. Run the docs gate as

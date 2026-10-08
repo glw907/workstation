@@ -76,8 +76,8 @@ type Finding struct {
 	Line    int    `json:"line"`
 	Excerpt string `json:"excerpt"`
 	// Gate marks a finding that fails the run: the CLI exits non-zero when
-	// any finding carries it. Only trailing-hinge-run gates, and only under
-	// the docs-register profile.
+	// any finding carries it. Only trailing-hinge-run and appositive-stack
+	// gate, and only under the docs-register profile.
 	Gate bool `json:"gate,omitempty"`
 }
 
@@ -162,8 +162,11 @@ func Scan(input string, opts Options) *Report {
 	}
 
 	profile := resolveProfile(opts.Path, opts.HomeDir, opts.Profile)
-	hingeRuns, uniform := paragraphFindings(prose, profile == ProfileDocsRegister)
-	for _, f := range hingeRuns {
+	paras := proseParagraphs(prose)
+	gate := profile == ProfileDocsRegister
+	sentenceShape, uniform := paragraphFindings(paras, gate)
+	sentenceShape = append(sentenceShape, appositiveFindings(paras, gate)...)
+	for _, f := range sentenceShape {
 		r.Counts[f.Check]++
 		r.Findings = append(r.Findings, f)
 	}
@@ -213,10 +216,14 @@ func lineOf(s string, m match) int {
 
 // excerpt clips the matched text to a readable window.
 func excerpt(s string, m match) string {
+	return strings.ReplaceAll(clip(strings.TrimSpace(s[m.start:m.end])), "\n", " ")
+}
+
+// clip cuts text to a readable window of 90 runes.
+func clip(text string) string {
 	const window = 90
-	text := strings.TrimSpace(s[m.start:m.end])
 	if runes := []rune(text); len(runes) > window {
-		text = string(runes[:window]) + "…"
+		return string(runes[:window]) + "…"
 	}
-	return strings.ReplaceAll(text, "\n", " ")
+	return text
 }

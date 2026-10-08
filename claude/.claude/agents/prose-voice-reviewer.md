@@ -25,8 +25,8 @@ Then run the deterministic floor: `tellgrader --register <docs|editor|commit|rep
 <file>` (on PATH; register per the router's table, `comments` for code files). Do not force the
 profile flag on; the profile resolves on its own from the graded repo's opt-in, and forcing it
 stays a reviewer's separate, explicit act, not something an agent definition does. Exit 2 is not an
-error: it means a finding carries `"gate": true` (a trailing-hinge run under the docs-register
-profile), and the report on stdout is complete. Its findings are
+error: it means a finding carries `"gate": true` (a trailing-hinge run or an appositive stack under the
+docs-register profile), and the report on stdout is complete. Its findings are
 facts; carry them into the report as Blockers without re-litigating them, and note its counts
 (soft slop, tricolons, cadence CV) as context. Spend your judgment on what the scanner cannot
 see: register fit, invented specifics the source facts do not support, shape and rhythm choices,
@@ -63,6 +63,10 @@ Then read the artifact and flag two things only:
   appositive), and give a rewrite. The fix folds the reason into the main clause, drops a reason
   the reader doesn't need, gives a link its own clause or sentence, or varies length with a short
   sentence. One such sentence is fine.
+- The appositive stack (Geoff, 2026-10-07): flag a sentence that names a noun, renames it in a
+  comma appositive, and then hangs a `which` or `who` clause after the appositive, so the clause's
+  antecedent is ambiguous. Give a split rewrite: the noun's fact in one sentence, the appositive's
+  in the next.
 
 Treat style preferences as optional. If a choice is defensible within the register, leave it. You
 are not a copy editor running up a score; you catch what a careful reader would call machine-written.

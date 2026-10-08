@@ -187,7 +187,7 @@ is the run.
 
 **Gating.** The finding reports in every register. Under the docs-register profile it carries
 `"gate": true`, and the CLI exits 2 after printing the report (1 stays a usage or read error). It
-is the only gating tell. The `--hook` path forces the profile off, so the hook stays advisory.
+and the appositive stack below are the only gating tells. The `--hook` path forces the profile off, so the hook stays advisory.
 
 **The uniform-paragraph count.** Alongside the run, `counts.uniform-paragraph` counts paragraphs of
 four or more sentences whose sentence-length coefficient of variation falls below 0.25. It is a
@@ -198,6 +198,56 @@ grade on alone.
 accepted rewrite, which must not, plus single hinges, two-hinge runs, list items, introductory
 clauses, fenced code, ", as well as" sentences, front matter, table rows, and HTML lines, none of
 which trip, and three ", as" subordinate tails, which do.
+
+## The appositive stack (a gating tell)
+
+**Provenance.** Geoff, 2026-10-07, flagging "another awkward AI sentence" on a cairn docs page:
+"Every person signed in to a cairn admin holds a role, a name from the site's declared role
+vocabulary, which is owner and editor unless the site declares its own." He approved this rewrite:
+"Everyone who signs in to a cairn admin has a role. The site declares its own role names, or uses
+the default pair, owner and editor."
+
+**The tell.** One sentence names a noun and renames it in a comma appositive. It then hangs a
+`which` or `who` clause after the appositive, often with an `unless`, `when`, or `if` tail. The
+reader can't tell whether the clause modifies the noun or the appositive. One sentence does the
+work of three.
+
+**The rule** (`internal/tellscan/appositive.go`):
+
+- A sentence has an **appositive stack** when it contains a comma, whitespace, and an appositive
+  opener (`a`, `an`, `the`, `its`, `their`, `his`, `her`, `our`, `your`, or a word ending in `'s`),
+  and a later `, which` or `, who` in the same sentence.
+- Parenthesized text is dropped before matching, so a list inside parentheses never opens a match.
+- At least three words must precede the appositive's comma.
+- The clause segment before that comma, back to the previous comma, must not open with a
+  preposition or a subordinator (`in`, `for`, `outside`, `without`, `when`, `if`, and the rest of
+  the list in `introLeadRe`). Such a segment is an introductory phrase, and the comma-led phrase
+  after it is the main clause's subject.
+- A `, and` or `, or` anywhere after the appositive's comma marks a serial list, and the sentence
+  doesn't count.
+- Sentences come from the trailing-hinge paragraphs above, so list items, headings, front matter,
+  table rows, HTML lines, and code are excluded the same way. The finding reports as
+  `appositive-stack` at the line the sentence starts on, with the sentence as its excerpt.
+
+**Measured precision.** The corpus was the cairn-cms `draft-docs-2a` worktree's `docs/extend/*.md`
+and `docs/reference/*.md`, 50 files and about 155,600 words, snapshotted on 2026-10-07. Before
+tuning, the rule without the parenthetical and introductory-phrase guards hit 13 sentences, and a
+hand-read found 8 true. The five false positives were four introductory phrases ("In the admin, a
+theme reaches the editor's preview frame, which ...") and one parenthesized list. With both guards,
+the rule hits 7 sentences, and the hand-read finds all 7 true. Those guards were tuned on the same
+corpus, so a held-out check followed. The 55 pre-deletion pages of cairn-cms's `admin`, `editors`,
+and `extend` arms (about 68,900 words) gave 1 hit, a true positive. The cairn-cms `docs/internal`
+files and the workstation's `~/.claude/docs` gave none, since their prose sits mostly in list
+items.
+
+**Gating.** Precision measured at least 90%, so the check gates the same way the trailing-hinge
+run does. Every register reports the finding. Under the docs-register profile it carries `"gate":
+true`, and the CLI exits 2. The `--hook` path stays advisory.
+
+**The fixtures.** `appositive_test.go` carries the flagged sentence, which must trip, and the
+approved rewrite, which must not. A `who` clause also trips. None of these trip: a plain `which`
+clause, an appositive without a relative clause, a serial list, an introductory phrase, a list in
+parentheses, list items, table rows, HTML lines, fenced code, or front matter.
 
 ## The `~/.claude` symlink caveat
 
