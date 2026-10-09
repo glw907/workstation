@@ -91,12 +91,22 @@ the close.
 
 | Class | Per-task gate | Review and blocking bar | Test mandate | Settle and close |
 | --- | --- | --- | --- | --- |
-| `auth-data` (auth, signing, sessions, D1, the commit path) | the repo's full gate | Opus; coverage gaps block | test-first, a mutation proof | `web-auth-security-reviewer`, a live auth smoke |
-| `engine-logic` (TypeScript behavior) | the repo's full gate | Opus; blocks on behavior defects and unmet outcomes, coverage gaps only on reachable behavior | test-first | none extra |
+| `auth-data` (auth, signing, sessions, D1, the commit path) | the gate tier its diff computes, plus the e2e specs its change reaches; the full gate at each segment boundary and before merge | Opus; coverage gaps block | test-first, a mutation proof | `web-auth-security-reviewer`, a live auth smoke |
+| `engine-logic` (TypeScript behavior) | the gate tier its diff computes, plus the e2e specs its change reaches; the full gate at each segment boundary and before merge | Opus; blocks on behavior defects and unmet outcomes, coverage gaps only on reachable behavior | test-first | none extra |
 | `paint` (CSS, theme, visual) | a targeted gate the plan names per task (type check, the touched files' component tests, CSS unit tests); full suite at segment boundaries or on CI | Opus (or Sonnet); blocks only on a behavior defect or unmet outcome, coverage notes batched to the boundary | one cascade test per rule (renders, a utility beats it); state tables only where the framework restates values per state; table-driven | an async owner glance at captures mid-pass, a fresh-context `visual-verifier` read, the owner sitting |
 | `sweep` (mechanical markup or rename) | type check plus the component project | Sonnet; grep-based post-conditions | existing tests stay green | spot captures |
 | `docs` | the docs tier | the register chain | none | none |
 | `tool` (Go) | `make check`, light gate lane | Opus | `go-conventions` | `tui-visual-verify` for a TUI change |
+
+**The per-task gate is the change's blast radius, never the whole suite (Geoff, 2026-10-08).** A
+task runs the tier its diff computes (`gate-tier.mjs` where the repo has one) plus the e2e specs its
+change can reach; the full gate runs once at each segment boundary and on CI before merge. This
+follows presubmit test selection (Google's TAP) and the deployment pipeline's fast commit stage
+(Fowler): assurance on a sensitive change comes from its targeted tests and mutation proof, not
+from rerunning unrelated suites. The older full-gate-per-task cells were inherited, not researched
+(engine pass pre-2b, pass A: Task 1 alone ran four 45-minute full gates). A plan pins a wider tier
+only with a named risk the computed tier misses, and never to carry an environment export (put
+the export in the task's own gate string).
 
 Superpowers skills yield to the pass class: TDD's write-first applies to `engine-logic` and
 `auth-data` only, and plans stay outcome-only.
