@@ -373,7 +373,12 @@ function implementPrompt(t, chain, a, blocking, baseSha, classifierExists) {
     cls ? `Pass class: ${cls.name}. Test mandate: ${cls.mandate}` : "",
     ``,
     `Gate command: ${t.gate || a.gate}`,
-    classifierExists
+    // A pinned tier keeps the plan's gate string (resolveGate), so the implementer must run that
+    // same string; sending it through the classifier would report a narrower one and trip the
+    // reviewer's mismatch check.
+    t.gateTier
+      ? `This task pins its gate tier, so run the Gate command above exactly as written, as one cairn-run-gate call with no classifier step and no split into separate runs (report gateTier: "pin" and gateCommand as that exact string). The runner's independent gate run uses the same string.`
+      : classifierExists
       ? `Before running the gate, check whether scripts/checks/gate-tier.mjs exists in this repo. If it does, run \`${classifierCmd}\` from the repo root, after your commits and before the gate, and run the gate string it prints on stdout instead of the Gate command above (report gateTier: "${t.gateTier ? "pin" : "computed"}" and gateCommand as that exact string). If the script is absent, exits non-zero, or prints nothing, run the Gate command above unchanged (report gateTier: "default" and gateCommand as that string).`
       : "",
     `Run the gate ONLY through \`${lanePrefix}cairn-run-gate '<the gate string>'\`${laneNote} as a plain foreground Bash call with \`timeout: 600000\`, and follow its own output for whether to re-issue and for the result: never run the gate or any test yourself with run_in_background, and never tail, wc, cat, ps, or sleep on a log. A transcript containing such polling calls is a task failure the conductor halts. Report the runner's exact exit line.`,

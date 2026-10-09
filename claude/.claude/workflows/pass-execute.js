@@ -59,8 +59,11 @@
 // (true/false) is passed through as the classifier's `--paint` flag. The implementer runs the
 // classifier itself (its prompt says how) and reports the tier and string it ran; the runner
 // independently resolves the same tier via a probe agent and hands the reviewer both, flagging a
-// mismatch as blocking. The workflow runtime has no filesystem or exec access, so every git/node
-// call here goes through a small probe agent rather than direct code.
+// mismatch as blocking. A pinned task skips the classifier on both sides: the runner keeps `t.gate`
+// or `args.gate`, and the implementer prompt says to run that string unchanged (2026-10-08: the
+// prompt still routed a pinned task through the classifier, which printed the narrower tier string,
+// and the reviewer escalated the mismatch). The workflow runtime has no filesystem or exec access,
+// so every git/node call here goes through a small probe agent rather than direct code.
 
 // Gate lane (Geoff, 2026-09-20): `args.gateLane` or a task's `gateLane` set to "light" makes the
 // implementer prefix every cairn-run-gate call with CAIRN_GATE_LANE=light, for a gate that launches
@@ -455,7 +458,12 @@ function implementPrompt(t, a, blocking, baseSha, classifierExists) {
     a.commonNotes ? `Notes: ${a.commonNotes}` : "",
     cls ? `Pass class: ${cls.name}. Test mandate: ${cls.mandate}` : "",
     `Gate command: ${t.gate || a.gate}`,
-    classifierExists
+    // A pinned tier keeps the plan's gate string (resolveGate), so the implementer must run that
+    // same string; sending it through the classifier would report a narrower one and trip the
+    // reviewer's mismatch check.
+    t.gateTier
+      ? `This task pins its gate tier, so run the Gate command above exactly as written, as one cairn-run-gate call with no classifier step and no split into separate runs (report gateTier: "pin" and gateCommand as that exact string). The runner's independent gate run uses the same string.`
+      : classifierExists
       ? `Before running the gate, check whether scripts/checks/gate-tier.mjs exists in this repo. If it does, run \`${classifierCmd}\` from the repo root, after your commits and before the gate, and run the gate string it prints on stdout instead of the Gate command above (report gateTier: "${t.gateTier ? "pin" : "computed"}" and gateCommand as that exact string). If the script is absent, exits non-zero, or prints nothing, run the Gate command above unchanged (report gateTier: "default" and gateCommand as that string).`
       : "",
     "Run the gate through `" + lanePrefix + "cairn-run-gate '<the gate string>'`" + laneNote + " and follow its own output for whether to re-issue and for the result; never run it in the background and never poll a log; report its exact result.",
