@@ -39,7 +39,7 @@ is a manifest in scope, including an example that consumes the root by `file:`. 
 directory. Record the before table: package, current, wanted, latest, manifest.
 
 A caret range that already admits the newer version still counts as a bump. It moves only when
-the lockfile is regenerated, so it is where most of the risk sits.
+the lockfile does, so it is where most of the risk sits.
 
 ### 2. Survey the bumped range
 
@@ -76,14 +76,22 @@ steps in step 5.
 
 ### 4. Take the bumps
 
-Rewrite each dependency and devDependency range to `^<newest non-major>` in every manifest so
-the declared floors track the install. Peer ranges do not move unless the survey found a reason.
-Delete `node_modules` and the lockfile in every manifest directory from step 1 that has its own
-lockfile (workspace members share the root's and need nothing separate), then `npm install` in
-dependency order (the root whose `prepare` builds the package installs before an example that
-consumes it by `file:`).
-Never `npm ci` after deleting a lockfile. Diff the regenerated lockfiles against the pre-sweep
-copies and record every resolved-version change, since caret-satisfied packages moved silently.
+Update in place, one non-workspace manifest from step 1 at a time (workspace members share the
+root's lockfile and move with it), root first, since a consumer such as a showcase reaches the
+root through `file:` (Geoff, 2026-10-08). In each:
+
+1. Run `npm update --save`. It takes every minor and patch the ranges allow and rewrites the
+   direct dependency and devDependency ranges in `package.json`, so the declared floors track the
+   install ([npm update](https://docs.npmjs.com/cli/v11/commands/npm-update)). A `~` or exact
+   range blocks a minor; widen it to `^` first unless the survey found it pinned on purpose. Peer
+   ranges do not move unless the survey found a reason.
+2. Run `npm dedupe`.
+3. Diff the lockfile against the pre-sweep copy and record every resolved-version change, since
+   caret-satisfied transitive packages move silently.
+
+Fall back to deleting `node_modules` and the lockfile and running `npm install` only on an
+`ERESOLVE` or a tree that will not dedupe, and say so in the record, naming the error. Never
+`npm ci` after deleting a lockfile.
 
 For each major: present the change, its peer blockers, and the consumer-visible effect, then
 wait for Geoff. An `npm audit fix` that needs `--force`, or that downgrades a package to clear an
@@ -117,7 +125,7 @@ result; the record paths.
 | --- | --- |
 | Only the root measured | List every manifest first; examples and workspaces carry their own. |
 | "Bump and gate" with no survey | The survey is the input; the refactor decision is the point. |
-| `npm update` or `npm install pkg@x` in place | Rewrite ranges, delete lockfiles, reinstall, diff. |
+| Lockfiles deleted by reflex, or `npm install pkg@x` in place | Per manifest, root first: `npm update --save`, `npm dedupe`, diff the lockfile; delete and reinstall only on `ERESOLVE`. |
 | Gate without the consumer build or CI | A library's own tests never see a consumer-bundler break. |
 | Held major with no trigger | A hold without a condition is forgotten; record it and schedule it. |
 | Take-now list quietly grows | Past a small task, propose the refactoring pass. |
