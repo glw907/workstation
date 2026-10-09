@@ -943,6 +943,8 @@ check("validatedReducedCommand: accepts listed touched test files, rejects anyth
   assert.equal(v(`cd /repo && CAIRN_GATE_LANE=light cairn-run-gate '${cmd}'`, ["src/a.test.ts"], ["src/a.test.ts"]), cmd, "unwraps cairn-run-gate");
   assert.equal(v("npx vitest run /repo/src/a.test.ts", ["./src/a.test.ts"], ["src/a.test.ts"]), "npx vitest run /repo/src/a.test.ts", "absolute and ./ forms");
   assert.equal(v("npm run check", [], ["src/a.ts"]), "npm run check", "type check only");
+  assert.equal(v("npm run check", [], ["src/a.test.ts"]), "", "a touched test file the command skips");
+  assert.equal(v(cmd, ["src/a.test.ts"], ["src/a.test.ts", "src/b.test.ts"]), "", "a second touched test file left out");
   assert.equal(v(cmd, ["src/a.test.ts"], ["src/b.ts"]), "", "listed file outside the diff");
   assert.equal(v(cmd, [], ["src/a.test.ts"]), "", "unlisted test file in the command");
   assert.equal(v("npm run check", ["src/a.test.ts"], ["src/a.test.ts"]), "", "listed file absent from the command");

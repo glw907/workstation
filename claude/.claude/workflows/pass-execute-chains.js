@@ -60,7 +60,8 @@
 // `npx vitest run <the touched test files>`, or the repo's equivalent), reports it as gateCommand,
 // and lists its test files in `reducedTestFiles`; the runner records the round's base commit
 // before the fix dispatch, asks a probe for `git diff --name-only <base>`, and runs the command
-// only when every test file it names is in that list (validatedReducedCommand). A failed check
+// only when every test file it names is in that list and every test file in that list is named
+// (validatedReducedCommand). A failed check
 // falls back to the reviewer reproducing the gate itself, and the reviewer prompt says why. A
 // no-class reduced round keeps running the resolved gate, as before.
 
@@ -407,8 +408,9 @@ const TEST_FILE_TOKEN = /(?:\.(?:test|spec)\.[cm]?[jt]sx?|_test\.go)$/;
 /**
  * The implementer's concrete reduced command for a class-default reduced round, validated against
  * the fix round's diff, or "" when it cannot stand. `touched` is the `git diff --name-only <round
- * base>` list. Every file in reducedTestFiles must be in `touched` and appear in the command, and
- * every test-file token in the command must be in reducedTestFiles. A `<placeholder>` left in the
+ * base>` list. Every file in reducedTestFiles must be in `touched` and appear in the command, every
+ * test file in `touched` must be in reducedTestFiles, and every test-file token in the command
+ * must be in reducedTestFiles. A `<placeholder>` left in the
  * command, or a report with no gateCommand or reducedTestFiles, also fails.
  */
 function validatedReducedCommand(implReport, touched, repo) {
@@ -425,6 +427,10 @@ function validatedReducedCommand(implReport, touched, repo) {
   const touchedSet = new Set(touched.map(norm));
   const listed = implReport.reducedTestFiles.map(norm);
   if (!listed.every((f) => f && touchedSet.has(f) && cmd.includes(f))) {
+    return "";
+  }
+  // A test file the round edited must run, or the reduced gate never exercises the fix.
+  if (![...touchedSet].filter((f) => TEST_FILE_TOKEN.test(f)).every((f) => listed.includes(f))) {
     return "";
   }
   const named = cmd
