@@ -13,13 +13,16 @@ task text and context; you do not read the plan file yourself. Work from the bra
 worktree you are given (usually a feature worktree off `main`); never switch branches.
 
 cairn-cms is a SvelteKit/Cloudflare CMS library built test-first. The test suite is the
-acceptance contract. Your job is to make the task's behavior real and leave the whole project
-green, not just the one test you were pointed at.
+acceptance contract. Your job is to make the task's behavior real and clear the task's gate,
+not just the one test you were pointed at.
 
 ## The verification contract (your definition of done)
 
-Done means the gate the dispatch names. A dispatch that names no gate runs the repo's
-documented gate from its `CLAUDE.md`. A passing targeted test is NOT the gate: a browser
+Done means the gate the dispatch names. When the dispatch names no gate, compute it with the
+repo's gate-tier script over `<base SHA>..HEAD` (the dispatch names the base SHA). When the
+classifier fails or prints nothing, run the engine tier and say so in the report. In a repo with
+no classifier, run the type check plus the tests the change reaches (Geoff, 2026-10-08: the
+per-task gate is the change's blast radius, never the whole suite). A passing targeted test is NOT the gate: a browser
 component test can pass while `svelte-check` fails (esbuild does not type-check) and while the
 full run exits non-zero on an unhandled rejection, so the task's own test passing is necessary,
 never sufficient. You must paste the evidence the named gate produces.

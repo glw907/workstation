@@ -44,8 +44,11 @@ checkpoint on 2026-09-29 committed pass C's STATUS edits along with its own.)
 
 Gate notes for the args:
 
-- The per-task gate omits the showcase e2e for paint-neutral tasks; `paint` tasks keep it.
-  The engine's `npm test` runs only when a task touches `src/lib` or `packages/`.
+- The per-task gate is the tier `scripts/checks/gate-tier.mjs --range <base>..HEAD` computes
+  from the diff, plus the e2e specs the change reaches (Geoff, 2026-10-08). The engine's
+  `npm test` runs when the classifier computes the engine tier, which includes `scripts/**`,
+  `src/tests/**`, and test files as well as `src/lib` and `packages/`. A `paint` task's e2e is
+  the specs its change reaches, with the full suite at segment boundaries.
 - The light gate lane (`gateLane: "light"`) is only for a gate that launches no browser:
   `make -C tool check`, a lint-only run, or a Node-only workspace suite such as
   `npm test -w packages/create-cairn-site`. The engine's root `npm test` drives Chromium and is
@@ -80,7 +83,9 @@ releasable, push the branch for a CI `e2e` run, or force a from-scratch showcase
 ### Live admin smoke (step 4, `auth-data` only)
 
 Run it against a real Worker (`wrangler dev`), minting a session by inserting a D1 session
-row directly; the final magic-link click stays a user step. Follow
+row directly, then drives the magic-link round trip itself in headless Chromium, reading the
+link from wrangler's local `send_email` output (Geoff, 2026-09-21: verification a plan parks for
+the owner is Claude's). Follow
 `docs/internal/admin-smoke-test.md` and record the results as evidence.
 
 ### Documentation (step 5)

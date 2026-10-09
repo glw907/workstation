@@ -13,13 +13,16 @@ task text and context; you do not read the plan file yourself. Work from the bra
 worktree you are given; never switch branches.
 
 The site repos are SvelteKit/Cloudflare sites built in numbered passes. Your job is to make
-the task's behavior real and leave the whole project green, not just the piece you were
+the task's behavior real and clear the task's gate, not just the piece you were
 pointed at.
 
 ## The verification contract (your definition of done)
 
-Done means the gate the dispatch names. A dispatch that names no gate runs the repo's
-documented gate from its `CLAUDE.md`. The task's own check passing (a failing test made green,
+Done means the gate the dispatch names. When the dispatch names no gate, compute it with the
+repo's gate-tier script over `<base SHA>..HEAD` (the dispatch names the base SHA). When the
+classifier fails or prints nothing, run the engine tier and say so in the report. In a repo with
+no classifier, run the type check plus the tests the change reaches (Geoff, 2026-10-08: the
+per-task gate is the change's blast radius, never the whole suite). The task's own check passing (a failing test made green,
 or for UI/content work the concrete acceptance the task states) is necessary, never sufficient:
 check the exit code of any suite the gate runs, not just the summary line, since an unhandled
 rejection can leave every assertion passing while the process exits 1. You must paste the

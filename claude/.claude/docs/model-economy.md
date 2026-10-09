@@ -18,6 +18,8 @@ Seats, per Anthropic's model guidance (Geoff, 2026-09-23):
 | Reviewers (`diff-reviewer`, domain reviewers, verifiers, graders) | `claude-opus-5-5` | `medium` |
 | Security review (`web-auth-security-reviewer`) | `claude-opus-5-5` | `high` |
 | Published docs drafts (`docs-page-chain.js` `drafterModel`) | `claude-opus-5-5` | `high` |
+| Docs chain plan seat (`docs-page-chain.js` `planEffort`) | `claude-opus-5-5` | `high` (Anthropic's effort guidance positions `xhigh` for 30+ minute agentic runs, https://platform.claude.com/docs/en/build-with-claude/effort; Geoff, 2026-10-08) |
+| Docs chain framing seat (`framingEffort`) | `claude-opus-5-5` | `xhigh` (Geoff's ruling; an A/B against `high` is scheduled at stage 2b's start) |
 | Mechanical search | `haiku` (alias resolves to `claude-haiku-5-5`, verified 2026-10-07) | `low` |
 | Gate runner (pass workflows) | `haiku` (Haiku 5.5) | `low` |
 | Escalation only | Fable 5.1 | `high` or above |

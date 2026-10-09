@@ -144,9 +144,9 @@ A site-launched session does not auto-load cairn's context. In order:
 3. **Read `~/Projects/cairn-cms/docs/STATUS.md`** and honor the changelog
    `Consumers must:` convention for any consumer-facing change.
 4. **`cairn-implementer` + `diff-reviewer` chains** per task, as in any cairn pass.
-5. **Run the full gate list by name**, including the six CI-only checks the local ritual
-   otherwise skips: `check:comments`, `check:reference:signatures`, `check:surface`,
-   `check:snippets`, `check:transcripts`, `check:symbols`.
+5. **Run the full gate list by name**: cairn-cms's `npm run check:close` runs it, including
+   `check:comments`, `check:reference:signatures`, `check:surface`, `check:snippets`,
+   `check:transcripts`, and `check:symbols`, which the local ritual once skipped.
 6. **The ordered close:** engine merge to `main`, then invoke the **`cairn-release`**
    skill (the change must be on the registry; a site branch cannot merge on a `file:`
    pin), then `npm run link:consumer -- <site-dir> --restore` from the cairn checkout,

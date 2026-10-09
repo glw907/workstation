@@ -60,9 +60,11 @@ review files in full, unless a verdict hedges.
 | Data integrity and failure risk | What happens on a crash, a concurrent process, a partial write, an upgrade, a restore? Can data be lost or silently corrupted? |
 | Consistency | Does the draft contradict a ratified document (earlier specs, rulings ledgers, the repo's CLAUDE.md)? Spot-check its citations: does each cited line say what the draft claims? |
 
-**A plan gets three lenses**, the disjoint set in the global CLAUDE.md: contract-and-criteria,
-mechanics-and-feasibility, and domain-risk. Staleness (does the plan still match the tree) is
-the drafter's pre-flight, not a lens. Every plan lens also checks proportionality and the four
+**A plan gets three lenses**, drawn from the spec table above: contract-and-criteria,
+mechanics-and-feasibility, and domain-risk (the "Data integrity and failure risk" row, read
+against the plan's domain). Staleness (does the plan still match the tree) is `pass-core`'s
+per-segment pre-flight, which runs once per segment; this review runs no staleness check of
+its own (Geoff, 2026-10-08). Every plan lens also checks proportionality and the four
 planning-miss items:
 
 - The declared pass class, and any per-task override, fits the change's real risk. A CSS task

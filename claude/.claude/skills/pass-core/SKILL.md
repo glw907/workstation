@@ -133,8 +133,15 @@ Each task runs as a chain:
    blocking bar and returns accept, fix, or escalate with `file:line` findings.
 3. One re-dispatch on `fix`; a second `fix` is the conductor's decision.
 
+**CI shadows the pass (Geoff, 2026-10-08).** Every pass opens a draft PR against the default
+branch after its first commit (Task 0) and pushes after each accepted task, so CI (which runs on
+`pull_request`) shadows the pass as it runs. Reason: cairn-cms CI fires on push only for
+`main` and `rebuild`, so a pass branch gets CI only through a PR; on 2026-10-08 the CI test job
+ran in about 11 minutes against about 45 locally.
+
 Below six tasks, dispatch the chain per task with the Agent tool and paste the class's
-mandate and bar into both prompts. At six or more, or when the plan marks tasks independent,
+mandate and bar into both prompts. A hand dispatch names the base SHA and the computed tier,
+never the full gate by default (Geoff, 2026-10-08). At six or more, or when the plan marks tasks independent,
 run `pass-execute` by name with `{repo, gate, implementer, passClass, reducedGate?, tasks:
 [{id, title, criteria, files, notes, passClass?, gate?}]}`. One invocation runs one segment.
 Read `~/.claude/docs/pass-gate-economy.md` before the first segment; its rules reach an
@@ -156,7 +163,9 @@ not specify; any further escalation follows `~/.claude/docs/model-economy.md` "C
 - **Pre-flight the plan's factual claims.** Before each segment, dispatch one `haiku` or
   `sonnet` pre-flight that lists every checkable claim the segment's tasks make about existing
   code (counts, error meanings, paths, shapes) and checks each at HEAD. Amend the plan, then
-  dispatch. A wrong claim found at review costs a full fix round.
+  dispatch. A wrong claim found at review costs a full fix round (incident: a6d311a). This is
+  the one staleness check on a pass; the drafter, the plan review, and Task 0 point here and run
+  no staleness check of their own (Geoff, 2026-10-08, audit redundancy).
 - **Read a tool's `--help` once** before a pass relies on it, and act on a tool's NOTE in
   an agent's report before the next dispatch.
 - **File every out-of-scope finding the same session (Geoff, 2026-09-29).** A defect any
@@ -203,7 +212,10 @@ No pass is done until every step has run. The repo skill supplies each step's co
    It never runs at a segment or task boundary, whatever the class; a `paint` pass that
    changed TS or Svelte takes it once at the close, and a `docs` pass never does.
 2. **Full gate.** The repo's full gate, including any suite a `paint` or `sweep` pass deferred
-   from its tasks. A test run is green only when it exits 0.
+   from its tasks. A test run is green only when it exits 0. The final segment's boundary full
+   gate is skipped when the close follows directly with no merge or rebase of the default branch
+   in between; this close gate is then the pass's full gate (Geoff, 2026-10-08, review item 8).
+   On a close-gate failure, revert the simplifier commit and re-gate before anything else.
 3. **Review fan-out by class.** `svelte-reviewer` for Svelte or load/action code,
    `cloudflare-workers-reviewer` for Worker, D1, or wrangler code,
    `web-auth-security-reviewer` always for `auth-data` and any auth, session, cookie, token,

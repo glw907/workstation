@@ -4,9 +4,10 @@ This holds CLAUDE.md's "Gate economy on a pass" section; CLAUDE.md keeps a point
 
 Clock time on a pass is the per-task gate and the fix rounds, not the implementer. Rules, all
 approved, all cheap in tokens:
-- **The slow suite runs only where it can catch something.** A browser e2e or visual suite
-  joins the per-task gate only for tasks that move rendered paint; paint-neutral tasks run the
-  check suite and unit tests, and the pass-end gate plus CI on every push run the full suite.
+- **The slow suite runs only where it can catch something.** The per-task gate is the change's
+  blast radius (Geoff, 2026-10-08): the tier the diff computes, plus the e2e specs its change
+  reaches. A `paint` task's e2e is the specs its change reaches, not the whole suite; the full
+  suite runs at segment boundaries and on CI. "Full gate" means only the 45-minute `full` tier.
   Across B2's eight tasks the per-task e2e caught nothing the checks, the diff reviewer, and CI
   did not, at a third of each task's hour.
 - **Comment-only fix rounds run a reduced gate** (the comment linters, the doc link gate, and
@@ -31,7 +32,8 @@ approved, all cheap in tokens:
   no comment claims what its assertion does not prove; the labeled report block verbatim;
   no process citations in shipped comments; counts found, changed, deferred; re-emit before
   the gate.
-- **Task 0 takes no gate** (Geoff, 2026-09-12): a read-only staleness pre-task runs none, and
+- **Task 0 takes no gate** (Geoff, 2026-09-12): a read-only pre-task runs none (its staleness check is `pass-core`'s per-segment pre-flight, not
+  a separate one; Geoff, 2026-10-08), and
   the lane's baseline is the conductor's own one `cairn-run-gate` call at lane launch, quoted
   to the reviewer as Task 0's gate evidence.
 - **The cross-lane review fires on a disjunction** (Geoff, 2026-09-12): the merge ritual's
