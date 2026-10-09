@@ -10,7 +10,9 @@ description: >
 
 # Pass core
 
-A pass is one plan executed on its own branch, from a committed plan to a closed ritual. This
+A pass is one plan executed on its own branch, from a committed plan to a closed ritual. Every step earns its tokens and its wall clock against the quality it buys (Geoff,
+2026-10-08): verification sized to the change's risk, never repeated on an unchanged commit, and
+never added by default. This
 skill holds what every repo's pass shares. The repo's pass skill (`cairn-pass`, `site-pass`)
 supplies the paths, the gate commands, the implementer agent, and any repo-only close step.
 Where the two disagree, the repo skill wins for its repo.

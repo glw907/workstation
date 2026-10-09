@@ -156,8 +156,10 @@ on sequencing, dependencies, and testing.
 
 ## Conducting a pass
 
-Two co-equal budgets govern every initiative: total tokens and Geoff's attended time (clock
-time is watched, never budgeted). After
+Two co-equal budgets govern every initiative: total tokens and Geoff's attended time. Clock
+time is an efficiency target beside them (Geoff, 2026-10-08): the process should be token- and
+clock-efficient, in proportion to producing quality code and docs, so a step that adds wall clock
+without adding assurance (a repeated gate, an unchanged-commit rerun) is a defect. After
 approval, tokens buy research, verification, and retries; attended time buys only taste,
 priorities, and product forks. Parallelize genuinely independent tasks (Geoff, 2026-09-03),
 serializing only under named contention or dependency; plans mark independent tasks.
