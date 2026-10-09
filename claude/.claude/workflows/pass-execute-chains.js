@@ -23,7 +23,9 @@
 // Pass class (Geoff, 2026-09-27): `args.passClass` or a task's `passClass` selects the test mandate,
 // the reviewer's blocking bar and model, and whether a test-only fix round takes the reduced gate
 // (`t.reducedGate`, `args.reducedGate`, or the class default: the repo's type check plus only the
-// test files this fix round touched). Coverage-only findings under a non-blocking class move to
+// test files this fix round touched), and the independent gate agent runs that reduced gate too, as
+// pass-execute.js does (Geoff's 2026-09-09 and 2026-09-27 rulings; this runner used to rerun the
+// full tier on every round). Coverage-only findings under a non-blocking class move to
 // nonBlocking and return as `batchedNotes`. Full rationale in pass-execute.js; without a passClass
 // every prompt is the pre-class one.
 
@@ -40,6 +42,27 @@
 // `cairn: true`, so the conductor verifies each and files it in cairn-cms's
 // `docs/internal/docs-friction-log.md`. `args.cairnFriction` (boolean) overrides the repo-path
 // test in CAIRN_FAMILY.
+
+// Gate receipts (Geoff, 2026-10-08): the independent gate step no longer reruns a gate the
+// implementer already passed on the same tree. Its Haiku agent first runs `cairn-run-gate --receipt
+// '<gate>'` (with the task's lane prefix); a receipt matches only the exact gate string on a tree
+// whose fingerprint (HEAD's tree, git status, the content of changed and untracked files, the
+// lockfiles, and an env allowlist; cairn-run-gate's header is the full list) equals the recorded
+// run's, and only a passing run's receipt counts. On a match the record carries `fromReceipt: true`
+// and the receipt line, and the reviewer prompt says the record came from a receipt; otherwise the
+// agent runs the gate as before. Since a receipt matches only the exact resolved string, a
+// narrower tier never satisfies a wider requirement. `gateMatches` still governs the
+// implementer-versus-resolved comparison.
+
+// Reduced fix rounds (Geoff, 2026-10-08): a fix round that takes the reduced gate runs it on the
+// independent gate agent too. An explicit `reducedGate` string runs as given. For the class
+// default, which names no command, the implementer composes a concrete one (the type check plus
+// `npx vitest run <the touched test files>`, or the repo's equivalent), reports it as gateCommand,
+// and lists its test files in `reducedTestFiles`; the runner records the round's base commit
+// before the fix dispatch, asks a probe for `git diff --name-only <base>`, and runs the command
+// only when every test file it names is in that list (validatedReducedCommand). A failed check
+// falls back to the reviewer reproducing the gate itself, and the reviewer prompt says why. A
+// no-class reduced round keeps running the resolved gate, as before.
 
 export const meta = {
   name: "pass-execute-chains",
@@ -78,6 +101,9 @@ const IMPL_SCHEMA = {
     // exact gate string the implementer ran.
     gateTier: { type: "string" },
     gateCommand: { type: "string" },
+    // Optional: on a class-default reduced fix round, the test files the concrete reduced
+    // command names, repo-relative, for the runner to check against the round's diff.
+    reducedTestFiles: { type: "array", items: { type: "string" } },
     // Optional: one row per mutation the plan named for this task, so the auth-data mandate
     // can be met. Never in `required`, since a consumer whose implementer definition does not
     // name mutations must not be asked for it.
@@ -112,9 +138,20 @@ const GATE_RUN_SCHEMA = {
     command: { type: "string" },
     exitCode: { type: ["integer", "null"] },
     result: { type: "string", enum: ["pass", "fail", "not run"] },
-    excerpt: { type: "string" }
+    excerpt: { type: "string" },
+    // Both optional: set when a cairn-run-gate receipt stood in for a rerun.
+    fromReceipt: { type: "boolean" },
+    receipt: { type: "string" }
   },
   required: ["command", "exitCode", "result", "excerpt"]
+};
+
+const TOUCHED_SCHEMA = {
+  type: "object",
+  properties: {
+    files: { type: "array", items: { type: "string" } }
+  },
+  required: ["files"]
 };
 
 const CLASSIFIER_PROBE_SCHEMA = {
@@ -354,9 +391,47 @@ function implementPrompt(t, chain, a, blocking, baseSha, classifierExists) {
       lines.push(`Every finding above is COMMENT-ONLY (the fix changes comment or doc text, never code behavior). For this fix round the gate is reduced: run ${renderGateText(reduced)} through cairn-run-gate and report that reduced gate as the gate result; do not run the full gate string. If your fix diff touches any non-comment line, run the full gate string instead.`);
     } else if (reduced) {
       lines.push(`Every finding above is COMMENT-ONLY or TEST-ONLY (the fix changes comment or doc text, or test files alone, never source behavior). For this fix round the gate is reduced: run ${renderGateText(reduced)}, through cairn-run-gate, and report that exact string as gateCommand and its result as the gate result; do not run the full gate string. If your fix diff touches any source line outside tests and comments, run the full gate string instead.`);
+      if (reduced === CLASS_DEFAULT_REDUCED_GATE) {
+        lines.push(CONCRETE_REDUCED_ASK);
+      }
     }
   }
   return lines.filter(Boolean).join("\n");
+}
+
+const CONCRETE_REDUCED_ASK = "That reduced gate names no fixed command, so compose a concrete one: the repo's type check plus a run of only the test files this fix round changed (for example `<the type check> && npx vitest run <the touched test files>`, or the repo's equivalent). Run it as one string through cairn-run-gate, report that exact string as gateCommand, and list in reducedTestFiles every test file it names, repo-relative (an empty list when it names none). The runner checks each against this round's diff and reruns the command independently; a file outside the diff sends the reviewer back to reproducing the gate by hand.";
+
+/** Paths a reduced command may name only when the fix round touched them. */
+const TEST_FILE_TOKEN = /(?:\.(?:test|spec)\.[cm]?[jt]sx?|_test\.go)$/;
+
+/**
+ * The implementer's concrete reduced command for a class-default reduced round, validated against
+ * the fix round's diff, or "" when it cannot stand. `touched` is the `git diff --name-only <round
+ * base>` list. Every file in reducedTestFiles must be in `touched` and appear in the command, and
+ * every test-file token in the command must be in reducedTestFiles. A `<placeholder>` left in the
+ * command, or a report with no gateCommand or reducedTestFiles, also fails.
+ */
+function validatedReducedCommand(implReport, touched, repo) {
+  if (!implReport || !implReport.gateCommand || !Array.isArray(implReport.reducedTestFiles) || !Array.isArray(touched)) {
+    return "";
+  }
+  const last = String(implReport.gateCommand).trim().split("\n").pop().trim();
+  const wrapped = last.match(/cairn-run-gate\s+'([^']+)'/);
+  const cmd = (wrapped ? wrapped[1] : last).trim();
+  if (!cmd || /<[^<>]+>/.test(cmd)) {
+    return "";
+  }
+  const norm = (p) => String(p).trim().split(`${repo}/`).join("").replace(/^\.\//, "");
+  const touchedSet = new Set(touched.map(norm));
+  const listed = implReport.reducedTestFiles.map(norm);
+  if (!listed.every((f) => f && touchedSet.has(f) && cmd.includes(f))) {
+    return "";
+  }
+  const named = cmd
+    .split(/\s+/)
+    .map((tok) => norm(tok.replace(/^['"]|['"]$/g, "")))
+    .filter((tok) => TEST_FILE_TOKEN.test(tok));
+  return named.every((tok) => listed.includes(tok)) ? cmd : "";
 }
 
 // === GATE MATCHER (tests extract this block; kept identical in pass-execute.js) ===
@@ -438,13 +513,18 @@ const GATE_EXCERPT_CHARS = 12000;
 
 /**
  * The gate string the independent gate runner executes, or "" when it cannot run one without a
- * judgment call. A pinned or fallback gate may carry a `<placeholder>` the implementer fills in, which
- * falls back to the reviewer reproducing the gate itself.
+ * judgment call. A class-reduced round runs its reduced gate: an explicit string as given, the
+ * class default only as the implementer's validated concrete command (`concreteReduced`, "" when
+ * validation failed). A pinned or fallback gate may still carry a `<placeholder>` the implementer
+ * fills in. Every "" falls back to the reviewer reproducing the gate itself.
  */
-function gateToRun(resolvedGate) {
-  // The reviewer in this runner reproduces the resolved gate in every round, reduced or not, so
-  // the runner runs it too and coverage never shrinks.
-  const g = resolvedGate.gate;
+function gateToRun(resolvedGate, reduced, cls, concreteReduced) {
+  // A no-class reduced round (comment-only, or the pre-class a.reducedGate fallback) keeps the
+  // resolved gate the reviewer always reproduced.
+  let g = resolvedGate.gate;
+  if (cls && reduced) {
+    g = reduced === CLASS_DEFAULT_REDUCED_GATE ? concreteReduced || "" : reduced;
+  }
   return g && !/<[^<>]+>/.test(g) ? g : "";
 }
 
@@ -464,8 +544,9 @@ async function runGateIndependently(t, chain, a, cls, gate, phaseName, label) {
     [
       `Repo: ${chain.repo}`,
       `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
-      `Run exactly this gate and nothing else: ${gate}`,
-      "Run it through `" + lanePrefix + "cairn-run-gate '<the gate string>'` (if the string above already begins with cairn-run-gate, run it as given) as a plain foreground Bash call with `timeout: 600000`. On exit 75, re-issue the same call until it prints `gate exit:`. Never run it in the background, never poll a log, and never edit a file.",
+      `The gate string: ${gate}`,
+      "First look for a receipt: run `" + lanePrefix + "cairn-run-gate --receipt '<the gate string>'` (if the gate string already begins with cairn-run-gate, insert --receipt right after it) as a plain foreground Bash call. If it exits 0 and prints a line starting `receipt: exit 0`, do not run the gate: report command as the gate string, exitCode 0, result pass, excerpt the empty string, fromReceipt true, and receipt as that line verbatim. Otherwise it prints `receipt: none`; go on and run the gate, and report fromReceipt false.",
+      "Without a receipt, run exactly that gate and nothing else, through `" + lanePrefix + "cairn-run-gate '<the gate string>'` (if the string above already begins with cairn-run-gate, run it as given) as a plain foreground Bash call with `timeout: 600000`. On exit 75, re-issue the same call until it prints `gate exit:`. Never run it in the background, never poll a log, and never edit a file.",
       "Report command as the exact string you ran and exitCode as the number after `gate exit:`, exactly as printed (null when it never printed). Set result to pass when the exit code is 0, fail when it is not, and not run when the runner never printed `gate exit:`.",
       `On a fail, copy into excerpt the last ${GATE_EXCERPT_LINES} lines of the failing output verbatim. Do not summarize, interpret, reorder, or trim a line. On a pass, excerpt is the empty string.`,
       "Skip agent-memory maintenance for this dispatch."
@@ -475,6 +556,10 @@ async function runGateIndependently(t, chain, a, cls, gate, phaseName, label) {
   // A "not run" record, or one whose result contradicts its exit code (null counts as nonzero),
   // cannot stand in for the gate, so the reviewer reproduces the gate itself.
   if (!out || out.result === "not run" || (out.exitCode === 0) !== (out.result === "pass")) {
+    return null;
+  }
+  // A receipt stands in only for a pass, and only with the lookup's own line to show for it.
+  if (out.fromReceipt && (out.exitCode !== 0 || !/^receipt: exit 0 /.test(String(out.receipt || "").trim()))) {
     return null;
   }
   const tail = String(out.excerpt || "").split("\n").slice(-GATE_EXCERPT_LINES).join("\n");
@@ -489,8 +574,11 @@ function gateRecordLines(gateRun, fallbackLine, fullGateLine) {
   if (!gateRun) {
     return [fallbackLine];
   }
+  const source = gateRun.fromReceipt
+    ? `Independent gate record from a cairn-run-gate receipt, not a rerun (${gateRun.command} already passed on this exact tree, matched by fingerprint; ${String(gateRun.receipt).trim()})`
+    : `Independent gate run (a separate runner executed ${gateRun.command})`;
   const lines = [
-    `Independent gate run (a separate runner executed ${gateRun.command}): exit code ${gateRun.exitCode}, result ${gateRun.result}. Treat this as the gate result and rerun the gate only if the diff gives you a specific reason to doubt it.`
+    `${source}: exit code ${gateRun.exitCode}, result ${gateRun.result}. Treat this as the gate result and rerun the gate only if the diff gives you a specific reason to doubt it.`
   ];
   if (gateRun.excerpt) {
     lines.push("Failing output, verbatim from the runner:", gateRun.excerpt);
@@ -501,8 +589,9 @@ function gateRecordLines(gateRun, fallbackLine, fullGateLine) {
   return lines;
 }
 
-function reviewPrompt(t, chain, a, implReport, resolvedGate, reduced, gateRun) {
+function reviewPrompt(t, chain, a, implReport, resolvedGate, reduced, gateRun, reducedCheck) {
   const cls = classOf(t, a);
+  const classReduced = cls && reduced;
   const ranCommand = implReport.gateCommand || t.gate || a.gate;
   // Any reduced round, class-based or the pre-class a.reducedGate fallback, is exempt from the
   // mismatch check: its expected gate is the reduced one, not resolvedGate.
@@ -523,13 +612,50 @@ function reviewPrompt(t, chain, a, implReport, resolvedGate, reduced, gateRun) {
     `Acceptance criteria (condensed): ${t.criteria}${a.paintProtocol ? " " + a.paintProtocol : ""}`,
     `The task's diff is exactly the commits the implementer reports below (diff each against its parent; the worktree has no other writers).`,
     `The gate string this task ran: ${ranCommand}`,
-    ...gateRecordLines(gateRun, `Reproduce the gate with: ${resolvedGate.gate}`, ""),
+    reducedCheckLine(reducedCheck),
+    ...gateRecordLines(
+      gateRun,
+      classReduced ? `Reproduce the full gate, if owed, with: ${resolvedGate.gate}` : `Reproduce the gate with: ${resolvedGate.gate}`,
+      classReduced ? `The runner executed the reduced gate. If the full gate was owed, reproduce it with: ${resolvedGate.gate}` : ""
+    ),
     mismatch,
     "Out of scope: list in outOfScope any real defect you notice outside this task's criteria (a bug, a stale doc or comment, a false claim, a gate gap), one {location, finding} each. It never affects the verdict; the conductor files each one in the repo's friction log.",
     harvestsCairnFriction(a, chain.repo) ? CAIRN_REVIEW_ASK : "",
     "Implementer report (JSON):",
     JSON.stringify(implReport)
   ].filter(Boolean).join("\n");
+}
+
+/**
+ * The files `git diff --name-only <base>` lists in the repo (committed and uncommitted changes
+ * since the fix round's base), or null when there is no base or the probe fails.
+ */
+async function touchedFiles(repo, base, phaseName, label) {
+  if (!base) {
+    return null;
+  }
+  const out = await agent(
+    [
+      `Repo: ${repo}`,
+      `Run \`git -C ${repo} diff --name-only ${base}\` and report every path it prints in files, verbatim, one entry per line of output.`,
+      `Do not run any other command and never modify a file.`
+    ].join("\n"),
+    { label, phase: phaseName, schema: TOUCHED_SCHEMA, model: "haiku", effort: "low" }
+  );
+  return out && Array.isArray(out.files) ? out.files : null;
+}
+
+/**
+ * The reviewer line for a class-default reduced round whose concrete command was checked: what
+ * the runner did with it. Empty when no check ran.
+ */
+function reducedCheckLine(check) {
+  if (!check || !check.attempted) {
+    return "";
+  }
+  return check.concrete
+    ? `The reduced gate the runner ran is the implementer's concrete command (\`${check.concrete}\`), after checking that every test file it names is in this fix round's diff.`
+    : "The implementer's concrete reduced command failed the runner's check (a test file it names is not in this fix round's diff, or the report did not list them), so the runner did not run it: reproduce the reduced gate yourself.";
 }
 
 function taskStatus(review, implReport) {
@@ -652,7 +778,7 @@ async function runTask(t, chain, a, classifierExists) {
   let resolvedGate = await resolveGate(t, chain, a, baseSha, classifierExists, phaseName, `gatetier:${t.id}`);
   logGateTier(t, resolvedGate);
 
-  let gateRun = await runGateIndependently(t, chain, a, cls, gateToRun(resolvedGate), phaseName, `gaterun:${t.id}`);
+  let gateRun = await runGateIndependently(t, chain, a, cls, gateToRun(resolvedGate, null, cls, ""), phaseName, `gaterun:${t.id}`);
   let review = await agent(reviewPrompt(t, chain, a, implReport, resolvedGate, null, gateRun), {
     label: `review:${t.id}`,
     phase: phaseName,
@@ -672,6 +798,10 @@ async function runTask(t, chain, a, classifierExists) {
   while (review.verdict === "fix" && fixRounds < maxFix) {
     fixRounds += 1;
     const reduced = reducedGateFor(t, a, cls, review.blocking);
+    // A class-default reduced round runs the implementer's concrete command only after checking
+    // it against this round's diff, so the round's base is captured before the fix dispatch.
+    const classDefault = Boolean(cls && reduced === CLASS_DEFAULT_REDUCED_GATE);
+    const roundBase = classDefault ? await recordBaseSha(chain, phaseName, `base:${t.id}:fix${fixRounds}`) : "";
     implReport = await agent(implementPrompt(t, chain, a, review.blocking, baseSha, classifierExists), {
       label: `impl:${t.id}:fix${fixRounds}`,
       phase: phaseName,
@@ -688,8 +818,14 @@ async function runTask(t, chain, a, classifierExists) {
     resolvedGate = await resolveGate(t, chain, a, baseSha, classifierExists, phaseName, `gatetier:${t.id}:fix${fixRounds}`);
     logGateTier(t, resolvedGate);
 
-    gateRun = await runGateIndependently(t, chain, a, cls, gateToRun(resolvedGate), phaseName, `gaterun:${t.id}:fix${fixRounds}`);
-    review = await agent(reviewPrompt(t, chain, a, implReport, resolvedGate, reduced, gateRun), {
+    let reducedCheck = null;
+    if (classDefault && implReport.gateCommand && Array.isArray(implReport.reducedTestFiles)) {
+      const touched = await touchedFiles(chain.repo, roundBase, phaseName, `touched:${t.id}:fix${fixRounds}`);
+      reducedCheck = { attempted: true, concrete: validatedReducedCommand(implReport, touched, chain.repo) };
+      log(`task ${t.id}: fix ${fixRounds} reduced command ${reducedCheck.concrete ? "validated" : "failed the diff check; the reviewer reproduces the gate"}`);
+    }
+    gateRun = await runGateIndependently(t, chain, a, cls, gateToRun(resolvedGate, reduced, cls, reducedCheck && reducedCheck.concrete), phaseName, `gaterun:${t.id}:fix${fixRounds}`);
+    review = await agent(reviewPrompt(t, chain, a, implReport, resolvedGate, reduced, gateRun, reducedCheck), {
       label: `review:${t.id}:fix${fixRounds}`,
       phase: phaseName,
       model: reviewerModel,

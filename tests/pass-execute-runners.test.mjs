@@ -49,7 +49,8 @@ const INTERNALS = [
   "gateMatches", "classOf", "reducedGateFor", "applyClassBar", "taskStatus", "IMPL_SCHEMA",
   "REVIEW_SCHEMA", "recordBaseSha", "resolveGate", "resolveClassifier", "implementPrompt",
   "reviewPrompt", "validateArgs", "runTask", "runChain", "tally", "gateToRun",
-  "runGateIndependently"
+  "runGateIndependently", "validatedReducedCommand", "gateRecordLines", "reducedCheckLine",
+  "touchedFiles"
 ];
 
 function loadFactory(src) {
@@ -910,7 +911,7 @@ check("gate runner (pass-execute.js): a class-default reduced gate dispatches no
   assert.match(reviewPromptOf(agent, "review:1:fix1"), /Reproduce the full gate, if owed, with: bash gate\.sh/);
 });
 
-check("gate runner (pass-execute-chains.js): every round runs the resolved gate, reduced or not", async () => {
+check("gate runner (pass-execute-chains.js): a no-class reduced round runs the resolved gate", async () => {
   const a = { ...gateRunChainsArgs, reducedGate: "bash reduced.sh" };
   const { bundle, agent } = load(chainsFactory, a, routesWithFix(gateRunPass));
   await bundle.runTask(gateRunTask, gateRunChain, a, false);
@@ -918,6 +919,118 @@ check("gate runner (pass-execute-chains.js): every round runs the resolved gate,
   assert.match(fixRun.prompt, /bash gate\.sh/);
   assert.doesNotMatch(fixRun.prompt, /reduced\.sh/);
 });
+
+// -------------------------------------------------------------------------------------------
+// Gate receipts and reduced fix rounds (Geoff, 2026-10-08).
+// -------------------------------------------------------------------------------------------
+
+check("the receipt and reduced-round helpers are identical source text across both runners", () => {
+  for (const name of ["validatedReducedCommand", "gateToRun", "gateRecordLines", "reducedCheckLine", "touchedFiles"]) {
+    const re = new RegExp(`\\n(?:async )?function ${name}\\([\\s\\S]*?\\n}\\n`);
+    assert.equal(SEQ_SRC.match(re)[0], CHAINS_SRC.match(re)[0], name);
+  }
+  for (const name of ["CONCRETE_REDUCED_ASK", "TEST_FILE_TOKEN"]) {
+    const re = new RegExp(`\\nconst ${name} = .*\\n`);
+    assert.equal(SEQ_SRC.match(re)[0], CHAINS_SRC.match(re)[0], name);
+  }
+});
+
+check("validatedReducedCommand: accepts listed touched test files, rejects anything else", () => {
+  const { bundle } = load(seqFactory, {});
+  const v = (cmd, files, touched) => bundle.validatedReducedCommand({ gateCommand: cmd, reducedTestFiles: files }, touched, "/repo");
+  const cmd = "npm run check && npx vitest run src/a.test.ts";
+  assert.equal(v(cmd, ["src/a.test.ts"], ["src/a.test.ts", "src/b.ts"]), cmd);
+  assert.equal(v(`cd /repo && CAIRN_GATE_LANE=light cairn-run-gate '${cmd}'`, ["src/a.test.ts"], ["src/a.test.ts"]), cmd, "unwraps cairn-run-gate");
+  assert.equal(v("npx vitest run /repo/src/a.test.ts", ["./src/a.test.ts"], ["src/a.test.ts"]), "npx vitest run /repo/src/a.test.ts", "absolute and ./ forms");
+  assert.equal(v("npm run check", [], ["src/a.ts"]), "npm run check", "type check only");
+  assert.equal(v(cmd, ["src/a.test.ts"], ["src/b.ts"]), "", "listed file outside the diff");
+  assert.equal(v(cmd, [], ["src/a.test.ts"]), "", "unlisted test file in the command");
+  assert.equal(v("npm run check", ["src/a.test.ts"], ["src/a.test.ts"]), "", "listed file absent from the command");
+  assert.equal(v("npx vitest run <the touched test files>", [], []), "", "placeholder");
+  assert.equal(bundle.validatedReducedCommand({ gateCommand: cmd }, ["src/a.test.ts"], "/repo"), "", "no reducedTestFiles");
+  assert.equal(v(cmd, ["src/a.test.ts"], null), "", "touched probe failed");
+});
+
+const testOnlyFix = [
+  ["review:1:fix", () => acceptReview()],
+  ["review:1", () => ({
+    verdict: "fix", summary: "", nonBlocking: [], gate: "fail", unspecified: [],
+    blocking: [{ location: "x", finding: "y", fix: "z", testOnly: true }]
+  })]
+];
+const concreteCmd = "npm run check && npx vitest run src/a.test.ts";
+const reducedRoutes = (fixImpl, touched) => [
+  ["base:", baseShaHandler],
+  ["impl:1:fix", fixImpl],
+  ["impl:", () => implOk()],
+  ["touched:", () => ({ files: touched })],
+  ["gaterun:", gateRunPass],
+  ...testOnlyFix
+];
+const fixImplWith = (files) => () => implOk({ gateCommand: concreteCmd, reducedTestFiles: files });
+
+for (const [name, factory, runIt] of [
+  ["pass-execute.js", seqFactory, (b, t, a) => b.runTask(t, a, false)],
+  ["pass-execute-chains.js", chainsFactory, (b, t, a) => b.runTask(t, gateRunChain, a, false)]
+]) {
+  const baseArgs = name === "pass-execute.js" ? gateRunArgs : gateRunChainsArgs;
+
+  check(`reduced round (${name}): a class round with an explicit reducedGate runs it on the gate agent`, async () => {
+    const a = { ...baseArgs, passClass: "engine-logic", reducedGate: "bash reduced.sh" };
+    const { bundle, agent } = load(factory, a, reducedRoutes(() => implOk(), []));
+    await runIt(bundle, gateRunTask, a);
+    assert.match(agent.calls.find((c) => c.label === "gaterun:1:fix1").prompt, /bash reduced\.sh/);
+    assert.match(reviewPromptOf(agent, "review:1:fix1"), /If the full gate was owed, reproduce it with: bash gate\.sh/);
+    assert.equal(agent.calls.filter((c) => c.label.startsWith("touched:")).length, 0);
+  });
+
+  check(`reduced round (${name}): a class-default round runs the validated concrete command`, async () => {
+    const a = { ...baseArgs, passClass: "engine-logic" };
+    const { bundle, agent } = load(factory, a, reducedRoutes(fixImplWith(["src/a.test.ts"]), ["src/a.test.ts"]));
+    await runIt(bundle, gateRunTask, a);
+    assert.ok(agent.calls.some((c) => c.label === "base:1:fix1"), "round base recorded");
+    const touched = agent.calls.find((c) => c.label === "touched:1:fix1");
+    assert.match(touched.prompt, new RegExp(`diff --name-only ${SHA}`));
+    assert.equal(touched.opts.model, "haiku");
+    assert.ok(agent.calls.findIndex((c) => c.label === "base:1:fix1") < agent.calls.findIndex((c) => c.label === "impl:1:fix1"));
+    assert.match(agent.calls.find((c) => c.label === "gaterun:1:fix1").prompt, /npx vitest run src\/a\.test\.ts/);
+    assert.match(reviewPromptOf(agent, "review:1:fix1"), /the implementer's concrete command/);
+    assert.match(agent.calls.find((c) => c.label === "impl:1:fix1").prompt, /reducedTestFiles/);
+  });
+
+  check(`reduced round (${name}): a concrete command naming a file outside the diff falls back`, async () => {
+    const a = { ...baseArgs, passClass: "engine-logic" };
+    const { bundle, agent } = load(factory, a, reducedRoutes(fixImplWith(["src/a.test.ts"]), ["src/other.ts"]));
+    await runIt(bundle, gateRunTask, a);
+    assert.equal(agent.calls.filter((c) => c.label === "gaterun:1:fix1").length, 0);
+    const prompt = reviewPromptOf(agent, "review:1:fix1");
+    assert.match(prompt, /failed the runner's check/);
+    assert.match(prompt, /Reproduce the full gate, if owed, with: bash gate\.sh/);
+  });
+
+  check(`receipt (${name}): the gate agent looks up a receipt first, with the lane prefix`, async () => {
+    const a = { ...baseArgs, gateLane: "light" };
+    const { bundle, agent } = load(factory, a, gateRunRoutes(gateRunPass));
+    await runIt(bundle, gateRunTask, a);
+    const prompt = agent.calls.find((c) => c.label === "gaterun:1").prompt;
+    assert.match(prompt, /CAIRN_GATE_LANE=light cairn-run-gate --receipt '<the gate string>'/);
+    assert.match(prompt, /The gate string: bash gate\.sh/);
+  });
+
+  check(`receipt (${name}): a receipt record reaches the reviewer named as a receipt`, async () => {
+    const line = "receipt: exit 0 (log: /s/log) fingerprint abc head def recorded now";
+    const agent = await (name === "pass-execute.js" ? runSeq : runChains)(() => ({ command: "bash gate.sh", exitCode: 0, result: "pass", excerpt: "", fromReceipt: true, receipt: line }));
+    const prompt = reviewPromptOf(agent);
+    assert.match(prompt, /from a cairn-run-gate receipt, not a rerun/);
+    assert.ok(prompt.includes(line));
+    assert.doesNotMatch(prompt, /Reproduce the gate with/);
+  });
+
+  check(`receipt (${name}): a receipt record without a pass receipt line falls back`, async () => {
+    const agent = await (name === "pass-execute.js" ? runSeq : runChains)(() => ({ command: "bash gate.sh", exitCode: 0, result: "pass", excerpt: "", fromReceipt: true, receipt: "receipt: none" }));
+    assert.match(reviewPromptOf(agent), /Reproduce the gate with: bash gate\.sh/);
+  });
+}
 
 console.log("");
 await runChecks();
