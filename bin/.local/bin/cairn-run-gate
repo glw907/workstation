@@ -22,6 +22,7 @@
 # shortens both so a staged dead pid resolves in about a second.
 #
 # Usage: cairn-run-gate '<gate string>' [log path]
+#        cairn-run-gate --receipt '<gate string>'
 # Memory: the gate runs in a transient user scope capped by CAIRN_GATE_MEMORY_HIGH (7G),
 # CAIRN_GATE_MEMORY_MAX (8G), and CAIRN_GATE_SWAP_MAX (4G); override per call as needed.
 # Lanes: gates queue on one machine-wide lock per lane. The default lane, heavy, is for a
@@ -33,8 +34,99 @@
 # Sleep: the gate runs under `awake`, which holds a sleep inhibitor (who "cairn-gate-<lane>")
 # for the gate's own run and releases it when the gate exits; see it in `systemd-inhibit --list`.
 # Exit status: the gate's when it has finished; 75 while it is still running.
+#
+# Receipts (Geoff, 2026-10-08): every run that prints "gate exit:" also writes a receipt, so a
+# second party can prove the same gate already ran on the same tree instead of rerunning it. A
+# receipt lives in its own state directory (CAIRN_GATE_RECEIPT_DIR, default
+# ~/.local/state/cairn-run-gate/receipts), never in the repo, one per repo toplevel, working
+# directory, and exact gate string. It records the toplevel, the working directory, HEAD, a
+# fingerprint, the gate string as run, the lane, the exit code, a copy of the log ending in the
+# "gate exit: N" line, and a timestamp. The fingerprint hashes what the gate reads beyond the
+# commit (caching is sound only for hermetic inputs, https://bazel.build/basics/hermeticity):
+# the toplevel and working directory, HEAD's tree, `git status --porcelain=v1 -uall`, the content
+# of every file that differs from HEAD or is untracked and not ignored, the package-lock.json and
+# node_modules/.package-lock.json at the root and under examples/*/, the effective lane, and the
+# environment values of E2E_PORT, CI, and every CAIRN_* name the gate string mentions (an export
+# inside the gate string is already part of the string). It is taken when the run starts and
+# again when it finishes; a tree that changed in between gets no receipt. A run started by an
+# older copy of this script carries no start fingerprint and gets none either.
+#
+# Lookup: `cairn-run-gate --receipt '<gate string>'` recomputes the fingerprint for the current
+# tree and, when the receipt for this exact gate string matches it, recorded exit 0, and its log
+# ends in "gate exit: 0", prints "receipt: exit 0 (log: ...) fingerprint ..." and exits 0. Any
+# other case prints a line starting "receipt: none" and exits 1: no receipt, another fingerprint,
+# or a failing run (a failing receipt never stands in for the gate). Lookup never starts a gate.
 set -u
+mode=run
+if [ "${1:-}" = "--receipt" ]; then
+  mode=receipt
+  shift
+fi
 gate="${1:?gate string required}"
+receipt_root="${CAIRN_GATE_RECEIPT_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/cairn-run-gate/receipts}"
+
+# Prints the tree fingerprint described above, or nothing outside a git work tree. Optional git
+# locks stay off so a fingerprint never contends with an agent's own commit for index.lock.
+gate_fingerprint() {
+  local cwd="$PWD" top
+  top=$(git rev-parse --show-toplevel 2>/dev/null) || return 0
+  (
+    export GIT_OPTIONAL_LOCKS=0
+    printf 'top=%s\ncwd=%s\n' "$top" "$cwd"
+    printf 'tree=%s\n' "$(git -C "$top" rev-parse -q --verify 'HEAD^{tree}' 2>/dev/null || echo none)"
+    echo '--- status'
+    git -C "$top" status --porcelain=v1 -uall
+    echo '--- content'
+    { git -C "$top" diff --name-only -z HEAD 2>/dev/null; git -C "$top" ls-files -o --exclude-standard -z; } |
+      sort -zu | while IFS= read -r -d '' f; do
+        if [ -L "$top/$f" ]; then
+          printf 'link %s %s\n' "$f" "$(readlink "$top/$f")"
+        elif [ -f "$top/$f" ]; then
+          printf 'file %s %s\n' "$f" "$(sha256sum <"$top/$f" | cut -c1-64)"
+        else
+          printf 'gone %s\n' "$f"
+        fi
+      done
+    echo '--- lockfiles'
+    for f in "$top/package-lock.json" "$top/node_modules/.package-lock.json" \
+      "$top"/examples/*/package-lock.json "$top"/examples/*/node_modules/.package-lock.json; do
+      [ -f "$f" ] && printf '%s %s\n' "${f#"$top"/}" "$(sha256sum <"$f" | cut -c1-64)"
+    done
+    echo '--- env'
+    printf 'lane=%s\n' "${CAIRN_GATE_LANE:-heavy}"
+    for v in E2E_PORT CI $(grep -oE 'CAIRN_[A-Za-z0-9_]+' <<<"$gate" | sort -u); do
+      if [ -n "${!v+x}" ]; then printf '%s=%s\n' "$v" "${!v}"; else printf '%s unset\n' "$v"; fi
+    done
+  ) | sha256sum | cut -c1-64
+}
+
+# The receipt directory for this toplevel, working directory, and exact gate string.
+receipt_dir() {
+  printf '%s/%s' "$receipt_root" "$(printf '%s\n%s\n%s' "$1" "$PWD" "$gate" | sha256sum | cut -c1-32)"
+}
+
+if [ "$mode" = receipt ]; then
+  top=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "receipt: none (not inside a git work tree)"; exit 1; }
+  rdir=$(receipt_dir "$top")
+  if [ ! -f "$rdir/receipt" ] || ! printf '%s' "$gate" | cmp -s - "$rdir/gate" 2>/dev/null; then
+    echo "receipt: none"
+    exit 1
+  fi
+  fp=$(gate_fingerprint)
+  rfp=$(sed -n 's/^fingerprint=//p' "$rdir/receipt")
+  rexit=$(sed -n 's/^exit=//p' "$rdir/receipt")
+  if [ -z "$fp" ] || [ "$fp" != "$rfp" ]; then
+    echo "receipt: none (the tree or environment differs from the last recorded run)"
+    exit 1
+  fi
+  if [ "$rexit" != "0" ] || [ "$(tail -n 1 "$rdir/log" 2>/dev/null)" != "gate exit: 0" ]; then
+    echo "receipt: none (the last run on this tree exited ${rexit:-unknown}; only a pass stands in for the gate)"
+    exit 1
+  fi
+  echo "receipt: exit 0 (log: $rdir/log) fingerprint $fp head $(sed -n 's/^head=//p' "$rdir/receipt") recorded $(sed -n 's/^timestamp=//p' "$rdir/receipt")"
+  exit 0
+fi
+
 wait_s="${CAIRN_GATE_WAIT:-540}"
 poll_s="${CAIRN_GATE_POLL_INTERVAL:-5}"
 grace_s="${CAIRN_GATE_GRACE:-15}"
@@ -90,10 +182,41 @@ if [ ! -e "$pidfile" ]; then
   # gate waited on another gate. The stamp runs inside the lock, before the gate itself.
   date +%s >"$state/queued"
   echo "$lane" >"$state/lane"
+  # The receipt's start fingerprint and HEAD, compared again when the run finishes.
+  gate_fingerprint >"$state/fingerprint"
+  git rev-parse HEAD >"$state/head" 2>/dev/null || echo none >"$state/head"
   ( "${lock[@]}" "${scope[@]}" "${keep_awake[@]}" bash -c 'date +%s >"$1"; exec bash -c "$2"' _ "$state/acquired" "$gate" >"$log" 2>&1; echo $? >"$statusfile" ) </dev/null &
   echo $! >"$pidfile"
   echo "gate started (log: $log)"
 fi
+
+# Writes this run's receipt (see the header) when its start fingerprint still matches the tree.
+# Never fails the call: a receipt is an optimization, so any error just leaves none.
+write_receipt() {
+  local status_code="$1" start_fp end_fp top rdir
+  start_fp=$(cat "$state/fingerprint" 2>/dev/null)
+  [ -n "$start_fp" ] || return 0
+  end_fp=$(gate_fingerprint)
+  [ "$start_fp" = "$end_fp" ] || return 0
+  top=$(git rev-parse --show-toplevel 2>/dev/null) || return 0
+  rdir=$(receipt_dir "$top")
+  mkdir -p "$rdir" 2>/dev/null || return 0
+  { cat "$log" 2>/dev/null; echo "gate exit: $status_code"; } >"$rdir/log.tmp" && mv -f "$rdir/log.tmp" "$rdir/log"
+  printf '%s' "$gate" >"$rdir/gate.tmp" && mv -f "$rdir/gate.tmp" "$rdir/gate"
+  {
+    echo "top=$top"
+    echo "cwd=$PWD"
+    echo "head=$(cat "$state/head" 2>/dev/null)"
+    echo "fingerprint=$end_fp"
+    echo "lane=$(cat "$state/lane" 2>/dev/null)"
+    echo "exit=$status_code"
+    echo "log=$rdir/log"
+    echo "source_log=$log"
+    echo "timestamp=$(date -u +%FT%TZ)"
+  } >"$rdir/receipt.tmp" && mv -f "$rdir/receipt.tmp" "$rdir/receipt"
+  find "$receipt_root" -mindepth 1 -maxdepth 1 -type d -mtime +14 -exec rm -rf {} + 2>/dev/null
+  return 0
+}
 
 pid=$(cat "$pidfile")
 waited=0
@@ -124,7 +247,8 @@ if [ ! -e "$statusfile" ]; then
   # reattaching to a dead pid, and count consecutive vanishes so a gate command that always
   # vanishes still terminates instead of looping forever.
   vanish_count=$(( $(cat "$vanishfile" 2>/dev/null || echo 0) + 1 ))
-  rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane"
+  [ "$vanish_count" -ge 3 ] && write_receipt 1
+  rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane" "$state/fingerprint" "$state/head"
   if [ "$vanish_count" -ge 3 ]; then
     rm -f "$vanishfile"
     echo "gate exit: 1 (vanished 3 times)"
@@ -150,7 +274,8 @@ if [ -e "$state/queued" ] && [ -e "$state/acquired" ]; then
     echo "NOTE: which has its own lock. Report this NOTE to your conductor verbatim."
   fi
 fi
-rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane"
+write_receipt "$status"
+rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane" "$state/fingerprint" "$state/head"
 echo "gate exit: $status (log: $log, $(wc -l <"$log") lines)"
 echo "--- last 60 lines ---"
 tail -60 "$log"

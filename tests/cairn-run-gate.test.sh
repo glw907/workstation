@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# cairn-run-gate.test.sh: prove the vanish handling (AW-17) and the old-script state directory
-# compatibility, against this worktree's own copy of the script, never the live
+# cairn-run-gate.test.sh: prove the vanish handling (AW-17), the old-script state directory
+# compatibility, and the receipts (2026-10-08), against this worktree's own copy of the script, never the live
 # ~/.local/bin/cairn-run-gate. Each case isolates TMPDIR to a fresh fixture root and drives the
 # script's own key derivation (sha256sum of PWD + gate string) so a case can pre-stage the exact
 # state directory the script will read. CAIRN_GATE_POLL_INTERVAL and CAIRN_GATE_GRACE are set
@@ -18,6 +18,8 @@ trap 'rm -rf "$fixture_root" "$work_dir"' EXIT
 # The gatedir the script computes as "${TMPDIR:-/tmp}/cairn-gate-$(id -u)". Point TMPDIR at the
 # fixture root so no case touches a real gate's state.
 export TMPDIR="$fixture_root"
+# Receipts go to the fixture root too, never the real ~/.local/state store.
+export CAIRN_GATE_RECEIPT_DIR="$fixture_root/receipts"
 gatedir="$TMPDIR/cairn-gate-$(id -u)"
 
 key_for() {
@@ -136,6 +138,42 @@ rc=$?
 assert_eq "$rc" "0" "old-format finished run: exit code from the existing status"
 assert_contains "$out" "gate exit: 0" "old-format finished run: terminal line"
 assert_contains "$out" "finished-run-marker" "old-format finished run: reports the existing log"
+
+# --- receipts: a finished run writes a receipt that --receipt finds for the exact gate string on
+# the same tree; an untracked file, another lane, or another gate string misses; a failing run's
+# receipt records its exit code and never counts as a pass; a tree changed mid-run gets none.
+rrepo="$work_dir/receipt-repo"
+mkdir -p "$rrepo"
+git -C "$rrepo" init -q
+echo a >"$rrepo/a.txt"
+git -C "$rrepo" add a.txt
+git -C "$rrepo" -c user.email=t@t -c user.name=t commit -qm init
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" 'true')
+assert_contains "$out" "gate exit: 0" "receipt: the run itself is unchanged"
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'true')
+rc=$?
+assert_eq "$rc" "0" "receipt: lookup on the same tree exits 0"
+assert_contains "$out" "receipt: exit 0 (log: " "receipt: lookup prints the record"
+out=$(cd "$rrepo" && "$SCRIPT" --receipt 'true')
+assert_eq "$?" "1" "receipt: another lane misses"
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'true ')
+assert_eq "$?" "1" "receipt: another gate string misses"
+touch "$rrepo/untracked.txt"
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'true')
+assert_eq "$?" "1" "receipt: an untracked file misses"
+assert_contains "$out" "receipt: none" "receipt: miss line"
+rm -f "$rrepo/untracked.txt"
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" 'false')
+assert_eq "$?" "1" "receipt: a failing run keeps its exit code"
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'false')
+assert_eq "$?" "1" "receipt: a failing receipt never counts as a pass"
+assert_contains "$out" "exited 1" "receipt: the miss names the recorded exit"
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" 'sleep 1; echo x >>a.txt')
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'sleep 1; echo x >>a.txt')
+assert_eq "$?" "1" "receipt: a tree changed during the run gets no receipt"
+git -C "$rrepo" checkout -q a.txt
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'sleep 1; echo x >>a.txt')
+assert_eq "$?" "1" "receipt: nor does the reverted start tree match it"
 
 # --- no runner prompt or implementer file carries a vanished clause: the protocol lives only in
 # cairn-run-gate's own output now.
