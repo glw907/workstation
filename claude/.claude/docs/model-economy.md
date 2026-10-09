@@ -66,8 +66,9 @@ Seats, per Anthropic's model guidance (Geoff, 2026-09-23):
 
 ### The pass-end score
 
-Score both budgets at every close. Tokens are measured against the plan's ceiling (`/cost`).
-Attended time is measured as two counts:
+Score the pass at every close on its three metrics, after output quality: tokens, attended time,
+and clock time. Tokens are measured against the plan's ceiling (`/cost`). Attended time is
+measured as two counts:
 
 - **Planning misses:** each ambiguity that surfaced after approval that a planning question
   would have caught. A rising count reopens the Opus-authors-plans rule.
@@ -75,6 +76,23 @@ Attended time is measured as two counts:
   checkpoint question counts once.
 
 Planning questions never count against the score. Record the numbers even when they look bad.
+
+**Clock time is the third scored metric (Geoff, 2026-10-09).** Output quality comes first and is
+never traded for speed: a gate, review, or fix round that catches a real defect earns its clock.
+Clock time is scored so that clock spent without assurance shows up. The plan header carries a
+clock estimate beside its token ceiling, and the close scores against it in four numbers:
+
+- **Total clock:** wall time from the first execution dispatch to merge-ready, minus pauses Geoff
+  ordered and owner-gated waits (a merge go, an owner read).
+- **Gate time:** the summed run time of every gate, from the `cairn-run-gate` logs, with lock
+  waits excluded.
+- **Lock wait:** time gates spent queued on the machine lock (`cairn-run-gate` prints it as a
+  NOTE).
+- **Rework clock:** time spent on fix rounds and reruns after a red, with each red's cause named:
+  a defect the gate rightly caught, or a process miss such as a check the per-task gate skipped.
+
+Born of engine pass pre-2b, pass A (2026-10-08 and 09): 12 tasks and the close took about 20
+hours of clock on modest tokens, nearly all of it gates, and nothing measured it until Geoff asked.
 
 ## Pricing and the allowance
 

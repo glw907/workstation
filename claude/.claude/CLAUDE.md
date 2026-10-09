@@ -157,7 +157,8 @@ on sequencing, dependencies, and testing.
 ## Conducting a pass
 
 Two co-equal budgets govern every initiative: total tokens and Geoff's attended time. Clock
-time is an efficiency target beside them (Geoff, 2026-10-08): the process should be token- and
+time is an efficiency target beside them (Geoff, 2026-10-08), scored at every close since
+2026-10-09 (`model-economy.md`): the process should be token- and
 clock-efficient, in proportion to producing quality code and docs, so a step that adds wall clock
 without adding assurance (a repeated gate, an unchanged-commit rerun) is a defect. After
 approval, tokens buy research, verification, and retries; attended time buys only taste,
@@ -274,9 +275,10 @@ to Geoff are for product, taste, priority, scope, and budget.
 Plans specify outcomes, constraints, and acceptance criteria per task, never implementation
 code. Small tasks skip the ceremony: a change touching a handful of files, fully specified by
 the request or existing tests, adding no new public surface, schema, or auth behavior, goes
-straight through the gates. Score both budgets at pass end (tokens against
-the ceiling via `/cost`; attended time as planning misses and execution sittings, defined in
-`model-economy.md`), recording the numbers even when they look bad.
+straight through the gates. Score each pass at its end, after output quality, on three metrics:
+tokens against the ceiling via `/cost`; attended time as planning misses and execution sittings;
+and clock time against the plan's estimate (Geoff, 2026-10-09). Definitions are in
+`model-economy.md`; record the numbers even when they look bad.
 
 ## Writing voice
 

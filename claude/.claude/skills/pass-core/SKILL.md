@@ -80,8 +80,8 @@ otherwise waits for a human), the lid-switch hold, and the stall guard, in dayti
 files, and its pass class, never implementation code. This overrides `writing-plans`'
 full-code steps. Skip its "which execution method?" question; this skill answers it.
 
-Every plan header carries a token ceiling, a checkpoint interval (default four tasks), and
-`Pass class: <class>`. At each checkpoint, at any split, and before any question to the
+Every plan header carries a token ceiling, a clock estimate (Geoff, 2026-10-09), a checkpoint
+interval (default four tasks), and `Pass class: <class>`. At each checkpoint, at any split, and before any question to the
 user, write STATUS (task ledger, decisions taken, spend, next task), then continue.
 
 ## Pass class (Geoff, 2026-09-27)
@@ -234,7 +234,11 @@ No pass is done until every step has run. The repo skill supplies each step's co
    memory: memory holds only what the repo cannot (preferences, corrections, the why behind a
    ruling no doc records). When the pass's spec or plan had a full-sequence `spec-plan-review`,
    the HISTORY entry names any finding its fold refused that turned out to be a real defect
-   during execution, or says none did (the fold-rule trial, Geoff, 2026-09-28).
+   during execution, or says none did (the fold-rule trial, Geoff, 2026-09-28). The HISTORY
+   entry and the plan's post-mortem carry the pass score after output quality: tokens against
+   the ceiling, attended time, and clock time against the plan's estimate (total, gate time,
+   lock wait, and rework clock with each red's cause), per `~/.claude/docs/model-economy.md`
+   "The pass-end score" (Geoff, 2026-10-09).
 7. **Commit** specific files, never `git add -A`. Push or merge per the repo skill.
 8. **Pre-bake and hand off** (below). Always, not on request.
 
