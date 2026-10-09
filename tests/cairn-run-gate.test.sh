@@ -20,6 +20,8 @@ trap 'rm -rf "$fixture_root" "$work_dir"' EXIT
 export TMPDIR="$fixture_root"
 # Receipts go to the fixture root too, never the real ~/.local/state store.
 export CAIRN_GATE_RECEIPT_DIR="$fixture_root/receipts"
+# A caller that exports a lane would change every fingerprint and the lane cases below.
+unset CAIRN_GATE_LANE
 gatedir="$TMPDIR/cairn-gate-$(id -u)"
 
 key_for() {
@@ -172,6 +174,34 @@ out=$(cd "$rrepo" && CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" 
 out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'sleep 1; echo x >>a.txt')
 assert_eq "$?" "1" "receipt: a tree changed during the run gets no receipt"
 git -C "$rrepo" checkout -q a.txt
+
+# --- receipts survive a commit: a gate passed on a dirty tree matches after that exact content is
+# committed, and one changed byte misses.
+echo dirty >>"$rrepo/a.txt"
+echo new >"$rrepo/b.txt"
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" 'true')
+git -C "$rrepo" add a.txt b.txt
+git -C "$rrepo" -c user.email=t@t -c user.name=t commit -qm dirty
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'true')
+assert_eq "$?" "0" "receipt: committing the gated content keeps the match"
+echo x >>"$rrepo/b.txt"
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'true')
+assert_eq "$?" "1" "receipt: one changed byte misses"
+git -C "$rrepo" checkout -q b.txt
+
+# --- a start fingerprint left by another run (an old-script launch finished by this one) never
+# yields a receipt: it is keyed by the pid that wrote it.
+gate6="true # case6"
+key6=$(key_for "$rrepo" "$gate6")
+state6="$gatedir/$key6"
+mkdir -p "$state6"
+echo 999999 >"$state6/pid"
+echo 0 >"$state6/status"
+: >"$state6/gate.log"
+printf '%s %s\n' 12345 "$(cd "$rrepo" && CAIRN_GATE_LANE=light bash -c 'source <(sed -n "/^gate_fingerprint()/,/^}/p" "$1"); gate="$2"; gate_fingerprint' _ "$SCRIPT" "$gate6")" >"$state6/fingerprint"
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" "$gate6")
+out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt "$gate6")
+assert_eq "$?" "1" "receipt: a stale start fingerprint from another run writes none"
 out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'sleep 1; echo x >>a.txt')
 assert_eq "$?" "1" "receipt: nor does the reverted start tree match it"
 

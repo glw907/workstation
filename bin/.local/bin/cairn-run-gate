@@ -43,13 +43,15 @@
 # fingerprint, the gate string as run, the lane, the exit code, a copy of the log ending in the
 # "gate exit: N" line, and a timestamp. The fingerprint hashes what the gate reads beyond the
 # commit (caching is sound only for hermetic inputs, https://bazel.build/basics/hermeticity):
-# the toplevel and working directory, HEAD's tree, `git status --porcelain=v1 -uall`, the content
-# of every file that differs from HEAD or is untracked and not ignored, the package-lock.json and
-# node_modules/.package-lock.json at the root and under examples/*/, the effective lane, and the
+# the toplevel and working directory, the tree `git write-tree` would produce after `git add -A`
+# (tracked and untracked non-ignored content, committed or not, so committing the gated tree keeps
+# the match), the package-lock.json and node_modules/.package-lock.json at the root and under
+# examples/*/, the realpath of each examples/*/node_modules/@glw907/* link, the effective lane, and the
 # environment values of E2E_PORT, CI, and every CAIRN_* name the gate string mentions (an export
 # inside the gate string is already part of the string). It is taken when the run starts and
-# again when it finishes; a tree that changed in between gets no receipt. A run started by an
-# older copy of this script carries no start fingerprint and gets none either.
+# again when it finishes; a tree that changed in between gets no receipt. The start fingerprint is
+# keyed by the run's pid, so a run started by an older copy of this script, which writes none,
+# never compares against a stale one and gets no receipt.
 #
 # Lookup: `cairn-run-gate --receipt '<gate string>'` recomputes the fingerprint for the current
 # tree and, when the receipt for this exact gate string matches it, recorded exit 0, and its log
@@ -65,32 +67,32 @@ fi
 gate="${1:?gate string required}"
 receipt_root="${CAIRN_GATE_RECEIPT_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/cairn-run-gate/receipts}"
 
-# Prints the tree fingerprint described above, or nothing outside a git work tree. Optional git
-# locks stay off so a fingerprint never contends with an agent's own commit for index.lock.
+# Prints the tree fingerprint described above, or nothing outside a git work tree. The tree part
+# is commit-invariant: a scratch index copied from the real one (so unchanged files keep their
+# stat cache) takes `git add -A` and `git write-tree`, so the same content hashes the same whether
+# it is committed, staged, or only on disk. Optional git locks stay off so a fingerprint never
+# contends with an agent's own commit for index.lock.
 gate_fingerprint() {
-  local cwd="$PWD" top
+  local cwd="$PWD" top idx tree
   top=$(git rev-parse --show-toplevel 2>/dev/null) || return 0
+  idx=$(mktemp "${TMPDIR:-/tmp}/cairn-gate-index.XXXXXX") || return 0
+  cp "$(git -C "$top" rev-parse --path-format=absolute --git-path index 2>/dev/null)" "$idx" 2>/dev/null || rm -f "$idx"
+  tree=$(export GIT_OPTIONAL_LOCKS=0 GIT_INDEX_FILE="$idx"
+    git -C "$top" add -A >/dev/null 2>&1 && git -C "$top" write-tree 2>/dev/null)
+  rm -f "$idx" "$idx.lock"
+  [ -n "$tree" ] || return 0
   (
-    export GIT_OPTIONAL_LOCKS=0
-    printf 'top=%s\ncwd=%s\n' "$top" "$cwd"
-    printf 'tree=%s\n' "$(git -C "$top" rev-parse -q --verify 'HEAD^{tree}' 2>/dev/null || echo none)"
-    echo '--- status'
-    git -C "$top" status --porcelain=v1 -uall
-    echo '--- content'
-    { git -C "$top" diff --name-only -z HEAD 2>/dev/null; git -C "$top" ls-files -o --exclude-standard -z; } |
-      sort -zu | while IFS= read -r -d '' f; do
-        if [ -L "$top/$f" ]; then
-          printf 'link %s %s\n' "$f" "$(readlink "$top/$f")"
-        elif [ -f "$top/$f" ]; then
-          printf 'file %s %s\n' "$f" "$(sha256sum <"$top/$f" | cut -c1-64)"
-        else
-          printf 'gone %s\n' "$f"
-        fi
-      done
+    printf 'top=%s\ncwd=%s\ntree=%s\n' "$top" "$cwd" "$tree"
     echo '--- lockfiles'
     for f in "$top/package-lock.json" "$top/node_modules/.package-lock.json" \
       "$top"/examples/*/package-lock.json "$top"/examples/*/node_modules/.package-lock.json; do
       [ -f "$f" ] && printf '%s %s\n' "${f#"$top"/}" "$(sha256sum <"$f" | cut -c1-64)"
+    done
+    # A feature worktree's example can link the engine from another checkout; which one it
+    # resolves to is part of what the gate proves.
+    echo '--- engine links'
+    for f in "$top"/examples/*/node_modules/@glw907/*; do
+      [ -e "$f" ] && printf '%s -> %s\n' "${f#"$top"/}" "$(realpath "$f")"
     done
     echo '--- env'
     printf 'lane=%s\n' "${CAIRN_GATE_LANE:-heavy}"
@@ -182,20 +184,22 @@ if [ ! -e "$pidfile" ]; then
   # gate waited on another gate. The stamp runs inside the lock, before the gate itself.
   date +%s >"$state/queued"
   echo "$lane" >"$state/lane"
-  # The receipt's start fingerprint and HEAD, compared again when the run finishes.
-  gate_fingerprint >"$state/fingerprint"
+  # The receipt's start fingerprint and HEAD; the fingerprint is written with the run's pid below.
+  rm -f "$state/fingerprint"
+  start_fp=$(gate_fingerprint)
   git rev-parse HEAD >"$state/head" 2>/dev/null || echo none >"$state/head"
   ( "${lock[@]}" "${scope[@]}" "${keep_awake[@]}" bash -c 'date +%s >"$1"; exec bash -c "$2"' _ "$state/acquired" "$gate" >"$log" 2>&1; echo $? >"$statusfile" ) </dev/null &
   echo $! >"$pidfile"
+  [ -n "$start_fp" ] && printf '%s %s\n' "$!" "$start_fp" >"$state/fingerprint"
   echo "gate started (log: $log)"
 fi
 
 # Writes this run's receipt (see the header) when its start fingerprint still matches the tree.
 # Never fails the call: a receipt is an optimization, so any error just leaves none.
 write_receipt() {
-  local status_code="$1" start_fp end_fp top rdir
-  start_fp=$(cat "$state/fingerprint" 2>/dev/null)
-  [ -n "$start_fp" ] || return 0
+  local status_code="$1" start_pid start_fp end_fp top rdir
+  [ -f "$state/fingerprint" ] && read -r start_pid start_fp <"$state/fingerprint" || return 0
+  [ -n "$start_fp" ] && [ "$start_pid" = "$pid" ] || return 0
   end_fp=$(gate_fingerprint)
   [ "$start_fp" = "$end_fp" ] || return 0
   top=$(git rev-parse --show-toplevel 2>/dev/null) || return 0
