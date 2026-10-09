@@ -83,7 +83,7 @@ releasable, push the branch for a CI `e2e` run, or force a from-scratch showcase
 ### Live admin smoke (step 4, `auth-data` only)
 
 Run it against a real Worker (`wrangler dev`), minting a session by inserting a D1 session
-row directly, then drives the magic-link round trip itself in headless Chromium, reading the
+row directly, then drive the magic-link round trip itself in headless Chromium, reading the
 link from wrangler's local `send_email` output (Geoff, 2026-09-21: verification a plan parks for
 the owner is Claude's). Follow
 `docs/internal/admin-smoke-test.md` and record the results as evidence.

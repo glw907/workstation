@@ -82,9 +82,12 @@ root through `file:` (Geoff, 2026-10-08). In each:
 
 1. Run `npm update --save`. It takes every minor and patch the ranges allow and rewrites the
    direct dependency and devDependency ranges in `package.json`, so the declared floors track the
-   install ([npm update](https://docs.npmjs.com/cli/v11/commands/npm-update)). A `~` or exact
-   range blocks a minor; widen it to `^` first unless the survey found it pinned on purpose. Peer
-   ranges do not move unless the survey found a reason.
+   install ([npm update](https://docs.npmjs.com/cli/v11/commands/npm-update)). Some ranges stop
+   it short: a `~` range blocks a minor, a `^0.x` range blocks a 0.x minor (`^0.5.0` stops below
+   `0.6.0`, so a consumer on `@glw907/cairn-cms ^0.x` would silently skip engine minors), and an
+   exact range blocks patches too. Rewrite each of those to `^<newest non-major>` before the
+   update unless the survey found it pinned on purpose. Peer ranges do not move unless the survey
+   found a reason.
 2. Run `npm dedupe`.
 3. Diff the lockfile against the pre-sweep copy and record every resolved-version change, since
    caret-satisfied transitive packages move silently.

@@ -6,7 +6,7 @@ Clock time on a pass is the per-task gate and the fix rounds, not the implemente
 approved, all cheap in tokens:
 - **The slow suite runs only where it can catch something.** The per-task gate is the change's
   blast radius (Geoff, 2026-10-08): the tier the diff computes, plus the e2e specs its change
-  reaches. A `paint` task's e2e is the specs its change reaches, not the whole suite; the full
+  reaches. A `paint` task's e2e is the set of specs its change reaches; the full
   suite runs at segment boundaries and on CI. "Full gate" means only the 45-minute `full` tier.
   Across B2's eight tasks the per-task e2e caught nothing the checks, the diff reviewer, and CI
   did not, at a third of each task's hour.
@@ -28,12 +28,21 @@ approved, all cheap in tokens:
   kind of change now does.
 - **Scope the engine test suite to the blast radius.** A task whose Files touch nothing under
   the engine's source runs the consumer's own unit suite, not the engine's.
+- **Gate receipts replace reruns on an unchanged tree** (Geoff, 2026-10-08). Every
+  `cairn-run-gate` run that prints `gate exit:` writes a receipt outside the repo. Its fingerprint
+  covers the tree `git add -A` and `git write-tree` would produce (tracked and untracked
+  non-ignored content, so committing the gated tree keeps the match), the lockfiles at the root
+  and under `examples/*/`, the realpath of each example's `@glw907` engine link, the toplevel and
+  working directory, the lane, and `E2E_PORT`, `CI`, and every `CAIRN_*` the gate string names.
+  `cairn-run-gate --receipt '<gate>'` exits 0 only for a receipt of that exact gate string, on a
+  matching fingerprint, from a run that passed. Both runners' gate agents look one up before
+  rerunning a gate, and a segment boundary does the same before its full gate.
 - **A pre-flight checklist in every task's notes prevents the fix rounds** B2 kept paying for:
   no comment claims what its assertion does not prove; the labeled report block verbatim;
   no process citations in shipped comments; counts found, changed, deferred; re-emit before
   the gate.
-- **Task 0 takes no gate** (Geoff, 2026-09-12): a read-only pre-task runs none (its staleness check is `pass-core`'s per-segment pre-flight, not
-  a separate one; Geoff, 2026-10-08), and
+- **Task 0 takes no gate** (Geoff, 2026-09-12): a read-only pre-task runs none (its staleness check is `pass-core`'s per-segment pre-flight; Geoff,
+  2026-10-08), and
   the lane's baseline is the conductor's own one `cairn-run-gate` call at lane launch, quoted
   to the reviewer as Task 0's gate evidence.
 - **The cross-lane review fires on a disjunction** (Geoff, 2026-09-12): the merge ritual's
@@ -65,8 +74,8 @@ approved, all cheap in tokens:
   the lock re-issues its gate every ten minutes and each re-issue is a paid turn. (1) Before launching a heavy gate
   expected to run over 15 minutes, send the other live session one line through `SendMessage` (what, rough length,
   roughly when), so a short gate can go first rather than queue behind a long one by surprise; a gate under 10
-  minutes needs no message. (2) Never re-run a full gate on an unchanged commit: a segment boundary reuses the last
-  task's full gate when `HEAD` has not moved since it ran. (3) Browserless steps stay on the light lane. (4) When a
+  minutes needs no message. (2) Never re-run a full gate on an unchanged tree: a segment boundary skips its full gate
+  when `cairn-run-gate --receipt '<gate>'` finds a passing receipt for it. (3) Browserless steps stay on the light lane. (4) When a
   session knows its next heavy gate is more than about 30 minutes away (an implementer still editing, a review, a
   CI wait), it says so if the other has heavy work queued, so the other can launch into the gap. `ListAgents` shows
   the live peer sessions.

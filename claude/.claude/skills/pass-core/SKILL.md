@@ -102,7 +102,8 @@ the close.
 
 **The per-task gate is the change's blast radius, never the whole suite (Geoff, 2026-10-08).** A
 task runs the tier its diff computes (`gate-tier.mjs` where the repo has one) plus the e2e specs its
-change can reach; the full gate runs once at each segment boundary and on CI before merge. This
+change can reach; the full gate runs once at each segment boundary (the final boundary's full
+gate yields to the close gate; see Closing) and on CI before merge. This
 follows presubmit test selection (Google's TAP) and the deployment pipeline's fast commit stage
 (Fowler): assurance on a sensitive change comes from its targeted tests and mutation proof, not
 from rerunning unrelated suites. The older full-gate-per-task cells were inherited, not researched
@@ -134,7 +135,7 @@ Each task runs as a chain:
 3. One re-dispatch on `fix`; a second `fix` is the conductor's decision.
 
 **CI shadows the pass (Geoff, 2026-10-08).** Every pass opens a draft PR against the default
-branch after its first commit (Task 0) and pushes after each accepted task, so CI (which runs on
+branch after the pass branch's first commit and pushes after each accepted task, so CI (which runs on
 `pull_request`) shadows the pass as it runs. Reason: cairn-cms CI fires on push only for
 `main` and `rebuild`, so a pass branch gets CI only through a PR; on 2026-10-08 the CI test job
 ran in about 11 minutes against about 45 locally.
@@ -152,8 +153,9 @@ not specify; any further escalation follows `~/.claude/docs/model-economy.md` "C
 
 ### Execution discipline
 
-- **Share the heavy gate lock deliberately.** A segment boundary reuses the last task's full gate when `HEAD` has
-  not moved since it ran; never re-run a full gate on an unchanged commit. When another live session shares the
+- **Share the heavy gate lock deliberately.** A segment boundary's full gate is skipped only when a receipt for
+  that exact gate already matches the tree (`cairn-run-gate --receipt '<gate>'` exits 0); never re-run a full gate
+  on an unchanged tree. When another live session shares the
   machine (`ListAgents`), send it a one-line heads-up before a heavy gate expected over 15 minutes, and say so when
   your next heavy gate is more than about 30 minutes away. The four rules live in
   `~/.claude/docs/pass-gate-economy.md` ("Sessions sharing the heavy lock coordinate").
