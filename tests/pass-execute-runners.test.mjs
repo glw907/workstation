@@ -1034,6 +1034,255 @@ for (const [name, factory, runIt] of [
   });
 }
 
+// -------------------------------------------------------------------------------------------
+// CI pipelining (pass-execute.js, sequential only): the runner pushes after every implementer
+// commit and runs ci-green through probe agents. Every case drives main() through a scripted
+// agent mock and reads which labels were dispatched, and in what order.
+// -------------------------------------------------------------------------------------------
+
+/**
+ * Routes for a CI run. `ciExits` maps a task id to the ci-green exits its probe reports, one per
+ * dispatch (the last repeats). `gatetier` maps a task id to extra gate-probe fields. `reviews`
+ * maps a label to a queue of review verdicts.
+ */
+function ciHarness({ tasks, ciExits = {}, gatetier = {}, reviews = {}, push = null, args: extra = {} }) {
+  const order = [];
+  let pushN = 0;
+  const shaOf = {};
+  const queues = {};
+  for (const [k, v] of Object.entries(ciExits)) queues[k] = [...v];
+  const routes = [
+    ["classifier", () => ({ exists: true })],
+    ["base:", baseShaHandler],
+    ["impl:", (_p, o) => { order.push(o.label); return implOk(); }],
+    ["push:", (_p, o) => {
+      order.push(o.label);
+      if (push) return push(o.label);
+      pushN += 1;
+      const rec = { sha: `sha${pushN}`, pushedAt: `2026-10-10T00:00:0${pushN}Z`, pushed: true };
+      shaOf[o.label] = rec.sha;
+      return rec;
+    }],
+    ["gatetier:", (_p, o) => {
+      const id = o.label.split(":")[1];
+      return { exists: true, gate: "computed gate", protectedExit: 0, protectedOut: "", ...(gatetier[id] || {}) };
+    }],
+    ["gaterun:", gateRunPass],
+    ["review:", (_p, o) => {
+      const q = reviews[o.label];
+      return q && q.length ? q.shift() : acceptReview();
+    }],
+    ["ci:", (prompt, o) => {
+      order.push(o.label);
+      const id = o.label.split(":")[1];
+      const q = queues[id] || [{ exitCode: 0, output: "" }];
+      const next = q.length > 1 ? q.shift() : q[0];
+      return typeof next === "number" ? { exitCode: next, output: "" } : next;
+    }]
+  ];
+  const args = { repo: "/repo", gate: "g", implementer: "i", ci: { pr: 7 }, tasks, ...extra };
+  const loaded = load(seqFactory, args, routes);
+  return { ...loaded, order, args };
+}
+
+const T = (id, extra = {}) => ({ id, title: `T${id}`, criteria: "c", ...extra });
+const idx = (order, label) => order.indexOf(label);
+const labelsOf = (agent, prefix) => agent.calls.filter((c) => c.label.startsWith(prefix)).map((c) => c.label);
+
+check("ci: green dispatches N+2 after N+1, and N+1 starts before N's check", async () => {
+  const h = ciHarness({ tasks: [T("1"), T("2"), T("3")] });
+  const result = await h.bundle.main();
+  assert.equal(result.ciRed, undefined);
+  assert.equal(result.ciUnavailable, undefined);
+  assert.deepEqual(result.tasks.map((t) => t.status), ["accepted", "accepted", "accepted"]);
+  assert.ok(idx(h.order, "impl:2") < idx(h.order, "ci:1"), "N+1 is dispatched without waiting on N");
+  assert.ok(idx(h.order, "ci:1") < idx(h.order, "impl:3"), "N's CI is read before N+2 starts");
+  const prompt = h.agent.calls.find((c) => c.label === "ci:1").prompt;
+  assert.match(prompt, /ci-green sha1 --pr 7 --wait --pushed-at 2026-10-10T00:00:01Z --task 1/);
+  assert.equal(h.agent.calls.find((c) => c.label === "ci:1").opts.model, "haiku");
+});
+
+check("ci: a red N halts after N+1 finishes and returns the ciRed record", async () => {
+  const detail = "FAIL test.yml / unit / vitest: foo.test.ts\nmain: test success";
+  const h = ciHarness({ tasks: [T("1"), T("2"), T("3")], ciExits: { "1": [{ exitCode: 1, output: detail }] } });
+  const result = await h.bundle.main();
+  assert.ok(h.order.includes("impl:2"), "N+1 finishes its chain");
+  assert.ok(!h.order.includes("impl:3"), "N+2 is never dispatched");
+  assert.deepEqual(result.tasks.map((t) => t.status), ["accepted", "accepted", "skipped"]);
+  assert.deepEqual(result.ciRed, { sha: "sha1", task: "1", verdict: "red", exitCode: 1, detail });
+  assert.equal(result.ciUnavailable, undefined);
+});
+
+check("ci: a missing N (exit 2) halts the same way", async () => {
+  const h = ciHarness({ tasks: [T("1"), T("2"), T("3")], ciExits: { "1": [{ exitCode: 2, output: "no runs" }] } });
+  const result = await h.bundle.main();
+  assert.ok(h.order.includes("impl:2"));
+  assert.ok(!h.order.includes("impl:3"));
+  assert.equal(result.ciRed.verdict, "missing");
+  assert.equal(result.ciRed.sha, "sha1");
+  assert.equal(result.ciRed.exitCode, 2);
+});
+
+check("ci: unavailable (exit 3, or any exit outside the five codes) halts with the ciUnavailable record", async () => {
+  for (const code of [3, 127, null]) {
+    const h = ciHarness({ tasks: [T("1"), T("2"), T("3")], ciExits: { "1": [{ exitCode: code, output: "no ci-green.json" }] } });
+    const result = await h.bundle.main();
+    assert.ok(!h.order.includes("impl:3"), `exit ${code}: N+2 is never dispatched`);
+    assert.equal(result.ciRed, undefined);
+    assert.equal(result.ciUnavailable.sha, "sha1");
+    assert.equal(result.ciUnavailable.task, "1");
+    assert.equal(result.ciUnavailable.exitCode, code);
+    assert.deepEqual(result.tasks.map((t) => t.status), ["accepted", "accepted", "skipped"]);
+  }
+});
+
+check("ci: pending (75, then 0) waits by re-dispatching the probe, then resolves", async () => {
+  const h = ciHarness({ tasks: [T("1"), T("2"), T("3")], ciExits: { "1": [75, 0] } });
+  const result = await h.bundle.main();
+  assert.equal(labelsOf(h.agent, "ci:").length, 2);
+  assert.ok(h.order.includes("impl:3"));
+  assert.equal(result.ciRed, undefined);
+  assert.match(h.agent.calls.find((c) => c.label === "ci:1").prompt, /re-issue/);
+});
+
+check("ci: an auth-data task blocks N+1's dispatch until green", async () => {
+  const h = ciHarness({ tasks: [T("1", { passClass: "auth-data" }), T("2")] });
+  await h.bundle.main();
+  assert.ok(idx(h.order, "ci:1") !== -1 && idx(h.order, "ci:1") < idx(h.order, "impl:2"));
+  const red = ciHarness({ tasks: [T("1", { passClass: "auth-data" }), T("2")], ciExits: { "1": [{ exitCode: 1, output: "boom" }] } });
+  const result = await red.bundle.main();
+  assert.ok(!red.order.includes("impl:2"), "a red wait leaves N+1 undispatched");
+  assert.equal(result.ciRed.task, "1");
+  assert.equal(result.tasks[1].status, "skipped");
+});
+
+check("ci: a task with its own ciWait: true blocks N+1's dispatch until green", async () => {
+  const h = ciHarness({ tasks: [T("1", { ciWait: true }), T("2")] });
+  await h.bundle.main();
+  assert.ok(idx(h.order, "ci:1") !== -1 && idx(h.order, "ci:1") < idx(h.order, "impl:2"));
+});
+
+check("ci: a task whose gate probe reports a protected-path touch blocks N+1's dispatch until green", async () => {
+  const h = ciHarness({ tasks: [T("1"), T("2")], gatetier: { "1": { protectedOut: "ciWait" } } });
+  await h.bundle.main();
+  assert.ok(idx(h.order, "ci:1") !== -1 && idx(h.order, "ci:1") < idx(h.order, "impl:2"));
+  const plain = ciHarness({ tasks: [T("1"), T("2")] });
+  await plain.bundle.main();
+  assert.ok(!plain.order.includes("ci:1"), "an unflagged task does not wait");
+});
+
+check("ci: a pinned task is still probed for --protected, keeps its pinned gate, and waits when flagged", async () => {
+  const h = ciHarness({ tasks: [T("1", { gateTier: "full", gate: "pinned gate" }), T("2")], gatetier: { "1": { protectedOut: "ciWait" } } });
+  const result = await h.bundle.main();
+  const probe = h.agent.calls.find((c) => c.label === "gatetier:1");
+  assert.ok(probe, "a pin no longer skips the gate probe");
+  assert.match(probe.prompt, /gate-tier\.mjs --range [a]{40}\.\.HEAD --protected/);
+  assert.doesNotMatch(probe.prompt, /gate-tier\.mjs --range [a]{40}\.\.HEAD(?! --protected)/, "the pinned gate string is never recomputed");
+  assert.match(h.agent.calls.find((c) => c.label === "gaterun:1").prompt, /The gate string: pinned gate/);
+  assert.ok(idx(h.order, "ci:1") < idx(h.order, "impl:2"));
+  assert.equal(result.tasks[0].status, "accepted");
+  const direct = await load(seqFactory, {}, [["g", () => ({ exists: true, gate: "", protectedExit: 0, protectedOut: "" })]])
+    .bundle.resolveGate({ id: "1", gateTier: "full", gate: "pinned gate" }, { gate: "x", ci: { pr: 7 } }, SHA, true, "g");
+  assert.deepEqual(direct, { gate: "pinned gate", source: "pin", tier: "full", ciWait: false });
+});
+
+check("ci: a --protected run that exits non-zero, or never reports, counts as ciWait; an absent classifier does not", async () => {
+  const wait = async (fields) => {
+    const { bundle } = load(seqFactory, {}, [["g", () => ({ exists: true, gate: "x", ...fields })]]);
+    return (await bundle.resolveGate({ id: "1" }, { gate: "g", ci: { pr: 7 } }, SHA, true, "g")).ciWait;
+  };
+  assert.equal(await wait({ protectedExit: 0, protectedOut: "" }), false);
+  assert.equal(await wait({ protectedExit: 0, protectedOut: "ciWait\n" }), true);
+  assert.equal(await wait({ protectedExit: 2, protectedOut: "" }), true);
+  assert.equal(await wait({ protectedExit: null, protectedOut: "" }), true);
+  assert.equal(await wait({}), true, "an omitted exit code fails closed");
+  const absent = load(seqFactory, {}, [["g", () => ({ exists: false, gate: "" })]]);
+  assert.equal((await absent.bundle.resolveGate({ id: "1" }, { gate: "g", ci: { pr: 7 } }, SHA, true, "g")).ciWait, false);
+  const p = load(seqFactory, {}, [["g", () => ({ exists: true, gate: "x", protectedExit: 0, protectedOut: "" })]]);
+  await p.bundle.resolveGate({ id: "1" }, { gate: "g", ci: { pr: 7 } }, SHA, true, "g");
+  assert.match(p.agent.calls[0].prompt, /--protected/);
+  assert.match(p.agent.calls[0].prompt, /non-zero/);
+});
+
+check("ci: no ci argument never pushes and never calls ci-green, and the gate probe stays as before", async () => {
+  const h = ciHarness({ tasks: [T("1", { passClass: "auth-data" }), T("2"), T("3")], args: { ci: undefined } });
+  const result = await h.bundle.main();
+  assert.equal(h.agent.calls.filter((c) => /^(push|ci):/.test(c.label)).length, 0);
+  assert.doesNotMatch(h.agent.calls.find((c) => c.label === "gatetier:2").prompt, /--protected/);
+  assert.equal(result.ci, undefined);
+  assert.equal(result.tasks.every((t) => t.ci === undefined), true);
+});
+
+check("ci: parallel: true never pushes and never calls ci-green", async () => {
+  const h = ciHarness({ tasks: [T("1", { passClass: "auth-data" }), T("2")], args: { parallel: true } });
+  await h.bundle.main();
+  assert.equal(h.agent.calls.filter((c) => /^(push|ci):/.test(c.label)).length, 0);
+});
+
+check("ci: a fix round's commit is pushed, and the check reads the pushed head", async () => {
+  const fixReview = { verdict: "fix", summary: "", blocking: [{ location: "x", finding: "f", fix: "g" }], nonBlocking: [], gate: "pass", unspecified: [] };
+  const h = ciHarness({ tasks: [T("1"), T("2")], reviews: { "review:1": [fixReview] } });
+  await h.bundle.main();
+  assert.deepEqual(labelsOf(h.agent, "push:"), ["push:1", "push:1:fix1", "push:2"]);
+  assert.ok(idx(h.order, "push:1:fix1") > idx(h.order, "impl:1:fix1"));
+});
+
+check("ci: the push precedes the review, and the accepted SHA is the last push", async () => {
+  const fixReview = { verdict: "fix", summary: "", blocking: [{ location: "x", finding: "f", fix: "g" }], nonBlocking: [], gate: "pass", unspecified: [] };
+  const h = ciHarness({ tasks: [T("1", { ciWait: true }), T("2")], reviews: { "review:1": [fixReview] } });
+  const result = await h.bundle.main();
+  const calls = h.agent.calls.map((c) => c.label);
+  assert.ok(calls.indexOf("push:1") < calls.indexOf("review:1"));
+  assert.ok(calls.indexOf("push:1:fix1") < calls.indexOf("review:1:fix1"));
+  assert.match(h.agent.calls.find((c) => c.label === "ci:1").prompt, /ci-green sha2 /);
+  assert.equal(result.tasks[0].ci.sha, "sha2");
+});
+
+check("ci: a failed push surfaces as ciUnavailable when that task's check comes due", async () => {
+  const h = ciHarness({ tasks: [T("1"), T("2"), T("3")], push: (label) => (label === "push:1" ? { sha: "", pushedAt: "", pushed: false } : { sha: "s", pushedAt: "2026-10-10T00:00:00Z", pushed: true }) });
+  const result = await h.bundle.main();
+  assert.ok(!h.order.includes("impl:3"));
+  assert.equal(result.ciUnavailable.task, "1");
+  assert.match(result.ciUnavailable.reason, /push/);
+  assert.equal(labelsOf(h.agent, "ci:").length, 0);
+});
+
+check("ci: validateArgs rejects a ci object without a numeric pr", () => {
+  const { bundle } = load(seqFactory);
+  const base = { repo: "/r", gate: "g", implementer: "i", tasks: [T("1")] };
+  assert.doesNotThrow(() => bundle.validateArgs({ ...base, ci: { pr: 7 } }));
+  assert.throws(() => bundle.validateArgs({ ...base, ci: {} }), /ci\.pr/);
+  assert.throws(() => bundle.validateArgs({ ...base, ci: { pr: "x" } }), /ci\.pr/);
+});
+
+check("ci: auth-data carries ciWait in both runners, and no other class does", () => {
+  for (const factory of [seqFactory, chainsFactory]) {
+    const { bundle } = load(factory);
+    for (const [name, cls] of Object.entries(bundle.PASS_CLASSES)) {
+      assert.equal(cls.ciWait === true, name === "auth-data", name);
+    }
+  }
+});
+
+check("classifier commands carry --class when a class is set, and omit it otherwise (both runners)", async () => {
+  const t = { id: "1", title: "T", criteria: "c", passClass: "auth-data" };
+  const a = { repo: "/repo", gate: "g", implementer: "i" };
+  const seq = load(seqFactory, {}, [["g", () => ({ exists: true, gate: "x", protectedExit: 0, protectedOut: "" })]]);
+  assert.match(seq.bundle.implementPrompt(t, a, null, "deadbeef", true), /--range deadbeef\.\.HEAD --class auth-data/);
+  assert.doesNotMatch(seq.bundle.implementPrompt({ ...t, passClass: undefined }, a, null, "deadbeef", true), /--class/);
+  await seq.bundle.resolveGate(t, a, "deadbeef", true, "g");
+  assert.match(seq.agent.calls[0].prompt, /--range deadbeef\.\.HEAD --class auth-data/);
+  const pinned = seq.bundle.implementPrompt({ ...t, gateTier: "full" }, a, null, "deadbeef", true);
+  assert.doesNotMatch(pinned, /gate-tier\.mjs --range/);
+
+  const chn = load(chainsFactory, {}, [["g", () => ({ exists: true, gate: "x" })]]);
+  const chain = { id: "C", repo: "/repo", branch: "b" };
+  assert.match(chn.bundle.implementPrompt(t, chain, a, null, "deadbeef", true), /--range deadbeef\.\.HEAD --class auth-data/);
+  assert.doesNotMatch(chn.bundle.implementPrompt({ ...t, passClass: undefined }, chain, a, null, "deadbeef", true), /--class/);
+  await chn.bundle.resolveGate(t, chain, a, "deadbeef", true, "P", "g");
+  assert.match(chn.agent.calls[0].prompt, /--range deadbeef\.\.HEAD --class auth-data/);
+});
+
 console.log("");
 await runChecks();
 if (failures.length) {

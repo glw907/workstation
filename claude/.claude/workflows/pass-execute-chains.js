@@ -223,14 +223,16 @@ const DEFAULT_REVIEWER_MODEL = "claude-opus-5-5";
 
 // The class table. `mandate` goes to the implementer, `bar` to the reviewer; `coverageBlocks`
 // false demotes coverageOnly findings; `testOnlyReduces` lets a test-only fix round take the
-// reduced gate. Keep in step with pass-execute.js.
+// reduced gate; `ciWait` makes the sequential runner read CI green before the next task (this
+// runner ignores it). Keep in step with pass-execute.js.
 const PASS_CLASSES = {
   "auth-data": {
     mandate: "Test-first: write or confirm the failing test before the change. For each auth, signing, session, D1, or commit-path branch you add, apply a mutation, confirm a test fails, revert it, and record it in mutationLedger. The pass end adds a web-auth-security-reviewer read and a live admin smoke.",
     bar: "Block on any behavior defect, unmet outcome, or coverage gap: an untested branch in auth, signing, sessions, D1, or the commit path is itself a defect.",
     coverageBlocks: true,
     testOnlyReduces: false,
-    reviewerModel: DEFAULT_REVIEWER_MODEL
+    reviewerModel: DEFAULT_REVIEWER_MODEL,
+    ciWait: true
   },
   "engine-logic": {
     mandate: "Test-first: write or confirm the failing test before the change.",
@@ -355,7 +357,8 @@ function implementPrompt(t, chain, a, blocking, baseSha, classifierExists) {
   const light = (t.gateLane || a.gateLane || (cls && cls.gateLane)) === "light";
   const lanePrefix = light ? "CAIRN_GATE_LANE=light " : "";
   const laneNote = light ? " (keep the CAIRN_GATE_LANE=light prefix on the first call and on every re-issue: this gate launches no browser, so it takes the light lane and does not queue behind a browser gate)" : "";
-  const classifierCmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${pinFlag}`;
+  const classFlag = cls ? ` --class ${cls.name}` : "";
+  const classifierCmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${classFlag}${pinFlag}`;
   const lines = [
     onMain
       ? `Repo (the main checkout, branch main; this pass runs on main by its plan's rule, no worktree, commit directly on main): ${chain.repo}`
@@ -738,7 +741,9 @@ async function resolveGate(t, chain, a, baseSha, classifierExists, phaseName, la
     return { gate: t.gate || a.gate, source: "fallback", tier: "default" };
   }
   const paintFlag = t.paint != null ? ` --paint ${t.paint ? "yes" : "no"}` : "";
-  const cmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}`;
+  const cls = classOf(t, a);
+  const classFlag = cls ? ` --class ${cls.name}` : "";
+  const cmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${classFlag}`;
   const probe = await agent(
     [
       `Repo: ${chain.repo}`,

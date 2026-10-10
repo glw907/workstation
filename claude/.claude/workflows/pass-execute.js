@@ -29,6 +29,10 @@
 //       reviewerModel: "sonnet",          // optional; overrides the class's reviewer model.
 //       stopOnEscalate: true,             // optional; sequential runs only, defaults to true.
 //                                         // See "Stop on an unaccepted task" below.
+//       ci: { pr: 110 },                  // optional; sequential runs only. Pipelines CI behind the
+//                                         // chain; see "CI pipelining" below. Absent, or under
+//                                         // `parallel: true`, the runner never pushes and never
+//                                         // calls ci-green.
 //       commonNotes: "...",               // optional; appended after every task's own
 //                                         // `notes` line in the implement prompt. Absent
 //                                         // adds nothing, matching today's prompts.
@@ -132,6 +136,35 @@
 // falls back to the reviewer reproducing the gate itself, and the reviewer prompt says why. A
 // no-class reduced round keeps running the resolved gate, as before.
 
+// CI pipelining: with `ci: { pr: <n> }` a sequential run reads CI as the full gate and overlaps
+// it with the next task's work. Every probe below is a Haiku agent; the runner itself has no exec.
+//   - After every implementer commit, fix rounds included, a `push:<task>[:fix<n>]` probe pushes
+//     (never forcing) and returns `{ pushed, sha, pushedAt }`. The push comes before the gate
+//     probe and the review, so CI runs while the reviewer reads. A task's `ci` field on its
+//     record is its last push plus `wait`, the accepted head.
+//   - After task N is accepted, N+1 is dispatched at once. Before task N+2 is dispatched, a
+//     `ci:<N>` probe runs `ci-green <sha> --pr <n> --wait --pushed-at <iso> --task <N>` on N's
+//     accepted SHA, so N+1 has finished its chain by the time a red N is read.
+//   - A task with `wait` set is read before N+1 is dispatched, and N+1 never starts on a red
+//     one. `wait` holds when the class sets `ciWait` (`auth-data`), when the task carries
+//     `ciWait: true`, or when the gate probe's `--protected` run says so. That probe runs on every
+//     task of a CI run, a pinned task included (the pinned gate string stays as written): its
+//     `protectedExit` and `protectedOut` make `ciWait` true when the exit is non-zero or missing
+//     or the output names `ciWait`, and false when the classifier is absent. The probe runs at
+//     the head being accepted, so a fix round's range is covered.
+//   - A `ci:` probe makes one `ci-green --wait` call (it blocks up to 540 seconds) and re-issues
+//     on exit 75; the runner re-dispatches it too if it reports 75, up to CI_MAX_WAITS times.
+//     Exit 0 is green. Exit 1 is red and exit 2 is missing: the run halts, the tasks not yet
+//     dispatched are marked "skipped", and the result carries `ciRed`: `{ sha, task, verdict:
+//     "red" | "missing", exitCode, detail }`, where `detail` is ci-green's own output (the failing
+//     workflows, jobs, steps, and tests, and `main`'s latest conclusion per workflow). Exit 3, any
+//     other exit, a failed push, or a probe that returns nothing halts the same way with
+//     `ciUnavailable`: `{ sha, task, exitCode, reason }`, and the conductor then runs the local
+//     full gate on that SHA.
+//   - The last two accepted tasks of a segment have no later dispatch to trigger their read, so the
+//     result's `ci.unchecked` lists their `{ task, sha, pushedAt }` for the conductor.
+// An unaccepted task ends the run as before, with no further CI reads.
+
 export const meta = {
   name: "pass-execute",
   description: "Runs a pass plan's tasks through implementer, diff-reviewer, and gate in a chain. One invocation runs one segment; a pass with conductor boundaries is launched once per segment.",
@@ -204,9 +237,32 @@ const GATE_TIER_SCHEMA = {
   type: "object",
   properties: {
     exists: { type: "boolean" },
-    gate: { type: "string" }
+    gate: { type: "string" },
+    // Only on a CI run: the exit code and stdout of the classifier's --protected mode. The runner
+    // derives ciWait from them, so a non-zero or missing exit fails closed.
+    protectedExit: { type: ["integer", "null"] },
+    protectedOut: { type: "string" }
   },
   required: ["exists", "gate"]
+};
+
+const PUSH_SCHEMA = {
+  type: "object",
+  properties: {
+    pushed: { type: "boolean" },
+    sha: { type: "string" },
+    pushedAt: { type: "string" }
+  },
+  required: ["pushed", "sha", "pushedAt"]
+};
+
+const CI_SCHEMA = {
+  type: "object",
+  properties: {
+    exitCode: { type: ["integer", "null"] },
+    output: { type: "string" }
+  },
+  required: ["exitCode", "output"]
 };
 
 const GATE_RUN_SCHEMA = {
@@ -294,14 +350,16 @@ const DEFAULT_REVIEWER_MODEL = "claude-opus-5-5";
 
 // The class table. `mandate` goes to the implementer, `bar` to the reviewer; `coverageBlocks`
 // false demotes coverageOnly findings; `testOnlyReduces` lets a test-only fix round take the
-// reduced gate. Keep in step with pass-execute-chains.js.
+// reduced gate; `ciWait` makes a CI run read CI green before the next task. Keep in step with
+// pass-execute-chains.js.
 const PASS_CLASSES = {
   "auth-data": {
     mandate: "Test-first: write or confirm the failing test before the change. For each auth, signing, session, D1, or commit-path branch you add, apply a mutation, confirm a test fails, revert it, and record it in mutationLedger. The pass end adds a web-auth-security-reviewer read and a live admin smoke.",
     bar: "Block on any behavior defect, unmet outcome, or coverage gap: an untested branch in auth, signing, sessions, D1, or the commit path is itself a defect.",
     coverageBlocks: true,
     testOnlyReduces: false,
-    reviewerModel: DEFAULT_REVIEWER_MODEL
+    reviewerModel: DEFAULT_REVIEWER_MODEL,
+    ciWait: true
   },
   "engine-logic": {
     mandate: "Test-first: write or confirm the failing test before the change.",
@@ -411,6 +469,9 @@ function validateArgs(a) {
       throw new Error(`unknown passClass "${c}"; expected one of ${Object.keys(PASS_CLASSES).join(", ")}`);
     }
   }
+  if (a.ci != null && !(a.ci && Number.isInteger(Number(a.ci.pr)) && Number(a.ci.pr) > 0 && a.ci.pr !== true)) {
+    throw new Error("args.ci.pr must be a pull request number");
+  }
   if (!a.repo) {
     throw new Error("args.repo is required");
   }
@@ -446,7 +507,8 @@ function implementPrompt(t, a, blocking, baseSha, classifierExists) {
   const light = (t.gateLane || a.gateLane || (cls && cls.gateLane)) === "light";
   const lanePrefix = light ? "CAIRN_GATE_LANE=light " : "";
   const laneNote = light ? " (keep the CAIRN_GATE_LANE=light prefix on the first call and on every re-issue: this gate launches no browser, so it takes the light lane)" : "";
-  const classifierCmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${pinFlag}`;
+  const classFlag = cls ? ` --class ${cls.name}` : "";
+  const classifierCmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${classFlag}${pinFlag}`;
   const lines = [
     `Repo: ${a.repo}`,
     `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
@@ -813,33 +875,171 @@ async function resolveClassifier(a) {
  * task's diff so far (base..HEAD, which grows across fix rounds).
  */
 async function resolveGate(t, a, baseSha, classifierExists, label) {
+  const watch = ciActive(a);
+  const protectedCmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD --protected`;
+  const protectedLines = watch
+    ? [
+        `Then run exactly \`${protectedCmd}\` from the repo root and report protectedExit as its exit code (null when it never ran) and protectedOut as its exact stdout, trimmed. Report a non-zero exit as it is; never retry it or read meaning into it.`
+      ]
+    : [];
+  const home = [
+    `Repo: ${a.repo}`,
+    `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
+    `Check whether the file scripts/checks/gate-tier.mjs exists there.`,
+    `If it does not, report exists: false and gate: "".`
+  ];
+  const last = [`Do not run any other command and never modify a file.`];
   if (t.gateTier) {
-    return { gate: t.gate || a.gate, source: "pin", tier: t.gateTier };
+    const pinned = { gate: t.gate || a.gate, source: "pin", tier: t.gateTier };
+    if (!watch || !classifierExists) {
+      return pinned;
+    }
+    const probe = await agent(
+      [
+        ...home,
+        `If it does, report exists: true and gate: "" (this task pins its gate; do not compute one).`,
+        ...protectedLines,
+        ...last
+      ].join("\n"),
+      { label, phase: "Implement", schema: GATE_TIER_SCHEMA, model: "haiku", effort: "low" }
+    );
+    return { ...pinned, ciWait: protectedWait(probe) };
   }
   if (!classifierExists) {
     return { gate: t.gate || a.gate, source: "fallback", tier: "default" };
   }
   const paintFlag = t.paint != null ? ` --paint ${t.paint ? "yes" : "no"}` : "";
-  const cmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}`;
+  const cls = classOf(t, a);
+  const classFlag = cls ? ` --class ${cls.name}` : "";
+  const cmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${classFlag}`;
   const probe = await agent(
     [
-      `Repo: ${a.repo}`,
-      `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
-      `Check whether the file scripts/checks/gate-tier.mjs exists there.`,
-      `If it does not, report exists: false and gate: "".`,
+      ...home,
       `If it does, run exactly \`${cmd}\` from the repo root and report exists: true and gate: "<its exact stdout, trimmed>". On a non-zero exit or empty stdout, report exists: true and gate: "".`,
-      `Do not run any other command and never modify a file.`
+      ...protectedLines,
+      ...last
     ].join("\n"),
     { label, phase: "Implement", schema: GATE_TIER_SCHEMA, model: "haiku", effort: "low" }
   );
+  const ciPart = watch ? { ciWait: protectedWait(probe) } : {};
   if (!probe || !probe.exists || !probe.gate) {
-    return { gate: t.gate || a.gate, source: "fallback", tier: "default" };
+    return { gate: t.gate || a.gate, source: "fallback", tier: "default", ...ciPart };
   }
-  return { gate: probe.gate, source: "classifier", tier: "computed" };
+  return { gate: probe.gate, source: "classifier", tier: "computed", ...ciPart };
+}
+
+/**
+ * Whether a gate probe's `--protected` run demands a CI wait. A missing probe, a missing exit
+ * code, and any non-zero exit fail closed to true; an absent classifier is false; otherwise the
+ * mode's stdout names `ciWait` exactly when the range touched a protected path.
+ */
+function protectedWait(probe) {
+  if (!probe) {
+    return true;
+  }
+  if (!probe.exists) {
+    return false;
+  }
+  if (probe.protectedExit !== 0) {
+    return true;
+  }
+  return /ciWait/.test(String(probe.protectedOut || ""));
 }
 
 function logGateTier(t, resolved) {
   log(`task ${t.id}: gate tier ${resolved.tier} (${resolved.source})`);
+}
+
+/** True for a sequential run that was handed a pull request to read CI from. */
+function ciActive(a) {
+  return Boolean(a && a.ci && a.ci.pr != null && a.parallel !== true);
+}
+
+/** The most `ci-green --wait` dispatches one check may take before it reads as unavailable. */
+const CI_MAX_WAITS = 12;
+
+/**
+ * Pushes the repo's HEAD through a probe agent and returns the push record
+ * `{ pushed, sha, pushedAt }`. A failed probe or a failed push is `pushed: false`.
+ */
+async function pushHead(a, label) {
+  const out = await agent(
+    [
+      `Repo: ${a.repo}`,
+      `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
+      `Run \`git push\` there (if the branch has no upstream, \`git push -u origin HEAD\`). Never force push and never change any other ref.`,
+      `Then run \`git rev-parse HEAD\` and \`date -u +%Y-%m-%dT%H:%M:%SZ\`. Report pushed: true only when the push exited 0, sha as the HEAD SHA, and pushedAt as the date output taken straight after the push. On a failed push report pushed: false with the same two values.`,
+      `Do not run any other command and never modify a file.`
+    ].join("\n"),
+    { label, phase: "Implement", schema: PUSH_SCHEMA, model: "haiku", effort: "low" }
+  );
+  const ok = Boolean(out && out.pushed === true && out.sha);
+  return { pushed: ok, sha: ok ? String(out.sha).trim() : "", pushedAt: out && out.pushedAt ? String(out.pushedAt).trim() : "" };
+}
+
+/**
+ * Reads CI for one accepted task's pushed SHA. Returns `{ kind: "green" }`, `{ kind: "red",
+ * record }` (red, or missing: ci-green exit 1 or 2), or `{ kind: "unavailable", record }`
+ * (exit 3, any exit outside the five codes, a failed push or probe, or a check still pending
+ * after CI_MAX_WAITS dispatches). Each dispatch is one `ci-green --wait` call, and the runner
+ * re-dispatches on exit 75.
+ */
+async function ciCheck(a, entry) {
+  const { task, ci } = entry;
+  const unavailable = (exitCode, reason) => ({ kind: "unavailable", record: { sha: ci.sha, task, exitCode, reason } });
+  if (!ci.pushed) {
+    return unavailable(null, "the commit was not pushed (push failed), so there is no SHA to read");
+  }
+  const cmd = `ci-green ${ci.sha} --pr ${a.ci.pr} --wait --pushed-at ${ci.pushedAt} --task ${task}`;
+  for (let n = 1; n <= CI_MAX_WAITS; n += 1) {
+    const out = await agent(
+      [
+        `Repo: ${a.repo}`,
+        `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
+        `Run exactly \`${cmd}\` from the repo root as a plain foreground Bash call with \`timeout: 600000\`. It blocks up to 540 seconds. On exit 75 (still pending), re-issue the identical call; stop on any other exit. Never poll a log, never run anything else, and never modify a file.`,
+        `Report exitCode as the last exit code, exactly as it exited (null when the command never ran or was not found), and output as that call's full stdout verbatim (the last 200 lines at most). Do not summarize, interpret, or reorder a line.`,
+        "Skip agent-memory maintenance for this dispatch."
+      ].join("\n"),
+      { label: `ci:${task}`, phase: "Review", schema: CI_SCHEMA, model: "haiku", effort: "low" }
+    );
+    if (!out) {
+      return unavailable(null, "the ci-green probe returned no report");
+    }
+    const code = out.exitCode;
+    const detail = String(out.output || "");
+    if (code === 0) {
+      return { kind: "green" };
+    }
+    if (code === 1 || code === 2) {
+      return { kind: "red", record: { sha: ci.sha, task, verdict: code === 1 ? "red" : "missing", exitCode: code, detail } };
+    }
+    if (code !== 75) {
+      return unavailable(code, `ci-green exited ${code === null ? "without a code" : code}${detail ? `: ${detail}` : ""}`);
+    }
+  }
+  return unavailable(75, `ci-green still pending after ${CI_MAX_WAITS} waits`);
+}
+
+/**
+ * Runs the checks a task about to be dispatched owes. Before task `i` starts, task `i - 2`'s
+ * accepted SHA must read green, and so must task `i - 1`'s when that task set `ci.wait`. A
+ * green check is marked on its ledger entry so nothing reads twice. Returns the first
+ * non-green check, or null.
+ */
+async function ciBeforeDispatch(a, ledger, i) {
+  for (const k of [i - 2, i - 1]) {
+    const entry = ledger[k];
+    if (!entry || entry.checked || (k === i - 1 && !entry.ci.wait)) {
+      continue;
+    }
+    const verdict = await ciCheck(a, entry);
+    if (verdict.kind !== "green") {
+      log(`task ${entry.task}: CI ${verdict.kind}; the run halts before task ${i + 1}`);
+      return verdict;
+    }
+    entry.checked = true;
+  }
+  return null;
 }
 
 async function runTask(t, a, classifierExists) {
@@ -870,6 +1070,9 @@ async function runTask(t, a, classifierExists) {
     log(`task ${t.id}: implementer failed to return a report`);
     return { id: t.id, title: t.title, status: "failed", fixRounds: 0, implementer: null, review: null };
   }
+
+  const ciOn = ciActive(a);
+  let pushRecord = ciOn ? await pushHead(a, `push:${t.id}`) : null;
 
   let resolvedGate = await resolveGate(t, a, baseSha, classifierExists, `gatetier:${t.id}`);
   logGateTier(t, resolvedGate);
@@ -911,6 +1114,10 @@ async function runTask(t, a, classifierExists) {
       return { id: t.id, title: t.title, status: "failed", fixRounds, implementer: null, review };
     }
 
+    if (ciOn) {
+      pushRecord = await pushHead(a, `push:${t.id}:fix${fixRounds}`);
+    }
+
     resolvedGate = await resolveGate(t, a, baseSha, classifierExists, `gatetier:${t.id}:fix${fixRounds}`);
     logGateTier(t, resolvedGate);
 
@@ -941,6 +1148,9 @@ async function runTask(t, a, classifierExists) {
   log(`task ${t.id} (${t.title}): ${status}, verdict ${review.verdict}, fixRounds ${fixRounds}${cls ? `, class ${cls.name}, ${batchedNotes.length} coverage notes batched` : ""}`);
 
   const record = { id: t.id, title: t.title, status, fixRounds, implementer: implReport, review, outOfScope };
+  if (ciOn) {
+    record.ci = { ...pushRecord, wait: Boolean(resolvedGate.ciWait || t.ciWait || (cls && cls.ciWait)) };
+  }
   return cls ? { ...record, passClass: cls.name, batchedNotes } : record;
 }
 
@@ -974,6 +1184,9 @@ async function main() {
   const classifierExists = await resolveClassifier(args);
 
   let results;
+  const ledger = [];
+  let ciRed = null;
+  let ciUnavailable = null;
 
   if (args.parallel === true) {
     results = await parallel(
@@ -995,8 +1208,22 @@ async function main() {
         results.push({ id: t.id, title: t.title, status: "deferred", fixRounds: 0, implementer: null, review: null });
         continue;
       }
+      if (ciActive(args)) {
+        const halt = await ciBeforeDispatch(args, ledger, i);
+        if (halt) {
+          if (halt.kind === "red") ciRed = halt.record;
+          else ciUnavailable = halt.record;
+          for (const rest of args.tasks.slice(i)) {
+            results.push({ id: rest.id, title: rest.title, status: "skipped", fixRounds: 0, implementer: null, review: null });
+          }
+          break;
+        }
+      }
       const record = await runTask(t, args, classifierExists);
       results.push(record);
+      if (record.status === "accepted" && record.ci) {
+        ledger[i] = { task: t.id, ci: record.ci, checked: false };
+      }
       if (stopOnEscalate && record.status !== "accepted") {
         log(`stopping after task ${t.id} (${record.status}); remaining tasks skipped`);
         for (const rest of args.tasks.slice(i + 1)) {
@@ -1012,7 +1239,14 @@ async function main() {
   const finalTally = tally(results);
   log(`tally: accepted ${finalTally.accepted}, needs-decision ${finalTally.needsDecision}, escalated ${finalTally.escalated}, failed ${finalTally.failed}, deferred ${finalTally.deferred}, skipped ${finalTally.skipped}`);
 
-  return { tasks: results, tally: finalTally, spent: budget.spent(), outOfScope: results.flatMap((r) => (r.outOfScope || []).map((o) => ({ task: r.id, ...o }))) };
+  const ciPart = ciActive(args)
+    ? {
+        ci: { pr: args.ci.pr, unchecked: ledger.filter((e) => e && !e.checked).map((e) => ({ task: e.task, sha: e.ci.sha, pushedAt: e.ci.pushedAt })) },
+        ...(ciRed ? { ciRed } : {}),
+        ...(ciUnavailable ? { ciUnavailable } : {})
+      }
+    : {};
+  return { tasks: results, tally: finalTally, spent: budget.spent(), outOfScope: results.flatMap((r) => (r.outOfScope || []).map((o) => ({ task: r.id, ...o }))), ...ciPart };
 }
 
 return main();
