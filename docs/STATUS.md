@@ -66,6 +66,10 @@ Strategic and standing items live in `ROADMAP.md` (history purge decision,
 musicbox repo split, devcontainers, kitty-harness replacement, custom uBlue
 image, restore split, the cairn documentation standard).
 
+- `cairn-run-gate` has no `--help` and runs any first argument other than `--receipt`
+  or `--records` as a gate string. A dubplate planning probe queued `--help` on the
+  heavy lane this way (2026-10-10). Fix: refuse an unknown `--` flag with exit 2.
+
 ## History
 
 Per-pass ledger: `docs/HISTORY.md`.
