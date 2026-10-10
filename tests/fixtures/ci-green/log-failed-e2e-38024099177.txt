@@ -1,0 +1,26 @@
+e2e	UNKNOWN STEP	2026-10-10T04:38:42.5136382Z PROOF cairn-admin-dark soft primary step: rest oklab(0.68 0.0586097 -0.138076 / 0.1) -> hover oklab(0.68 0.0586097 -0.138076 / 0.15) -> active oklab(0.68 0.0586097 -0.138076 / 0.22)
+e2e	UNKNOWN STEP	2026-10-10T04:38:42.5194565Z PROOF cairn-admin-dark primary lift: oklch(1 0 0 / 0) 0px 0.5px 0px 0.5px inset, oklch(0.1 0.02 75 / 0.35) 0px 1px 2px -1px
+e2e	UNKNOWN STEP	2026-10-10T04:38:44.0018484Z ·····
+e2e	UNKNOWN STEP	2026-10-10T04:38:58.9925160Z ·········································
+e2e	UNKNOWN STEP	2026-10-10T04:38:58.9948868Z 
+e2e	UNKNOWN STEP	2026-10-10T04:38:58.9950863Z   1) e2e/edit-save-failure.spec.ts:256:1 › a dictionary commit that never answers holds the save only until its deadline 
+e2e	UNKNOWN STEP	2026-10-10T04:38:58.9952052Z 
+e2e	UNKNOWN STEP	2026-10-10T04:38:58.9952487Z     Error: expect(locator).toHaveCount(expected) failed
+e2e	UNKNOWN STEP	2026-10-10T04:38:58.9952987Z 
+e2e	UNKNOWN STEP	2026-10-10T04:38:58.9953301Z     Locator:  locator('.cm-lintRange-info')
+e2e	UNKNOWN STEP	2026-10-10T04:38:58.9953867Z     Expected: 2
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0013883Z   2) e2e/edit-save-failure.spec.ts:207:1 › a pending dictionary word commits before the save or publish request is sent 
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0014872Z 
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0015318Z     Error: expect(locator).toHaveCount(expected) failed
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0032638Z   3) e2e/publish-pending-word.spec.ts:23:1 › a publish with a pending dictionary word lands without a conflict and commits the word 
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0033496Z 
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0033825Z     Error: expect(locator).toHaveCount(expected) failed
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0047129Z     Error Context: test-results/publish-pending-word-a-pub-fb5e9-nflict-and-commits-the-word/error-context.md
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0047861Z 
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0047998Z   1 failed
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0049071Z     e2e/edit-save-failure.spec.ts:256:1 › a dictionary commit that never answers holds the save only until its deadline 
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0049941Z   2 flaky
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0050878Z     e2e/edit-save-failure.spec.ts:207:1 › a pending dictionary word commits before the save or publish request is sent 
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0052747Z     e2e/publish-pending-word.spec.ts:23:1 › a publish with a pending dictionary word lands without a conflict and commits the word 
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.0054044Z   354 passed (9.9m)
+e2e	UNKNOWN STEP	2026-10-10T04:38:59.2020057Z ##[error]Process completed with exit code 1.

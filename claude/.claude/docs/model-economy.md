@@ -84,10 +84,11 @@ clock estimate beside its token ceiling, and the close scores against it in four
 
 - **Total clock:** wall time from the first execution dispatch to merge-ready, minus pauses Geoff
   ordered and owner-gated waits (a merge go, an owner read).
-- **Gate time:** the summed run time of every gate, from the `cairn-run-gate` logs, with lock
-  waits excluded.
-- **Lock wait:** time gates spent queued on the machine lock (`cairn-run-gate` prints it as a
-  NOTE).
+- **Gate time:** the summed run time of every gate, from the run records
+  (`cairn-run-gate --records <toplevel> <branch>`), with lock waits excluded.
+- **Lock wait:** time gates spent queued on the machine lock, from the same records.
+- **CI wait on the critical path:** time the pass idled waiting for CI green (a `ciWait` task, a
+  boundary, the close), named apart from gate time and lock wait; the records sum it.
 - **Rework clock:** time spent on fix rounds and reruns after a red, with each red's cause named:
   a defect the gate rightly caught, or a process miss such as a check the per-task gate skipped.
 

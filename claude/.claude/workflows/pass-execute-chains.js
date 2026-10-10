@@ -29,6 +29,11 @@
 // nonBlocking and return as `batchedNotes`. Full rationale in pass-execute.js; without a passClass
 // every prompt is the pre-class one.
 
+// CI: this runner does no per-task pipelining. It never pushes after a task or
+// reads a CI verdict between tasks; the sequential runner's `ci: { pr }` does both. A chain reads
+// `ci-green` at its boundaries (the conductor's step), and an `auth-data` task, which waits for CI
+// green before the next task, runs through pass-execute.js sequentially, never in a chain.
+
 // Classifier caching (AW-13): a chain's own `classifier` boolean, else `args.classifier`, else one
 // cached existence probe (`model: "haiku"`) for whether that chain's repo carries
 // `scripts/checks/gate-tier.mjs`, run once per chain and reused for every task in it.
@@ -223,14 +228,16 @@ const DEFAULT_REVIEWER_MODEL = "claude-opus-5-5";
 
 // The class table. `mandate` goes to the implementer, `bar` to the reviewer; `coverageBlocks`
 // false demotes coverageOnly findings; `testOnlyReduces` lets a test-only fix round take the
-// reduced gate. Keep in step with pass-execute.js.
+// reduced gate; `ciWait` makes the sequential runner read CI green before the next task (this
+// runner ignores it). Keep in step with pass-execute.js.
 const PASS_CLASSES = {
   "auth-data": {
     mandate: "Test-first: write or confirm the failing test before the change. For each auth, signing, session, D1, or commit-path branch you add, apply a mutation, confirm a test fails, revert it, and record it in mutationLedger. The pass end adds a web-auth-security-reviewer read and a live admin smoke.",
     bar: "Block on any behavior defect, unmet outcome, or coverage gap: an untested branch in auth, signing, sessions, D1, or the commit path is itself a defect.",
     coverageBlocks: true,
     testOnlyReduces: false,
-    reviewerModel: DEFAULT_REVIEWER_MODEL
+    reviewerModel: DEFAULT_REVIEWER_MODEL,
+    ciWait: true
   },
   "engine-logic": {
     mandate: "Test-first: write or confirm the failing test before the change.",
@@ -355,7 +362,8 @@ function implementPrompt(t, chain, a, blocking, baseSha, classifierExists) {
   const light = (t.gateLane || a.gateLane || (cls && cls.gateLane)) === "light";
   const lanePrefix = light ? "CAIRN_GATE_LANE=light " : "";
   const laneNote = light ? " (keep the CAIRN_GATE_LANE=light prefix on the first call and on every re-issue: this gate launches no browser, so it takes the light lane and does not queue behind a browser gate)" : "";
-  const classifierCmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${pinFlag}`;
+  const classFlag = cls ? ` --class ${cls.name}` : "";
+  const classifierCmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${classFlag}${pinFlag}`;
   const lines = [
     onMain
       ? `Repo (the main checkout, branch main; this pass runs on main by its plan's rule, no worktree, commit directly on main): ${chain.repo}`
@@ -600,6 +608,11 @@ function gateRecordLines(gateRun, fallbackLine, fullGateLine) {
   return lines;
 }
 
+// A weakened check is a blocking finding on any class: CI's full run is the holdout only while the
+// checks that select and run it stay intact (an observed instance of an agent editing tests to
+// pass: arXiv 2511.21654).
+const TEST_WEAKENING_LINE = "Blocking finding, any class: an existing test deleted, skipped, `.only`'d, or loosened; or a bucket, no-check entry, e2e map entry, trigger, protected path, `check:close` component, `ci-green.json` entry, or workflow test step narrowed or weakened, that the task's criteria do not name.";
+
 function reviewPrompt(t, chain, a, implReport, resolvedGate, reduced, gateRun, reducedCheck) {
   const cls = classOf(t, a);
   const classReduced = cls && reduced;
@@ -630,6 +643,7 @@ function reviewPrompt(t, chain, a, implReport, resolvedGate, reduced, gateRun, r
       classReduced ? `The runner executed the reduced gate. If the full gate was owed, reproduce it with: ${resolvedGate.gate}` : ""
     ),
     mismatch,
+    TEST_WEAKENING_LINE,
     "Out of scope: list in outOfScope any real defect you notice outside this task's criteria (a bug, a stale doc or comment, a false claim, a gate gap), one {location, finding} each. It never affects the verdict; the conductor files each one in the repo's friction log.",
     harvestsCairnFriction(a, chain.repo) ? CAIRN_REVIEW_ASK : "",
     "Implementer report (JSON):",
@@ -738,7 +752,9 @@ async function resolveGate(t, chain, a, baseSha, classifierExists, phaseName, la
     return { gate: t.gate || a.gate, source: "fallback", tier: "default" };
   }
   const paintFlag = t.paint != null ? ` --paint ${t.paint ? "yes" : "no"}` : "";
-  const cmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}`;
+  const cls = classOf(t, a);
+  const classFlag = cls ? ` --class ${cls.name}` : "";
+  const cmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${classFlag}`;
   const probe = await agent(
     [
       `Repo: ${chain.repo}`,

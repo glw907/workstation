@@ -6,21 +6,25 @@ Clock time on a pass is the per-task gate and the fix rounds, not the implemente
 approved, all cheap in tokens:
 - **The slow suite runs only where it can catch something.** The per-task gate is the change's
   blast radius (Geoff, 2026-10-08): the tier the diff computes, plus the e2e specs its change
-  reaches. A `paint` task's e2e is the set of specs its change reaches; the full
-  suite runs at segment boundaries and on CI. "Full gate" means only the 45-minute `full` tier.
-  Across B2's eight tasks the per-task e2e caught nothing the checks, the diff reviewer, and CI
-  did not, at a third of each task's hour.
-- **Comment-only fix rounds run a reduced gate** (the comment linters, the doc link gate, and
-  the touched files' unit tests). The reviewer marks each blocking finding `commentOnly`; the
-  chains scripts route on it.
+  reaches. A `paint` task's e2e is the set of specs its change reaches. "Full gate"
+  means CI green on the commit (Geoff, 2026-10-09) where the repo skill names a CI-green command,
+  and the 45-minute local `full` tier otherwise; segment boundaries and the close read it, and the
+  local tier runs there only when the command reports CI unavailable. Across B2's eight tasks the per-task e2e caught nothing the
+  checks, the diff reviewer, and CI did not, at a third of each task's hour. Measured baseline
+  (cairn-cms, 2026-10-08 and 09): a local full gate ran about 45 minutes against about 11
+  minutes for CI's `test` job, with `npm test` at 208 s and e2e at 291 s on CI.
+- **Reduced fix rounds, one statement.** A fix round whose blocking findings are all `commentOnly`
+  runs a reduced gate under every class, `auth-data` included (the repo's type check plus only the
+  test files the fix round touched). A round whose findings are all `commentOnly` or
+  `testOnly` reduces under every class but `auth-data`, whose test-only round keeps its targeted
+  gate. A `coverageOnly` finding moves to `batchedNotes` under `engine-logic`, `paint`, `sweep`,
+  and `docs`. The reviewer marks each finding; both runners route on it.
 - **The pass class sets the ceremony** (Geoff, 2026-09-27). A plan header declares `Pass class:`
   (`auth-data`, `engine-logic`, `paint`, `sweep`, `docs`, `tool`), a task may override it, and
   the class picks the per-task gate, the review bar, the test mandate, and the close steps; the
   table lives in the `pass-core` skill. Both runners take `passClass` in their args and render
-  it: the mandate into the implementer prompt, the bar into the reviewer prompt. Under every
-  class but `auth-data`, a fix round whose findings are all `commentOnly` or `testOnly` runs the
-  reduced gate, and under `engine-logic`, `paint`, `sweep`, and `docs` a `coverageOnly` finding
-  moves to nonBlocking and returns as `batchedNotes` for the segment boundary. Born of the
+  it: the mandate into the implementer prompt, the bar into the reviewer prompt. The fix-round
+  reductions are stated once, in the rule above. Born of the
   theme identity pass A evaluation (2026-09-27): a CSS retheme ran the full engine gate on every
   task (7 to 11 minutes, 5,167 node tests plus about 1,600 serialized browser component tests),
   carried about 4.4 test lines per source line, and reran that full gate on every test-only fix
@@ -36,7 +40,8 @@ approved, all cheap in tokens:
   working directory, the lane, and `E2E_PORT`, `CI`, and every `CAIRN_*` the gate string names.
   `cairn-run-gate --receipt '<gate>'` exits 0 only for a receipt of that exact gate string, on a
   matching fingerprint, from a run that passed. Both runners' gate agents look one up before
-  rerunning a gate, and a segment boundary does the same before its full gate.
+  rerunning a gate, and a segment boundary does the same before a local full gate. A boundary that read CI green
+  has no local gate to skip.
 - **A pre-flight checklist in every task's notes prevents the fix rounds** B2 kept paying for:
   no comment claims what its assertion does not prove; the labeled report block verbatim;
   no process citations in shipped comments; counts found, changed, deferred; re-emit before
@@ -74,8 +79,9 @@ approved, all cheap in tokens:
   the lock re-issues its gate every ten minutes and each re-issue is a paid turn. (1) Before launching a heavy gate
   expected to run over 15 minutes, send the other live session one line through `SendMessage` (what, rough length,
   roughly when), so a short gate can go first rather than queue behind a long one by surprise; a gate under 10
-  minutes needs no message. (2) Never re-run a full gate on an unchanged tree: a segment boundary skips its full gate
-  when `cairn-run-gate --receipt '<gate>'` finds a passing receipt for it. (3) Browserless steps stay on the light lane. (4) When a
+  minutes needs no message. (2) Never re-run a full gate on an unchanged tree: a segment boundary skips a local full gate
+  when `cairn-run-gate --receipt '<gate>'` finds a passing receipt for it, and skips it entirely
+  when CI green on the commit already stands as the full gate. (3) Browserless steps stay on the light lane. (4) When a
   session knows its next heavy gate is more than about 30 minutes away (an implementer still editing, a review, a
   CI wait), it says so if the other has heavy work queued, so the other can launch into the gap. `ListAgents` shows
   the live peer sessions.
@@ -102,5 +108,5 @@ approved, all cheap in tokens:
   Docs-only and CSS-only passes skip it.
 - **The close ritual calls one `npm run check:close`** (cairn-cms, 2026-09-27) instead of a
   hand-kept list of check scripts. The script runs CI's check list in CI order, minus the unit
-  and e2e suites, so a check added to CI is added to the script in the same change and the close
+  and e2e suites, and builds once for all of its checks, so a check added to CI is added to the script in the same change and the close
   can no longer drift behind CI.

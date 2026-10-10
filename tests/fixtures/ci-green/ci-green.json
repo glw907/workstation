@@ -1,0 +1,19 @@
+{
+  "expected": [
+    ".github/workflows/create-site.yml",
+    ".github/workflows/design.yml",
+    ".github/workflows/e2e.yml",
+    ".github/workflows/scaffold.yml",
+    ".github/workflows/test.yml"
+  ],
+  "judgedWhenPresent": [
+    ".github/workflows/tool-conditions.yml",
+    ".github/workflows/tool.yml"
+  ],
+  "neverOnPullRequest": [
+    ".github/workflows/norms.yml",
+    ".github/workflows/publish.yml",
+    ".github/workflows/tsgo.yml"
+  ],
+  "ignorePrefixes": ["tool/"]
+}
