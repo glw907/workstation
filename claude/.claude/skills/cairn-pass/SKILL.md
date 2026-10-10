@@ -47,8 +47,14 @@ Gate notes for the args:
 - The per-task gate is the tier `scripts/checks/gate-tier.mjs --range <base>..HEAD` computes
   from the diff, plus the e2e specs the change reaches (Geoff, 2026-10-08). The engine's
   `npm test` runs when the classifier computes the engine tier, which includes `scripts/**`,
-  `src/tests/**`, and test files as well as `src/lib` and `packages/`. A `paint` task's e2e is
-  the specs its change reaches, with the full suite at segment boundaries.
+  `src/tests/**`, and test files as well as `src/lib` and `packages/`. The classifier prints the
+  targeted gate by default (`--pin <tier>` keeps a tier string; `--class auth-data` adds the
+  three auth e2e specs). A `paint` task's e2e is the specs its change reaches; its full suite at
+  segment boundaries is CI green on the pass's draft PR (below).
+- The protected paths are the bucket and e2e-map table, `scripts/test/component-rerun-triggers.mjs`,
+  `scripts/checks/gate-tier.mjs`, `.github/ci-green.json`, and `.github/workflows/**`. A task
+  whose diff touches one runs its targeted gate, then waits for CI green on its own commit before
+  the next task; `gate-tier.mjs --range <base>..HEAD --protected` prints `ciWait` for such a range.
 - The light gate lane (`gateLane: "light"`) is only for a gate that launches no browser:
   `make -C tool check`, a lint-only run, or a Node-only workspace suite such as
   `npm test -w packages/create-cairn-site`. The engine's root `npm test` drives Chromium and is
@@ -70,13 +76,21 @@ Run `pass-core`'s ritual. The cairn-specific parts of each step:
 
 ### Gate (step 2)
 
-`npm test` (exits 0), then `npm run check:close`, which runs `npm run check` (0 errors, 0
-warnings) and the rest of the CI check list minus e2e. A `docs` pass skips `npm test` but still
-runs `check:close`.
+Push the close commit and read `ci-green <sha> --pr <n> --wait` (exit 0 is green, 1 red, 2
+missing, 3 unavailable, 75 pending: re-issue on 75, with `run_in_background`). CI's `test`, `e2e`,
+`design`, and `scaffold` runs, plus `create-site` for a diff outside `tool/**`, are the pass's
+full gate, e2e included. Only on exit 3 does the local full gate run: `TIER_GATES.full` from
+`scripts/checks/gate-tier.mjs` (`npm test`, then `check:close`, which builds once), its e2e step
+run with `--grep-invert "site home|archive page 2"` (the 20 visual tests this workstation's
+Chromium renders off CI's baselines). A `docs` pass skips `npm test` but still runs `check:close`.
+
+**The draft PR.** Open it against `main` after the pass branch's first commit and push after each
+accepted task (the sequential runner pushes after every implementer commit). cairn-cms CI fires
+on push only for `main` and `rebuild`, so the PR is what gives a pass branch its CI.
 
 Prove the consumer build, not only `npm test`: the package ships TypeScript inside `.svelte`,
-so a consumer-bundler break shows only when a consumer builds. Before calling a pass
-releasable, push the branch for a CI `e2e` run, or force a from-scratch showcase build
+so a consumer-bundler break shows only when a consumer builds. CI's `e2e` run above proves it;
+on the local fallback, force a from-scratch showcase build
 (`rm -rf examples/showcase/{node_modules,package-lock.json}`, fresh install,
 `npm run build`). Local Playwright reuses a stale preview server.
 
@@ -132,6 +146,11 @@ A pass never bumps the version or publishes. It finalizes its `CHANGELOG.md` ent
 `## Unreleased`, leaves `package.json` alone, and stops. When a cut is independently warranted
 (a consumer needs the change now, or a coherent capability has landed), invoke
 `cairn-release`.
+
+The pass score's gate time and lock wait come from `cairn-run-gate --records <toplevel> <branch>`.
+List every retried test from `ci-green`'s output in the HISTORY entry (a retry that passed is
+flake evidence, not green), and count the selection misses: a CI red on a commit whose targeted
+gate was green. Two misses reopen the bucket table.
 
 Update `docs/STATUS.md` on `main` as part of the merge, and `docs/HISTORY.md` beside it.
 Append the post-mortem to the plan file. Never write cairn state into a consumer site's

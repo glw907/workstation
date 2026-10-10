@@ -747,6 +747,11 @@ function gateRecordLines(gateRun, fallbackLine, fullGateLine) {
   return lines;
 }
 
+// A weakened check is a blocking finding on any class: CI's full run is the holdout only while the
+// checks that select and run it stay intact (an observed instance of an agent editing tests to
+// pass: arXiv 2511.21654).
+const TEST_WEAKENING_LINE = "Blocking finding, any class: an existing test deleted, skipped, `.only`'d, or loosened; or a bucket, no-check entry, e2e map entry, trigger, protected path, `check:close` component, `ci-green.json` entry, or workflow test step narrowed or weakened, that the task's criteria do not name.";
+
 function reviewPrompt(t, a, implReport, resolvedGate, reduced, gateRun, reducedCheck) {
   const cls = classOf(t, a);
   const ranCommand = implReport.gateCommand || t.gate || a.gate;
@@ -777,6 +782,7 @@ function reviewPrompt(t, a, implReport, resolvedGate, reduced, gateRun, reducedC
     ...(cls
       ? reviewClassLines(cls, reduced)
       : [noClassReviewLine(t, a)]),
+    TEST_WEAKENING_LINE,
     "Out of scope: list in outOfScope any real defect you notice outside this task's criteria (a bug, a stale doc or comment, a false claim, a gate gap), one {location, finding} each. It never affects the verdict; the conductor files each one in the repo's friction log.",
     harvestsCairnFriction(a, a.repo) ? CAIRN_REVIEW_ASK : "",
     "Implementer report (JSON):",

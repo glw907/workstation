@@ -93,20 +93,28 @@ the close.
 
 | Class | Per-task gate | Review and blocking bar | Test mandate | Settle and close |
 | --- | --- | --- | --- | --- |
-| `auth-data` (auth, signing, sessions, D1, the commit path) | the gate tier its diff computes, plus the e2e specs its change reaches; the full gate at each segment boundary and before merge | Opus; coverage gaps block | test-first, a mutation proof | `web-auth-security-reviewer`, a live auth smoke |
-| `engine-logic` (TypeScript behavior) | the gate tier its diff computes, plus the e2e specs its change reaches; the full gate at each segment boundary and before merge | Opus; blocks on behavior defects and unmet outcomes, coverage gaps only on reachable behavior | test-first | none extra |
-| `paint` (CSS, theme, visual) | a targeted gate the plan names per task (type check, the touched files' component tests, CSS unit tests); full suite at segment boundaries or on CI | Opus (or Sonnet); blocks only on a behavior defect or unmet outcome, coverage notes batched to the boundary | one cascade test per rule (renders, a utility beats it); state tables only where the framework restates values per state; table-driven | an async owner glance at captures mid-pass, a fresh-context `visual-verifier` read, the owner sitting |
+| `auth-data` (auth, signing, sessions, D1, the commit path) | the targeted gate its diff computes, plus the e2e specs its change reaches (the classifier's `--class auth-data` adds the auth specs); waits for CI green before the next task; the full gate (CI green where the repo skill names a command) at each segment boundary and before merge | Opus; coverage gaps block | test-first, a mutation proof | `web-auth-security-reviewer`, a live auth smoke |
+| `engine-logic` (TypeScript behavior) | the targeted gate its diff computes, plus the e2e specs its change reaches; the full gate (CI green where the repo skill names a command) at each segment boundary and before merge | Opus; blocks on behavior defects and unmet outcomes, coverage gaps only on reachable behavior | test-first | none extra |
+| `paint` (CSS, theme, visual) | a targeted gate the plan names per task (type check, the touched files' component tests, CSS unit tests); full suite as the full gate (CI green where the repo skill names a command) at segment boundaries and before merge | Opus (or Sonnet); blocks only on a behavior defect or unmet outcome, coverage notes batched to the boundary | one cascade test per rule (renders, a utility beats it); state tables only where the framework restates values per state; table-driven | an async owner glance at captures mid-pass, a fresh-context `visual-verifier` read, the owner sitting |
 | `sweep` (mechanical markup or rename) | type check plus the component project | Sonnet; grep-based post-conditions | existing tests stay green | spot captures |
-| `docs` | the docs tier | the register chain | none | none |
+| `docs` | the computed gate (it skips the component leg on a docs-only diff), or `--pin docs` | the register chain | none | none |
 | `tool` (Go) | `make check`, light gate lane | Opus | `go-conventions` | `tui-visual-verify` for a TUI change |
 
 **The per-task gate is the change's blast radius, never the whole suite (Geoff, 2026-10-08).** A
-task runs the tier its diff computes (`gate-tier.mjs` where the repo has one) plus the e2e specs its
-change can reach; the full gate runs once at each segment boundary (the final boundary's full
-gate yields to the close gate; see Closing) and on CI before merge. This
-follows presubmit test selection (Google's TAP) and the deployment pipeline's fast commit stage
+task runs the targeted gate its diff computes (`gate-tier.mjs` where the repo has one; `--pin <tier>`
+keeps a named tier) plus the e2e specs its change can reach. The full gate is CI green on the
+commit: where the repo skill names a CI-green command, each segment boundary and the close read it
+and the local full gate runs only when that command reports CI unavailable; otherwise the local
+full gate runs once at each segment boundary (the final boundary's full gate yields to the close
+gate; see Closing) and before merge. This follows presubmit test selection (Google's TAP) and the deployment pipeline's fast commit stage
 (Fowler): assurance on a sensitive change comes from its targeted tests and mutation proof, not
-from rerunning unrelated suites. The older full-gate-per-task cells were inherited, not researched
+from rerunning unrelated suites. A task that touches the selection machinery (the repo skill
+lists the protected paths) cannot be vouched for by its own classifier edit, so it runs its
+targeted gate and then waits for CI green on its own commit before the next task (Geoff,
+2026-10-09, widening on a build-config change as TAP and Bazel do). The classifier's
+`--protected` mode flags the range through the runner's probe, a task's `ciWait: true` overrides,
+and the local full gate runs only on the CI command's unavailable exit. The older
+full-gate-per-task cells were inherited, not researched
 (engine pass pre-2b, pass A: Task 1 alone ran four 45-minute full gates). A plan pins a wider tier
 only with a named risk the computed tier misses, and never to carry an environment export (put
 the export in the task's own gate string).
@@ -116,8 +124,8 @@ Superpowers skills yield to the pass class: TDD's write-first applies to `engine
 
 `~/.claude/workflows/pass-execute.js` renders each class's mandate and bar into the prompts,
 demotes coverage-only findings for classes whose coverage does not block (returned as
-`batchedNotes`), and reduces the gate on a comment-only or test-only fix round (all classes
-but `auth-data`). Its header comment is the spec; `PASS_CLASSES` there must stay in step with
+`batchedNotes`), and reduces the gate on a comment-only or test-only fix round (rules in
+`~/.claude/docs/pass-gate-economy.md`). Its header comment is the spec; `PASS_CLASSES` there must stay in step with
 this table. With no class, the runner keeps its pre-class behavior.
 
 ## Executing
@@ -136,7 +144,10 @@ Each task runs as a chain:
 
 **CI shadows the pass (Geoff, 2026-10-08).** Every pass opens a draft PR against the default
 branch after the pass branch's first commit and pushes after each accepted task, so CI (which runs on
-`pull_request`) shadows the pass as it runs. Reason: cairn-cms CI fires on push only for
+`pull_request`) shadows the pass as it runs. The sequential runner pushes after every
+implementer commit and reads the CI verdict on task N's accepted SHA before it dispatches task
+N+2 (before N+1 when the task waits, per the per-task gate above); a red stops the line until a
+fix commit is green. Reason: cairn-cms CI fires on push only for
 `main` and `rebuild`, so a pass branch gets CI only through a PR; on 2026-10-08 the CI test job
 ran in about 11 minutes against about 45 locally.
 
@@ -153,9 +164,9 @@ not specify; any further escalation follows `~/.claude/docs/model-economy.md` "C
 
 ### Execution discipline
 
-- **Share the heavy gate lock deliberately.** A segment boundary's full gate is skipped only when a receipt for
-  that exact gate already matches the tree (`cairn-run-gate --receipt '<gate>'` exits 0); never re-run a full gate
-  on an unchanged tree. When another live session shares the
+- **Share the heavy gate lock deliberately.** A local full gate (the fallback, or where the repo has no
+  CI-green command) is skipped only when a receipt for that exact gate already matches the tree
+  (`cairn-run-gate --receipt '<gate>'` exits 0); never re-run a full gate on an unchanged tree. When another live session shares the
   machine (`ListAgents`), send it a one-line heads-up before a heavy gate expected over 15 minutes, and say so when
   your next heavy gate is more than about 30 minutes away. The four rules live in
   `~/.claude/docs/pass-gate-economy.md` ("Sessions sharing the heavy lock coordinate").
@@ -214,7 +225,9 @@ No pass is done until every step has run. The repo skill supplies each step's co
    It never runs at a segment or task boundary, whatever the class; a `paint` pass that
    changed TS or Svelte takes it once at the close, and a `docs` pass never does.
 2. **Full gate.** The repo's full gate, including any suite a `paint` or `sweep` pass deferred
-   from its tasks. A test run is green only when it exits 0. The final segment's boundary full
+   from its tasks: where the repo skill names a CI-green command, CI green on the close commit,
+   and the local full gate only when that command reports CI unavailable; otherwise the local full
+   gate. A test run is green only when it exits 0. The final segment's boundary full
    gate is skipped when the close follows directly with no merge or rebase of the default branch
    in between; this close gate is then the pass's full gate (Geoff, 2026-10-08, review item 8).
    On a close-gate failure, revert the simplifier commit and re-gate before anything else.
@@ -236,8 +249,9 @@ No pass is done until every step has run. The repo skill supplies each step's co
    the HISTORY entry names any finding its fold refused that turned out to be a real defect
    during execution, or says none did (the fold-rule trial, Geoff, 2026-09-28). The HISTORY
    entry and the plan's post-mortem carry the pass score after output quality: tokens against
-   the ceiling, attended time, and clock time against the plan's estimate (total, gate time,
-   lock wait, and rework clock with each red's cause), per `~/.claude/docs/model-economy.md`
+   the ceiling, attended time, and clock time against the plan's estimate (total, gate time and lock wait from the
+   gate run records, CI wait on the critical path named apart, and rework clock with each red's
+   cause), per `~/.claude/docs/model-economy.md`
    "The pass-end score" (Geoff, 2026-10-09).
 7. **Commit** specific files, never `git add -A`. Push or merge per the repo skill.
 8. **Pre-bake and hand off** (below). Always, not on request.

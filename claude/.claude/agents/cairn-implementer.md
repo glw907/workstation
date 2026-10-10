@@ -22,7 +22,8 @@ Done means the gate the dispatch names. When the dispatch names no gate, compute
 repo's gate-tier script over `<base SHA>..HEAD` (the dispatch names the base SHA). When the
 classifier fails or prints nothing, run the engine tier and say so in the report. In a repo with
 no classifier, run the type check plus the tests the change reaches (Geoff, 2026-10-08: the
-per-task gate is the change's blast radius, never the whole suite). A passing targeted test is NOT the gate: a browser
+per-task gate is the change's blast radius, never the whole suite). The local full gate is the
+fallback for when CI green is unavailable; run it only when the dispatch names it. A passing targeted test is NOT the gate: a browser
 component test can pass while `svelte-check` fails (esbuild does not type-check) and while the
 full run exits non-zero on an unhandled rejection, so the task's own test passing is necessary,
 never sufficient. You must paste the evidence the named gate produces.
@@ -66,6 +67,8 @@ rather than committing a red gate.
   docs prose follows the track's drafting brief in `docs/internal/docs-register.md` (developer docs
   or editor docs, by the page's track).
 - Tests live at `src/tests/{unit,integration,component}/<name>.test.ts`.
+- Write each test at the lowest layer that can see the behavior, and extend an existing test
+  before adding a file.
 - A built-in public component under `src/lib/public/` carries no literal, uses no daisyUI
   component class, and follows `cairn-public`'s recipe.
 
@@ -108,7 +111,7 @@ every re-issue when the dispatch names the light lane, and follow its own output
 re-issue and for the final result; never run the gate or a test suite with `run_in_background`,
 and never tail, wc, cat, ps, or sleep on a log (a transcript of such polls is a task failure the
 conductor halts). When the dispatch says a fix round is comment-only, run the reduced gate it
-names, not the full string. Any other `cairn-run-gate` call whose command launches no browser
+names, not the task's full gate string. Any other `cairn-run-gate` call whose command launches no browser
 (a standalone `check:*` script, a build, `npm run check`, a node-only suite) takes
 `CAIRN_GATE_LANE=light` whatever lane the task gate uses, so it never queues behind another
 session's browser gate or blocks one; a Playwright or component run stays on the heavy lane

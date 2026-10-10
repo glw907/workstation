@@ -308,6 +308,8 @@ check("pass-core's class table matches PASS_CLASSES: the class-name set, the rev
       }
       const wantsLight = /light gate lane/.test(gateCol);
       assert.equal(Boolean(cls.gateLane === "light"), wantsLight, `${name}: gate lane mismatch against pass-core`);
+      const waitsForCi = /waits for CI green before the next task/.test(gateCol);
+      assert.equal(waitsForCi, Boolean(cls.ciWait), `${name}: the CI wait in pass-core's gate cell must match PASS_CLASSES ciWait`);
     }
   }
 });
@@ -772,6 +774,22 @@ const expectedOutOfScope = [
   { task: "1", location: "a.md:1", finding: "first" },
   { task: "1", location: "b.md:2", finding: "second" }
 ];
+
+check("both review prompts name the test-weakening finding as blocking", () => {
+  const t = { id: "1", title: "T", criteria: "C" };
+  const implReport = { gate: "pass", gateOutput: "", gateCommand: "g", commits: [], filesTouched: [], unspecifiedDecisions: [], couldNotDo: [], summary: "" };
+  const a = { repo: "/repo", gate: "g", implementer: "i", planPath: "/p" };
+  const chain = { id: "C", repo: "/repo", branch: "chain-c" };
+  const texts = [
+    load(seqFactory).bundle.reviewPrompt(t, a, implReport, { gate: "g" }, null),
+    load(chainsFactory).bundle.reviewPrompt(t, chain, a, implReport, { gate: "g" }, null)
+  ];
+  for (const text of texts) {
+    assert.match(text, /existing test deleted, skipped, `\.only`'d, or loosened/);
+    assert.match(text, /bucket, no-check entry, e2e map entry, trigger, protected path, `check:close` component, `ci-green\.json` entry, or workflow test step/);
+    assert.match(text, /blocking finding/);
+  }
+});
 
 check("outOfScope findings from every review round reach the run's result (pass-execute.js)", async () => {
   const args = { repo: "/repo", gate: "g", implementer: "i", classifier: false, tasks: [{ id: "1", title: "T", criteria: "c" }] };

@@ -29,6 +29,11 @@
 // nonBlocking and return as `batchedNotes`. Full rationale in pass-execute.js; without a passClass
 // every prompt is the pre-class one.
 
+// CI (gate economy pass): this runner does no per-task pipelining. It never pushes after a task or
+// reads a CI verdict between tasks; the sequential runner's `ci: { pr }` does both. A chain reads
+// `ci-green` at its boundaries (the conductor's step), and an `auth-data` task, which waits for CI
+// green before the next task, runs through pass-execute.js sequentially, never in a chain.
+
 // Classifier caching (AW-13): a chain's own `classifier` boolean, else `args.classifier`, else one
 // cached existence probe (`model: "haiku"`) for whether that chain's repo carries
 // `scripts/checks/gate-tier.mjs`, run once per chain and reused for every task in it.
@@ -603,6 +608,11 @@ function gateRecordLines(gateRun, fallbackLine, fullGateLine) {
   return lines;
 }
 
+// A weakened check is a blocking finding on any class: CI's full run is the holdout only while the
+// checks that select and run it stay intact (an observed instance of an agent editing tests to
+// pass: arXiv 2511.21654).
+const TEST_WEAKENING_LINE = "Blocking finding, any class: an existing test deleted, skipped, `.only`'d, or loosened; or a bucket, no-check entry, e2e map entry, trigger, protected path, `check:close` component, `ci-green.json` entry, or workflow test step narrowed or weakened, that the task's criteria do not name.";
+
 function reviewPrompt(t, chain, a, implReport, resolvedGate, reduced, gateRun, reducedCheck) {
   const cls = classOf(t, a);
   const classReduced = cls && reduced;
@@ -633,6 +643,7 @@ function reviewPrompt(t, chain, a, implReport, resolvedGate, reduced, gateRun, r
       classReduced ? `The runner executed the reduced gate. If the full gate was owed, reproduce it with: ${resolvedGate.gate}` : ""
     ),
     mismatch,
+    TEST_WEAKENING_LINE,
     "Out of scope: list in outOfScope any real defect you notice outside this task's criteria (a bug, a stale doc or comment, a false claim, a gate gap), one {location, finding} each. It never affects the verdict; the conductor files each one in the repo's friction log.",
     harvestsCairnFriction(a, chain.repo) ? CAIRN_REVIEW_ASK : "",
     "Implementer report (JSON):",
