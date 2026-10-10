@@ -120,6 +120,13 @@ check("a tool-only file list with zero runs exits 75, then 2 past 5 minutes, nev
   assert.equal(verdict({ runs: [], files: TOOL_ONLY, nowMs: T0 + 6 * MIN }).exit, 2);
 });
 
+check("an empty file list requires the expected set: one green run exits 75, then 2 past 5 minutes", () => {
+  const one = runsOf("runs-green-8483ca5b.json").slice(0, 1);
+  assert.deepEqual(lib.requiredWorkflows(config, []), config.expected);
+  assert.equal(verdict({ runs: one, files: [], nowMs: T0 + 1 * MIN }).exit, 75);
+  assert.equal(verdict({ runs: one, files: [], nowMs: T0 + 6 * MIN }).exit, 2);
+});
+
 check("a tool-only diff with only the tool workflow green exits 0", () => {
   const runs = runsOf("runs-green-8483ca5b.json").filter((r) => r.path.includes("tool"));
   assert.equal(verdict({ runs, files: TOOL_ONLY }).exit, 0);
@@ -146,6 +153,7 @@ check("an absent or malformed ci-green.json is not ok", () => {
   assert.equal(lib.parseConfig("{not json").ok, false);
   assert.equal(lib.parseConfig('{"expected": "x"}').ok, false);
   assert.equal(lib.parseConfig('{"expected": [], "judgedWhenPresent": [], "neverOnPullRequest": []}').ok, false);
+  assert.equal(lib.parseConfig('{"expected": [], "judgedWhenPresent": [], "neverOnPullRequest": [], "ignorePrefixes": []}').ok, false);
   assert.equal(lib.parseConfig(text("ci-green.json")).ok, true);
 });
 
@@ -156,6 +164,14 @@ check("an infra red on attempt 1 plans a rerun; on attempt 2 it is red", () => {
   const jobs = { [run.id]: json("jobs-cancelled-37893646318.json").jobs };
   assert.equal(lib.planReruns([run], jobs).length, 1);
   assert.deepEqual(lib.planReruns([{ ...run, run_attempt: 2 }], jobs), []);
+});
+
+check("several cancelled jobs in one run plan a single --failed rerun", () => {
+  const run = json("run-cancelled-37893646318.json");
+  const base = json("jobs-cancelled-37893646318.json").jobs[0];
+  // Derived: the recorded cancelled job, twice.
+  const jobs = [base, { ...base, id: base.id + 1, name: "test 2" }];
+  assert.deepEqual(lib.planReruns([run], { [run.id]: jobs }), [["run", "rerun", "37893646318", "--failed"]]);
 });
 
 check("a failure in a test step is not infra and plans nothing", () => {
@@ -420,6 +436,29 @@ check("main exits 75 past the wait budget while runs are pending", () => {
   assert.ok(h.sleeps.length > 0);
   assert.ok(h.sleeps.reduce((a, b) => a + b, 0) <= 540_000 + 20_000);
 });
+
+check("main exits 3 when the run list is truncated by the page size", () => {
+  const runs = json("runs-green-8483ca5b.json");
+  const h = harness({
+    configText: text("ci-green.json"),
+    routes: { "actions/runs?head_sha": { ...runs, total_count: runs.workflow_runs.length + 50 } },
+    args: ["8483ca5b", "--pr", "110"],
+  });
+  assert.equal(h.run(), 3);
+  assert.match(h.out.join("\n"), /truncated/);
+});
+
+check("queueSeconds counts from the push, not from a rerun's restarted clock", () =>
+  withDir((dir) => {
+    const runs = json("runs-rerun-b5953af8.json");
+    const h = harness({ configText: text("ci-green.json"), routes: { "actions/runs?head_sha": runs, "/jobs": { jobs: [] } }, args: ["b5953af8", "--pr", "110", "--wait", "--pushed-at", "2026-10-09T21:00:00Z"] });
+    h.deps.env.CAIRN_GATE_RECORDS_DIR = dir;
+    h.deps.now = () => Date.parse("2026-10-09T21:40:00Z");
+    assert.equal(h.run(), 0);
+    const rec = JSON.parse(readFileSync(join(dir, "runs.jsonl"), "utf8").trim());
+    assert.equal(rec.queueSeconds, 40 * 60);
+  }),
+);
 
 check("main rejects a missing --pr", () => {
   const h = harness({ configText: text("ci-green.json"), args: ["abc123"] });

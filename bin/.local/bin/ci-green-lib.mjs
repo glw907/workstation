@@ -37,6 +37,9 @@ export function parseConfig(text) {
     return { ok: false, error: `not valid JSON (${e.message})` };
   }
   for (const key of ["expected", "judgedWhenPresent", "neverOnPullRequest", "ignorePrefixes"]) {
+    if (key === "expected" && Array.isArray(config?.expected) && config.expected.length === 0) {
+      return { ok: false, error: '"expected" must not be empty' };
+    }
     if (!Array.isArray(config?.[key]) || !config[key].every((v) => typeof v === "string")) {
       return { ok: false, error: `"${key}" must be an array of strings` };
     }
@@ -56,13 +59,15 @@ export function parseNameOnly(text) {
 
 /**
  * The workflows that must have run: the expected set whenever the diff touches a path outside the
- * ignored prefixes, none for a diff that stays inside them.
+ * ignored prefixes, none for a diff that stays inside them. An empty diff (a SHA already in
+ * origin/main) cannot show it stays inside them, so it requires the expected set too.
  *
  * @param {{ expected: string[], ignorePrefixes: string[] }} config - The parsed config.
  * @param {string[]} files - The diff's changed paths.
  * @returns {string[]} Workflow file paths.
  */
 export function requiredWorkflows(config, files) {
+  if (files.length === 0) return config.expected;
   const outside = files.some((f) => !config.ignorePrefixes.some((p) => f.startsWith(p)));
   return outside ? config.expected : [];
 }
@@ -179,7 +184,10 @@ export function planReruns(redRuns, jobsByRun) {
       if (!failed.every((j) => j.steps.length && j.steps.every((s) => SETUP_STEP.test(s)))) return [];
       commands.push(["run", "rerun", String(run.id), "--failed"]);
     } else {
-      for (const job of bad) commands.push(["run", "rerun", String(run.id), "--job", String(job.id)]);
+      // One --failed covers cancelled jobs too, and GitHub may refuse a second --job rerun while
+      // the first is still running.
+      if (bad.length > 1) commands.push(["run", "rerun", String(run.id), "--failed"]);
+      else commands.push(["run", "rerun", String(run.id), "--job", String(bad[0].id)]);
     }
   }
   return commands;
@@ -389,6 +397,7 @@ export function main(args, deps = realDeps()) {
   const branch = quiet(() => git(["branch", "--show-current"]));
   const short = sha.slice(0, 8);
   let clockStartMs = startMs;
+  let pushedAtMs = startMs;
   let retried = [];
 
   const finish = (outcome, line) => {
@@ -396,7 +405,7 @@ export function main(args, deps = realDeps()) {
     if (wait) {
       const dir = env.CAIRN_GATE_RECORDS_DIR || join(env.HOME || homedir(), ".local/state/cairn-run-gate");
       const lockWait = Number(env.CAIRN_GATE_RECORDS_LOCK_WAIT) || 10;
-      const queueSeconds = Math.max(0, Math.round((startMs - clockStartMs) / 1000));
+      const queueSeconds = Math.max(0, Math.round((startMs - pushedAtMs) / 1000));
       appendRecord(dir, ciRecord({ sha, pr, task: opts.task, toplevel, branch, startMs, endMs: now(), queueSeconds, outcome, retried }), { lockWait, warn: err });
     }
     return EXIT[outcome];
@@ -430,7 +439,7 @@ export function main(args, deps = realDeps()) {
   } catch (e) {
     return unavailable(`cannot diff ${short} against origin/main: ${message(e)}`);
   }
-  const pushedAtMs = Date.parse(opts.pushedAt ?? quiet(() => git(["show", "-s", "--format=%cI", sha])));
+  pushedAtMs = Date.parse(opts.pushedAt ?? quiet(() => git(["show", "-s", "--format=%cI", sha])));
   if (Number.isNaN(pushedAtMs)) return unavailable("cannot read the push time; pass --pushed-at <iso>");
   clockStartMs = pushedAtMs;
 
@@ -452,7 +461,12 @@ export function main(args, deps = realDeps()) {
     let runs = [];
     let apiError = null;
     try {
-      runs = api(`repos/{owner}/{repo}/actions/runs?head_sha=${sha}&per_page=100`).workflow_runs;
+      const page = api(`repos/{owner}/{repo}/actions/runs?head_sha=${sha}&per_page=100`);
+      runs = page.workflow_runs;
+      if (page.total_count > runs.length) {
+        runs = [];
+        apiError = `run list truncated (${page.total_count} runs, ${page.workflow_runs.length} returned)`;
+      }
     } catch (e) {
       apiError = message(e);
     }
