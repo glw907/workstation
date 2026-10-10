@@ -110,3 +110,7 @@ approved, all cheap in tokens:
   hand-kept list of check scripts. The script runs CI's check list in CI order, minus the unit
   and e2e suites, and builds once for all of its checks, so a check added to CI is added to the script in the same change and the close
   can no longer drift behind CI.
+- **Never edit a script a running gate executes** (dubplate, 2026-10-10). Bash reads a script incrementally, so
+  a mid-run edit shifts the bytes it has yet to read: a header-comment edit to dubplate's `check.sh` made the gate
+  exit 127 (`line 609: e: command not found`). A conductor serializes any edit to gate machinery after the gate
+  finishes.
