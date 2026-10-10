@@ -7,15 +7,15 @@ approved, all cheap in tokens:
 - **The slow suite runs only where it can catch something.** The per-task gate is the change's
   blast radius (Geoff, 2026-10-08): the tier the diff computes, plus the e2e specs its change
   reaches. A `paint` task's e2e is the set of specs its change reaches. "Full gate"
-  means CI green on the commit (Geoff, 2026-10-09): where the repo skill names a CI-green command,
-  segment boundaries and the close read it, and the 45-minute local `full` tier runs only when that
-  command reports CI unavailable. Across B2's eight tasks the per-task e2e caught nothing the
+  means CI green on the commit (Geoff, 2026-10-09) where the repo skill names a CI-green command,
+  and the 45-minute local `full` tier otherwise; segment boundaries and the close read it, and the
+  local tier runs there only when the command reports CI unavailable. Across B2's eight tasks the per-task e2e caught nothing the
   checks, the diff reviewer, and CI did not, at a third of each task's hour. Measured baseline
   (cairn-cms, 2026-10-08 and 09): a local full gate ran about 45 minutes against about 11
   minutes for CI's `test` job, with `npm test` at 208 s and e2e at 291 s on CI.
 - **Reduced fix rounds, one statement.** A fix round whose blocking findings are all `commentOnly`
-  runs a reduced gate under every class, `auth-data` included (the comment linters, the doc link
-  gate, and the touched files' unit tests). A round whose findings are all `commentOnly` or
+  runs a reduced gate under every class, `auth-data` included (the repo's type check plus only the
+  test files the fix round touched). A round whose findings are all `commentOnly` or
   `testOnly` reduces under every class but `auth-data`, whose test-only round keeps its targeted
   gate. A `coverageOnly` finding moves to `batchedNotes` under `engine-logic`, `paint`, `sweep`,
   and `docs`. The reviewer marks each finding; both runners route on it.

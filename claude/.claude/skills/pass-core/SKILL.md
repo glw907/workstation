@@ -144,7 +144,7 @@ Each task runs as a chain:
 
 **CI shadows the pass (Geoff, 2026-10-08).** Every pass opens a draft PR against the default
 branch after the pass branch's first commit and pushes after each accepted task, so CI (which runs on
-`pull_request`) shadows the pass as it runs. The sequential runner pushes after every
+`pull_request`) shadows the pass as it runs. Given `ci: { pr }`, the sequential runner pushes after every
 implementer commit and reads the CI verdict on task N's accepted SHA before it dispatches task
 N+2 (before N+1 when the task waits, per the per-task gate above); a red stops the line until a
 fix commit is green. Reason: cairn-cms CI fires on push only for
@@ -154,7 +154,8 @@ ran in about 11 minutes against about 45 locally.
 Below six tasks, dispatch the chain per task with the Agent tool and paste the class's
 mandate and bar into both prompts. A hand dispatch names the base SHA and the computed tier,
 never the full gate by default (Geoff, 2026-10-08). At six or more, or when the plan marks tasks independent,
-run `pass-execute` by name with `{repo, gate, implementer, passClass, reducedGate?, tasks:
+run `pass-execute` by name (`auth-data` tasks never run through `pass-execute-chains`, which does not
+wait on CI) with `{repo, gate, implementer, passClass, reducedGate?, tasks:
 [{id, title, criteria, files, notes, passClass?, gate?}]}`. One invocation runs one segment.
 Read `~/.claude/docs/pass-gate-economy.md` before the first segment; its rules reach an
 implementer only through the args.
