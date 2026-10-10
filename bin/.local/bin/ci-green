@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+// ci-green: reads a commit's GitHub Actions workflow-run conclusions and says whether CI is green.
+//
+//   ci-green <sha> --pr <n> [--wait] [--pushed-at <iso>] [--task <id>]
+//
+// Run it from inside a clone of the repository: it fetches origin, reads `.github/ci-green.json`
+// at the SHA (`git show`), diffs the SHA against its merge base with origin/main, and queries
+// GitHub through `gh`, which infers the repository from the clone.
+//
+//   --pr <n>          the pull request number (required); used to fetch its head when the SHA is
+//                     not local and to explain a SHA that got no runs.
+//   --wait            block up to 540 seconds (CI_GREEN_WAIT_SECONDS) while runs are pending, and
+//                     rerun an infrastructure red once. Without it the command reads once.
+//   --pushed-at <iso> when the SHA reached GitHub; the 5-minute missing clock and the 60-minute
+//                     unavailable clock start here, falling back to the commit's committer date.
+//   --task <id>       a label copied into the wait record.
+//
+// Exit codes:
+//   0   green: at least one run, every run concluded success, every required workflow present
+//   1   red: a run concluded anything but success (failing jobs, steps, tests, and a log tail print)
+//   2   missing: a required workflow, or any run at all, is absent 5 minutes after the push
+//   3   unavailable: no readable `.github/ci-green.json` at the SHA, a git or API failure, no
+//       terminal result 60 minutes after the push, or a usage error
+//   75  pending: runs are still going (or the wait budget ran out); re-issue the same command
+//
+// Each `--wait` invocation appends one `kind: "ci"` line to the run records file shared with
+// cairn-run-gate (`CAIRN_GATE_RECORDS_DIR`, default ~/.local/state/cairn-run-gate/runs.jsonl),
+// under the same lock. The decision logic lives in ci-green-lib.mjs.
+import { main } from "./ci-green-lib.mjs";
+
+process.exitCode = main(process.argv.slice(2));
