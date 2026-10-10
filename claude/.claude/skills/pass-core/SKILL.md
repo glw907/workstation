@@ -180,6 +180,17 @@ not specify; any further escalation follows `~/.claude/docs/model-economy.md` "C
 - **One implementer per dispatch, verified.** Wait for each result and verify its commit
   (`git log`, `git status`) before depending on it. On an API overload or 5xx, wait and retry
   once; never fire a second dispatch while one may still be in flight.
+- **Clock overrun is a stop-or-fix event, never a status line (Geoff, 2026-10-10).** Every
+  fallback tick and every progress question checks two things: the elapsed clock of the chain in
+  flight against its plan estimate, and the gate string actually running (`pgrep -af
+  cairn-run-gate`) against the tier the classifier should compute. A chain past twice its
+  estimate, or a running gate that is the fallback F when the repo has a classifier, triggers a
+  diagnosis on that tick. Fix it in place when the fix is the conductor's call (a relaunch with
+  `classifier: true` past a wrong probe, a corrected arg); otherwise stop the run and write
+  STATUS. A projected total well past the plan's estimate is that same trigger. Report it as a
+  defect being handled, never as an estimate. (Engine pass B, S1: the runner's Haiku probe
+  reported `gate-tier.mjs` absent, every gate fell back to the 45-minute F, and two ticks logged
+  "alive, in its gate" for an hour before the owner stopped the pass.)
 - **Pre-flight the plan's factual claims.** Before each segment, dispatch one `haiku` or
   `sonnet` pre-flight that lists every checkable claim the segment's tasks make about existing
   code (counts, error meanings, paths, shapes) and checks each at HEAD. Amend the plan, then
