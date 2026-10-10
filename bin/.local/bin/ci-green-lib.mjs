@@ -384,7 +384,9 @@ export function main(args, deps = realDeps()) {
     return EXIT.unavailable;
   }
   const { opts } = parsed;
-  const { sha, pr, wait } = opts;
+  const { pr, wait } = opts;
+  // The runs API matches head_sha only against a full SHA, so the argument is resolved after the fetch.
+  let sha = opts.sha;
   const startMs = now();
   const quiet = (fn, fallback = "") => {
     try {
@@ -416,10 +418,10 @@ export function main(args, deps = realDeps()) {
   try {
     git(["fetch", "origin", "main", "--quiet"]);
     try {
-      git(["cat-file", "-e", `${sha}^{commit}`]);
+      sha = git(["rev-parse", "--verify", `${opts.sha}^{commit}`]).trim();
     } catch {
       git(["fetch", "origin", `pull/${pr}/head`, "--quiet"]);
-      git(["cat-file", "-e", `${sha}^{commit}`]);
+      sha = git(["rev-parse", "--verify", `${opts.sha}^{commit}`]).trim();
     }
   } catch (e) {
     return unavailable(`cannot fetch ${short}: ${message(e)}`);

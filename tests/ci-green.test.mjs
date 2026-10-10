@@ -300,7 +300,9 @@ check("an unwritable records directory warns once and does not throw", () =>
 
 // ---- the command, end to end with git and gh stubbed ----
 
-function harness({ configText, files = ["src/lib/index.ts"], routes = {}, args }) {
+const FULL_SHA = "8483ca5b6422b6122e18f16b763f235685a2f100";
+
+function harness({ configText, files = ["src/lib/index.ts"], routes = {}, args, committerDate = "2026-10-10T12:00:00Z" }) {
   const out = [];
   const err = [];
   const calls = [];
@@ -310,8 +312,8 @@ function harness({ configText, files = ["src/lib/index.ts"], routes = {}, args }
     const key = a.join(" ");
     calls.push(["git", key]);
     if (key.startsWith("fetch")) return "";
-    if (key.startsWith("cat-file")) return "";
-    if (key.startsWith("show -s --format=%cI")) return "2026-10-10T12:00:00Z\n";
+    if (key.startsWith("rev-parse --verify")) return `${FULL_SHA}\n`;
+    if (key.startsWith("show -s --format=%cI")) return `${committerDate}\n`;
     if (key.startsWith("show ") && key.includes(".github/ci-green.json")) {
       if (configText === null) throw new Error("fatal: path '.github/ci-green.json' does not exist");
       return configText;
@@ -459,6 +461,29 @@ check("queueSeconds counts from the push, not from a rerun's restarted clock", (
     assert.equal(rec.queueSeconds, 40 * 60);
   }),
 );
+
+check("a short SHA is resolved to the full SHA before the runs query and the config read", () => {
+  const runs = json("runs-green-8483ca5b.json");
+  const h = harness({
+    configText: text("ci-green.json"),
+    routes: { [`actions/runs?head_sha=${FULL_SHA}&`]: runs, "/jobs": { jobs: [] } },
+    args: ["8483ca5b", "--pr", "110"],
+  });
+  assert.equal(h.run(), 0);
+  const used = h.calls.filter(([, c]) => /head_sha=|show .*ci-green\.json|show -s|diff --name-only/.test(c)).map(([, c]) => c);
+  assert.ok(used.length >= 4 && used.every((c) => c.includes(FULL_SHA) && !/[^0-9a-f]8483ca5b[^0-9a-f6]/.test(c)), used.join("\n"));
+});
+
+check("a -0800 committer date is read as its UTC instant: one minute after is pending, six is missing", () => {
+  const stamp = "2026-10-10T08:40:11-08:00";
+  const at = (ms) => {
+    const h = harness({ configText: text("ci-green.json"), routes: { "actions/runs?head_sha": { total_count: 0, workflow_runs: [] } }, args: ["8483ca5b", "--pr", "110"], committerDate: stamp });
+    h.deps.now = () => Date.parse("2026-10-10T16:40:11Z") + ms;
+    return h.run();
+  };
+  assert.equal(at(MIN), 75);
+  assert.equal(at(6 * MIN), 2);
+});
 
 check("main rejects a missing --pr", () => {
   const h = harness({ configText: text("ci-green.json"), args: ["abc123"] });
