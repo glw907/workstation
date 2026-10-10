@@ -76,16 +76,19 @@ Run `pass-core`'s ritual. The cairn-specific parts of each step:
 
 ### Gate (step 2)
 
-Push the close commit and read `ci-green <sha> --pr <n> --wait` (exit 0 is green, 1 red, 2
-missing, 3 unavailable, 75 pending: re-issue on 75, with `run_in_background`). CI's `test`, `e2e`,
-`design`, and `scaffold` runs, plus `create-site` for a diff outside `tool/**`, are the pass's
-full gate, e2e included. Only on exit 3 does the local full gate run: `TIER_GATES.full` from
+Push the close commit and read `ci-green <sha> --pr <n> --wait` from the pass worktree, so its CI
+line lands under the pass branch for `--records` (exit 0 is green, 1 red, 2 missing, 3 unavailable,
+75 pending: re-issue on 75, with `run_in_background`; any other exit, such as 127 before stow,
+counts as 3 and the local full gate runs). For a diff with a path outside `tool/**`, CI's `test`,
+`e2e`, `design`, `scaffold`, and `create-site` runs are the pass's full gate, e2e included; a
+tool-only diff requires none, and `tool` and `tool-conditions` are judged when present. Only on exit 3 does the local full gate run: `TIER_GATES.full` from
 `scripts/checks/gate-tier.mjs` (`npm test`, then `check:close`, which builds once), its e2e step
 run with `--grep-invert "site home|archive page 2"` (the 20 visual tests this workstation's
 Chromium renders off CI's baselines). On that local fallback a `docs` pass skips `npm test` but still runs `check:close`.
 
 **The draft PR.** Open it against `main` after the pass branch's first commit and push after each
-accepted task (the sequential runner pushes after every implementer commit). cairn-cms CI fires
+accepted task. Pass `ci: { pr: <draft PR> }` to the sequential runner; without it the runner never
+pushes or reads CI. cairn-cms CI fires
 on push only for `main` and `rebuild`, so the PR is what gives a pass branch its CI.
 
 Prove the consumer build, not only `npm test`: the package ships TypeScript inside `.svelte`,

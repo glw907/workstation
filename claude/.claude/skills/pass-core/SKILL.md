@@ -102,7 +102,8 @@ the close.
 
 **The per-task gate is the change's blast radius, never the whole suite (Geoff, 2026-10-08).** A
 task runs the targeted gate its diff computes (`gate-tier.mjs` where the repo has one; `--pin <tier>`
-keeps a named tier) plus the e2e specs its change can reach. The full gate is CI green on the
+keeps a named tier, and returns before `--class` applies, so an `auth-data` task pinned below
+`full` loses the three auth specs: pin `full` or append them) plus the e2e specs its change can reach. The full gate is CI green on the
 commit: where the repo skill names a CI-green command, each segment boundary and the close read it
 and the local full gate runs only when that command reports CI unavailable; otherwise the local
 full gate runs once at each segment boundary (the final boundary's full gate yields to the close
@@ -154,9 +155,14 @@ ran in about 11 minutes against about 45 locally.
 Below six tasks, dispatch the chain per task with the Agent tool and paste the class's
 mandate and bar into both prompts. A hand dispatch names the base SHA and the computed tier,
 never the full gate by default (Geoff, 2026-10-08). At six or more, or when the plan marks tasks independent,
-run `pass-execute` by name (`auth-data` tasks never run through `pass-execute-chains`, which does not
-wait on CI) with `{repo, gate, implementer, passClass, reducedGate?, tasks:
-[{id, title, criteria, files, notes, passClass?, gate?}]}`. One invocation runs one segment.
+run `pass-execute` by name with `{repo, gate, implementer, passClass, reducedGate?, ci?: { pr },
+tasks: [{id, title, criteria, files, notes, passClass?, gate?}]}`. `ci` is required whenever the
+repo skill names a CI-green command and the run is sequential. Omitting `ci`, `parallel: true`, or
+`pass-execute-chains` disables the push, the reads, and every CI wait, so `auth-data` and
+protected-path tasks run sequentially through `pass-execute` with `ci`. In a hand dispatch below
+six tasks, the conductor pushes at the implementer's commit, runs `gate-tier.mjs --range
+<base>..HEAD --protected` beside the gate, and reads `ci-green --wait` on N before N+2 (before N+1
+when the task waits). One invocation runs one segment.
 Read `~/.claude/docs/pass-gate-economy.md` before the first segment; its rules reach an
 implementer only through the args.
 

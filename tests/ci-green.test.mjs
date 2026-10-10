@@ -354,6 +354,24 @@ check("main exits 3 naming ci-green.json when the file is absent at the SHA", ()
   }),
 );
 
+check("main exits 3 when the argument fails to resolve after the pull/<n>/head fallback", () => {
+  const h = harness({ configText: text("ci-green.json"), args: ["abc123", "--pr", "110"] });
+  const stubbed = h.deps.git;
+  h.deps.git = (a) => {
+    if (a.join(" ").startsWith("rev-parse --verify")) throw new Error("fatal: Needed a single revision");
+    return stubbed(a);
+  };
+  assert.equal(h.run(), 3);
+  assert.match(h.out.join("\n"), /unavailable \(cannot fetch abc123/);
+  assert.ok(h.calls.some(([, c]) => c === "fetch origin pull/110/head --quiet"), "the pull ref is fetched before giving up");
+});
+
+check("main names the resolved SHA, not the raw argument, in its verdict line", () => {
+  const h = harness({ configText: null, args: ["abc123", "--pr", "110"] });
+  assert.equal(h.run(), 3);
+  assert.match(h.out.join("\n"), /\.github\/ci-green\.json at 8483ca5b is/);
+});
+
 check("main exits 3 naming ci-green.json when the file is malformed", () => {
   const h = harness({ configText: "{oops", args: ["abc123", "--pr", "110"] });
   assert.equal(h.run(), 3);

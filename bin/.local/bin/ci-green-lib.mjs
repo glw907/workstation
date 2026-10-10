@@ -397,7 +397,7 @@ export function main(args, deps = realDeps()) {
   };
   const toplevel = quiet(() => git(["rev-parse", "--show-toplevel"]));
   const branch = quiet(() => git(["branch", "--show-current"]));
-  const short = sha.slice(0, 8);
+  let short = sha.slice(0, 8);
   let clockStartMs = startMs;
   let pushedAtMs = startMs;
   let retried = [];
@@ -426,6 +426,7 @@ export function main(args, deps = realDeps()) {
   } catch (e) {
     return unavailable(`cannot fetch ${short}: ${message(e)}`);
   }
+  short = sha.slice(0, 8);
   const config = parseConfig(quiet(() => git(["show", `${sha}:${CONFIG_PATH}`])));
   if (!config.ok) return unavailable(`${CONFIG_PATH} at ${short} is ${config.error}`);
   let files;
