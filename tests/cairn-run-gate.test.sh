@@ -23,6 +23,9 @@ export CAIRN_GATE_RECEIPT_DIR="$fixture_root/receipts"
 # A caller that exports a lane would change every fingerprint and the lane cases below.
 unset CAIRN_GATE_LANE
 gatedir="$TMPDIR/cairn-gate-$(id -u)"
+# Run records go to the fixture root too, never ~/.local/state; a case that reads them points the
+# variable at a directory of its own.
+export CAIRN_GATE_RECORDS_DIR="$fixture_root/records"
 
 key_for() {
   # Mirror the script's own key: sha256sum of "$PWD\n$gate", first 16 hex chars.
@@ -198,12 +201,143 @@ mkdir -p "$state6"
 echo 999999 >"$state6/pid"
 echo 0 >"$state6/status"
 : >"$state6/gate.log"
-printf '%s %s\n' 12345 "$(cd "$rrepo" && CAIRN_GATE_LANE=light bash -c 'source <(sed -n "/^gate_fingerprint()/,/^}/p" "$1"); gate="$2"; gate_fingerprint' _ "$SCRIPT" "$gate6")" >"$state6/fingerprint"
+printf '%s %s\n' 12345 "$(cd "$rrepo" && CAIRN_GATE_LANE=light bash -c 'source <(sed -n "/^gate_tree()/,/^}/p;/^gate_fingerprint()/,/^}/p" "$1"); gate="$2"; gate_fingerprint' _ "$SCRIPT" "$gate6")" >"$state6/fingerprint"
 out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" "$gate6")
 out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt "$gate6")
 assert_eq "$?" "1" "receipt: a stale start fingerprint from another run writes none"
 out=$(cd "$rrepo" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'sleep 1; echo x >>a.txt')
 assert_eq "$?" "1" "receipt: nor does the reverted start tree match it"
+
+# --- run records: one gate line per run, written by the detached run, so an abandoned caller still
+# leaves one and a reattaching caller adds none.
+rec_lines() { [ -f "$1/runs.jsonl" ] && wc -l <"$1/runs.jsonl" || echo 0; }
+wait_for_lines() {
+  local dir="$1" want="$2" i
+  for i in $(seq 1 100); do
+    [ "$(rec_lines "$dir")" -ge "$want" ] && return 0
+    sleep 0.1
+  done
+  return 1
+}
+
+rec1="$fixture_root/rec-reattach"
+gate7="sleep 3; echo rec7"
+out=$(cd "$rrepo" && CAIRN_GATE_RECORDS_DIR="$rec1" CAIRN_GATE_LANE=light CAIRN_GATE_WAIT=1 CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" "$gate7")
+assert_eq "$?" "75" "records: the first call of a slow gate exits 75"
+wait_for_lines "$rec1" 1 || { echo "FAIL: records: an abandoned caller left no record"; fail=1; }
+for i in 1 2 3 4 5 6; do
+  out=$(cd "$rrepo" && CAIRN_GATE_RECORDS_DIR="$rec1" CAIRN_GATE_LANE=light CAIRN_GATE_WAIT=2 CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" "$gate7")
+  [ "$?" -ne 75 ] && break
+done
+assert_contains "$out" "gate exit: 0" "records: the reattached call completes"
+assert_eq "$(rec_lines "$rec1")" "1" "records: a re-issued gate leaves exactly one line"
+assert_eq "$(jq -r '.kind + " " + .outcome + " " + (.exit|tostring) + " " + .gate' "$rec1/runs.jsonl")" "gate exit 0 $gate7" "records: the gate line names kind, outcome, exit, gate"
+assert_eq "$(jq -r '.lane + " " + .toplevel' "$rec1/runs.jsonl")" "light $rrepo" "records: lane and toplevel"
+assert_eq "$(jq -r '[.head, .tree, .branch, .start, .end] | map(length > 0) | all' "$rec1/runs.jsonl")" "true" "records: head, tree, branch, start, end present"
+
+rec2="$fixture_root/rec-vanish"
+gate8="echo case8 $$"
+key8=$(key_for "$work_dir" "$gate8")
+mkdir -p "$gatedir/$key8"
+dead_pid >"$gatedir/$key8/pid"
+: >"$gatedir/$key8/gate.log"
+out=$(cd "$work_dir" && CAIRN_GATE_RECORDS_DIR="$rec2" CAIRN_GATE_POLL_INTERVAL=1 CAIRN_GATE_GRACE=1 "$SCRIPT" "$gate8")
+assert_eq "$?" "75" "records: a vanished run still exits 75"
+assert_eq "$(rec_lines "$rec2")" "1" "records: a vanished run leaves one line"
+assert_eq "$(jq -r '.kind + " " + .outcome' "$rec2/runs.jsonl")" "gate vanished" "records: the line is outcome vanished"
+
+rec3="$fixture_root/rec-receipt"
+out=$(cd "$rrepo" && CAIRN_GATE_RECORDS_DIR="$rec3" CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" 'echo rec9')
+out=$(cd "$rrepo" && CAIRN_GATE_RECORDS_DIR="$rec3" CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'echo rec9')
+assert_eq "$?" "0" "records: the receipt lookup still hits"
+assert_eq "$(rec_lines "$rec3")" "2" "records: a run and a receipt hit leave two lines"
+assert_eq "$(jq -r '.outcome' "$rec3/runs.jsonl" | paste -sd, -)" "exit,receipt" "records: the second line is outcome receipt"
+
+# A second run queued behind a held machine lock records the wait.
+rec4="$fixture_root/rec-wait"
+mkdir -p "$gatedir"
+flock "$gatedir/machine-light.lock" sleep 3 &
+holder=$!
+sleep 0.5
+out=$(cd "$rrepo" && CAIRN_GATE_RECORDS_DIR="$rec4" CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" 'echo rec10')
+wait "$holder" 2>/dev/null
+assert_eq "$(jq -r '.lockWaitSeconds > 0' "$rec4/runs.jsonl")" "true" "records: a run queued behind a held lock records a wait above zero"
+rec5="$fixture_root/rec-nowait"
+out=$(cd "$rrepo" && CAIRN_GATE_RECORDS_DIR="$rec5" CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" 'echo rec11')
+# Stamps are whole seconds, so an unqueued run can straddle one second boundary.
+assert_eq "$(jq -r '.lockWaitSeconds <= 1' "$rec5/runs.jsonl")" "true" "records: an unqueued run records no real wait"
+
+# The summary sums only the matching lines and counts the malformed one.
+rec6="$fixture_root/rec-summary"
+mkdir -p "$rec6"
+{
+  jq -nc '{kind:"gate",gate:"g",toplevel:"/t",branch:"b",start:"2026-10-10T10:00:00Z",end:"2026-10-10T10:10:00Z",lockWaitSeconds:60,exit:0,outcome:"exit"}'
+  jq -nc '{kind:"gate",gate:"g",toplevel:"/t",branch:"b",start:"2026-10-10T11:00:00Z",end:"2026-10-10T11:05:00Z",lockWaitSeconds:0,exit:1,outcome:"exit"}'
+  jq -nc '{kind:"ci",sha:"s",pr:1,task:null,toplevel:"/t",branch:"b",start:"2026-10-10T12:00:00Z",end:"2026-10-10T12:20:00Z",queueSeconds:30,outcome:"green",retried:[]}'
+  jq -nc '{kind:"gate",gate:"g",toplevel:"/t",branch:"other",start:"2026-10-10T10:00:00Z",end:"2026-10-10T20:00:00Z",lockWaitSeconds:999,exit:0,outcome:"exit"}'
+  jq -nc '{kind:"ci",sha:"s",pr:1,task:null,toplevel:"/other",branch:"b",start:"2026-10-10T12:00:00Z",end:"2026-10-10T18:00:00Z",queueSeconds:1,outcome:"green",retried:[]}'
+  echo '{"kind":"gate","broken'
+} >"$rec6/runs.jsonl"
+out=$(CAIRN_GATE_RECORDS_DIR="$rec6" "$SCRIPT" --records /t b)
+assert_eq "$?" "0" "records: the summary exits 0"
+assert_eq "$out" "gate 840s (2 runs), lock wait 60s, ci wait 1200s (1 waits), malformed 1" "records: the summary sums only the matching lines"
+out=$(CAIRN_GATE_RECORDS_DIR="$fixture_root/rec-absent" "$SCRIPT" --records /t b)
+assert_eq "$?" "0" "records: an absent file exits 0"
+assert_eq "$out" "gate 0s (0 runs), lock wait 0s, ci wait 0s (0 waits), malformed 0" "records: an absent file prints zero sums"
+
+# A record failure never changes the gate's printed exit or its receipt, and warns once.
+count_warn() { grep -c "cairn-run-gate: record" <<<"$1"; }
+rrepo2="$work_dir/record-fail-repo"
+mkdir -p "$rrepo2"
+git -C "$rrepo2" init -q
+echo a >"$rrepo2/a.txt"
+git -C "$rrepo2" add a.txt
+git -C "$rrepo2" -c user.email=t@t -c user.name=t commit -qm init
+good=$(cd "$rrepo2" && CAIRN_GATE_RECORDS_DIR="$fixture_root/rec-ok" CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" 'echo rec12' 2>&1)
+good_rc=$?
+good_exit=$(grep -o '^gate exit: [0-9]*' <<<"$good")
+assert_eq "$(count_warn "$good")" "0" "records: no warning with records on"
+(cd "$rrepo2" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'echo rec12' >/dev/null)
+assert_eq "$?" "0" "records: the receipt exists with records on"
+
+echo file >"$fixture_root/afile"
+bad=$(cd "$rrepo2" && CAIRN_GATE_RECORDS_DIR="$fixture_root/afile/sub" CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" 'echo rec13' 2>&1)
+assert_eq "$?" "$good_rc" "records: an unwritable directory leaves the exit unchanged"
+assert_eq "$(grep -o '^gate exit: [0-9]*' <<<"$bad")" "$good_exit" "records: an unwritable directory leaves the printed exit unchanged"
+assert_eq "$(count_warn "$bad")" "1" "records: an unwritable directory warns once"
+(cd "$rrepo2" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'echo rec13' >/dev/null)
+assert_eq "$?" "0" "records: an unwritable directory leaves the receipt"
+
+# A PATH holding the tools the script needs and no jq (jq lives under Homebrew in the live
+# environment, which a detached run need not inherit).
+nojq_bin="$fixture_root/nojq-bin"
+mkdir -p "$nojq_bin"
+for tool in bash env git sha256sum cut sed grep date cat mkdir rm mv cp sleep flock tail wc find mktemp \
+  realpath id kill tr head sort dirname touch ln; do
+  ln -sf "$(command -v "$tool")" "$nojq_bin/$tool"
+done
+safe_path="$nojq_bin"
+if PATH="$safe_path" command -v jq >/dev/null; then
+  echo "FAIL: records: jq is on the stripped PATH, the case proves nothing"; fail=1
+fi
+nojq=$(cd "$rrepo2" && PATH="$safe_path" CAIRN_GATE_RECORDS_DIR="$fixture_root/rec-nojq" CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" 'echo rec14' 2>&1)
+assert_eq "$?" "$good_rc" "records: jq off PATH leaves the exit unchanged"
+assert_eq "$(grep -o '^gate exit: [0-9]*' <<<"$nojq")" "$good_exit" "records: jq off PATH leaves the printed exit unchanged"
+assert_eq "$(count_warn "$nojq")" "1" "records: jq off PATH warns once"
+(cd "$rrepo2" && CAIRN_GATE_LANE=light "$SCRIPT" --receipt 'echo rec14' >/dev/null)
+assert_eq "$?" "0" "records: jq off PATH leaves the receipt"
+assert_eq "$(rec_lines "$fixture_root/rec-nojq")" "0" "records: jq off PATH writes no line"
+
+# A lock that stays held past the wait is a warning, not a failure.
+rec7="$fixture_root/rec-locked"
+mkdir -p "$rec7"
+flock "$rec7/runs.lock" sleep 4 &
+holder=$!
+sleep 0.3
+locked=$(cd "$rrepo2" && CAIRN_GATE_RECORDS_DIR="$rec7" CAIRN_GATE_RECORDS_LOCK_WAIT=1 CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" 'echo rec15' 2>&1)
+assert_eq "$?" "$good_rc" "records: a lock timeout leaves the exit unchanged"
+assert_eq "$(count_warn "$locked")" "1" "records: a lock timeout warns once"
+wait "$holder" 2>/dev/null
 
 # --- no runner prompt or implementer file carries a vanished clause: the protocol lives only in
 # cairn-run-gate's own output now.

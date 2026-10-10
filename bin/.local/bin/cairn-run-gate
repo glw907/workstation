@@ -23,6 +23,7 @@
 #
 # Usage: cairn-run-gate '<gate string>' [log path]
 #        cairn-run-gate --receipt '<gate string>'
+#        cairn-run-gate --records <toplevel> <branch>
 # Memory: the gate runs in a transient user scope capped by CAIRN_GATE_MEMORY_HIGH (7G),
 # CAIRN_GATE_MEMORY_MAX (8G), and CAIRN_GATE_SWAP_MAX (4G); override per call as needed.
 # Lanes: gates queue on one machine-wide lock per lane. The default lane, heavy, is for a
@@ -53,6 +54,23 @@
 # keyed by the run's pid, so a run started by an older copy of this script, which writes none,
 # never compares against a stale one and gets no receipt.
 #
+# Run records: every run also appends one JSON line to ${CAIRN_GATE_RECORDS_DIR:-
+# ~/.local/state/cairn-run-gate}/runs.jsonl, under flock on runs.lock in that directory, so a pass
+# can score its gate and CI time from one file. A gate line carries kind "gate", gate, tree,
+# toplevel, branch, head, lane, start, end (ISO 8601 UTC), lockWaitSeconds (the time the run queued
+# on the machine lock), exit, and outcome. The detached run writes the "exit" line after its gate
+# command exits and before it writes the status file, so a caller that abandons the run still
+# leaves a record and a re-issued call writes none. The caller writes "vanished" when it detects a
+# lost run and "receipt" on a receipt hit. A CI wait line (kind "ci", written by ci-green) shares
+# the file. A record write is best effort: an unwritable directory, a jq missing from the run's
+# PATH, or a lock held past CAIRN_GATE_RECORDS_LOCK_WAIT seconds (default 10) prints one warning
+# and never changes the exit, the status, or the receipt.
+#
+# Summary: `cairn-run-gate --records <toplevel> <branch>` prints one line summing, for that
+# toplevel and branch, the gate time of completed runs (end minus start minus lock wait), the lock
+# wait, and the CI wait (end minus start of each CI line), and counts any malformed line it skips.
+# An absent records file prints zero sums and exits 0.
+#
 # Lookup: `cairn-run-gate --receipt '<gate string>'` recomputes the fingerprint for the current
 # tree and, when the receipt for this exact gate string matches it, recorded exit 0, and its log
 # ends in "gate exit: 0", prints "receipt: exit 0 (log: ...) fingerprint ..." and exits 0. Any
@@ -64,6 +82,40 @@ if [ "${1:-}" = "--receipt" ]; then
   mode=receipt
   shift
 fi
+records_dir="${CAIRN_GATE_RECORDS_DIR:-$HOME/.local/state/cairn-run-gate}"
+
+if [ "${1:-}" = "--records" ]; then
+  [ $# -eq 3 ] || { echo "usage: cairn-run-gate --records <toplevel> <branch>" >&2; exit 2; }
+  command -v jq >/dev/null 2>&1 || { echo "cairn-run-gate: --records needs jq" >&2; exit 2; }
+  if [ -f "$records_dir/runs.jsonl" ]; then
+    src="$records_dir/runs.jsonl"
+  else
+    src=/dev/null
+  fi
+  jq -Rrn --arg top "$2" --arg br "$3" '
+    def secs: fromdateiso8601;
+    def delta:
+      if .kind == "gate" then
+        (if .outcome == "exit"
+          then {g: ((.end | secs) - (.start | secs) - .lockWaitSeconds), gn: 1, l: .lockWaitSeconds}
+          else {} end)
+      elif .kind == "ci" then {c: ((.end | secs) - (.start | secs)), cn: 1}
+      else {} end;
+    reduce (inputs | select(. != "")) as $line ({g: 0, gn: 0, l: 0, c: 0, cn: 0, m: 0};
+      (try ($line | fromjson) catch null) as $o
+      | if ($o | type) != "object" then .m += 1
+        elif $o.toplevel != $top or $o.branch != $br then .
+        else
+          (try ($o | delta) catch null) as $d
+          | if $d == null then .m += 1
+            else .g += ($d.g // 0) | .gn += ($d.gn // 0) | .l += ($d.l // 0)
+              | .c += ($d.c // 0) | .cn += ($d.cn // 0)
+            end
+        end)
+    | "gate \(.g)s (\(.gn) runs), lock wait \(.l)s, ci wait \(.c)s (\(.cn) waits), malformed \(.m)"
+  ' <"$src"
+  exit $?
+fi
 gate="${1:?gate string required}"
 receipt_root="${CAIRN_GATE_RECEIPT_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/cairn-run-gate/receipts}"
 
@@ -72,14 +124,21 @@ receipt_root="${CAIRN_GATE_RECEIPT_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ca
 # stat cache) takes `git add -A` and `git write-tree`, so the same content hashes the same whether
 # it is committed, staged, or only on disk. Optional git locks stay off so a fingerprint never
 # contends with an agent's own commit for index.lock.
-gate_fingerprint() {
-  local cwd="$PWD" top idx tree
+gate_tree() {
+  local top idx tree
   top=$(git rev-parse --show-toplevel 2>/dev/null) || return 0
   idx=$(mktemp "${TMPDIR:-/tmp}/cairn-gate-index.XXXXXX") || return 0
   cp "$(git -C "$top" rev-parse --path-format=absolute --git-path index 2>/dev/null)" "$idx" 2>/dev/null || rm -f "$idx"
   tree=$(export GIT_OPTIONAL_LOCKS=0 GIT_INDEX_FILE="$idx"
     git -C "$top" add -A >/dev/null 2>&1 && git -C "$top" write-tree 2>/dev/null)
   rm -f "$idx" "$idx.lock"
+  printf '%s' "$tree"
+}
+
+gate_fingerprint() {
+  local cwd="$PWD" top tree
+  top=$(git rev-parse --show-toplevel 2>/dev/null) || return 0
+  tree=$(gate_tree)
   [ -n "$tree" ] || return 0
   (
     printf 'top=%s\ncwd=%s\ntree=%s\n' "$top" "$cwd" "$tree"
@@ -100,6 +159,41 @@ gate_fingerprint() {
       if [ -n "${!v+x}" ]; then printf '%s=%s\n' "$v" "${!v}"; else printf '%s unset\n' "$v"; fi
     done
   ) | sha256sum | cut -c1-64
+}
+
+# Appends one line to the run records under the records lock. Best effort: any failure prints one
+# warning and returns 0, so a record never changes the gate's exit, status, or receipt.
+append_record() {
+  local line="$1" status
+  mkdir -p "$records_dir" 2>/dev/null || { echo "cairn-run-gate: record not written (cannot create $records_dir)" >&2; return 0; }
+  ( 2>/dev/null
+    flock -w "${CAIRN_GATE_RECORDS_LOCK_WAIT:-10}" 9 || exit 3
+    printf '%s\n' "$line" >>"$records_dir/runs.jsonl" || exit 4
+  ) 2>/dev/null 9>>"$records_dir/runs.lock"
+  status=$?
+  case "$status" in
+    0) ;;
+    3) echo "cairn-run-gate: record not written (the records lock stayed held)" >&2 ;;
+    *) echo "cairn-run-gate: record not written (cannot write $records_dir/runs.jsonl)" >&2 ;;
+  esac
+  return 0
+}
+
+# write_gate_record <outcome> <exit code or null> <start epoch> <lock wait seconds> <head> <lane>
+write_gate_record() {
+  local outcome="$1" code="$2" start_epoch="$3" lock_wait="$4" head="$5" lane="$6" top branch tree line
+  command -v jq >/dev/null 2>&1 || { echo "cairn-run-gate: record not written (jq not found on PATH)" >&2; return 0; }
+  top=$(git rev-parse --show-toplevel 2>/dev/null) || top=""
+  branch=$(git branch --show-current 2>/dev/null) || branch=""
+  tree=$(gate_tree)
+  line=$(jq -nc --arg gate "$gate" --arg tree "$tree" --arg top "$top" --arg branch "$branch" \
+    --arg head "$head" --arg lane "$lane" --arg outcome "$outcome" \
+    --arg start "$(date -u -d "@$start_epoch" +%FT%TZ 2>/dev/null)" --arg end "$(date -u +%FT%TZ)" \
+    --argjson wait "${lock_wait:-0}" --argjson code "$code" \
+    '{kind: "gate", gate: $gate, tree: $tree, toplevel: $top, branch: $branch, head: $head, lane: $lane,
+      start: $start, end: $end, lockWaitSeconds: $wait, exit: $code, outcome: $outcome}' 2>/dev/null) \
+    || { echo "cairn-run-gate: record not written (jq failed)" >&2; return 0; }
+  append_record "$line"
 }
 
 # The receipt directory for this toplevel, working directory, and exact gate string.
@@ -125,6 +219,8 @@ if [ "$mode" = receipt ]; then
     echo "receipt: none (the last run on this tree exited ${rexit:-unknown}; only a pass stands in for the gate)"
     exit 1
   fi
+  now=$(date +%s)
+  write_gate_record receipt 0 "$now" 0 "$(git rev-parse HEAD 2>/dev/null || echo none)" "${CAIRN_GATE_LANE:-heavy}"
   echo "receipt: exit 0 (log: $rdir/log) fingerprint $fp head $(sed -n 's/^head=//p' "$rdir/receipt") recorded $(sed -n 's/^timestamp=//p' "$rdir/receipt")"
   exit 0
 fi
@@ -185,10 +281,18 @@ if [ ! -e "$pidfile" ]; then
   date +%s >"$state/queued"
   echo "$lane" >"$state/lane"
   # The receipt's start fingerprint and HEAD; the fingerprint is written with the run's pid below.
-  rm -f "$state/fingerprint"
+  rm -f "$state/fingerprint" "$state/record-warning"
   start_fp=$(gate_fingerprint)
   git rev-parse HEAD >"$state/head" 2>/dev/null || echo none >"$state/head"
-  ( "${lock[@]}" "${scope[@]}" "${keep_awake[@]}" bash -c 'date +%s >"$1"; exec bash -c "$2"' _ "$state/acquired" "$gate" >"$log" 2>&1; echo $? >"$statusfile" ) </dev/null &
+  # The exit record is written here, after the gate exits and before the status file: the caller
+  # deletes the run's state once the status appears, and may have gone away entirely. Its warning
+  # lands in a file the caller prints, since this process outlives the call that started it.
+  ( "${lock[@]}" "${scope[@]}" "${keep_awake[@]}" bash -c 'date +%s >"$1"; exec bash -c "$2"' _ "$state/acquired" "$gate" >"$log" 2>&1
+    rc=$?
+    queued_at=$(cat "$state/queued" 2>/dev/null || date +%s)
+    acquired_at=$(cat "$state/acquired" 2>/dev/null || echo "$queued_at")
+    write_gate_record exit "$rc" "$queued_at" "$((acquired_at - queued_at))" "$(cat "$state/head" 2>/dev/null)" "$lane" 2>>"$state/record-warning"
+    echo "$rc" >"$statusfile" ) </dev/null &
   echo $! >"$pidfile"
   [ -n "$start_fp" ] && printf '%s %s\n' "$!" "$start_fp" >"$state/fingerprint"
   echo "gate started (log: $log)"
@@ -252,7 +356,10 @@ if [ ! -e "$statusfile" ]; then
   # vanishes still terminates instead of looping forever.
   vanish_count=$(( $(cat "$vanishfile" 2>/dev/null || echo 0) + 1 ))
   [ "$vanish_count" -ge 3 ] && write_receipt 1
-  rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane" "$state/fingerprint" "$state/head"
+  queued_at=$(cat "$state/queued" 2>/dev/null || date +%s)
+  acquired_at=$(cat "$state/acquired" 2>/dev/null || echo "$queued_at")
+  write_gate_record vanished null "$queued_at" "$((acquired_at - queued_at))" "$(cat "$state/head" 2>/dev/null || git rev-parse HEAD 2>/dev/null || echo none)" "$(cat "$state/lane" 2>/dev/null || echo "${CAIRN_GATE_LANE:-heavy}")"
+  rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane" "$state/fingerprint" "$state/head" "$state/record-warning"
   if [ "$vanish_count" -ge 3 ]; then
     rm -f "$vanishfile"
     echo "gate exit: 1 (vanished 3 times)"
@@ -279,7 +386,8 @@ if [ -e "$state/queued" ] && [ -e "$state/acquired" ]; then
   fi
 fi
 write_receipt "$status"
-rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane" "$state/fingerprint" "$state/head"
+[ -s "$state/record-warning" ] && cat "$state/record-warning" >&2
+rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane" "$state/fingerprint" "$state/head" "$state/record-warning"
 echo "gate exit: $status (log: $log, $(wc -l <"$log") lines)"
 echo "--- last 60 lines ---"
 tail -60 "$log"
