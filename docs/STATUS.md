@@ -42,7 +42,22 @@ artifacts. github.com/glw907/workstation.
 
 ## Immediate next action
 
-Claude infra sweep, passes A-core then B: plan
+**Lean pass process cutover** (Geoff approved the design 2026-10-10). Spec:
+`docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`; evidence beside it in
+`docs/superpowers/research/2026-10-10-{anthropic-agentic-guidance,pass-catch-ledger}.md`. The cutover
+runs on the new process from its first step. Resume prompt, launched from `~/.dotfiles` with
+`claude --model claude-opus-5-5 --effort high`:
+
+> Read `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md` and the two research files it
+> cites. It is a `runner`-class pass. Run its spec review as the spec itself defines it (three
+> parallel Opus lenses: contract, mechanics, risk; a fold that probes every new mechanism; one
+> verification read), bringing Geoff only findings that change the approved design. Then write the
+> plan per the spec's Lifecycle step 4 (three plan lenses, since `runner`), covering Rollout steps 1
+> to 4, and execute it per the spec's Execution section. Before the plan, decide which items of the
+> infra sweep below the cutover supersedes and record that here. Pass B in cairn-cms (Rollout step 5)
+> resumes only after steps 1 to 4 merge.
+
+Superseded in part by the cutover (the plan says which parts): Claude infra sweep, passes A-core then B: plan
 `docs/superpowers/plans/2026-09-28-infra-sweep-a-core-b.md` (spec
 `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, audit
 `claude/.claude/docs/record/2026-09-28-claude-infra-audit.md`). Conducted from a cairn-cms session
