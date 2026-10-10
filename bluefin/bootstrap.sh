@@ -759,6 +759,8 @@ restore_projects() {
     echo "== restore: projects from the tarball =="
     local item
     mkdir -p "$HOME/Projects"
+    # The workstation repo is ~/.dotfiles (stow's home); this link puts it beside the other repos.
+    ln -sfn "$HOME/.dotfiles" "$HOME/Projects/workstation"
     for item in aksailingclub-sveltekit cairn-scratch ecxc-ski-agent-memory; do
         if [[ -d "$RESTORE_STAGING/projects/$item" ]]; then
             rsync -a --ignore-existing "$RESTORE_STAGING/projects/$item/" "$HOME/Projects/$item/"
