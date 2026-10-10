@@ -29,7 +29,7 @@
 // nonBlocking and return as `batchedNotes`. Full rationale in pass-execute.js; without a passClass
 // every prompt is the pre-class one.
 
-// CI (gate economy pass): this runner does no per-task pipelining. It never pushes after a task or
+// CI: this runner does no per-task pipelining. It never pushes after a task or
 // reads a CI verdict between tasks; the sequential runner's `ci: { pr }` does both. A chain reads
 // `ci-green` at its boundaries (the conductor's step), and an `auth-data` task, which waits for CI
 // green before the next task, runs through pass-execute.js sequentially, never in a chain.

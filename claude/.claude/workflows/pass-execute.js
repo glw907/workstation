@@ -890,13 +890,13 @@ async function resolveGate(t, a, baseSha, classifierExists, label) {
         `Then run exactly \`${protectedCmd}\` from the repo root and report protectedExit as its exit code (null when it never ran) and protectedOut as its exact stdout, trimmed. Report a non-zero exit as it is; never retry it or read meaning into it.`
       ]
     : [];
-  const home = [
+  const probeIntro = [
     `Repo: ${a.repo}`,
     `Work in that repo: cd to it first and use absolute paths under it. It governs over any working directory your environment block names, which follows the conductor session and can point at another worktree.`,
     `Check whether the file scripts/checks/gate-tier.mjs exists there.`,
     `If it does not, report exists: false and gate: "".`
   ];
-  const last = [`Do not run any other command and never modify a file.`];
+  const probeOutro = [`Do not run any other command and never modify a file.`];
   if (t.gateTier) {
     const pinned = { gate: t.gate || a.gate, source: "pin", tier: t.gateTier };
     if (!watch || !classifierExists) {
@@ -904,10 +904,10 @@ async function resolveGate(t, a, baseSha, classifierExists, label) {
     }
     const probe = await agent(
       [
-        ...home,
+        ...probeIntro,
         `If it does, report exists: true and gate: "" (this task pins its gate; do not compute one).`,
         ...protectedLines,
-        ...last
+        ...probeOutro
       ].join("\n"),
       { label, phase: "Implement", schema: GATE_TIER_SCHEMA, model: "haiku", effort: "low" }
     );
@@ -922,10 +922,10 @@ async function resolveGate(t, a, baseSha, classifierExists, label) {
   const cmd = `node scripts/checks/gate-tier.mjs --range ${baseSha}..HEAD${paintFlag}${classFlag}`;
   const probe = await agent(
     [
-      ...home,
+      ...probeIntro,
       `If it does, run exactly \`${cmd}\` from the repo root and report exists: true and gate: "<its exact stdout, trimmed>". On a non-zero exit or empty stdout, report exists: true and gate: "".`,
       ...protectedLines,
-      ...last
+      ...probeOutro
     ].join("\n"),
     { label, phase: "Implement", schema: GATE_TIER_SCHEMA, model: "haiku", effort: "low" }
   );
@@ -1192,6 +1192,7 @@ async function main() {
   const classifierExists = await resolveClassifier(args);
 
   let results;
+  const ciOn = ciActive(args);
   const ledger = [];
   let ciRed = null;
   let ciUnavailable = null;
@@ -1216,7 +1217,7 @@ async function main() {
         results.push({ id: t.id, title: t.title, status: "deferred", fixRounds: 0, implementer: null, review: null });
         continue;
       }
-      if (ciActive(args)) {
+      if (ciOn) {
         const halt = await ciBeforeDispatch(args, ledger, i);
         if (halt) {
           if (halt.kind === "red") ciRed = halt.record;
@@ -1247,11 +1248,11 @@ async function main() {
   const finalTally = tally(results);
   log(`tally: accepted ${finalTally.accepted}, needs-decision ${finalTally.needsDecision}, escalated ${finalTally.escalated}, failed ${finalTally.failed}, deferred ${finalTally.deferred}, skipped ${finalTally.skipped}`);
 
-  const unchecked = ciActive(args) ? ledger.filter((e) => e && !e.checked).map((e) => ({ task: e.task, sha: e.ci.sha, pushedAt: e.ci.pushedAt })) : [];
+  const unchecked = ciOn ? ledger.filter((e) => e && !e.checked).map((e) => ({ task: e.task, sha: e.ci.sha, pushedAt: e.ci.pushedAt })) : [];
   if (unchecked.length > 0) {
     log(`CI never read green for: ${unchecked.map((u) => `task ${u.task} ${u.sha || "(not pushed)"}`).join("; ")}`);
   }
-  const ciPart = ciActive(args)
+  const ciPart = ciOn
     ? {
         ci: { pr: args.ci.pr, unchecked },
         ...(ciRed ? { ciRed } : {}),

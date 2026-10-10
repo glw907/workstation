@@ -36,10 +36,10 @@ export function parseConfig(text) {
   } catch (e) {
     return { ok: false, error: `not valid JSON (${e.message})` };
   }
+  if (Array.isArray(config?.expected) && config.expected.length === 0) {
+    return { ok: false, error: '"expected" must not be empty' };
+  }
   for (const key of ["expected", "judgedWhenPresent", "neverOnPullRequest", "ignorePrefixes"]) {
-    if (key === "expected" && Array.isArray(config?.expected) && config.expected.length === 0) {
-      return { ok: false, error: '"expected" must not be empty' };
-    }
     if (!Array.isArray(config?.[key]) || !config[key].every((v) => typeof v === "string")) {
       return { ok: false, error: `"${key}" must be an array of strings` };
     }
@@ -104,8 +104,9 @@ export function clockStart(pushedAtMs, runs) {
  *   noRuns: boolean, rerunRuns: object[], reason: string | null }} The verdict.
  */
 export function classify({ runs, config, files, nowMs, clockStartMs, apiError = null }) {
+  const noRuns = runs.length === 0;
   const verdict = (state, extra = {}) => ({
-    state, exit: EXIT[state], red: [], pending: [], missing: [], noRuns: runs.length === 0, rerunRuns: [], reason: null, ...extra,
+    state, exit: EXIT[state], red: [], pending: [], missing: [], noRuns, rerunRuns: [], reason: null, ...extra,
   });
   if (apiError) return verdict("unavailable", { reason: apiError });
   const elapsed = nowMs - clockStartMs;
@@ -115,7 +116,6 @@ export function classify({ runs, config, files, nowMs, clockStartMs, apiError = 
   const present = new Set(runs.map((r) => r.path));
   const missing = requiredWorkflows(config, files).filter((p) => !present.has(p));
   const rerunRuns = runs.filter((r) => r.run_attempt > 1);
-  const noRuns = runs.length === 0;
   if (red.length) return verdict("red", { red, pending, missing, rerunRuns });
   if ((missing.length || noRuns) && elapsed >= MISSING_AFTER) return verdict("missing", { pending, missing, rerunRuns });
   if (pending.length) {
@@ -426,13 +426,7 @@ export function main(args, deps = realDeps()) {
   } catch (e) {
     return unavailable(`cannot fetch ${short}: ${message(e)}`);
   }
-  let configText = null;
-  try {
-    configText = git(["show", `${sha}:${CONFIG_PATH}`]);
-  } catch {
-    configText = null;
-  }
-  const config = parseConfig(configText);
+  const config = parseConfig(quiet(() => git(["show", `${sha}:${CONFIG_PATH}`])));
   if (!config.ok) return unavailable(`${CONFIG_PATH} at ${short} is ${config.error}`);
   let files;
   try {
@@ -446,6 +440,13 @@ export function main(args, deps = realDeps()) {
   clockStartMs = pushedAtMs;
 
   const api = (path) => JSON.parse(gh(["api", path]));
+  const apiOr = (path, fallback) => {
+    try {
+      return api(path);
+    } catch {
+      return fallback;
+    }
+  };
   const jobsOf = (run) => {
     try {
       return api(`repos/{owner}/{repo}/actions/runs/${run.id}/jobs?per_page=100`).jobs;
@@ -508,12 +509,7 @@ export function main(args, deps = realDeps()) {
         const entries = [];
         for (const run of runs) {
           for (const job of testJobs(jobsOf(run) ?? [])) {
-            let annotations = [];
-            try {
-              annotations = api(`repos/{owner}/{repo}/check-runs/${job.id}/annotations?per_page=100`);
-            } catch {
-              annotations = [];
-            }
+            const annotations = apiOr(`repos/{owner}/{repo}/check-runs/${job.id}/annotations?per_page=100`, []);
             entries.push({ job: { workflow: basename(run.path, ".yml"), name: job.name }, annotations });
           }
         }
@@ -532,23 +528,17 @@ export function main(args, deps = realDeps()) {
           const log = quiet(() => gh(["run", "view", String(run.id), "--log-failed"]));
           for (const name of failedTests(log)) out(`  failed test: ${name}`);
           for (const line of logTail(log)) out(`  | ${line}`);
-          const main_ = quiet(() => {
+          const mainLatest = quiet(() => {
             const latest = api(`repos/{owner}/{repo}/actions/workflows/${basename(run.path)}/runs?branch=main&status=completed&per_page=1`).workflow_runs[0];
             return latest ? `${latest.conclusion} (${latest.head_sha.slice(0, 8)}, ${latest.created_at})` : "no completed run";
           }, "unreadable");
-          out(`  main's latest ${basename(run.path)} run: ${main_}`);
+          out(`  main's latest ${basename(run.path)} run: ${mainLatest}`);
         }
         if (plan.length && !wait) out(`ci-green: an infrastructure red; --wait would rerun once: ${plan.map((c) => c.join(" ")).join("; ")}`);
         return finish("red", `red ${short}`);
       }
       case "missing": {
-        let prObject = null;
-        try {
-          prObject = api(`repos/{owner}/{repo}/pulls/${pr}`);
-        } catch {
-          prObject = null;
-        }
-        const note = missingNote(prObject);
+        const note = missingNote(apiOr(`repos/{owner}/{repo}/pulls/${pr}`, null));
         out(verdict.noRuns && !verdict.missing.length ? "missing: no workflow run exists on the SHA" : `missing: no run for ${names(verdict.missing)}`);
         if (note) out(note);
         return finish("missing", `missing ${short}`);
