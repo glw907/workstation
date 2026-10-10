@@ -1145,6 +1145,34 @@ check("ci: pending (75, then 0) waits by re-dispatching the probe, then resolves
   assert.match(h.agent.calls.find((c) => c.label === "ci:1").prompt, /re-issue/);
 });
 
+check("ci: a check still pending after CI_MAX_WAITS dispatches halts as ciUnavailable with exit 75", async () => {
+  const h = ciHarness({ tasks: [T("1"), T("2"), T("3")], ciExits: { "1": [75] } });
+  const result = await h.bundle.main();
+  assert.equal(labelsOf(h.agent, "ci:").length, 12);
+  assert.ok(!h.order.includes("impl:3"));
+  assert.equal(result.ciRed, undefined);
+  assert.equal(result.ciUnavailable.exitCode, 75);
+  assert.equal(result.ciUnavailable.task, "1");
+});
+
+check("ci: the unread heads are logged and listed in ci.unchecked", async () => {
+  const h = ciHarness({ tasks: [T("1"), T("2")] });
+  const result = await h.bundle.main();
+  assert.deepEqual(result.ci.unchecked.map((u) => [u.task, u.sha]), [["1", "sha1"], ["2", "sha2"]]);
+  const line = h.log.lines.find((l) => /never read green/.test(l));
+  assert.match(line, /task 1 sha1/);
+  assert.match(line, /task 2 sha2/);
+});
+
+check("ci: a push reported pushed with an empty pushedAt counts as a failed push", async () => {
+  const h = ciHarness({ tasks: [T("1"), T("2"), T("3")], push: () => ({ sha: "s", pushedAt: "", pushed: true }) });
+  const result = await h.bundle.main();
+  assert.ok(!h.order.includes("impl:3"));
+  assert.equal(result.ciUnavailable.task, "1");
+  assert.match(result.ciUnavailable.reason, /push/);
+  assert.equal(labelsOf(h.agent, "ci:").length, 0);
+});
+
 check("ci: an auth-data task blocks N+1's dispatch until green", async () => {
   const h = ciHarness({ tasks: [T("1", { passClass: "auth-data" }), T("2")] });
   await h.bundle.main();

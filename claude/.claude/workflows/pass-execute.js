@@ -152,8 +152,9 @@
 //     `protectedExit` and `protectedOut` make `ciWait` true when the exit is non-zero or missing
 //     or the output names `ciWait`, and false when the classifier is absent. The probe runs at
 //     the head being accepted, so a fix round's range is covered.
-//   - A `ci:` probe makes one `ci-green --wait` call (it blocks up to 540 seconds) and re-issues
-//     on exit 75; the runner re-dispatches it too if it reports 75, up to CI_MAX_WAITS times.
+//   - A `ci:` probe runs `ci-green --wait` (each call blocks up to 540 seconds) and itself
+//     re-issues the call on exit 75. If it still reports 75, the runner re-dispatches the probe,
+//     and caps those re-dispatches at CI_MAX_WAITS, after which the check is unavailable.
 //     Exit 0 is green. Exit 1 is red and exit 2 is missing: the run halts, the tasks not yet
 //     dispatched are marked "skipped", and the result carries `ciRed`: `{ sha, task, verdict:
 //     "red" | "missing", exitCode, detail }`, where `detail` is ci-green's own output (the failing
@@ -161,8 +162,9 @@
 //     other exit, a failed push, or a probe that returns nothing halts the same way with
 //     `ciUnavailable`: `{ sha, task, exitCode, reason }`, and the conductor then runs the local
 //     full gate on that SHA.
-//   - The last two accepted tasks of a segment have no later dispatch to trigger their read, so the
-//     result's `ci.unchecked` lists their `{ task, sha, pushedAt }` for the conductor.
+//   - The result's `ci.unchecked` lists `{ task, sha, pushedAt }` for every accepted task whose
+//     read never ran: the segment's last heads, which have no later dispatch to trigger a read,
+//     and a halted task whose read did not come back green. The run also logs them.
 // An unaccepted task ends the run as before, with no further CI reads.
 
 export const meta = {
@@ -973,7 +975,7 @@ async function pushHead(a, label) {
     ].join("\n"),
     { label, phase: "Implement", schema: PUSH_SCHEMA, model: "haiku", effort: "low" }
   );
-  const ok = Boolean(out && out.pushed === true && out.sha);
+  const ok = Boolean(out && out.pushed === true && out.sha && String(out.pushedAt || "").trim());
   return { pushed: ok, sha: ok ? String(out.sha).trim() : "", pushedAt: out && out.pushedAt ? String(out.pushedAt).trim() : "" };
 }
 
@@ -1239,9 +1241,13 @@ async function main() {
   const finalTally = tally(results);
   log(`tally: accepted ${finalTally.accepted}, needs-decision ${finalTally.needsDecision}, escalated ${finalTally.escalated}, failed ${finalTally.failed}, deferred ${finalTally.deferred}, skipped ${finalTally.skipped}`);
 
+  const unchecked = ciActive(args) ? ledger.filter((e) => e && !e.checked).map((e) => ({ task: e.task, sha: e.ci.sha, pushedAt: e.ci.pushedAt })) : [];
+  if (unchecked.length > 0) {
+    log(`CI never read green for: ${unchecked.map((u) => `task ${u.task} ${u.sha || "(not pushed)"}`).join("; ")}`);
+  }
   const ciPart = ciActive(args)
     ? {
-        ci: { pr: args.ci.pr, unchecked: ledger.filter((e) => e && !e.checked).map((e) => ({ task: e.task, sha: e.ci.sha, pushedAt: e.ci.pushedAt })) },
+        ci: { pr: args.ci.pr, unchecked },
         ...(ciRed ? { ciRed } : {}),
         ...(ciUnavailable ? { ciUnavailable } : {})
       }
