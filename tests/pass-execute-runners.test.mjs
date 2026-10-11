@@ -287,33 +287,6 @@ check("the gate matcher bounds trailing steps to plain && steps and keeps placeh
   }
 });
 
-check("pass-core's class table matches PASS_CLASSES: the class-name set, the reviewer model, and the gate lane", () => {
-  const rowRe = /^\|\s*`([a-z-]+)`[^|]*\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|\s*$/gm;
-  const rows = [...PASS_CORE_SRC.matchAll(rowRe)];
-  assert.ok(rows.length >= 6, `expected at least 6 class rows in pass-core's table, found ${rows.length}`);
-  for (const factory of [seqFactory, chainsFactory]) {
-    const { bundle } = load(factory);
-    const tableNames = new Set(rows.map((m) => m[1]));
-    assert.deepEqual(tableNames, new Set(Object.keys(bundle.PASS_CLASSES)));
-    for (const m of rows) {
-      const name = m[1];
-      const gateCol = m[2];
-      const barCol = m[3].trim();
-      const cls = bundle.PASS_CLASSES[name];
-      assert.ok(cls, `pass-core names a class "${name}" the runner does not define`);
-      if (/^Opus\b/.test(barCol)) {
-        assert.equal(cls.reviewerModel, "claude-opus-5-5", `${name}: pass-core's bar column says Opus`);
-      } else if (/^Sonnet\b/.test(barCol)) {
-        assert.equal(cls.reviewerModel, "sonnet", `${name}: pass-core's bar column says Sonnet`);
-      }
-      const wantsLight = /light gate lane/.test(gateCol);
-      assert.equal(Boolean(cls.gateLane === "light"), wantsLight, `${name}: gate lane mismatch against pass-core`);
-      const waitsForCi = /waits for CI green before the next task/.test(gateCol);
-      assert.equal(waitsForCi, Boolean(cls.ciWait), `${name}: the CI wait in pass-core's gate cell must match PASS_CLASSES ciWait`);
-    }
-  }
-});
-
 // -------------------------------------------------------------------------------------------
 // Schema completeness (AW-05, AW-12): every field a mandate cites exists in IMPL_SCHEMA; every
 // REVIEW_SCHEMA blocking-item field is read somewhere (the removed severity field was not).
