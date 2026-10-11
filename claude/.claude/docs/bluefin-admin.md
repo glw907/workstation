@@ -322,6 +322,11 @@ never-commit rules and a pointer here.
   sync script; ASC's is `aksailingclub-legacy/secrets/`), and
   `cloudflare-estate-inventory.md`. None found is the finding, not "Geoff owes a paste."
   Name-only checks, never print values.
+- **A create response can carry a secret.** A Cloudflare `cfd_tunnel` create response
+  holds the tunnel's `TunnelSecret` and connector `token` beside its id. Pipe it through
+  `jq -r .result.id`, or whichever single field the step needs, so the body never reaches a
+  transcript, a log, or a report. A body that does is a printed secret: treat the tunnel as
+  compromised, then delete and recreate it.
 
 ## Google Docs / Drive (gws)
 

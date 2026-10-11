@@ -25,9 +25,9 @@ at the foot; treat the snapshot below as orientation, verify before acting.
   Edit on ALL zones so a newly registered zone never repeats the gap),
   API-token management ✗ (deliberate: cannot self-extend).
   Rotated into: the ASC age store, `~/.local/secrets`, and the four GH-Actions repos
-  (aksailingclub-legacy/-org, ecxc-ski, 907-life). Predecessors both deleted:
-  "Cloudflare Admin" (`48efe6a4...`) and `CF_ZT_TOKEN` / "Cloudflare Agent Token -
-  2026-05-25" (only consumers were verify-keys.sh health checks).
+  (aksailingclub-legacy/-org, ecxc-ski, 907-life). Predecessor deleted:
+  "Cloudflare Admin" (`48efe6a4...`). `CF_ZT_TOKEN` was once listed here as deleted too, but
+  it is live; its own bullet is below.
   Second credential: the Cloudflare MCP plugin's OAuth (not in the token list; broad
   READ incl. DNS, refuses writes). Maintenance rules: any scope change lands in THIS
   bullet, same session; after a rotation, a RUNNING Claude session's env still holds
@@ -48,14 +48,46 @@ at the foot; treat the snapshot below as orientation, verify before acting.
   2026-07-14 failure above). Permission-group ids are not recorded: listing them needs
   token-management scope, which neither token carries. Registry entry:
   `~/.dotfiles/secrets/registry.md`.
+- **Zero Trust token `CF_ZT_TOKEN`** (workstation age store, local only; registry entry
+  `CF_ZT_TOKEN`). **Use it, not `CLOUDFLARE_API_TOKEN`, for anything touching Access identity
+  providers.** It reads `accounts/{id}/access/identity_providers` (two IdPs: `onetimepin` and
+  `google-apps` "Google Workspace"), verified live 2026-10-10. Per the registry's 2026-08-30
+  note it also creates and reads Access apps and policies. The general token got
+  `auth.forbidden` on that endpoint on 2026-08-30. On 2026-10-10 the general token answers
+  `success: true` with an empty list, which reads as "no IdPs" and is wrong (verified live,
+  statuses and names only).
 - **Worker secrets are WRITE-ONLY**: `wrangler secret list` returns NAMES, never values; a value
   set with `wrangler secret put` cannot be read back. To learn a secret's value you need its
   origin store, not the worker.
-- **Access-protected sites (ASC dev/staging)**: the service token in `~/.local/secrets`
-  (`ASC_ACCESS_CLIENT_ID` / `ASC_ACCESS_CLIENT_SECRET`), sent as `CF-Access-Client-Id` /
-  `CF-Access-Client-Secret` headers. Full recipe: the cairn `asc-cloudflare-access` memory.
+- **Access-protected ASC hosts: the `asc-cloudflare-access` recipe** (verified live 2026-10-10,
+  statuses and names only). It replaces a cairn memory of that name, which never existed.
+  - Hosts. `staging.aksailingclub.org` sits behind the "ASC Staging" app.
+    `dev.aksailingclub.org` is not behind Access: no app covers it, and it answers 200 with no
+    token.
+  - Credential. Service token `claude-capture-asc-ref` (token id `aa9f1b5b-…`, 2160-hour
+    duration). The ASC Staging policy "claude-capture service token" admits it (decision
+    `non_identity`, include `service_token`), and that app's "Service token (CI)" policy admits
+    any valid service token. The ops hosts admit only "Automated Testing - Ops Dashboard"
+    (`CF_ACCESS_CLIENT_SECRET` in the registry).
+  - Use. `source ~/.local/secrets`, then send `CF-Access-Client-Id: $ASC_ACCESS_CLIENT_ID` and
+    `CF-Access-Client-Secret: $ASC_ACCESS_CLIENT_SECRET` (curl `-H`, Playwright
+    `extraHTTPHeaders`). A 302 to the Access login means Access refused the token.
+  - State on 2026-10-10: broken. The token expired on 2026-10-04, and neither variable is in
+    `~/.local/secrets` or the age registry. Access shows a client secret once, at create or
+    rotate, so the old secret is unrecoverable.
+  - Restore (a live-account write: Geoff's go first). `POST
+    accounts/{id}/access/service_tokens/{token_id}/refresh` extends the expiry. `POST
+    .../{token_id}/rotate` issues a new client secret and revokes the old one, so call it once.
+    Capture its single response in a shell variable, never displaying it. Run `jq -r
+    .result.client_id` and `jq -r .result.client_secret` on that variable, piping each into
+    `secret-set.sh ASC_ACCESS_CLIENT_ID --stdin` and `secret-set.sh ASC_ACCESS_CLIENT_SECRET
+    --stdin`. Then add both to `~/.dotfiles/secrets/registry.md`.
+  - A new token. `POST accounts/{id}/access/service_tokens` with `name` and `duration` answers
+    201 with the same two fields; store them the same way. Then add an app policy with decision
+    `non_identity` and include `{"service_token":{"token_id":"<id>"}}`.
 - **The workstation registry** `~/.dotfiles/secrets/values.age` and `~/.local/secrets`: the
-  workstation's own secrets (GitHub App key, the ASC Access service token, etc.). Its
+  workstation's own secrets (the GitHub App key, among others; the ASC Access service token has
+  been absent since 2026-10-04, see the recipe's Restore step). Its
   `registry.md` marks some entries "ASC-managed separately" — those live in the ASC store below,
   not nowhere.
 - **The ASC project store** `~/Projects/aksailingclub-legacy/secrets/values.age` (age key
@@ -87,9 +119,10 @@ legacy ops event photos), 907-life-media, ecxc-media, cairn-pub-media.
 legacy site until cutover), aksailingclub-org (build worker), asc-ops (+ -dev, -staging; the
 retiring dashboard), asc-handbook, asc-uptime, 907-life, ecxc, cairn-pub, eudaimonia.
 
-**Access apps:** ASC CMS Admin (dev.aksailingclub.org/admin), ASC Staging, ASC Handbook (+ its
-CMS), Ops Dashboard (ops + staging), the Ops Schema API (public, consumed cross-origin by the
-handbook — do not lock it).
+**Access apps** (live 2026-10-10): ASC Staging, ASC Handbook (+ its CMS), Ops Dashboard (ops +
+staging), the Ops Schema API (public, consumed cross-origin by the handbook — do not lock it),
+and `phonebook` (+ `phonebook-prov`) on phonebook.907.life. The ASC CMS Admin app on
+dev.aksailingclub.org/admin is gone.
 
 **asc-site worker secrets (names):** GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID,
 GITHUB_APP_PRIVATE_KEY_B64, STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET (Stripe SANDBOX test keys,

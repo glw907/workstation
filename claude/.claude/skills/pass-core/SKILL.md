@@ -113,10 +113,12 @@ The repo's full-suite home is green on the head. One whole-branch Opus review fo
 `diff-reviewer` at whole-branch scope loads the checklists the adapter's globs match, re-derives
 each task's class, and gives any unread `auth-data` task its read. `visual-verifier` runs on
 rendered UI in a site or the cairn admin. One batched fix chain follows, then the gate again; a
-second review only on a blocker. An overruled verdict is stated with its reason in the PR body, and
-a correctness-critical overrule re-runs the review at `xhigh`. The adapter's close checklist runs
-(the auth smoke on `auth-data`), STATUS and ROADMAP are updated, and the PR body carries what
-landed, each `auth-data` verdict, and the score.
+second review only on a blocker. A fix dispatch quotes each reviewer finding verbatim (location,
+finding, and fix) as the task's acceptance criteria, never a summary. In dubplate, verbatim criteria
+landed at zero fix rounds and paraphrased ones averaged one. An overruled verdict is stated with its
+reason in the PR body, and a correctness-critical overrule re-runs the review at `xhigh`. The
+adapter's close checklist runs (the auth smoke on `auth-data`), STATUS and ROADMAP are updated, and
+the PR body carries what landed, each `auth-data` verdict, and the score.
 
 ## Score
 
