@@ -57,23 +57,30 @@ runs on the new process from its first step. Resume prompt, launched from `~/.do
 > infra sweep below the cutover supersedes and record that here. Pass B in cairn-cms (Rollout step 5)
 > resumes only after steps 1 to 4 merge.
 
-Superseded in part by the cutover (the plan says which parts): Claude infra sweep, passes A-core then B: plan
-`docs/superpowers/plans/2026-09-28-infra-sweep-a-core-b.md` (spec
+**Infra sweep after the cutover** (decided 2026-10-10; spec
 `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, audit
-`claude/.claude/docs/record/2026-09-28-claude-infra-audit.md`). Conducted from a cairn-cms session
-started 2026-09-28; task ledger below. After B merges, the cairn-cms style-guide-sync plan is
-re-baselined on the corrected infra, then A-rest, C and D, E, and the per-repo F chores follow.
+`claude/.claude/docs/record/2026-09-28-claude-infra-audit.md`; A-core `c3e709c` and B `7de1210`
+merged). The rule: an item is superseded when the cutover rewrites or deletes the file it targets,
+and the rewriting task takes that item's audit ids as inputs. An item on a file the cutover leaves
+alone survives, and its pass is re-planned in the lean format after rollout step 3.
 
-Ledger: A-core and B merged (A-core `c3e709c`, B `7de1210`; rollback is `git revert -m 1`, B before A-core); next
-action is the cairn-cms style-guide-sync re-baseline (apply the sweep spec's ten amendments to
-that plan, run its verification read, then execute on the corrected infra), then A-rest (spec
-now includes the monthly drift routine, the release trigger for Anthropic practice, and the
-combined context budget), then C and D, E, and the per-repo F chores.
-
-Owed, still open from the infra round's handoff: `cairn-cms/CLAUDE.md`'s own four-line pick and
-budget trim; poplar's `go-architecture-reader` adoption; whether the overnight-run runaway guard
-should become an armable script in `bin/.local/bin/`; the dubplate-implementer worktree
-gate-string note.
+- Style-guide-sync (cairn-cms): the runner amendments 1 to 4, 7, 9, and 10 are superseded. The
+  content (chain W's tasks, amendments 5, 6, and 8) survives as a lean task list, and any W edit to
+  a file the cutover rewrites (the implementers, the global `CLAUDE.md`, `docs-page-chain.js`)
+  moves into that rewrite.
+- A-rest: the seat check (`seats.json`) and the `pass-core` close wiring are superseded. The
+  context-budget check (it holds ruling 6), the remaining reference checks, cross-repo mode, the
+  monthly drift routine, and the release trigger survive. The duplicate-paragraph check and
+  `parity.json` wait for a catch record on the shrunken surface (ruling 2).
+- C: findings on `pass-core`, `spec-plan-review`, `cairn-pass`, and `site-pass` (PS-11 and
+  PS-15 among them) are superseded; findings on every other skill and doc survive.
+- D survives whole.
+- E: AW-11 (runner merge), AW-21 (implementer parity), and DC-19 and DC-21 (global CLAUDE.md
+  routing) are superseded. `omitClaudeMd` and `.claude/rules/` survive as options.
+- F: the cairn-cms and site rows are superseded by rollout steps 2 and 3. The poplar row survives.
+- Owed from the infra round: cairn-cms's CLAUDE.md trim (step 2), the runaway-guard script
+  question (the unattended-guards fold), and the dubplate-implementer gate-string note (step 3)
+  are superseded. Poplar's `go-architecture-reader` adoption stays poplar's call.
 
 ## Open items
 
@@ -81,9 +88,8 @@ Strategic and standing items live in `ROADMAP.md` (history purge decision,
 musicbox repo split, devcontainers, kitty-harness replacement, custom uBlue
 image, restore split, the cairn documentation standard).
 
-- `cairn-run-gate` has no `--help` and runs any first argument other than `--receipt`
-  or `--records` as a gate string. A dubplate planning probe queued `--help` on the
-  heavy lane this way (2026-10-10). Fix: refuse an unknown `--` flag with exit 2.
+- `cairn-run-gate` runs an unknown `--` flag as a gate string (2026-10-10). The cutover's
+  Execution item 6 fixes it.
 
 ## History
 

@@ -62,10 +62,11 @@ Two departures, each with its evidence.
   review produced 19 blocker-level catches across five passes, 6 of 11 audited ones unique, at 37 to
   45 minutes of wall clock and no attended time (catch ledger, S1), and because ruling 9 welcomes
   planning spend.
-- **Reviewer subagents.** The Sonnet 5.5 prompting page says "don't launch reviewer sub-agents unless
-  the user asked for a review." The process makes that ask in two places only: per task on `auth-data`
-  work, and once over the whole branch at close. The per-task read caught two fail-open auth blockers,
-  and the close seats had 11 of 12 audited catches unique (catch ledger, S3 and S6).
+- **Reviewer subagents.** The Sonnet 5.5 prompting page says "don't launch reviewer sub-agents
+  unless the user asked for a review." The process makes that ask in three places only: per task on
+  `auth-data` work, once over the whole branch at close, and the close's `visual-verifier` read. The
+  per-task read caught two fail-open auth blockers, and the close seats had 11 of 12 audited catches
+  unique (catch ledger, S3 and S6).
 
 ## Lifecycle
 
@@ -98,7 +99,7 @@ medium unless stated (guidance file, section 7).
    for Go), re-derives each task's class, and gives any unread `auth-data` task its read;
    `visual-verifier` runs on rendered UI in a site or the cairn admin (catch ledger S6 item 4). One
    batched fix chain; the auth smoke on `auth-data` passes; STATUS and ROADMAP updated; a PR body with
-   what landed, each `auth-data` verdict, and a one-line score of clock, tokens, and attended time.
+   what landed, each `auth-data` verdict, and a score carrying the Execution price table's five rows.
    Geoff reads the PR and merges.
 
 Retired from today's lifecycle: the conductor, the simplifier as a standing step, the per-task local
@@ -107,11 +108,14 @@ STATUS writes, and pass segmenting.
 
 ## Execution
 
-1. **One session executes.** The planning session launches it with
-   `claude --bg --model sonnet --effort medium` in the pass checkout (stowed `settings.json:11`
-   already sets `auto` permissions) and records its id in STATUS. It reads, edits, writes the tests,
-   and commits (Anthropic: "an agent handling a feature should also handle its tests"), and arms the
-   API-drop wake-up and, if the lid may close, the lid-switch hold (`unattended-work-guards.md`).
+1. **One session executes.** The planning session launches it with `claude --bg --model sonnet
+   --effort medium` in the pass checkout (stowed `settings.json:11` already sets `auto` permissions)
+   and records its id in STATUS. The checkout is a linked worktree on the pass branch with the
+   adapter's setup command already run, since a `--bg` session skips its own isolation only "already
+   inside a linked git worktree" (code.claude.com/docs/en/agent-view, "How file edits are
+   isolated"). It reads, edits, writes the tests, and commits (Anthropic: "an agent handling a
+   feature should also handle its tests"), and arms the API-drop wake-up and, if the lid may close,
+   the lid-switch hold (`unattended-work-guards.md`).
 2. **Pairs.** Two tasks whose files, generated outputs included, are disjoint go to two Agent-tool
    subagents with worktree isolation, after the session commits. `worktree.baseRef: "head"` makes
    their worktrees branch from that commit, not the remote default (code.claude.com/docs/en/worktrees,
@@ -125,20 +129,25 @@ STATUS writes, and pass segmenting.
 4. **CI carries the whole suites, off the critical path,** where it runs on PRs. The first push opens
    a draft PR, since cairn CI runs on `pull_request` and on push only to `main` and `rebuild`
    (`test.yml:3-8`). After each push the adapter's watch command (cairn: `ci-green <sha> --pr <n>
-   --wait`, re-issued on 75; elsewhere `gh pr checks <n> --watch --fail-fast`) runs as a background
-   Bash task, which re-invokes the session on exit. A red stops the line: fix forward or revert.
+   --wait`, re-issued on 75; elsewhere with PR CI, `gh pr checks <n> --watch --fail-fast`) runs as a
+   background Bash task, which re-invokes the session on exit. A repo whose full-suite home is local
+   has no watch command. A red stops the line: fix forward or revert.
 5. **Review beside CI.** On `auth-data` tasks an Opus diff review reads the commit while CI runs. A
    `fix` or `escalate` verdict stops the line as a red does.
-6. **A clock stop.** The session writes a task-clock file (task, start, estimate) at each task start.
-   A PostToolUse hook returns a stop line as `additionalContext` once elapsed time passes twice the
-   estimate (code.claude.com/docs/en/hooks), and stays silent with no file. On a stop the session
-   writes STATUS, sends `notify-send -u normal`, and waits for Geoff (ruling 13).
-7. **`cairn-run-gate` fixes.** A finished result stays until a new run starts, so a repeat call or a
-   concurrent waiter reprints it, never a false vanish; `--fresh` forces a rerun. The deadline uses
-   `$SECONDS`, so a call returns inside the 600-second cap. An unknown flag exits 2. The exit-75 text
-   names the Bash `timeout: 600000`. With `RUN_GATE_IF_BUSY=defer`, a heavy-lane gate whose lock is
-   held exits 76 and leaves that leg to the push's CI; never where the full-suite home is local, and
-   never on `auth-data`.
+6. **A clock stop.** The session writes a task-clock file (task, start, estimate) at each task
+   start, in the pass worktree's git dir (`git rev-parse --git-dir`), outside the work tree so the
+   gate fingerprint holds. A PostToolUse hook resolves that dir from its input's `cwd` ("Current
+   working directory when the hook is invoked", code.claude.com/docs/en/hooks) and returns a stop
+   line as `additionalContext` once elapsed time passes twice the estimate. With no file it stays
+   silent, so it fires only in a session working in a pass worktree. On a stop the session writes
+   STATUS, sends `notify-send -u normal`, and waits for Geoff (ruling 13).
+7. **`cairn-run-gate` fixes.** A repeat call or a concurrent waiter reprints a finished result,
+   never a false vanish, only while the tree fingerprint matches the run's start
+   (`gate_fingerprint`, `cairn-run-gate:138`); a changed tree starts a new run, and `--fresh` reruns
+   the same tree. The deadline uses `$SECONDS`, so a call returns inside the 600-second cap. An
+   unknown flag exits 2. The exit-75 text names the Bash `timeout: 600000`. With
+   `RUN_GATE_IF_BUSY=defer`, a heavy-lane gate whose lock is held exits 76 and leaves that leg to
+   the push's CI; never where the full-suite home is local, and never on `auth-data`.
 
 Pass B priced on the evidence (11 tasks, minutes):
 
@@ -181,18 +190,22 @@ what is "no longer load-bearing"). Caps: CLAUDE.md under 200 lines (memory docs)
 
 ## Rollout
 
-The cutover runs on the new process from its first task, as a `runner` pass. Its sessions launch in
-`~/.dotfiles` (`~/Projects/workstation` is a convenience link), and the launch prompt names this spec
-as overriding the loaded pass sections until step 1 merges. `~/.claude` resolves through stow into
-that working tree, so an edit there is live machine-wide at once. No pass runs until its repo's step
-merges; rung 14a's hold is recorded in dubplate's STATUS before step 1 merges.
+The cutover runs on the new process from its first task, within step 1's limits, as a `runner` pass.
+Its sessions launch in `~/.dotfiles` (`~/Projects/workstation` is a convenience link), and the
+launch prompt names this spec as overriding the loaded pass sections until step 1 merges.
+`~/.claude` resolves through stow into that working tree, so an edit there is live machine-wide at
+once. No pass runs until its repo's step merges; rung 14a's hold is recorded in dubplate's STATUS
+before step 1 merges.
 
 1. **Workstation repo,** on a branch in a worktree: every row above that lives in `~/.dotfiles`, both
    adapters included. The sweep covers skills, agents, workflows, and docs that name a deleted file or
    teach a retired mechanism, and each superseded phrase joins `tooling/retired-phrases.txt`. Done
-   when `scripts/check.sh` is green, one live pair probe ran `cairn-run-gate` in its worktree, and the
-   one-executor check is clear in every repo. It lands as one merge commit whose parent is tagged
-   `pre-lean-process`, so rollback is one revert.
+   when `scripts/check.sh` is green and the one-executor check is clear in every repo. It lands as one
+   merge commit whose parent is tagged `pre-lean-process`, so rollback is one revert. Step 1 runs
+   serially, with no pairs and no clock stop, since its new settings and gate go live only at the
+   merge. The first acts after the merge are one live pair probe running `cairn-run-gate` in its
+   worktree and one clock-stop probe, with the tag as rollback. Step 1 also files ruling 11's PR test
+   CI items on each named repo's ROADMAP.
 2. **cairn-cms,** on a branch merged by PR: its `CLAUDE.md`, the fast lane in `gate-tier.mjs` with its
    header and `docs/internal/pass-gate-tiers.md`, one measured fast-lane peak to set its lanes, and
    the CI e2e shard.
@@ -212,10 +225,10 @@ merges; rung 14a's hold is recorded in dubplate's STATUS before step 1 merges.
 
 ## Success test
 
-Pass B lands in 9 hours or less of clock, from its first execution commit to PR-ready, excluding
-Geoff's read wait and pauses he orders (`cairn-run-gate --records` gives gate, lock, and CI time). No
-behavioral, security, or contract escape surfaces through the next pass's close, from CI on `main`,
-that close's review, or Geoff's use; an escape goes into STATUS with its commit. Attended time stays
-at the design, the PR read, and one event per fired clock stop (ruling 13). The PR score carries the
-table's five rows; a miss names its row, or an escape the step that should have caught it, and only
-that changes.
+Pass B lands in 9 hours or less of clock, from its first execution commit to PR-ready (the close
+complete with the full-suite home green), excluding Geoff's read wait and pauses he orders
+(`cairn-run-gate --records` gives gate, lock, and CI time). No behavioral, security, or contract
+escape surfaces through the next pass's close, from CI on `main`, that close's review, or Geoff's
+use; an escape goes into STATUS with its commit. Attended time stays at the design, the PR read, and
+one event per fired clock stop (ruling 13). The PR score carries the table's five rows; a miss names
+its row, or an escape the step that should have caught it, and only that changes.

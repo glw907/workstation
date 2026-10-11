@@ -103,3 +103,21 @@ None. Rulings 11 to 14 settle every fork the reviews raised; the remaining calls
     (conventional practice), and the watch commands (existing tools).
 - Spec length: 167 lines before, 221 after (+32%). Rulings 11 to 14 and the revision note account
   for 11 of the 54 added lines; the rest is +26%.
+
+## Second fold
+
+Input: `docs/superpowers/research/2026-10-10-lean-pass-process-fold-verification.md` (3 major, 5
+minor). Each fix touches only the cited location.
+
+| Finding | Disposition |
+|---|---|
+| M1. Reprint has no tree condition | Folded, Execution 7: a finished result reprints only while the tree fingerprint matches the run's start (`gate_fingerprint`, `cairn-run-gate:138`, verified); a changed tree starts a new run, and `--fresh` reruns the same tree. |
+| M2. `claude --bg` self-isolates | Folded, Execution 1: the pass checkout is a linked worktree on the pass branch with the adapter's setup command already run. Source fetched 2026-10-10, code.claude.com/docs/en/agent-view, "How file edits are isolated": "Before editing files, Claude moves the session into an isolated git worktree under `.claude/worktrees/`", skipped when "The session is already inside a linked git worktree, whether Claude created it under `.claude/worktrees/` or you created it with `git worktree add` somewhere else". `worktree.bgIsolation: "none"` refused as machine-wide. |
+| M3. Step 1 gates on machinery live only at merge | Folded, Rollout step 1: runs serially with no pairs and no clock stop; the live pair probe and a clock-stop probe are the first acts after the merge, with `pre-lean-process` as rollback. The preamble's "from its first task" gains "within step 1's limits". The `--settings` pre-merge probe alternative refused. |
+| m1. Departures "two places only" | Folded: "three places only", adding the close's `visual-verifier` read. |
+| m2. Score shape and PR-ready | Folded: Close's score carries the Execution price table's five rows; the success test defines PR-ready as the close complete with the full-suite home green. |
+| m3. `gh pr checks` on repos without PR CI | Folded, Execution 4: "elsewhere with PR CI"; a repo whose full-suite home is local has no watch command. |
+| m4. Ruling 11's ROADMAP filing has no home | Folded, Rollout step 1: step 1 files the PR test CI items on each named repo's ROADMAP. |
+| m5. Task-clock file location | Folded, Execution 6: the file lives in the pass worktree's git dir (`git rev-parse --git-dir`), outside the work tree so the gate fingerprint holds; the hook resolves that dir from its input's `cwd`, so it fires only in a session working in a pass worktree. Source, code.claude.com/docs/en/hooks, "Common input fields": `cwd` is "Current working directory when the hook is invoked", and "the `cwd` field in the hook's input JSON is the worktree root after Claude enters a worktree". The session-id key refused: the git dir scopes the file to the worktree, which the disposition asked for. |
+
+Counts: 8 folded, 0 refused whole. Spec length: 221 lines before, 234 after.
