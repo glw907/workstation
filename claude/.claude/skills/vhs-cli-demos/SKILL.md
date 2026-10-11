@@ -1,19 +1,14 @@
 ---
 name: vhs-cli-demos
 description: >-
-  Generate deterministic screenshots and demo GIFs of command-line and terminal
-  (TUI) applications using Charm VHS. Use this skill whenever the user wants to
-  capture, record, screenshot, or make a GIF/video of a CLI or terminal app —
-  for a README, docs site, marketing page, changelog, release notes, or visual
-  regression tests. Trigger on phrases like "record a gif of my CLI", "demo gif
-  for the README", "screenshot my terminal app", "capture the TUI", "make a
-  terminal recording", "VHS tape", "charm vhs", "asciinema but as a gif", or any
-  request to show a terminal program in motion or as a still — even when the user
-  doesn't name VHS. Also use when a captured GIF is too large and needs to be
-  shrunk for the web, or when setting up a repeatable capture pipeline for many
-  scenes. Covers install, authoring tapes, determinism, motion-GIF storytelling,
-  and the lossless size-optimization that makes GIFs web-viable.
+  Generate deterministic screenshots and demo GIFs of CLI and TUI apps with
+  Charm VHS, for READMEs, docs, and visual regression tests. Use when asked to
+  record, screenshot, or GIF a terminal app, or to shrink a captured GIF.
 ---
+
+<!-- local-overlay -->
+vhs is not installed on this workstation (bluefin/Brewfile has no vhs); install it through the dependency-upgrade skill before running any tape.
+<!-- /local-overlay -->
 
 # Capturing CLI & TUI apps with VHS
 

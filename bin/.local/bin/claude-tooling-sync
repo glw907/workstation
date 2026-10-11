@@ -14,10 +14,15 @@ Commands:
   update-skills [NAME ...]
                    re-fetch vendored skills from their source repos at the default
                    branch and rewrite the pinned commit in the manifest
+  apply-overlays --root TREE
+                   apply each vendored-skills.json entry's `description` and `note`
+                   overlays, and the sibling-name rewrite, to the skills installed under
+                   TREE; no network call, nothing written outside TREE
   lint --root TREE
                    tree-only checks against TREE's own copy: vendored-skills.json is
-                   well formed, and every skills/<dir> carrying a LICENSE* file has a
-                   manifest entry. Runs from a worktree's own checkout (check.sh calls
+                   well formed, every skills/<dir> carrying a LICENSE* file has a
+                   manifest entry, and every installed vendored SKILL.md carries its
+                   entry's overlays. Runs from a worktree's own checkout (check.sh calls
                    it as `claude-tooling-sync lint --root .`), never through ~/.claude.
 
 apply, verify, and update-skills take --home (default the real home directory) so a
@@ -28,12 +33,20 @@ ${VAR} form and resolve at runtime from ~/.local/secrets. See
 """
 import argparse
 import json
+import re
 import subprocess
 import sys
+import textwrap
 from collections import defaultdict
 from pathlib import Path
 
 MANIFEST_FIELDS = ("repo", "path", "branch", "commit", "license")
+NOTE_OPEN = "<!-- local-overlay -->"
+NOTE_CLOSE = "<!-- /local-overlay -->"
+NOTE_BLOCK = re.compile(re.escape(NOTE_OPEN) + r"\n(.*?)\n?" + re.escape(NOTE_CLOSE) + r"\n*",
+                        re.DOTALL)
+FENCE = re.compile(r"^ {0,3}(```|~~~)")
+SPAN = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
 
 
 class ConfigError(Exception):
@@ -193,7 +206,139 @@ def gh_json(endpoint):
     return json.loads(out)
 
 
-def fetch_skill(paths, name, entry):
+def collapse(text):
+    """Collapse every whitespace run to one space so wrapping never counts as a difference."""
+    return " ".join(text.split())
+
+
+def split_frontmatter(text):
+    """Return (frontmatter lines between the fences, body text), or None with no frontmatter."""
+    lines = text.splitlines(keepends=True)
+    if not lines or lines[0].rstrip("\n") != "---":
+        return None
+    for end in range(1, len(lines)):
+        if lines[end].rstrip("\n") == "---":
+            return lines[1:end], "".join(lines[end + 1:])
+    return None
+
+
+def description_span(fm):
+    """Return (start, stop) of the `description:` key and its continuation lines in fm."""
+    for i, line in enumerate(fm):
+        if line.startswith("description:"):
+            stop = i + 1
+            while stop < len(fm) and (fm[stop][:1] in " \t" or not fm[stop].strip()):
+                stop += 1
+            while stop > i + 1 and not fm[stop - 1].strip():
+                stop -= 1
+            return i, stop
+    return None
+
+
+def read_description(fm):
+    """Return the frontmatter description as whitespace-collapsed text, or None if absent."""
+    span = description_span(fm)
+    if span is None:
+        return None
+    first = fm[span[0]][len("description:"):].strip()
+    rest = [line.strip() for line in fm[span[0] + 1:span[1]]]
+    if first[:1] in (">", "|"):
+        return collapse(" ".join(rest))
+    text = collapse(" ".join([first, *rest]))
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in "\"'":
+        text = text[1:-1]
+    return text
+
+
+def folded_description(text):
+    """Return a `description: >-` block holding text, valid YAML whatever text contains."""
+    wrapped = textwrap.wrap(collapse(text), width=78, break_long_words=False,
+                            break_on_hyphens=False)
+    return ["description: >-\n"] + [f"  {line}\n" for line in wrapped]
+
+
+def sibling_renames(skills, entry):
+    """Map each upstream directory name to its rename for renamed entries from entry's repo."""
+    return {Path(e["path"]).name: e["rename"] for e in skills.values()
+            if e.get("repo") == entry.get("repo") and "rename" in e}
+
+
+def rewrite_siblings(body, renames):
+    """Rewrite single-backtick spans naming a renamed sibling, outside fenced code blocks."""
+    if not renames:
+        return body
+    out = []
+    fenced = False
+    for line in body.splitlines(keepends=True):
+        if FENCE.match(line):
+            fenced = not fenced
+        elif not fenced:
+            line = SPAN.sub(lambda m: f"`{renames.get(m.group(1), m.group(1))}`", line)
+        out.append(line)
+    return "".join(out)
+
+
+def leftover_siblings(body, renames):
+    """Return the sibling names still spelled as single-backtick spans outside fences."""
+    found = set()
+    fenced = False
+    for line in body.splitlines():
+        if FENCE.match(line):
+            fenced = not fenced
+        elif not fenced:
+            found.update(m for m in SPAN.findall(line) if m in renames)
+    return sorted(found)
+
+
+def overlay_text(text, entry, skills):
+    """Return text with the entry's description, note, and sibling overlays applied."""
+    parts = split_frontmatter(text)
+    if parts is None:
+        return text
+    fm, body = parts
+    if "description" in entry:
+        span = description_span(fm)
+        block = folded_description(entry["description"])
+        if span is None:
+            fm = fm + block
+        else:
+            fm = fm[:span[0]] + block + fm[span[1]:]
+    if "note" in entry:
+        body = body.lstrip("\n")
+        found = NOTE_BLOCK.match(body)
+        if found:
+            body = body[found.end():]
+        body = f"\n{NOTE_OPEN}\n{collapse(entry['note'])}\n{NOTE_CLOSE}\n\n{body}"
+    body = rewrite_siblings(body, sibling_renames(skills, entry))
+    return "---\n" + "".join(fm) + "---\n" + body
+
+
+def apply_overlays(skill_dir, entry, skills):
+    """Apply one manifest entry's overlays to an installed skill directory; report a change."""
+    skill_md = skill_dir / "SKILL.md"
+    text = skill_md.read_text()
+    new = overlay_text(text, entry, skills)
+    if new != text:
+        skill_md.write_text(new)
+    return new != text
+
+
+def apply_overlays_cmd(root):
+    """Apply every vendored entry's overlays to the skills installed under root."""
+    manifest_path = root / "claude" / ".claude" / "tooling" / "vendored-skills.json"
+    skills_dir = root / "claude" / ".claude" / "skills"
+    skills = require_object(load(manifest_path), "skills", manifest_path)
+    for name, entry in skills.items():
+        skill_dir = skills_dir / entry.get("rename", name)
+        if not (skill_dir / "SKILL.md").exists():
+            print(f"  - {name}: not installed under {skills_dir}, skipped")
+            continue
+        changed = apply_overlays(skill_dir, entry, skills)
+        print(f"  {'+' if changed else '='} {name}: {'overlays applied' if changed else 'unchanged'}")
+    return 0
+
+
+def fetch_skill(paths, name, entry, skills):
     """Copy a vendored skill's files from its source repo at the manifest's branch."""
     repo, path, branch = entry["repo"], entry["path"], entry["branch"]
     head = gh_json(f"repos/{repo}/commits/{branch}")["sha"][:12]
@@ -217,6 +362,7 @@ def fetch_skill(paths, name, entry):
         original = Path(path).name
         text = text.replace(f"\nname: {original}\n", f"\nname: {entry['rename']}\n", 1)
         skill_md.write_text(text)
+    apply_overlays(dest, entry, skills)
     return head, len(files)
 
 
@@ -228,7 +374,7 @@ def update_skills(paths, names):
     targets = names or list(skills)
     for name in targets:
         entry = skills[name]
-        head, count = fetch_skill(paths, name, entry)
+        head, count = fetch_skill(paths, name, entry, skills)
         entry["commit"] = head
         print(f"  + {name}: {count} files from {entry['repo']}@{head}")
     with open(manifest_path, "w") as f:
@@ -268,7 +414,36 @@ def lint(root):
                 fail = True
     if not fail:
         print("  + every licensed skills/<dir> has a vendored-skills.json entry")
+    if lint_overlays(skills_dir, skills):
+        fail = True
     return 1 if fail else 0
+
+
+def lint_overlays(skills_dir, skills):
+    """Print and return whether an installed vendored SKILL.md misses its entry's overlays."""
+    fail = False
+    for name, entry in skills.items():
+        skill_md = skills_dir / entry.get("rename", name) / "SKILL.md"
+        if not skill_md.exists():
+            continue
+        text = skill_md.read_text()
+        parts = split_frontmatter(text)
+        fm, body = parts if parts else ([], text)
+        problems = []
+        if "description" in entry and read_description(fm) != collapse(entry["description"]):
+            problems.append("description differs from the manifest's")
+        if "note" in entry:
+            found = NOTE_BLOCK.search(body)
+            if not found or found.group(1).strip() != collapse(entry["note"]):
+                problems.append("note block missing or differs from the manifest's")
+        for sibling in leftover_siblings(body, sibling_renames(skills, entry)):
+            problems.append(f"sibling span `{sibling}` outside a fence")
+        for problem in problems:
+            print(f"  x {name}: {problem} (run claude-tooling-sync apply-overlays --root .)")
+            fail = True
+    if not fail:
+        print("  + every vendored skill carries its manifest overlays")
+    return fail
 
 
 def build_parser():
@@ -291,6 +466,9 @@ def build_parser():
     lint_cmd = sub.add_parser("lint", help="tree-only manifest and unmanifested-skill checks")
     lint_cmd.add_argument("--root", type=Path, required=True)
 
+    overlays = sub.add_parser("apply-overlays", help="apply manifest description and note overlays")
+    overlays.add_argument("--root", type=Path, required=True)
+
     return parser
 
 
@@ -306,6 +484,8 @@ def main(argv=None):
             return verify(paths, projects_root)
         if args.command == "update-skills":
             return update_skills(Paths(args.home.resolve()), args.names)
+        if args.command == "apply-overlays":
+            return apply_overlays_cmd(args.root.resolve())
         return lint(args.root.resolve())
     except ConfigError as err:
         print(f"{args.command}: configuration error", file=sys.stderr)
