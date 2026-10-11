@@ -42,20 +42,30 @@ artifacts. github.com/glw907/workstation.
 
 ## Immediate next action
 
-**Lean pass process cutover** (Geoff approved the design 2026-10-10). Spec:
-`docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`; evidence beside it in
-`docs/superpowers/research/2026-10-10-{anthropic-agentic-guidance,pass-catch-ledger}.md`. The cutover
-runs on the new process from its first step. Resume prompt, launched from `~/.dotfiles` with
-`claude --model claude-opus-5-5 --effort high`:
+**Lean pass process cutover: step 1a executes.** Spec (reviewed, folded, verified; Geoff's
+rulings 11 to 14): `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`. Plan (three
+lenses, three folds, replay-proved rollback; rulings R-A to R-D):
+`docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`. Pre-launch is done. Dotfiles `main` is
+frozen until the step 1 merge block. Launch 1a in a new terminal tab:
 
-> Read `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md` and the two research files it
-> cites. It is a `runner`-class pass. Run its spec review as the spec itself defines it (three
-> parallel Opus lenses: contract, mechanics, risk; a fold that probes every new mechanism; one
-> verification read), bringing Geoff only findings that change the approved design. Then write the
-> plan per the spec's Lifecycle step 4 (three plan lenses, since `runner`), covering Rollout steps 1
-> to 4, and execute it per the spec's Execution section. Before the plan, decide which items of the
-> infra sweep below the cutover supersedes and record that here. Pass B in cairn-cms (Rollout step 5)
-> resumes only after steps 1 to 4 merge.
+```bash
+cd ~/Projects/.worktrees/dotfiles-lean-cutover &&
+claude --model sonnet --effort medium --name lean-step1a "$(cat ~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover-prompts/1a.txt)"
+```
+
+After 1a opens its PR, Geoff reads it and runs the plan's "Merge block", which launches 1b. 1b
+starts steps 2 and 4 with `--bg`; step 3 is Geoff's paste per its "Pre-launch for 3". Pass B
+(rollout step 5) follows steps 1 and 2.
+
+S1-T1 one-executor check (2026-10-10, planning session with Geoff present): no live session other
+than the planning session. Every row is clear or "stale, not touched".
+
+| Repo | Live session | Uncommitted | Disposition |
+|---|---|---|---|
+| ~/.dotfiles | planning session only | none | clear |
+| cairn-cms | none | four September worktrees (403 to 659 h); pass B worktree clean | stale, not touched |
+| ecxc-ski, 907-life, aksailingclub-org, xcathletes-org, cairn-pub, poplar | none | none | clear |
+| dubplate | none | agent-memory, research, `reports/` (newest 3 h); STATUS and ROADMAP clean | stale, not touched |
 
 **Infra sweep after the cutover** (decided 2026-10-10; spec
 `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, audit
