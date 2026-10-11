@@ -52,6 +52,10 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   silently. Until then a session treats an idle ALARM that arrives AFTER the run's completion
   notification as expected, checks only that any live run still has a guard, and moves on.
 
+- **PR test CI for dotfiles.** Add a workflow that runs `bash scripts/check.sh` on
+  `pull_request`. Until it lands, the full-suite home is the local close gate (ruling 11 of the
+  lean pass process spec).
+
 ## Someday
 
 - **Devcontainers** for the SvelteKit/Cloudflare site repos: logged per repo
