@@ -47,6 +47,9 @@ style-guide-sync are merged. Geoff's rulings R1 to R4 split what survives into s
 guard's tools) and sweep-2 (skill and doc content), which is planned from the baseline that
 sweep-1 leaves. Poplar's `pass-core` adapter follows sweep-2.
 
+Sweep-1 executes in session `infra-sweep-1` (job id `661df253`), branch
+`worktree-infra-sweep-1`, started 2026-10-11.
+
 ## Open items
 
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not
