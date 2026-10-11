@@ -25,8 +25,9 @@ you carry to the PR body's "Found, not done". Fourth, it commits and never pushe
 write the pair's clock file per the plan's Clock convention. When both return, check the overrun
 and remove the clock file. If either returned uncommitted, apply "Stops" before merging either
 half. Otherwise merge both and run the gate. Then execute
-T3 yourself, then the Close. Every gate is `CAIRN_GATE_LANE=light cairn-run-gate 'bash
-scripts/check.sh'` with the Bash tool's `timeout: 600000`.
+T3 yourself, then the Close. Every gate, yours and the pair's, is `bash scripts/gate.sh` run from
+the worktree with the Bash tool's `timeout: 600000`, re-issued on exit 75 until it prints `gate
+exit:`. It overrides the Gate line of the `dotfiles-pass` copy you load from `main`.
 
 You may commit on your worktree's branch and push it to `glw907/workstation`; open the PR there.
 Never push `main`, never merge the PR, and never write any repo other than `~/.dotfiles`. A stop

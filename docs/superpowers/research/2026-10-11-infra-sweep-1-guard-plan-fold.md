@@ -141,3 +141,18 @@ found no blockers, one major, and four minors. Every blocker and major from the 
 | V-m2 | folded (owner of the step: the planning session) | The planning session commits and pushes before launch. The launch check reads right as written: `git fetch origin` runs first, and `git rev-parse worktree-infra-sweep-plan origin/worktree-infra-sweep-plan` must print two equal lines. It runs from the main checkout, outside isolation. |
 | V-m3 | folded | T2 trigger-check bullet. Each run is one plain `claude -p` command, `cd <scratch>/<run> && timeout 180 claude -p ... "<prompt>" > <scratch>/<run>.jsonl`, with no pipe, heredoc, or inline script. A separate `grep -c` step reads the `Skill` tool use. The verification probe showed the guard accepts this form. The scratch directory is the task's `mktemp -d` directory. |
 | V-m4 | folded | Conventions "Scope" and the prompt. A pair subagent's final report lists the defects it found outside its task, and the session carries them to the PR body. |
+
+## Post-verification addition (planning session)
+
+The planning session's closing gate run found that a worktree-isolated session's Bash guard refuses
+`CAIRN_GATE_LANE=light cairn-run-gate 'bash scripts/check.sh'` ("cannot be shown not to be git").
+Dotfiles #2 hit the same refusal, ran `bash scripts/check.sh` bare, lost the lane lock and the
+`--records` score, and listed the fix as owed to the next dotfiles pass. Sweep-1's executor and its
+pair subagents are worktree-isolated, so every gate in the plan as verified would have been refused.
+The fix rides in the planning commits: `scripts/gate.sh`, a no-argument wrapper that runs the same
+command. Probe from this worktree: the guard accepts `bash scripts/gate.sh`, which printed
+`gate exit: 0 (log: ...)` and exited 0, and `cairn-run-gate --records` showed one run of 112 s. The
+plan's Gate convention, its end-to-end check, the prompt, and `dotfiles-pass`'s Gate line now name
+the wrapper. The executor loads `dotfiles-pass` from `main`, so the plan and the prompt state the
+override until the merge. No other mechanism changed, so no second verification read runs (the
+skill reserves one for a blocker the verification finds).

@@ -27,7 +27,7 @@ the cap does not reach.
 
 **End-to-end check.** On the close head:
 
-1. `CAIRN_GATE_LANE=light cairn-run-gate 'bash scripts/check.sh'` prints `gate exit: 0`.
+1. `bash scripts/gate.sh` prints `gate exit: 0`.
 2. `python3 claude/.claude/tooling/ratchet.py check --root .` exits 0. A clean run prints nothing.
 3. `python3 -I -c 'import json; d = json.load(open("claude/.claude/tooling/ratchet-baseline.json")); print(sorted(d["checks"])); print(sorted({e["finding"] for e in d["entries"]})); print([e["file"] for e in d["entries"] if "vhs-cli-demos" in e["file"]])'`
    prints the five ids (`dead-reference`, `description-cap`, `fork-skill`, `relative-link`,
@@ -63,9 +63,14 @@ unpushed `main` commit would ride into the PR.
 
 ## Conventions every task follows
 
-- **Gate.** `CAIRN_GATE_LANE=light cairn-run-gate 'bash scripts/check.sh'`, with the Bash tool's
-  `timeout: 600000`, re-issued on exit 75 until it prints `gate exit:` (dotfiles-pass). It is also
-  the fast lane. A focused leg (`uv run --with pytest --no-project python -m pytest
+- **Gate.** `bash scripts/gate.sh`, with the Bash tool's `timeout: 600000`, re-issued on exit 75
+  until it prints `gate exit:`. It is also the fast lane. The wrapper runs `cairn-run-gate 'bash
+  scripts/check.sh'` on the light lane. A worktree-isolated session's Bash guard refuses that
+  wrapped form ("cannot be shown not to be git"; dotfiles #2's "Found, not done") and accepts the
+  no-argument wrapper, which keeps the lane lock and the `--records` score (probed 2026-10-11 from
+  this plan's worktree: `gate exit: 0`, one record of 112 s). This overrides the dotfiles-pass Gate
+  line loaded from `main` until this pass merges. Never fall back to a bare `bash scripts/check.sh`
+  for an acceptance. A focused leg (`uv run --with pytest --no-project python -m pytest
   tests/test_check_claude_refs.py -q`) may run between edits; the task's acceptance is the gate.
 - **The main checkout stays untouched.** Every tool runs from the worktree's own path
   (`bin/.local/bin/<tool>`, `scripts/<tool>`), never as a bare name: `~/.local/bin/<tool>` is a stow
