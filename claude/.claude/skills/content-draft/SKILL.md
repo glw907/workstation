@@ -14,6 +14,11 @@ Load the shared method at `~/.claude/docs/web-content-method.md` and the site's
 recipe per content type). If the site has a voice corpus (the guide names it), read the entries
 nearest the piece. Then work the steps in order.
 
+Not every site has a `docs/content-guide.md`. When it is absent, say so in one line, name where the
+site's voice rules live (its CLAUDE.md or README) if anywhere, and draft from the shared method and
+the brief alone. Take container budgets and recipes from the brief's container plan, and mark any
+voice or budget question the sources do not answer as `[ASK]`.
+
 ## Steps
 
 1. **Build the brief, first.** Write it to `docs/content-briefs/<piece>.md` in the site repo.
