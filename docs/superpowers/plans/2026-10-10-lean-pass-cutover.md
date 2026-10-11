@@ -8,29 +8,30 @@ dispositions stand; no task undoes one).
 step 1 merges on GitHub). **Scope:** the spec's Rollout steps 1 to 4. Step 5 is the next action
 named on the last line.
 
-**Plan review:** pending. Per the spec's Lifecycle step 4, a `runner` pass with the `live-account`
-flag takes all three plan lenses plus one verification read before step 1 launches.
+**Plan review:** three lenses (contract, mechanics, risk) at `a0cdfd5`, folded per
+`docs/superpowers/research/2026-10-10-lean-pass-cutover-plan-fold.md`. The verification read runs
+next, before step 1 launches (spec Lifecycle step 4).
 
-**Clock estimate:** 1,850 task-minutes in all (step 1: 665, step 2: 445, step 3: 530, step 4: 210).
-Wall clock under the recommended concurrency (steps 2 and 3 as a pair, step 4 when the first of them
-opens its PR): about 1,260 minutes (21 hours), excluding Geoff's PR reads and the gaps before he
-launches a session.
+**Clock estimate:** 1,970 task-minutes in all (step 1: 660, step 2: 510, step 3: 590, step 4: 210).
+Steps 2, 3, and 4 launch together after session 1b's probes pass, and the heavy gate lock
+serializes their heavy legs (Geoff, ruling R-C). Wall clock is about 660 + 460 = 1,120 minutes
+(18.7 hours), with step 3 binding. That excludes Geoff's PR reads, his launch gaps, and heavy-lock
+queueing between the concurrent steps.
 
 **Where each step executes**
 
-| Step | Session | Checkout | Branch | Model, effort | Mode |
-|---|---|---|---|---|---|
-| 1a | build | `~/Projects/.worktrees/dotfiles-lean-cutover` (linked worktree of `~/.dotfiles`) | `lean-cutover` | `sonnet`, `medium` | `claude --bg` |
-| 1b | merge | `~/.dotfiles` (main checkout) | `main` | `sonnet`, `medium` | interactive |
-| 1c | probes and filings | `~/.dotfiles` (main checkout), fresh after 1b | `main` | `sonnet`, `medium` | interactive |
-| 2 | cairn-cms | `~/Projects/cairn-cms/.claude/worktrees/lean-cutover` | `lean-cutover` | `sonnet`, `medium` | `claude --bg` |
-| 3 | sites and dubplate | launched in `~/Projects`; edits land in `~/Projects/.worktrees/<repo>-lean-cutover` | `lean-cutover` per repo | `sonnet`, `medium` | `claude --bg` |
-| 4 | docs-chain audit | `~/Projects/.worktrees/dotfiles-docs-chain-audit` | `docs-chain-audit` | `sonnet`, `medium` | `claude --bg` |
+| Step | Session | Checkout | Branch | Launched by |
+|---|---|---|---|---|
+| 1a | build | `~/Projects/.worktrees/dotfiles-lean-cutover` (linked worktree of `~/.dotfiles`) | `lean-cutover` | Geoff, after the pre-launch |
+| merge | none: Geoff's terminal | `~/.dotfiles` (main checkout) | `main` | Geoff |
+| 1b | tag, probes, filing | `~/.dotfiles` (main checkout), started after the merge | `main` | Geoff, in the merge block |
+| 2 | cairn-cms | `~/Projects/cairn-cms/.claude/worktrees/lean-cutover` | `lean-cutover` | Geoff |
+| 3 | sites, cairn-pub, dubplate | started in `~/Projects`; edits land in `~/Projects/.worktrees/<repo>-lean-cutover` | `lean-cutover` per repo | Geoff |
+| 4 | docs-chain audit | `~/Projects/.worktrees/dotfiles-docs-chain-audit` | `docs-chain-audit` | Geoff |
 
-The spec's Execution item 1 sets `claude --bg --model sonnet --effort medium` in a linked worktree
-with setup already run. Sessions 1b and 1c run interactive in the main checkout because a `--bg`
-session started in a repository's main checkout moves itself into a new worktree before editing
-(source M2), and 1b and 1c must pull, stow, and commit on `main` in place.
+Every session runs `sonnet` at `medium`, interactive in its own terminal tab under the user's
+`auto` mode: `claude --model sonnet --effort medium --name <name> "<launch prompt>"` (M1), never
+`claude --bg` (M2; see Spec gaps). The `--name` is the session's recorded handle.
 
 ## Conventions every task follows
 
@@ -47,45 +48,61 @@ session started in a repository's main checkout moves itself into a new worktree
   in each step.
 - **Stops.** A stop writes the step's `docs/STATUS.md` on its branch (present tense: the task in
   flight, what failed, the one question), runs `notify-send -u normal "lean cutover: <step> stopped"`,
-  and waits. Stops are: a live executor or warm unauthored change found by a one-executor check; a
-  red the session cannot fix in two attempts; a whole-branch review `escalate`; a finding that would
-  change the approved design (one batched question, spec Lifecycle step 3); and, in steps 2 to 4, the
-  clock stop (spec Execution item 6, ruling 13).
+  and waits. Stops are: a live session or a warm unauthored change in a file the task must commit
+  (see "One-executor rule"); a red the session cannot fix in two attempts; a whole-branch review
+  `escalate`; a finding that would change the approved design (one batched question, spec Lifecycle
+  step 3); and, in steps 2 to 4, the clock stop (spec Execution item 6, ruling 13).
+- **One-executor rule.** A live session whose `cwd` is in a repo (`claude agents --json`) is a stop
+  for any commit in that repo outside the step's own worktree. Before a task commits on a default
+  branch in a main checkout, `git -C <repo> diff --quiet HEAD -- <the files it writes>` must pass,
+  or it stops. Other uncommitted files, in any checkout, are another session's work: no task
+  stages, commits, stashes, or discards them.
+- **Pushes.** Every launch prompt names its push targets as `glw907/<repo>`, since auto mode trusts
+  the session's start directory and its remotes and blocks a push to any other repository unless
+  the user named it (M1). No session pushes a default branch except where a task says so, and no
+  session merges a PR.
 - **Scope.** A discovered item outside the task goes to the PR body's "Found, not done" list, never
   into the task in flight. cairn friction goes to cairn-cms `docs/internal/docs-friction-log.md` only
-  from step 2 (ruling 8: the friction log stays in cairn only).
+  from step 2 (ruling 8: the friction log stays in cairn only). Steps 1, 3, and 4 never write
+  cairn-cms, so their PR bodies list the friction they meet as owed to that log.
 - **PR body.** Every step's PR body carries: what landed (task id, commit); each `auth-data` verdict
   (none is expected in steps 1 to 4); the whole-branch review verdict with a disposition per finding;
   the audit ids each task took, each marked absorbed, already fixed at HEAD, or superseded; "Found,
   not done"; and the score: the spec's Execution price table rows (Gates on the critical path, Work and
   review, CI waits on the path, Fix rounds and reds, Close, Total) for this step, gate and lock time
   from `cairn-run-gate --records <toplevel> <branch>`, the clock from the first execution commit to
-  PR-ready, and the attended events (spec Success test).
+  PR-ready, and the attended events (spec Success test). A HISTORY harvest reports counts per
+  disposition (moved, owed, dropped) first, then lists the owed and dropped rows by heading and
+  bullet index without quoting the bullet; the full table, one row per bullet with its home, goes
+  in a collapsed `<details>` block.
 - **Writing.** Prose follows the workstation writing voice; `scripts/check.sh` runs the Vale and
   tellgrader nets in dotfiles. Caps: a `CLAUDE.md` under 200 lines, a skill body under 500 (spec,
   Instruction surface).
 
 ## Sources the tasks rely on
 
-Each mechanism below was read or probed on 2026-10-10. Tasks cite them as M1 to M15.
+Each mechanism below was read or probed on 2026-10-10. Tasks cite them as M1 to M16.
 
-- **M1, background launch.** code.claude.com/docs/en/agent-view, "Dispatch an agent from your
-  shell": `claude --bg "investigate the flaky SettingsChangeDetector test"`; "The prompt is the
-  positional argument, not a `-p` value"; `claude --bg --name "flaky-test-fix" "<prompt>"`; after
-  backgrounding it prints `claude attach <id>`, `claude logs <id>`, `claude stop <id>`. `claude --help`
-  (2.1.296): `--effort <level>` takes "low, medium, high, xhigh, max"; `--model` takes "an alias for
-  the latest model (e.g. 'fable', 'opus', or 'sonnet')"; `attach`: "Part of the session name works
-  too". `claude agents --help`: `--json` "Print active sessions (interactive and background) as a JSON
-  array and exit (for scripting; does not require a TTY)". Running `claude --bg` in an untrusted
-  directory shows the workspace trust dialog first.
-- **M2, isolation of a `--bg` session.** agent-view, "How file edits are isolated": "Before editing
-  files, Claude moves the session into an isolated git worktree under `.claude/worktrees/`". It skips
-  that when "The session is already inside a linked git worktree", when "The file that Claude is
-  editing is inside a linked git worktree", and when "The working directory isn't a git repository".
-  Also: "A session editing a checkout it didn't isolate itself still asks before committing or
-  switching branches. This applies when ... the session started inside a worktree that already
-  existed." Every `--bg` launch prompt below grants commit and branch-push approval in writing for
-  that reason (see "Spec gaps" at the end).
+- **M1, interactive launch under auto mode.** `claude --help` (2.1.296): "starts an interactive
+  session by default"; positional `prompt` "Your prompt"; `-n, --name <name>` "Set a display name for
+  this session"; `--effort <level>` takes "low, medium, high, xhigh, max"; `--model` takes an alias
+  such as 'sonnet'. `claude agents --json` (probed) lists interactive sessions with `pid`, `cwd`,
+  `kind: "interactive"`, and `name`. `~/.claude/settings.json:11` sets `"defaultMode": "auto"`, which
+  applies from user settings (code.claude.com/docs/en/permission-modes). Auto mode allows by default
+  "Pushing to any branch of the repository you're working in"; "The classifier trusts your working
+  directory and the remotes that were configured for it when the session started"; it blocks
+  "pushing to a third-party repository, unless you named that external target" and "Merging a pull
+  request no human has approved". Writes under `.claude` and `.git` are protected paths, "Routed to
+  the classifier" in auto mode. Both `~/.dotfiles` and `~/Projects` are trusted in `~/.claude.json`.
+- **M2, why not `--bg`.** The 2.1.296 binary's background-session prompt, gated on
+  `CLAUDE_CODE_SESSION_KIND === "bg"`: "Before making any code changes, use the EnterWorktree tool ...
+  unless your cwd is already under `.claude/worktrees/`" and "If you didn't enter the worktree yourself
+  this job, or you're in the user's own checkout, ask before committing or switching branches"
+  (strings in `/tmp/claude-1000/mech-review/strings.txt`, function `bBo`). agent-view, "How file
+  edits are isolated": "A session editing a checkout it didn't isolate itself still asks before
+  committing or switching branches. This applies when isolation is set to "none", when the worktree
+  move failed, or when the session started inside a worktree that already existed." An interactive
+  session gets no background section.
 - **M3, manual worktrees.** code.claude.com/docs/en/worktrees, "Manage worktrees manually": `git
   worktree add ../project-feature-a -b feature-a`; "A worktree is a fresh checkout, so initialize your
   development environment there."
@@ -138,6 +155,15 @@ Each mechanism below was read or probed on 2026-10-10. Tasks cite them as M1 to 
 - **M15, memory peak.** `systemd-run --user --wait -P -d <command>` prints `Memory peak: <n>` for the
   whole unit on exit (probed with systemd 259). The service gets the user manager's environment, so
   pass `-E PATH="$PATH"`.
+- **M16, cwd and reload.** The binary resets the shell cwd after a `cd` that leaves the allowed
+  working directories ("Shell cwd was reset to ...", function `Eor`), and its subagent prompt says
+  "Agent threads always have their cwd reset between bash calls". code.claude.com/docs/en/settings,
+  "When edits take effect": "Claude Code watches your settings files and reloads them when they
+  change, so it applies most edits to the running session without a restart, including edits to
+  `permissions`, `hooks`"; `model` and `effortLevel` are read only at session start.
+  code.claude.com/docs/en/memory: CLAUDE.md and auto memory "are loaded at the start of every
+  conversation". So a merge into the main checkout reaches every live session's settings and hooks
+  at once, and only a session started after it carries the merged `CLAUDE.md`.
 
 ## Rules inventory for the three process docs
 
@@ -245,13 +271,24 @@ plus the sweep. It runs serially, with no pairs and no clock stop (the new setti
 only at the merge). Done when `scripts/check.sh` is green, the one-executor check is clear in every
 repo, the merge is live, and both probes pass.
 
-### Pre-launch for 1a (Geoff or the planning session, in a terminal)
+### Pre-launch for 1a (the planning session, with Geoff present)
 
-1. Commit this plan on `main` (the planning session, after its plan review), and close the planning
-   session so the one-executor check finds no session in `~/.dotfiles`.
-2. Check the main checkout: `claude agents --json` lists no session in `~/.dotfiles`, and
-   `git -C ~/.dotfiles status --short` is empty.
-3. Create the worktree and confirm a green baseline (no setup command is needed, M13):
+1. Run S1-T1 below and settle any stop with Geoff before going on.
+2. Commit this plan, its review records, and `docs/STATUS.md` carrying S1-T1's table on `main`, and
+   push. Assert that every touched repo's default branch is at ahead 0 (Geoff, ruling R-A: all were
+   pushed on 2026-10-10; this re-checks for anything landed since). Any output line is a stop for
+   Geoff, now:
+
+   ```bash
+   for r in ~/.dotfiles ~/Projects/{cairn-cms,ecxc-ski,907-life,aksailingclub-org,xcathletes-org,cairn-pub}; do
+     [ "$(git -C "$r" rev-list --count origin/main..main)" = 0 ] || echo "AHEAD: $r"; done
+   [ "$(git -C ~/Projects/dubplate rev-list --count origin/master..master)" = 0 ] || echo "AHEAD: dubplate"
+   ```
+
+   From here until the merge block, dotfiles `main` is frozen: no session commits to it.
+3. Create the worktree and confirm a green baseline (no setup command is needed, M13). The `cd`
+   leaves the session's working directory, so it resets after each call (M16): run the `cd` and the
+   gate in one Bash call, and repeat both on exit 75.
 
    ```bash
    git -C ~/.dotfiles worktree add ~/Projects/.worktrees/dotfiles-lean-cutover -b lean-cutover main
@@ -259,11 +296,11 @@ repo, the merge is live, and both probes pass.
    CAIRN_GATE_LANE=light cairn-run-gate 'bash scripts/check.sh'
    ```
 
-4. Launch (M1). Accept the trust dialog if it appears.
+4. Geoff opens a new terminal tab and launches 1a (M1); the planning session then ends.
 
    ```bash
    cd ~/Projects/.worktrees/dotfiles-lean-cutover
-   claude --bg --model sonnet --effort medium --name lean-step1a "<launch prompt below>"
+   claude --model sonnet --effort medium --name lean-step1a "<launch prompt below>"
    ```
 
 **Launch prompt (1a):**
@@ -278,51 +315,59 @@ repo, the merge is live, and both probes pass.
 > copies under `claude/` in this worktree. Never invoke the `pass-execute` workflows, never dispatch
 > a per-task review, and never run `code-simplifier`. First arm the API-drop wake-up (`/loop` with no
 > interval) and the lid-switch hold, per `~/.claude/docs/unattended-work-guards.md`. Then execute
-> S1-T1 to S1-T13 in order, one commit per task with the task id first in the subject; a task is done
-> only when its acceptance check passes. You have standing approval to commit on `lean-cutover`
-> without asking and to push `lean-cutover` to `origin`; never push `main`, never merge, never
-> force-push. Stop only on a stop the plan's Conventions name. At S1-T13's end, notify Geoff with the
-> PR link and end the session.
+> S1-T2 to S1-T13 in order (S1-T1 ran before launch), one commit per task with the task id first in
+> the subject; a task is done only when its acceptance check passes. You may commit on
+> `lean-cutover` and push it to `glw907/workstation`. For S1-T2 only, you may commit
+> `docs/STATUS.md` and `ROADMAP.md` on dubplate's `master` in `~/Projects/dubplate` and push
+> `master` to `glw907/dubplate`. Never push dotfiles `main`, never merge, never force-push. Stop only
+> on a stop the plan's Conventions name. At S1-T13's end, notify Geoff with the PR link and end.
 
-### S1-T1. One-executor check across every repo
+### S1-T1. One-executor check across every repo (pre-launch)
 
-- **Outcome.** A table, kept for the PR body, with one row per repo: `cairn-cms`, `ecxc-ski`,
-  `907-life`, `aksailingclub-org`, `xcathletes-org`, `cairn-pub`, `dubplate`, `poplar`, and this
-  worktree. Columns: a live Claude session whose cwd is in the repo (`claude agents --json`, and
-  `readlink /proc/<pid>/cwd` for each `pgrep -x claude`, excluding this session); warm uncommitted
-  changes in the main checkout and in each linked worktree (`git -C <path> status --short` over
-  `git worktree list`), with each file's mtime; and the repo's `docs/STATUS.md` next action, flagged
-  if it names a pass in flight. Expected at planning time (2026-10-10): cairn-cms engine pass B is
-  paused with unpushed WIP `dbdc4556` in `.claude/worktrees/engine-pre-2b-b` (paused, not in flight);
-  dubplate's main checkout carries uncommitted tracked edits under
-  `.claude/agent-memory/dubplate-implementer/`.
-- **Decision rule.** A live session in any repo is a stop. Warm uncommitted changes are a stop unless
-  every changed file is agent memory or untracked notes, no session's cwd is in that repo, and the
-  newest mtime is older than the repo's last commit; then the row is recorded "stale, not staged" and
-  no later task in this plan stages those files.
-- **Files.** None (no commit).
+- **Outcome.** The planning session, with Geoff present, builds a table with one row per repo:
+  `cairn-cms`, `ecxc-ski`, `907-life`, `aksailingclub-org`, `xcathletes-org`, `cairn-pub`, `dubplate`,
+  `poplar`, and `~/.dotfiles`. Columns: live Claude sessions whose `cwd` is in the repo
+  (`claude agents --json`, excluding the planning session); uncommitted files in the main checkout
+  and each linked worktree (`git -C <path> status --short` over `git worktree list`), with the newest
+  mtime; and the `docs/STATUS.md` next action, flagged if it names a pass in flight. Known at planning
+  time: cairn-cms worktrees `docs-reset-dryrun`, `gate-tier-tool`, `polish-11b-i`, and
+  `polish-11b-ii` carry September edits; engine pass B is paused in `.claude/worktrees/engine-pre-2b-b`;
+  dubplate's main checkout carries agent-memory edits and untracked research, `reports/`, and
+  `research_notes/` files.
+- **Decision rule.** A live session in a repo is a stop. An uncommitted file under 24 hours old in a
+  main checkout this plan commits on is a stop: dotfiles `main` (other than the planning session's
+  own plan and review records) and dubplate's `docs/STATUS.md` and `ROADMAP.md`. Geoff settles
+  either stop before launch. Every other row is recorded "stale, not touched"; steps 2 and 3 branch
+  fresh worktrees from `origin`, so stale files elsewhere never contend. No task stages, commits, stashes, or discards another session's file.
+- **Files.** Dotfiles `docs/STATUS.md` (the table, committed with the plan in pre-launch step 2; S1-T13
+  moves it into the PR body).
 - **Risk.** `ordinary`.
-- **Acceptance.** The table exists in the session's notes with all nine rows, and either every row
-  is clear or recorded stale under the decision rule, or the session has stopped.
+- **Acceptance.** All nine rows exist; every row is clear or "stale, not touched"; any stop has
+  Geoff's ruling.
 - **Test.** None (read-only).
 - **Clock.** 15.
 
-### S1-T2. Record rung 14a's hold in dubplate
+### S1-T2. Record rung 14a's hold and file ruling 11's item in dubplate
 
 - **Outcome.** dubplate's `docs/STATUS.md` "Next action" and its lane-registry row for lane 1 say:
   rung 14a is held (ruling 12, lean pass process spec at
   `~/.dotfiles/docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`); its plan
   `docs/superpowers/plans/2026-10-10-rung-14a-admin-api.md` is re-planned as a lean task list in a
   fresh dubplate session after rollout steps 1 to 3 merge; the old plan stays as evidence.
-- **Files.** `~/Projects/dubplate/docs/STATUS.md` only, committed on dubplate `master` in its main
-  checkout, then `git -C ~/Projects/dubplate push origin master` (the branch tracks
-  `origin/master`; if the push is rejected as behind, pull with rebase once and retry).
-- **Risk.** `ordinary`.
-- **Acceptance.** `git -C ~/Projects/dubplate show --stat HEAD` lists only `docs/STATUS.md`;
-  `grep -n 'ruling 12' ~/Projects/dubplate/docs/STATUS.md` prints the hold line; `git -C
-  ~/Projects/dubplate status --short` shows the same files S1-T1 recorded, no more.
+  dubplate's `ROADMAP.md` gains one Planned item: add PR test CI that runs `bash scripts/check.sh` on
+  `pull_request`; until it lands, the full-suite home is the local close gate (ruling 11).
+- **Files.** `~/Projects/dubplate/docs/STATUS.md` and `~/Projects/dubplate/ROADMAP.md`, in one commit
+  on dubplate `master` in its main checkout, after the One-executor rule's `diff --quiet` check on
+  both files passes and `git -C ~/Projects/dubplate rev-list --count origin/master..master` prints 0.
+  Then `git -C ~/Projects/dubplate push origin master`. A rejected push is a stop (never pull or
+  rebase over the dirty agent-memory files).
+- **Risk.** `ordinary`, `live-account`.
+- **Acceptance.** `git -C ~/Projects/dubplate show --stat HEAD` lists exactly those two files;
+  `grep -n 'ruling 12' ~/Projects/dubplate/docs/STATUS.md` prints the hold line; `grep -i 'PR test CI'
+  ~/Projects/dubplate/ROADMAP.md` prints the item; `git -C ~/Projects/dubplate status -sb` shows no
+  `ahead`; `git -C ~/Projects/dubplate status --short` lists the same files S1-T1 recorded.
 - **Test.** None.
-- **Clock.** 10.
+- **Clock.** 15.
 
 ### S1-T3. `cairn-run-gate` fixes
 
@@ -338,11 +383,13 @@ repo, the merge is live, and both probes pass.
      exits 2 with the usage line and starts nothing (today `:119` takes it as the gate string).
   4. The exit-75 text tells the caller to re-issue the same command with the Bash tool's
      `timeout: 600000`.
-  5. With `RUN_GATE_IF_BUSY=defer`, a heavy-lane gate whose machine lock is held exits 76 with one
-     line saying the leg is left to the push's CI, and starts nothing. The light lane ignores the
-     variable. The script cannot know a repo's full-suite home or a task's risk class, so the header
-     says the caller must not set it where the full-suite home is local or on an `auth-data` task
-     (`pass-core` and the adapters repeat that).
+  5. With `RUN_GATE_IF_BUSY=defer`, a heavy-lane call that would start a run while the machine
+     lock is held exits 76 with one line saying the leg is left to the push's CI, and starts
+     nothing. A call that reattaches to its own in-flight run (its `pidfile` exists, `:240`) never
+     defers. `--fresh` with a run in flight reattaches; it discards only a finished result. The light
+     lane ignores the variable. The script cannot know a repo's full-suite home or a task's risk
+     class, so the header says the caller must not set it where the full-suite home is local or on an
+     `auth-data` task (`pass-core` and the adapters repeat that).
   6. The header comment matches the new behavior (it no longer says a result "is printed once and
      then cleared"), and the lock-wait NOTE no longer tells the reader to report to a conductor.
 - **Files.** `bin/.local/bin/cairn-run-gate`, `tests/cairn-run-gate.test.sh`.
@@ -351,13 +398,16 @@ repo, the merge is live, and both probes pass.
 - **Acceptance.** `bash tests/cairn-run-gate.test.sh` exits 0 and its output names a passing case
   for each of: two concurrent waiters both print `gate exit:`; a repeat call on an unchanged tree
   reprints without a new run (the run records gain no `exit` line); a changed tree starts a new run;
-  `--fresh` reruns; a call with a slow poll returns inside its deadline; `--bogus` exits 2 and starts
-  nothing; the exit-75 text contains `timeout: 600000`; `RUN_GATE_IF_BUSY=defer` with the heavy lock
-  held exits 76 and starts nothing; every pre-existing vanish case still passes. `grep -c 'printed
-  once' bin/.local/bin/cairn-run-gate` prints 0. The dotfiles gate is green.
+  `--fresh` reruns; a call with a slow poll returns inside its deadline (a PATH-shimmed `sleep` that
+  sleeps twice its argument, under a small `CAIRN_GATE_WAIT`; the wait loop calls `sleep` by name,
+  `:332`); `--bogus` exits 2 and starts nothing; the exit-75 text contains `timeout: 600000`;
+  `RUN_GATE_IF_BUSY=defer` with the heavy lock held by another run exits 76 and starts nothing; a
+  `defer` re-issue while its own heavy run holds the lock reattaches and never exits 76; every
+  pre-existing vanish case still passes. `grep -c 'printed once' bin/.local/bin/cairn-run-gate`
+  prints 0. The dotfiles gate is green.
 - **Test.** The cases above, added to `tests/cairn-run-gate.test.sh` beside its vanish cases (it
   already stages a temporary `TMPDIR` and short poll intervals).
-- **Clock.** 60.
+- **Clock.** 65.
 
 ### S1-T4. Clock-stop hook and settings
 
@@ -396,13 +446,18 @@ repo, the merge is live, and both probes pass.
   about 120 lines, sections in this order: "Lifecycle" (the spec's six steps, risk classes as a
   floor, the `live-account` flag, the one-sentence-diff skip, the plan's task fields with pairs
   marked, folding a single-deliverable task into a neighbor); "Models" (ME-1, ME-2, ME-8, ME-10's
-  `low` and `max`); "Execute" (one session launched with `claude --bg --model sonnet --effort medium`
-  in a linked worktree with the adapter's setup run, its name recorded in STATUS; the API-drop
-  wake-up and the lid-switch hold; it writes code and tests and commits; written approval to commit
-  and push the branch in its launch prompt, per M2); "Pairs" (spec Execution item 2, PG-11's port
-  rule); "Gates" (spec Execution items 3, 4, and 5; the CI watch as a background Bash task; PG-5,
-  PG-10, PG-13's pointer; `RUN_GATE_IF_BUSY=defer` limits); "Clock stop" (the task-clock file's path
-  and three lines, written at each task start, removed at the close; ruling 13's response); "Close"
+  `low` and `max`); "Execute" (one interactive session, `claude --model sonnet --effort medium --name
+  <name> "<launch prompt>"`, started by Geoff in its own terminal tab in a linked worktree with the
+  adapter's setup run, under the user's `auto` mode; never `claude --bg`, whose prompt moves the work
+  off the pass branch, M2; its name recorded in STATUS; the launch prompt names the branch and its
+  `glw907/<repo>` push target, M1; the API-drop wake-up and the lid-switch hold; it writes code and
+  tests and commits); "Pairs" (spec Execution item 2, PG-11's port rule); "Gates" (spec Execution
+  items 3, 4, and 5; the CI watch as a background Bash task; PG-5, PG-10, PG-13's pointer;
+  `RUN_GATE_IF_BUSY=defer` limits); "Clock stop" (the task-clock file's path and three lines,
+  written at each task start from a `cd` into the task's worktree, removed at the close; ruling 13's
+  response; a resume after a stop rewrites `start=`, or `estimate=` to the figure Geoff names; the
+  stop cannot fire while the session waits on a pair, since pair worktrees hold no clock file);
+  "Close"
   (spec Lifecycle step 6, ME-4); "Score" (the five rows and their sources, attended events, escapes,
   ME-12); "Ledgers" (STATUS present tense and 60 lines or fewer; ROADMAP tiers; git and PR bodies are
   history; `HISTORY.md` and post-mortems stop growing; a lesson lands where it executes; ruling 8);
@@ -432,10 +487,15 @@ repo, the merge is live, and both probes pass.
     cairn pass runs before step 2 merges); full-suite home CI on the draft PR; worktree
     `.claude/worktrees/<branch>` with setup `npm ci && npm ci --prefix examples/showcase` (M14); CI
     watch `ci-green <sha> --pr <n> --wait`, re-issued on 75, as a background Bash task (M7); local
-    `TIER_GATES.full` and `npm run check:close` only on `ci-green` exit 3 (PG-16); the protected
-    paths still wait for CI green on their own commit before the next task; `auth-data` paths
-    (auth, signing, sessions, D1, the commit path); the four domain reviewers' globs plus
-    `go-conventions` for `tool/**`; the close checklist keeps the live admin smoke on `auth-data`,
+    `TIER_GATES.full` and `npm run check:close` only on `ci-green` exit 3 (PG-16); no task waits for
+    CI before the next one (the 2026-10-09 protected-path wait has no catch record, and a red still
+    stops the line, spec Execution item 4); `auth-data` globs `src/lib/{auth,auth-channel,auth-crypto,
+    auth-store,github}/**`, `src/lib/sveltekit/{csrf*,auth-*,commit-log}.ts`,
+    `src/lib/admin/{csrf-context.ts,CsrfField.svelte}`, `migrations*/**`,
+    `examples/showcase/migrations*/**`, `templates/*/migrations*/**`, `**/hooks.server.ts`,
+    `**/preview/[token]/**`, `**/members/login/**`, `**/admin/signups/**`, `tool/internal/secrets/**`,
+    `packages/create-cairn-site/src/{github,cloudflare}/**`, `wrangler.*`; the four domain reviewers'
+    globs plus `go-conventions` for `tool/**`; the close checklist keeps the live admin smoke on `auth-data`,
     the documentation dimension, the CHANGELOG and facts rules, the release hand-off to
     `cairn-release`, and drops HISTORY entries, post-mortems, and the simplifier. PG-9: say whether
     cairn's gate scopes gitleaks to the change set and, if so, add the branch-history scan.
@@ -444,8 +504,13 @@ repo, the merge is live, and both probes pass.
     touches, PG-4), full-suite home (aksailingclub-org: CI on PR, watched with `gh pr checks <n>
     --watch --fail-fast`; the other four: one local `npm run check && npm test && npm run build` at
     the close, since they have no PR test CI, ruling 11), worktree `~/Projects/.worktrees/<repo>-<branch>`
-    with setup `npm ci`; plan and spec paths read from each site's `CLAUDE.md` or STATUS (PS-09);
-    the cairn-docs editing rules that the current skill carries stay, shortened.
+    with setup `npm ci`, and `auth-data` globs: every site `src/hooks.server.ts`,
+    `src/routes/admin/**`, `wrangler.*`; aksailingclub-org adds `src/member-auth/**`,
+    `src/member-signup/**`, `src/admin-club/**`, `migrations/**`, `data/membershipworks/**` (member
+    PII); xcathletes-org adds `src/lib/server/{auth,db}/**`, `src/routes/team/{login,tokens}/**`,
+    `migrations*/**`; cairn-pub adds `migrations/**`. Plan and spec paths are read from each site's
+    `CLAUDE.md` or STATUS (PS-09); the cairn-docs editing rules that the current skill carries stay,
+    shortened.
     `site-pass/plan-template.md` is deleted: the plan's task fields live in `pass-core` alone.
   - A new project skill for the workstation repo, `.claude/skills/dotfiles-pass/SKILL.md` at the
     repo root (tracked; not a stow package): gate and fast lane `CAIRN_GATE_LANE=light cairn-run-gate
@@ -453,8 +518,10 @@ repo, the merge is live, and both probes pass.
     dotfiles has no PR test CI (ruling 11); worktree `~/Projects/.worktrees/dotfiles-<branch>`, no
     setup; no CI watch; risk map `runner` for `claude/.claude/{skills,agents,workflows}/**`,
     `claude/.claude/settings.json`, `bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-clock-stop}`,
-    `scripts/**`, `tests/**`; `auth-data` for `secrets/**`, `scripts/secrets/**`, and the
-    `bin/.local/bin/` secret and sudo helpers (list them by name after `ls`); `ordinary` otherwise;
+    `scripts/**`, `tests/**`; `auth-data` for `secrets/**`, `scripts/secrets/**`, `bash/.bashrc`
+    (it sources the secrets), and `bin/.local/bin/{claude-block-op,claude-secret-guard,
+    claude-tierguard,claude-askpass,claude-sudo-setup,claude-sudo-clear,secret-receive,
+    fastmail-password,fastmail-dav-password}`; `ordinary` otherwise;
     checklist globs `*.py` to `python-conventions`, `*.go` to `go-conventions`, `*.{js,mjs,ts}` to
     `ts-conventions`.
   - `.gitignore` gains `.claude/worktrees/`, so pair-subagent worktrees under the main checkout stay
@@ -467,10 +534,12 @@ repo, the merge is live, and both probes pass.
 - **Acceptance.** For each of the three adapter files, `grep -c -E '^\*\*(Gate|Fast lane|Full-suite
   home|Worktree setup|CI watch|Risk-class path map|Checklist globs|Close checklist)\*\*'` prints 8;
   `site-pass`'s table has five site rows; `test ! -e claude/.claude/skills/site-pass/plan-template.md`;
-  `grep -qx '.claude/worktrees/' .gitignore`; each adapter is under 120 lines (`wc -l`). The dotfiles
-  gate is green.
-- **Test.** The gate's reference and retired-phrase checks.
-- **Clock.** 60.
+  `grep -qx '.claude/worktrees/' .gitignore`; each adapter is under 120 lines (`wc -l`); every
+  `auth-data` glob, braces expanded, matches at least one tracked file in its repo (`git -C <repo>
+  ls-files -- '<glob>'` is non-empty; all matched on 2026-10-10); `grep -c 'wait for CI green' claude/.claude/skills/cairn-pass/SKILL.md`
+  prints 0. The dotfiles gate is green.
+- **Test.** The gate's reference and retired-phrase checks, and the glob check above.
+- **Clock.** 70.
 
 ### S1-T7. Rewrite `spec-plan-review`
 
@@ -517,7 +586,8 @@ repo, the merge is live, and both probes pass.
 - **Risk.** `runner`.
 - **Audit inputs.** AW-04, AW-05, AW-18, AW-19, AW-20, AW-21, AW-23, the section 4 rows named above.
 - **Acceptance.** `grep -c -i -E 'conductor|Report format|exit 75'` over the four files prints 0 per
-  file; `grep -c -E 'whole-branch'` on `diff-reviewer.md` prints at least 1; `grep -q "track's drafting
+  file; `grep -c -E 'whole-branch'` on `diff-reviewer.md` prints at least 1, and `grep -q 'auth-data'`
+  and `grep -qi 'coverage gap'` both succeed on it; `grep -q "track's drafting
   brief"` succeeds on both implementers and `grep -q 'check:docs-gate -- --page'` on
   `site-implementer.md`; `grep -E '^effort:'` prints `medium` for both implementers. The dotfiles gate
   is green.
@@ -560,7 +630,9 @@ repo, the merge is live, and both probes pass.
   `pass-gate-economy.md` are deleted. `unattended-work-guards.md` keeps UG-1 to UG-9 (retargeted as
   their rows say) and gains "Shared gate lanes" (PG-13, PG-14's lane rule, PG-17).
   `claude-tooling.md` gains "Model defaults" (ME-9, ME-10's `/effort` fact) and the by-name workflow
-  procedure (PG-12) in its "Workflows" row or a short section, and its lines 50-55 seat paragraph
+  procedure (PG-12) in its "Workflows" row or a short section, plus one line that
+  `worktree.baseRef: "head"` applies in every repo, so subagent and `--worktree` branches start from
+  the local `HEAD` (M4), and its lines 50-55 seat paragraph
   loses the deleted runners. `fable-post-cutoff-system.md` gains "Pricing and allowance" (ME-13) and
   its note at line 3-5 no longer points at `model-economy.md` (DC-06).
 - **Files.** `claude/.claude/docs/model-economy.md` (deleted), `claude/.claude/docs/pass-gate-economy.md`
@@ -609,7 +681,9 @@ repo, the merge is live, and both probes pass.
   (comment and prompt wording only, no seat change, so step 4 inherits clean text),
   `skills/cairn-release/SKILL.md:79-100,165` (its HISTORY yield record moves to the PR body, ruling 8),
   `skills/log-project/SKILL.md` (a shipped item leaves ROADMAP; PS-11's HISTORY close is superseded),
-  `bin/.local/bin/cairn-run-gate`, and `ROADMAP.md:17,47,52`. Each
+  `bin/.local/bin/cairn-run-gate`, and `ROADMAP.md:17,47,52`. `skills/go-ship/SKILL.md:28-35` keeps its
+  simplifier step: the skill is user-invoked (`disable-model-invocation: true`), which is the
+  on-request use the spec keeps. Each
   superseded phrase joins `claude/.claude/tooling/retired-phrases.txt` with a comment naming the
   spec, at least: `pass-execute`, `model-economy.md`, `pass-gate-economy.md`, `token ceiling`,
   `checkpoint interval`, `thin conductor`, `code-simplifier runs once per pass`, `Pass class:`, and
@@ -625,17 +699,22 @@ repo, the merge is live, and both probes pass.
 
   ```bash
   grep -rIn -i -E 'pass-execute|model-economy|pass-gate-economy|token ceiling|checkpoint interval|thin conductor|segment boundar|reducedGate|batchedNotes|implementer-review-gate|per-task chain|post-mortem to the plan|HISTORY entry' \
-    claude/.claude bin/.local/bin scripts tests ROADMAP.md README.md \
+    claude/.claude bin/.local/bin scripts tests ROADMAP.md README.md .claude/skills \
     --exclude-dir=record --exclude-dir=synced --exclude-dir=research --exclude=retired-phrases.txt \
     | grep -v retired-ok
-  grep -rIn -i -w 'conductor' claude/.claude bin/.local/bin scripts tests ROADMAP.md README.md \
+  grep -rIn -i -w 'conductor' claude/.claude bin/.local/bin scripts tests ROADMAP.md README.md .claude/skills \
     --exclude-dir=record --exclude-dir=synced --exclude-dir=research --exclude-dir=tellgrader \
     --exclude=retired-phrases.txt | grep -v retired-ok
+  grep -rIl -i 'code-simplifier' claude/.claude/skills claude/.claude/agents claude/.claude/workflows \
+    claude/.claude/CLAUDE.md .claude/skills --exclude-dir=synced | grep -v -x 'claude/.claude/skills/go-ship/SKILL.md'
+  grep -n -i 'HISTORY' claude/.claude/skills/cairn-release/SKILL.md | grep -v retired-ok
   ```
 
   At planning time the first grep hit 17 files and the second 20, every one a file this step
   rewrites, deletes, or names above (`tellgrader` is excluded because its Go test fixtures use the
-  word as sample prose).
+  word as sample prose). The new `.claude/skills` tree sits outside the gate's own scan
+  (`scripts/check-claude-refs.py` reads only `claude/.claude`), so these greps are its only
+  retired-phrase check; that gap is accepted.
 - **Test.** The gate's retired-phrase and dead-reference checks.
 - **Clock.** 60.
 
@@ -651,107 +730,130 @@ repo, the merge is live, and both probes pass.
      re-derives each task's risk class from the adapter's path map.
   3. One batched fix chain over its findings, then the gate again. A second review only on a blocker.
   4. `docs/STATUS.md` on the branch: present tense, 60 lines or fewer; the current state names the
-     cutover's step 1 as PR-ready; the next action is session 1b's launch (this plan, "Pre-launch for
-     1b"); the infra-sweep block stays; the open item about `cairn-run-gate` flags is removed (fixed
-     in S1-T3). `docs/HISTORY.md` gains one top line saying it is frozen as of 2026-10-10 (ruling 8).
-     `ROADMAP.md` gets no new entry here (S1-T17 files ruling 11).
-  5. Push `lean-cutover`, then `gh pr create --base main --head lean-cutover --body-file <file>` (M8)
-     with the Conventions' PR body, including S1-T1's table and the inventory placements. Not a
-     draft: dotfiles has no CI to shadow.
+     cutover's step 1 as PR-ready; the next action is Geoff's merge block (this plan, "Merge block");
+     S1-T1's table moves to the PR body; the infra-sweep block stays; the open item about
+     `cairn-run-gate` flags is removed (fixed in S1-T3). `docs/HISTORY.md` gains one top line saying
+     it is frozen as of 2026-10-10 (ruling 8). `ROADMAP.md` gets no new entry here (S1-T15 files
+     ruling 11 after the merge).
+  5. Push `lean-cutover`, then `gh pr create -R glw907/workstation --base main --head lean-cutover
+     --body-file <file>` (M8) with the Conventions' PR body, including S1-T1's table, the inventory
+     placements, and a `Head: <sha>` line naming the pushed head. Not a draft: dotfiles has no CI to
+     shadow.
   6. `notify-send -u normal "lean cutover: step 1 PR ready"` and end.
 - **Files.** `docs/STATUS.md`, `docs/HISTORY.md` (one line), and the fix chain's files.
 - **Risk.** `runner` (the pass's highest).
 - **Acceptance.** The gate is green on the pushed head (`gate exit: 0` from `cairn-run-gate`);
   `gh pr view lean-cutover --json state,isDraft` shows `OPEN` and `false`; the PR body has the review
-  verdict and the score section; `wc -l < docs/STATUS.md` prints 60 or less.
+  verdict, the score section, and the `Head:` line; `wc -l < docs/STATUS.md` prints 60 or less.
 - **Test.** The gate.
 - **Clock.** 75.
 
-### Pre-launch for 1b (Geoff, after reading the PR)
+### Merge block (Geoff, after reading the PR)
 
-Launching 1b is Geoff's merge go (ruling 4). In a terminal:
+Geoff's merge is his touchpoint (ruling 4, spec Lifecycle step 6). He runs these in a terminal, with
+no Claude session open anywhere, since a pull into the main checkout reaches every running session's
+settings and hooks at once (M16):
 
 ```bash
-cd ~/.dotfiles
+claude agents --json; pgrep -a -x claude   # both must list nothing
+git -C ~/.dotfiles fetch origin
+git -C ~/.dotfiles status -sb               # must read "## main...origin/main" alone, no file lines
+gh pr merge lean-cutover -R glw907/workstation --merge --match-head-commit <the PR body's Head sha>
+cd ~/.dotfiles && git pull --ff-only && stow -R bin && command -v claude-clock-stop
 claude --model sonnet --effort medium --name lean-step1b "<launch prompt below>"
 ```
 
+The pull, the restow, and `command -v` share one line, so the merged settings never name a hook
+whose link is missing (M10). Session 1b starts after the pull, so it loads the merged `CLAUDE.md`,
+skills, and settings (M16), and one session covers the tag, the probes, and the filing.
+
 **Launch prompt (1b):**
 
-> You are session 1b of the lean pass cutover. Geoff has read PR `lean-cutover` in
-> `glw907/workstation` and this launch is his go to merge it. Read
-> `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md` (Conventions, Sources, and S1-T14) and
-> the spec beside it; the spec still overrides the loaded pass sections until your merge lands.
-> Execute S1-T14 only. On success, tell Geoff to close this session and start session 1c from the
-> plan's "Pre-launch for 1c", since 1c must load the merged settings and skills fresh. On any failed
-> check, stop before merging and say which.
+> You are session 1b of the lean pass cutover. Geoff merged PR `lean-cutover` into `main` of
+> `glw907/workstation` and pulled it, so your loaded global `CLAUDE.md`, `pass-core`, and settings
+> are the merged ones. Work in `~/.dotfiles` on `main`. Read
+> `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md` (Conventions, Sources, S1-T14 to S1-T18,
+> and "Steps 2 to 4") and the spec beside it. Execute S1-T14 to S1-T18 in order. You may push the
+> tag `pre-lean-process` in S1-T14 and push `main` in S1-T18, both to `glw907/workstation`. If a
+> check or probe fails, or the clock-stop hook misfires (a stop line with no clock file, or a hook
+> error that names `claude-clock-stop`), stop: write the failure and one question into
+> `docs/STATUS.md`, run `notify-send -u normal "lean cutover: 1b stopped"`, and wait. Never revert,
+> roll back, or edit settings on your own; the remedy is Geoff's call. At S1-T18's end, notify Geoff
+> that steps 2 to 4 are ready to launch, and end.
 
-### S1-T14. Tag the merge parent, merge, go live
+### S1-T14. Verify the merge and tag its parent
 
-- **Outcome.** The one-executor check of S1-T1 re-run across every repo is clear (the merge swaps
-  the instruction surface of every live session, M10). `git -C ~/.dotfiles fetch origin`; the local
-  `main` equals `origin/main`; the PR's base is that commit. `git tag pre-lean-process <origin/main>`
-  and `git push origin pre-lean-process`. `gh pr merge lean-cutover --merge --match-head-commit
-  <head sha>` (M8). Then, in one Bash command so no tool call runs between them: `git -C ~/.dotfiles
-  pull --ff-only && cd ~/.dotfiles && stow -R bin && command -v claude-clock-stop` (M10; settings
-  name the hook by its PATH name, so the link must exist before the next tool call). Then
-  `claude-tooling-sync verify` and `bash scripts/check.sh` in the main checkout.
-- **Files.** None authored (the merge commit only).
+- **Outcome.** The merge is one merge commit on the frozen `main`: `git merge-base HEAD^1 HEAD^2`
+  equals `HEAD^1` (the branch was cut from the merge parent, so `main` did not move) and
+  `git rev-list --count --first-parent HEAD^1..HEAD` prints 1. Then `git tag pre-lean-process
+  HEAD^1 && git push origin pre-lean-process`, so the merge commit's parent carries the tag (spec
+  Rollout step 1). `readlink -f ~/.local/bin/claude-clock-stop` resolves into
+  `~/.dotfiles/bin/.local/bin/`; `claude-tooling-sync verify` and `CAIRN_GATE_LANE=light
+  cairn-run-gate 'bash scripts/check.sh'` exit 0 in the main checkout.
+- **Files.** None authored (the tag only).
 - **Risk.** `runner`, `live-account`.
-- **Acceptance.** `git -C ~/.dotfiles rev-parse HEAD^1` equals `git -C ~/.dotfiles rev-parse
-  pre-lean-process`; `git -C ~/.dotfiles rev-list --count pre-lean-process..HEAD --first-parent`
-  prints 1; `readlink ~/.local/bin/claude-clock-stop` resolves into `~/.dotfiles/bin/.local/bin/`;
-  `claude-tooling-sync verify` and `bash scripts/check.sh` exit 0.
-- **Rollback.** `git -C ~/.dotfiles revert -m 1 HEAD && git -C ~/.dotfiles push origin main` restores
-  the `pre-lean-process` tree; then `stow -R bin`.
+- **Acceptance.** The two merge checks above; `git rev-parse pre-lean-process` equals `git rev-parse
+  HEAD^1`; `git ls-remote origin refs/tags/pre-lean-process` prints that sha; the readlink, verify,
+  and gate results above.
+- **Rollback (Geoff's call, never a session's).** The smaller remedy for a clock-stop misfire is to
+  delete the one `claude-clock-stop` PostToolUse entry from `claude/.claude/settings.json`. The full
+  rollback is `git -C ~/.dotfiles revert -m 1 <merge sha> && git -C ~/.dotfiles push origin main &&
+  cd ~/.dotfiles && stow -R bin`, with the merge sha that S1-T18 records; `stow -R` prunes the link to
+  the deleted `claude-clock-stop` (risk review, probed with GNU Stow 2.4.1). Then clear the gate state
+  the new `cairn-run-gate` persisted, keeping the lock files, since the old script reprints a stored
+  status whenever a `pidfile` exists (`cairn-run-gate:240`): list `find /tmp/cairn-gate-$(id -u)
+  -mindepth 1 -maxdepth 1 -type d` first, then rerun it with `-exec rm -rf {} +`. Restart every
+  Claude session, since `CLAUDE.md` loads only at session start (M16). Re-landing the cutover later
+  takes a revert of the revert.
 - **Test.** The acceptance commands.
-- **Clock.** 20.
+- **Clock.** 15.
 
-### Pre-launch for 1c (Geoff, after closing 1b)
+### S1-T15. File ruling 11's item in dotfiles, unpushed
 
-```bash
-cd ~/.dotfiles
-claude --model sonnet --effort medium --name lean-step1c "<launch prompt below>"
-```
+- **Outcome.** Dotfiles `ROADMAP.md` gains one Planned item: add PR test CI that runs
+  `bash scripts/check.sh` on `pull_request`; until it lands, the full-suite home is the local close
+  gate (ruling 11). It is committed alone on `main`, after the One-executor rule's `diff --quiet`
+  check on `ROADMAP.md`, and stays unpushed until S1-T18, so S1-T16 has a local `HEAD` ahead of
+  `origin/main`. dubplate filed in S1-T2; ecxc-ski, 907-life, xcathletes-org, and cairn-pub file in
+  their step 3 PRs (ruling R-B, see Spec gaps).
+- **Files.** `ROADMAP.md`.
+- **Risk.** `ordinary`.
+- **Acceptance.** `git show --stat HEAD` lists only `ROADMAP.md`; `git rev-list --count
+  origin/main..main` prints 1.
+- **Test.** None.
+- **Clock.** 10.
 
-**Launch prompt (1c):**
-
-> You are session 1c of the lean pass cutover, started after step 1 merged, so the loaded global
-> `CLAUDE.md`, `pass-core`, and settings are the new ones. Read
-> `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md` (Conventions, Sources, S1-T15 to S1-T18,
-> and "Steps 2 to 4: order and concurrency"). Execute S1-T15 to S1-T18 in order in this main
-> checkout, one commit per repo change. If the clock-stop hook misfires (a stop line with no clock
-> file, or a visible hook error on tool calls), apply S1-T14's rollback at once, notify Geoff, and
-> stop. If only the pair probe fails, record it, notify Geoff with one question (run passes serially
-> or fix first), and wait.
-
-### S1-T15. Live pair probe
+### S1-T16. Live pair probe
 
 - **Outcome.** The spec's Execution item 2 shown live with the merged settings. From `~/.dotfiles`,
   dispatch two Agent-tool subagents in one message, each with `isolation: "worktree"` and `model:
-  "sonnet"` (M5). Each one: prints `git rev-parse HEAD` and `git merge-base HEAD <main sha>`; runs
-  `CAIRN_GATE_LANE=light cairn-run-gate 'test -f .claude/skills/dotfiles-pass/SKILL.md && bash -n
-  bin/.local/bin/cairn-run-gate'` in its worktree until `gate exit:`; writes one file
-  `probe/<agent letter>.txt`; commits it; never pushes; returns its branch name and commit. The
-  session then creates a scratch branch `pair-probe` at `main`, merges both branches into it, runs the
-  same light gate on the result, and deletes `pair-probe`, both agent branches, and both worktrees.
+  "sonnet"` (M5). Each one writes every Bash call as `cd <its worktree> && ...` (M16), prints `git
+  rev-parse HEAD` and `git merge-base HEAD <S1-T15 sha>`, runs `CAIRN_GATE_LANE=light cairn-run-gate
+  'test -f .claude/skills/dotfiles-pass/SKILL.md && bash -n bin/.local/bin/cairn-run-gate'` until
+  `gate exit:`, writes one file `probe/<agent letter>.txt`, commits it, never pushes, and returns its
+  branch name and commit. The session then adds a scratch worktree `git worktree add
+  .claude/worktrees/pair-probe -b pair-probe main` (M3), merges both branches there, runs the same
+  light gate, and removes the scratch worktree, `pair-probe`, both agent branches, and both agent
+  worktrees.
 - **Files.** None kept.
 - **Risk.** `runner`.
-- **Acceptance.** Both subagents report a merge base equal to the merge commit (M4: `"head"`); both
-  gates print `gate exit: 0`; the merge into `pair-probe` is conflict-free; afterward `git worktree
+- **Acceptance.** Both subagents report a merge base equal to S1-T15's commit, which differs from
+  `git rev-parse origin/main` (M4: `"head"`; without the setting they would branch from the default
+  branch); both gates print `gate exit: 0`; the scratch merge is conflict-free; afterward `git worktree
   list` and `git branch --list 'pair-probe*' 'worktree-*'` match their state before the probe, and
   `git status --short` is empty.
 - **Test.** The acceptance observations, quoted in STATUS by S1-T18.
 - **Clock.** 25.
 
-### S1-T16. Clock-stop probe
+### S1-T17. Clock-stop probe
 
 - **Outcome.** The spec's Execution item 6 shown live. `git worktree add --detach
-  ~/Projects/.worktrees/dotfiles-clock-probe`; write `pass-task-clock` into `git -C
-  ~/Projects/.worktrees/dotfiles-clock-probe rev-parse --absolute-git-dir` with `task=probe`,
-  `start=` ten minutes ago, `estimate=1`; run one Bash call that `cd`s into the probe worktree (M6:
-  `cwd` follows `cd`) and then one more Bash call there. Then remove the file, run one more call, `cd`
-  back to `~/.dotfiles`, run one more call, and `git worktree remove` the probe.
+  ~/.dotfiles/.claude/worktrees/clock-probe` (inside the session's working directory, so a `cd` there
+  holds, M16; S1-T6's `.gitignore` line covers it); write `pass-task-clock` into `git -C
+  ~/.dotfiles/.claude/worktrees/clock-probe rev-parse --absolute-git-dir` with `task=probe`, `start=`
+  ten minutes ago, `estimate=1`; run one Bash call that `cd`s into the probe worktree (M6: `cwd`
+  follows `cd`) and then one more Bash call there. Then remove the file, run one more call, `cd` back
+  to `~/.dotfiles`, run one more call, and `git worktree remove` the probe.
 - **Files.** None kept.
 - **Risk.** `runner`.
 - **Acceptance.** The session quotes the stop line it received after the call in the probe worktree,
@@ -761,54 +863,40 @@ claude --model sonnet --effort medium --name lean-step1c "<launch prompt below>"
 - **Test.** The acceptance observations.
 - **Clock.** 15.
 
-### S1-T17. File ruling 11's PR test CI items
-
-- **Outcome.** Each named repo's `ROADMAP.md` carries one Planned item: add PR test CI that runs the
-  repo's full suite on `pull_request`, and until it lands the repo's full-suite home is the local
-  close gate (ruling 11). Repos: `~/.dotfiles` (`bash scripts/check.sh`), dubplate
-  (`bash scripts/check.sh`), xcathletes-org, ecxc-ski, 907-life (`npm run check && npm test && npm
-  run build`), and cairn-pub (same). cairn-pub has no `ROADMAP.md`: create it with the `Active`,
-  `Planned`, `Someday` tiers the global ledger rule names, through the `log-project` skill. Re-run the
-  one-executor check for each repo first; commit each `ROADMAP.md` alone on its default branch and
-  push.
-- **Files.** `ROADMAP.md` in each of the six repos (cairn-pub's new).
-- **Risk.** `ordinary`, `live-account`.
-- **Acceptance.** `grep -l -i 'PR test CI' ~/.dotfiles/ROADMAP.md ~/Projects/{dubplate,xcathletes-org,ecxc-ski,907-life,cairn-pub}/ROADMAP.md`
-  lists all six; `git -C <repo> show --stat HEAD` lists only `ROADMAP.md` in each; each push
-  succeeded (`git -C <repo> status -sb` shows no `ahead`).
-- **Test.** The acceptance commands.
-- **Clock.** 30.
-
-### S1-T18. STATUS and the handoff
+### S1-T18. STATUS, push, and the handoff
 
 - **Outcome.** Dotfiles `docs/STATUS.md` on `main`: step 1 merged (merge sha, tag), both probe
-  results quoted, and the next action listing the launches for steps 2 and 3 as a pair, then step 4,
-  pointing at this plan's launch blocks; the next action also says step 5 (pass B) starts only when
-  every step's PR has merged. Commit that file alone and push. Tell Geoff to close the session.
+  results quoted, S1-T14's rollback with the merge sha filled in, and the next action: Geoff launches
+  steps 2, 3, and 4 together from this plan's pre-launch blocks, in tabs named `lean-step2`,
+  `lean-step3`, and `lean-step4` (ruling R-C); step 5 (pass B) starts once steps 1 and 2 have merged
+  (spec Rollout step 5: its branch merges `main` after step 2). Commit that file alone, then push
+  `main`, which carries S1-T15's commit. Notify Geoff and end.
 - **Files.** `~/.dotfiles/docs/STATUS.md`.
 - **Risk.** `ordinary`.
-- **Acceptance.** `git -C ~/.dotfiles show --stat HEAD` lists only `docs/STATUS.md`; `wc -l` prints
-  60 or less; `grep -c 'lean-step2\|lean-step3\|lean-step4'` prints at least 3.
+- **Acceptance.** `git show --stat HEAD` lists only `docs/STATUS.md`; `wc -l` prints 60 or less;
+  `grep -c 'lean-step2\|lean-step3\|lean-step4'` prints at least 3; `git status -sb` shows no
+  `ahead`.
 - **Test.** None.
 - **Clock.** 10.
 
 ## Steps 2 to 4: order and concurrency
 
-Steps 2, 3, and 4 start only after step 1 merges and session 1c finishes, each in a fresh session so
-it loads the rewritten `CLAUDE.md` and skills.
+Steps 2, 3, and 4 launch together after session 1b's S1-T18 (Geoff, ruling R-C). Geoff opens the
+three tabs from the pre-launch blocks below; each is a fresh session, so it loads the merged
+`CLAUDE.md` and skills. Under the interactive launch (M1, M2) no session can open another, so the
+spec's "the planning session launches it" falls to Geoff here (Spec gaps).
 
 - **No shared file forces an order.** Step 2 writes only cairn-cms; step 3 writes only ecxc-ski,
-  907-life, aksailingclub-org, xcathletes-org, and dubplate; step 4 writes only dotfiles
+  907-life, aksailingclub-org, xcathletes-org, cairn-pub, and dubplate; step 4 writes only dotfiles
   (`docs-page-chain.js`, its tests, and that branch's STATUS). Steps 2 and 3 never write dotfiles:
   a lesson whose executing home is a dotfiles file is listed in the PR body as owed (S2-T5, S3-T8).
-  Step 4 never writes cairn-cms. cairn-pub needs no step 3 branch (zero hits at planning time; its
-  ROADMAP lands in S1-T17).
+  Step 4 never writes cairn-cms. cairn-pub's step 3 branch carries only its new `ROADMAP.md`
+  (ruling R-B).
 - **Shared resources.** The machine's heavy gate lock and memory, shared by every session's gates
-  (`cairn-run-gate` serializes heavy gates, PG-13's heads-up rule applies); S2-T4's peak measurement,
-  which needs no other gate running; and Geoff's PR reads (step 3 opens five PRs).
-- **Order.** Ruling 10 runs independent items in pairs by default, so launch steps 2 and 3 together,
-  and launch step 4 when the first of them opens its PR. Steps 2 and 3 go first because step 5 needs
-  step 2 merged and dubplate's rung 14a needs step 3 merged (ruling 12).
+  (`cairn-run-gate` serializes heavy gates; PG-13's heads-up rule applies); S2-T3's peak measurement,
+  which queues on that lock; and Geoff's PR reads (step 3 opens six PRs).
+- **Pre-launch assertion.** Each block below first checks that its repos' default branches are at
+  ahead 0 (ruling R-A) and prints `AHEAD: <repo>` otherwise; Geoff stops on that line.
 
 ## Step 2: cairn-cms
 
@@ -818,11 +906,12 @@ harvest. Clock stop on (each task writes its task-clock file at start, per `pass
 ### Pre-launch for 2
 
 ```bash
+[ "$(git -C ~/Projects/cairn-cms rev-list --count origin/main..main)" = 0 ] || echo "AHEAD: cairn-cms"
 git -C ~/Projects/cairn-cms fetch origin
 git -C ~/Projects/cairn-cms worktree add .claude/worktrees/lean-cutover -b lean-cutover origin/main
 cd ~/Projects/cairn-cms/.claude/worktrees/lean-cutover
 npm ci && npm ci --prefix examples/showcase
-claude --bg --model sonnet --effort medium --name lean-step2 "<launch prompt below>"
+claude --model sonnet --effort medium --name lean-step2 "<launch prompt below>"
 ```
 
 **Launch prompt (2):**
@@ -832,14 +921,18 @@ claude --bg --model sonnet --effort medium --name lean-step2 "<launch prompt bel
 > `lean-cutover`, with setup already run. Load `cairn-pass` (it loads `pass-core`) and follow it. Read
 > `~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover.md` (Conventions, Sources, Audit
 > inputs, "Steps 2 to 4", and Step 2) and the spec beside it. Arm the API-drop wake-up and the
-> lid-switch hold. Execute S2-T1 to S2-T6; S2-T1 and S2-T2 are a pair (two Agent-tool subagents with
-> worktree isolation, after your first commit). Push after each task; the first push opens a draft PR
-> against `main`, and `ci-green <sha> --pr <n> --wait` watches each push as a background Bash task. You
-> have standing approval to commit on `lean-cutover` without asking and to push it; never push `main`,
-> never merge, never write `~/.dotfiles`. At S2-T6's end, mark the PR ready, notify Geoff, and end.
+> lid-switch hold. Execute S2-T1, S2-T2, S2-T3, S2-T5, and S2-T6. S2-T1 and S2-T2 run first, as a
+> pair from the branch head: two Agent-tool subagents with worktree isolation, each told to gate with
+> the string `node scripts/checks/gate-tier.mjs --range <base>..HEAD` prints, since `--fast` does not
+> exist until S2-T3; S2-T2's subagent skips the adapter's setup command, since its acceptance is CI.
+> Push after each task; the first push opens a draft PR against `main` in `glw907/cairn-cms`, and
+> `ci-green <sha> --pr <n> --wait` watches each push as a background Bash task. You may commit on
+> `lean-cutover` and push it to `glw907/cairn-cms`; never push `main`, never merge, never write
+> `~/.dotfiles`. At S2-T6's end, mark the PR ready, notify Geoff, and end.
 
-Gate strings: until S2-T3 lands, the per-task gate is `node scripts/checks/gate-tier.mjs --range
-<base>..HEAD` (today's targeted tier, run through `cairn-run-gate`); from S2-T3 on, the fast lane.
+Gate strings: until S2-T3 lands, the per-task gate is the string `node scripts/checks/gate-tier.mjs
+--range <base>..HEAD` prints (today's targeted tier, run through `cairn-run-gate`); from S2-T3 on, the
+fast lane.
 
 ### S2-T1. cairn `CLAUDE.md` (pair with S2-T2)
 
@@ -867,50 +960,48 @@ Gate strings: until S2-T3 lands, the per-task gate is `node scripts/checks/gate-
   `.github/ci-green.json` still expects it.
 - **Files.** `.github/workflows/e2e.yml`, `examples/showcase/playwright.config.ts` (CI reporter),
   `scripts/ci/retries-notice.mjs` only if it must read merged output.
-- **Risk.** `runner` (a protected path: wait for CI green on this commit before the next task).
+- **Risk.** `runner`. Its acceptance is CI on its own commit; the session goes on to S2-T3 while that
+  CI runs, and a red stops the line.
 - **Acceptance.** On the PR, the `e2e` workflow run for this commit shows one job per shard plus the
   merge job, all `success` (`gh run view <id> --json jobs`); `ci-green <sha> --pr <n> --wait` exits 0.
+  The whole-branch review confirms the `update_snapshots` dispatch path still routes to one
+  unsharded job (no `actionlint` is installed).
 - **Test.** The CI run itself.
 - **Clock.** 75.
 
-### S2-T3. The fast lane
+### S2-T3. The fast lane, measured
 
 - **Outcome.** `scripts/checks/gate-tier.mjs --fast --range <base>..HEAD` prints the spec's Execution
   item 3 legs as one or two lines, each a complete `cairn-run-gate` gate string: line 1 runs the
   non-browser legs (the type check, the unit tests related to the diff, the static checks the diff's
   buckets select, and the docs gate when docs changed) concurrently, failing if any leg fails; line 2,
-  present only when the diff reaches component tests, runs the related component tests alone. Line 1
-  carries no lane prefix until S2-T4 sets one; line 2 is always heavy. It runs no whole node projects
-  and no e2e (CI carries them, spec Execution item 4). Fail closed as today: an empty range or a git
-  failure prints nothing and exits non-zero. The default, `--pin`, and `--protected` modes are
+  present only when the diff reaches component tests, runs the related component tests alone and is
+  always heavy. It runs no whole node projects and no e2e (CI carries them, spec Execution item 4).
+  Fail closed as today: an empty range or a git failure prints nothing and exits non-zero. Any
+  unknown flag exits 2 with nothing on stdout (today `--fast` is silently ignored and the default
+  targeted tier prints, exit 0; probed 2026-10-10). The default, `--pin`, and `--protected` modes are
   unchanged. The header no longer names `pass-execute.js` and documents `--fast` and its lane rule;
   `docs/internal/pass-gate-tiers.md` documents the fast lane.
+  Line 1's lane is then measured: run it for a representative `src/lib` range three times as `flock
+  "${TMPDIR:-/tmp}/cairn-gate-$(id -u)/machine.lock" systemd-run --user --wait -P -d -E PATH="$PATH"
+  bash -c '<line 1>'` (M15; the heavy lock `cairn-run-gate:270` takes, so it queues behind other
+  sessions' heavy gates and runs beside none), and take the largest `Memory peak`. If it fits the
+  light lane's 3G cap (`cairn-run-gate:29-34`), line 1 gains the `CAIRN_GATE_LANE=light` prefix;
+  otherwise it stays heavy. The PR body records the three peaks and that the light lane's 2G
+  `MemoryHigh` throttles above 2G; the header and `pass-gate-tiers.md` record the measurement, date,
+  and range.
 - **Files.** `scripts/checks/gate-tier.mjs`, `scripts/checks/gate-table.json` only if a bucket needs a
   fast-lane field, `src/tests/unit/gate-tier.test.ts`, `docs/internal/pass-gate-tiers.md`.
-- **Risk.** `runner` (protected path).
+- **Risk.** `runner`.
 - **Acceptance.** `npx vitest run src/tests/unit/gate-tier.test.ts` exits 0 with new cases for a
-  docs-only diff, a `src/lib` diff, a component diff, and an empty range; `node
-  scripts/checks/gate-tier.mjs --fast --range origin/main..HEAD` prints one or two lines; `grep -c
-  pass-execute scripts/checks/gate-tier.mjs` prints 0; CI green on the commit.
+  docs-only diff, a `src/lib` diff, a component diff, an empty range, an unknown flag (exit 2, empty
+  stdout), `--fast` output that contains neither `npm run package` nor `check:close`, line 1 exiting
+  non-zero when one of its legs fails, and line 1's prefix matching the measured lane; each line `node
+  scripts/checks/gate-tier.mjs --fast --range origin/main..HEAD` prints, run through `cairn-run-gate`,
+  prints `gate exit: 0`; `grep -c pass-execute scripts/checks/gate-tier.mjs` prints 0; the PR body
+  lists three `Memory peak` values and the chosen lane; CI green on the commit.
 - **Test.** The unit cases above.
-- **Clock.** 90.
-
-### S2-T4. Measure the fast lane's peak and set its lane
-
-- **Outcome.** With no other gate running (`pgrep -af cairn-run-gate` empty, and a heads-up to any
-  live session per PG-13), run line 1 of the fast lane for a representative `src/lib` range three
-  times under `systemd-run --user --wait -P -d -E PATH="$PATH" bash -c '<line 1>'` (M15) and take the
-  largest `Memory peak`. If it fits the light lane's 3G cap (`cairn-run-gate:29-34`), line 1 gains the
-  `CAIRN_GATE_LANE=light` prefix; otherwise it stays heavy. The light lane's 2G `MemoryHigh` throttles
-  above 2G; the PR body records all three peaks and that note. The header and
-  `docs/internal/pass-gate-tiers.md` record the measurement, date, and range.
-- **Files.** `scripts/checks/gate-tier.mjs`, `src/tests/unit/gate-tier.test.ts`,
-  `docs/internal/pass-gate-tiers.md`.
-- **Risk.** `runner` (protected path).
-- **Acceptance.** The PR body lists three `Memory peak` values and the chosen lane; a unit case asserts
-  line 1's prefix matches that choice; CI green on the commit.
-- **Test.** The unit case.
-- **Clock.** 40.
+- **Clock.** 135.
 
 ### S2-T5. Harvest HISTORY and sweep cairn's executing homes
 
@@ -924,7 +1015,7 @@ Gate strings: until S2-T3 lands, the per-task gate is `node scripts/checks/gate-
 - **Files.** The homes the harvest writes, `docs/HISTORY.md` (one line), `ROADMAP.md`, `CLAUDE.md` only
   through pointers, `docs/internal/durable-gotchas.md`, `docs/internal/pass-gate-tiers.md`.
 - **Risk.** `ordinary`.
-- **Acceptance.** The PR table has one row per bullet and states the count; `git diff origin/main --
+- **Acceptance.** The PR body states the count and carries the harvest report per Conventions; `git diff origin/main --
   docs/HISTORY.md` adds only the frozen line; this prints nothing:
 
   ```bash
@@ -934,7 +1025,7 @@ Gate strings: until S2-T3 lands, the per-task gate is `node scripts/checks/gate-
 
   (At planning time: `CLAUDE.md` 3 hits, `ROADMAP.md` 10, `gate-tier.mjs` 4.)
 - **Test.** The gate's docs checks on the change.
-- **Clock.** 120.
+- **Clock.** 180.
 
 ### S2-T6. Close
 
@@ -943,9 +1034,8 @@ Gate strings: until S2-T3 lands, the per-task gate is `node scripts/checks/gate-
   "opus"`) at whole-branch scope with the checklists `cairn-pass`'s globs name; one batched fix chain;
   `docs/STATUS.md` present tense and 60 lines or fewer, with its "Next action (lean pass process)"
   block corrected (the adapters landed in step 1, not here) and pass B named as rollout step 5,
-  starting once steps 3 and 4 have merged too (`gh pr list -R glw907/<repo> --head lean-cutover
-  --state merged` for each step 3 repo, and `--head docs-chain-audit` for dotfiles); remove the
-  task-clock file; the PR body per Conventions; `gh pr ready`; notify Geoff; end.
+  starting once this PR merges (spec Rollout step 5: its branch merges `main` after step 2); remove
+  the task-clock file; the PR body per Conventions; `gh pr ready`; notify Geoff; end.
 - **Files.** `docs/STATUS.md` and the fix chain's files.
 - **Risk.** `runner`.
 - **Acceptance.** `ci-green <head> --pr <n> --wait` exits 0; `gh pr view --json isDraft` shows
@@ -954,14 +1044,24 @@ Gate strings: until S2-T3 lands, the per-task gate is `node scripts/checks/gate-
 - **Test.** CI.
 - **Clock.** 60.
 
-## Step 3: sites and dubplate
+## Step 3: sites, cairn-pub, and dubplate
 
-The spec's Rollout step 3. One session, launched in `~/Projects`, which is not a git repository, so
-it edits in place (M2); its edits land in the five linked worktrees created before launch. Its pairs
-are cross-repo: two Agent-tool subagents dispatched together, each confined to one repo's linked
-worktree, which already isolates it (M2: an edit "inside a linked git worktree" skips the move). They
-commit on their repo's `lean-cutover` branch and never push; the session runs that repo's fast lane
-and pushes. Clock stop on.
+The spec's Rollout step 3, plus the ROADMAP filings for ecxc-ski, 907-life, xcathletes-org, and
+cairn-pub (ruling R-B). One session, started in `~/Projects`, edits the six linked worktrees created
+before launch. Every worktree sits under `~/Projects`, so a `cd` into one holds (M16).
+
+- **Pairs.** Two Agent-tool subagents dispatched together, each confined to one repo's worktree,
+  with no `isolation` parameter: the disjoint repos isolate them. Each writes every Bash call as
+  `cd <its worktree> && ...`, since a subagent's cwd resets between calls (M16). They commit on their
+  repo's `lean-cutover` branch and never push; the session then pushes.
+- **Clock stop.** At each task start the session `cd`s into that task's worktree and writes the
+  task-clock file in its `git rev-parse --git-dir`; for a pair, it writes one file, with the longer
+  estimate, in the worktree of the pair's first task and stays there. The stop cannot fire while the session waits on a pair.
+- **Gates.** A task runs its repo's fast lane only when its diff touches a file outside `*.md` and
+  `.claude/**` (`svelte-check` reads neither; S3-T9 runs each full-suite home once). dubplate's scoped
+  gate is `bash scripts/check.sh --scope-changed` with no `--base`: on a branch it measures from the
+  merge base with `master` (`scripts/check.sh:300-302`), and a `--base` other than a full 40-hex id
+  silently runs the full form (`:142-144`).
 
 The step 3 grep list (the spec's "named grep list per repo"), run from each worktree over that repo's
 executing homes (`CLAUDE.md`, `README.md`, `ROADMAP.md`, `docs/STATUS.md`, every file under `.claude/`
@@ -983,15 +1083,17 @@ aksailingclub-org `docs/page-review-protocol.md` 1, `ROADMAP.md` 5; xcathletes-o
 ### Pre-launch for 3
 
 ```bash
-for r in ecxc-ski 907-life aksailingclub-org xcathletes-org; do
+for r in ecxc-ski 907-life aksailingclub-org xcathletes-org cairn-pub; do
+  [ "$(git -C ~/Projects/$r rev-list --count origin/main..main)" = 0 ] || echo "AHEAD: $r"
   git -C ~/Projects/$r fetch origin
   git -C ~/Projects/$r worktree add ~/Projects/.worktrees/$r-lean-cutover -b lean-cutover origin/main
   (cd ~/Projects/.worktrees/$r-lean-cutover && npm ci)
 done
+[ "$(git -C ~/Projects/dubplate rev-list --count origin/master..master)" = 0 ] || echo "AHEAD: dubplate"
 git -C ~/Projects/dubplate fetch origin
 git -C ~/Projects/dubplate worktree add ~/Projects/.worktrees/dubplate-lean-cutover -b lean-cutover origin/master
 cd ~/Projects
-claude --bg --model sonnet --effort medium --name lean-step3 "<launch prompt below>"
+claude --model sonnet --effort medium --name lean-step3 "<launch prompt below>"
 ```
 
 dubplate has no adapter until S3-T7, so its setup is discovered in S3-T1. Its step 3 changes are
@@ -1002,28 +1104,33 @@ only to the oracle legs).
 
 > You are executing rollout step 3 of the lean pass cutover, a `runner`-class pass with the
 > `live-account` flag. You run from `~/Projects`; your checkouts are the linked worktrees
-> `~/Projects/.worktrees/{ecxc-ski,907-life,aksailingclub-org,xcathletes-org,dubplate}-lean-cutover`,
+> `~/Projects/.worktrees/{ecxc-ski,907-life,aksailingclub-org,xcathletes-org,cairn-pub,dubplate}-lean-cutover`,
 > each on branch `lean-cutover`. Load `pass-core` and `site-pass`. Read
 > `~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover.md` (Conventions, Sources, Audit
 > inputs, "Steps 2 to 4", and Step 3) and the spec beside it. Arm the API-drop wake-up and the
-> lid-switch hold. Execute S3-T1 to S3-T9; the plan marks three cross-repo pairs. You have standing
-> approval to commit on each repo's `lean-cutover` branch without asking and to push those branches;
-> never push a default branch, never merge, never write `~/.dotfiles` or cairn-cms. At S3-T9's end,
-> notify Geoff with the five PR links and end.
+> lid-switch hold. Execute S3-T1 to S3-T9; the plan marks three cross-repo pairs. At each task start,
+> `cd` into its worktree and write the task-clock file there. You may commit on each repo's
+> `lean-cutover` branch and push it to its own remote: `glw907/ecxc-ski`, `glw907/907-life`,
+> `glw907/aksailingclub-org`, `glw907/xcathletes-org`, `glw907/cairn-pub`, and `glw907/dubplate`, and
+> open one PR in each. Never push a default branch, never merge, never write `~/.dotfiles` or
+> cairn-cms. At S3-T9's end, notify Geoff with the six PR links and end.
 
-### S3-T1. Baseline the five worktrees
+### S3-T1. Baseline dubplate, file cairn-pub's ROADMAP
 
-- **Outcome.** Each worktree is on `lean-cutover` at its remote default branch. Each site's fast lane
-  (`npm run check`) passes through `cairn-run-gate`. dubplate's gate legs for a docs-only change are
-  known: `bash scripts/check.sh --scope-changed --base origin/master --dry-run` in its worktree, and any
-  setup that dry run says it needs is run and recorded for S3-T7. The step 3 grep's counts per repo
-  are recorded for the PR bodies.
-- **Files.** None (no commit).
+- **Outcome.** dubplate's gate legs for a docs-only change are known: `bash scripts/check.sh
+  --scope-changed --dry-run` in its worktree, and any setup that dry run says it needs is run and
+  recorded for S3-T7. The step 3 grep's counts per repo are recorded for the PR bodies. cairn-pub's
+  worktree gains `ROADMAP.md`, created through the `log-project` skill with the `Active`, `Planned`,
+  and `Someday` tiers and one Planned item: add PR test CI that runs `npm run check && npm test &&
+  npm run build` on `pull_request`; until it lands, the full-suite home is the local close gate
+  (ruling 11).
+- **Files.** cairn-pub `ROADMAP.md` (new), one commit on its `lean-cutover`.
 - **Risk.** `ordinary`.
-- **Acceptance.** Four `gate exit: 0` results (one per site); dubplate's dry-run output recorded; a
-  count table for five repos in the session's notes.
+- **Acceptance.** dubplate's dry-run output and a count table for six repos in the session's notes;
+  `git -C ~/Projects/.worktrees/cairn-pub-lean-cutover show --stat HEAD` lists only `ROADMAP.md`, which
+  carries the three tiers and the item.
 - **Test.** None.
-- **Clock.** 25.
+- **Clock.** 20.
 
 ### S3-T2. ecxc-ski (pair P1 with S3-T3)
 
@@ -1031,14 +1138,17 @@ only to the oracle legs).
   `.claude/rules/development-workflow.md` no longer teach the retired per-commit or per-task machinery
   (spec step 3); `ship` either points at `site-pass` or is deleted if it adds nothing over it.
   `docs/STATUS.md` (173 lines) is present tense and 60 lines or fewer, its pass history dropped since
-  git holds it (DC-02 under ruling 8). The audit ids are folded or recorded.
+  git holds it (DC-02 under ruling 8). The audit ids are folded or recorded. `ROADMAP.md` gains
+  ruling 11's Planned item: add PR test CI that runs `npm run check && npm test && npm run build` on
+  `pull_request`; until it lands, the full-suite home is the local close gate (ruling R-B).
 - **Files.** `.claude/skills/ship/SKILL.md`, `.claude/rules/development-workflow.md`, `CLAUDE.md`,
-  `docs/STATUS.md`, and the stub DC-17 names if present.
+  `docs/STATUS.md`, `ROADMAP.md`, and the stub DC-17 names if present.
 - **Risk.** `runner` (a skill).
 - **Audit inputs.** DC-02, DC-13, DC-17, DC-22, DC-23 (deferred: its dotfiles half is pass C's).
-- **Acceptance.** The step 3 grep prints nothing; `wc -l < docs/STATUS.md` prints 60 or less; the
-  fast lane is green on the commit.
-- **Test.** The fast lane.
+- **Acceptance.** The step 3 grep prints nothing; `wc -l < docs/STATUS.md` prints 60 or less;
+  `grep -i 'PR test CI' ROADMAP.md` prints the item; the fast lane is green if the step's Gates rule
+  calls for it.
+- **Test.** The fast lane, per the step's Gates rule.
 - **Clock.** 45.
 
 ### S3-T3. 907-life (pair P1 with S3-T2)
@@ -1047,13 +1157,15 @@ only to the oracle legs).
   stops teaching retired machinery. `CLAUDE.md:5`'s over-budget `@`-imports are reduced (DC-02).
   `docs/HISTORY.md`'s one rediscover section is harvested as in S2-T5 (homes inside 907-life; dotfiles
   homes listed as owed) and the file gains the frozen line. The audit ids are folded or recorded.
+  `ROADMAP.md` gains ruling 11's item, worded as in S3-T2 (ruling R-B).
 - **Files.** `.claude/rules/development-workflow.md`, `CLAUDE.md`, `docs/STATUS.md`, `docs/HISTORY.md`
-  (one line), the harvest's homes.
+  (one line), `ROADMAP.md`, the harvest's homes.
 - **Risk.** `ordinary`.
 - **Audit inputs.** DC-02, DC-13, DC-14, DC-17, DC-22.
-- **Acceptance.** The step 3 grep prints nothing; the PR table has one row per harvested bullet; the
-  fast lane is green.
-- **Test.** The fast lane.
+- **Acceptance.** The step 3 grep prints nothing; the PR body carries the harvest report per
+  Conventions; `grep -i 'PR test CI' ROADMAP.md` prints the item; the fast lane is green if the step's
+  Gates rule calls for it.
+- **Test.** The fast lane, per the step's Gates rule.
 - **Clock.** 40.
 
 ### S3-T4. aksailingclub-org (pair P2 with S3-T5)
@@ -1066,10 +1178,11 @@ only to the oracle legs).
   the harvest's homes.
 - **Risk.** `ordinary`.
 - **Audit inputs.** DC-09, DC-15, DC-22.
-- **Acceptance.** `wc -l < CLAUDE.md` prints 200 or less; the step 3 grep prints nothing; the PR table
-  has one row per bullet; the fast lane is green.
-- **Test.** The fast lane.
-- **Clock.** 75.
+- **Acceptance.** `wc -l < CLAUDE.md` prints 200 or less; the step 3 grep prints nothing; the PR body
+  carries the harvest report per Conventions; the fast lane is green if the step's Gates rule calls
+  for it.
+- **Test.** The fast lane, per the step's Gates rule.
+- **Clock.** 70.
 
 ### S3-T5. dubplate sweep (pair P2 with S3-T4)
 
@@ -1081,41 +1194,48 @@ only to the oracle legs).
   Live dubplate rules that are not pass machinery (the lane registry as its executor check, the
   planning-miss rules at `:138`, ranked findings at `:147`, the refused-features list) stay, moved to
   the adapter in S3-T7 where they are pass rules. `CLAUDE.md` (356 lines) at 200 or fewer.
-  `ROADMAP.md` and `docs/roster-walk.md` stop naming retired machinery.
+  `ROADMAP.md` and `docs/roster-walk.md` stop naming retired machinery. `scripts/checks/gate-tier.mjs`,
+  "The pass-execute shim" (its own line 2), is deleted with the runners it served, and `CLAUDE.md:251`
+  stops naming it (the step 3 grep does not scan `scripts/`, so this is named here).
 - **Files.** `CLAUDE.md`, `.claude/agents/dubplate-implementer.md` (deleted),
-  `.claude/instructions/simplifier-brief.md` (deleted), `ROADMAP.md`, `docs/roster-walk.md`.
+  `.claude/instructions/simplifier-brief.md` (deleted), `scripts/checks/gate-tier.mjs` (deleted),
+  `ROADMAP.md`, `docs/roster-walk.md`.
 - **Risk.** `runner` (an agent).
 - **Audit inputs.** The owed `dubplate-implementer` gate-string note (superseded).
 - **Acceptance.** `wc -l < CLAUDE.md` prints 200 or less; `test ! -e .claude/agents/dubplate-implementer.md
-  && test ! -e .claude/instructions/simplifier-brief.md`; the step 3 grep prints nothing; `git status
+  && test ! -e .claude/instructions/simplifier-brief.md && test ! -e scripts/checks/gate-tier.mjs`;
+  `git grep -n gate-tier -- CLAUDE.md` prints nothing; the step 3 grep prints nothing; `git status
   --short .claude/agent-memory` in the worktree is empty; dubplate's scoped gate is green.
-- **Test.** `bash scripts/check.sh --scope-changed --base origin/master` through `cairn-run-gate`.
+- **Test.** `bash scripts/check.sh --scope-changed` through `cairn-run-gate`.
 - **Clock.** 60.
 
 ### S3-T6. xcathletes-org (pair P3 with S3-T7)
 
 - **Outcome.** `CLAUDE.md:95`'s per-task "full gate" wording follows `site-pass` (DC-03); `CLAUDE.md:61`
   describes `docs/HISTORY.md` as a frozen record; the one rediscover section is harvested as in S2-T5,
-  with the frozen line.
-- **Files.** `CLAUDE.md`, `docs/HISTORY.md` (one line), the harvest's homes.
+  with the frozen line. `ROADMAP.md` gains ruling 11's item, worded as in S3-T2 (ruling R-B).
+- **Files.** `CLAUDE.md`, `docs/HISTORY.md` (one line), `ROADMAP.md`, the harvest's homes.
 - **Risk.** `ordinary`.
 - **Audit inputs.** DC-03.
 - **Acceptance.** `grep -n -i 'full gate' CLAUDE.md` shows no per-task full gate; the step 3 grep prints
-  nothing; the fast lane is green.
-- **Test.** The fast lane.
+  nothing; `grep -i 'PR test CI' ROADMAP.md` prints the item; the fast lane is green if the step's
+  Gates rule calls for it.
+- **Test.** The fast lane, per the step's Gates rule.
 - **Clock.** 30.
 
 ### S3-T7. dubplate adapter (pair P3 with S3-T6; after S3-T5)
 
 - **Outcome.** A project skill `.claude/skills/dubplate-pass/SKILL.md` with the eight fields S1-T6
   names, loading `pass-core`: gate `cairn-run-gate 'bash scripts/check.sh'`; fast lane `bash
-  scripts/check.sh --scope-changed --base <base>`; full-suite home one local `bash scripts/check.sh`
+  scripts/check.sh --scope-changed` (no `--base`; see the step's Gates rule); full-suite home one local `bash scripts/check.sh`
   on the close head (no PR CI, ruling 11), plus the `go vet -tags oracle ./cmd/harness/...
   ./internal/harness/...` residue when a lane touches those files; worktree rules (which work may
   leave the main tree, given the gitignored beets venv) and the setup S3-T1 found; no CI watch;
-  `auth-data` for the serve and JWT surface (named paths), `runner` for `scripts/` and `.claude/`,
-  `ordinary` otherwise; checklist globs (`web/**` to `svelte-reviewer` and `daisyui-a11y-reviewer`,
-  the serve and JWT paths to `web-auth-security-reviewer`, `*.go` to `go-conventions`); a close
+  `auth-data` for `internal/auth/**`, `internal/serve/**`, `internal/engine/store/migrations/**`,
+  `cmd/dubplate-server/**`, `web/src/routes/{login,members}/**`, and `systemd/**` (each matched
+  tracked files on 2026-10-10), `runner` for `scripts/` and `.claude/`, `ordinary` otherwise;
+  checklist globs (`web/**` to `svelte-reviewer` and `daisyui-a11y-reviewer`, the `auth-data` paths
+  to `web-auth-security-reviewer`, `*.go` to `go-conventions`); a close
   checklist; PG-9 if its scoped gate scopes gitleaks; the moved dubplate pass rules from S3-T5. Pair
   subagents use the workstation `site-implementer` definition or `general-purpose` with the
   `go-conventions` skill named in the dispatch, as the adapter states.
@@ -1123,42 +1243,44 @@ only to the oracle legs).
 - **Risk.** `runner`.
 - **Acceptance.** `grep -c -E '^\*\*(Gate|Fast lane|Full-suite home|Worktree setup|CI watch|Risk-class
   path map|Checklist globs|Close checklist)\*\*' .claude/skills/dubplate-pass/SKILL.md` prints 8;
-  every path the risk map names exists (`ls`); the scoped gate is green.
+  every `auth-data` glob, braces expanded, matches a tracked file (`git ls-files -- '<glob>'`); the
+  scoped gate is green.
 - **Test.** The scoped gate.
 - **Clock.** 45.
 
 ### S3-T8. dubplate HISTORY harvest
 
 - **Outcome.** Every bullet under a rediscover heading in dubplate's `docs/HISTORY.md` (47 headings,
-  about 198 bullets) gets one disposition in the PR table, as in S2-T5, with homes inside dubplate (a
+  196 bullets) gets one disposition, reported as in S2-T5, with homes inside dubplate (a
   test, `scripts/check.sh`, a script header, the adapter, `CLAUDE.md` pointers, the governing doc) or
   listed as owed to dotfiles. The file gains the frozen line and no other change.
 - **Files.** The homes the harvest writes, `docs/HISTORY.md` (one line).
 - **Risk.** `ordinary`.
-- **Acceptance.** The PR table has one row per bullet and states the count; `git diff origin/master --
-  docs/HISTORY.md` adds only the frozen line; `wc -l < CLAUDE.md` still prints 200 or less; the scoped
-  gate is green.
+- **Acceptance.** The PR body states the count and carries the harvest report per Conventions; `git
+  diff origin/master -- docs/HISTORY.md` adds only the frozen line; `wc -l < CLAUDE.md` still prints
+  200 or less; the scoped gate is green.
 - **Test.** The scoped gate.
-- **Clock.** 120.
+- **Clock.** 180.
 
 ### S3-T9. Close
 
-- **Outcome.** For each of the five repos: its full-suite home green on the head (aksailingclub-org:
+- **Outcome.** For each of the six repos: its full-suite home green on the head (aksailingclub-org:
   open its PR as a draft at its first push, then `gh pr checks <n> --watch --fail-fast` as a background
-  Bash task; ecxc-ski, 907-life, xcathletes-org: `cairn-run-gate 'npm run check && npm test && npm run
-  build'`; dubplate: `cairn-run-gate 'bash scripts/check.sh'`). One whole-branch review by the live
-  `diff-reviewer` (Agent tool, `model: "opus"`) across the five branch diffs, with the checklists each
+  Bash task; ecxc-ski, 907-life, xcathletes-org, cairn-pub: `cairn-run-gate 'npm run check && npm test
+  && npm run build'`; dubplate: `cairn-run-gate 'bash scripts/check.sh'`). One whole-branch review by
+  the live `diff-reviewer` (Agent tool, `model: "opus"`) across the six branch diffs, with the checklists each
   repo's adapter globs name; one batched fix chain. Each repo's `docs/STATUS.md` present tense, 60
   lines or fewer; dubplate's next action: once this PR merges, re-plan rung 14a as a lean task list in
-  a fresh dubplate session (ruling 12). One PR per repo per Conventions, ready for review; remove the
-  task-clock files; notify Geoff with the five links; end.
+  a fresh dubplate session (ruling 12); cairn-pub's STATUS is left as it is (its branch adds only
+  `ROADMAP.md`). One PR per repo per Conventions, ready for review; remove the task-clock files;
+  notify Geoff with the six links; end.
 - **Files.** Five `docs/STATUS.md` files and the fix chain's files.
 - **Risk.** `runner`.
-- **Acceptance.** Five green full-suite results (`gate exit: 0`, or `gh pr checks` exit 0 for
+- **Acceptance.** Six green full-suite results (`gate exit: 0`, or `gh pr checks` exit 0 for
   aksailingclub-org); `gh pr list -R glw907/<repo> --head lean-cutover --json isDraft` shows one
-  non-draft PR in each of the five repos; each STATUS at 60 lines or fewer.
+  non-draft PR in each of the six repos; each touched STATUS at 60 lines or fewer.
 - **Test.** The full-suite homes.
-- **Clock.** 90.
+- **Clock.** 100.
 
 ## Step 4: docs-chain audit
 
@@ -1167,9 +1289,10 @@ The spec's Rollout step 4 under rulings 7 and 14, before docs stage 2b. Clock st
 ### Pre-launch for 4
 
 ```bash
+[ "$(git -C ~/.dotfiles rev-list --count origin/main..main)" = 0 ] || echo "AHEAD: dotfiles"
 git -C ~/.dotfiles worktree add ~/Projects/.worktrees/dotfiles-docs-chain-audit -b docs-chain-audit main
 cd ~/Projects/.worktrees/dotfiles-docs-chain-audit
-claude --bg --model sonnet --effort medium --name lean-step4 "<launch prompt below>"
+claude --model sonnet --effort medium --name lean-step4 "<launch prompt below>"
 ```
 
 **Launch prompt (4):**
@@ -1179,9 +1302,9 @@ claude --bg --model sonnet --effort medium --name lean-step4 "<launch prompt bel
 > `~/Projects/.worktrees/dotfiles-docs-chain-audit` on branch `docs-chain-audit`. Load `dotfiles-pass`
 > (it loads `pass-core`). Read `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md` (Conventions,
 > Sources, "Steps 2 to 4", and Step 4) and the spec beside it. Arm the API-drop wake-up and the
-> lid-switch hold. Execute S4-T1 to S4-T4. You have standing approval to commit on
-> `docs-chain-audit` without asking and to push it; never push `main`, never merge, never write
-> cairn-cms. At S4-T4's end, notify Geoff with the PR link and end.
+> lid-switch hold. Execute S4-T1 to S4-T4. You may commit on `docs-chain-audit` and push it to
+> `glw907/workstation`; never push `main`, never merge, never write cairn-cms. At S4-T4's end,
+> notify Geoff with the PR link and end.
 
 ### S4-T1. Inventory the seats
 
@@ -1249,18 +1372,29 @@ claude --bg --model sonnet --effort medium --name lean-step4 "<launch prompt bel
 
 ## Spec gaps this plan resolves
 
-- **Ruling 11 names cairn-pub's ROADMAP, which does not exist.** S1-T17 creates it through
+- **Ruling 11 names cairn-pub's ROADMAP, which does not exist.** S3-T1 creates it through
   `log-project`.
 - **Ruling 11 needs every repo's adapter to name a full-suite home; the spec names adapters only for
   cairn-cms, the sites, and dubplate.** S1-T6 adds `dotfiles-pass` for the workstation repo.
-- **A `--bg` session started in an existing worktree "still asks before committing" (M2).** The spec
-  relies on that launch for unattended execution. Every launch prompt grants commit and branch-push
-  approval in writing; the first launch (1a) shows whether that suffices, and a session that asks
-  anyway costs one attended event.
-- **Step 1's merge and probes cannot run in the `--bg` build session.** A `--bg` session in the main
-  checkout isolates itself (M2), and the probes need a session started after the merge. Sessions 1b
-  and 1c run interactive in the main checkout.
+- **Departure from spec Rollout step 1 ("Step 1 also files ruling 11's PR test CI items on each named
+  repo's ROADMAP"), by Geoff's ruling R-B.** dotfiles (S1-T15) and dubplate (S1-T2) file in step 1.
+  ecxc-ski, 907-life, xcathletes-org, and cairn-pub file inside their step 3 PRs, because a push to
+  their `main` redeploys production (`deploy.yml` on push for the first three, Workers Builds on
+  `main` for xcathletes-org; risk review F4), so a ROADMAP commit pushed in step 1 would redeploy four
+  sites with no code change. Geoff's merge of each step 3 PR then deploys once, as expected.
+- **Departure from spec Execution item 1 (`claude --bg`, launched by the planning session).** The
+  background-session prompt tells the model to call `EnterWorktree` from any checkout not under
+  `.claude/worktrees/`, moving the work off the pass branch, and to ask before committing in a
+  worktree it did not create (M2). Every executing session therefore runs interactive under auto mode
+  (M1). No session can open an interactive one, so Geoff launches 1a, 1b, and steps 2 to 4 from this
+  plan's blocks; S1-T5 writes the same launch into `pass-core`.
+- **Departure from spec Execution item 2 for step 3's cross-repo pairs.** The two subagents work in
+  different repos' worktrees with no `isolation` parameter, so worktree isolation and the merge step
+  do not apply; the disjoint repos isolate them.
+- **The merge is Geoff's, in a terminal.** The spec's Close has Geoff merge; auto mode also blocks a
+  session from "Merging a pull request no human has approved" (M1). The tag goes on the merge commit's
+  parent after the merge (S1-T14), which is what spec Rollout step 1 asks.
 
 Next action: rollout step 5, engine pass B in cairn-cms, re-planned as a lean task list outside the
-clock once steps 1 to 4 have merged, its branch merging `main` after step 2, its WIP `dbdc4556`
+clock once steps 1 and 2 have merged, its branch merging `main` after step 2, its WIP `dbdc4556`
 re-gated through the fast lane, and Task 2 given the `auth-data` read.
