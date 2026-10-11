@@ -17,23 +17,40 @@ checklist globs, and close checklist, and wins where it disagrees with this skil
 
 Each task takes a risk class from the adapter's path map: `auth-data`, `runner`, or `ordinary`.
 `runner` covers skills, agents, workflows, the gate tools, `.github/workflows`, and `scripts/checks`.
-The design's class is a floor, and a pass takes its highest task's class. A `live-account` flag
-marks a run that can touch a real Cloudflare, GitHub, or npm account.
+Only Geoff's ruling raises a class, stated in the design in one sentence. A pass takes its highest
+task's class. A `live-account` flag marks a run that can touch a real Cloudflare, GitHub, or npm account.
 
 1. **Design.** Opus at `high` brainstorms in chat. Geoff approves a design of a page or less: the
    outcome, files and interfaces touched, what is out of scope, one end-to-end check, and the risk
-   class. If the diff fits in one sentence, skip steps 2 to 4.
-2. **Spec.** An agent writes the approved design at the length precision needs. Every mechanism
-   it states is quoted from source or probed, never recalled.
-3. **Spec review.** `spec-plan-review` runs three Opus lenses in parallel, then a probing fold and
-   one verification read. A finding that changes the approved design returns to Geoff as one
-   batched question; every other finding is folded without him.
+   class. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt carries
+   these two samples, and extras go in "Later", never built:
+   > "Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
+   > Keep solutions simple and focused: - Scope: Don't add features, refactor code, or make
+   > "improvements" beyond what was asked. A bug fix doesn't need surrounding code cleaned up. A
+   > simple feature doesn't need extra configurability. ... - Defensive coding: Don't add error
+   > handling, fallbacks, or validation for scenarios that can't happen. Trust internal code and
+   > framework guarantees. Only validate at system boundaries (user input, external APIs). -
+   > Abstractions: Don't create helpers, utilities, or abstractions for one-time operations. Don't
+   > design for hypothetical future requirements. The right amount of complexity is the minimum
+   > needed for the current task."
+   > (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>)
+   >
+   > "Deliver what was asked, at the scope intended. Make routine judgment calls yourself, and check
+   > in only when different readings of the request would lead to materially different work. If the
+   > request seems mistaken or a better approach exists, say so in a sentence and continue with the
+   > task as asked rather than quietly narrowing, widening, or transforming it. Finish the whole
+   > task, and stop short of actions that are clearly beyond what was asked."
+   > (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>)
+2. **Spec.** An agent writes the approved design at the length precision needs, only if
+   `spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or probed.
+3. **Spec review.** `spec-plan-review` sets spec and plan review depth. A finding that changes
+   the approved design returns to Geoff as one batched question; every other finding is folded
+   without him.
 4. **Plan.** A task list. Each task carries its outcome, files, risk class, acceptance check, test,
    and a clock estimate in minutes, and never implementation code. Independent tasks are marked as
-   pairs. Fold a single-deliverable task into a neighbor. Plan review runs the mechanics lens and a
-   verification read; an `auth-data` or `runner` pass, or one with `live-account`, runs all three
-   lenses. Skip `writing-plans`' code steps and execution-method question. Test-first applies to
-   `auth-data` tasks.
+   pairs. Fold a single-deliverable task into a neighbor. A plan whose task-minutes exceed twice its
+   design's estimate goes back to Geoff with the reason before launch. Skip `writing-plans`' code
+   steps and execution-method question. Test-first applies to `auth-data` tasks.
 5. **Execute.** See "Execute".
 6. **Close.** See "Close". Geoff reads the PR and merges.
 

@@ -24,41 +24,42 @@ prose (Geoff, 2026-09-08). A spec or plan is written in whatever voice serves Cl
 
 ## The sequence
 
-1. Three lenses run in parallel, each a fresh-context Opus agent at effort `medium`. Their names
-   are contract and criteria, mechanics and feasibility, and data integrity and failure risk.
+1. The lenses the depth below names run in parallel, each a fresh-context Opus agent at effort
+   `medium`. Their names are contract and criteria, mechanics and feasibility, and data integrity
+   and failure risk. The mechanics lens is the `plan-reviewer` agent.
 2. One fold agent records a disposition per finding and revises the document.
-3. One verification read checks the fold, and the fold agent applies its findings. Another read
-   runs only when the verification finds a blocker.
+3. A verification read checks the fold, and the fold agent applies its findings, only on an
+   `auth-data` or `live-account` pass. Another read runs only when it finds a blocker.
 4. A finding that changes the approved design returns to Geoff as one batched question. Every
    other finding is folded without him.
 
-**Depth scales with risk.** A spec takes all three lenses. A plan takes the mechanics lens plus a
-verification read by default, and all three lenses when the pass is `auth-data` or `runner`, or
-carries the `live-account` flag (risk classes: `pass-core`).
+**Depth scales with risk.** A design of a page or less needs no separate spec. A plan gets the
+mechanics lens and the fold only. A spec otherwise takes the three lenses and the fold, with no
+verification read: the Opus 5 page says to remove "separate verification steps" and "do not use
+subagents to verify or double-check your own work" (Prompting Claude Opus 5,
+<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>).
+The three lenses and the verification read are kept for `auth-data` and `live-account` passes
+(risk classes: `pass-core`).
 
 ## The lenses
 
 | Lens | Asks |
 | --- | --- |
 | Contract and criteria | Is every promise testable? Does each criterion name its fixture and the reason it would fail? Can any criterion pass vacuously? |
-| Mechanics and feasibility | Does every mechanism behave as stated? Verify empirically (a scratch module, a probe run) or by quoting the docs or source, never from memory. |
+| Mechanics and feasibility | The `plan-reviewer` agent holds this lens prompt and the plan checklist. |
 | Data integrity and failure risk | What happens on a crash, a concurrent process, a partial write, an upgrade, a restore? Can data be lost or silently corrupted? |
 
-On a plan, each lens also checks these items:
+On a plan, every lens also checks the plan checklist in the `plan-reviewer` agent's body.
 
-- The declared risk class and any per-task override fit the change's real risk.
-- Every library or stdlib behavior a task relies on is quoted from the docs or the source.
-- Every state a check can meet (absent, empty, malformed, many bad) names the report it gives.
-- Every privileged field names every channel that may set it.
-- Every proof names the fixture state it needs, so the test cannot pass vacuously.
-- Each task carries a clock estimate, and any single-deliverable task is folded into a neighbor.
-
-Every reviewer dispatch carries the target path and commit, the lens, and the ask: report every gap
-found, ranked by consequence, each with a severity (blocker, major, minor), the location
+Dispatch the mechanics lens as the `plan-reviewer` agent; the dispatching session saves its reply
+as `docs/superpowers/research/<date>-<target>-review-mechanics.md`. Every other reviewer dispatch
+carries the target path and commit, the lens, and the same ask the agent holds: report every gap
+found, ranked by consequence, each with a severity (blocker, major, minor), a tag (`correctness`
+if it affects correctness or a stated requirement, `optional` otherwise), the location
 (`file:line`), the defect, and a proposed fold. Over-ceremony counts as a finding, ranked by its
 cost in clock time and tokens. A finding whose resolution is a product or priority choice is marked
-**OWNER FORK**, with the options and a recommendation; a reviewer never rules a fork. The reviewer
-writes only its output file, `docs/superpowers/research/<date>-<target>-review-<lens>.md`.
+**OWNER FORK**, with the options and a recommendation; a reviewer never rules a fork. Those
+reviewers write only their output file, `docs/superpowers/research/<date>-<target>-review-<lens>.md`.
 
 ## The fold
 
@@ -67,7 +68,9 @@ One fold agent (`claude-opus-5-5`) takes every review file. It loads
 performatively. It writes a fold record with one disposition per finding: folded (where the
 revision carries it), refused (a one-line reason), or owner fork.
 
-- The fold filters. It folds only gaps that affect correctness or the stated requirements, and it
+- The fold filters. It drops every `optional` finding, in the best-practices page's words: "flag
+  only gaps that affect correctness or the stated requirements, and treat the rest as optional"
+  (https://code.claude.com/docs/en/best-practices). It folds the `correctness` findings, and it
   may refuse a finding whose fix costs more than the risk it removes. Convergent findings from
   several lenses fold once, at the root.
 - The fold probes every new mechanism it introduces: it quotes the docs or source, or runs a probe,
@@ -84,7 +87,7 @@ revision carries it), refused (a one-line reason), or owner fork.
 
 ## The verification read
 
-A fresh agent (`claude-opus-5-5`) with no part in the fold reads the revision against the fold
+On an `auth-data` or `live-account` pass, a fresh agent (`claude-opus-5-5`) with no part in the fold reads the revision against the fold
 record and the reviews. It asks whether each blocker and major closed at the cited location,
 whether the fold introduced a contradiction or an order that cannot build, whether any new
 mechanism is quoted or proven, and whether Geoff can rule each fork on the evidence given. It
@@ -104,5 +107,5 @@ Reviewers write only their own file and never commit.
 | Fold accepts every finding | Refusal is a valid disposition; cost against risk, one line |
 | Fold picks an answer to an owner fork | It consolidates and recommends; Geoff rules |
 | Mechanics lens or fold reasons from memory | Scratch module, probe, or a quoted doc line, cited |
-| Skipping the verification read because the fold "looks complete" | The fold is where new unquoted mechanisms appear |
-| Full three-lens set on a small `ordinary` plan | Mechanics lens plus a verification read |
+| Running a verification read on an `ordinary` pass | Only `auth-data` and `live-account` passes take it |
+| Full three-lens set on a plan | Mechanics lens and the fold; three lenses only on `auth-data` or `live-account` |
