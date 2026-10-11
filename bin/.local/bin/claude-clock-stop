@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# claude-clock-stop: Claude Code PostToolUse hook that stops a pass task running past twice its
+# estimate (lean pass process spec, Execution item 6; Geoff's ruling 13).
+#
+# The session writes pass-task-clock in its pass worktree's git dir (outside the work tree, so
+# the gate fingerprint holds) at each task start: three lines, task=<id>, start=<epoch seconds>,
+# estimate=<minutes>. The hook resolves that git dir from the hook input's cwd, which follows a
+# `cd` and is the worktree root after EnterWorktree. Once elapsed time passes twice the
+# estimate, it prints one JSON object whose additionalContext tells the session to write STATUS,
+# notify, and wait. Every other case prints nothing: no file, under the threshold, a malformed
+# file, a non-git cwd, a missing tool. It runs after every tool call, so it never exits non-zero.
+{
+  input=$(cat)
+  cwd=$(jq -r '.cwd // empty' <<<"$input" 2>/dev/null)
+  [ -n "$cwd" ] || exit 0
+  gitdir=$(git -C "$cwd" rev-parse --absolute-git-dir 2>/dev/null) || exit 0
+  file="$gitdir/pass-task-clock"
+  [ -f "$file" ] || exit 0
+  task=$(sed -n 's/^task=//p' "$file" | head -n 1)
+  start=$(sed -n 's/^start=//p' "$file" | head -n 1)
+  estimate=$(sed -n 's/^estimate=//p' "$file" | head -n 1)
+  [ -n "$task" ] || exit 0
+  [[ "$start" =~ ^[0-9]+$ ]] || exit 0
+  [[ "$estimate" =~ ^[0-9]+$ ]] && [ "$estimate" -gt 0 ] || exit 0
+  elapsed=$(( ($(date +%s) - start) / 60 ))
+  [ "$elapsed" -gt $((estimate * 2)) ] || exit 0
+  msg="Clock stop: task $task has run $elapsed minutes against a $estimate-minute estimate. Write STATUS, run \`notify-send -u normal\`, and wait for Geoff (ruling 13)."
+  jq -nc --arg m "$msg" '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $m}}'
+} 2>/dev/null
+exit 0
