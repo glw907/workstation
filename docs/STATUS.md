@@ -18,27 +18,23 @@ artifacts. github.com/glw907/workstation.
 - **Secrets**: age-encrypted in `secrets/values.age`, synced by
   `scripts/secrets/sync.sh`; inventory in `secrets/registry.md`.
 - **Gate**: `scripts/check.sh`.
-- **Lean pass process, step 1 merged** (`998859b`, PR #1; tag `pre-lean-process` at its parent
-  `deed191`, pushed). The rewritten `pass-core`, the three adapters, the trimmed agents, the
-  199-line global `CLAUDE.md`, the `cairn-run-gate` fixes, and the `claude-clock-stop` hook are
-  live. The merge check, `claude-tooling-sync verify`, and
-  the light-lane gate all passed in the main checkout.
-- **Probes, all passed on 2026-10-10.** Pair probe: both `isolation: "worktree"` subagents
-  branched from S1-T15's commit `5532034`, not `origin/main` (`998859b`); both gates printed
-  `gate exit: 0`; the scratch merge was conflict-free and the gate on it exited 0. Clock stop: the
-  call after `cd` into the probe worktree received "Clock stop: task probe has run 10 minutes
-  against a 1-minute estimate"; the calls after removal and back in the main checkout carried
-  none. Launch probe: `claude --bg` printed id `1d6eed4e`, committed `rd-probe.txt` (`ok`, `0`) on
-  `worktree-rd-probe` under `.claude/worktrees/` unattended, pushed nothing, and was cleaned up.
-- **Rollback** (Geoff's call only): the plan's S1-T14 "Rollback" block.
+- **Lean pass process live; rollout steps 1 to 4 merged.** Step 1 is dotfiles #1 (`998859b`;
+  tag `pre-lean-process` at its parent `deed191`; rollback is Geoff's call only, from the plan's
+  S1-T14 block). Step 2 is cairn-cms #112 (merge `aacaa46c`). Step 3 is six PRs: ecxc-ski #1,
+  907-life #1, aksailingclub-org #12, xcathletes-org #1, cairn-pub #1, and dubplate #1. Step 4 is
+  dotfiles #2, the docs-chain audit, which kept all six judged seats. Dotfiles #3 carried step 3's
+  owed dotfiles items. Plan and spec: `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`,
+  `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
+
 ## Immediate next action
 
-Steps 2 and 4 run as background sessions (`claude agents` lists them):
-`lean-step2` is cairn-cms.
-`lean-step4` (docs-chain audit) is PR-ready on `worktree-docs-chain-audit`: all six judged seats
-kept (plan read, page structural read, register editor, fact read, figure verifier, final reader); no cut.
-Geoff pastes step 3 as `lean-step3` from the plan's "Pre-launch for 3" block (ruling R-C).
-Pass B (rollout step 5) starts once steps 1 and 2 have merged. Plan and spec: `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`, `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
+Rollout step 5, engine pass B, runs unattended as background session `engine-pass-b` (id
+`0d52ae78`) in cairn-cms. Its plan is `docs/superpowers/plans/2026-10-10-engine-pass-b-lean.md`
+on cairn-cms branch `engine-pre-2b-b`. It merges its own PR (Geoff's ruling) and notifies at a
+stop or at the merge. While it is live (`claude agents --json`), no other session touches
+cairn-cms, its main checkout, or its worktrees.
+
+In dotfiles, the infra sweep is being re-planned as a lean pass (below).
 
 **Infra sweep after the cutover** (decided 2026-10-10; spec
 `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, audit
