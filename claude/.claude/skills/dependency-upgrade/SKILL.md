@@ -57,8 +57,9 @@ For a design-system package (DaisyUI in the cairn family) the survey also invent
 current component set against the repo's home-grown components and recipes, each with its
 coverage gap and whether a swap is a consumer-visible change.
 
-Record the survey as a dated file under the repo's records directory (cairn family:
-`docs/internal/record/`), since the next sweep starts from it.
+Record the survey as a dated file under the repo's records directory, since the next sweep starts
+from it. In cairn-cms that is `docs/internal/record/`; elsewhere, the directory the repo's CLAUDE.md
+or STATUS names.
 
 ### 3. Rule the refactor decision
 
