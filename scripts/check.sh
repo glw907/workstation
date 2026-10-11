@@ -41,7 +41,6 @@ run "vale-hook test suite" uv run --with pytest --no-project python -m pytest te
 run "vale style fixtures" bash tests/vale/run-fixtures.sh
 run "docs-page-chain derivation test" node tests/docs-page-chain-derivation.test.mjs
 run "docs-page-chain outline test" node tests/docs-page-chain-outline.test.mjs
-run "pass-execute runners test" node tests/pass-execute-runners.test.mjs
 run "ci-green test" node tests/ci-green.test.mjs
 run "cairn-run-gate vanish handling" bash tests/cairn-run-gate.test.sh
 run "claude-clock-stop hook" bash tests/claude-clock-stop.test.sh

@@ -442,23 +442,13 @@ for i in 1 2 3 4 5 6; do
 done
 assert_contains "$out" "gate exit: 0" "defer: the own run finishes"
 
-# --- no runner prompt or implementer file carries a vanished clause: the protocol lives only in
+# --- no implementer file or workflow carries a vanished clause: the protocol lives only in
 # cairn-run-gate's own output now.
 hits=$(grep -rniI "vanish" \
   "$REPO_ROOT/claude/.claude/agents/cairn-implementer.md" \
   "$REPO_ROOT/claude/.claude/agents/site-implementer.md" \
   "$REPO_ROOT/claude/.claude/workflows/docs-page-chain.js" || true)
 [ -z "$hits" ] || { echo "FAIL: a vanished clause remains: $hits"; fail=1; }
-chains_hits=$(grep -n "vanish" "$REPO_ROOT/claude/.claude/workflows/pass-execute.js" \
-  "$REPO_ROOT/claude/.claude/workflows/pass-execute-chains.js" 2>/dev/null || true)
-[ -z "$chains_hits" ] || { echo "FAIL: a vanished clause remains in the runners: $chains_hits"; fail=1; }
-
-# --- neither runner restates the exit-75 protocol (AW-20): both defer to cairn-run-gate's own
-# output for whether to re-issue.
-restated_hits=$(grep -ni -e "exit 75 means" -e "reattaches and waits again" \
-  "$REPO_ROOT/claude/.claude/workflows/pass-execute.js" \
-  "$REPO_ROOT/claude/.claude/workflows/pass-execute-chains.js" 2>/dev/null || true)
-[ -z "$restated_hits" ] || { echo "FAIL: a restated exit-75 clause remains in the runners: $restated_hits"; fail=1; }
 
 [ "$fail" -eq 0 ] && echo "cairn-run-gate: OK" || echo "cairn-run-gate: FAILED"
 exit "$fail"
