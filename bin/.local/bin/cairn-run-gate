@@ -272,6 +272,9 @@ if [ -e "$pidfile" ] && [ -e "$statusfile" ] && [ -e "$state/reported" ]; then
   [ "$keep" = 1 ] || clear_state
 fi
 
+reprinted=0
+[ -e "$pidfile" ] && [ -e "$statusfile" ] && [ -e "$state/reported" ] && reprinted=1
+
 if [ ! -e "$pidfile" ]; then
   find "$gatedir" -mindepth 1 -maxdepth 1 -type d -mtime +7 ! -path "$state" -exec rm -rf {} + 2>/dev/null
   if [ "${RUN_GATE_IF_BUSY:-}" = defer ] && [ "${CAIRN_GATE_LANE:-heavy}" = heavy ] \
@@ -432,6 +435,7 @@ if [ ! -e "$state/reported" ]; then
   [ -s "$state/record-warning" ] && cat "$state/record-warning" >&2
   : >"$state/reported"
 fi
+[ "$reprinted" = 1 ] && echo "NOTE: reprinted from a finished run on this unchanged tree; re-issue with --fresh to rerun it."
 echo "gate exit: $status (log: $log, $(wc -l <"$log") lines)"
 echo "--- last 60 lines ---"
 tail -60 "$log"

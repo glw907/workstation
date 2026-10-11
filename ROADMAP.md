@@ -2,8 +2,8 @@
 
 Strategic initiatives for the workstation repo: work spanning passes, or
 standing decisions other work is measured against. Managed by `/log-project`.
-Current state lives in `docs/STATUS.md`; the per-pass ledger in
-`docs/HISTORY.md`.
+Current state lives in `docs/STATUS.md`; the per-pass ledger
+in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
 
 ## Active
 

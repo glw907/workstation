@@ -29,7 +29,7 @@ green lane, report BLOCKED with the exact failing output instead of committing a
 1. Ask any clarifying question before you start if the task or its boundaries are unclear.
 2. Where the task has a testable contract, write the failing test first on an `auth-data` task and
    confirm it fails for the right reason. Other tasks take a test at the lowest layer that can see
-   the behavior; a `docs` task needs none.
+   the behavior; a docs-only task needs none.
 3. Implement the minimum that satisfies the task. Add no features or files it did not ask for.
 4. Run the fast lane and fix anything red.
 5. Commit only the files the task lists, in imperative mood.

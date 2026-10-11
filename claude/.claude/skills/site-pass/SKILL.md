@@ -64,7 +64,7 @@ rendered pages.
 - List cairn friction the pass met under "Cairn friction" in the PR body, verified against cairn-cms.
   A cairn session files it in cairn-cms's `docs/internal/docs-friction-log.md`. A UI mechanic that
   belongs to the engine follows `~/.claude/docs/engine-ui-mechanics.md`.
-- Commit subject `Pass <n>: <summary>`, specific files only.
+- Commit specific files only, one commit per task with the task id first in the subject.
 
 ## Following cairn-cms docs during the round
 

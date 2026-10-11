@@ -31,7 +31,7 @@ exact failing output instead of committing a red one.
 1. Ask any clarifying question before you start if the task or its boundaries are unclear.
 2. Meet the task's test mandate. An `auth-data` task writes the failing test first and confirms it
    fails for the right reason. Otherwise write the test at the lowest layer that can see the
-   behavior, and extend an existing test before adding a file. A `docs` task needs no test; the
+   behavior, and extend an existing test before adding a file. A docs-only task needs no test; the
    docs gates are the proof.
 3. Implement the minimum that satisfies the task. Add no features or files it did not ask for.
 4. Run the fast lane and fix anything red.

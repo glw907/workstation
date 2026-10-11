@@ -369,6 +369,7 @@ out=$(lean "$gateL1")
 assert_eq "$?" "0" "persist: a repeat call exits with the stored status"
 assert_contains "$out" "gate exit: 0" "persist: a repeat call reprints gate exit"
 assert_not_contains "$out" "gate started" "persist: a repeat call starts no run"
+assert_contains "$out" "re-issue with --fresh" "persist: a repeat call says it was reprinted"
 assert_eq "$(rec_lines "$recL")" "1" "persist: a repeat call adds no exit line"
 
 # A changed tree starts a new run.

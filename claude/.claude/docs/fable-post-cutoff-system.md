@@ -19,7 +19,7 @@ Non-interactive Fable jobs go through the Batch API (async, <24h, usually minute
 - The Opus session submits, polls, folds results back.
 - Shared-prefix caching across jobs in one batch: N verifications against one spec share
   the spec as a cached prefix — write it once, read it cheap.
-- Fits: plan drafts from prepared briefs, review verdicts, triage rankings, post-mortem
+- Fits: plan drafts from prepared briefs, review verdicts, triage rankings, arc
   synthesis, register/prose passes. (Most of what Fable did this arc, honestly.)
 
 ## Mode 2 — PER-DISPATCH (one-shot judgment from a live session)
@@ -43,7 +43,7 @@ brainstorm). Structured for cache economics:
 ## Governance
 
 - Fable-credits are budget #3 (with tokens-at-large and Geoff's attended time): every
-  invocation logged (purpose, mode, tokens) in the session's post-mortem.
+  invocation logged (purpose, mode, tokens) in the PR body's score.
 - A weekly credit ceiling Geoff sets; the session asks before exceeding it, never after.
 - Verify current Batch/caching terms at first use (50% batch discount and 5min/1h TTLs
   are the standing terms as designed; pricing pages govern).
@@ -62,7 +62,7 @@ a worse output. When work crosses a trigger, Opus proposes — one sentence nami
 the mode, and the rough size — and Geoff decides. The triggers:
 
 - **Propose a BATCH job when:** a major plan/spec needs authorship; a pass-end review has
-  accumulated (a diff Geoff will rely on, a release gate); a post-mortem closes an arc; a
+  accumulated (a diff Geoff will rely on, a release gate); an arc closes; a
   register/prose pass covers user-facing text; multiple verdicts share one spec (batch
   them with a shared cached prefix). Shape: "This is Fable-batch work — [job], ~[N]k
   tokens, results by [when]. Queue it?"
