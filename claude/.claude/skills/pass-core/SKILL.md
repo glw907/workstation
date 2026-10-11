@@ -140,7 +140,15 @@ finding, and fix) as the task's acceptance criteria, never a summary. In dubplat
 landed at zero fix rounds and paraphrased ones averaged one. An overruled verdict is stated with its
 reason in the PR body, and a correctness-critical overrule re-runs the review at `xhigh`. The
 adapter's close checklist runs (the auth smoke on `auth-data`), STATUS and ROADMAP are updated, and
-the PR body carries what landed, each `auth-data` verdict, and the score. When the PR is ready for
+the PR body carries what landed, each `auth-data` verdict, and the score. Each "Found, not
+done" item in the PR body carries a proposed disposition (now, defer, or drop) and a one-line reason,
+and Geoff triages them at the PR read. Whoever merges acts on the triage: a "now" item becomes a
+follow-up task or pass, a "defer" item is filed in BACKLOG or ROADMAP with its number cited back in
+the PR, and a "drop" item stays only in the PR. A merged PR body is history no session reads (Geoff,
+2026-10-11: dubplate PR #2 left 14 items there). Prompting best practices
+(<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>):
+"Use structured formats for state data: When tracking structured information (like test results or
+task status), use JSON or other structured formats". When the PR is ready for
 Geoff's read, the session that hands it over opens it in his default browser with `gh pr view <n>
 -R <owner>/<repo> --web`; a pass that merges its own PR opens no tab (Geoff, 2026-10-11).
 
