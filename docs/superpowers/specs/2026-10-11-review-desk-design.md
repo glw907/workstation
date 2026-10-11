@@ -1,6 +1,6 @@
 # Review desk (design)
 
-**Status:** approved by Geoff, 2026-10-11, in the conducting session (`c747c352`), with his answers
+**Status:** approved by Geoff, 2026-10-11, in the conducting session (`c747c352`), and amended the same day for the SvelteKit stack (see "How it works"), with his answers
 to three questions recorded below. It runs before infra sweep 2 (Geoff, same day).
 
 ## Why
@@ -45,7 +45,7 @@ under `~/Projects/cairn-themes/`:
   labels, no gradients, no decorative motion, contour texture at about a quarter opacity, WCAG AA;
 - `survey-theme/reference/2026-10-07-approved-specimen.html`, the approved specimen to match.
 
-Karla for UI text, Spectral for page titles, Monaspace Neon for code, all self-hosted. Light and
+Karla for UI text, Spectral for page titles, Monaspace Neon for code, all self-hosted (Fontsource). Light and
 dark follow the system setting. The page works offline: no CDN or network fetch at view time.
 
 ## How it works
@@ -53,12 +53,19 @@ dark follow the system setting. The page works offline: no CDN or network fetch 
 - A session hands an item over with one command. The command builds the page's data from git and
   `gh`, opens the tab, and waits in the background until Geoff decides, so his click wakes the
   session (the conductor pattern, run as a background Bash command).
-- A small Python standard-library server, bound to `127.0.0.1` only and kept running by a systemd
-  user service, serves the pages and takes the decisions. It is stowed through dotfiles, so every
-  workstation has it.
-- Security: a click leads to a merge, and any web page Geoff visits can reach localhost. So: a
-  per-start token embedded in the page and required on every decision, an Origin and Host check
-  (against cross-site requests and DNS rebinding), and the loopback-only bind.
+- **Stack (Geoff, 2026-10-11: "use the local sveltekit idiom ... since we're already well-tooled
+  for that").** A SvelteKit app in its own repo, `~/Projects/review-desk` (`glw907/review-desk`),
+  following phonebook's stack (SvelteKit 3, TypeScript, Tailwind CSS 4, daisyUI 5) with
+  `@sveltejs/adapter-node` in place of the Cloudflare adapter. A systemd user service runs the
+  built app on `127.0.0.1` only. Dotfiles holds the handing-over command and the unit file, stowed,
+  and `bluefin/bootstrap.sh` (or its manifest) installs the app on a fresh workstation. The Survey
+  theme core is copied in from `~/Projects/cairn-themes` the way phonebook takes it, with fonts
+  self-hosted through Fontsource. This replaces the Python standard-library server the first
+  version of this design named.
+- Security: a click leads to a merge, and any web page Geoff visits can reach localhost. SvelteKit's
+  built-in CSRF check rejects a cross-origin form post. On top of it: a per-start token embedded in
+  the page and required on every decision, a Host check against DNS rebinding, and the
+  loopback-only bind.
 - `pass-core` names the desk as the one way to hand anything to Geoff for approval, at the Design
   step and at Close. The PR #4 rule (open PRs in Firefox) covers him until this lands.
 
