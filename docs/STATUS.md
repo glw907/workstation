@@ -34,13 +34,15 @@ on cairn-cms branch `engine-pre-2b-b`. It merges its own PR (Geoff's ruling) and
 stop or at the merge. While it is live (`claude agents --json`), no other session touches
 cairn-cms, its main checkout, or its worktrees.
 
-In dotfiles, infra sweep 1 (the guard) is built and awaits Geoff's read of its PR (branch
-`worktree-infra-sweep-1`, session `infra-sweep-1`, job id `661df253`). Its gate is green and the
-whole-branch review accepted it. After the merge, the next action is the sweep-2 planning
-session, attended with Geoff, planned from the baseline sweep-1 leaves: 15 entries by check id
-(`dead-reference` 2, `retired-phrase` 2, `relative-link` 2, `description-cap` 5, `fork-skill` 4).
-Launch it with:
-`cd ~/.dotfiles && claude --model opus --effort high --name infra-sweep-2-plan "$(cat docs/superpowers/plans/2026-10-11-infra-sweep-2-planning-prompt.txt)"`.
+In dotfiles, infra sweep 1 merged (PR #5, `961d110`). Session `c747c352` conducts what follows.
+Next is the review desk (design `docs/superpowers/specs/2026-10-11-review-desk-design.md`, approved
+by Geoff 2026-10-11, before sweep 2 by his ruling). Its unattended planning session
+`review-desk-plan` runs from branch `worktree-review-desk` with the prompt
+`docs/superpowers/plans/2026-10-11-review-desk-planning-prompt.txt`. Sweep 2 follows. Its design
+waits for Geoff's approval on branch `worktree-infra-sweep-2-design`. It plans from the baseline
+sweep 1 left, 15 entries (`dead-reference` 2, `retired-phrase` 2, `relative-link` 2,
+`description-cap` 5, `fork-skill` 4), with the prompt
+`docs/superpowers/plans/2026-10-11-infra-sweep-2-planning-prompt.txt`.
 
 **Infra sweep after the cutover** (re-planned 2026-10-11; spec
 `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md` "Lean re-plan", evidence
