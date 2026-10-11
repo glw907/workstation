@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+"""PreToolUse hook denying a gate or CI-watch command piped into tail or head.
+
+A pipe into tail or head hides the command's output until it exits, so a
+long gate or CI watch looks hung and its exit code is lost. The guarded
+commands are cairn-run-gate, ci-green, scripts/check.sh, scripts/gate.sh,
+npm test, npm run check[:suffix], and gh pr checks. Exit 2 denies the call;
+any other non-zero exit is a non-blocking error that puts a notice on every
+such call (https://code.claude.com/docs/en/hooks), so every input the script
+cannot parse exits 0 silently.
+"""
+
+import json
+import os
+import re
+import shlex
+import sys
+
+PREFILTER = re.compile(
+    r"cairn-run-gate|ci-green|scripts/(?:check|gate)\.sh|npm\s+test"
+    r"|npm\s+run\s+check|gh\s+pr\s+checks"
+)
+TAIL_HEAD = re.compile(r"\b(?:tail|head)\b")
+HEREDOC = re.compile(r"(?<!<)<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
+ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
+PIPES = {"|", "|&"}
+MESSAGE = (
+    "Blocked: piping a gate or CI-watch command into tail or head hides its "
+    "output until it exits. Run it bare, or redirect it to a file "
+    "(cmd > /tmp/out.log 2>&1) and read the file."
+)
+
+
+def strip_heredocs(command: str) -> str:
+    """Drop heredoc bodies so their text is never tokenized as commands."""
+    kept: list[str] = []
+    delimiter = None
+    for line in command.split("\n"):
+        if delimiter is not None:
+            if line.strip() == delimiter:
+                delimiter = None
+            continue
+        kept.append(line)
+        found = HEREDOC.search(line)
+        if found:
+            delimiter = found.group(2)
+    return "\n".join(kept)
+
+
+def tokenize(command: str) -> list[str]:
+    """Split on shell words, keeping newline and pipe operators as tokens."""
+    lexer = shlex.shlex(command, posix=True, punctuation_chars="|;\n")
+    lexer.whitespace = " \t\r"
+    lexer.whitespace_split = True
+    return list(lexer)
+
+
+def pipelines(tokens: list[str]) -> list[list[list[str]]]:
+    """Group tokens into pipelines, each a list of pipe-separated stages."""
+    result: list[list[list[str]]] = [[[]]]
+    previous = ""
+    for token in tokens:
+        if token in PIPES:
+            result[-1].append([])
+        elif token == "&" and previous in PIPES:
+            pass  # the second half of |&
+        elif token == "&" and previous.endswith(">"):
+            result[-1][-1].append(token)  # a redirect such as 2>&1
+        elif token in ("&", "&&") or set(token) <= set("|;\n"):
+            result.append([[]])  # ||, ;, &&, a newline, or a background &
+        else:
+            result[-1][-1].append(token)
+        previous = token
+    return result
+
+
+def command_words(stage: list[str]) -> list[str]:
+    """Return the stage after leading assignments and an optional timeout."""
+    words = list(stage)
+    while words and ASSIGNMENT.match(words[0]):
+        words.pop(0)
+    if len(words) > 1 and words[0] == "timeout":
+        words = words[2:]
+    return words
+
+
+def is_guarded(words: list[str]) -> bool:
+    """Report whether the stage runs one of the guarded commands."""
+    if words and words[0] in ("bash", "sh"):
+        words = words[1:]
+    if not words:
+        return False
+    first = words[0]
+    if os.path.basename(first) in ("cairn-run-gate", "ci-green"):
+        return True
+    if re.fullmatch(r"(?:.*/)?scripts/(?:check|gate)\.sh", first):
+        return True
+    if first == "npm":
+        return words[1:2] == ["test"] or (
+            words[1:2] == ["run"]
+            and len(words) > 2
+            and re.fullmatch(r"check(?::.*)?", words[2]) is not None
+        )
+    return words[:3] == ["gh", "pr", "checks"]
+
+
+def main() -> int:
+    """Read the hook input and return the exit code."""
+    try:
+        data = json.load(sys.stdin)
+        command = (data.get("tool_input") or {}).get("command")
+    except (ValueError, AttributeError):
+        return 0
+    if not isinstance(command, str):
+        return 0
+    if not PREFILTER.search(command) or not TAIL_HEAD.search(command):
+        return 0
+    try:
+        grouped = pipelines(tokenize(strip_heredocs(command)))
+    except ValueError:
+        return 0
+    for pipeline in grouped:
+        stages = [command_words(stage) for stage in pipeline]
+        for index, words in enumerate(stages):
+            if not is_guarded(words):
+                continue
+            if any(later[:1] in (["tail"], ["head"]) for later in stages[index + 1 :]):
+                print(MESSAGE, file=sys.stderr)
+                return 2
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

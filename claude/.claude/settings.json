@@ -33,6 +33,11 @@
             "type": "command",
             "command": "claude-secret-guard",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "claude-tail-guard",
+            "timeout": 10
           }
         ]
       },
