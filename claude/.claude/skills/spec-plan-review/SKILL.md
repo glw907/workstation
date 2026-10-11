@@ -2,168 +2,107 @@
 name: spec-plan-review
 description: >
   Use when a design spec or a pass plan is drafted and needs review before the owner approves
-  it, in any repo on this workstation (dubplate, cairn-cms, the sites). Triggers include
-  "review this spec", "plan review", "adversarial review of the plan", "fan out reviewers on
-  the draft", and a plan-approval gate that has no review record yet. Do not use for a code
-  diff (that is diff-reviewer) or for published docs pages (that is the docs page chain).
+  it, in any repo on this workstation (dubplate, cairn-cms, the sites, dotfiles). Triggers include
+  "review this spec", "plan review", "adversarial review of the plan", "fan out reviewers on the
+  draft", and a plan-approval gate that has no review record yet. Do not use for a code diff
+  (that is diff-reviewer) or for published docs pages (that is the docs page chain).
 ---
 
 # Spec and plan review
 
-A review exists to find the defects that would cost a build or an owner sitting, and to fold
-them without over-engineering the document. Two forces pull against each other. Reviewers who
-are asked for gaps always find some, and a fold that accepts every finding bloats the document
-and buries the real fixes. This process keeps the reviewers wide and the fold selective.
+A review finds the defects that would cost a build or an owner sitting, and the fold applies
+them without over-engineering the document. The reviewers stay wide and the fold stays selective.
+Reviewers asked to report only high-severity issues "may follow that instruction literally and
+report less; ask it to report everything and filter in a separate pass instead" (Opus 5 prompting
+page). Claude Code best practices name the opposite risk: "Chasing every finding leads to
+over-engineering ... flag only gaps that affect correctness or the stated requirements."
+(https://code.claude.com/docs/en/best-practices). The lenses report everything, ranked by
+consequence, and the fold does the filtering.
 
-Anthropic's Claude Code best practices (https://code.claude.com/docs/en/best-practices) state
-the risk this process is built around:
-
-> "A reviewer prompted to find gaps will usually report some, even when the work is sound,
-> because that is what it was asked to do. Chasing every finding leads to over-engineering: extra
-> abstraction layers, defensive code, and tests for cases that can't happen. Tell the reviewer to
-> flag only gaps that affect correctness or the stated requirements, and treat the rest as
-> optional."
+No prose, register, or conformance review runs on a spec or plan; Vale and `tellgrader` cover
+prose (Geoff, 2026-09-08). A spec or plan is written in whatever voice serves Claude Code best.
 
 ## The sequence
 
-1. **Lenses, in parallel.** Each reviewer is a fresh-context agent with one lens.
-2. **One fold.** A single agent records a disposition per finding and revises the document.
-3. **One verification read.** A fresh agent checks the fold.
-4. **A narrow second fold**, only when the verification read finds a blocker or a major.
-5. **The owner sitting**, on the consolidated rulings section.
+1. Three lenses run in parallel, each a fresh-context Opus agent at effort `medium`. Their names
+   are contract and criteria, mechanics and feasibility, and data integrity and failure risk.
+2. One fold agent records a disposition per finding and revises the document.
+3. One verification read checks the fold, and the fold agent applies its findings. Another read
+   runs only when the verification finds a blocker.
+4. A finding that changes the approved design returns to Geoff as one batched question. Every
+   other finding is folded without him.
 
-No prose, register, or conformance review runs on a spec or plan (Geoff, 2026-09-08: specs
-are not register-graded). A spec or plan is written in whatever voice is most effective for
-Claude Code; the published-docs standards govern public-facing writing only (Geoff,
-2026-09-28).
+**Depth scales with risk.** A spec takes all three lenses. A plan takes the mechanics lens plus a
+verification read by default, and all three lenses when the pass is `auth-data` or `runner`, or
+carries the `live-account` flag (risk classes: `pass-core`).
 
-**Review depth scales by pass class** (the table in `pass-core`). `auth-data`,
-`engine-logic`, and any spec that introduces new mechanism take the full sequence. A `paint`,
-`sweep`, or `docs` plan takes one lens that folds its own findings, with no separate fold
-agent; the verification read runs only if that lens found a blocker. Four lenses is a hard
-cap, never exceeded (one recent spec drew nine). Evidence: theme identity pass A produced about
-3,400 lines of review and fold before any code, and none of its three lenses flagged the
-over-ceremony an independent evaluation later found (the full engine gate on every CSS task,
-4.4:1 test-to-source lines).
-
-The conductor dispatches every step and commits every file. It reads the reports, never the
-review files in full, unless a verdict hedges.
-
-## Step 1: the lenses
-
-**A spec gets four lenses:**
+## The lenses
 
 | Lens | Asks |
 | --- | --- |
 | Contract and criteria | Is every promise testable? Does each criterion name its fixture and the reason it would fail? Can any criterion pass vacuously? |
-| Mechanics and feasibility | Does every mechanism behave as stated? Verify empirically (a scratch module, a probe run) or by quoting the docs or source. Never from memory. |
+| Mechanics and feasibility | Does every mechanism behave as stated? Verify empirically (a scratch module, a probe run) or by quoting the docs or source, never from memory. |
 | Data integrity and failure risk | What happens on a crash, a concurrent process, a partial write, an upgrade, a restore? Can data be lost or silently corrupted? |
-| Consistency | Does the draft contradict a ratified document (earlier specs, rulings ledgers, the repo's CLAUDE.md)? Spot-check its citations: does each cited line say what the draft claims? |
 
-**A plan gets three lenses**, drawn from the spec table above: contract-and-criteria,
-mechanics-and-feasibility, and domain-risk (the "Data integrity and failure risk" row, read
-against the plan's domain). Staleness (does the plan still match the tree) is `pass-core`'s
-per-segment pre-flight, which runs once per segment; this review runs no staleness check of
-its own (Geoff, 2026-10-08). Every plan lens also checks proportionality and the four
-planning-miss items:
+On a plan, each lens also checks these items:
 
-- The declared pass class, and any per-task override, fits the change's real risk. A CSS task
-  classed `auth-data` is a finding; so is a signing change classed `paint`.
-- Each task's gate, review bar, test mandate, and settle steps match its class, and the plan
-  justifies any deviation.
-- Owner time sits where the acceptance criterion is. For `paint`, taste is the criterion, so
-  the plan puts an owner glance mid-pass, not only at the end.
-
-- Every library or stdlib behavior a task relies on is quoted from the docs or the source
-  (`go doc`, a man page, the module cache), never recalled.
+- The declared risk class and any per-task override fit the change's real risk.
+- Every library or stdlib behavior a task relies on is quoted from the docs or the source.
 - Every state a check can meet (absent, empty, malformed, many bad) names the report it gives.
 - Every privileged field names every channel that may set it.
-- Every proof names the fixture state it needs (selected, populated), so the test cannot pass
-  vacuously.
+- Every proof names the fixture state it needs, so the test cannot pass vacuously.
+- Each task carries a clock estimate, and any single-deliverable task is folded into a neighbor.
 
-**Every reviewer dispatch carries these parts:**
+Every reviewer dispatch carries the target path and commit, the lens, and the ask: report every gap
+found, ranked by consequence, each with a severity (blocker, major, minor), the location
+(`file:line`), the defect, and a proposed fold. Over-ceremony counts as a finding, ranked by its
+cost in clock time and tokens. A finding whose resolution is a product or priority choice is marked
+**OWNER FORK**, with the options and a recommendation; a reviewer never rules a fork. The reviewer
+writes only its output file, `docs/superpowers/research/<date>-<target>-review-<lens>.md`.
 
-- The target path and commit, and the lens.
-- The Anthropic warning above, quoted with its source URL.
-- The ask: correctness gaps ranked by consequence, and over-ceremony ranked by its cost in
-  clock time and tokens ("full engine gate on nine CSS tasks, ~1.5 h, catches nothing the
-  targeted gate misses"), not polish. Each finding carries a severity
-  (blocker, major, minor), the location (`file:line`), the defect, and a proposed fold.
-- Mark any finding whose resolution is a product or priority choice as **OWNER FORK**, with the
-  options and a recommendation. A reviewer never rules a fork. A question with one clearly
-  correct answer (a ratified standard, a conformance text, or a proven defect settles it) is
-  not a fork: propose that answer as the fold.
-- The output file: `docs/superpowers/research/<date>-<target>-review-<lens>.md` (or the repo's
-  equivalent). The reviewer writes only that file.
-- When a code lane shares the tree: write your own file only, never commit, never touch any
-  other path.
-- `model: "claude-opus-5-5"`, effort `high`.
+## The fold
 
-## Step 2: the fold
+One fold agent (`claude-opus-5-5`) takes every review file. It loads
+`superpowers:receiving-code-review`, verifies a finding before acting on it, and never agrees
+performatively. It writes a fold record with one disposition per finding: folded (where the
+revision carries it), refused (a one-line reason), or owner fork.
 
-One fold agent (`claude-opus-5-5`, effort `high`) takes every review file. Its dispatch says:
+- The fold filters. It folds only gaps that affect correctness or the stated requirements, and it
+  may refuse a finding whose fix costs more than the risk it removes. Convergent findings from
+  several lenses fold once, at the root.
+- The fold probes every new mechanism it introduces: it quotes the docs or source, or runs a probe,
+  and never states one from memory. The catch ledger found that 8 verification majors were
+  mechanisms a fold stated from recollection.
+- A finding whose fix is new machinery (a validator, a registry, a marker scheme) folds only when
+  the record names a team or published source that runs it and a measured defect it answers
+  (Geoff, 2026-09-28: "I want a proven and battle-tested system").
+- It never rules an owner fork. It consolidates the forks into one numbered rulings section, each a
+  yes-or-no question with a recommendation and what each answer builds. A question with one clearly
+  correct answer is not a fork: the document takes it and records why (Geoff, 2026-09-25).
+- When the revision silently changes a ratified document's meaning, the fold records an owed
+  erratum and does not edit that document.
 
-- Load `superpowers:receiving-code-review` first. Verify a finding before acting on it; do not
-  agree performatively.
-- Write a fold record with **one disposition per finding**: folded (where the revision carries
-  it), refused (a one-line reason), or owner fork (the numbered ruling it became). Duplicate
-  findings across lenses fold once and list every ID.
-- **A fold may refuse** a finding whose fix costs more than the risk it removes. The reason is
-  one line. A fold that refuses nothing across dozens of findings should say why. An
-  over-ceremony finding is weighed by its cost; refusing one names what the extra ceremony
-  catches.
-- Fix convergent defects (several lenses reaching one root) at the root, not per finding.
-- **A fold adds no invented mechanism (Geoff, 2026-09-28: "I want a proven and battle-tested
-  system").** A finding whose fix is new machinery (a validator, a registry, a marker scheme, a
-  planted-defect control) folds only when the fold record names a team or published source that
-  runs that mechanism, and a measured defect, not a hypothetical one, that it answers. Otherwise
-  refuse it or take the conventional fix.
-- **Never rule an owner fork.** Consolidate every fork into one numbered rulings section in the
-  document, each a yes-or-no question with a recommendation and what each answer builds.
-- **Never make a ruling out of a settled question.** When one answer is clearly the
-  architecturally correct one, the document takes it as its own decision and records why. The
-  owner's rulings hold only genuine forks: product or taste choices, trade-offs with no dominant
-  answer, and risks only the owner can accept (Geoff, 2026-09-25: "You don't need to ask
-  questions for the sake of ceremony").
-- When the revision silently changes a ratified document's meaning, record it as an owed
-  erratum in the fold record. The fold does not edit the ratified document.
-- **End the fold record with a measures block**, for a full-sequence review: new-mechanism
-  findings folded versus refused (each folded one naming its source and measured defect), the
-  target's line count before and after the fold, and any token-ceiling change. Growth past about
-  25% or a raised ceiling is the signal to revisit this skill's fold rules (Geoff, 2026-09-28;
-  the trial runs three full-sequence reviews). The fourth measure, a refused finding that proved
-  real, is scored at the pass close (`pass-core`, Ledgers).
-- Write only the target and the fold record. Never commit when a code lane shares the tree.
+## The verification read
 
-## Step 3: the verification read
-
-A fresh agent (`claude-opus-5-5`, effort `high`) with no part in the fold reads the revision
-against the fold record and the reviews. Its questions:
-
-- Did each blocker and major actually close, at the cited location?
-- Did the fold introduce a contradiction between sections, or a pass order that cannot build?
-- Did the fold state a new mechanism from memory? Every new mechanism must be quoted or proven.
-- Can the owner rule each fork on the evidence given?
-
-It writes `<date>-<target>-fold-verification.md` with the same finding shape. On a blocker or
-major, dispatch **one narrow second fold** limited to those findings. Minors go to the fold
-record as owed.
+A fresh agent (`claude-opus-5-5`) with no part in the fold reads the revision against the fold
+record and the reviews. It asks whether each blocker and major closed at the cited location,
+whether the fold introduced a contradiction or an order that cannot build, whether any new
+mechanism is quoted or proven, and whether Geoff can rule each fork on the evidence given. It
+writes `<date>-<target>-fold-verification.md` in the finding shape above. The fold agent applies
+its findings; minors go to the fold record as owed.
 
 ## Commits
 
-The conductor commits each stage after its agents finish: the reviews, the fold (target plus
-record), the verification, the second fold. Path-limited commits, never
-`git add -A`, because a code lane may hold warm files in the same tree.
+The planning session commits each stage after its agents finish, path-limited, never `git add -A`.
+Reviewers write only their own file and never commit.
 
 ## Common mistakes
 
 | Mistake | Fix |
 | --- | --- |
-| Reviewer prompt asks for "all issues" | Ask for correctness gaps ranked by consequence, and quote the warning |
+| Reviewer prompt filters severity up front | Ask it to report everything, ranked; the fold filters |
 | Fold accepts every finding | Refusal is a valid disposition; cost against risk, one line |
-| Fold picks an answer to an owner fork | It consolidates and recommends; the owner rules |
-| Mechanics lens reasons from memory | Scratch module, probe, or a quoted doc line, cited |
+| Fold picks an answer to an owner fork | It consolidates and recommends; Geoff rules |
+| Mechanics lens or fold reasons from memory | Scratch module, probe, or a quoted doc line, cited |
 | Skipping the verification read because the fold "looks complete" | The fold is where new unquoted mechanisms appear |
-| Reviewing only for missing rigor | Over-ceremony is a finding too, ranked by its cost |
-| Full review set on a `paint`, `sweep`, or `docs` plan | One self-folding lens; depth follows the pass class |
-| Reviewers commit into a shared tree | Only the conductor commits |
+| Full three-lens set on a small `ordinary` plan | Mechanics lens plus a verification read |
