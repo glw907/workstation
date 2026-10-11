@@ -18,20 +18,27 @@ artifacts. github.com/glw907/workstation.
 - **Secrets**: age-encrypted in `secrets/values.age`, synced by
   `scripts/secrets/sync.sh`; inventory in `secrets/registry.md`.
 - **Gate**: `scripts/check.sh`.
-- **Lean pass process, step 1 PR-ready**: the rewritten `pass-core`, the three adapters
-  (`cairn-pass`, `site-pass`, `.claude/skills/dotfiles-pass`), `spec-plan-review`, the trimmed
-  agents, the 199-line global `CLAUDE.md`, the `cairn-run-gate` fixes, and the `claude-clock-stop`
-  hook. The `pass-execute` runners and the two economy docs are deleted. `docs/HISTORY.md` is
-  frozen (ruling 8).
+- **Lean pass process, step 1 merged** (`998859b`, PR #1; tag `pre-lean-process` at its parent
+  `deed191`, pushed). The rewritten `pass-core`, the three adapters, the trimmed agents, the
+  199-line global `CLAUDE.md`, the `cairn-run-gate` fixes, and the `claude-clock-stop` hook are
+  live. `docs/HISTORY.md` is frozen (ruling 8). The merge check, `claude-tooling-sync verify`, and
+  the light-lane gate all passed in the main checkout.
+- **Probes, all passed on 2026-10-10.** Pair probe: both `isolation: "worktree"` subagents
+  branched from S1-T15's commit `5532034`, not `origin/main` (`998859b`); both gates printed
+  `gate exit: 0`; the scratch merge was conflict-free and the gate on it exited 0. Clock stop: the
+  call after `cd` into the probe worktree received "Clock stop: task probe has run 10 minutes
+  against a 1-minute estimate"; the calls after removal and back in the main checkout carried
+  none. Launch probe: `claude --bg` printed id `1d6eed4e`, committed `rd-probe.txt` (`ok`, `0`) on
+  `worktree-rd-probe` under `.claude/worktrees/` unattended, pushed nothing, and was cleaned up.
+- **Rollback** (Geoff's call only): the plan's S1-T14 "Rollback" block.
 
 ## Immediate next action
 
-Geoff reads the PR (`glw907/workstation`, branch `lean-cutover`) and runs the plan's "Merge
-block" in a terminal with no Claude session open:
-`docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`. It launches session 1b, which tags
-`pre-lean-process`, runs the probes, and starts steps 2 and 4 with `--bg`. Step 3 is Geoff's paste
-per the plan's "Pre-launch for 3". Pass B (rollout step 5) follows steps 1 and 2. Dotfiles `main`
-stays frozen until the merge. Spec: `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
+Steps 2 and 4 run as background sessions `lean-step2` (cairn-cms) and `lean-step4` (docs-chain
+audit); `claude agents` lists them. Geoff pastes step 3 as `lean-step3` from the plan's
+"Pre-launch for 3" block (ruling R-C). Pass B (rollout step 5) starts once steps 1 and 2 have
+merged. Plan: `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`. Spec:
+`docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
 
 **Infra sweep after the cutover** (decided 2026-10-10; spec
 `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, audit
