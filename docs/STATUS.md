@@ -21,7 +21,7 @@ artifacts. github.com/glw907/workstation.
 - **Lean pass process, step 1 merged** (`998859b`, PR #1; tag `pre-lean-process` at its parent
   `deed191`, pushed). The rewritten `pass-core`, the three adapters, the trimmed agents, the
   199-line global `CLAUDE.md`, the `cairn-run-gate` fixes, and the `claude-clock-stop` hook are
-  live. `docs/HISTORY.md` is frozen (ruling 8). The merge check, `claude-tooling-sync verify`, and
+  live. The merge check, `claude-tooling-sync verify`, and
   the light-lane gate all passed in the main checkout.
 - **Probes, all passed on 2026-10-10.** Pair probe: both `isolation: "worktree"` subagents
   branched from S1-T15's commit `5532034`, not `origin/main` (`998859b`); both gates printed
@@ -31,14 +31,14 @@ artifacts. github.com/glw907/workstation.
   none. Launch probe: `claude --bg` printed id `1d6eed4e`, committed `rd-probe.txt` (`ok`, `0`) on
   `worktree-rd-probe` under `.claude/worktrees/` unattended, pushed nothing, and was cleaned up.
 - **Rollback** (Geoff's call only): the plan's S1-T14 "Rollback" block.
-
 ## Immediate next action
 
-Steps 2 and 4 run as background sessions; `claude agents` lists them.
-`lean-step2` is cairn-cms, `lean-step4` is the docs-chain audit.
+Steps 2 and 4 run as background sessions (`claude agents` lists them):
+`lean-step2` is cairn-cms.
+`lean-step4` is the docs-chain audit.
 Geoff pastes step 3 as `lean-step3` from the plan's "Pre-launch for 3" block (ruling R-C).
-Pass B (rollout step 5) starts once steps 1 and 2 have
-merged. Plan: `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`. Spec:
+Pass B (rollout step 5) starts once steps 1 and 2 have merged. Plan:
+`docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`. Spec:
 `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
 
 **Infra sweep after the cutover** (decided 2026-10-10; spec
