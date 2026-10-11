@@ -36,7 +36,7 @@ artifacts. github.com/glw907/workstation.
 Steps 2 and 4 run as background sessions (`claude agents` lists them):
 `lean-step2` is cairn-cms.
 `lean-step4` (docs-chain audit) is PR-ready on `worktree-docs-chain-audit`: all six judged seats
-kept (plan and page structural reads, register editor, fact read, figure verifier, final reader); no cut.
+kept (plan read, page structural read, register editor, fact read, figure verifier, final reader); no cut.
 Geoff pastes step 3 as `lean-step3` from the plan's "Pre-launch for 3" block (ruling R-C).
 Pass B (rollout step 5) starts once steps 1 and 2 have merged. Plan and spec: `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`, `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
 
