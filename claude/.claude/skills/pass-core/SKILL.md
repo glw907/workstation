@@ -169,6 +169,13 @@ decisions. `ROADMAP.md` holds initiatives under `Active`, `Planned`, and `Someda
 (ruling 8). A lesson lands where it executes: a skill, agent, tool, or repo doc. Memory holds only a
 preference or a ruling's why that no file can.
 
+A hand-over (the STATUS update, the next session's launch prompt, and the research records it
+carries) changes no behavior, so it is never brought to Geoff as a PR (Geoff, 2026-10-11). The
+handing-over session commits it on a branch, runs the gate, opens the PR, and merges it itself with
+`gh pr merge <n> --merge`, then pulls the checkout. Best practices for Claude Code
+(<https://code.claude.com/docs/en/best-practices>): "For tasks where the scope is clear and the fix
+is small ... ask Claude to do it directly."
+
 ## Scope
 
 A grant authorizes a mechanism or a boundary, never more work. Work found mid-task goes to the PR
