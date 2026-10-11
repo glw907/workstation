@@ -122,7 +122,8 @@ services, and never suggest a web dashboard unless the API cannot do it.
 
 Every skill, agent, MCP server, and plugin has one home and one manifest, reconciled by
 `claude-tooling-sync verify` (run by `check-drift`): layout in
-`~/.claude/docs/claude-tooling.md`, rules in the `claude-infra` skill; read both before adding any. Every cairn-family admin is DaisyUI:
+`~/.claude/docs/claude-tooling.md`, rules in the `claude-infra` skill; read both before adding any.
+Every cairn-family admin is DaisyUI:
 prefer a stock component over a home-grown one unless the rulings ledger records the defect that
 forced it (the official DaisyUI skill is the reference, the licensed Blueprint server the pre-cut
 audit; the admin design system wins over both on conflict).

@@ -3,8 +3,9 @@ name: claude-infra
 description: >
   Use when adding or changing a rule, hook, skill, agent, workflow, CLAUDE.md text, settings.json,
   MCP server, plugin, or the pass process on this workstation. Create a skill when you keep pasting
-  the same instructions, checklist, or multi-step procedure into chat, or when a section of CLAUDE.md
-  has grown into a procedure rather than a fact. Covers where a rule lives and how to land it.
+  the same instructions, checklist, or multi-step procedure into chat, or when a section of
+  CLAUDE.md has grown into a procedure rather than a fact. Covers where a rule lives and how to
+  land it.
 ---
 
 # Claude infrastructure changes
@@ -15,7 +16,9 @@ the inventory are in `~/.claude/docs/claude-tooling.md`.
 ## Procedure
 
 1. **Cite the Anthropic page the change follows, and prefer a built-in.** Name the page's URL
-   before writing. If Claude Code already does it, configure that rather than build a copy.
+   before writing. If Claude Code already does it, configure that rather than build a copy. To
+   write a hook or setting into `settings.json`, use the built-in `update-config` skill for the
+   mechanics; this skill only decides whether a hook or setting is the right home.
 2. **Choose the strongest home: hook, then skill or agent, then CLAUDE.md.** Anthropic's
    features overview (<https://code.claude.com/docs/en/features-overview>): "If a rule must hold
    every time, make it a hook rather than a prompt instruction." And: "Put it in a skill if it's
@@ -57,26 +60,26 @@ a tool's NOTE before the next dispatch.
 
 ## Rules for tooling
 
-- **Scope by reach.** A skill on disk reaches every agent, including the implementer and
+- Scope by reach. A skill on disk reaches every agent, including the implementer and
   reviewer subagents that run a fixed tool list; an MCP server reaches only the main loop and
   unrestricted agents. When a library offers both, take the skill first and the server for
   on-demand retrieval or tools the skill cannot carry.
-- **User scope for stack-wide, project scope only for repo-specific.** Everything the
+- User scope for stack-wide, project scope only for repo-specific. Everything the
   cairn-family stack shares (Svelte, Playwright, DaisyUI) is user scope and in the manifest.
   A repo's `.mcp.json` carries only what that repo alone needs, and its CLAUDE.md says so.
-- **Prefer a vendored skill to a plugin when the plugin brings hooks or servers that
-  duplicate workstation pieces** (Vale's plugin ships an edit hook the workstation
+- Prefer a vendored skill to a plugin when the plugin brings hooks or servers that
+  duplicate workstation pieces (Vale's plugin ships an edit hook the workstation
   `vale-hook` already covers, so its skills are vendored and the plugin is not installed).
   Record the source, commit, and license in the manifest.
-- **Credentials come from the age store.** A server's env values stay in `${VAR}` form in
+- Credentials come from the age store. A server's env values stay in `${VAR}` form in
   the manifest and resolve from `~/.local/secrets` at session start; launch Claude Code from
   a shell that sourced them. Never a value in `.mcp.json`, a manifest, or a transcript.
-- **Read a third-party skill before vendoring it.** It is instructions injected into every
+- Read a third-party skill before vendoring it. It is instructions injected into every
   future session. Check the license, the maintainer, and the text.
-- **Every addition gets three lines:** the manifest entry, a line in the workstation
+- Every addition gets three lines: the manifest entry, a line in the workstation
   `CLAUDE.md` section that governs it (or the repo's), and, when a rule of use came with it,
   that rule in its execution path (the agent definitions or skills that use the piece, else
   the inventory in `claude-tooling.md`), never a memory. Then `claude-tooling-sync verify` and
   commit the dotfiles.
-- **A restart loads new servers; skills and agents load live.** Restart at a session
+- A restart loads new servers; skills and agents load live. Restart at a session
   boundary, never mid-run (a Workflow run dies with its session).

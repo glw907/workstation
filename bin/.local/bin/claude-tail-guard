@@ -8,6 +8,12 @@ npm test, npm run check[:suffix], and gh pr checks. Exit 2 denies the call;
 any other non-zero exit is a non-blocking error that puts a notice on every
 such call (https://code.claude.com/docs/en/hooks), so every input the script
 cannot parse exits 0 silently.
+
+This is a hook, not a permission deny rule, because permission rules split a
+command on its operators and "A rule must match each subcommand
+independently", so no rule can say "piped into tail"; for that, "To inspect the
+full command text with your own logic before it runs, use a PreToolUse hook"
+(https://code.claude.com/docs/en/permissions, "Compound commands").
 """
 
 import json
@@ -49,7 +55,7 @@ def strip_heredocs(command: str) -> str:
 
 def tokenize(command: str) -> list[str]:
     """Split on shell words, keeping newline and pipe operators as tokens."""
-    lexer = shlex.shlex(command, posix=True, punctuation_chars="|;\n")
+    lexer = shlex.shlex(command, posix=True, punctuation_chars="|;&()\n")
     lexer.whitespace = " \t\r"
     lexer.whitespace_split = True
     return list(lexer)
@@ -68,6 +74,8 @@ def pipelines(tokens: list[str]) -> list[list[list[str]]]:
             result[-1][-1].append(token)  # a redirect such as 2>&1
         elif token in ("&", "&&") or set(token) <= set("|;\n"):
             result.append([[]])  # ||, ;, &&, a newline, or a background &
+        elif set(token) <= set("()"):
+            pass  # a subshell's parentheses group words, not stages
         else:
             result[-1][-1].append(token)
         previous = token
@@ -75,12 +83,27 @@ def pipelines(tokens: list[str]) -> list[list[list[str]]]:
 
 
 def command_words(stage: list[str]) -> list[str]:
-    """Return the stage after leading assignments and an optional timeout."""
+    """Return the stage after leading assignments and wrapper commands."""
     words = list(stage)
-    while words and ASSIGNMENT.match(words[0]):
-        words.pop(0)
-    if len(words) > 1 and words[0] == "timeout":
-        words = words[2:]
+    while words:
+        if ASSIGNMENT.match(words[0]):
+            words.pop(0)
+        elif words[0] in ("time", "command", "nohup"):
+            words.pop(0)
+        elif words[0] == "env":
+            words.pop(0)
+            while words and (words[0].startswith("-") or ASSIGNMENT.match(words[0])):
+                words.pop(0)
+        elif words[0] == "timeout":
+            words.pop(0)
+            while words and words[0].startswith("-"):
+                option = words.pop(0)
+                if option in ("-k", "-s", "--kill-after", "--signal") and words:
+                    words.pop(0)
+            if words:
+                words.pop(0)  # the duration
+        else:
+            break
     return words
 
 

@@ -21,6 +21,12 @@ DENIED = [
     "timeout 600 cairn-run-gate 'bash scripts/check.sh' | tail",
     "CI=1 npm test | head",
     "git status\nnpm test | tail",
+    "npm run check:cairn|&tail",
+    "npm test | tail&",
+    "(npm test) | tail",
+    "timeout -k 5 600 npm test | tail",
+    "env CI=1 npm test | tail",
+    "time npm test | head",
 ]
 
 HEREDOC_NO_APOSTROPHE = "git commit -F - <<'EOF'\nNotes on npm test | tail\nEOF"

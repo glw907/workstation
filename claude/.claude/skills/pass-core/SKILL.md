@@ -4,7 +4,8 @@ description: >
   The lean pass process every repo shares: the six-step lifecycle from design to close, risk
   classes, one executing session with pair subagents, the fast gate with CI carrying the whole
   suites, the clock stop, the whole-branch close review, and the score. Use when a repo adapter
-  (cairn-pass, site-pass, dotfiles-pass) points here, or when planning, executing, or closing a pass.
+  (cairn-pass, site-pass, dotfiles-pass) points here, or when planning, executing, or closing a
+  pass.
 ---
 
 # Pass core
@@ -16,13 +17,16 @@ checklist globs, and close checklist, and wins where it disagrees with this skil
 ## Lifecycle
 
 Each task takes a risk class from the adapter's path map: `auth-data`, `runner`, or `ordinary`.
-`runner` covers skills, agents, workflows, the gate tools, `.github/workflows`, and `scripts/checks`.
+`runner` covers skills, agents, workflows, the gate tools, `.github/workflows`, and
+`scripts/checks`.
 Only Geoff's ruling raises a class, stated in the design in one sentence. A pass takes its highest
-task's class. A `live-account` flag marks a run that can touch a real Cloudflare, GitHub, or npm account.
+task's class. A `live-account` flag marks a run that can touch a real Cloudflare, GitHub, or npm
+account.
 
 1. **Design.** Opus at `high` brainstorms in chat. Geoff approves a design of a page or less: the
    outcome, files and interfaces touched, what is out of scope, one end-to-end check, and the risk
-   class. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt carries
+   class. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
+   carries
    these two samples, and extras go in "Later", never built:
    > "Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
    > Keep solutions simple and focused: - Scope: Don't add features, refactor code, or make
@@ -42,7 +46,8 @@ task's class. A `live-account` flag marks a run that can touch a real Cloudflare
    > task, and stop short of actions that are clearly beyond what was asked."
    > (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>)
 2. **Spec.** An agent writes the approved design at the length precision needs, only if
-   `spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or probed.
+   `spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
+   probed.
 3. **Spec review.** `spec-plan-review` sets spec and plan review depth. A finding that changes
    the approved design returns to Geoff as one batched question; every other finding is folded
    without him.

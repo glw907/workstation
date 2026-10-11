@@ -49,7 +49,7 @@ The three lenses and the verification read are kept for `auth-data` and `live-ac
 | Mechanics and feasibility | The `plan-reviewer` agent holds this lens prompt and the plan checklist. |
 | Data integrity and failure risk | What happens on a crash, a concurrent process, a partial write, an upgrade, a restore? Can data be lost or silently corrupted? |
 
-On a plan, every lens also checks the plan checklist in the `plan-reviewer` agent's body.
+On a plan, the mechanics lens also checks the plan checklist in the `plan-reviewer` agent's body.
 
 Dispatch the mechanics lens as the `plan-reviewer` agent; the dispatching session saves its reply
 as `docs/superpowers/research/<date>-<target>-review-mechanics.md`. Every other reviewer dispatch
@@ -59,7 +59,8 @@ if it affects correctness or a stated requirement, `optional` otherwise), the lo
 (`file:line`), the defect, and a proposed fold. Over-ceremony counts as a finding, ranked by its
 cost in clock time and tokens. A finding whose resolution is a product or priority choice is marked
 **OWNER FORK**, with the options and a recommendation; a reviewer never rules a fork. Those
-reviewers write only their output file, `docs/superpowers/research/<date>-<target>-review-<lens>.md`.
+reviewers write only their output file,
+`docs/superpowers/research/<date>-<target>-review-<lens>.md`.
 
 ## The fold
 
@@ -70,7 +71,7 @@ revision carries it), refused (a one-line reason), or owner fork.
 
 - The fold filters. It drops every `optional` finding, in the best-practices page's words: "flag
   only gaps that affect correctness or the stated requirements, and treat the rest as optional"
-  (https://code.claude.com/docs/en/best-practices). It folds the `correctness` findings, and it
+  (<https://code.claude.com/docs/en/best-practices>). It folds the `correctness` findings, and it
   may refuse a finding whose fix costs more than the risk it removes. Convergent findings from
   several lenses fold once, at the root.
 - The fold probes every new mechanism it introduces: it quotes the docs or source, or runs a probe,
@@ -87,8 +88,9 @@ revision carries it), refused (a one-line reason), or owner fork.
 
 ## The verification read
 
-On an `auth-data` or `live-account` pass, a fresh agent (`claude-opus-5-5`) with no part in the fold reads the revision against the fold
-record and the reviews. It asks whether each blocker and major closed at the cited location,
+On an `auth-data` or `live-account` pass, a fresh agent (`claude-opus-5-5`) with no part in the
+fold reads the revision against the fold record and the reviews. It asks whether each blocker and
+major closed at the cited location,
 whether the fold introduced a contradiction or an order that cannot build, whether any new
 mechanism is quoted or proven, and whether Geoff can rule each fork on the evidence given. It
 writes `<date>-<target>-fold-verification.md` in the finding shape above. The fold agent applies
