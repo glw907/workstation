@@ -50,3 +50,6 @@ secrets/*.decrypted
 
 # Claude Code runtime cache of claude.ai-synced skills
 claude/.claude/skills/synced/
+
+# Pair-subagent and pass worktrees under the main checkout
+.claude/worktrees/
