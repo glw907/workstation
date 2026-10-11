@@ -30,3 +30,12 @@ beyond the named lines.
 
 The folds of findings 1 and 2 add tests to T3, whose estimate rises from 45 to 55 minutes. The plan
 now totals 255 task-minutes, under the 360 tripwire.
+
+## Amendment 3a (after the fold)
+
+Geoff amended the design with item 3a, the `plan-reviewer` agent (`fe26a9b`), after this fold. It
+reached the planning session through the post-cutover sweep session, and the branch was merged in.
+T2 builds the agent and the `spec-plan-review` dispatch, and T1 adds the agent to
+`claude-tooling.md`'s lines. T2 rises from 35 to 50 minutes, and the plan totals 270 task-minutes,
+under the 360 tripwire. The agent did not exist on this branch, so this plan's own review stayed
+as the planning prompt set it.

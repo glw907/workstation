@@ -1,7 +1,8 @@
 # Infrastructure skill and proportionality rules: implementation plan
 
 **Design:** `docs/superpowers/specs/2026-10-11-infra-skill-and-proportionality-design.md`, approved
-by Geoff 2026-10-11 (under a page, so no separate spec). **Evidence:**
+by Geoff 2026-10-11 (under a page, so no separate spec), with Geoff's amendment item 3a (the
+`plan-reviewer` agent, `fe26a9b`), which T2 builds. **Evidence:**
 `docs/superpowers/research/2026-10-11-anthropic-guidance-proportionality.md` (cited below as
 "research"). **Review:** the mechanics lens and its fold record,
 `docs/superpowers/research/2026-10-11-infra-skill-plan-{review-mechanics,fold}.md`.
@@ -9,8 +10,8 @@ by Geoff 2026-10-11 (under a page, so no separate spec). **Evidence:**
 **Outcome.** A session that changes local Claude Code infrastructure loads a `claude-infra` skill
 that sends it to Anthropic's guidance first and to the strongest home for each rule. `pass-core`
 carries Anthropic's anti-over-engineering prompts verbatim, takes risk class from the path map, and
-sends an over-budget plan back to Geoff. `spec-plan-review` tags findings and scales its depth to
-the design's size. A hook denies a gate or CI-watch command piped into `tail` or `head`. The gate
+sends an over-budget plan back to Geoff. `spec-plan-review` tags findings, scales its depth to
+the design's size, and dispatches a `plan-reviewer` agent for the mechanics lens. A hook denies a gate or CI-watch command piped into `tail` or `head`. The gate
 warns when a branch changes Claude infrastructure without citing Anthropic. The global `CLAUDE.md`
 gets shorter.
 
@@ -68,7 +69,7 @@ existing text:
 4. `wc -l claude/.claude/CLAUDE.md` prints fewer than 199 lines, and T2's line count for `pass-core`
    holds (growth no larger than the quoted prompts).
 
-**Clock estimate:** 255 task-minutes (T1 70, T2 35, T3 55, T4 45, close 50), under the design's
+**Clock estimate:** 270 task-minutes (T1 70, T2 50, T3 55, T4 45, close 50), under the design's
 tripwire of 360. The two pairs run in turn, so the path is about 70 + 55 + 50 = 175 minutes.
 
 ## Launch
@@ -165,7 +166,8 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
     "layout and rules in `~/.claude/docs/claude-tooling.md`" names the skill for the rules, and
     `claude-tooling.md`'s inventory line for `spec-plan-review` (now "the three lenses, probing
     fold, and verification read every spec or plan takes") says its depth scales with the design's
-    size, matching T2.
+    size and that it dispatches the `plan-reviewer` agent, matching T2. The "Model pins" list of
+    reviewer agents that name `claude-opus-5-5` gains `plan-reviewer`.
 - **Files.** `claude/.claude/skills/claude-infra/SKILL.md` (new), `claude/.claude/CLAUDE.md`,
   `claude/.claude/docs/claude-tooling.md`.
 - **Risk class.** `runner`.
@@ -200,7 +202,7 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
 - **Pair.** Runs as a pair with T2 (disjoint files).
 - **Estimate.** 70 minutes.
 
-### T2. `pass-core` and `spec-plan-review` edits
+### T2. `pass-core` and `spec-plan-review` edits, and the `plan-reviewer` agent
 
 - **Outcome.**
   - `pass-core`, "Lifecycle" opening paragraph: "The design's class is a floor" becomes a task's
@@ -229,8 +231,24 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
     with no verification read (reading 3). It cites the Opus 5 page's guidance against separate
     verification steps from the research. "The sequence", the "Depth scales" paragraph, and the two
     stale "Common mistakes" rows (the skipped verification read, the small-plan row) change to
-    match; nothing else in the skill does.
-- **Files.** `claude/.claude/skills/pass-core/SKILL.md`, `claude/.claude/skills/spec-plan-review/SKILL.md`.
+    match; nothing else in the skill does, beyond the dispatch line below.
+  - The `plan-reviewer` agent (design item 3a), `claude/.claude/agents/plan-reviewer.md`, about 40
+    lines, in the shape of `diff-reviewer.md`'s frontmatter: `name: plan-reviewer`, a one-sentence
+    `description` (every agent description takes up context), `tools: Read, Grep, Glob, Bash,
+    WebFetch` (read-only, with Bash for probes and WebFetch for quoting docs), `model:
+    claude-opus-5-5`, `effort: medium`. Its body is the mechanics lens prompt that
+    `spec-plan-review` holds today (the lens row, the plan checklist, and the finding shape),
+    plus the `correctness` or `optional` tag on every finding. It never edits a file: its report is
+    its final reply. The body cites the two pages design item 3a quotes, with their URLs
+    (`https://code.claude.com/docs/en/sub-agents`: "Define a custom subagent when you keep
+    spawning the same kind of worker with the same instructions";
+    `https://code.claude.com/docs/en/features-overview`), copied from the design.
+  - `spec-plan-review` dispatches `plan-reviewer` for the mechanics lens in place of the retyped
+    lens prompt, and the dispatching session saves its reply as
+    `docs/superpowers/research/<date>-<target>-review-mechanics.md`. The skill keeps the procedure;
+    the lens prompt lives in the agent alone. The agent adds no review (design item 3a).
+- **Files.** `claude/.claude/skills/pass-core/SKILL.md`,
+  `claude/.claude/skills/spec-plan-review/SKILL.md`, `claude/.claude/agents/plan-reviewer.md` (new).
 - **Risk class.** `runner`.
 - **Acceptance.**
   - `pass-core` growth: `wc -l` after the edit, minus 161, is no more than the number of lines
@@ -247,10 +265,20 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
   - `spec-plan-review` names the tags `correctness` and `optional`, quotes the "flag only gaps"
     line with `https://code.claude.com/docs/en/best-practices`, and its depth paragraph states the
     four cases above.
+  - `plan-reviewer.md` is under 50 lines, its frontmatter names no write tool (`Write`, `Edit`,
+    `NotebookEdit`), and `spec-plan-review` names `plan-reviewer` where it dispatches the mechanics
+    lens.
+  - One live dispatch: from T2's worktree, an Agent-tool call with `subagent_type:
+    "plan-reviewer"` on this plan (`docs/superpowers/plans/2026-10-11-infra-skill.md`) returns
+    findings, each tagged `correctness` or `optional`, and leaves `git status --porcelain` empty.
+    The agent file loads live through the folded `~/.claude/agents` link only after the merge, so
+    this dispatch passes the agent's body as a `general-purpose` prompt with `model: opus`, effort
+    `medium`, if `plan-reviewer` is not yet listed; the commit body says which form ran.
   - The gate prints `gate exit: 0`.
-- **Test.** The acceptance greps and line counts; the gate's ratchet leg covers the edited skills.
+- **Test.** The acceptance greps and line counts, and the live dispatch; the gate's ratchet leg
+  covers the edited skills and the agent.
 - **Pair.** Runs as a pair with T1.
-- **Estimate.** 35 minutes.
+- **Estimate.** 50 minutes.
 
 ### T3. The tail guard
 
