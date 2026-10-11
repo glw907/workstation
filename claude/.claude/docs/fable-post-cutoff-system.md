@@ -16,7 +16,7 @@ Non-interactive Fable jobs go through the Batch API (async, <24h, usually minute
 - A queue directory of self-contained job files: task + ALL context pre-extracted (the
   dispatch discipline is now economic law — a job that needs a follow-up question wasted
   its round trip).
-- The Opus conductor submits, polls, folds results back.
+- The Opus session submits, polls, folds results back.
 - Shared-prefix caching across jobs in one batch: N verifications against one spec share
   the spec as a cached prefix — write it once, read it cheap.
 - Fits: plan drafts from prepared briefs, review verdicts, triage rankings, post-mortem
@@ -44,7 +44,7 @@ brainstorm). Structured for cache economics:
 
 - Fable-credits are budget #3 (with tokens-at-large and Geoff's attended time): every
   invocation logged (purpose, mode, tokens) in the session's post-mortem.
-- A weekly credit ceiling Geoff sets; the conductor asks before exceeding it, never after.
+- A weekly credit ceiling Geoff sets; the session asks before exceeding it, never after.
 - Verify current Batch/caching terms at first use (50% batch discount and 5min/1h TTLs
   are the standing terms as designed; pricing pages govern).
 
@@ -55,7 +55,7 @@ brainstorm). Structured for cache economics:
 `poll`, `collect` (results to files + a digest). Job files carry YAML frontmatter
 (purpose, max_tokens, cache_prefix: <path>) so the ledger writes itself.
 
-## The conductor's suggestion rules (Opus-side, baked in)
+## The suggestion rules (Opus-side, baked in)
 
 Opus NEVER silently spends Fable credits and never silently absorbs Fable-tier work into
 a worse output. When work crosses a trigger, Opus proposes — one sentence naming the job,

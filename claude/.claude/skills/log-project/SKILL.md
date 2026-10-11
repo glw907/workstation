@@ -114,7 +114,7 @@ created as needed:
 
 ### Format rules
 
-- **Status sections**: `## Active`, `## Planned`, `## Someday`, `## Done`
+- **Status sections**: `## Active`, `## Planned`, `## Someday` (a `## Done` only where the file already has one)
 - **Project heading**: `### Title \`slug\``
 - **Body**: 1-3 sentences of description, then `Related: #N, #N` linking to backlog items
 - **Slug**: appears in backticks after the title; this is the identifier used
@@ -145,13 +145,15 @@ If backlog items were also modified (e.g., adding `#project:slug` tags), include
 
 When closing a project:
 
-1. Move the project block to the `## Done` section
-2. Add `Completed: YYYY-MM-DD` on a new line
-3. Optionally add a one-line outcome summary
-4. Check `BACKLOG.md` for any open items tagged `#project:slug`:
+1. Remove the project block from `ROADMAP.md`: git history and the closing PR body hold the record
+   (lean pass process, ruling 8), so a shipped item leaves ROADMAP. Read the file's existing
+   sections first and never seed a tier it does not already have. A repo whose ROADMAP already
+   keeps a `## Done` section may append the block there with `Completed: YYYY-MM-DD`.
+2. Put a one-line outcome summary in the commit message
+3. Check `BACKLOG.md` for any open items tagged `#project:slug`:
    - If they're truly done, close them (change `- [ ]` to `- [x]`, move to Done)
    - If they're still open but no longer part of this project, remove the project tag
-5. Confirm: "Closed project **slug**: Title"
+4. Confirm: "Closed project **slug**: Title"
 
 ## Auto-closing
 

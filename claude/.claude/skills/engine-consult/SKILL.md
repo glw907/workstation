@@ -106,7 +106,7 @@ Dispatch the `engine-triage` agent (read-only, fresh-context, pinned `claude-opu
 with the absolute paths to the brief, the rulings ledger
 (`~/Projects/cairn-cms/docs/internal/engine-rulings.md`), and the site plan. It reads the
 ledger first, so a settled ruling is cited rather than re-argued, then argues each item
-against the standard. The conductor adjudicates its verdicts, records them in the brief
+against the standard. The planning session adjudicates its verdicts, records them in the brief
 document itself, and appends one ledger entry per ruled item, copying the entry format
 from the fenced template in the ledger's own header rather than reconstructing it (two of
 its fields are conditional, audit-tier ones consultation entries usually omit).
@@ -143,7 +143,8 @@ A site-launched session does not auto-load cairn's context. In order:
    the claim.
 3. **Read `~/Projects/cairn-cms/docs/STATUS.md`** and honor the changelog
    `Consumers must:` convention for any consumer-facing change.
-4. **`cairn-implementer` + `diff-reviewer` chains** per task, as in any cairn pass.
+4. **The lean pass loop** per `cairn-pass`: one executing session, pair subagents where files are
+   disjoint, the fast lane per task, and the whole-branch close review.
 5. **Run the full gate list by name**: cairn-cms's `npm run check:close` runs it, including
    `check:comments`, `check:reference:signatures`, `check:surface`, `check:snippets`,
    `check:transcripts`, and `check:symbols`, which the local ritual once skipped.
