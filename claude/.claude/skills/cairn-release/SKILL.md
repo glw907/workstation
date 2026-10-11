@@ -1,15 +1,10 @@
 ---
 name: cairn-release
 description: >
-  Cut and publish the cairn-cms npm package (`@glw907/cairn-cms`, "cairn") to the registry, the deliberate
-  act that gets a cairn version onto npm. Invoke on any intent to publish, ship, cut, release, tag, or push
-  out cairn (for example "publish cairn", "ship it to npm", "cut a cairn release", "tag it on github"), when
-  merged-and-green cairn work on `main` is ready to go out, when held cairn changes should batch into one
-  publish, when picking the next version, finalizing the CHANGELOG, or firing the publish workflow, or when
-  a consumer site (ecxc-ski, 907.life) is blocked on a new cairn export and needs it on the registry before
-  its dependency range bumps. Do not invoke it for a finished cairn dev pass that just holds unpublished
-  (that is `cairn-pass`), or for a SvelteKit site's own deploy; this skill publishes the cairn-cms package
-  itself.
+  Cut and publish the cairn-cms npm package (`@glw907/cairn-cms`). Invoke on any intent to publish, ship,
+  cut, release, tag, or push out cairn; when merged-and-green work on `main` is ready to go out; when
+  picking the next version or finalizing the CHANGELOG; or when a consumer site needs a new export on the
+  registry. Not for a dev pass that holds unpublished (`cairn-pass`) or a site deploy.
 ---
 
 # Cairn release
@@ -49,18 +44,17 @@ worktree live (its lockfiles collide with a live branch): every minor and patch 
 with its unblock trigger recorded, the survey and the refactor decision on record. Skip this only when the
 window already contains such a sweep and `npm outdated` at every manifest returns only the held majors.
 
-The full gate must be green at the release commit. Run it (sequentially; `npm test` and
-`check:custom-surface` both repackage `dist`, so do not run them concurrently):
+The full gate must be green at the release commit. Run it sequentially (`npm test` and `check:close`
+both repackage `dist`, so never run them concurrently):
 
-- `npm run check` (svelte-check, 0 errors and 0 warnings)
+- `npm run check:close` (the repo's own close gate: it carries the type check, the doc gates, the
+  comment gate, the custom-surface check, the package and dev-package checks, and `check:version`, so
+  this list never needs re-copying when a check is added)
 - `npm test` (exit 0, not just a passing count)
-- `npm run check:custom-surface` (PASS both trees)
-- `npm run check:comments` (the TSDoc + em-dash gate)
-- the four doc gates: `npm run check:reference`, `check:reference:signatures`, `check:docs`, `check:package`
 - after `npm version`, also bump `packages/cairn-cms-dev` to the same number (`npm version <x.y.z>
-  --no-git-tag-version` in that directory) and run `npm run check:dev-package` and `check:version`:
-  CI's `test` job fails the release commit when the two versions differ (born 2026-09-30, the
-  `0.98.0` cut, which caught it only on CI)
+  --no-git-tag-version` in that directory), then run `npm run check:close` again: CI's `test` job fails
+  the release commit when the two versions differ (born 2026-09-30, the `0.98.0` cut, which caught it
+  only on CI)
 - the consumer-build proof: a CI `e2e` run, or a from-scratch showcase build (`rm -rf
   examples/showcase/{node_modules,package-lock.json}` then a fresh install and `npm run build`). Local
   Playwright reuses a stale preview off CI, so do not trust a local "all green" alone.
@@ -146,7 +140,7 @@ The release body is the changelog window since the last PUBLISHED tag. When seve
 one publish (the common case in this initiative, because passes hold and batch), the body summarizes EACH
 held section in the window and carries EVERY `Consumers must:` line from the breaking ones. Compose it into
 a notes file rather than by hand at the `gh` prompt. Add the matching per-version entry to
-`docs/guides/upgrade-cairn.md` if the pass did not already.
+`docs/extend/upgrade-cairn.md` if the pass did not already.
 
 A window touching an admin surface (`src/lib/components/*.svelte`, `cairn-admin.css`) also earns a
 re-read of the reproduction stories and docs pages the change reaches: check every affected story's

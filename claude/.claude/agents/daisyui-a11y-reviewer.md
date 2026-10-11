@@ -82,6 +82,7 @@ daisyui.com, tailwindcss.com, the ARIA APG, and WCAG 2.2 understanding docs when
 For every new or changed component in the diff, ask whether a stock DaisyUI 5 component or
 template covers it; the reference is the official skill at `~/.claude/skills/daisyui/`
 (read the component guide before judging). A home-grown component is acceptable only when
-`docs/internal/engine-rulings.md` or `docs/internal/admin-design-system.md` records the
+`~/Projects/cairn-cms/docs/internal/engine-rulings.md` or
+`~/Projects/cairn-cms/docs/internal/admin-design-system.md` records the
 DaisyUI defect that forced it; otherwise report it as a non-blocking finding naming the
 DaisyUI component to use. cairn's design-system rules win over the skill on any conflict.

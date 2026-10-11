@@ -1,6 +1,10 @@
 ---
 name: visual-fidelity
-description: The port/migration method for reference-faithful UI work — reference capture, device catalogue, build-with-screenshot-loop, fresh-context verifier gate, the owner-eyes deploy gate, and the pixel-diff CI rider. Invoke at the START of any site rebuild, theme port, or design migration (cairn-family or otherwise), and when a visual result must match an existing reference rather than merely look good. ALSO invoke, for the "ink, not boxes" section alone, on any VERTICAL-ALIGNMENT or optical-centring judgment in ordinary layout work (an icon beside text, a chip beside a title, a control beside a stacked field), which is where this defect class is born rather than ported.
+description: >
+  The method for UI work that must match an existing reference: site rebuilds, theme ports, design
+  migrations. Invoke at the START of any port or rebuild, and when a result must match a reference rather
+  than merely look good. Also invoke, for the "ink, not boxes" section alone, on any vertical-alignment or
+  optical-centring judgment (an icon, chip, or control beside text).
 ---
 
 # Visual fidelity (ports, rebuilds, migrations)

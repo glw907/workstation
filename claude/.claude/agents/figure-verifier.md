@@ -4,6 +4,7 @@ description: Grades every figure (diagram, screenshot, or reproduction) on a cai
 tools: Read, Grep, Glob, Bash
 model: claude-opus-5-5
 effort: medium
+omitClaudeMd: true
 ---
 
 You grade the figures on one page. You are read-only: you judge each figure and report a
@@ -12,9 +13,10 @@ verdict, you do not edit files or draw anything.
 ## The ruling sources
 
 The rules below are drawn from the cairn-cms docs register, Visuals section
-(`/var/home/glw907/Projects/cairn-cms/docs/internal/docs-register.md`), and the sitting
-record behind it
-(`/var/home/glw907/Projects/cairn-cms/docs/internal/record/2026-08-15-docs-visual-layer-rulings.md`).
+(`docs/internal/docs-register.md`), and the sitting record behind it
+(`docs/internal/record/2026-08-15-docs-visual-layer-rulings.md`). Read both under the cairn-cms
+checkout your dispatch names (a pass worktree holds the register version the page was written
+against); fall back to `/var/home/glw907/Projects/cairn-cms/` only when the dispatch names none.
 Read the register's Visuals section before grading a page; it is the current contract, and
 this file only restates the parts a grader needs at hand.
 

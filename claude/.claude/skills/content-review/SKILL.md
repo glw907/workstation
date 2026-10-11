@@ -12,11 +12,13 @@ the reliable form; self-critique in the drafting context is not.
 
 Load the shared method at `~/.claude/docs/web-content-method.md` (the gates, the catalog, the
 rubric for when a score is requested) and the site's `docs/content-guide.md` (the load-bearing
-rules, budgets, and recipes the draft was written against).
+rules, budgets, and recipes the draft was written against). When the site has no
+`docs/content-guide.md`, run on the shared method alone, skip step 4, and open the report by
+saying the site guide was absent.
 
 ## Steps
 
-1. **Read** the target file, the site guide, and the method. If the piece has a brief in
+1. **Read** the target file, the site guide (when present), and the method. If the piece has a brief in
    `docs/content-briefs/`, read it; brief facts are the claim baseline.
 
 2. **Run Vale** on the file for the machine signals (the site's `.vale.ini` selects the content
@@ -43,12 +45,9 @@ rules, budgets, and recipes the draft was written against).
 6. **Score only on request.** When the user asks for a score, apply the method's rubric (seven
    dimensions, level anchors, gold-set calibration) and report the band first, the number second.
 
-7. **Apply only approved edits.** Ask "apply all, apply some (specify), or skip?". Edit only the
-   approved sentences. Change nothing else. Never change meaning to fix rhythm; flag those as
-   needing human judgment and skip.
-
 ## Hard rules
 
+- The report is the whole job: this skill edits nothing. The caller decides which proposed replacements to apply.
 - Gates and findings are the default deliverable; the score appears only when asked for.
 - Cite a named rule or pattern or leave the sentence alone. No "improved the flow" rewrites.
 - Re-check each proposed replacement against the catalog before presenting it.
