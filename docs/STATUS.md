@@ -48,6 +48,13 @@ Launch it with:
 style-guide-sync are merged. Geoff's rulings R1 to R4 split what survives into sweep-1 (the
 guard's tools) and sweep-2 (skill and doc content). Poplar's `pass-core` adapter follows sweep-2.
 
+**Infra skill build** (built; session `infra-skill-build`, id `7ff5a620`): PR #8 on
+`glw907/workstation` (branch `worktree-infra-skill-build`) waits on Geoff's read. Gate green,
+whole-branch review fixed. Plan: `docs/superpowers/plans/2026-10-11-infra-skill.md`. After the
+merge, the conducting session runs the PR body's "Post-merge steps": restore the stowed
+`settings.json`, then `git -C ~/.dotfiles pull --ff-only && stow -d ~/.dotfiles -R bin`, then
+write its own state here, commit a conductor launch prompt, and stop its loop.
+
 ## Open items
 
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not

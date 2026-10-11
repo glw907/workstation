@@ -3,8 +3,13 @@
 # A worktree-isolated session's Bash guard refuses `cairn-run-gate '<string>'`,
 # since it cannot show the quoted string is not git; a no-argument wrapper
 # passes, and keeps the lane lock and the run records `--records` scores.
-# Exit codes are cairn-run-gate's, so exit 75 still means re-issue.
+# Exit codes are cairn-run-gate's, so exit 75 still means re-issue. It repeats
+# the `gate exit:` line last, so the result is the output's final line.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 export CAIRN_GATE_LANE=light
-exec cairn-run-gate 'bash scripts/check.sh'
+out=$(cairn-run-gate 'bash scripts/check.sh' 2>&1)
+rc=$?
+printf '%s\n' "$out"
+printf '%s\n' "$out" | grep -m1 '^gate exit:' || true
+exit "$rc"
