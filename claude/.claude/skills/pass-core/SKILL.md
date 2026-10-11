@@ -22,7 +22,9 @@ marks a run that can touch a real Cloudflare, GitHub, or npm account.
 
 1. **Design.** Opus at `high` brainstorms in chat. Geoff approves a design of a page or less: the
    outcome, files and interfaces touched, what is out of scope, one end-to-end check, and the risk
-   class. If the diff fits in one sentence, skip steps 2 to 4.
+   class. The design is committed as a file on a pushed branch and opened for Geoff's read with
+   `gh browse <path> --branch <branch> -R <owner>/<repo>`, beside its summary in chat. If the diff
+   fits in one sentence, skip steps 2 to 4.
 2. **Spec.** An agent writes the approved design at the length precision needs. Every mechanism
    it states is quoted from source or probed, never recalled.
 3. **Spec review.** `spec-plan-review` runs three Opus lenses in parallel, then a probing fold and
@@ -119,8 +121,10 @@ landed at zero fix rounds and paraphrased ones averaged one. An overruled verdic
 reason in the PR body, and a correctness-critical overrule re-runs the review at `xhigh`. The
 adapter's close checklist runs (the auth smoke on `auth-data`), STATUS and ROADMAP are updated, and
 the PR body carries what landed, each `auth-data` verdict, and the score. When the PR is ready for
-Geoff's read, the session that hands it over opens it in his default browser with `gh pr view <n>
--R <owner>/<repo> --web`; a pass that merges its own PR opens no tab (Geoff, 2026-10-11).
+Geoff's read, the session that hands it over opens it with `gh pr view <n> -R <owner>/<repo>
+--web`; a pass that merges its own PR opens no tab. Anything brought to Geoff for approval, a design
+or a PR, opens in his default browser, Firefox, at the moment it is handed over (Geoff,
+2026-10-11).
 
 ## Score
 
