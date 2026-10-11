@@ -13,11 +13,13 @@
 # stderr (PostToolUse feeds exit-2 stderr back to the writing session as blocking
 # feedback, so the session that grew the file is the one told to trim it).
 #
-# Budgets are approximate tokens (bytes / 4), overridable via environment.
+# Budgets are approximate tokens (bytes / 4), overridable via environment. The global
+# CLAUDE.md (realpath ending /claude/.claude/CLAUDE.md) also has a line cap.
 
 CLAUDE_MD_BUDGET="${CLAUDE_MD_BUDGET:-6000}"
 IMPORT_BUDGET="${IMPORT_BUDGET:-4000}"
 MEMORY_INDEX_BUDGET="${MEMORY_INDEX_BUDGET:-1500}"
+CLAUDE_MD_LINE_CAP="${CLAUDE_MD_LINE_CAP:-200}"
 
 tokens_of() { echo $(( $(wc -c < "$1") / 4 )); }
 
@@ -52,9 +54,18 @@ budget_for() {
 }
 
 check() {
-  local f budget toks
+  local f budget toks lines
   f=$(realpath -m "$1" 2>/dev/null) || return 0
   [ -f "$f" ] || return 0
+  # The global CLAUDE.md (tree copy, any worktree's, or ~/.claude/CLAUDE.md through its stow
+  # link) also has a line cap; every other CLAUDE.md keeps only the token budget.
+  if [[ "$f" == */claude/.claude/CLAUDE.md ]]; then
+    lines=$(wc -l < "$f")
+    if [ "$lines" -gt "$CLAUDE_MD_LINE_CAP" ]; then
+      echo "context-budget: $f is ${lines} lines, over its ${CLAUDE_MD_LINE_CAP}-line cap. Move detail to ~/.claude/docs/claude-md-archive.md and leave a one-line pointer here." >&2
+      return 2
+    fi
+  fi
   budget=$(budget_for "$f")
   [ -n "$budget" ] || return 0
   toks=$(tokens_of "$f")

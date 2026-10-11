@@ -123,7 +123,7 @@ page is written for a developer working by hand, and no page addresses a coding 
 Claude Code belongs in its own section of the docs, never on a page for the developer, and no other
 agent is assumed, so there is no AGENTS.md. A page may name an agent-specific file it must document,
 such as a file-tree entry, in one line that labels the tool and links the dedicated doc or
-reference ("`CLAUDE.md`: Claude Code's guidance file; see [Guidance](../reference/guidance.md)").
+reference ("`CLAUDE.md`: Claude Code's guidance file; see [Guidance](../reference/guidance.md)"). <!-- link-ok -->
 
 Choose examples that are generic and likely to apply to many organizations, such as a `staff` role,
 a members area, or signups (Geoff, 2026-10-07: "Examples should be generic and likely to apply to

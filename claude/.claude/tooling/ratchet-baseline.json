@@ -2,7 +2,8 @@
   "comment": "Known violations that may shrink and never grow; ratchet.py beside this file documents the format and rules.",
   "checks": {
     "dead-reference": { "tool": "scripts/check-claude-refs.py" },
-    "retired-phrase": { "tool": "scripts/check-claude-refs.py" }
+    "retired-phrase": { "tool": "scripts/check-claude-refs.py" },
+    "relative-link": { "tool": "scripts/check-claude-refs.py" }
   },
   "entries": [
     { "check": "retired-phrase", "file": "claude/.claude/skills/cairn-figure/SKILL.md",
@@ -12,14 +13,6 @@
       "fingerprint": "currently 1.26",
       "finding": "CS-4", "pass": "D" },
 
-    { "check": "dead-reference", "file": "claude/.claude/docs/bluefin-admin.md",
-      "fingerprint": "~/.local/bin/poplar",
-      "finding": "GA-03", "pass": "A-rest",
-      "defect": "self-mode rewrites every ~/.local/bin path; rewrite only stowed bins" },
-    { "check": "dead-reference", "file": "claude/.claude/instructions/fastmail-api.md",
-      "fingerprint": "~/.local/bin/poplar",
-      "finding": "GA-03", "pass": "A-rest",
-      "defect": "self-mode rewrites every ~/.local/bin path; rewrite only stowed bins" },
     { "check": "dead-reference", "file": "claude/.claude/docs/oom-defense.md",
       "fingerprint": "~/.config/systemd/user.conf.d/",
       "finding": "GA-04", "pass": "C",
@@ -27,6 +20,13 @@
     { "check": "dead-reference", "file": "claude/.claude/docs/oom-defense.md",
       "fingerprint": "~/.local/bin/scoped-test",
       "finding": "GA-05", "pass": "C",
-      "defect": "names a hypothetical future shim, explicitly a deferred stretch idea never built" }
+      "defect": "names a hypothetical future shim, explicitly a deferred stretch idea never built" },
+
+    { "check": "relative-link", "file": "claude/.claude/docs/bubbletea-conventions.md",
+      "fingerprint": "research/2026-04-26-bubbletea-norms.md", "count": 2,
+      "finding": "DC-10", "pass": "D" },
+    { "check": "relative-link", "file": "claude/.claude/docs/bubbletea-conventions.md",
+      "fingerprint": "research/2026-04-26-reference-apps.md", "count": 2,
+      "finding": "DC-10", "pass": "D" }
   ]
 }
