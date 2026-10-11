@@ -34,9 +34,10 @@ artifacts. github.com/glw907/workstation.
 
 ## Immediate next action
 
-Steps 2 and 4 run as background sessions `lean-step2` (cairn-cms) and `lean-step4` (docs-chain
-audit); `claude agents` lists them. Geoff pastes step 3 as `lean-step3` from the plan's
-"Pre-launch for 3" block (ruling R-C). Pass B (rollout step 5) starts once steps 1 and 2 have
+Steps 2 and 4 run as background sessions; `claude agents` lists them.
+`lean-step2` is cairn-cms, `lean-step4` is the docs-chain audit.
+Geoff pastes step 3 as `lean-step3` from the plan's "Pre-launch for 3" block (ruling R-C).
+Pass B (rollout step 5) starts once steps 1 and 2 have
 merged. Plan: `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`. Spec:
 `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
 
