@@ -26,7 +26,7 @@ act `live-account`; the "Later" list carries the question.)
 the design adopts: "Avoid over-engineering. Only make changes that are directly requested or
 clearly necessary. Keep solutions simple and focused: - Scope: Don't add features, refactor code,
 or make "improvements" beyond what was asked. A bug fix doesn't need surrounding code cleaned up. A
-simple feature doesn't need extra configurability. - Defensive coding: Don't add error handling,
+simple feature doesn't need extra configurability. ... - Defensive coding: Don't add error handling,
 fallbacks, or validation for scenarios that can't happen. Trust internal code and framework
 guarantees. Only validate at system boundaries (user input, external APIs). - Abstractions: Don't
 create helpers, utilities, or abstractions for one-time operations. Don't design for hypothetical
@@ -44,9 +44,11 @@ existing text:
 
 1. The research record carries no suggested trigger text for the skill's description. T1 draws the
    description from the design's own trigger prompts and the skills page's create-a-skill line.
-2. `pass-core` steps 3 and 4 restate the review depth that design item 3 changes. T2 turns those
-   two sentences into pointers to `spec-plan-review`, so the skills cannot disagree. This is the
-   only `pass-core` text T2 touches beyond the design's three edits.
+2. `pass-core` steps 2, 3, and 4 restate the spec and review depth that design item 3 changes.
+   Step 2 gains one clause (a spec is written only when `spec-plan-review`'s depth calls for one),
+   and the depth sentences in steps 3 and 4 become pointers to `spec-plan-review`, so the skills
+   cannot disagree on every pass. This is the only `pass-core` text T2 touches beyond the design's
+   three edits.
 3. The design keeps "the three lenses and the verification read" for `auth-data` and
    `live-account` passes and says a plan otherwise gets the mechanics lens only. It says nothing new
    about a spec on other passes. T2 keeps the three lenses and the fold for any spec and drops the
@@ -66,8 +68,8 @@ existing text:
 4. `wc -l claude/.claude/CLAUDE.md` prints fewer than 199 lines, and T2's line count for `pass-core`
    holds (growth no larger than the quoted prompts).
 
-**Clock estimate:** 245 task-minutes (T1 70, T2 35, T3 45, T4 45, close 50), under the design's
-tripwire of 360. The two pairs run in turn, so the path is about 70 + 45 + 50 = 165 minutes.
+**Clock estimate:** 255 task-minutes (T1 70, T2 35, T3 55, T4 45, close 50), under the design's
+tripwire of 360. The two pairs run in turn, so the path is about 70 + 55 + 50 = 175 minutes.
 
 ## Launch
 
@@ -114,7 +116,7 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
   quotes each page verbatim, and carries that page's URL. Nothing is quoted from memory.
 - **Clock.** At each pair's start the session writes `pass-task-clock` in its own pass worktree's
   git dir (`git rev-parse --absolute-git-dir`) with `task=<ids>`, `start=<epoch>`,
-  `estimate=<minutes>` (`task=T1+T2`, `estimate=70`; then `task=T3+T4`, `estimate=45`), checks the
+  `estimate=<minutes>` (`task=T1+T2`, `estimate=70`; then `task=T3+T4`, `estimate=55`), checks the
   overrun when both halves return, and removes the file (pass-core "Clock stop"). The close writes
   its own file (`task=close`, `estimate=50`). Pair worktrees hold no clock file, and the pair
   subagents write none.
@@ -148,8 +150,8 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
     3. Keep one home per rule, with its manifest, pointing at `claude-tooling.md`'s "Layout" table
        for which manifest.
     4. Trace scope to a stated need, with the two sample prompts quoted verbatim from the research
-       ("Avoid over-engineering ..." in full, and the Opus 5 "Deliver what was asked ..." paragraph
-       in full).
+       ("Avoid over-engineering ..." and the Opus 5 "Deliver what was asked ..." paragraph, each as
+       the research quotes it, its `...` elisions kept).
     5. Land the change through a PR whose commit messages and body cite the guidance URL.
     6. Audit with `/doctor prompt-audit`, `/skill-doctor`, and Anthropic's `skill-creator`, named
        and pointed to, never restated.
@@ -175,7 +177,11 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
   - Trigger check, the mechanism sweep 1's T2 proved (commit `6a27ff2`). At task start, `mktemp -d
     /tmp/infra-skill-t1.XXXXXX` makes the scratch directory, its printed path written literally in
     every later command. Each prompt runs in a fresh session from its own subdirectory
-    `<scratch>/<run>`, whose `.claude/skills/claude-infra/` holds a copy of the skill under test.
+    `<scratch>/<run>`, whose `.claude/skills/` holds a copy of the skill under test beside copies
+    of `pass-core` (`claude/.claude/skills/pass-core/`) and `dotfiles-pass`
+    (`.claude/skills/dotfiles-pass/`), so the run measures the competition a real session has.
+    `--setting-sources project` hides the personal and plugin skills; the bundled ones,
+    `update-config` among them, stay visible (review probe).
     Each run is one plain command, `cd <scratch>/<run> && timeout 180 claude -p --model sonnet
     --setting-sources project --output-format stream-json --verbose "<prompt>" >
     <scratch>/<run>.jsonl`, with no pipe, no heredoc, and no inline script. A separate step counts
@@ -201,15 +207,17 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
     class from the adapter's path map, raised only by Geoff's ruling, which the design states in one
     sentence. "A pass takes its highest task's class" stays.
   - `pass-core` step 1, Design: the two sample prompts from the research go in verbatim as one
-    quote block ("Avoid over-engineering ..." in full; the Opus 5 "Deliver what was asked ..."
-    paragraph in full), each with its page URL. One sentence says every planning dispatch prompt
-    carries them, and extras are listed as "Later" and never built.
+    quote block ("Avoid over-engineering ..." and the Opus 5 "Deliver what was asked ..."
+    paragraph, each as the research quotes it, its `...` elisions kept), each with its page URL.
+    One sentence says every planning dispatch prompt carries them, and extras are listed as "Later"
+    and never built.
   - `pass-core` step 4, Plan: one sentence of the estimate tripwire. A plan whose task-minutes
     exceed twice its design's estimate goes back to Geoff with the reason before launch.
   - `pass-core` steps 3 and 4: the sentences that state review depth ("runs three Opus lenses in
     parallel, then a probing fold and one verification read"; "Plan review runs the mechanics lens
     and a verification read; an `auth-data` or `runner` pass ... runs all three lenses") become
-    pointers to `spec-plan-review` for depth. Reading 2 above.
+    pointers to `spec-plan-review` for depth. Step 2 gains one clause: a spec is written only when
+    `spec-plan-review`'s depth calls for one. Reading 2 above.
   - `spec-plan-review`, findings: every lens reports everything and tags each finding as
     `correctness` (it affects correctness or a stated requirement) or `optional`. The fold drops
     the optional ones, in the best-practices page's words: "flag only gaps that affect correctness
@@ -225,10 +233,15 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
 - **Files.** `claude/.claude/skills/pass-core/SKILL.md`, `claude/.claude/skills/spec-plan-review/SKILL.md`.
 - **Risk class.** `runner`.
 - **Acceptance.**
-  - `pass-core` growth: `wc -l` after the edit, minus 161, is no more than the line count of the
-    quote block holding the two sample prompts. The commit body records both numbers.
+  - `pass-core` growth: `wc -l` after the edit, minus 161, is no more than the number of lines
+    starting with `>` (the quote block, its URLs included). The commit body records both numbers.
+    The budget is tight (the review's draft grew 20 lines against a 17-line block), so the edits
+    keep to it this way: the quote block follows step 1's last line with no blank line before it
+    (a CommonMark block quote may interrupt a paragraph); the sentence introducing it and the
+    "Later" sentence ride in step 1's existing lines; the risk-class, step 2, tripwire, and pointer
+    edits net to zero lines, the pointers being shorter than the depth sentences they replace.
   - `git diff -- claude/.claude/skills/pass-core/SKILL.md` touches only the "Lifecycle" opening
-    paragraph and steps 1, 3, and 4.
+    paragraph and steps 1 to 4.
   - `grep -n "verification read" claude/.claude/skills/pass-core/SKILL.md` prints nothing (depth now
     lives in `spec-plan-review` alone).
   - `spec-plan-review` names the tags `correctness` and `optional`, quotes the "flag only gaps"
@@ -250,9 +263,19 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
     because the hooks page says the `if` filter is best-effort.
   - The commands it guards are the design's list: `cairn-run-gate`, `ci-green`,
     `scripts/check.sh`, `scripts/gate.sh`, `npm test`, `npm run check` (with or without a
-    `:suffix`, such as `npm run check:cairn`), and `gh pr checks`. "Piped into" means a later stage
-    of the same pipeline starts with `tail` or `head`. A `||`, `;`, `&&`, or newline ends a
-    pipeline.
+    `:suffix`, such as `npm run check:cairn`), and `gh pr checks`. A pipeline stage is guarded only
+    when its command word is one of these, after any `VAR=value` assignments and an optional
+    `timeout <n>`; `bash scripts/check.sh` and `bash scripts/gate.sh` count, since `bash` runs the
+    script. A stage that merely names a gate file (`cat scripts/check.sh`, `grep -n run
+    scripts/check.sh`, `git diff -- scripts/gate.sh`) is not guarded. "Piped into" means a later
+    stage of the same pipeline starts with `tail` or `head`. `|` and `|&` are pipes; `||`, `;`,
+    `&&`, and a newline end a pipeline.
+  - A cheap regex pre-filter runs first, the shape `claude-block-op` uses: a command that names no
+    guarded command, or no `tail` or `head`, exits 0 at once. Input the script cannot parse (for
+    example a heredoc whose body holds an unpaired quote, on which `shlex` raises `ValueError: No
+    closing quotation`, review probe) exits 0 silently. Any other exit but 2 is a non-blocking
+    error, which the hooks page says puts a notice on the call, so it would show on every such
+    command in every session.
   - `claude/.claude/settings.json` adds `{"type": "command", "command": "claude-tail-guard",
     "timeout": 10}` to the `Bash` matcher's `hooks` list, after `claude-secret-guard`, named bare
     like its siblings.
@@ -270,12 +293,16 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
   - Denied (exit 2, stderr names a redirect): `cairn-run-gate 'bash scripts/check.sh' | tail -5`;
     `bash scripts/gate.sh 2>&1 | head -40`; `ci-green 12 | tail -1`; `npm test | tail -20`; `npm run
     check:cairn 2>&1 | tail`; `gh pr checks 7 --watch | tail -3`; `bash scripts/check.sh | tee
-    out.log | tail`.
+    out.log | tail`; `bash scripts/gate.sh |& tail -5`; `timeout 600 cairn-run-gate 'bash
+    scripts/check.sh' | tail`.
   - Allowed (exit 0, no output): `bash scripts/gate.sh`; `cairn-run-gate 'bash scripts/check.sh' >
     /tmp/gate.log 2>&1`; `npm test; git log --oneline | head -5`; `npm test || echo failed`; `tail
-    -5 gate.log`; `git log | head`; input with no `tool_input.command`.
+    -5 gate.log`; `git log | head`; `cat scripts/check.sh | head -20`; `git diff -- scripts/gate.sh
+    | head`; `grep -n run scripts/check.sh | tail`; `npm test` and `git log | head` on two lines; a
+    `git commit` heredoc whose body holds an apostrophe and the words `npm test | tail`; input with
+    no `tool_input.command`.
 - **Pair.** Runs as a pair with T4 (disjoint files).
-- **Estimate.** 45 minutes.
+- **Estimate.** 55 minutes.
 
 ### T4. The guidance warning
 
@@ -287,7 +314,9 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
     `claude/.claude/CLAUDE.md`, and no message carries an `http://` or `https://` URL whose host is
     `anthropic.com`, `claude.com`, or a subdomain of either (`code.claude.com`,
     `platform.claude.com`), it prints one `WARNING:` line naming the changed paths. It always exits
-    0. When `<base>` does not resolve, it prints one line saying the check was skipped and exits 0.
+    0. When `<base>` does not resolve, or either git command fails (a base with no shared history
+    makes `git diff` exit 128, review probe), it prints one line saying the check was skipped and
+    exits 0, so the step can never fail the gate through `check.sh`'s `run`.
   - `scripts/check.sh` runs it as a step (`run "guidance citation (warning only)" bash
     scripts/check-guidance-cite.sh`) and runs its test (`run "guidance citation test" bash
     tests/check-guidance-cite.test.sh`). The step never fails the gate. The design makes it a hard
@@ -308,7 +337,11 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
     are silent;
   - a URL on another host (`https://example.com/claude.com`) still warns;
   - a branch touching only `docs/` is silent;
-  - a missing base prints the skip line and exits 0.
+  - a skill change whose only `anthropic.com` mention is the `Co-Authored-By: ...
+    <noreply@anthropic.com>` trailer every commit here carries still prints `WARNING:` (a loose host
+    grep would pass the other cases and never warn on a real branch);
+  - a missing base, and an orphan-branch base with no shared history, each print the skip line and
+    exit 0.
 - **Pair.** Runs as a pair with T3.
 - **Estimate.** 45 minutes. Pair B starts after pair A merges and its gate is green.
 
@@ -330,17 +363,19 @@ Per pass-core "Close" and dotfiles-pass "Close checklist", in order:
    it ready, and open it in Geoff's browser with `gh pr view <n> -R glw907/workstation --web`. The
    body carries:
    - what landed (task id, commit), the review verdict, and T1's trigger table;
-   - "What goes live": at the merge, the skills, `CLAUDE.md`, and `settings.json` change at once
-     through their stow links. The `settings.json` hook names `claude-tail-guard`, which reaches
-     `~/.local/bin` only after `stow -R bin`, so the stow follows the pull at once. Rollback is
+   - "What goes live": at the conducting session's pull into `~/.dotfiles`, the skills,
+     `CLAUDE.md`, and `settings.json` change at once through their stow links. The `settings.json`
+     hook names `claude-tail-guard`, which reaches `~/.local/bin` only after `stow -R bin`; until
+     then every Bash call carries a non-blocking hook-error notice (exit 127, hooks page), so the
+     pull and the stow run as one command. Rollback is
      `git revert -m 1 <merge>` on `main`, then a pull;
    - "Post-merge steps for the conducting session" (the design's "Conductor restart"; the executor
      performs none of them), in this order. The settings restore comes before the pull, because
      this PR changes `settings.json` and `git pull --ff-only` refuses a file with an uncommitted
      change that the merge touches:
      1. Restore the stowed `settings.json` from Geoff's one-discussion `/effort high`.
-     2. Pull `~/.dotfiles` (`git -C ~/.dotfiles pull --ff-only`), then `stow -R bin` from
-        `~/.dotfiles` for the new hook script.
+     2. Pull `~/.dotfiles` and stow the new hook script in one command: `git -C ~/.dotfiles pull
+        --ff-only && stow -d ~/.dotfiles -R bin`.
      3. Write the conductor's state into `docs/STATUS.md`: work in flight with session names and
         watchers, the next steps in order, decisions pending with Geoff, and post-merge steps owed
         (for example, dubplate's memory prune).
