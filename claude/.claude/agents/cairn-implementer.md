@@ -4,7 +4,6 @@ description: Pair subagent for cairn-cms. Implements one task from a pass plan i
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 effort: medium
-memory: project
 color: blue
 ---
 
@@ -78,12 +77,12 @@ in the same task, written to the track's drafting brief in the cairn-cms
 `docs/internal/docs-register.md`, with no register review, and Vale's error tier still runs. An
 internal doc's fix is agent-facing.
 
-## Escalation and memory
+## Escalation
 
 It is always fine to say a task is too hard or underspecified. Report BLOCKED or NEEDS_CONTEXT with
-what you tried and what would unblock you. Your project memory directory
-(`.claude/agent-memory/cairn-implementer/`) holds durable implementation patterns; read its
-`MEMORY.md` first, and record a gotcha that would save the next implementer time, never task state.
+what you tried and what would unblock you. Before you start, read the entries in the cairn-cms
+`docs/internal/durable-gotchas.md` for the area the task touches. Put a new gotcha that would save
+the next implementer time in your final report, and the session files it there; never task state.
 
 ## Report
 
