@@ -34,21 +34,19 @@ on cairn-cms branch `engine-pre-2b-b`. It merges its own PR (Geoff's ruling) and
 stop or at the merge. While it is live (`claude agents --json`), no other session touches
 cairn-cms, its main checkout, or its worktrees.
 
-In dotfiles, infra sweep 1 (the guard) is launch-ready. Its plan is
-`docs/superpowers/plans/2026-10-11-infra-sweep-1-guard.md` on branch `worktree-infra-sweep-plan`,
-and the session continues that branch. Launch from `~/.dotfiles` with the plan's "Launch" block:
-`claude --bg --model sonnet --effort medium --name infra-sweep-1` with the prompt from
-`2026-10-11-infra-sweep-1-guard-prompt.txt`, read through `git show`.
+In dotfiles, infra sweep 1 (the guard) is built and awaits Geoff's read of its PR (branch
+`worktree-infra-sweep-1`, session `infra-sweep-1`, job id `661df253`). Its gate is green and the
+whole-branch review accepted it. After the merge, the next action is the sweep-2 planning
+session, attended with Geoff, planned from the baseline sweep-1 leaves: 15 entries by check id
+(`dead-reference` 2, `retired-phrase` 2, `relative-link` 2, `description-cap` 5, `fork-skill` 4).
+Launch it with:
+`cd ~/.dotfiles && claude --model opus --effort high --name infra-sweep-2-plan "$(cat docs/superpowers/plans/2026-10-11-infra-sweep-2-planning-prompt.txt)"`.
 
 **Infra sweep after the cutover** (re-planned 2026-10-11; spec
 `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md` "Lean re-plan", evidence
 `docs/superpowers/research/2026-10-11-infra-sweep-survivor-ledger.md`). A-core, B, and
 style-guide-sync are merged. Geoff's rulings R1 to R4 split what survives into sweep-1 (the
-guard's tools) and sweep-2 (skill and doc content), which is planned from the baseline that
-sweep-1 leaves. Poplar's `pass-core` adapter follows sweep-2.
-
-Sweep-1 executes in session `infra-sweep-1` (job id `661df253`), branch
-`worktree-infra-sweep-1`, started 2026-10-11.
+guard's tools) and sweep-2 (skill and doc content). Poplar's `pass-core` adapter follows sweep-2.
 
 ## Open items
 
