@@ -1,9 +1,10 @@
 # Infra sweep 2: content, chaining, and alignment (design)
 
-**Status:** re-checked against main at `5d35c35`, 2026-10-11, awaiting Geoff. First brought that day
-by the conducting session (`c747c352`). E implements Geoff's choices of that day, F is his request
-("please add the monthly review"), and H is his "now" ruling on dubplate PR #2's found-not-done
-list. Parent spec: `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md` "Lean re-plan
+**Status:** re-checked against main at `5d35c35`, 2026-10-11, and amended with Geoff's rulings of
+that day (H trimmed, I added); awaiting Geoff. First brought that day by the conducting session
+(`c747c352`). E implements Geoff's choices of that day, F is his request ("please add the monthly
+review"), H is his "now" ruling on dubplate PR #2's found-not-done list, and I is his ruling on
+Charm's model. Parent spec: `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md` "Lean re-plan
 (2026-10-11)". Evidence: `docs/superpowers/research/2026-10-11-infra-sweep-survivor-ledger.md`.
 
 **Already landed, so dropped here.** PR #8 (`01a562b`) landed the review depth by design size and
@@ -18,16 +19,17 @@ PR #10 (`81af5cc`) lets a hand-over merge itself (`pass-core/SKILL.md:180-185`).
 Every surviving content finding is fixed and the ratchet baseline holds no entries. The conductor
 role and pre-approved planning live in `pass-core` instead of a launch prompt, and an `ordinary`
 pass merges its own PR. The workstation checks itself against Anthropic's guidance every month
-without anyone starting the check. Three dubplate process facts reach the skills that execute them.
+without anyone starting the check. Two dubplate process facts reach the skills that execute them,
+and the TUI skills rest on Charm's published practice.
 
 ## Tasks
 
 All are `runner` class and land in dotfiles. Minutes are rough.
 
-- **A. Go and TUI skills.** CS-1 to CS-5, CS-7, CS-11 to CS-13, and DC-10. Split `go-conventions`
-  (592 lines) and `elm-conventions` (582) under 500, as a pair, with reference material one level
-  down. Retire `claude/.claude/docs/bubbletea-conventions.md`, which clears its two `relative-link`
-  entries. Trigger checks for `go-conventions`. About 240.
+- **A. Go skills.** CS-1 to CS-5, CS-7, CS-11 to CS-13, and DC-10. Split `go-conventions` (592
+  lines) under 500, with reference material one level down. Retire
+  `claude/.claude/docs/bubbletea-conventions.md`, which clears its two `relative-link` entries.
+  Trigger checks for `go-conventions`. `elm-conventions` moves to I. About 160.
 - **B. Cairn-facing skills and agents.** PS-02, PS-03, PS-05, PS-06, PS-17, PS-18, PS-19, PS-28's
   trims, AW-14, AW-15, and AW-22. Trigger checks for `visual-fidelity` and `cairn-release`. About 135.
 - **C. Site and generic skills.** PS-08, PS-10, PS-20, PS-21, the PS-09 and PS-11 residuals, and
@@ -59,34 +61,48 @@ All are `runner` class and land in dotfiles. Minutes are rough.
   `~/.dotfiles`, so each `/effort` choice leaves an uncommitted change that blocks the clean-checkout
   launch checks. Machine-local preference writes move out of the tracked file, by a method the plan
   takes from Claude Code's settings documentation and probes. About 45.
-- **H. Three dubplate facts land where they execute** (Geoff, 2026-10-11, "now"). None is in the
+- **H. Two dubplate facts land where they execute** (Geoff, 2026-10-11, "now"). Neither is in the
   tree today. (a) `go-ship` step 2 "Simplify", which dispatches `code-simplifier`: the dispatch
   says "no sub-agents, work serially, one gate, one commit". (b) `pass-core` "Ledgers": cite a
   commit id that survives a merge, a merge commit or an id on the default branch, since a squash or
-  rebase rewrites ids. (c) the `prose-voice-reviewer` agent: on a spec, review prose once per
-  revision, facts and contradictions first. About 30.
+  rebase rewrites ids. The third fact, prose review once per spec revision, is dropped: Geoff keeps
+  his 2026-09-08 ruling (`spec-plan-review/SKILL.md:22`). About 20.
+- **I. `bubbletea-design` and `elm-conventions` rest on Charm's practice** (Geoff, 2026-10-11).
+  Primary source: Charm's agent guide for Crush's Bubble Tea v2 UI
+  (<https://github.com/charmbracelet/crush/blob/main/internal/ui/AGENTS.md>), FSL-1.1-MIT, so the
+  skills cite and distill it and never copy the file in. Secondary: the Bubble Tea v2 discussion
+  (<https://github.com/charmbracelet/bubbletea/discussions/1374>) and the releases page (v2.1.0
+  current). Every rule cites Charm or says why the house departs. `elm-conventions` adopts Charm's
+  model: one top-level Bubble Tea model, with child components as plain structs that expose
+  imperative methods ("Never use commands to send messages when you can directly mutate children or
+  state"; "do not nest models"). That replaces the rule that nested models signal parents via Msg
+  types, and the rewrite brings the skill under 500 lines. `claude-tooling.md` records the order of
+  use (house skills, then Charm's guide, then the installed `tui-design` plugin, gfargo, MIT) and
+  gives `tui-design` its rule of use. `tui-visual-verify` is unchanged. About 75.
 
-B, C, and D touch disjoint files, so they can run as pairs. F and G touch disjoint files too. H's
-`pass-core` line rides with E.
+B, C, and D touch disjoint files, so they can run as pairs, and so can A and I. F and G touch
+disjoint files too. H's `pass-core` line rides with E.
 
 ## Out of scope
 
-Other repos: DC-23's ECXC anchors go to ecxc-ski's ROADMAP. Atomic writes and the head-SHA race in
+Other repos: DC-23's ECXC anchors go to ecxc-ski's ROADMAP, and poplar's refactor to Charm's
+model, a separate poplar pass. Atomic writes and the head-SHA race in
 `fetch_skill`, and the checks deferred by ruling R2. A per-rule basis record and a quarterly prune;
 F's review surfaces them as it runs.
 
 ## End-to-end check
 
 `bash scripts/gate.sh` prints `gate exit: 0`. `ratchet-baseline.json` has an empty `entries` list.
-`go-conventions` and `elm-conventions` are each under 500 lines. Each trimmed description passes
+`go-conventions` and `elm-conventions` are each under 500 lines, and every `elm-conventions` rule
+cites Charm or names its departure. Each trimmed description passes
 its trigger prompts. A dry run of F's review on today's tree completes unattended and hands over
 either a design or a quiet-month line. A `/effort` change leaves
-`git -C ~/.dotfiles status --porcelain` empty. `grep` finds each of H's three facts in its target.
+`git -C ~/.dotfiles status --porcelain` empty. `grep` finds each of H's two facts in its target.
 
 ## Risk and size
 
 `runner`, from the path map. The `live-account` flag is dropped: a branch push and a PR are every
-dotfiles pass's normal path, so review depth is the plan's mechanics lens and the fold. About 810
+dotfiles pass's normal path, so review depth is the plan's mechanics lens and the fold. About 795
 task-minutes, roughly a 6-hour path with pairs.
 
 ## How it runs
