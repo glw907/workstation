@@ -4,9 +4,10 @@ are the merged ones. Work in `~/.dotfiles` on `main`. Read
 `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md` (Conventions, Sources, S1-T14 to S1-T18,
 and "Steps 2 to 4") and the spec beside it. Execute S1-T14, S1-T15, S1-T16, S1-T17, S1-T17b, and
 S1-T18 in order. You may push the tag `pre-lean-process` in S1-T14 and push `main` in S1-T18, both
-to `glw907/workstation`, and in S1-T18 start steps 2 and 4 with the plan's `claude --bg` launch
-blocks. If a check or probe fails, or the clock-stop hook misfires (a stop line with no clock file,
-or a hook error that names `claude-clock-stop`), stop: write the failure and one question into
-`docs/STATUS.md`, run `notify-send -u normal "lean cutover: 1b stopped"`, and wait. Never revert,
-roll back, or edit settings on your own; the remedy is Geoff's call. At S1-T18's end, notify Geoff
-that steps 2 and 4 are running and step 3 is ready to paste, and end.
+to `glw907/workstation`, delete the S1-T17b probe's branch from it if one was pushed, and in S1-T18
+start steps 2 and 4 with the plan's `claude --bg` launch blocks. If a check or probe fails, or the
+clock-stop hook misfires (a stop line with no clock file, or a hook error that names
+`claude-clock-stop`), stop: write the failure and one question into `docs/STATUS.md`, run
+`notify-send -u normal "lean cutover: 1b stopped"`, and wait. Never revert, roll back, or edit
+settings on your own; the remedy is Geoff's call. At S1-T18's end, notify Geoff that steps 2 and 4
+are running and step 3 is ready to paste, and end.

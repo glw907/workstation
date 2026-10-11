@@ -194,3 +194,88 @@ ruling R-D (2026-10-10), with the coordinator's R-D addendum. Probes ran in `/tm
 
 **Measures:** plan 1,400 lines before, 1,423 after. Total estimate 1,990 task-minutes (S1-T17b adds
 20). Wall clock is about 1,140 minutes.
+
+## Third fold
+
+Input: `2026-10-10-lean-pass-cutover-plan-final-verification.md` (3 major, 8 minor), plus three
+model-alignment changes from the coordinator, sourced in `2026-10-10-anthropic-agentic-guidance.md`
+sections 5 and 7. The Opus 5 review lines sit in section 5, not 6. The probe harness in
+`/tmp/claude-1000/final-verify/` was reused. New runners: `run-rollback-fold3.sh`,
+`run-launch-fold3.sh`, and `f3-m2/case.sh`. Each replay runs the block extracted verbatim from the
+plan with `awk`, and `cmp` confirms the plan text equals the replayed file.
+
+**What this fold verified before acting:**
+
+- **agent-view, "What deleting a session removes"** (fetched 2026-10-10): "When you delete a session
+  whose worktree has commits that Claude Code can't confirm are saved elsewhere, Claude Code keeps the
+  worktree and the session"; "A worktree git no longer recognizes, for example after `git worktree
+  prune`, doesn't block the delete. Claude Code deletes the session and leaves the directory on
+  disk." Same page: "the next time you attach or reply, the session resumes where it left off".
+  `claude attach --help`: "Usage: claude attach <id|name>".
+- **`claude agents --json`** on this machine prints objects with a `name` field. `--help` says
+  `--all` "also include[s] completed background sessions".
+- **Bash tool:** "Shell state (env vars, functions) does not persist".
+- **git:** `git worktree remove --force` on a locked worktree exits 128 ("cannot remove a locked
+  working tree"). `--force --force` exits 0.
+- **Ignore coverage:** `git check-ignore -q .claude/worktrees/x` exits 0 in cairn-cms and dubplate.
+  It exits 1 in ecxc-ski, 907-life, aksailingclub-org, xcathletes-org, and cairn-pub. In a scratch
+  repo, appending the line to `rev-parse --path-format=absolute --git-path info/exclude` turned a
+  `?? .claude/` status into an empty one.
+- **Freshness check:** `fetch`, then the default-branch test and `rev-list --count HEAD..origin/main`
+  = 0. A scratch clone passed when clean and when ahead by its own commit. It failed when behind and
+  when on another branch.
+- **Tag:** "create unless at `M^1`, push unless `ls-remote` prints that sha" exited 0 on a first
+  run, on a resume after both steps, and on a resume after a failed push, which pushed the tag.
+
+**Dispositions:**
+
+| ID | Disposition | Where |
+|---|---|---|
+| F-M1 | Folded as proposed: commit a stopped 1b's STATUS or ROADMAP first, revert in a scratch worktree, fast-forward the live `main`, then restow before the push. Added the recovery for a conflict in another file: resolve it in `$R` with `--theirs`, continue, then run the block's last three lines. | S1-T14 rollback |
+| F-M2 | Folded: the cleanup order is `claude stop`, `git worktree remove --force --force`, `git branch -D`, a remote delete only if `ls-remote` shows the branch, then `claude rm`. It also runs before a failure stop. The listing comes from the launch's own Bash call, and the final check reads `claude agents --json --all`. One deviation: a second `--force`, because a locked worktree refuses one `--force`, and whether Claude Code locks its worktrees is unprobed. 1b's prompt grants the conditional remote delete. | S1-T17b; prompt 1b |
+| F-M3 | Folded: `pass-core` "Execute" fetches, then checks for the default branch and for `rev-list --count HEAD..origin/<default>` = 0 before the launch. The acceptance greps `HEAD..origin/` in that section. | S1-T5 |
+| F-m1 | Folded: the regex gains the three alternations. It caught all nine intended samples and printed nothing over the prompts, HEAD's `pass-core`, the global and cairn-cms `CLAUDE.md`, and every site's `CLAUDE.md` and `.claude/rules`. S2-T1's acceptance and the step 3 grep list now run it. | S1-T5; S2-T1; step 3 grep list |
+| F-m2 | Folded: the probe prompt runs `notify-send -u normal` and appends its exit status. The acceptance reads `ok` then `0`. | S1-T17b |
+| F-m3 | Folded: the planning session appends `.claude/worktrees/` to `info/exclude` wherever `check-ignore` fails. This replaces "added by the plan's first task". | S1-T5 |
+| F-m4 | Folded: a task's end, and a pair's return after its overrun check, removes its clock file. | S1-T5 "Clock stop"; step 3 "Clock stop" |
+| F-m5 | Folded: each launch block skips when `claude agents --json` already names its `--name`. S1-T18's acceptance accepts the skip. | Launches 2 and 4; S1-T18 |
+| F-m6 | Folded: the tag is created and pushed independently, and `M` is re-derived in each Bash call. | S1-T14 |
+| F-m7 | Folded: resume with `claude attach <name>` first. Where `--bg --resume` is needed, it runs from the main checkout. | Conventions, "Resume" |
+| F-m8 | Folded: a pass that continues an existing branch launches the same way, and its first task merges or cherry-picks that branch. | S1-T5 |
+| Model 1 | Folded: lenses report every gap, ranked by consequence, quoting the Opus 5 page. The fold filters, using the best-practices over-engineering warning as its own guidance. Acceptance greps both phrases. | S1-T7 |
+| Model 2 | Folded with one reading: `high` covers "design and plan authorship (ME-1, ruling 9)", not spec review. The spec's Lifecycle preamble says "Effort is medium unless stated", and step 3 states no effort. S1-T7 keeps "Reviewer effort is `medium`" and its no-`high` grep, and the Opus 5 review line says accuracy "holds at lower effort settings". Putting spec review at `high` would depart from the spec, which is Geoff's call. `xhigh` and `max` now need a pass score's measured gain, which also bounds ME-2's ladder. | S1-T5 "Models" |
+| Model 3 | Folded: the executor is Sonnet 5.5 at `medium`. A clock stop or CI red traced to executor reasoning moves the next pass to `high`, quoting the Sonnet 5.5 page. | S1-T5 "Models" |
+
+Not folded (outside the remit; the verification marked them optional wording): plan:288's "both
+probes pass", where three probes now gate step 1, and cairn-pass's `.claude/worktrees/<branch>`.
+
+**Replays:**
+
+F-M1. Command: `run-rollback-fold3.sh <home> <scenario> blocks/rollback-fold3.sh [complete]`. After
+each run it checks four things: the `~/.local/bin` link set against the pre-merge snapshot, the
+live `settings.json` against `git show <pre>:claude/.claude/settings.json`, a grep for conflict markers over the live tree,
+and the STATUS stop note.
+
+| Scenario | Old block | Fold 3 block |
+|---|---|---|
+| R4, dirty STATUS from a stopped 1b | exit 128; stop note lost; no rollback; `claude-clock-stop` link live | exit 0; links and `settings.json` = pre-merge; 0 markers; stop note in HEAD's STATUS (commit "Record the 1b stop"); S1-T15's item kept; pushed |
+| R4r, dirty STATUS and ROADMAP (stopped inside S1-T15) | not run | exit 0; links and `settings.json` = pre-merge; 0 markers; both notes kept |
+| R6, a later commit edits `settings.json` | exit 128; `UU settings.json` and markers in the live tree; one dangling link | exit 128 by design; live tree untouched and coherent: 0 markers, no revert in progress, 0 dangling links, clean status; scratch worktree left |
+| R6, then the plan's recovery lines | n/a | exit 0; links and `settings.json` = pre-merge; 0 markers; pushed |
+| R1, R2, R3, R5 (clean) | exit 0 (verification) | exit 0 each; links and `settings.json` = pre-merge; 0 markers; `origin/main` = HEAD |
+| R7, push rejected (clean) | exit 1, restowed (verification) | exit 1; revert committed locally and restowed first; links and `settings.json` = pre-merge; 0 markers |
+
+F-M2, git side. Command: `f3-m2/case.sh <dir> <unpushed|pushed|dirty|locked>` with a stub
+`claude`. The plan's launch line passed `bash -n` and exited 0 with a listing. In all four cases,
+the cleanup exited 0, `git worktree list` stopped naming the probe worktree before `claude rm` ran,
+and the worktree list, branch list, and remote refs matched their pre-probe state with the directory
+gone. The live probe still has to show four things: `claude stop` returns after the process ends,
+`claude rm` exits 0 on a session whose worktree git has dropped, `claude agents --json --all` then
+omits it, and `notify-send` from a `--bg` session exits 0.
+
+F-m5. Command: `run-launch-fold3.sh <2|4> <case>` with `shim24`. Clean: exit 0, one launch, in
+`~/Projects/cairn-cms` or `~/.dotfiles`, with the prompt byte-identical. Name already listed: exit
+0, no launch, no git call. Another name listed: one launch. Failed fetch: exit 1, no launch. `HEAD`
+behind: exit 1, no launch.
+
+**Measures:** plan 1,423 lines before, 1,471 after. Clock estimates unchanged (1,990 task-minutes).

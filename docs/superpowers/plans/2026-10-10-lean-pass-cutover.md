@@ -47,8 +47,10 @@ session's recorded handle.
   change makes no commit and says so in its notes.
 - **Resume.** A relaunch with the same launch prompt finds the done tasks by `git log --oneline` on
   the step's branch (task ids in subjects) and starts at the first task whose acceptance fails. A
-  `--bg` step resumes in its own worktree with `claude --bg --resume <session-id>`, which "continues
-  that session in the background under the same ID" (`claude --help`).
+  stopped `--bg` step resumes with `claude attach <name>`: "the next time you attach or reply, the
+  session resumes where it left off" (agent-view). Where `claude --bg --resume <session-id>` is
+  needed, run it from the repo's main checkout, since a session started inside an existing worktree
+  "still asks before committing" (M2).
 - **Gates.** Every gate runs through `cairn-run-gate '<string>'`, re-issued on exit 75 until it
   prints `gate exit:`, with the Bash tool's `timeout: 600000` (source M7). Per-repo gate strings are
   in each step.
@@ -441,34 +443,43 @@ repo, the merge is live, and both probes pass.
 
 ### S1-T5. Rewrite `pass-core`
 
-- **Outcome.** `claude/.claude/skills/pass-core/SKILL.md` (312 lines today) holds the lean process in
-  about 120 lines, sections in this order: "Lifecycle" (the spec's six steps, risk classes as a
+- **Outcome.** `claude/.claude/skills/pass-core/SKILL.md` (312 lines today) holds the lean process
+  in about 120 lines, sections in this order: "Lifecycle" (the spec's six steps, risk classes as a
   floor, the `live-account` flag, the one-sentence-diff skip, the plan's task fields with pairs
   marked, folding a single-deliverable task into a neighbor); "Models" (ME-1, ME-2, ME-8, ME-10's
-  `low` and `max`); "Execute" (one session, which the planning session starts from the repo's main
-  checkout as `claude --bg --model sonnet --effort medium --name <name> "$(cat <prompt file>)"`, so
-  Geoff pastes nothing (ruling R-D, M2); its first act is `EnterWorktree`, and its first act in the
-  new worktree is the adapter's setup command; it commits without asking and pushes the branch it
-  created, and its PR comes from that branch; the repo's `.gitignore` carries `.claude/worktrees/`,
-  added by the plan's first task where missing; its name and id recorded in STATUS; the launch prompt
-  names its `glw907/<repo>` push target, M1; the API-drop wake-up and the lid-switch hold; it writes
-  code and tests and commits); "Pairs" (spec Execution item 2, PG-11's port rule); "Gates" (spec
-  Execution items 3, 4, and 5; the CI watch as a background Bash task; PG-5, PG-10, PG-13's pointer;
-  `RUN_GATE_IF_BUSY=defer` limits); "Clock stop" (the task-clock file's path and three lines,
-  written at each task start from a `cd` into the task's worktree, removed at the close; ruling 13's
-  response; a resume after a stop rewrites `start=`, or `estimate=` to the figure Geoff names; the
-  stop cannot fire while the session waits on a pair, since isolated pair worktrees hold no clock
-  file);
-  "Close"
-  (spec Lifecycle step 6, ME-4); "Score" (the five rows and their sources, attended events, escapes,
-  ME-12); "Ledgers" (STATUS present tense and 60 lines or fewer; ROADMAP tiers; git and PR bodies are
-  history; `HISTORY.md` and post-mortems stop growing; a lesson lands where it executes; ruling 8);
-  "Scope" (ME-15's home); "Launch prompt" (the shape a STATUS next action takes: goal, scope, the
-  plan path, the checkout, the exact `claude` line; the prompt lives in a committed file, launched
-  as `"$(cat <file>)"`, never inline in double quotes). Superpowers skills yield: plans stay
-  outcome-only and skip `writing-plans`' code steps and its execution-method question; test-first
-  applies to `auth-data` tasks (the 2026-09-27 ruling's `auth-data` half; its `engine-logic` class
-  no longer exists).
+  `low` and `max`; Opus at `medium` by default and `high` for design and plan authorship (ME-1,
+  ruling 9); `xhigh` and `max` only where a pass score shows a measured gain, per the Opus 5.5
+  prompting page: "Reserve xhigh and max for work where you've measured a quality gain"; the
+  executor Sonnet 5.5 at `medium`, and a clock stop or CI red traced to executor reasoning moves the
+  next pass to `high`, per the Sonnet 5.5 page: "start at medium for well-specified tasks and move
+  to high for harder or longer ones"); "Execute" (one session, which the planning session starts
+  from the repo's main checkout as `claude --bg --model sonnet --effort medium --name <name> "$(cat
+  <prompt file>)"`, so Geoff pastes nothing (ruling R-D, M2); before the launch the planning session
+  runs `git -C <repo> fetch origin` and checks that the main checkout is on its default branch and
+  `git -C <repo> rev-list --count HEAD..origin/<default>` prints 0, since `"head"` branches from
+  local `HEAD` (M4), and appends `.claude/worktrees/` to the file `git -C <repo> rev-parse
+  --path-format=absolute --git-path info/exclude` names wherever `git -C <repo> check-ignore -q
+  .claude/worktrees/x` fails; its first act is `EnterWorktree`, and its first act in the new
+  worktree is the adapter's setup command; it commits without asking and pushes the branch it
+  created, and its PR comes from that branch; a pass that continues an existing branch launches the
+  same way, and its first task merges or cherry-picks that branch into the new one; its name and id
+  recorded in STATUS; the launch prompt names its `glw907/<repo>` push target, M1; the API-drop
+  wake-up and the lid-switch hold; it writes code and tests and commits); "Pairs" (spec Execution
+  item 2, PG-11's port rule); "Gates" (spec Execution items 3, 4, and 5; the CI watch as a
+  background Bash task; PG-5, PG-10, PG-13's pointer; `RUN_GATE_IF_BUSY=defer` limits); "Clock stop"
+  (the task-clock file's path and three lines, written at each task start from a `cd` into the
+  task's worktree, removed at each task's end, and at a pair's return after its overrun check;
+  ruling 13's response; a resume after a stop rewrites `start=`, or `estimate=` to the figure Geoff
+  names; the stop cannot fire while the session waits on a pair, since isolated pair worktrees hold
+  no clock file); "Close" (spec Lifecycle step 6, ME-4); "Score" (the five rows and their sources,
+  attended events, escapes, ME-12); "Ledgers" (STATUS present tense and 60 lines or fewer; ROADMAP
+  tiers; git and PR bodies are history; `HISTORY.md` and post-mortems stop growing; a lesson lands
+  where it executes; ruling 8); "Scope" (ME-15's home); "Launch prompt" (the shape a STATUS next
+  action takes: goal, scope, the plan path, the checkout, the exact `claude` line; the prompt lives
+  in a committed file, launched as `"$(cat <file>)"`, never inline in double quotes). Superpowers
+  skills yield: plans stay outcome-only and skip `writing-plans`' code steps and its
+  execution-method question; test-first applies to `auth-data` tasks (the 2026-09-27 ruling's
+  `auth-data` half; its `engine-logic` class no longer exists).
 - **Files.** `claude/.claude/skills/pass-core/SKILL.md`.
 - **Risk.** `runner`.
 - **Audit inputs.** PS-13, PS-14, PS-16, PS-23, PS-24; A-rest close wiring (superseded).
@@ -476,12 +487,14 @@ repo, the merge is live, and both probes pass.
   -E '^## (Lifecycle|Models|Execute|Pairs|Gates|Clock stop|Close|Score|Ledgers|Scope|Launch prompt)$'`
   on the file prints 11; `grep -c -i -E 'pass-execute|token ceiling|checkpoint interval|thin
   conductor|segment boundar'` prints 0 unless the line carries `retired-ok`; the description in the
-  frontmatter names the lean lifecycle and no retired mechanism; this git-ownership grep prints
-  nothing over the file and every prompt file this plan names (M2: such wording would leave git to
-  Geoff):
+  frontmatter names the lean lifecycle and no retired mechanism; in the "Execute" section (`sed -n
+  '/^## Execute$/,/^## /p'`), `grep -c 'HEAD..origin/'` and `grep -c 'info/exclude'` each print at
+  least 1; in the "Models" section, `grep -c 'measured a quality gain'` and `grep -c 'harder or
+  longer'` each print at least 1; this git-ownership grep prints nothing over the file and every
+  prompt file this plan names (M2: such wording would leave git to Geoff):
 
   ```bash
-  grep -n -i -E '(user|Geoff|you) (handles?|makes?|does|runs?) (the |all |every )?(git|commit|push)|(commit|push)(es|s)? (only )?(when|if) (the user|Geoff|asked)|only when (the user|Geoff) asks|leave (git|commit|push)[a-z]* to|never (commit|push) (unless|without)' \
+  grep -n -i -E '(user|Geoff|you) (handles?|makes?|does|runs?) (the |all |every )?(git|commit|push)|(commit|push)(es|s)? (only )?(when|if) (the user|Geoff|asked)|only when (the user|Geoff) asks|leave (git|commit|push)[a-z]* to|never (commit|push) (unless|without)|(user|Geoff) (commits|pushes|owns git)|(do not|don.t|never) (commit|push)[a-z]* (unless|until|without)|let (the user|Geoff) (commit|push)' \
     claude/.claude/skills/pass-core/SKILL.md docs/superpowers/plans/2026-10-10-lean-pass-cutover-prompts/*.txt
   ```
 
@@ -560,8 +573,13 @@ repo, the merge is live, and both probes pass.
 
 - **Outcome.** `claude/.claude/skills/spec-plan-review/SKILL.md` (169 lines) holds the spec's
   Lifecycle steps 3 and 4: three parallel Opus spec lenses named "contract and criteria", "mechanics
-  and feasibility", and "data integrity and failure risk"; a fold that probes every new mechanism it
-  introduces and may refuse a finding with a reason; one verification read whose findings the fold
+  and feasibility", and "data integrity and failure risk"; each lens reports every gap it finds,
+  ranked by consequence, since under "only report high-severity issues" the model "may follow that
+  instruction literally and report less; ask it to report everything and filter in a separate pass
+  instead" (Opus 5 prompting page); a fold that does that filtering, keeping Claude Code best
+  practices' warning as its own guidance ("Chasing every finding leads to over-engineering ... flag
+  only gaps that affect correctness or the stated requirements"), probes every new mechanism it
+  introduces, and may refuse a finding with a reason; one verification read whose findings the fold
   agent applies, with another read only on a blocker; a design-changing finding goes to Geoff as one
   batched question; plan review runs the mechanics lens plus a verification read by default, and all
   three lenses for an `auth-data` or `runner` pass or one with the `live-account` flag. The
@@ -573,7 +591,9 @@ repo, the merge is live, and both probes pass.
 - **Acceptance.** `wc -l` prints 120 or less; the three lens names each appear (`grep -c` per name
   prints at least 1); `grep -c -i -E 'consistency lens|prose lens'` prints 0 unless the line carries
   `retired-ok`; ``grep -c '`high`'`` prints 0 (the skill names no `high` effort; design and plan
-  authorship effort lives in `pass-core`). The dotfiles gate is green.
+  authorship effort lives in `pass-core`); `grep -c 'report everything'` and `grep -c 'affect
+  correctness or the stated requirements'` each print at least 1, the second on a line about the
+  fold. The dotfiles gate is green.
 - **Test.** The gate's checks.
 - **Clock.** 30.
 
@@ -792,9 +812,11 @@ probes, the filing, and the launch of steps 2 and 4.
   mergeCommit -q .mergeCommit.oid)`; every check below, S1-T18, and the rollback name `M`, so a
   resumed 1b re-derives it after later commits move `HEAD`. The merge is one merge commit on the
   frozen `main`: `git merge-base M^1 M^2` equals `M^1` (the branch was cut from the merge parent, so
-  `main` did not move) and `git rev-list --count --first-parent M^1..M` prints 1. Then, unless the tag
-  already exists at `M^1` (a resume), `git tag pre-lean-process M^1 && git push origin
-  pre-lean-process`, so the merge commit's parent carries the tag (spec Rollout step 1).
+  `main` did not move) and `git rev-list --count --first-parent M^1..M` prints 1. Then create the tag
+  unless it exists at `M^1` (`git tag pre-lean-process M^1`), and push it unless `git ls-remote origin
+  refs/tags/pre-lean-process` prints that sha (`git push origin pre-lean-process`), so the merge
+  commit's parent carries the tag (spec Rollout step 1). Re-derive `M` in each Bash call, since
+  "Shell state (env vars, functions) does not persist" (Bash tool).
   `readlink -f ~/.local/bin/claude-clock-stop` resolves into `~/.dotfiles/bin/.local/bin/`;
   `claude-tooling-sync verify` and `CAIRN_GATE_LANE=light cairn-run-gate 'bash scripts/check.sh'`
   exit 0 in the main checkout.
@@ -806,18 +828,31 @@ probes, the filing, and the launch of steps 2 and 4.
 - **Rollback (Geoff's call, never a session's).** The smaller remedy for a clock-stop misfire is to
   delete the one `claude-clock-stop` PostToolUse entry from `claude/.claude/settings.json`. The full
   rollback is clean only before any step 2 to 4 PR merges, since those land the lean process in other
-  repos and the revert leaves them. It restows before it pushes, and it keeps the live
-  `docs/STATUS.md` and `ROADMAP.md` where S1-T15 and S1-T18 make the revert conflict (replayed in a
-  scratch repo, fold verification V-M2):
+  repos and the revert leaves them. It first commits a stopped 1b's uncommitted `docs/STATUS.md` or
+  `ROADMAP.md`, builds the revert in a scratch worktree, and moves the live checkout only by a
+  fast-forward to the finished revert. It keeps the live `docs/STATUS.md` and `ROADMAP.md` where
+  S1-T15 and S1-T18 make the revert conflict, and it restows before it pushes (replayed in a scratch
+  repo, third fold):
 
   ```bash
   M=$(gh pr view lean-cutover -R glw907/workstation --json mergeCommit -q .mergeCommit.oid) &&
-  { git -C ~/.dotfiles revert -m 1 --no-edit "$M" || {
-      git -C ~/.dotfiles checkout --ours -- docs/STATUS.md ROADMAP.md &&
-      git -C ~/.dotfiles add docs/STATUS.md ROADMAP.md &&
-      GIT_EDITOR=true git -C ~/.dotfiles revert --continue; }; } &&
+  { git -C ~/.dotfiles diff --quiet HEAD -- docs/STATUS.md ROADMAP.md ||
+    git -C ~/.dotfiles commit -q -m "Record the 1b stop before the rollback" -- docs/STATUS.md ROADMAP.md; } &&
+  R=$(mktemp -d)/rollback && git -C ~/.dotfiles worktree add -q --detach "$R" HEAD &&
+  { git -C "$R" revert -m 1 --no-edit "$M" || {
+      git -C "$R" rev-parse -q --verify REVERT_HEAD >/dev/null &&
+      git -C "$R" checkout --ours -- docs/STATUS.md ROADMAP.md &&
+      git -C "$R" add docs/STATUS.md ROADMAP.md &&
+      GIT_EDITOR=true git -C "$R" revert --continue; }; } &&
+  git -C ~/.dotfiles merge -q --ff-only "$(git -C "$R" rev-parse HEAD)" &&
+  git -C ~/.dotfiles worktree remove "$R" &&
   cd ~/.dotfiles && stow -R bin && git push origin main
   ```
+
+  A conflict in any other file (a later commit to `settings.json`, say) stops the chain with the live
+  checkout untouched. Resolve it in `$R` (`git -C "$R" checkout --theirs -- <file>` takes the
+  pre-merge version and drops the later edit), `git -C "$R" add <file>`, run `GIT_EDITOR=true git -C
+  "$R" revert --continue`, then the block's last three lines.
 
   `stow -R` prunes the link to the deleted `claude-clock-stop` (risk review, probed with GNU Stow
   2.4.1). Then clear the gate state the new `cairn-run-gate` persisted, keeping the lock files, since
@@ -888,24 +923,32 @@ probes, the filing, and the launch of steps 2 and 4.
 
 - **Outcome.** The R-D launch shown live before `pass-core` relies on it. From `~/.dotfiles`, one
   Bash call runs `claude --bg --model sonnet --effort medium --name lean-rd-probe 'Create the file
-  rd-probe.txt containing the word ok, commit it, and do not push.'` and records the printed id. The
-  probe runs in trusted `~/.dotfiles`, since a fresh scratch repo is an untrusted nested repository
-  and the launch would exit `Workspace not trusted` (M2); "do not push" keeps the throwaway branch
-  off `glw907/workstation`. A background Bash task (M7) then polls for at most 15 minutes until `git
-  worktree list` shows a new worktree under `~/.dotfiles/.claude/worktrees/` whose branch carries a
-  commit adding `rd-probe.txt`. Nobody attaches, so that commit proves the session committed without
-  asking. Then `claude stop <id>`, `claude rm <id>`, `git worktree remove --force` on the probe
-  worktree, and `git branch -D` on its branch.
+  rd-probe.txt containing the word ok. Run notify-send -u normal "lean cutover: rd probe" and append
+  its exit status to the file as a second line. Commit it, and do not push.' && claude agents --json`
+  and records the printed id and that listing. The probe runs in trusted `~/.dotfiles`, since a
+  fresh scratch repo is an untrusted nested repository and the launch would exit `Workspace not
+  trusted` (M2); "do not push" keeps the throwaway branch off `glw907/workstation`. A background
+  Bash task (M7) then polls for at most 15 minutes until `git worktree list` shows a new worktree
+  under `~/.dotfiles/.claude/worktrees/` whose branch carries a commit adding `rd-probe.txt`, and
+  prints `git show <branch>:rd-probe.txt`. Nobody attaches, so that commit proves the session
+  committed without asking. Then, and before any failure stop: `claude stop <id>`; `git worktree
+  remove --force --force` on the probe worktree (the second flag also removes a locked one); `git
+  branch -D` on its branch; `git push origin --delete <branch>` only if `git ls-remote origin
+  refs/heads/<branch>` prints a line; then `claude rm <id>`. Git goes first because a delete whose
+  worktree holds unpushed commits "keeps the worktree and the session", while "A worktree git no
+  longer recognizes, for example after `git worktree prune`, doesn't block the delete" (agent-view,
+  "What deleting a session removes").
 - **Files.** None kept.
 - **Risk.** `runner`.
-- **Acceptance.** `claude --bg` exits 0 and prints an id; `claude agents --json` listed
-  `lean-rd-probe` while it ran; the commit appeared under `.claude/worktrees/` within the deadline;
-  `git status --short` in `~/.dotfiles` stayed empty; `git ls-remote origin` shows no new branch;
-  afterward `git worktree list` and `git branch --list` match their state before the probe. The
-  session records the branch name `EnterWorktree` gave (M2) for S1-T18. A failure is a stop under
-  the 1b prompt. The remedy is then Geoff's: `pass-core`'s launch falls back to the interactive
-  paste, recorded in Spec gaps as a departure, and steps 2 and 4 launch as 3 does, with the same
-  lines less `--bg`, pasted from each repo's main checkout.
+- **Acceptance.** `claude --bg` exits 0 and prints an id; the listing from the launch call names
+  `lean-rd-probe`; the commit appeared under `.claude/worktrees/` within the deadline, and its
+  `rd-probe.txt` reads `ok` then `0`; `git status --short` in `~/.dotfiles` stayed empty; `git
+  ls-remote origin` shows no new branch; afterward `git worktree list` and `git branch --list` match
+  their state before the probe, and `claude agents --json --all` no longer names `lean-rd-probe`.
+  The session records the branch name `EnterWorktree` gave (M2) for S1-T18. A failure runs the
+  cleanup, then stops under the 1b prompt. The remedy is then Geoff's: `pass-core`'s launch falls
+  back to the interactive paste, recorded in Spec gaps as a departure, and steps 2 and 4 launch as 3
+  does, with the same lines less `--bg`, pasted from each repo's main checkout.
 - **Test.** The acceptance observations, quoted in STATUS by S1-T18.
 - **Clock.** 20.
 
@@ -921,8 +964,8 @@ probes, the filing, and the launch of steps 2 and 4.
 - **Risk.** `ordinary`, `live-account`.
 - **Acceptance.** `git show --stat HEAD` lists only `docs/STATUS.md`; `wc -l` prints 60 or less;
   `grep -c 'lean-step2\|lean-step3\|lean-step4'` prints at least 3; `git status -sb` shows no
-  `ahead`; each launch block exits 0 with a printed id, and `claude agents --json` lists `lean-step2`
-  and `lean-step4`.
+  `ahead`; each launch block exits 0, printing an id or skipping a `--name` that `claude agents
+  --json` already lists (a resume), and `claude agents --json` lists `lean-step2` and `lean-step4`.
 - **Test.** None.
 - **Clock.** 10.
 
@@ -955,10 +998,11 @@ harvest. Clock stop on (each task writes its task-clock file at start, per `pass
 ### Launch for 2 (1b runs it in S1-T18)
 
 ```bash
+claude agents --json | jq -e 'any(.[]; .name == "lean-step2")' >/dev/null || {
 git -C ~/Projects/cairn-cms fetch origin &&
 [ "$(git -C ~/Projects/cairn-cms rev-parse HEAD)" = "$(git -C ~/Projects/cairn-cms rev-parse origin/main)" ] &&
 cd ~/Projects/cairn-cms &&
-claude --bg --model sonnet --effort medium --name lean-step2 "$(cat ~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover-prompts/2.txt)"
+claude --bg --model sonnet --effort medium --name lean-step2 "$(cat ~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover-prompts/2.txt)"; }
 ```
 
 The session enters its worktree, then runs the setup there (M2, M14).
@@ -978,9 +1022,10 @@ fast lane.
 - **Files.** `CLAUDE.md`.
 - **Risk.** `ordinary`.
 - **Audit inputs.** DC-03, PS-14, DC-18, DC-22, DC-24, PS-25, the owed trim.
-- **Acceptance.** `wc -l < CLAUDE.md` prints 200 or less; the step 2 grep (S2-T5) prints nothing for
-  `CLAUDE.md`; every relative link target exists: `grep -oE '\]\([^)#]+' CLAUDE.md | cut -c3- | while
-  read -r p; do test -e "$p" || echo "MISSING $p"; done` prints nothing.
+- **Acceptance.** `wc -l < CLAUDE.md` prints 200 or less; the step 2 grep (S2-T5) and S1-T5's
+  git-ownership grep print nothing for `CLAUDE.md`; every relative link target exists: `grep -oE
+  '\]\([^)#]+' CLAUDE.md | cut -c3- | while read -r p; do test -e "$p" || echo "MISSING $p"; done`
+  prints nothing.
 - **Test.** The gate's docs checks on the change.
 - **Clock.** 60.
 
@@ -1094,7 +1139,7 @@ before launch. Every worktree sits under `~/Projects`, so a `cd` into one holds 
   task-clock file in its `git rev-parse --git-dir`. A pair's subagents work in those worktrees, and
   hooks fire on a subagent's tool calls too (hooks page), so while a pair runs the session holds no
   clock file; when the pair returns it writes one, with the longer estimate and `start=` set to the
-  dispatch time.
+  dispatch time. A task's end, and a pair's return after its overrun check, removes its clock file.
 - **Gates.** A task runs its repo's fast lane only when its diff touches a file outside `*.md` and
   `.claude/**` (`svelte-check` reads neither; S3-T9 runs each full-suite home once). dubplate's scoped
   gate is `bash scripts/check.sh --scope-changed` with no `--base`: on a branch it measures from the
@@ -1111,6 +1156,8 @@ P='pass-execute|conductor|code-simplifier|simplifier-brief|go-architecture-reade
 files=$( { ls CLAUDE.md README.md ROADMAP.md docs/STATUS.md 2>/dev/null; find .claude -type f -not -path '*/agent-memory/*' -not -path '*/worktrees/*' -not -name '*.lock'; find docs -maxdepth 1 -type f -name '*.md' | grep -v -E '/[0-9]{4}-[0-9]{2}-[0-9]{2}|HISTORY|status-archive'; } | sort -u )
 grep -I -n -i -E "$P" $files
 ```
+
+The step 3 grep also runs S1-T5's git-ownership pattern over the same `$files`, which prints nothing.
 
 Hits at planning time (2026-10-10): ecxc-ski `.claude/rules/development-workflow.md` 1,
 `.claude/skills/ship/SKILL.md` 2; 907-life `.claude/rules/development-workflow.md` 1;
@@ -1317,10 +1364,11 @@ The spec's Rollout step 4 under rulings 7 and 14, before docs stage 2b. Clock st
 ### Launch for 4 (1b runs it in S1-T18)
 
 ```bash
+claude agents --json | jq -e 'any(.[]; .name == "lean-step4")' >/dev/null || {
 git -C ~/.dotfiles fetch origin &&
 [ "$(git -C ~/.dotfiles rev-parse HEAD)" = "$(git -C ~/.dotfiles rev-parse origin/main)" ] &&
 cd ~/.dotfiles &&
-claude --bg --model sonnet --effort medium --name lean-step4 "$(cat ~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover-prompts/4.txt)"
+claude --bg --model sonnet --effort medium --name lean-step4 "$(cat ~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover-prompts/4.txt)"; }
 ```
 
 **Launch prompt (4):** `2026-10-10-lean-pass-cutover-prompts/4.txt`.
