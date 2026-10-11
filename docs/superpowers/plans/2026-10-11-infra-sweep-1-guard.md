@@ -97,8 +97,10 @@ unpushed `main` commit would ride into the PR.
 - **Stops.** A red the session cannot fix in two attempts, a merge conflict, or a clock stop: write
   `docs/STATUS.md` on the branch (task in flight, what failed, the one question), run `notify-send
   -u normal "infra-sweep-1: stopped"`, and wait. A pair subagent that cannot get its gate green in
-  two attempts returns the failure to the session uncommitted, and the session applies this rule.
-- **Scope.** A defect found outside a task goes to the PR body's "Found, not done" list.
+  two attempts, or whose T2 trigger check misses twice, returns its work to the session
+  uncommitted. The session then applies this rule before merging either half of the pair.
+- **Scope.** A defect found outside a task goes to the PR body's "Found, not done" list. A pair
+  subagent lists such defects in its final report, and the session carries them to the PR body.
 
 ## Tasks
 
@@ -211,15 +213,26 @@ unpushed `main` commit would ride into the PR.
   - System `python3 -I` with PyYAML (6.0.3, probed present) parses the frontmatter of all eight
     vendored `SKILL.md` files, and each parsed `description` equals its manifest value (or, with no
     override, its prior value) after whitespace collapse.
-  - `git -C ~/.dotfiles status --porcelain` prints nothing before and after the task.
+  - The main checkout is untouched. Any git command aimed at `~/.dotfiles` is refused inside a
+    worktree-isolated session (verification probe), so this check uses file times. At task start,
+    `mktemp -d /tmp/infra-sweep-1-t2.XXXXXX` makes the task's scratch directory and `touch
+    <scratch>/stamp` writes the stamp, with the printed path written literally in every later
+    command. At task end, `find /var/home/glw907/.dotfiles/claude/.claude/skills
+    /var/home/glw907/.dotfiles/claude/.claude/tooling -path '*/skills/synced' -prune -o -type f
+    -newer <scratch>/stamp -print` prints nothing. The probe confirms this `find` runs from inside a
+    worktree, and that it lists files when the stamp is older than them. `skills/synced` is pruned
+    because it churns on its own.
   - Trigger checks for `daisyui` (spec "Anthropic practice" item 7: a CLAUDE.md rule depends on
-    it). Five prompts, each in a fresh `claude -p --model sonnet --setting-sources project
-    --output-format stream-json --verbose` session run from a scratch directory outside the
-    worktree whose `.claude/skills/daisyui/` holds the copy under test. `--setting-sources project`
-    hides the live personal skills (probed: the scratch skill loads, `daisyui` does not), and a
-    trigger is a `"name":"Skill"` tool use whose input `skill` is `daisyui` (probed on a scratch
-    skill). The "before" runs use the directory as committed at T2's base; the "after" runs use the
-    overlaid copy.
+    it). There are five prompts, each in a fresh session run from a subdirectory of the scratch
+    directory whose `.claude/skills/daisyui/` holds the copy under test. Each run is one plain
+    command, `cd <scratch>/<run> && timeout 180 claude -p --model sonnet --setting-sources project
+    --output-format stream-json --verbose "<prompt>" > <scratch>/<run>.jsonl`, with no pipe, no
+    heredoc, and no inline script. A separate step reads each file with `grep -c
+    '"name":"Skill","input":{"skill":"daisyui"'`. The isolation guard refuses a `claude -p` inside a
+    compound command and accepts this form (verification probe). `--setting-sources project` hides
+    the live personal skills (probed: the scratch skill loads, `daisyui` does not), and a trigger is
+    that `Skill` tool use (probed on a scratch skill). The "before" runs use the directory as
+    committed at T2's base; the "after" runs use the overlaid copy.
     - Should trigger: "Build a pricing card with a primary button using DaisyUI classes. Reply with
       the markup only."; "Which DaisyUI component fits a dismissible alert, and which classes does
       it take?"; "Review this markup for DaisyUI 5 mistakes: a div with classes card and bordered
@@ -228,9 +241,10 @@ unpushed `main` commit would ride into the PR.
       markup only."; "Write a React JSX component that lists users, styled with inline styles
       only."
     - After the overlay, all three should-trigger prompts trigger and neither should-not prompt
-      does. One reword of the description is allowed; a second miss is a stop. The before and
-      after results, one row per prompt, go in T2's commit body, and the session copies them into
-      the PR body.
+      does. One reword of the description is allowed. On a second miss, the subagent returns its
+      work uncommitted with the trigger table, and the session applies "Stops" before merging
+      either half of the pair. The before and after results, one row per prompt, go in T2's commit
+      body, and the session copies them into the PR body.
   - The gate prints `gate exit: 0`.
 - **Test.** In `tests/test_claude_tooling_sync.py`, driven by subprocess like the existing tests,
   `apply-overlays --root <fixture>` over a fixture tree with its own manifest: a single-line, a

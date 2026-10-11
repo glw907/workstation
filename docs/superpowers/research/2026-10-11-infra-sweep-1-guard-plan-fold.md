@@ -38,8 +38,9 @@ clearly correct answer, so the plan takes it.
    through `Paths(home)` into the live main checkout. T2 instead gains `apply-overlays --root
    TREE`, an offline application of the description, note, and sibling-rewrite overlays to the
    worktree's own copies, and `fetch_skill` calls the same function after any future fetch.
-   Acceptance: `git -C ~/.dotfiles status --porcelain` prints nothing before and after T2, and
-   PyYAML parses all eight vendored frontmatters. The overlay writes a folded block (probed).
+   Acceptance: a stamp-file `find -newer` over the main checkout's `claude/.claude/{skills,tooling}`
+   prints nothing after T2 (revised under V-M1, since a git check of the main checkout is refused
+   inside a worktree), and PyYAML parses all eight vendored frontmatters. The overlay writes a folded block (probed).
 2. **The line cap applies to the global CLAUDE.md only** (contract M4, mechanics M4, risk M1).
    The realpath must end in `/claude/.claude/CLAUDE.md`, which covers the tree copy, any
    worktree's copy, and `~/.claude/CLAUDE.md` through its stow link (probed), and the cap has its
@@ -127,3 +128,16 @@ T1 130 (from 120: the GA-03 symlink fixtures, the count fixture, and the line-ca
 malformed-state fixtures and the forwarded flags), and the close 70 (from 60: the `origin/main` merge
 and the go-live paragraph). Total 420 task-minutes, with a pair path of about 300 minutes
 (130 + 100 + 70).
+
+## Verification
+
+The verification read (`2026-10-11-infra-sweep-1-guard-fold-verification.md`, at `236f9d7`)
+found no blockers, one major, and four minors. Every blocker and major from the lenses closed.
+
+| Id | Disposition | Where folded, or why |
+|---|---|---|
+| V-M1 | folded | T2 acceptance. The `git -C ~/.dotfiles status` line becomes a non-git check: at task start, a stamp in a `mktemp -d /tmp/infra-sweep-1-t2.XXXXXX` scratch directory; at task end, `find` over the main checkout's `claude/.claude/skills` and `claude/.claude/tooling`, pruning `skills/synced`, with `-newer <stamp> -print` printing nothing. The commands are plain, with literal paths. Moving a git check to the session would not work either, since the session also runs in its own worktree. Probed from this worktree-isolated session: the `find` runs, prints nothing against a fresh stamp, and lists files against an older stamp. The fold record's settled item 1 is updated to match. |
+| V-m1 | folded | T2 trigger-check bullet, Conventions "Stops", and the prompt. On a second miss, the subagent returns its work uncommitted with the trigger table, and the session applies "Stops" before merging either half. |
+| V-m2 | folded (owner of the step: the planning session) | The planning session commits and pushes before launch. The launch check reads right as written: `git fetch origin` runs first, and `git rev-parse worktree-infra-sweep-plan origin/worktree-infra-sweep-plan` must print two equal lines. It runs from the main checkout, outside isolation. |
+| V-m3 | folded | T2 trigger-check bullet. Each run is one plain `claude -p` command, `cd <scratch>/<run> && timeout 180 claude -p ... "<prompt>" > <scratch>/<run>.jsonl`, with no pipe, heredoc, or inline script. A separate `grep -c` step reads the `Skill` tool use. The verification probe showed the guard accepts this form. The scratch directory is the task's `mktemp -d` directory. |
+| V-m4 | folded | Conventions "Scope" and the prompt. A pair subagent's final report lists the defects it found outside its task, and the session carries them to the PR body. |

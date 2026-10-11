@@ -15,12 +15,16 @@ branches from that commit.
 
 Execute T1 and T2 as a pair: two Agent-tool subagents with `subagent_type: "general-purpose"`,
 `isolation: "worktree"`, model `sonnet`, effort `medium`. Give each its task's full text from the
-plan plus the plan's "Conventions every task follows" section, both verbatim, and tell it three
-things: the Clock and Stops conventions belong to you, so it writes no clock file and, if its gate
-is not green after two attempts, returns the failure to you uncommitted; it runs every tool from its
-worktree's own path and writes nothing in `~/.dotfiles` outside `.claude/worktrees/`; it commits and
-never pushes. Before dispatch, write the pair's clock file per the plan's Clock convention. When
-both return, check the overrun, remove the clock file, merge both, and run the gate. Then execute
+plan plus the plan's "Conventions every task follows" section, both verbatim, and tell it four
+things. First, the Clock and Stops conventions belong to you: it writes no clock file, and it
+returns its work to you uncommitted if its gate is not green after two attempts or if T2's
+`daisyui` trigger check misses twice (in that case with the trigger table). Second, it runs every
+tool from its worktree's own path and writes nothing in `~/.dotfiles` outside
+`.claude/worktrees/`. Third, its final report lists every defect it found outside its task, which
+you carry to the PR body's "Found, not done". Fourth, it commits and never pushes. Before dispatch,
+write the pair's clock file per the plan's Clock convention. When both return, check the overrun
+and remove the clock file. If either returned uncommitted, apply "Stops" before merging either
+half. Otherwise merge both and run the gate. Then execute
 T3 yourself, then the Close. Every gate is `CAIRN_GATE_LANE=light cairn-run-gate 'bash
 scripts/check.sh'` with the Bash tool's `timeout: 600000`.
 
