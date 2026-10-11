@@ -326,7 +326,12 @@ Per pass-core "Close" and dotfiles-pass "Close checklist", in order:
    not a check of this branch); one `gitleaks git` branch-history scan is clean.
 4. `docs/STATUS.md`: the infra sweep section names sweep-2 as next, planned from the baseline this
    pass leaves, with the baseline's entry count by check id (15 expected: `dead-reference` 2,
-   `retired-phrase` 2, `relative-link` 2, `description-cap` 5, `fork-skill` 4).
+   `retired-phrase` 2, `relative-link` 2, `description-cap` 5, `fork-skill` 4). Its next action is
+   the sweep-2 planning session, an attended session with Geoff, launched after this PR merges
+   with the exact line `cd ~/.dotfiles && claude --model opus --effort high --name
+   infra-sweep-2-plan "$(cat docs/superpowers/plans/2026-10-11-infra-sweep-2-planning-prompt.txt)"`.
+   The prompt file is already committed (planning commits). If the close changed the sweep-2
+   scope, it updates that file in the same commit.
 5. Push `glw907/workstation`, open the PR (draft until the close is done), and write its body:
    - what landed (task id, commit), the review verdict, and T2's trigger-check table;
    - "What goes live": at Geoff's pull into `~/.dotfiles` after the merge, the global-CLAUDE.md line
