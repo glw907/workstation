@@ -18,6 +18,10 @@ Commands:
                    apply each vendored-skills.json entry's `description` and `note`
                    overlays, and the sibling-name rewrite, to the skills installed under
                    TREE; no network call, nothing written outside TREE
+  ratchet-report --root TREE
+                   print the ratchet report (shared tool protocol) for `description-cap`, a
+                   SKILL.md description over 500 characters with no `paths:` key, and
+                   `fork-skill`, a `context: fork` skill whose body assumes a conversation
   lint --root TREE
                    tree-only checks against TREE's own copy: vendored-skills.json is
                    well formed, every skills/<dir> carrying a LICENSE* file has a
@@ -47,6 +51,11 @@ NOTE_BLOCK = re.compile(re.escape(NOTE_OPEN) + r"\n(.*?)\n?" + re.escape(NOTE_CL
                         re.DOTALL)
 FENCE = re.compile(r"^ {0,3}(```|~~~)")
 SPAN = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
+DESCRIPTION_CAP = 500
+FORK_CONTEXT = re.compile(r"""^context:\s*["']?fork["']?\s*$""")
+# A fork skill runs in a fresh context: it cannot see the conversation or put a question to the user.
+FORK_PHRASES = ("under discussion", "during the session", "delegated", "ask the user",
+                'ask "')
 
 
 class ConfigError(Exception):
@@ -446,6 +455,60 @@ def lint_overlays(skills_dir, skills):
     return fail
 
 
+def skill_frontmatter(text, path):
+    """Return (frontmatter lines, body) of a SKILL.md, None with no frontmatter at all.
+
+    An opening fence with no closing one raises ConfigError, since a half-read skill would
+    report a silent pass.
+    """
+    lines = text.splitlines(keepends=True)
+    if not lines or lines[0].rstrip("\n") != "---":
+        return None
+    parts = split_frontmatter(text)
+    if parts is None:
+        raise ConfigError([f"{path}: unterminated frontmatter"])
+    return parts
+
+
+def skill_files(root):
+    """Return every authored or vendored SKILL.md under root, skills/synced excluded."""
+    skills_dir = root / "claude" / ".claude" / "skills"
+    if not skills_dir.is_dir():
+        return []
+    return sorted(d / "SKILL.md" for d in skills_dir.iterdir()
+                  if d.is_dir() and d.name != "synced" and (d / "SKILL.md").is_file())
+
+
+def skill_violations(root, path):
+    """Return the ratchet violations one SKILL.md carries, under both ids."""
+    parts = skill_frontmatter(path.read_text(), path)
+    if parts is None:
+        return []
+    fm, body = parts
+    rel = path.relative_to(root).as_posix()
+    found = []
+    description = read_description(fm)
+    gated = any(line.startswith("paths:") for line in fm)
+    if description is not None and len(description) > DESCRIPTION_CAP and not gated:
+        found.append({"check": "description-cap", "file": rel, "fingerprint": "description"})
+    if any(FORK_CONTEXT.match(line) for line in fm):
+        text = collapse(body).lower()
+        for phrase in FORK_PHRASES:
+            found += [{"check": "fork-skill", "file": rel, "fingerprint": phrase}
+                      for _ in range(text.count(phrase))]
+    return found
+
+
+def ratchet_report(root):
+    """Print the ratchet report for the description-cap and fork-skill checks under root."""
+    sys.dont_write_bytecode = True
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "claude" / ".claude" / "tooling"))
+    import ratchet
+    violations = [v for path in skill_files(root) for v in skill_violations(root, path)]
+    ratchet.emit_report(("description-cap", "fork-skill"), violations)
+    return 0
+
+
 def build_parser():
     """Build the argument parser; argparse itself exits 2 with usage on an unknown argument."""
     parser = argparse.ArgumentParser(prog="claude-tooling-sync",
@@ -469,6 +532,12 @@ def build_parser():
     overlays = sub.add_parser("apply-overlays", help="apply manifest description and note overlays")
     overlays.add_argument("--root", type=Path, required=True)
 
+    report = sub.add_parser("ratchet-report", help="print the ratchet report for the skill checks")
+    report.add_argument("--root", type=Path, required=True)
+    report.add_argument("--home", type=Path, default=None)
+    report.add_argument("--projects-root", type=Path, default=None)
+    report.add_argument("--memory-root", type=Path, default=None)
+
     return parser
 
 
@@ -484,6 +553,8 @@ def main(argv=None):
             return verify(paths, projects_root)
         if args.command == "update-skills":
             return update_skills(Paths(args.home.resolve()), args.names)
+        if args.command == "ratchet-report":
+            return ratchet_report(args.root.resolve())
         if args.command == "apply-overlays":
             return apply_overlays_cmd(args.root.resolve())
         return lint(args.root.resolve())
