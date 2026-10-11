@@ -27,7 +27,8 @@ anyone but Geoff. Also any edit to `~/Projects/cairn-themes` or `~/Projects/phon
 2. One real PR (this pass's own draft PR), one design (the design doc above), and one triage list
    (three rows) are each handed over with the worktree's `bin/.local/bin/review-desk`, the first
    with no build present and nothing on port 7907, so the command builds and starts the close
-   head's app itself. Each item page, opened in Chromium at the URL the command handed Firefox,
+   head's app itself, and the next two find it running and pass the start lock at once. Each item
+   page, opened in Chromium at the URL the command handed Firefox,
    renders, and on it `getComputedStyle(document.body)` gives a `backgroundColor` of `rgb(247, 247,
    243)` (or `rgb(17, 23, 30)` when the browser prefers dark) and a `fontFamily` naming `Karla
    Variable`. A screenshot of each is the human-readable record. T3's stub test is the evidence that
@@ -41,9 +42,9 @@ anyone but Geoff. Also any edit to `~/Projects/cairn-themes` or `~/Projects/phon
    with the right `Host` and `Origin: http://evil.example` gets 403 with the body `Cross-site POST
    form submissions are forbidden`, and no `decision.json` appears.
 
-**Clock estimate:** 310 task-minutes (T1 85, T2 80, T3 65, T4 20, close 60), against the design's
+**Clock estimate:** 315 task-minutes (T1 85, T2 80, T3 65, T4 25, close 60), against the design's
 180 to 210 and under pass-core's twice-the-estimate line of 420. T2 and T3 run as a pair, so the
-path is about 85 + 80 + 20 + 60 = 245 minutes.
+path is about 85 + 80 + 25 + 60 = 250 minutes.
 
 ## Launch
 
@@ -122,8 +123,10 @@ Each was read from source or run on 2026-10-11; a task builds on these and never
     (`src/runtime/env/dynamic/private.js:7`). A declared variable is validated when the app
     starts, and also during `vite build` (its "Analysing routes" step) and on import under vitest:
     declared as `REVIEW_DESK_STATE: {}`, the probe's build and tests failed with `env_invalid`
-    ("Value is missing"). Declared as `REVIEW_DESK_STATE: { schema: (value) => value ?? '' }`
-    ("Returning `undefined` is valid", `:1177`), both pass with the variable unset. A module
+    ("Value is missing"). Declared with an optional schema ("Returning `undefined` is valid",
+    `:1177`), both pass with the variable unset. The probed `src/env.ts`: `import { defineEnvVars } from
+    '@sveltejs/kit/env'; export const variables = defineEnvVars({ REVIEW_DESK_STATE: { schema:
+    (value) => value ?? '' } });` (module `@sveltejs/kit/env`, `types/index.d.ts:1153`). A module
     reads it as `import { REVIEW_DESK_STATE } from '$app/env/private'`. Setting `process.env` inside
     a test does not reach it; a test that needs a value mocks the module (probed):
     `const state = vi.hoisted(() => ({ root: '' })); vi.mock('$app/env/private', () => ({ get
@@ -182,9 +185,13 @@ Each was read from source or run on 2026-10-11; a task builds on these and never
 - **Shell mechanics** (probed with a scratch script). With `trap '<cleanup>' EXIT` and `trap 'exit
   143' TERM HUP INT`, a SIGTERM to a script polling with `sleep 1` runs the cleanup and exits 143
   within the current sleep. `exec 9>"$lock"; flock 9` serializes two shells: the second waits until
-  the first closes fd 9. `pkill -f '<path>/review-desk/build'` run from a Bash tool call also
-  matches the calling shell, whose command line holds the pattern, and kills it (the probe's call
-  died with exit 144); the bracket form `pkill -f '<path>/review-desk/[b]uild'` matches the node
+  the first closes fd 9. A child started while fd 9 is open inherits it (bash sets no
+  close-on-exec), and the lock stays held while any holder lives: after a first shell ran `setsid -f
+  sleep` under the lock and exited, a second shell's `flock -w 2 9` timed out; with `9>&-` on the
+  `setsid` line it got the lock at once (fold probe and verification probe, 2026-10-11).
+  `pkill -f '<path>/review-desk/build'` run from a Bash tool call also matches the calling shell,
+  whose command line holds the pattern, and kills it (the probe's call died with exit 144); the
+  bracket form `pkill -f '<path>/review-desk/[b]uild'` matches the node
   process and not the shell.
 - **Survey core.** `~/Projects/cairn-themes/survey-theme/core/` holds `survey.css` (imports the
   other three), `fonts.css`, `theme.css`, `components.css`. Its header: it "does not import
@@ -380,9 +387,10 @@ Each was read from source or run on 2026-10-11; a task builds on these and never
      http://127.0.0.1:7907/` succeeds. It finds the app at the canonical path `realpath "<script
      dir>/../../../review-desk"`, `<script dir>` taken from its own realpath; builds it when
      `build/index.js` is absent (`npm ci` then `npm run build`); starts it with `HOST=127.0.0.1
-     PORT=7907 REVIEW_DESK_STATE=<root> setsid -f node <app>/build`; and polls `curl` until it
-     answers (10 seconds at most, then exits 1 naming the log). Build and server output go to
-     `<root>/server.log`.
+     PORT=7907 REVIEW_DESK_STATE=<root> setsid -f node <app>/build 9>&- >>"$log" 2>&1`, so the
+     detached app does not inherit the lock; and polls `curl` until it answers (10 seconds at most,
+     then exits 1 naming the log). It releases the lock with `exec 9>&-` as soon as the app
+     answers, before steps 3 and 4. Build and server output go to `<root>/server.log`.
   3. Checks `curl -sf http://127.0.0.1:7907/item/<id>`; if the running app does not serve the item
      (an app started on another state root or an old build), it exits 1 with "an app on 7907 does
      not serve this state root; stop it with pkill -f 'review-desk/[b]uild'".
@@ -425,15 +433,19 @@ Each was read from source or run on 2026-10-11; a task builds on these and never
     own PR still opens nothing.
   - "Lifecycle" step 1 hands a design brought for approval over with `review-desk design`, and
     step 6's "Geoff reads the PR and merges" changes to match "Close".
+  - "Launch prompt" adds one sentence: the prompt for a pass that hands its PR over says the
+    session waits for the desk, merges only on Geoff's desk approve with `--match-head-commit`,
+    and ends after acting on the decision; it never says "never merge" or "end" outright.
 - **Files.** `claude/.claude/skills/pass-core/SKILL.md`.
 - **Risk class.** `runner`.
 - **Acceptance.** `grep -c 'gh pr view' claude/.claude/skills/pass-core/SKILL.md` prints 0, and
   `grep -n` finds each behavior: `review-desk pr`, `review-desk triage`, and `review-desk design`
-  (the last in "Lifecycle"); `stays open until`; `--match-head-commit`; `fixes forward`. The
+  (the last in "Lifecycle"); `stays open until`; `--match-head-commit` (in "Close" and in
+  "Launch prompt"); `fixes forward`; `merges only on Geoff's desk approve` (in "Launch prompt"). The
   `PostToolUse` `vale-hook` and `tellgrader --hook` report nothing on the edit, and the gate prints
   `gate exit: 0`.
 - **Test.** Prose only; the greps and the hooks are the check.
-- **Estimate.** 20 minutes.
+- **Estimate.** 25 minutes.
 
 ### Close
 
@@ -455,7 +467,8 @@ Per pass-core "Close" and dotfiles-pass "Close checklist", in order:
    result for the PR body.
 4. `diff-reviewer` at whole-branch scope reads the branch against this plan, loading
    `ts-conventions`. One batched fix chain follows if it returns `fix`, each finding quoted
-   verbatim as the fix's acceptance, then the gate again.
+   verbatim as the fix's acceptance, then the gate again. If the chain touches `review-desk/` or
+   `bin/.local/bin/review-desk`, step 3 reruns on the new head before step 5.
 5. `claude-tooling-sync verify` passes; one `gitleaks git` branch-history scan is clean.
 6. `docs/STATUS.md` drops the review desk from the conductor queue and names this PR as pending
    Geoff's read.
@@ -464,7 +477,9 @@ Per pass-core "Close" and dotfiles-pass "Close checklist", in order:
    PATH, and `pass-core`'s new hand-over applies to every session; rollback is `git revert -m 1
    <merge>` then a pull); "Found, not done", each item with a proposed disposition and a one-line
    reason, seeded with the "Later" list below plus anything the tasks found; and the score rows
-   (`cairn-run-gate --records <toplevel> <branch>`). Mark the PR ready.
+   (`cairn-run-gate --records <toplevel> <branch>`). Mark the PR ready. This pass hands its PR
+   over by `notify-send`, as its prompt says, since `review-desk` goes live only after the merge
+   and `stow -R bin`.
 
 Geoff reads and merges.
 

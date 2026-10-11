@@ -43,4 +43,5 @@ until it prints `gate exit:`.
 You may commit on your worktree's branch and push it to `glw907/workstation`; open the PR there.
 Never push `main`, never merge the PR, and never write any repo other than `~/.dotfiles`. A stop
 follows the plan's "Stops" convention. At the Close's end, notify Geoff with `notify-send -u normal`
-and the PR link, and end.
+and the PR link, and end. This pass does not hand its PR over with `review-desk`, whatever T4
+writes into `pass-core`: the command goes live only after Geoff merges and runs `stow -R bin`.

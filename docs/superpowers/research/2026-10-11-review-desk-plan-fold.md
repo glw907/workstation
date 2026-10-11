@@ -4,8 +4,8 @@ Inputs: the three lenses (`review-mechanics` M, `review-contract` C, `review-ris
 `docs/superpowers/plans/2026-10-11-review-desk.md` and its launch prompt. The design was not edited
 and the revision changes none of its meaning, so no erratum is owed.
 
-**Task minutes:** 310 (T1 85, T2 80, T3 65, T4 20, close 60), up from 255 and under the 420 cap.
-Critical path about 245 minutes.
+**Task minutes:** 315 after the verification findings below (T1 85, T2 80, T3 65, T4 25, close
+60), up from 255 and under the 420 cap. Critical path about 250 minutes.
 
 **Counts:** 54 findings: 48 folded (two in part), 6 refused, 0 owner forks.
 
@@ -113,3 +113,28 @@ probe app is stopped and port 7907 is free).
 
 No owner forks. C7's wait-and-merge text sits inside the design's "wakes the waiting session to act
 on it" and "the session acts on the decision".
+
+## Verification findings
+
+From `2026-10-11-review-desk-fold-verification.md` (on 7246c66): 5 findings, all 5 folded, none
+refused, no owner fork. T4 goes from 20 to 25 minutes; the total is 315.
+
+| Finding | Disposition | Where the revision carries it, or why not |
+| --- | --- | --- |
+| V1 (blocker) the detached app inherits the start lock's fd 9 | folded | Reproduced (probe 1 below). T3 step 2 starts the app with `9>&-` and releases the lock with `exec 9>&-` once the app answers, before the item check and Firefox; probed fact "Shell mechanics" records the inheritance; e2e step 2 makes the second and third hand-overs the check. No T3 test case, since `curl` is stubbed as already running there |
+| V2 (major) T4's merge rule must reach pass-core "Launch prompt" | folded | Verified: that section holds no merge or end text, and no skill or doc carries a "never merge" template, so each planner writes it fresh from that section. T4 outcome adds the sentence, and its acceptance greps it. This pass's own prompt keeps "never merge", since the tool is not live until the merge |
+| V3 (minor) the e2e can miss the close head | folded | Close step 4: a fix chain touching `review-desk/` or `bin/.local/bin/review-desk` reruns step 3 on the new head |
+| V4 (minor) the env fact does not quote its file | folded | Probed fact "Environment variables" quotes the probed `src/env.ts` with its module (`@sveltejs/kit/env`, `types/index.d.ts:1153`) |
+| V5 (minor, optional) this pass's Close uses the old hand-over unexplained | folded | Nearly free, and it heads off a stop to ask: one clause in Close step 7 and one sentence at the end of the launch prompt, where the executor's authority sits |
+
+### Probes run
+
+1. `/var/home/glw907/.claude/jobs/c01b6758/tmp/fold2/flock/driver.sh`: a first subshell takes
+   `flock` on fd 9, runs `setsid -f sleep 6`, closes fd 9, and exits; a second subshell's `flock -w
+   2 9` printed "lock still held after 2 s". The same with `9>&-` on the `setsid` line and `exec
+   9>&-` after: the second subshell "got lock" at once. The sleeps exit by themselves.
+2. `grep -n` of `claude/.claude/skills/pass-core/SKILL.md` "Launch prompt" (line 193: goal, scope,
+   plan path, checkout, `claude` line, prompt file; nothing on merging or ending) and of
+   `claude/.claude/skills`, `.claude/skills`, and `claude/.claude/docs` for "never merge" (no hit).
+3. `types/index.d.ts:1153` is `declare module '@sveltejs/kit/env'`; the scaffold's `src/env.ts` is
+   the quoted file.
