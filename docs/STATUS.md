@@ -37,9 +37,7 @@ Steps 2 and 4 run as background sessions (`claude agents` lists them):
 `lean-step2` is cairn-cms.
 `lean-step4` is the docs-chain audit.
 Geoff pastes step 3 as `lean-step3` from the plan's "Pre-launch for 3" block (ruling R-C).
-Pass B (rollout step 5) starts once steps 1 and 2 have merged. Plan:
-`docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`. Spec:
-`docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
+Pass B (rollout step 5) starts once steps 1 and 2 have merged. Plan and spec: `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`, `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
 
 **Infra sweep after the cutover** (decided 2026-10-10; spec
 `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, audit
