@@ -58,9 +58,31 @@ at the foot; treat the snapshot below as orientation, verify before acting.
 - **Worker secrets are WRITE-ONLY**: `wrangler secret list` returns NAMES, never values; a value
   set with `wrangler secret put` cannot be read back. To learn a secret's value you need its
   origin store, not the worker.
-- **Access-protected sites (ASC dev/staging)**: the service token in `~/.local/secrets`
-  (`ASC_ACCESS_CLIENT_ID` / `ASC_ACCESS_CLIENT_SECRET`), sent as `CF-Access-Client-Id` /
-  `CF-Access-Client-Secret` headers. Full recipe: the cairn `asc-cloudflare-access` memory.
+- **Access-protected ASC hosts: the `asc-cloudflare-access` recipe** (verified live 2026-10-10,
+  statuses and names only). It replaces a cairn memory of that name, which never existed.
+  - Hosts. `staging.aksailingclub.org` sits behind the "ASC Staging" app.
+    `dev.aksailingclub.org` is not behind Access: no app covers it, and it answers 200 with no
+    token.
+  - Credential. Service token `claude-capture-asc-ref` (token id `aa9f1b5b-…`, 2160-hour
+    duration). The ASC Staging policy "claude-capture service token" admits it (decision
+    `non_identity`, include `service_token`), and that app's "Service token (CI)" policy admits
+    any valid service token. The ops hosts admit only "Automated Testing - Ops Dashboard"
+    (`CF_ACCESS_CLIENT_SECRET` in the registry).
+  - Use. `source ~/.local/secrets`, then send `CF-Access-Client-Id: $ASC_ACCESS_CLIENT_ID` and
+    `CF-Access-Client-Secret: $ASC_ACCESS_CLIENT_SECRET` (curl `-H`, Playwright
+    `extraHTTPHeaders`). A 302 to the Access login means Access refused the token.
+  - State on 2026-10-10: broken. The token expired on 2026-10-04, and neither variable is in
+    `~/.local/secrets` or the age registry. Access shows a client secret once, at create or
+    rotate, so the old secret is unrecoverable.
+  - Restore (a live-account write: Geoff's go first). `POST
+    accounts/{id}/access/service_tokens/{token_id}/refresh` extends the expiry. `POST
+    .../{token_id}/rotate` issues a new client secret and revokes the old one. Its response
+    carries `client_id` and `client_secret`; pipe each through `jq -r` into `secret-set.sh
+    ASC_ACCESS_CLIENT_ID --stdin` and `secret-set.sh ASC_ACCESS_CLIENT_SECRET --stdin`, never
+    displaying the body, then add both to `~/.dotfiles/secrets/registry.md`.
+  - A new token. `POST accounts/{id}/access/service_tokens` with `name` and `duration` answers
+    201 with the same two fields; store them the same way. Then add an app policy with decision
+    `non_identity` and include `{"service_token":{"token_id":"<id>"}}`.
 - **The workstation registry** `~/.dotfiles/secrets/values.age` and `~/.local/secrets`: the
   workstation's own secrets (GitHub App key, the ASC Access service token, etc.). Its
   `registry.md` marks some entries "ASC-managed separately" — those live in the ASC store below,
@@ -94,9 +116,10 @@ legacy ops event photos), 907-life-media, ecxc-media, cairn-pub-media.
 legacy site until cutover), aksailingclub-org (build worker), asc-ops (+ -dev, -staging; the
 retiring dashboard), asc-handbook, asc-uptime, 907-life, ecxc, cairn-pub, eudaimonia.
 
-**Access apps:** ASC CMS Admin (dev.aksailingclub.org/admin), ASC Staging, ASC Handbook (+ its
-CMS), Ops Dashboard (ops + staging), the Ops Schema API (public, consumed cross-origin by the
-handbook — do not lock it).
+**Access apps** (live 2026-10-10): ASC Staging, ASC Handbook (+ its CMS), Ops Dashboard (ops +
+staging), the Ops Schema API (public, consumed cross-origin by the handbook — do not lock it),
+and `phonebook` (+ `phonebook-prov`) on phonebook.907.life. The ASC CMS Admin app on
+dev.aksailingclub.org/admin is gone.
 
 **asc-site worker secrets (names):** GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID,
 GITHUB_APP_PRIVATE_KEY_B64, STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET (Stripe SANDBOX test keys,
