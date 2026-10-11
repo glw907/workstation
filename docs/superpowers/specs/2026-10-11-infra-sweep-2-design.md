@@ -1,7 +1,7 @@
 # Infra sweep 2: content, chaining, and alignment (design)
 
 **Status:** re-checked against main at `5d35c35`, 2026-10-11, and amended with Geoff's rulings of
-that day (H trimmed, I added); awaiting Geoff. First brought that day by the conducting session
+that day (H trimmed, I added); approved by Geoff, 2026-10-11, for unattended planning. First brought that day by the conducting session
 (`c747c352`). E implements Geoff's choices of that day, F is his request ("please add the monthly
 review"), H is his "now" ruling on dubplate PR #2's found-not-done list, and I is his ruling on
 Charm's model. Parent spec: `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md` "Lean re-plan
