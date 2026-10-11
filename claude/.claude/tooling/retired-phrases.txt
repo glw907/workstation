@@ -121,3 +121,16 @@ no house voice
 
 # Style-guide-sync ruling 12: same supersession as the line above. retired-ok
 not a house voice
+
+# Lean pass process (spec 2026-10-10): the runners, the two economy docs, token ceilings,
+# checkpoint STATUS writes, the conductor, the six pass classes, and the standing simplifier
+# step are retired. A line that must name one carries `retired-ok`.
+pass-execute
+model-economy.md
+pass-gate-economy.md
+token ceiling
+checkpoint interval
+thin conductor
+code-simplifier runs once per pass
+Pass class:
+go-architecture-reader per touched

@@ -76,11 +76,11 @@ The sweep catches the docs-code drift that option coverage (`check:options`) can
 behavior and changelog-described behavior outside option-bearing types. It finds new gaps; it does not
 re-verify existing facts whose cited files changed.
 
-- **Window.** From the last engine tag whose sweep `docs/HISTORY.md` records, to `main`. Find the tags
+- **Window.** From the last engine tag whose release commit body carries a "Doc-code sweep" record, to `main`. Find the tags
   with `git tag --list 'v[0-9]*' --sort=-v:refname | grep -v -e '-'`: the `v[0-9]*` glob skips the
   repo's `tool/v*` tags, and the `grep` drops prerelease tags. A cut that ran no sweep leaves no record,
   so its range rolls into the next window. The first window is seeded at `v0.98.0`, since the planning
-  sweep (`86fd134c`) ran after that cut and no `HISTORY.md` entry records one yet.
+  sweep (`86fd134c`) ran after that cut and no release commit records one yet.
 - **Finders.** Work from three inputs: the `docs/internal/api-surface.md` diff over the window, the
   scaffold's emitted-template diff (`templates/`), and the changelog's `Consumers must:` and behavior
   lines. One module or one surface per agent context, never a per-file window (the `v0.97.0..v0.98.0`
@@ -95,9 +95,9 @@ re-verify existing facts whose cited files changed.
 - **Cap.** 1M tokens per cut, counted across every sweep subagent. At the cap, stop, report the modules
   left unswept, and carry them into the next window's record. Never extend the cap to finish.
 - **Staleness report.** A verifier that meets an existing fact the changed code contradicts reports it.
-  Record the report in the `HISTORY.md` entry: it is the trigger for the deferred fact-staleness
+  Record the report in the yield record: it is the trigger for the deferred fact-staleness
   mechanism (`docs/superpowers/specs/2026-09-30-docs-code-sync-design.md`, "Deferred, with triggers").
-- **Yield record.** Add a `docs/HISTORY.md` entry per run: the tag the window started from, the verified
+- **Yield record.** Put a "Doc-code sweep" paragraph in the release commit body per run, so git and the commit carry the yield (ruling 8): the tag the window started from, the verified
   gaps found beside the modules swept (so window size does not confound the measure), how each gap was
   filed, the unswept modules, and the tokens spent. The next sweep's window starts at this cut's tag.
 - **Retire rule.** After two consecutive capability releases whose sweeps found zero verified gaps, the
@@ -107,7 +107,7 @@ re-verify existing facts whose cited files changed.
 
 ## 4. Pick the version (immutable; verify free)
 
-Published numbers are global and immutable. The pre-rebuild history already burned `0.1`–`0.68`, so never
+Published numbers are global and immutable. The pre-rebuild releases already burned `0.1`–`0.68`, so never
 assume the next number is free. List the full set and pick the first free one:
 
 ```bash
@@ -162,7 +162,7 @@ breaks `npm run package`. Write the concrete token. A quick check:
 
 ## 6. Commit, land on `main`, cut the release
 
-Commit the version bump plus the finalized CHANGELOG (plus the post-mortem and STATUS if they are part of
+Commit the version bump plus the finalized CHANGELOG (plus STATUS if it is part of
 this cut). Land it on `main` (fast-forward push, never force). Then:
 
 ```bash

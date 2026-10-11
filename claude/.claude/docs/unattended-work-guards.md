@@ -1,12 +1,12 @@
 # Guards on long unattended work
 
-Full procedures for the guards the global CLAUDE.md names. The sleep inhibitor is
-tool-enforced; the runaway guard is still armed by the session. Read this when arming a guard
-or investigating a suspend.
+Full procedures for the guards the global CLAUDE.md and `pass-core` name. The sleep inhibitor is
+tool-enforced; the runaway guard, the wake-up, and the lid-switch hold are still armed by the
+session. Read this when arming a guard or investigating a suspend.
 
 ## Runaway guard (any workflow expected to run past ~30 minutes)
 
-Nothing intervenes unless the main loop watches from outside (proven 2026-07-02: a sweep
+Nothing intervenes unless the session watches from outside (proven 2026-07-02: a sweep
 agent burned ~5 hours grooming its own agent-memory index). At launch, arm a background
 Bash guard that first reads the workflow's `journal.jsonl` for completed agents, then polls
 the transcript dir every ~5 minutes for either signature: the newest `agent-*.jsonl` idle
@@ -87,33 +87,35 @@ desktop notification, records the floor, and exits, releasing both channels so t
 may sleep. A lease refresh does not re-arm it until capacity recovers above the floor.
 (`cairn-run-gate`'s own hold and `awake` carry no floor; a gate is bounded.)
 
-The holder does not save a session's state. A session running long unattended work on
-battery that wants its state saved before the floor still stands down itself at 11%: TaskStop
-the workflow and guards, WIP-commit partial work on the feature branch, and write STATUS with
-the exact resume prompt (including any `resumeFromRunId`), then report. Suspend evidence
+The holder does not save a session's state. The executing session or workflow, running long
+unattended work on battery, stands itself down at 11% when it wants its state saved before the
+floor: TaskStop the workflow and guards, WIP-commit partial work on the feature branch, and write
+STATUS with the exact resume prompt (including any `resumeFromRunId`), then report. Suspend evidence
 lives in `journalctl`; check it before diagnosing any long-running background work as slow
 or stalled.
 
 ## A wake-up that does not depend on the API link (born 2026-09-20, five hours lost)
 
-Every guard above watches the machine or the agents. None of them wakes the CONDUCTOR. A
-workflow's completion or failure reaches the main loop only as a task notification, and a
-notification that fires while the API link is down is not retried on a timer: the session sits
-until a human types. On 2026-09-20 an `EAI_AGAIN` drop killed a fold implementer at about 04:00,
-the chain halted, and the conductor sat unwoken until Geoff's 09:16 message, with no suspend in
-`journalctl` and every inhibitor held. So any run left unattended arms a scheduled wake-up as
-well: start `/loop` with no interval (dynamic pacing) once the first workflow is launched, with
-the workflow's own notification as the primary signal and a 1200 to 1800 second fallback. The
-fallback tick checks the journal for a dead or halted run and relaunches with `resumeFromRunId`.
-A tick that fires while the link is still down fails and the next one retries, which is the
-property the notification lacks. Arm it at launch, not when something already looks slow.
+Every guard above watches the machine or the agents. None of them wakes the executing session. A
+workflow's completion or failure, or a background Bash task's exit, reaches the session only as a
+task notification, and a notification that fires while the API link is down is not retried on a
+timer: the session sits until a human types. On 2026-09-20 an `EAI_AGAIN` drop killed a fold
+implementer at about 04:00, the chain halted, and the session sat unwoken until Geoff's 09:16
+message, with no suspend in `journalctl` and every inhibitor held. So any run left unattended arms
+a scheduled wake-up as well: `/loop` with no interval (dynamic pacing), started as the executing
+session's first guard (`pass-core` "Execute") and, for a workflow, once it is launched. The
+notification is the primary signal and a 1200 to 1800 second fallback is the backstop. The
+fallback tick checks the journal or the branch's task commits for a dead or halted run and
+relaunches with `resumeFromRunId`, or resumes at the first task whose acceptance fails. A tick
+that fires while the link is still down fails and the next one retries, which is the property the
+notification lacks. Arm it at launch, not when something already looks slow.
 
 ## Restart recovery re-arms the FULL set (born of a 7% near-miss, 2026-09-03)
 
 A harness process restart orphans every background guard at once. Recovery after ANY
 restart re-arms ALL layers as one checklist, never just the guard for the work being
-relaunched. The set: (1) the workflow runaway guard, and (2) any session-level battery
-stand-down. The sleep inhibitors need no re-arm: the lease holder runs outside the harness and the
+relaunched. The set: (1) the workflow runaway guard, (2) any session-level battery
+stand-down, (3) the `/loop` wake-up, and (4) the lid-switch hold. The sleep inhibitors need no re-arm: the lease holder runs outside the harness and the
 next tool call refreshes the lease (confirm with `systemd-inhibit --list`). "It's on AC
 right now" is not a reason to skip the battery layer: the holder's floor is silent on AC
 by design, so it is already watching when someone later unplugs.
@@ -140,3 +142,32 @@ closed lid also holds `systemd-inhibit --what=handle-lid-switch --who=<initiativ
 which stops logind from acting on the lid at all. Neither the lease holder nor `awake` takes this lock, so
 hold it by hand whenever the laptop may be closed or carried; `journalctl | grep "time jump detected"` shows the gap if it
 happens anyway.
+
+## Shared gate lanes
+
+Gates queue on one machine-wide lock per lane, and every gate runs in a memory-capped scope
+(`cairn-run-gate`'s header holds the caps). Born 2026-09-14: the motion pass's two chains ran their
+full gates side by side, each with headless Chromium, the kernel OOM-killed a browser six times,
+and systemd-oomd then killed GNOME Shell, which took every open app and both sessions with it.
+
+- **One full gate per machine at a time.** The heavy lane serializes browser-bearing gates. A gate
+  that launches no browser takes the light lane (`CAIRN_GATE_LANE=light`): its own lock and a 3G
+  cap, so it never waits behind a browser gate, and one light gate beside one heavy gate still fits
+  in RAM. Put a gate on the light lane only when its measured peak fits that cap
+  (`systemd-run --user --wait -P -d -E PATH="$PATH" <command>` prints `Memory peak:`). Born
+  2026-09-20: a one-minute Go gate queued behind another session's e2e gates on nearly every task
+  of cairn Go tool pass A, two to three hours in all.
+- **Sessions sharing the heavy lock coordinate** (cairn-cms and dubplate sessions, agreed
+  2026-10-05). An agent waiting on the lock re-issues its gate every ten minutes, and each
+  re-issue is a paid turn, so four rules keep the queue cheap. (1) Before a heavy gate expected to
+  run over 15 minutes, send the other live session one line through `SendMessage` (what, rough
+  length, roughly when); a gate under 10 minutes needs no message. (2) Never re-run a full gate on
+  an unchanged tree: `cairn-run-gate --receipt '<gate>'` finds a passing receipt, and CI green on
+  the commit already stands as the full gate where CI is the full-suite home. (3) Browserless
+  steps stay on the light lane. (4) A session that knows its next heavy gate is more than about
+  30 minutes away says so if the other has heavy work queued, so the other can launch into the
+  gap. `ListAgents` shows the live peer sessions.
+- **Never edit a script a running gate executes** (dubplate, 2026-10-10). Bash reads a script
+  incrementally, so a mid-run edit shifts the bytes it has yet to read: a header-comment edit to
+  dubplate's `check.sh` made the gate exit 127 (`line 609: e: command not found`). Serialize any
+  edit to gate machinery after the gate finishes.

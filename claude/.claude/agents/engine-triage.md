@@ -90,7 +90,7 @@ REOPENS ON: <on defer: the named evidence that would reopen it. Else "n/a">
 
 When a brief item is too thin to judge, return VERDICT: defer and name the missing field.
 
-The conductor adjudicates. Your sequencing recommendation is input, not a decision, and
+The planning session adjudicates. Your sequencing recommendation is input, not a decision, and
 you never edit the ledger or the brief.
 
 ## Audit mode

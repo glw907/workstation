@@ -20,7 +20,7 @@ machine.** The manifests record intent; the script reports what happened.
 | MCP servers, project scope | a repo's `.mcp.json` | that repo | the repo's own CLAUDE.md names it |
 | Secrets a server needs | the age store, `~/.local/secrets` | `~/.dotfiles/secrets/registry.md` | `secret-receive`, `sync.sh` |
 | Memory | `~/.claude/projects/<repo>/memory/` | `MEMORY.md` index per repo | the session |
-| Workflows | `~/.claude/workflows/` (invoked by name, never from a scratchpad copy) | the directory | the Workflow tool |
+| Workflows | `~/.claude/workflows/` (invoked by name; see "Workflows" below) | the directory | the Workflow tool |
 
 ## Rules
 
@@ -48,19 +48,42 @@ machine.** The manifests record intent; the script reports what happened.
 - **A restart loads new servers; skills and agents load live.** Restart at a session
   boundary, never mid-run (a Workflow run dies with its session).
 
-Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; see
-`model-economy.md`): every reviewer agent under `agents/` and every workflow script under
-`workflows/` names `claude-opus-5-5` explicitly (`diff-reviewer`, the four domain reviewers,
-`engine-triage`, `go-architecture-reader`, `figure-verifier`, `visual-verifier`,
-`prose-voice-reviewer`, `cairn-register-editor`; `pass-execute.js`, `pass-execute-chains.js`,
-`docs-page-chain.js`). `cairn-docs-drafter` (the docs page chain's default drafter, `effort: high`)
-also pins `claude-opus-5-5` explicitly and carries no `skills:` line; the page-inputs step's
-output (job, page type, exemplar excerpts, fact ids, claim inventory) arrives in the dispatch
-prompt, never a separate profile arg or file. No agent pins Fable 5.1; it is reached only by a per-dispatch escalation.
-Implementers stay on `sonnet` at effort `high`; the docs page chain drafts published pages on
-`claude-opus-5-5` (its `drafterModel` default, Geoff 2026-09-22). A frontmatter pin is read at session start, so a repin reaches a
-running session only through a per-dispatch `model`; verify a repin from a fresh headless session
-by grepping the subagent transcript's `"model"` field, never from the agent's own answer.
+Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; the seats are in
+`pass-core` "Models"): every reviewer agent under `agents/` and the workflow script
+`docs-page-chain.js` names `claude-opus-5-5` explicitly (`diff-reviewer`, the four domain
+reviewers, `engine-triage`, `go-architecture-reader`, `figure-verifier`, `visual-verifier`,
+`prose-voice-reviewer`, `cairn-register-editor`). `cairn-docs-drafter` (the docs page chain's
+default drafter, `effort: high`) also pins `claude-opus-5-5` explicitly and carries no `skills:`
+line; the page-inputs step's output (job, page type, exemplar excerpts, fact ids, claim inventory)
+arrives in the dispatch prompt, never a separate profile arg or file. No agent pins Fable 5.1; it
+is reached only by a per-dispatch escalation. Implementers stay on `sonnet` at effort `medium`; the
+docs page chain drafts published pages on `claude-opus-5-5` (its `drafterModel` default, Geoff
+2026-09-22). A frontmatter pin is read at session start, so a repin reaches a running session only
+through a per-dispatch `model`; verify a repin from a fresh headless session by grepping the
+subagent transcript's `"model"` field, never from the agent's own answer.
+
+`worktree.baseRef: "head"` in the stowed `settings.json` applies in every repo, so subagent and
+`--worktree` branches start from the local `HEAD`, not the remote default (code.claude.com/docs/en/
+worktrees, "Choose the base branch").
+
+## Model defaults
+
+`CLAUDE_CODE_SUBAGENT_MODEL=sonnet` sits in `~/.claude/settings.json` `env`. It reaches only
+dispatches with no model of their own: `general-purpose`, `claude`, unpinned custom agents, and
+Workflow `agent()` without `model`. Frontmatter pins and a per-dispatch `model` both win over it,
+and a settings value outranks a shell export, so it also reapplies to running sessions. Forcing it
+onto `Explore` or `Plan` would override every frontmatter pin. `/effort` persists per model into
+`settings.json` through the stow link, so reset it at the end of a session that raised it.
+
+## Workflows
+
+Invoke a workstation workflow by name, never from a scratchpad copy, so every run executes the
+committed script. By-name resolution can serve a stale copy after the script changed in the same
+session (2026-10-01: run `wf_55b254af-82a` ran an earlier commit and redrafted six pages). Before
+relying on a run, `cmp` the persisted script the tool returns against the committed file. On a
+mismatch, stop the run, copy the committed file over that returned path, and relaunch with
+`scriptPath`. When the tool refuses that path (2026-10-03, after the session's working directory
+changed), copy the committed file into the session scratchpad, `cmp` it, and relaunch from there.
 
 ## Procedures
 
@@ -113,9 +136,9 @@ commit skills and manifest together.
   and wired in as an advisory step of the per-task gate for admin-markup tasks.
 - **Dependency upgrades:** the authored `dependency-upgrade` skill (2026-09-14), the procedure every
   bump in every repo follows; the global CLAUDE.md "Dependencies" section is the standing rule.
-- **Spec and plan review:** the authored `spec-plan-review` skill (2026-09-23), the lens fan-out,
-  fold, verification read, and prose review every spec or plan takes before owner approval; the
-  global CLAUDE.md "Conducting a pass" section points at it.
+- **Spec and plan review:** the authored `spec-plan-review` skill (2026-10-10 rewrite), the three
+  lenses, probing fold, and verification read every spec or plan takes before owner approval;
+  `pass-core` points at it.
 - **Svelte:** the official server (user scope, remote).
 - **Playwright:** Microsoft's server (user scope, stdio).
 - **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook.

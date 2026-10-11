@@ -1,170 +1,89 @@
 ---
 name: cairn-pass
 description: >
-  Starts, resumes, or closes a pass in the cairn-cms repo (the @glw907/cairn-cms engine
-  library and its Go `cairn` tool). Use when the user asks to start, execute, resume, or
-  close a cairn-cms pass or plan under cairn-cms/docs/superpowers/plans/, or when a fresh
-  session in cairn-cms follows a STATUS resume prompt. Loads pass-core for the shared
-  machinery. For a consumer site's own passes (ecxc-ski, 907-life, and the rest) use
-  site-pass.
+  The cairn-cms adapter for the lean pass process: gate, fast lane, full-suite home, worktree
+  setup, CI watch, risk-class path map, checklist globs, and close checklist for the
+  @glw907/cairn-cms engine and its Go `cairn` tool. Use when planning, executing, resuming, or
+  closing a cairn-cms pass, or when a fresh cairn-cms session follows a STATUS launch prompt. For
+  a consumer site's pass use site-pass.
 ---
 
 # Cairn pass
 
-**Load `pass-core` first.** It holds the pass-class table, the execution chain, execution
-discipline, the close ritual skeleton, and the handoff. This skill adds only what is
-cairn-cms's own.
+Load `pass-core` first; it holds the lifecycle and the rules this adapter fills in. The sources
+are `docs/STATUS.md` (the rolling now) and the functional spec
+(`docs/superpowers/specs/2026-05-28-cairn-rebuild-functional-spec.md`, the locked decisions).
+STATUS's next action names the plan; trust it. Check `docs/internal/consultations/` for briefs with
+unrecorded verdicts first (`engine-consult` carries the protocol).
 
-The canonical sources are the functional spec
-(`docs/superpowers/specs/2026-05-28-cairn-rebuild-functional-spec.md`, the locked decisions)
-and `docs/STATUS.md` (the rolling now, canonical on `main`). Engine work runs one pass per
-feature worktree off `main`, so `main` stays releasable. Honor cairn-cms's own `CLAUDE.md`
-and skills.
+**Gate**: `cairn-run-gate '<string>'` from the pass worktree, per `pass-core` "Gates".
 
-## Starting a pass
+**Fast lane**: `node scripts/checks/gate-tier.mjs --fast --range <base>..HEAD` prints the legs.
+Run them in order, each through `cairn-run-gate` with a leading `CAIRN_GATE_LANE=<lane>` lifted onto
+the call (`CAIRN_GATE_LANE=light cairn-run-gate '<rest>'`), since the tool reads the lane from its
+own environment. The `--fast` flag lands in rollout step 2. The `tool` class gate is
+`make -C tool check` on the light lane; a Node-only workspace suite such as `npm test -w
+packages/create-cairn-site` is light, and the engine's root `npm test` drives Chromium and is never
+light. A lone unrelated test failure, or `Cannot connect to the server in 60 seconds`, is a known
+workstation trap first: `docs/internal/durable-gotchas.md` carries the rerun rule.
 
-1. Read `docs/STATUS.md`, the functional spec sections the plan touches, and the plan in
-   full. STATUS's next action names the plan and method; trust it rather than re-deriving
-   the design.
-2. Check `docs/internal/consultations/` for briefs with unrecorded verdicts or accepted items
-   queued for this pass. An unanswered brief is worked before unrelated tasks
-   (`engine-consult` carries the protocol).
-3. Confirm you are in the feature worktree STATUS names, not the `main` checkout.
-4. Run the chain per `pass-core` with `implementer: "cairn-implementer"`.
+**Full-suite home**: CI on the draft PR. Local `TIER_GATES.full` (`npm test`, then `npm run
+check:close`, which builds once) runs only on `ci-green` exit 3, with the e2e step run as `--grep-invert
+"site home|archive page 2"`. A docs-only local fallback skips `npm test` and runs `check:close`.
+The gate runs no gitleaks scan, so there is no branch-history scan to owe.
 
-The friction log `pass-core`'s out-of-scope rule names is `docs/internal/docs-friction-log.md`.
-Add each entry under "Open findings" as a `- **\`perspective\`.**` bullet, commit it on `main`
-at the checkpoint, and name who found it and the date.
+**Worktree setup**: The launch's `.claude/worktrees/<branch>`, then `npm ci && npm ci --prefix
+examples/showcase`, since a worktree's showcase otherwise resolves the main checkout's engine
+(`docs/internal/durable-gotchas.md`).
 
-The `main` checkout is shared: another session's pass may hold uncommitted edits to
-`docs/STATUS.md` or the friction log there. Before a checkpoint commit on `main`, run
-`git diff <file>` and stage only your own hunks (`git add -p`). If a file carries another
-session's warm edits, coordinate with that session instead of committing them. (A harvest
-checkpoint on 2026-09-29 committed pass C's STATUS edits along with its own.)
+**CI watch**: `ci-green <sha> --pr <n> --wait` as a background Bash task, re-issued on 75; exit 0
+is green, 1 red, 2 missing, 3 unavailable. The first push opens a draft PR, since cairn CI fires
+on `pull_request` and on push only to `main` and `rebuild`. No task waits for CI before the next; a
+red stops the line. Run it from the pass worktree so its CI line lands under the pass branch for
+`--records`. List every retried test from its output in the PR body: a retry that passed is flake
+evidence, not green.
 
-Gate notes for the args:
+**Risk-class path map**: `auth-data`: `src/lib/{auth,auth-channel,auth-crypto,auth-store,github}/**`,
+`src/lib/sveltekit/{csrf*,auth-*,commit-log}.ts`, `src/lib/admin/{csrf-context.ts,CsrfField.svelte}`,
+`migrations*/**`, `examples/showcase/migrations*/**`, `templates/*/migrations*/**`,
+`**/hooks.server.ts`, `**/preview/\[token\]/**` (escaped: in a pathspec `[token]` is a character
+class), `**/members/login/**`, `**/admin/signups/**`, `tool/internal/secrets/**`,
+`packages/create-cairn-site/src/{github,cloudflare}/**`, `wrangler.*`. `runner`: `scripts/checks/**`,
+`.github/workflows/**`, `.github/ci-green.json`. `ordinary`: the rest. A chassis task
+(`examples/showcase/src/chassis/`, `templates/waymark/`) takes the class an engine change of its
+kind would take and the engine's quality bar, since a developer copies that code.
 
-- The per-task gate is the tier `scripts/checks/gate-tier.mjs --range <base>..HEAD` computes
-  from the diff, plus the e2e specs the change reaches (Geoff, 2026-10-08). The engine's
-  `npm test` runs when the classifier computes the engine tier, which includes `scripts/**`,
-  `src/tests/**`, and test files as well as `src/lib` and `packages/`. The classifier prints the
-  targeted gate by default (`--pin <tier>` keeps a tier string; `--class auth-data` adds the
-  three auth e2e specs). A `paint` task's e2e is the specs its change reaches; its full suite at
-  segment boundaries is CI green on the pass's draft PR (below).
-- The protected paths are the bucket and e2e-map table, `scripts/test/component-rerun-triggers.mjs`,
-  `scripts/checks/gate-tier.mjs`, `.github/ci-green.json`, and `.github/workflows/**`. A task
-  whose diff touches one runs its targeted gate, then waits for CI green on its own commit before
-  the next task; `gate-tier.mjs --range <base>..HEAD --protected` prints `ciWait` for such a range.
-- The light gate lane (`gateLane: "light"`) is only for a gate that launches no browser:
-  `make -C tool check`, a lint-only run, or a Node-only workspace suite such as
-  `npm test -w packages/create-cairn-site`. The engine's root `npm test` drives Chromium and is
-  never light.
-- The `tool` class gate is `make -C tool check`.
-- A lone unrelated test-file failure, or a component run printing `Cannot connect to the
-  server in 60 seconds`, is a known workstation trap before it is a regression:
-  `docs/internal/durable-gotchas.md` carries the rerun rule and the serialized heavy gate.
+**Checklist globs**: The close review loads `svelte-reviewer` for `**/*.svelte` and load, action, or
+hook code; `cloudflare-workers-reviewer` for Worker, D1, and `wrangler.*`;
+`web-auth-security-reviewer` for every `auth-data` glob; `daisyui-a11y-reviewer` for markup, styles,
+and theme config; `go-conventions` for `tool/**`.
 
-The chassis (the showcase's `examples/showcase/src/chassis/` and `templates/waymark/`) is the
-code a developer copies, so whatever it does becomes their idiom, and its quality bar equals the
-engine's (Geoff, 2026-09-01). A chassis task takes the same pass class, review bar, and plan
-review an engine change of its kind would take, never a lighter tier: exemplar-grade code and
-the full cleanliness treatment.
+**Close checklist**: Beyond `pass-core` "Close":
 
-## Closing a pass
-
-Run `pass-core`'s ritual. The cairn-specific parts of each step:
-
-### Gate (step 2)
-
-Push the close commit and read `ci-green <sha> --pr <n> --wait` from the pass worktree, so its CI
-line lands under the pass branch for `--records` (exit 0 is green, 1 red, 2 missing, 3 unavailable,
-75 pending: re-issue on 75, with `run_in_background`; any other exit, such as 127 before stow,
-counts as 3 and the local full gate runs). For a diff with a path outside `tool/**`, CI's `test`,
-`e2e`, `design`, `scaffold`, and `create-site` runs are the pass's full gate, e2e included; a
-tool-only diff requires none, and `tool` and `tool-conditions` are judged when present. Only on exit 3 does the local full gate run: `TIER_GATES.full` from
-`scripts/checks/gate-tier.mjs` (`npm test`, then `check:close`, which builds once), its e2e step
-run with `--grep-invert "site home|archive page 2"` (the 20 visual tests this workstation's
-Chromium renders off CI's baselines). On that local fallback a `docs` pass skips `npm test` but still runs `check:close`.
-
-**The draft PR.** Open it against `main` after the pass branch's first commit and push after each
-accepted task. Pass `ci: { pr: <draft PR> }` to the sequential runner; without it the runner never
-pushes or reads CI. cairn-cms CI fires
-on push only for `main` and `rebuild`, so the PR is what gives a pass branch its CI.
-
-Prove the consumer build, not only `npm test`: the package ships TypeScript inside `.svelte`,
-so a consumer-bundler break shows only when a consumer builds. CI's `e2e` run above proves it;
-on the local fallback, force a from-scratch showcase build
-(`rm -rf examples/showcase/{node_modules,package-lock.json}`, fresh install,
-`npm run build`). Local Playwright reuses a stale preview server.
-
-### Live admin smoke (step 4, `auth-data` only)
-
-Run it against a real Worker (`wrangler dev`), minting a session by inserting a D1 session
-row directly, then drive the magic-link round trip itself in headless Chromium, reading the
-link from wrangler's local `send_email` output (Geoff, 2026-09-21: verification a plan parks for
-the owner is Claude's). Follow
-`docs/internal/admin-smoke-test.md` and record the results as evidence.
-
-### Documentation (step 5)
-
-Documentation is a pass dimension. Fix every doc the change touched, including inbound
-references on other pages.
-
-- A public-behavior change files its bullet in `docs/internal/facts/<arm>.md`, then updates
-  the reference page if it is public API. The admin and editors arms and the front door are
-  empty, and extend holds only its kept pages until stage 2a; each arm stays that way until its own stage
-  rebuilds it. While an arm holds no rebuilt page, a divergence is filed into the facts container.
-  A deficiency found on an existing page (reference, a kept extend record, or a rebuilt arm page)
-  is fixed on the page in the same pass, with its fact bullet filed alongside. On a published page
-  the fix is written to the track's drafting brief, with no register review or polish, and Vale's
-  error tier still runs; an edit to a page with a brief updates the brief in the same change (the
-  parent spec's "Edits after the chain"). An internal doc's fix is agent-facing. A site pass's docs edits land
-  per `site-pass`.
-- Any behavior change updates `CHANGELOG.md` under `## Unreleased` and the per-version record
-  (`docs/extend/migration-notes.md`, with `docs/extend/upgrade-cairn.md` its short-task half).
-  A breaking change carries one `Consumers must:` line per consumer action.
-- A removed or renamed symbol: `grep -rn` all of `docs/` and `README.md` for the old name and
-  its anchors, and repoint every hit.
-- An intended public-surface change runs `npm run check:surface -- --update` and commits the
-  regenerated `docs/internal/api-surface.md`.
-- A ruling on a consultation item or an executed audit verdict updates
-  `docs/internal/engine-rulings.md`.
-- Triage the whole `docs/internal/docs-friction-log.md`, complete-or-move: each entry is fixed
-  and deleted, promoted to `ROADMAP.md`, or deleted as overtaken, verified against the code
-  first. Append any new friction the pass surfaced. When the pass ran the page chain, the fold
-  agent (never the conductor) first reconciles every stage record's `frictionFiled` entry against
-  the log; a promotion to an engine change reads `docs/internal/engine-rulings.md` and runs the
-  charter's premise test first; the HISTORY entry counts the entries and their outcomes.
+- The live admin smoke on `auth-data`, against a real Worker (`wrangler dev`) with a session minted by
+  inserting a D1 row, then the magic-link round trip in headless Chromium, reading the link from
+  wrangler's local `send_email` output; follow `docs/internal/admin-smoke-test.md`.
+- Documentation is a pass dimension: fix every doc the change touched, inbound references included.
+  A public-behavior change files its bullet in `docs/internal/facts/<arm>.md` and updates the
+  reference page if it is public API. An arm with no rebuilt page files divergences into the facts
+  container instead of fixing a page. A fix on a published page is written to the track's drafting
+  brief with no register review, and Vale's error tier still runs; an edit to a page with a brief
+  updates the brief in the same change (the spec's "Edits after the chain").
+- A behavior change updates `CHANGELOG.md` under `## Unreleased` and the per-version record
+  (`docs/extend/migration-notes.md`, with `docs/extend/upgrade-cairn.md`); a breaking change carries
+  one `Consumers must:` line per consumer action. A removed or renamed symbol is grepped across
+  `docs/` and `README.md` and every hit repointed. An intended public-surface change runs `npm run
+  check:surface -- --update` and commits `docs/internal/api-surface.md`. A ruling on a consultation
+  item updates `docs/internal/engine-rulings.md`.
+- Triage `docs/internal/docs-friction-log.md`, complete-or-move: each entry is fixed and deleted,
+  promoted to `ROADMAP.md`, or deleted as overtaken, verified against the code first. A promotion to
+  an engine change reads `engine-rulings.md` and runs the charter's premise test first. File each
+  new friction under "Open findings" as a `- **\`perspective\`.**` bullet naming the finder and
+  date, verified against cairn-cms first. The `main` checkout is shared: stage only your own hunk
+  (`git add -p`) and leave another session's warm edits alone. UI mechanics follow
+  `~/.claude/docs/engine-ui-mechanics.md`.
 - A docs-stage close runs the engine-pass boundary test over the log's engine entries and the
-  `ROADMAP.md` engine-friction entries: fix before the next docs stage an item whose fix would
-  change what a written or outlined page tells the reader (a workaround, a caveat, a step); fix
-  now an item that blocks a page or a migration step; batch the rest into whichever engine pass
-  runs next. The close report and STATUS state the verdict: whether an engine pass is warranted
-  before the next stage, and its scope. Engine passes land on `main` and never release (Geoff,
-  2026-10-07; `ROADMAP.md`'s standing rule).
-
-### Ledgers and release (step 6)
-
-A pass never bumps the version or publishes. It finalizes its `CHANGELOG.md` entry under
-`## Unreleased`, leaves `package.json` alone, and stops. When a cut is independently warranted
-(a consumer needs the change now, or a coherent capability has landed), invoke
-`cairn-release`.
-
-The pass score's gate time and lock wait come from `cairn-run-gate --records <toplevel> <branch>`.
-List every retried test from `ci-green`'s output in the HISTORY entry (a retry that passed is
-flake evidence, not green), and count the selection misses: a CI red on a commit whose targeted
-gate was green. Two misses reopen the bucket table.
-
-Update `docs/STATUS.md` on `main` as part of the merge, and `docs/HISTORY.md` beside it.
-Append the post-mortem to the plan file. Never write cairn state into a consumer site's
-STATUS.
-
-### Handoff (step 8)
-
-The launch directory is inside `cairn-cms`, so its hooks and memory load. Example resume
-line: "Execute the component grammar plan (`docs/superpowers/plans/<file>.md`)."
-
-## When not to use
-
-- A consumer site's own passes: `site-pass`.
-- Mid-pass debugging or single-file edits.
+  `ROADMAP.md` engine-friction entries, and states in STATUS whether an engine pass is warranted
+  before the next stage. Engine passes land on `main` and never release.
+- A pass never bumps the version or publishes. It finalizes its `CHANGELOG.md` entry and stops;
+  `cairn-release` cuts a release when one is warranted. Never write cairn state into a site's STATUS.

@@ -339,23 +339,117 @@ assert_eq "$?" "$good_rc" "records: a lock timeout leaves the exit unchanged"
 assert_eq "$(count_warn "$locked")" "1" "records: a lock timeout warns once"
 wait "$holder" 2>/dev/null
 
-# --- no runner prompt or implementer file carries a vanished clause: the protocol lives only in
+# --- lean cutover (spec Execution item 7): a finished result persists for repeat calls and
+# concurrent waiters while the tree matches, a changed tree or --fresh reruns, the deadline holds
+# under a slow poll, an unknown flag exits 2, and RUN_GATE_IF_BUSY=defer leaves a busy heavy leg.
+lrepo="$work_dir/lean-repo"
+mkdir -p "$lrepo"
+git -C "$lrepo" init -q
+echo a >"$lrepo/a.txt"
+git -C "$lrepo" add a.txt
+git -C "$lrepo" -c user.email=t@t -c user.name=t commit -qm init
+recL="$fixture_root/rec-lean"
+lean() { (cd "$lrepo" && CAIRN_GATE_RECORDS_DIR="$recL" CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" "$@"); }
+
+# Two concurrent waiters both print the result; the run happens once.
+gateL1="sleep 2; echo lean1"
+lean "$gateL1" >"$fixture_root/waiter1.out" 2>&1 &
+w1=$!
+sleep 1
+lean "$gateL1" >"$fixture_root/waiter2.out" 2>&1 &
+w2=$!
+wait "$w1" "$w2"
+assert_contains "$(cat "$fixture_root/waiter1.out")" "gate exit: 0" "persist: the first waiter prints gate exit"
+assert_contains "$(cat "$fixture_root/waiter2.out")" "gate exit: 0" "persist: the second waiter prints gate exit"
+assert_not_contains "$(cat "$fixture_root/waiter2.out")" "vanished" "persist: no false vanish"
+assert_eq "$(rec_lines "$recL")" "1" "persist: two waiters leave one run record"
+
+# A repeat call on an unchanged tree reprints without a new run.
+out=$(lean "$gateL1")
+assert_eq "$?" "0" "persist: a repeat call exits with the stored status"
+assert_contains "$out" "gate exit: 0" "persist: a repeat call reprints gate exit"
+assert_not_contains "$out" "gate started" "persist: a repeat call starts no run"
+assert_contains "$out" "re-issue with --fresh" "persist: a repeat call says it was reprinted"
+assert_eq "$(rec_lines "$recL")" "1" "persist: a repeat call adds no exit line"
+
+# A changed tree starts a new run.
+echo b >>"$lrepo/a.txt"
+out=$(lean "$gateL1")
+assert_contains "$out" "gate started" "persist: a changed tree starts a new run"
+wait_for_lines "$recL" 2 || { echo "FAIL: persist: the changed-tree run left no record"; fail=1; }
+assert_eq "$(rec_lines "$recL")" "2" "persist: a changed tree adds one run"
+
+# --fresh reruns the same tree.
+out=$(lean --fresh "$gateL1")
+assert_contains "$out" "gate started" "fresh: --fresh starts a new run on the same tree"
+assert_contains "$out" "gate exit: 0" "fresh: the rerun finishes"
+assert_eq "$(rec_lines "$recL")" "3" "fresh: --fresh adds one run"
+git -C "$lrepo" checkout -q a.txt
+
+# A poll that sleeps twice its argument still returns inside the wait budget plus one interval.
+shim="$fixture_root/slow-sleep-bin"
+mkdir -p "$shim"
+real_sleep="$(command -v sleep)"
+printf '#!/usr/bin/env bash\nexec %s "$(awk -v n="$1" "BEGIN{print n*2}")"\n' "$real_sleep" >"$shim/sleep"
+chmod +x "$shim/sleep"
+gateL2="$real_sleep 12; echo lean2"
+t0=$(date +%s)
+(cd "$lrepo" && PATH="$shim:$PATH" CAIRN_GATE_RECORDS_DIR="$recL" CAIRN_GATE_LANE=light CAIRN_GATE_WAIT=4 CAIRN_GATE_POLL_INTERVAL=1 "$SCRIPT" "$gateL2") >"$fixture_root/slow.out" 2>&1
+rc=$?
+t1=$(date +%s)
+out=$(cat "$fixture_root/slow.out")
+assert_eq "$rc" "75" "deadline: the slow-poll call exits 75"
+[ $((t1 - t0)) -le 6 ] || { echo "FAIL: deadline: slow-poll call took $((t1 - t0))s, want 6s or less"; fail=1; }
+assert_contains "$out" "timeout: 600000" "exit 75 text names the Bash timeout"
+for i in 1 2 3 4 5 6; do
+  out=$(lean "$gateL2")
+  [ "$?" -ne 75 ] && break
+done
+assert_contains "$out" "gate exit: 0" "deadline: the run finishes after the slow-poll call"
+
+# An unknown flag exits 2 and starts nothing.
+before=$(ls "$gatedir" | wc -l)
+out=$(lean --bogus 'echo bogus' 2>&1)
+assert_eq "$?" "2" "flags: an unknown flag exits 2"
+assert_contains "$out" "usage: cairn-run-gate" "flags: the usage line prints"
+assert_eq "$(ls "$gatedir" | wc -l)" "$before" "flags: an unknown flag creates no state"
+assert_eq "$(rec_lines "$recL")" "4" "flags: an unknown flag starts no run"
+
+# RUN_GATE_IF_BUSY=defer: a busy heavy lock exits 76 and starts nothing.
+recD="$fixture_root/rec-defer"
+heavy() { (cd "$lrepo" && CAIRN_GATE_RECORDS_DIR="$recD" CAIRN_GATE_POLL_INTERVAL=1 "$@"); }
+flock "$gatedir/machine.lock" "$real_sleep" 4 &
+holder=$!
+sleep 0.5
+out=$(heavy env RUN_GATE_IF_BUSY=defer "$SCRIPT" 'echo defer1' 2>&1)
+assert_eq "$?" "76" "defer: a busy heavy lock exits 76"
+assert_contains "$out" "push's CI" "defer: the line leaves the leg to CI"
+assert_not_contains "$out" "gate started" "defer: nothing starts"
+assert_eq "$(rec_lines "$recD")" "0" "defer: nothing is recorded"
+# The light lane ignores the variable.
+out=$(heavy env RUN_GATE_IF_BUSY=defer CAIRN_GATE_LANE=light "$SCRIPT" 'echo defer2' 2>&1)
+assert_eq "$?" "0" "defer: the light lane ignores the variable"
+wait "$holder" 2>/dev/null
+# A call that reattaches to its own in-flight heavy run never defers.
+gateL3="$real_sleep 7; echo lean3"
+# (Output goes to a file: the detached run holds a command substitution's pipe open until it ends.)
+heavy env CAIRN_GATE_WAIT=1 "$SCRIPT" "$gateL3" >"$fixture_root/own1.out" 2>&1
+assert_eq "$?" "75" "defer: the own run starts and is still running"
+heavy env RUN_GATE_IF_BUSY=defer CAIRN_GATE_WAIT=1 "$SCRIPT" "$gateL3" >"$fixture_root/own2.out" 2>&1
+assert_eq "$?" "75" "defer: a re-issue reattaches to its own run and never exits 76"
+for i in 1 2 3 4 5 6; do
+  out=$(heavy env RUN_GATE_IF_BUSY=defer CAIRN_GATE_WAIT=8 "$SCRIPT" "$gateL3" 2>&1)
+  [ "$?" -ne 75 ] && break
+done
+assert_contains "$out" "gate exit: 0" "defer: the own run finishes"
+
+# --- no implementer file or workflow carries a vanished clause: the protocol lives only in
 # cairn-run-gate's own output now.
 hits=$(grep -rniI "vanish" \
   "$REPO_ROOT/claude/.claude/agents/cairn-implementer.md" \
   "$REPO_ROOT/claude/.claude/agents/site-implementer.md" \
   "$REPO_ROOT/claude/.claude/workflows/docs-page-chain.js" || true)
 [ -z "$hits" ] || { echo "FAIL: a vanished clause remains: $hits"; fail=1; }
-chains_hits=$(grep -n "vanish" "$REPO_ROOT/claude/.claude/workflows/pass-execute.js" \
-  "$REPO_ROOT/claude/.claude/workflows/pass-execute-chains.js" 2>/dev/null || true)
-[ -z "$chains_hits" ] || { echo "FAIL: a vanished clause remains in the runners: $chains_hits"; fail=1; }
-
-# --- neither runner restates the exit-75 protocol (AW-20): both defer to cairn-run-gate's own
-# output for whether to re-issue.
-restated_hits=$(grep -ni -e "exit 75 means" -e "reattaches and waits again" \
-  "$REPO_ROOT/claude/.claude/workflows/pass-execute.js" \
-  "$REPO_ROOT/claude/.claude/workflows/pass-execute-chains.js" 2>/dev/null || true)
-[ -z "$restated_hits" ] || { echo "FAIL: a restated exit-75 clause remains in the runners: $restated_hits"; fail=1; }
 
 [ "$fail" -eq 0 ] && echo "cairn-run-gate: OK" || echo "cairn-run-gate: FAILED"
 exit "$fail"

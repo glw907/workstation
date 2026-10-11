@@ -1,5 +1,7 @@
 # History
 
+> Frozen as of 2026-10-10 (lean pass process, ruling 8): git history and PR bodies are the record now.
+
 Per-pass ledger, newest first. Current state lives in `docs/STATUS.md`;
 strategic initiatives spanning passes live in `ROADMAP.md`.
 

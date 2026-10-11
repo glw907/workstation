@@ -49,9 +49,10 @@ in `cloudflare-estate-inventory.md`.
 
 ## Conducting a pass: model-selection detail
 
-Moved 2026-09-27 to `model-economy.md`'s "Current state" section, which carries the seat table
-(model and effort per seat), the `xhigh`-then-`max`-then-`fable` escalation, reviewer overrules,
-the `CLAUDE_CODE_SUBAGENT_MODEL` fallback, `/effort` persistence, and the Fable allowance cap.
+Moved 2026-09-27 to the model economy doc, and on 2026-10-10 to `pass-core` "Models" (seats,
+the `xhigh`-then-`max`-then-`fable` escalation, reviewer overrules) and `claude-tooling.md` "Model
+defaults" (the `CLAUDE_CODE_SUBAGENT_MODEL` fallback, `/effort` persistence), with the Fable
+allowance cap in `fable-post-cutoff-system.md`.
 The old CLAUDE.md line "reviewers, plan authorship, adjudication, and research at `high`" was
-superseded by that doc's reviewer effort `medium` (Anthropic's Opus 5.5 guidance), security
+superseded by the reviewer effort `medium` (Anthropic's Opus 5.5 guidance), security
 review excepted at `high`.
