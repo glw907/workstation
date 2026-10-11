@@ -25,9 +25,9 @@ at the foot; treat the snapshot below as orientation, verify before acting.
   Edit on ALL zones so a newly registered zone never repeats the gap),
   API-token management ✗ (deliberate: cannot self-extend).
   Rotated into: the ASC age store, `~/.local/secrets`, and the four GH-Actions repos
-  (aksailingclub-legacy/-org, ecxc-ski, 907-life). Predecessors both deleted:
-  "Cloudflare Admin" (`48efe6a4...`) and `CF_ZT_TOKEN` / "Cloudflare Agent Token -
-  2026-05-25" (only consumers were verify-keys.sh health checks).
+  (aksailingclub-legacy/-org, ecxc-ski, 907-life). Predecessor deleted:
+  "Cloudflare Admin" (`48efe6a4...`). `CF_ZT_TOKEN` was once listed here as deleted too, but
+  it is live; its own bullet is below.
   Second credential: the Cloudflare MCP plugin's OAuth (not in the token list; broad
   READ incl. DNS, refuses writes). Maintenance rules: any scope change lands in THIS
   bullet, same session; after a rotation, a RUNNING Claude session's env still holds
@@ -48,6 +48,13 @@ at the foot; treat the snapshot below as orientation, verify before acting.
   2026-07-14 failure above). Permission-group ids are not recorded: listing them needs
   token-management scope, which neither token carries. Registry entry:
   `~/.dotfiles/secrets/registry.md`.
+- **Zero Trust token `CF_ZT_TOKEN`** (workstation age store, local only; registry entry
+  `CF_ZT_TOKEN`). **Use it, not `CLOUDFLARE_API_TOKEN`, for anything touching Access identity
+  providers.** It reads `accounts/{id}/access/identity_providers` (two IdPs: `onetimepin` and
+  `google-apps` "Google Workspace") and creates and reads Access apps and policies. The general
+  token got `auth.forbidden` on that endpoint on 2026-08-30. On 2026-10-10 it answers
+  `success: true` with an empty list, which reads as "no IdPs" and is wrong. Both verified live
+  2026-10-10, statuses and names only.
 - **Worker secrets are WRITE-ONLY**: `wrangler secret list` returns NAMES, never values; a value
   set with `wrangler secret put` cannot be read back. To learn a secret's value you need its
   origin store, not the worker.
