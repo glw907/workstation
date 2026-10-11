@@ -13,23 +13,23 @@ description: >-
 Design thinking and verification for terminal UIs. Every layout
 decision is verifiable. Render first, then fix. Never guess.
 
-## Live Preview
+## Sources and Departures
 
-**Always launch the binary for the user at conversation start.**
-Build and open it in a kitty window so they can see the current
-state while discussing changes. Use the project's own build target
-when one exists. Otherwise build the binary directly from its
-`cmd/` package:
+Structure, update flow, and width math follow `elm-conventions`, which
+rests on Charm's agent guide for the Crush UI
+(`https://github.com/charmbracelet/crush/blob/f02ffbcec15a9f95cb9bcff895833df10f829aae/internal/ui/AGENTS.md`).
+Where this skill states a width or ANSI rule it cites that guide. The
+visual language below (theme slots, hue budget, box-drawing, density,
+iconography) is a House departure: Charm's guide has no visual-design
+section, so these rules are the house's own and each is checked against
+the real terminal.
 
-```bash
-make build && kitty --title "myapp" -e ./myapp &  # path per the build target
-# no build target:
-go build -o /tmp/myapp ./cmd/myapp/ && kitty --title "myapp" -e /tmp/myapp &
-```
+## Verify in the Real Terminal
 
-After making changes, rebuild and relaunch so the user sees the
-result. Headless analysis supports the live window, not the other
-way around.
+Launch the real terminal and look at what it paints with
+`tui-visual-verify`, which owns the capture harness, the resize rungs,
+and the fresh-context grading. The headless modes below support that
+look; they never replace it.
 
 ## TUI Design Language
 
@@ -51,8 +51,9 @@ Nerd Font families have different visual weight and cell widths.
 Some icons render as double-width despite being a single codepoint.
 
 Rules:
-- Verify icon width with `lipgloss.Width()`, never `len()` or rune
-  count
+- Verify icon width with `ansi.StringWidth()`, never `len()` or rune
+  count, and confirm it in the real terminal: a glyph's cell width can
+  depend on the font (Charm guide L12-18 for the ANSI-safe helpers)
 - Match icon visual weight to element importance. A heavy icon on a
   de-emphasized element creates noise.
 - Material Design (`nf-md-*`) has the broadest coverage for
@@ -67,7 +68,8 @@ single-width. CJK, some emoji, and certain Nerd Font icons are
 double-width.
 
 **The rule:** All padding and alignment uses display width
-(`lipgloss.Width`), never string length or rune count. A column
+(`ansi.StringWidth`, per `elm-conventions` Rule 6), never string length
+or rune count. A column
 that looks aligned in code may be ragged on screen.
 
 ### Box-Drawing Vocabulary
@@ -164,7 +166,7 @@ brutalist status line creates visual dissonance.
 
 ## Headless Analysis Protocol
 
-Three modes for inspecting TUI layout. Start from the fastest.
+Three modes for inspecting TUI layout.
 This is the defined method that prevents "guess and ship."
 
 ### Mode 1: Render-and-Inspect
@@ -180,7 +182,7 @@ Structural correctness: connections, alignment, borders.
    - Junction: ┬ on row N aligns with │ on rows N+1..M
    - Border continuity: every content row ends with same char
    - Column alignment: elements line up across rows
-   - Width: lipgloss.Width(line) == expected terminal width
+   - Width: ansi.StringWidth(line) == expected terminal width
 ```
 
 Write checks as Go test assertions. This is the regression safety
@@ -207,23 +209,20 @@ alignment, inconsistent padding, visual weight imbalance.
 **When:** Building a new component, user reports a visual issue,
 or positional checks pass but something looks off.
 
-### Mode 3: Live Window
+### Mode 3: Real Terminal
 
-The running binary in the kitty window is the primary reference.
-Look at what the user sees. When discussing issues, reference the
-live screen, not wireframes, code, or headless captures.
-
-Use tmux captures or screenshots to bring the live state into the
-conversation when needed for precise cell-level analysis.
+The running binary in a real terminal is the primary reference. Look at
+what the user sees, through `tui-visual-verify`; reference the painted
+screen, not wireframes, code, or text captures, when discussing issues.
 
 **When:** Always. This is the default mode.
 
 ### Priority
 
-The live window is the source of truth. Always start with Mode 3
-(look at the actual screen). Use Mode 1 for structural regression
-tests and Mode 2 when you need to count cells precisely. Never
-reason about the layout from code alone when the binary is running.
+The real terminal is the source of truth. Start with Mode 3. Use Mode 1
+for structural regression tests and Mode 2 when you need to count cells
+precisely. Never reason about the layout from code alone when the binary
+can be run.
 
 ## Iteration Loop
 
@@ -272,11 +271,11 @@ Verify on any component before declaring it done:
   all content rows
 - [ ] **Column alignment**: divider position is consistent from
   header through footer
-- [ ] **Width budget**: `lipgloss.Width(line)` matches the expected
+- [ ] **Width budget**: `ansi.StringWidth(line)` matches the expected
   terminal width for every row
 - [ ] **Theme survival**: visual distinctions hold across palette
   swaps (not just the active theme)
-- [ ] **Icon width**: measured with `lipgloss.Width()`, not rune
+- [ ] **Icon width**: measured with `ansi.StringWidth()`, not rune
   count or `len()`
 - [ ] **Minimum viable width**: no crash or garble at 40 columns
 - [ ] **Nerd Font weight**: icons match element importance, not

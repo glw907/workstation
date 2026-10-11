@@ -124,6 +124,10 @@ commit skills and manifest together.
 - **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook.
 - **Cobra:** one community skill (vendored, MIT) for the cairn Go tool; `go-conventions`
   and `elm-conventions` stay mandatory.
+- **TUI work:** the order of use is the house skills (`elm-conventions`, `bubbletea-design`,
+  `tui-visual-verify`), then Charm's agent guide for the Crush UI (pinned in `elm-conventions`),
+  then the `tui-design` plugin. `tui-design` (gfargo, MIT) is consulted for layout and
+  discoverability patterns; the house skills win on any conflict.
 - **Plugins:** superpowers, code-review, code-simplifier, frontend-design, skill-creator
   (Anthropic); cloudflare; tui-design.
 

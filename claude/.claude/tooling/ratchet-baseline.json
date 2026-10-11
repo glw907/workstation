@@ -24,13 +24,6 @@
       "finding": "GA-05", "pass": "C",
       "defect": "names a hypothetical future shim, explicitly a deferred stretch idea never built" },
 
-    { "check": "relative-link", "file": "claude/.claude/docs/bubbletea-conventions.md",
-      "fingerprint": "research/2026-04-26-bubbletea-norms.md", "count": 2,
-      "finding": "DC-10", "pass": "D" },
-    { "check": "relative-link", "file": "claude/.claude/docs/bubbletea-conventions.md",
-      "fingerprint": "research/2026-04-26-reference-apps.md", "count": 2,
-      "finding": "DC-10", "pass": "D" },
-
     { "check": "description-cap", "file": "claude/.claude/skills/cairn-release/SKILL.md",
       "fingerprint": "description",
       "finding": "PS-28", "pass": "C" },
