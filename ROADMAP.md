@@ -17,7 +17,11 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   `pass-core` "Models" and
   `docs/superpowers/plans/2026-09-04-prompt-audit-report.md`. Each review
   records its verdicts in its PR body and its tokens and interaction
-  points per the pass scoring rule. First review due 2026-10-01.
+  points per the pass scoring rule. First review due 2026-10-01. When a
+  Claude model or Claude Code release shipped since the last review, it also
+  re-fetches the pages the infra sweep spec's "Anthropic practice" cites and
+  records any new or changed practice with the file it affects (ruling R3 of
+  the sweep's 2026-10-11 re-plan, which replaced a separate release trigger).
 
 - **cairn documentation standard** (Geoff, 2026-09-08): three plans against the standing spec
   `~/Projects/cairn-cms/docs/superpowers/specs/2026-09-08-docs-standard-design.md`. Plan one,
@@ -52,11 +56,23 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   silently. Until then a session treats an idle ALARM that arrives AFTER the run's completion
   notification as expected, checks only that any live run still has a guard, and moves on.
 
+- **Poplar adopts `pass-core`** (Geoff, 2026-10-11, ruling R4 of the infra sweep re-plan). After
+  infra sweep 2, a poplar PR gives poplar a small adapter like dubplate's and replaces
+  `poplar/CLAUDE.md`'s "Conducting a pass" section, which defers to a deleted global rule. It
+  also repins `poplar-reviewer` (`claude-opus-5` at `high`) and `poplar-implementer` (no effort),
+  and drops the missing `glw907-vendor.sh` re-sync line (DC-11, DC-12).
+
 - **PR test CI for dotfiles.** Add a workflow that runs `bash scripts/check.sh` on
   `pull_request`. Until it lands, the full-suite home is the local close gate (ruling 11 of the
   lean pass process spec).
 
 ## Someday
+
+- **The deferred infra-sweep checks** (ruling R2 of the 2026-10-11 re-plan: a check is built when
+  it has a live catch). These are duplicate-paragraph with `parity.json`, plus cross-repo mode with
+  heading-citation, orphan-doc, and `check-drift --only claude`. Definitions:
+  `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md` "Pass A-rest". Build one when a
+  defect of its class surfaces, which is its first catch.
 
 - **Devcontainers** for the SvelteKit/Cloudflare site repos: logged per repo
   (907-life #2, ecxc-ski #39, xcathletes-org #4, the ASC STATUS chore), built

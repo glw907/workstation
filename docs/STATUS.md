@@ -34,21 +34,18 @@ on cairn-cms branch `engine-pre-2b-b`. It merges its own PR (Geoff's ruling) and
 stop or at the merge. While it is live (`claude agents --json`), no other session touches
 cairn-cms, its main checkout, or its worktrees.
 
-In dotfiles, the infra sweep is being re-planned as a lean pass (below).
+In dotfiles, infra sweep 1 (the guard) is launch-ready. Its plan is
+`docs/superpowers/plans/2026-10-11-infra-sweep-1-guard.md` on branch `worktree-infra-sweep-plan`,
+and the session continues that branch. Launch from `~/.dotfiles` with the plan's "Launch" block:
+`claude --bg --model sonnet --effort medium --name infra-sweep-1` with the prompt from
+`2026-10-11-infra-sweep-1-guard-prompt.txt`, read through `git show`.
 
-**Infra sweep after the cutover** (decided 2026-10-10; spec
-`docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, audit
-`claude/.claude/docs/record/2026-09-28-claude-infra-audit.md`). An audit item is superseded when
-the cutover rewrites or deletes the file it targets. Items on files the cutover leaves alone
-survive, and their pass is re-planned in the lean format after rollout step 3.
-
-- Style-guide-sync (cairn-cms): chain W's content survives as a lean task list; runner
-  amendments are superseded.
-- A-rest: the seat check and the `pass-core` close wiring are superseded; the context-budget
-  check, remaining reference checks, cross-repo mode, drift routine, and release trigger survive.
-- C: findings on `pass-core`, `spec-plan-review`, `cairn-pass`, and `site-pass` are superseded.
-  D survives whole. E: AW-11, AW-21, DC-19, and DC-21 are superseded. F: the cairn-cms and site
-  rows are superseded by steps 2 and 3; the poplar row survives.
+**Infra sweep after the cutover** (re-planned 2026-10-11; spec
+`docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md` "Lean re-plan", evidence
+`docs/superpowers/research/2026-10-11-infra-sweep-survivor-ledger.md`). A-core, B, and
+style-guide-sync are merged. Geoff's rulings R1 to R4 split what survives into sweep-1 (the
+guard's tools) and sweep-2 (skill and doc content), which is planned from the baseline that
+sweep-1 leaves. Poplar's `pass-core` adapter follows sweep-2.
 
 ## Open items
 
