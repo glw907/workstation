@@ -48,6 +48,10 @@ Launch it with:
 style-guide-sync are merged. Geoff's rulings R1 to R4 split what survives into sweep-1 (the
 guard's tools) and sweep-2 (skill and doc content). Poplar's `pass-core` adapter follows sweep-2.
 
+**Infra skill build** (executing): background session `infra-skill-build`, id `7ff5a620`, branch
+`worktree-infra-skill-build`. Plan: `docs/superpowers/plans/2026-10-11-infra-skill.md`. Two pairs
+(T1+T2, then T3+T4), then the close.
+
 ## Open items
 
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not
