@@ -21,7 +21,8 @@ BASELINE = "claude/.claude/tooling/ratchet-baseline.json"
 PY = shutil.which("python3") or sys.executable
 
 CHECKS = {"dead-reference": {"tool": "scripts/check-claude-refs.py"},
-          "retired-phrase": {"tool": "scripts/check-claude-refs.py"}}
+          "retired-phrase": {"tool": "scripts/check-claude-refs.py"},
+          "relative-link": {"tool": "scripts/check-claude-refs.py"}}
 
 # Runs a script under an audit hook that records every path it opens, lists, or hands to a
 # subprocess, minus the interpreter's own install tree. Mirrors tests/test_ratchet.py's
@@ -177,6 +178,90 @@ def test_f1_doc_deleted_only_in_the_fixture_tree_is_a_dead_path(fx):
 def test_f2_local_bin_cited_present_in_the_fixtures_bin_passes(fx):
     fx.write("claude/.claude/docs/a.md", "Run `~/.local/bin/example-tool` to apply it.\n")
     fx.write_bin("example-tool")
+    fx.baseline([])
+    proc = fx.check()
+    assert proc.returncode == 0, out(proc)
+
+
+def test_local_bin_stow_link_in_home_with_the_bin_deleted_from_the_tree_is_dead(fx):
+    fx.write("claude/.claude/docs/a.md", "Run `~/.local/bin/foo` to apply it.\n")
+    stowed = fx.tmp / "stow" / "bin" / ".local" / "bin" / "foo"
+    stowed.parent.mkdir(parents=True)
+    stowed.write_text("#!/bin/sh\n")
+    link = fx.home / ".local" / "bin" / "foo"
+    link.parent.mkdir(parents=True)
+    link.symlink_to(stowed)
+    fx.baseline([])
+    proc = fx.check()
+    assert proc.returncode == 1
+    assert "~/.local/bin/foo" in out(proc)
+
+
+def test_local_bin_folded_dangling_stow_link_is_dead(fx):
+    fx.write("claude/.claude/docs/a.md", "Run `~/.local/bin/foo` to apply it.\n")
+    stow_bin = fx.tmp / "stow" / "bin" / ".local" / "bin"
+    stow_bin.mkdir(parents=True)
+    (fx.home / ".local").mkdir()
+    (fx.home / ".local" / "bin").symlink_to(stow_bin)
+    fx.baseline([])
+    proc = fx.check()
+    assert proc.returncode == 1
+    assert "~/.local/bin/foo" in out(proc)
+
+
+def test_local_bin_regular_file_in_home_absent_from_the_tree_passes(fx):
+    fx.write("claude/.claude/docs/a.md", "Run `~/.local/bin/foo` to apply it.\n")
+    fx.write_in_home(".local/bin/foo", "#!/bin/sh\n")
+    fx.baseline([])
+    proc = fx.check()
+    assert proc.returncode == 0, out(proc)
+
+
+def test_local_bin_span_absent_from_tree_and_home_is_dead(fx):
+    fx.write("claude/.claude/docs/a.md", "Run `~/.local/bin/foo` to apply it.\n")
+    fx.baseline([])
+    proc = fx.check()
+    assert proc.returncode == 1
+    assert "~/.local/bin/foo" in out(proc)
+
+
+# ---- relative-link ----
+
+
+def test_a_dead_relative_link_fails(fx):
+    fx.write("claude/.claude/docs/a.md", "See [the note](gone.md) here.\n")
+    fx.baseline([])
+    proc = fx.check()
+    assert proc.returncode == 1
+    assert "relative-link" in out(proc)
+    assert "gone.md" in out(proc)
+
+
+def test_one_dead_target_twice_in_a_file_matches_one_entry_with_count_two(fx):
+    fx.write("claude/.claude/docs/a.md", "See [a](gone.md#x).\n\nAnd [b](gone.md) again.\n")
+    fx.baseline([{**entry("relative-link", "claude/.claude/docs/a.md", "gone.md"), "count": 2}])
+    proc = fx.check()
+    assert proc.returncode == 0, out(proc)
+
+
+def test_live_and_exempt_relative_links_are_not_reported(fx):
+    fx.write("claude/.claude/docs/exists.md", "target\n")
+    fx.write("claude/.claude/docs/a.md",
+             "[live](exists.md) [anchored](exists.md#section) [web](http://example.invalid/x)\n"
+             "[here](#anchor) [abs](/etc/nothing-here) [tilde](~/nothing-here)\n"
+             "[dead](gone.md) <!-- link-ok -->\n")
+    fx.baseline([])
+    proc = fx.check()
+    assert proc.returncode == 0, out(proc)
+
+
+def test_a_vendored_skills_dead_relative_link_is_not_scanned(fx):
+    fx.write("claude/.claude/tooling/vendored-skills.json",
+             json.dumps({"skills": {"vendored-example": {
+                 "repo": "example/repo", "path": "skills/x", "branch": "main",
+                 "commit": "abc123def456", "license": "MIT"}}}))
+    fx.write("claude/.claude/skills/vendored-example/SKILL.md",
+             "---\nname: vendored-example\n---\n\nSee [x](gone.md).\n")
     fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 0, out(proc)

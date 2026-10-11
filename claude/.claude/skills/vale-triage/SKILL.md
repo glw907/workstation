@@ -33,7 +33,7 @@ severity, and the ten rules responsible for the most. A team that hears
 
 | bucket | when | what to write |
 |---|---|---|
-| **Fix** | few hits, rule is right | do it now, or hand to `fix` |
+| **Fix** | few hits, rule is right | do it now, or hand to `vale-fix` |
 | **Downgrade** | rule is right, backlog is real | set it to `suggestion` so it guides new writing |
 | **Disable** | rule does not match how this project writes | name it in the config *with a comment saying why* |
 

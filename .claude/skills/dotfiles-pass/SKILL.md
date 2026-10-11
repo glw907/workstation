@@ -13,7 +13,9 @@ Load `pass-core` first; it holds the lifecycle and the rules this adapter fills 
 GNU Stow repo: `~/.claude` and `~/.local/bin` link into the main checkout, so a merge there is live
 on the machine at once, and a new `bin` script needs `stow -R bin`.
 
-**Gate**: `CAIRN_GATE_LANE=light cairn-run-gate 'bash scripts/check.sh'`. The light lane fits: the
+**Gate**: `bash scripts/gate.sh`, which runs `CAIRN_GATE_LANE=light cairn-run-gate 'bash
+scripts/check.sh'`; a worktree-isolated session's Bash guard refuses the wrapped string and accepts
+the no-argument wrapper. The light lane fits: the
 gate launches no browser and its measured peak is 105 MB.
 
 **Fast lane**: The same command. It takes about 76 seconds, so no narrower lane exists.
