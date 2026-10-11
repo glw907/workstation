@@ -116,10 +116,9 @@ commit skills and manifest together.
   and wired in as an advisory step of the per-task gate for admin-markup tasks.
 - **Dependency upgrades:** the authored `dependency-upgrade` skill (2026-09-14), the procedure every
   bump in every repo follows; the global CLAUDE.md "Dependencies" section is the standing rule.
-- **Spec and plan review:** the authored `spec-plan-review` skill (2026-10-10 rewrite), the three
-  lenses, probing fold, and verification read every spec or plan takes before owner approval;
-  its depth scales with the design's size, and it dispatches the `plan-reviewer` agent.
-  `pass-core` points at it.
+- **Spec and plan review:** the authored `spec-plan-review` skill (2026-10-10 rewrite), the review
+  every spec or plan takes before owner approval; its depth scales with the design's size, and it
+  dispatches the `plan-reviewer` agent. `pass-core` points at it.
 - **Svelte:** the official server (user scope, remote).
 - **Playwright:** Microsoft's server (user scope, stdio).
 - **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook.
