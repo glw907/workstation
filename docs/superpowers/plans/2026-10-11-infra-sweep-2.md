@@ -16,10 +16,11 @@ the commit-id rule, and `go-ship` carries the serial simplifier dispatch. The mo
 launches itself, `/effort` no longer dirties `~/.dotfiles`, and `elm-conventions` and
 `bubbletea-design` rest on Charm's published model.
 
-**Pass class:** `runner` (every task touches `claude/.claude/{skills,agents}/**`,
-`claude/.claude/tooling/**`, `claude/.claude/settings.json`, `.claude/skills/**`,
-`bin/.local/bin/claude-tooling-sync`, or `tests/**`). No `live-account` flag (design, "Risk and
-size"). No `auth-data` path is touched. The only account call is D's read-only token verify.
+**Pass class:** `runner` (design, "All are `runner` class"). Every task but F touches
+`claude/.claude/{skills,agents}/**`, `claude/.claude/tooling/**`, `claude/.claude/settings.json`,
+`.claude/skills/**`, `bin/.local/bin/claude-tooling-sync`, or `tests/**`; F's files map to
+`ordinary`, and it is `runner` because it launches unattended sessions. No `live-account` flag
+(design, "Risk and size"). No `auth-data` path is touched. The only account call is D's read-only token verify.
 
 **Out of scope:** the design's list (other repos, poplar's refactor, `fetch_skill`'s atomic writes
 and head-SHA race, the R2 checks, a per-rule basis record, a quarterly prune). Also out: any edit to
@@ -51,16 +52,17 @@ change no item's content:
    should-not prompt triggering, after the change.
 5. F's dry run completed unattended through `systemd-run` and left a quiet-month line or a design
    on a local branch (F's acceptance).
-6. A fixture run of G's `apply` followed by a `modelSettings` write into the generated file
-   leaves the worktree's tracked `claude/.claude/settings.json` unchanged (G's acceptance). The live
-   check, a real `/effort` change leaving `git -C ~/.dotfiles status --porcelain` empty, follows
-   the merge, since the stowed tree is `main`'s (PR body, "What goes live").
+6. G's pytest case passes: after `apply` on the fixture home, a `modelSettings` write into the
+   generated live file leaves `verify` passing and the fixture's tracked `settings.json` byte for
+   byte unchanged (G's acceptance). The live check, a real `/effort` change leaving `git -C
+   ~/.dotfiles status --porcelain` empty, follows the merge, since the stowed tree is `main`'s (PR
+   body, "What goes live").
 7. `grep -n 'no sub-agents' claude/.claude/skills/go-ship/SKILL.md` and `grep -n 'merge commit'
    claude/.claude/skills/pass-core/SKILL.md` each print a line.
 
-**Clock estimate:** 955 task-minutes: A 175, I 110, B 160, C 55, D 105, F 135, E 80, G 60, close
+**Clock estimate:** 975 task-minutes: A 175, I 110, B 160, C 55, D 105, F 145, E 80, G 70, close
 75. The pairs run in four waves: A with I, B with C, D with F, and E with G. The path is about
-175 + 160 + 135 + 80 + 75 = 625 minutes.
+175 + 160 + 145 + 80 + 75 = 635 minutes.
 
 ## Launch
 
@@ -94,7 +96,8 @@ If the local branch `worktree-infra-sweep-2` is absent (the planning worktree wa
 - **The main checkout stays untouched.** Every tool runs from the worktree's own path
   (`bin/.local/bin/<tool>`, `scripts/<tool>`), never as a bare name: `~/.local/bin/<tool>` is a stow
   link to the main checkout's copy. No command writes `~/.dotfiles` outside `.claude/worktrees/`,
-  and no command writes `~/.claude` (G's and F's fixtures use scratch homes).
+  and no command writes a tracked or configuration file in `~/.claude` (G's fixtures use scratch
+  homes; the transcripts every `claude -p` run leaves under `~/.claude/projects` are expected).
 - **Commits.** One commit per task, subject starting with the task id (`A: Split go-conventions
   and fix CS-1 to CS-13`), imperative mood, specific files only. The pre-commit hook runs the
   ratchet's `hook` mode.
@@ -267,8 +270,8 @@ If the local branch `worktree-infra-sweep-2` is absent (the planning worktree wa
   - PS-05: `cairn-figure`'s restated alt rules become a pointer to the register's "Visuals"
     section (cairn-cms `docs/internal/docs-register.md`), and the "gates do not exist yet" section
     says `npm run check:visuals` exists and drops the `check:figures` claim.
-  - PS-06: `register-check` (a `context: fork` skill) takes the files, whether application is
-    delegated, and any sanctioned phrases as explicit arguments, and reports new tells for the
+  - PS-06: `register-check` (a `context: fork` skill) takes the files, an `apply: yes/no`
+    argument, and any sanctioned phrases as explicit arguments, and reports new tells for the
     caller to file; nothing in it assumes a conversation.
   - PS-19: "three-gate" becomes "four-gate" at :3 and :9, and the description names the fourth
     gate.
@@ -298,6 +301,10 @@ If the local branch `worktree-infra-sweep-2` is absent (the planning worktree wa
   - `python3 -I -c 'import yaml, sys; t = open(sys.argv[1]).read().split("---")[1]; yaml.safe_load(t)'
     claude/.claude/skills/svelte-check/SKILL.md` exits 0 (system PyYAML).
   - `grep -n 'three-gate' claude/.claude/skills/register-check/SKILL.md` prints nothing.
+  - The `register-check` and `content-review` bodies contain none of the fork-skill phrases
+    (`claude-tooling-sync` `FORK_PHRASES`, counted as lowercase substrings): `under discussion`,
+    `during the session`, `delegated`, `ask the user`, `ask "`. `grep -n -i 'under
+    discussion\|during the session\|delegated\|ask the user\|ask "'` on both files prints nothing.
   - Trigger checks, before and after, for `visual-fidelity` and `cairn-release` (design B):
     - `visual-fidelity` should trigger: "Port our club site's old WordPress theme to SvelteKit so it
       looks the same."; "This chip sits a pixel low beside the card title. Fix the vertical
@@ -393,13 +400,20 @@ If the local branch `worktree-infra-sweep-2` is absent (the planning worktree wa
   - `model-review.timer` (unchanged, monthly) starts `model-review.service`, whose script
     `bin/.local/bin/model-review-notify` now launches an unattended review instead of only
     notifying. The script finds its repo from its own resolved path, puts the Homebrew bin on
-    `PATH` (`claude` is `/home/linuxbrew/.linuxbrew/bin/claude`), and makes two print-mode calls
-    from the repo. The first is `claude -p "/doctor prompt-audit"`, the form probed unattended
-    (facts "F"); with no path its default covers `~/.claude` and the repo's `.claude/`, and its
-    report is saved to a temporary file. The second runs model `opus` with `--permission-mode
-    auto` in a fresh worktree (`-w model-review-<YYYY-MM>`), with the committed prompt
-    `docs/model-review/prompt.txt` and the report's path. Its one optional argument, `--dry-run`,
-    appends a line telling the session to commit locally and stop (no push, no PR, no
+    `PATH` (`claude` is `/home/linuxbrew/.linuxbrew/bin/claude`), and runs `git -C "$repo" pull
+    --ff-only` so the run's worktree branches from current `main` (`worktree.baseRef` is `"head"`,
+    and the worktree session's isolation checks block a `git -C` into the main checkout, so the
+    session cannot pull after its own self-merge). The script keeps `set -uo pipefail` without
+    `-e`, so a refused pull leaves the checkout as is and the review runs from local `HEAD`. Then it
+    makes two print-mode calls from the repo. The first is `claude -p --model opus --effort medium
+    "/doctor prompt-audit"`. The facts probed that form unattended with one path (facts "Probe
+    results": 8 turns, $0.78); with no path its default covers `~/.claude` and the repo's
+    `.claude/` (the memory page), so the whole-tree cost and duration are unmeasured until the dry
+    run. Its report is saved to a temporary file. The second runs `--model opus --effort high` with
+    `--permission-mode auto` in a fresh worktree (`-w model-review-<YYYY-MM>`), with the prompt's
+    text passed as `"$(cat "$repo/docs/model-review/prompt.txt")"` (pass-core "Launch prompt"), not
+    as a path, followed by the report's path. Its one optional argument, `--dry-run`, skips the
+    pull and appends a line telling the session to commit locally and stop (no push, no PR, no
     notification). The service's `Description=` says it runs the review.
   - The prompt, in order: read the audit report; read `docs/model-review/state.json` (model ids, Claude Code version, and a
     digest per page) and compare it with the current `claude --version` and model ids; on a change,
@@ -421,16 +435,22 @@ If the local branch `worktree-infra-sweep-2` is absent (the planning worktree wa
 - **Acceptance.**
   - `systemd-analyze --user verify upkeep/.config/systemd/user/model-review.service` reports no
     error.
-  - The dry run through the systemd user manager's environment, `systemd-run --user --wait
-    --collect <worktree>/bin/.local/bin/model-review-notify --dry-run`, exits 0. Its worktree's
-    branch holds `state.json` and either a `log.md` line or a design, and nothing was pushed
-    (`git ls-remote origin 'refs/heads/model-review-*'` prints nothing). The session reads the
-    hand-over, records the outcome in the commit body, then removes the dry-run worktree and its
-    local branch.
+  - F commits its files before the dry run, so the run's `-w` worktree, branched from the pair's
+    `HEAD`, holds them. The dry run goes through the systemd user manager's environment:
+    `systemd-run --user --wait --collect <worktree>/bin/.local/bin/model-review-notify --dry-run`,
+    launched with the Bash tool's `run_in_background: true`, since it can outlast the 600-second
+    foreground cap. The pair waits for the completion notification (sub-agents page: "When that
+    command ends, Claude Code sends the subagent a notification"), and the command exits 0. Its
+    worktree's branch, `worktree-model-review-<YYYY-MM>` (the worktrees page: "a new branch named
+    `worktree-<name>`"), holds `state.json` and either a `log.md` line or a design, and nothing
+    was pushed (`git ls-remote origin 'refs/heads/worktree-model-review-*'` prints nothing). The
+    pair reads the hand-over and records the outcome by amending its commit's body. It then runs
+    `git worktree unlock` on the dry-run worktree (a `-p` run "leaves the lock it took", the
+    worktrees page), `git worktree remove`, and deletes the local branch.
   - The gate prints `gate exit: 0`.
 - **Test.** The dry run and the unit verify.
 - **Pair.** Wave 3, with D.
-- **Estimate.** 135 minutes.
+- **Estimate.** 145 minutes.
 
 ### Wave 4: E and G (a pair)
 
@@ -438,8 +458,9 @@ If the local branch `worktree-infra-sweep-2` is absent (the planning worktree wa
 
 - **Outcome.**
   - E1, pre-approved designs: Lifecycle step 1 says a design Geoff approves ahead of its pass,
-    with unattended planning approved, lets the planning session run steps 2 to 4 and write the
-    executor's launch prompt without him. A plan over twice the design's estimate, or a finding
+    with unattended planning approved, lets the planning session run steps 2 to 4, write the
+    executor's launch prompt, and launch the executor after the "Execute" pre-launch checks,
+    without him (design E1: "and the executor's launch unattended"). A plan over twice the design's estimate, or a finding
     that changes the design, stops it with one question in STATUS and `notify-send -u normal`.
   - E2, a "Conductor" section: the conductor watches unattended passes with the Monitor tool over
     `claude agents --json`, opens each PR or design for Geoff in Firefox, merges a PR with `gh pr
@@ -457,7 +478,8 @@ If the local branch `worktree-infra-sweep-2` is absent (the planning worktree wa
     gate, one commit".
 - **Files.** `claude/.claude/skills/pass-core/SKILL.md`, `claude/.claude/skills/go-ship/SKILL.md`,
   and only if the grep below finds an unqualified line,
-  `claude/.claude/skills/{cairn-pass,site-pass}/SKILL.md` and `.claude/skills/dotfiles-pass/SKILL.md`.
+  `claude/.claude/skills/{cairn-pass,site-pass}/SKILL.md`. Today it matches only
+  `pass-core/SKILL.md:60`. `.claude/skills/dotfiles-pass/SKILL.md` is G's in this wave.
 - **Risk class.** `runner`.
 - **Acceptance.**
   - `grep -n 'no sub-agents' claude/.claude/skills/go-ship/SKILL.md`, `grep -n 'merge commit'
@@ -487,28 +509,43 @@ If the local branch `worktree-infra-sweep-2` is absent (the planning worktree wa
     drift when the live file is missing or a link, or when a tracked key's live value differs.
     Both take the existing `--home`.
   - `bluefin/bootstrap.sh` runs `apply` after stow if it does not already. `claude-tooling-sync`'s
-    docstring and `claude-tooling.md` (the layout row at :17 and the stow-link mentions at :45,
-    :51, :56) say the file is generated, not stowed.
+    docstring and `claude-tooling.md` say the file is generated, not stowed: the layout row
+    "Workstation `CLAUDE.md`, `settings.json`", "in the stowed `settings.json`", and "`/effort`
+    persists per model into `settings.json` through the stow link" (cited by phrase, since I and
+    D edit the file first). The same doc says the tracked keys win at `apply`: a Claude Code
+    command that writes a tracked key, such as `/tui` (`tui`) or `/memory` (`autoMemoryEnabled`)
+    (settings reference), shows as `verify` drift until the change is committed to the tracked
+    file, and the next `apply` reverts it.
+  - dotfiles-pass "Close checklist" gains one line: a merge that touches
+    `claude/.claude/settings.json` is followed by `claude-tooling-sync apply`, since the live file
+    no longer follows a pull.
 - **Files.** `claude/.claude/settings.json`, `claude/.stow-local-ignore` (new),
   `bin/.local/bin/claude-tooling-sync`, `tests/test_claude_tooling_sync.py`,
-  `claude/.claude/docs/claude-tooling.md`, and `bluefin/bootstrap.sh` if needed.
+  `claude/.claude/docs/claude-tooling.md`, `.claude/skills/dotfiles-pass/SKILL.md`, and
+  `bluefin/bootstrap.sh` if needed.
 - **Risk class.** `runner`.
 - **Acceptance.**
-  - `stow -n -v -d <worktree> -t <scratch-home> claude` lists no `.claude/settings.json` link and
-    still lists every other `claude/.claude` entry.
-  - In a scratch home holding a real copy of the old tracked file (the state the cutover's first
-    step leaves; Close step 6): `apply --home <scratch-home>` leaves a real file whose keys are the
-    new tracked keys plus `model`, `effortLevel`, and `modelSettings` from the old file, and
-    `verify --home <scratch-home>` passes. A script then writes a new `modelSettings` entry into
-    that file: `verify` still passes, and `git diff --quiet -- claude/.claude/settings.json` exits
-    0 in the worktree. In a scratch home holding a symlink, `apply` replaces it with a real file.
+  - `claude/.stow-local-ignore` names the file as `^/\.claude/settings\.json$`. In a scratch home
+    holding a real `.claude/` directory (the live layout: `bootstrap.sh` pre-creates `~/.claude`
+    in `STOW_SHARED_DIRS` so stow does not fold it), `stow -n -v -d <worktree> -t <scratch-home>
+    claude` lists no `.claude/settings.json` link and still lists every other `claude/.claude`
+    entry. An empty scratch home folds `.claude` whole and cannot show this.
+  - The pytest cases below pass. No manual `apply` runs: `apply` reads the tracked file from
+    `<home>/.dotfiles/` and runs the real `claude mcp add-json` for any manifest server missing
+    from `<home>/.claude.json`, so only the fixture home, with its empty servers manifest and
+    stub `claude`, is safe.
   - The gate prints `gate exit: 0`.
-- **Test.** In `tests/test_claude_tooling_sync.py`, by subprocess like the existing tests: `apply`
-  replaces a symlink with a real file and keeps live-only keys; a second `apply` changes nothing;
-  `verify` fails on a missing file, a link, and a changed tracked key, and passes on a live-only
-  key.
+- **Test.** In `tests/test_claude_tooling_sync.py`, by subprocess like the existing tests.
+  `fixture_home` also writes a live `<home>/.claude/settings.json`, so
+  `test_verify_passes_with_no_collision` survives the missing-file rule. Cases: `apply` replaces a
+  symlink with a real file and keeps live-only keys; a second `apply` changes nothing; `verify`
+  fails on a missing file, a link, and a changed tracked key, and passes on a live-only key. The
+  cutover case: a live real file holding an old tracked copy with `model`, `effortLevel`, and
+  `modelSettings`; `apply` leaves the new tracked keys plus those three, and `verify` passes; the
+  test then writes a new `modelSettings` entry into the live file, `verify` still passes, and the
+  fixture's tracked `settings.json` is byte for byte unchanged.
 - **Pair.** Wave 4, with E.
-- **Estimate.** 60 minutes.
+- **Estimate.** 70 minutes.
 
 ### Close
 
@@ -530,19 +567,25 @@ Per pass-core "Close" and dotfiles-pass "Close checklist", in order:
    the agent repins), and logs poplar's refactor to Charm's Bubble Tea model (`elm-conventions` as
    this pass leaves it) as its own pass in poplar's ROADMAP. It carries Anthropic's two scope
    samples verbatim (pass-core step 1).
-5. `docs/STATUS.md`: the infra sweep line moves to "merged" on Geoff's merge; the next action names
+5. `docs/STATUS.md`: the infra sweep line moves to "merged" on Geoff's merge. The next action
+   starts with G's two pre-merge cutover commands (step 6), to run before the merge. It then names
    that prompt with the exact line `cd ~/Projects/poplar && claude --model opus --effort high --name
    poplar-adapter-plan "$(git -C ~/.dotfiles show main:docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt)"`.
-6. Push `glw907/workstation`, open the PR (draft until the close is done), and write its body:
+6. Push `glw907/workstation`, open the PR (draft until the close is done), and write its body. Its
+   first line tells the merger to run G's two pre-merge commands before merging, because whoever
+   merges pulls at once (pass-core "Close"), and a pull while `~/.claude/settings.json` is still a
+   link would drop today's preferences or be refused over a dirty file:
    - what landed (task id, commit), the review verdict, and every trigger table;
-   - "What goes live" at Geoff's pull: the skill and agent text at once; the timer's next monthly
-     fire launching the review; and G's cutover, three commands in order. Before the pull, `cp
-     --remove-destination "$(readlink -f ~/.claude/settings.json)" ~/.claude/settings.json` turns
-     the link into a real file that keeps today's `model`, `effortLevel`, and `modelSettings` (the
-     merged tracked file no longer holds them). Then the pull. Then `~/.local/bin/claude-tooling-sync
-     apply` lays the tracked keys over that file. The live check follows: a `/effort` change leaves
-     `git -C ~/.dotfiles status --porcelain` empty. Rollback is `git revert -m 1 <merge>` on `main`,
-     a pull, `rm ~/.claude/settings.json`, and `stow -R claude` to restore the link;
+   - "What goes live": the skill and agent text at once; the timer's next monthly fire launching
+     the review; and G's cutover, in order. Before the merge, `cp --remove-destination "$(readlink
+     -f ~/.claude/settings.json)" ~/.claude/settings.json` turns the link into a real file that
+     keeps today's `model`, `effortLevel`, and `modelSettings` (the merged tracked file no longer
+     holds them), and `git -C ~/.dotfiles checkout -- claude/.claude/settings.json` drops any
+     `/effort` write the link left in the tracked file, which the real file now holds. Then the
+     merge and its pull. Then `~/.local/bin/claude-tooling-sync apply` lays the tracked keys over
+     the real file. The live check follows: a `/effort` change leaves `git -C ~/.dotfiles status
+     --porcelain` empty. Rollback is `git revert -m 1 <merge>` on `main`, a pull, `rm
+     ~/.claude/settings.json`, and `stow -R claude` to restore the link;
    - "Found, not done", each with now, defer, or drop and a reason: DC-23's ECXC anchors (ecxc-ski
      ROADMAP); aksailingclub-org's `project-tracking.json` taking `"backlog": false`; the review's
      dry-run findings; plus anything the tasks found;

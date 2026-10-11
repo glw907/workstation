@@ -37,7 +37,8 @@ from the plan plus the plan's "Conventions every task follows" section, both ver
 four things. First, the Clock and Stops conventions belong to you: it writes no clock file, and it
 returns its work to you uncommitted if its gate is not green after two attempts or a trigger check
 misses twice (with the trigger table). Second, it runs every tool from its worktree's own path and
-writes nothing in `~/.dotfiles` outside `.claude/worktrees/` and nothing in `~/.claude`. Third, its
+writes nothing in `~/.dotfiles` outside `.claude/worktrees/` and no tracked or configuration file
+in `~/.claude` (a `claude -p` run's transcript under `~/.claude/projects` is expected). Third, its
 final report lists every defect it found outside its task, which you carry to the PR body's "Found,
 not done". Fourth, it commits and never pushes. Before each dispatch, write the wave's clock file
 per the plan's Clock convention. When both return, check the overrun and remove the clock file. If
