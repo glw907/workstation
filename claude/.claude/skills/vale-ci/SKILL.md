@@ -3,6 +3,10 @@ name: vale-ci
 description: Run Vale in GitHub Actions, a pre-commit hook, or another runner. Use when the user says "add vale to CI", "run vale on PRs", "add a pre-commit hook", or "make the build fail on style errors".
 ---
 
+<!-- local-overlay -->
+A repo here commits its Vale styles and pins Vale in CI, so do not run `vale sync` against a committed `styles/` directory or edit the CI pin; a fix lands on a pass branch, never a branch per file.
+<!-- /local-overlay -->
+
 # Put Vale in the pipeline
 
 ## When to use this

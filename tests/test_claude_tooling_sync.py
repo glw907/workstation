@@ -149,3 +149,176 @@ def test_verify_passes_with_no_collision(tmp_path):
     proc = run("verify", "--home", str(home), "--projects-root", str(projects),
               env={"PATH": stub_claude_on_path(tmp_path)})
     assert proc.returncode == 0, out(proc)
+
+
+# ---- apply-overlays and the overlay lint checks ----
+
+VALE = {"repo": "vale/tools", "branch": "main", "commit": "abc123def456", "license": "MIT"}
+HOSTILE = 'Use when: a "quoted" thing # not a comment, `x` works'
+
+
+def vale_manifest(**extra):
+    return {
+        "one": {**VALE, "path": "skills/one", **extra.get("one", {})},
+        "two": {**VALE, "path": "skills/fix", "rename": "vale-fix", **extra.get("two", {})},
+        "solo": {**ENTRY, "path": "skills/fix", **extra.get("solo", {})},
+    }
+
+
+def put_skill(root, name, text):
+    d = root / "claude" / ".claude" / "skills" / name
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "SKILL.md").write_text(text)
+
+
+def read(root, name):
+    return (root / "claude" / ".claude" / "skills" / name / "SKILL.md").read_text()
+
+
+def overlay_tree(tmp_path, manifest):
+    write_manifest(tmp_path, manifest)
+    body = "\n# Title\n\nSay fix here, use `fix` and `other`.\n\n```\n`fix`\n```\n"
+    put_skill(tmp_path, "one", f"---\nname: one\ndescription: old one\n---\n{body}")
+    put_skill(tmp_path, "vale-fix", f'---\nname: vale-fix\ndescription: "quoted old"\n---\n{body}')
+    put_skill(tmp_path, "solo",
+              "---\nname: solo\ndescription: >\n  block\n  old\nmetadata:\n  v: 1\n---\n" + body)
+
+
+def test_descriptions_in_every_form_become_folded_blocks(tmp_path):
+    overlay_tree(tmp_path, vale_manifest(one={"description": HOSTILE},
+                                         two={"description": "second new"},
+                                         solo={"description": "third new"}))
+    proc = run("apply-overlays", "--root", str(tmp_path))
+    assert proc.returncode == 0, out(proc)
+    assert "description: >-\n  " + HOSTILE + "\n---" in read(tmp_path, "one")
+    assert "description: >-\n  second new\n---" in read(tmp_path, "vale-fix")
+    assert "description: >-\n  third new\nmetadata:\n  v: 1\n---" in read(tmp_path, "solo")
+    assert run("lint", "--root", str(tmp_path)).returncode == 0
+
+
+def test_note_lands_once_after_frontmatter(tmp_path):
+    overlay_tree(tmp_path, vale_manifest(one={"note": "First note."}))
+    run("apply-overlays", "--root", str(tmp_path))
+    first = read(tmp_path, "one")
+    assert first.startswith("---\nname: one\ndescription: old one\n---\n\n<!-- local-overlay -->\n"
+                            "First note.\n<!-- /local-overlay -->\n\n# Title")
+    run("apply-overlays", "--root", str(tmp_path))
+    assert read(tmp_path, "one") == first
+    write_manifest(tmp_path, vale_manifest(one={"note": "Second note."}))
+    run("apply-overlays", "--root", str(tmp_path))
+    changed = read(tmp_path, "one")
+    assert changed.count("local-overlay -->") == 2 and "Second note." in changed
+    assert "First note." not in changed
+
+
+def test_sibling_spans_rewrite_only_outside_fences_in_renaming_repos(tmp_path):
+    overlay_tree(tmp_path, vale_manifest())
+    run("apply-overlays", "--root", str(tmp_path))
+    renamed = read(tmp_path, "one")
+    assert "use `vale-fix` and `other`" in renamed
+    assert "Say fix here" in renamed
+    assert "```\n`fix`\n```" in renamed
+    assert "use `fix` and" in read(tmp_path, "solo")
+
+
+def test_apply_overlays_leaves_an_empty_home_empty(tmp_path):
+    root = tmp_path / "tree"
+    root.mkdir()
+    overlay_tree(root, vale_manifest(one={"note": "N."}))
+    home = tmp_path / "home"
+    home.mkdir()
+    proc = run("apply-overlays", "--root", str(root), env={"HOME": str(home)})
+    assert proc.returncode == 0, out(proc)
+    assert list(home.iterdir()) == []
+
+
+def test_lint_fails_on_missing_description_note_and_sibling(tmp_path):
+    overlay_tree(tmp_path, vale_manifest(one={"description": "wanted", "note": "Wanted note."}))
+    proc = run("lint", "--root", str(tmp_path))
+    assert proc.returncode == 1
+    text = out(proc)
+    assert "x one: description differs" in text
+    assert "x one: note block missing" in text
+    assert "x one: sibling span `fix`" in text
+
+
+def test_lint_passes_on_a_clean_overlaid_tree(tmp_path):
+    overlay_tree(tmp_path, vale_manifest(one={"description": HOSTILE, "note": "A note."}))
+    assert run("apply-overlays", "--root", str(tmp_path)).returncode == 0
+    proc = run("lint", "--root", str(tmp_path))
+    assert proc.returncode == 0, out(proc)
+
+
+# ---- ratchet-report: description-cap and fork-skill ----
+
+
+def cap_skill(root, name, description, extra=""):
+    put_skill(root, name, f"---\nname: {name}\ndescription: {description}\n{extra}---\n\nBody.\n")
+
+
+def report(root, *flags):
+    proc = run("ratchet-report", "--root", str(root), *flags)
+    assert proc.returncode == 0, out(proc)
+    return json.loads(proc.stdout)
+
+
+def hits(data, check):
+    return sorted((v["file"].split("/")[-2], v["fingerprint"]) for v in data["violations"]
+                  if v["check"] == check)
+
+
+def test_description_cap_counts_code_points_after_collapse(tmp_path):
+    cap_skill(tmp_path, "over", "é" * 501)
+    cap_skill(tmp_path, "edge", "x" * 500)
+    cap_skill(tmp_path, "gated", "y" * 901, extra="paths: src/**\n")
+    put_skill(tmp_path, "block",
+              "---\nname: block\ndescription: >-\n  " + "word " * 60 + "\n  " + "more " * 41 + "\n---\n")
+    cap_skill(tmp_path, "colon", "Use when: " + "z" * 495)
+    data = report(tmp_path)
+    assert hits(data, "description-cap") == [("block", "description"), ("colon", "description"),
+                                             ("over", "description")]
+
+
+def test_description_cap_scopes_to_skill_dirs_without_synced(tmp_path):
+    cap_skill(tmp_path, "vendored", "v" * 501)
+    cap_skill(tmp_path, "synced", "s" * 501)
+    d = tmp_path / "claude" / ".claude" / "skills" / "synced" / "inner"
+    d.mkdir(parents=True)
+    (d / "SKILL.md").write_text("---\nname: inner\ndescription: " + "i" * 501 + "\n---\n")
+    assert hits(report(tmp_path), "description-cap") == [("vendored", "description")]
+
+
+def test_missing_description_is_clean_and_unterminated_frontmatter_exits_2(tmp_path):
+    put_skill(tmp_path, "bare", "---\nname: bare\n---\n")
+    assert hits(report(tmp_path), "description-cap") == []
+    put_skill(tmp_path, "broken", "---\nname: broken\ndescription: x\n")
+    proc = run("ratchet-report", "--root", str(tmp_path))
+    assert proc.returncode == 2
+    assert "unterminated frontmatter" in out(proc)
+
+
+def fork_skill(root, name, body, context="context: fork\n"):
+    put_skill(root, name, f"---\nname: {name}\ndescription: d\n{context}---\n\n{body}\n")
+
+
+def test_fork_skill_phrases_fail_only_under_context_fork(tmp_path):
+    fork_skill(tmp_path, "bad", "Apply the rule under discussion, and ask the user.")
+    fork_skill(tmp_path, "plain", "Apply the rule under discussion.", context="")
+    fork_skill(tmp_path, "clean", "Apply the rule to the diff.")
+    fork_skill(tmp_path, "wrapped", "Apply the rule Under\n  Discussion now.")
+    fork_skill(tmp_path, "quote", 'Then ask "which page?" of the owner.')
+    data = report(tmp_path)
+    assert hits(data, "fork-skill") == [("bad", "ask the user"), ("bad", "under discussion"),
+                                        ("quote", 'ask "'), ("wrapped", "under discussion")]
+
+
+def test_fork_skill_repeats_report_one_violation_each(tmp_path):
+    fork_skill(tmp_path, "twice", "It was delegated. Then delegated again.")
+    assert hits(report(tmp_path), "fork-skill") == [("twice", "delegated"), ("twice", "delegated")]
+
+
+def test_ratchet_report_accepts_the_forwarded_flags_and_names_both_ids(tmp_path):
+    data = report(tmp_path, "--home", str(tmp_path), "--projects-root", str(tmp_path),
+                  "--memory-root", str(tmp_path))
+    assert data["implements"] == ["description-cap", "fork-skill"]
+    assert data["violations"] == []

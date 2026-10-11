@@ -17,42 +17,39 @@ artifacts. github.com/glw907/workstation.
   CLIs; `mise` for per-project Node. **Flatpaks**: `bluefin/flatpaks.txt`.
 - **Secrets**: age-encrypted in `secrets/values.age`, synced by
   `scripts/secrets/sync.sh`; inventory in `secrets/registry.md`.
-- **Gate**: `scripts/check.sh`.
-- **Lean pass process, step 1 merged** (`998859b`, PR #1; tag `pre-lean-process` at its parent
-  `deed191`, pushed). The rewritten `pass-core`, the three adapters, the trimmed agents, the
-  199-line global `CLAUDE.md`, the `cairn-run-gate` fixes, and the `claude-clock-stop` hook are
-  live. The merge check, `claude-tooling-sync verify`, and
-  the light-lane gate all passed in the main checkout.
-- **Probes, all passed on 2026-10-10.** Pair probe: both `isolation: "worktree"` subagents
-  branched from S1-T15's commit `5532034`, not `origin/main` (`998859b`); both gates printed
-  `gate exit: 0`; the scratch merge was conflict-free and the gate on it exited 0. Clock stop: the
-  call after `cd` into the probe worktree received "Clock stop: task probe has run 10 minutes
-  against a 1-minute estimate"; the calls after removal and back in the main checkout carried
-  none. Launch probe: `claude --bg` printed id `1d6eed4e`, committed `rd-probe.txt` (`ok`, `0`) on
-  `worktree-rd-probe` under `.claude/worktrees/` unattended, pushed nothing, and was cleaned up.
-- **Rollback** (Geoff's call only): the plan's S1-T14 "Rollback" block.
+- **Gate**: `scripts/check.sh`, run as `bash scripts/gate.sh`.
+- **The lean pass process is fully in place.** Rollout steps 1 to 5 merged; step 5, engine pass B
+  (cairn-cms #113), took 6.1 hours of clock against the 9-hour test. Plan and spec:
+  `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`,
+  `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
+- **Merged since, 2026-10-11:** infra sweep 1, the guard (#5); PRs open in Geoff's browser (#4); a
+  repo's checkout is pulled after its PR merges (#7); the `claude-infra` skill, Anthropic's scope
+  prompts in `pass-core`, review depth by design size, the `plan-reviewer` agent, the
+  `claude-tail-guard` hook, and the guidance-citation warning (#8). Evidence for #8:
+  `docs/superpowers/research/2026-10-11-anthropic-guidance-proportionality.md`.
+
 ## Immediate next action
 
-Steps 2 and 4 run as background sessions (`claude agents` lists them):
-`lean-step2` is cairn-cms.
-`lean-step4` (docs-chain audit) is PR-ready on `worktree-docs-chain-audit`: all six judged seats
-kept (plan read, page structural read, register editor, fact read, figure verifier, final reader); no cut.
-Geoff pastes step 3 as `lean-step3` from the plan's "Pre-launch for 3" block (ruling R-C).
-Pass B (rollout step 5) starts once steps 1 and 2 have merged. Plan and spec: `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`, `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
+Start a fresh conductor, so the work ahead runs under #8's rules (Geoff, 2026-10-11):
+`cd ~/.dotfiles && claude --model opus --effort high --name conductor "$(cat docs/superpowers/plans/2026-10-11-conductor-prompt.txt)"`.
 
-**Infra sweep after the cutover** (decided 2026-10-10; spec
-`docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, audit
-`claude/.claude/docs/record/2026-09-28-claude-infra-audit.md`). An audit item is superseded when
-the cutover rewrites or deletes the file it targets. Items on files the cutover leaves alone
-survive, and their pass is re-planned in the lean format after rollout step 3.
+## Conductor
 
-- Style-guide-sync (cairn-cms): chain W's content survives as a lean task list; runner
-  amendments are superseded.
-- A-rest: the seat check and the `pass-core` close wiring are superseded; the context-budget
-  check, remaining reference checks, cross-repo mode, drift routine, and release trigger survive.
-- C: findings on `pass-core`, `spec-plan-review`, `cairn-pass`, and `site-pass` are superseded.
-  D survives whole. E: AW-11, AW-21, DC-19, and DC-21 are superseded. F: the cairn-cms and site
-  rows are superseded by steps 2 and 3; the poplar row survives.
+Handed over by session `c747c352` after #8 merged. In flight: the dubplate alignment executor,
+session `dubplate-alignment` (id `394cf8c0`), unwatched until the new conductor arms a watch. The
+queue, in order, with each item's detail in the launch prompt:
+
+1. **Dubplate alignment PR.** After Geoff merges it, the conductor fast-forwards dubplate, backs up
+   and then prunes dubplate's auto-memory per the PR body's dry run, and trashes the untracked
+   `reports/` originals. Then dubplate's `admin-api-1` re-plan.
+2. **Review desk, lean v1.** Amend the design on `worktree-review-desk`, then bring it to Geoff.
+3. **cairn-cms alignment.** Approved by Geoff. Evidence and rulings:
+   `docs/superpowers/research/2026-10-11-cairn-cms-alignment-audit.md`.
+4. **Infra sweep 2.** The design on `worktree-infra-sweep-2-design` waits for Geoff. Re-check it
+   against #8 first.
+5. **Poplar adapter**, then the cairn-cms ROADMAP restructure after docs stage 2b.
+
+Pending with Geoff: the review-desk and sweep-2 designs, and the dubplate alignment PR.
 
 ## Open items
 

@@ -1,0 +1,28 @@
+You are the planning session for infra sweep 2, the content pass, in the workstation repo
+`~/.dotfiles`. Infra sweep 1 (the guard) has merged; confirm that first with `git log --oneline -5`
+on `main` and the infra sweep section of `docs/STATUS.md`. If it has not merged, stop and say so.
+
+Load `dotfiles-pass` (it loads `pass-core`) and follow pass-core's Lifecycle from step 1.
+
+Inputs, read in full:
+- The spec section "Lean re-plan (2026-10-11)" at the end of
+  `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`: Geoff's rulings R1 to R4, the
+  method calls, and the sweep-2 scope list.
+- `docs/superpowers/research/2026-10-11-infra-sweep-survivor-ledger.md`, the evidence per finding.
+- `claude/.claude/tooling/ratchet-baseline.json` as sweep 1 left it. Each entry is a sweep-2
+  defect, and sweep 2 ends with the baseline empty.
+- Sweep 1's PR body ("Found, not done") and the audit
+  `claude/.claude/docs/record/2026-09-28-claude-infra-audit.md` section 5 for each finding's text.
+
+Re-check each sweep-2 item against the files as they stand now, since sweep 1 and any later work
+may have moved them, and cite its target and why it survives. Then bring Geoff one design of a page
+or less for approval: outcome, files and interfaces touched, what is out of scope, one end-to-end
+check, and the risk class (`runner`). Questions to Geoff only for product, priority, scope, or
+budget, batched with a recommendation each.
+
+After approval, write the lean plan beside this prompt, run `spec-plan-review` with all three
+lenses (a `runner` pass), fold, and run the verification read. Every gate is `bash scripts/gate.sh`.
+Commit the plan, its executor launch prompt in a committed file, and a STATUS next action with the
+exact `claude --bg` line. The plan's Close must leave the next step's prompt the same way: the
+poplar `pass-core` adapter (ruling R4, ROADMAP "Planned"), which is a poplar planning session.
+Stop at a launch-ready plan. Never merge, and never push `main`.

@@ -3,6 +3,10 @@ name: vale-fix
 description: Run Vale, fix error-level alerts, and open a pull request per file. Use when the user says "run vale", "fix vale errors", "lint the docs", "fix the linter", or "make vale pass". Fixes errors only; leaves warnings and suggestions for a person.
 ---
 
+<!-- local-overlay -->
+A repo here commits its Vale styles and pins Vale in CI, so do not run `vale sync` against a committed `styles/` directory or edit the CI pin; a fix lands on a pass branch, never a branch per file.
+<!-- /local-overlay -->
+
 # Fix Vale alerts
 
 ## When to use this
@@ -17,7 +21,7 @@ in someone else's pull request is worse than the alerts.
 
 Check these before doing any work, and stop with a plain message if one fails:
 
-1. `vale --version` succeeds. If not, use the `setup` skill.
+1. `vale --version` succeeds. If not, use the `vale-setup` skill.
 2. A config exists — `vale ls-config` resolves without error.
 3. The working tree is clean, or the user has said it is fine to branch from
    what is there.
@@ -111,7 +115,7 @@ Most rules name their own replacement; these are the shapes that need judgment:
 - **Contractions** — whichever direction the project's style goes; do not
   switch a document's register halfway through.
 - **Spelling** — a flagged product name is not a misspelling. Use the
-  `vocab` skill instead of editing the word.
+  `vale-vocab` skill instead of editing the word.
 
 ## Do not
 

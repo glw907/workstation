@@ -715,3 +715,43 @@ widen a pass; none adds a pass.
 - The implementer seat for A-core and B tasks: `cairn-implementer` with the explicit gate, or
   `general-purpose` on `sonnet` with the implementer's report shape pasted in.
 - Token ceiling and checkpoint interval for A-core and for B, per the global rule.
+
+## Lean re-plan (2026-10-11)
+
+The lean pass cutover (`docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`) rewrote or
+deleted many of this spec's targets. The survivor ledger
+(`docs/superpowers/research/2026-10-11-infra-sweep-survivor-ledger.md`) re-derives every item
+against the tree at `4231a67`. It supersedes the pass split above (A-rest, C, D, E, F) for
+everything not yet built. A-core, B, and the style-guide-sync plan are merged.
+
+**Rulings (Geoff, 2026-10-11).**
+
+- **R1. Two passes.** Sweep-1 builds the guard's tools. Sweep-2 fixes the skill and doc content,
+  planned from the baseline as sweep-1 leaves it.
+- **R2. Live-target checks only** (lean ruling 2: a step stays on its catch record). Build a check
+  only where it catches a live defect in dotfiles today. Duplicate-paragraph with `parity.json`,
+  cross-repo mode, heading-citation, orphan-doc, and `check-drift --only claude` go to ROADMAP
+  Someday. The three live duplicates (AW-21, AW-22, DC-22) are fixed by hand in sweep-2.
+- **R3. Cloud routines.** The monthly drift routine is dropped. The release trigger folds into the
+  ROADMAP's monthly model review as one checklist line.
+- **R4. Poplar** adopts `pass-core` with a small adapter, in a poplar PR after sweep-2.
+
+**Method calls (planning session).** Heading-citation and orphan-doc fail R2: a probe of self
+mode found no true catch for either (ledger, "Probes"). DC-17's file stays, since the sites cite
+it. The quoted-version check (DC-14), the `/goal` evaluation, and `.claude/rules/` support are
+dropped, since none has a live instance. Each trimmed description gets trigger checks (three
+should-trigger and two should-not prompts in fresh `claude -p` sessions, before and after), per
+"Anthropic practice" item 7.
+
+**Sweep-1, the guard** (plan: `docs/superpowers/plans/2026-10-11-infra-sweep-1-guard.md`):
+GA-03, the relative-link check, the CLAUDE.md 200-line cap, the vendored-skill overlay (CS-6,
+CS-8, CS-10, CS-17), and the description-cap and fork-skill checks, which seed their live
+violations for sweep-2.
+
+**Sweep-2, the content** (planned after sweep-1 merges): CS-1 to CS-5, CS-7, CS-11 to CS-13, DC-10,
+and the `go-conventions` and `elm-conventions` splits; PS-02, PS-03, PS-05, PS-06, PS-17, PS-18,
+PS-19, PS-28, AW-14, AW-15, AW-22; PS-08, PS-10, PS-20, PS-21 and the PS-09 and PS-11 residuals;
+DC-07, DC-16, DC-22, DC-23 (generic anchors only), GA-04, GA-05, the DC-06 residual, the AW-21
+measures half, and `prose-voice-reviewer.md:3`; `omitClaudeMd` on the drafter, `diff-reviewer`,
+`visual-verifier`, and `figure-verifier`. It ends with an empty baseline. DC-23's ECXC anchors go
+to ecxc-ski's ROADMAP.

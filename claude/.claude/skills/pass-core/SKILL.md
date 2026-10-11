@@ -4,7 +4,8 @@ description: >
   The lean pass process every repo shares: the six-step lifecycle from design to close, risk
   classes, one executing session with pair subagents, the fast gate with CI carrying the whole
   suites, the clock stop, the whole-branch close review, and the score. Use when a repo adapter
-  (cairn-pass, site-pass, dotfiles-pass) points here, or when planning, executing, or closing a pass.
+  (cairn-pass, site-pass, dotfiles-pass) points here, or when planning, executing, or closing a
+  pass.
 ---
 
 # Pass core
@@ -16,24 +17,45 @@ checklist globs, and close checklist, and wins where it disagrees with this skil
 ## Lifecycle
 
 Each task takes a risk class from the adapter's path map: `auth-data`, `runner`, or `ordinary`.
-`runner` covers skills, agents, workflows, the gate tools, `.github/workflows`, and `scripts/checks`.
-The design's class is a floor, and a pass takes its highest task's class. A `live-account` flag
-marks a run that can touch a real Cloudflare, GitHub, or npm account.
+`runner` covers skills, agents, workflows, the gate tools, `.github/workflows`, and
+`scripts/checks`.
+Only Geoff's ruling raises a class, stated in the design in one sentence. A pass takes its highest
+task's class. A `live-account` flag marks a run that can touch a real Cloudflare, GitHub, or npm
+account.
 
 1. **Design.** Opus at `high` brainstorms in chat. Geoff approves a design of a page or less: the
    outcome, files and interfaces touched, what is out of scope, one end-to-end check, and the risk
-   class. If the diff fits in one sentence, skip steps 2 to 4.
-2. **Spec.** An agent writes the approved design at the length precision needs. Every mechanism
-   it states is quoted from source or probed, never recalled.
-3. **Spec review.** `spec-plan-review` runs three Opus lenses in parallel, then a probing fold and
-   one verification read. A finding that changes the approved design returns to Geoff as one
-   batched question; every other finding is folded without him.
+   class. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
+   carries
+   these two samples, and extras go in "Later", never built:
+   > "Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
+   > Keep solutions simple and focused: - Scope: Don't add features, refactor code, or make
+   > "improvements" beyond what was asked. A bug fix doesn't need surrounding code cleaned up. A
+   > simple feature doesn't need extra configurability. ... - Defensive coding: Don't add error
+   > handling, fallbacks, or validation for scenarios that can't happen. Trust internal code and
+   > framework guarantees. Only validate at system boundaries (user input, external APIs). -
+   > Abstractions: Don't create helpers, utilities, or abstractions for one-time operations. Don't
+   > design for hypothetical future requirements. The right amount of complexity is the minimum
+   > needed for the current task."
+   > (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>)
+   >
+   > "Deliver what was asked, at the scope intended. Make routine judgment calls yourself, and check
+   > in only when different readings of the request would lead to materially different work. If the
+   > request seems mistaken or a better approach exists, say so in a sentence and continue with the
+   > task as asked rather than quietly narrowing, widening, or transforming it. Finish the whole
+   > task, and stop short of actions that are clearly beyond what was asked."
+   > (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>)
+2. **Spec.** An agent writes the approved design at the length precision needs, only if
+   `spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
+   probed.
+3. **Spec review.** `spec-plan-review` sets spec and plan review depth. A finding that changes
+   the approved design returns to Geoff as one batched question; every other finding is folded
+   without him.
 4. **Plan.** A task list. Each task carries its outcome, files, risk class, acceptance check, test,
    and a clock estimate in minutes, and never implementation code. Independent tasks are marked as
-   pairs. Fold a single-deliverable task into a neighbor. Plan review runs the mechanics lens and a
-   verification read; an `auth-data` or `runner` pass, or one with `live-account`, runs all three
-   lenses. Skip `writing-plans`' code steps and execution-method question. Test-first applies to
-   `auth-data` tasks.
+   pairs. Fold a single-deliverable task into a neighbor. A plan whose task-minutes exceed twice its
+   design's estimate goes back to Geoff with the reason before launch. Skip `writing-plans`' code
+   steps and execution-method question. Test-first applies to `auth-data` tasks.
 5. **Execute.** See "Execute".
 6. **Close.** See "Close". Geoff reads the PR and merges.
 
@@ -118,7 +140,24 @@ finding, and fix) as the task's acceptance criteria, never a summary. In dubplat
 landed at zero fix rounds and paraphrased ones averaged one. An overruled verdict is stated with its
 reason in the PR body, and a correctness-critical overrule re-runs the review at `xhigh`. The
 adapter's close checklist runs (the auth smoke on `auth-data`), STATUS and ROADMAP are updated, and
-the PR body carries what landed, each `auth-data` verdict, and the score.
+the PR body carries what landed, each `auth-data` verdict, and the score. Each "Found, not
+done" item in the PR body carries a proposed disposition (now, defer, or drop) and a one-line reason,
+and Geoff triages them at the PR read. Whoever merges acts on the triage: a "now" item becomes a
+follow-up task or pass, a "defer" item is filed in BACKLOG or ROADMAP with its number cited back in
+the PR, and a "drop" item stays only in the PR. A merged PR body is history no session reads (Geoff,
+2026-10-11: dubplate PR #2 left 14 items there). Prompting best practices
+(<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>):
+"Use structured formats for state data: When tracking structured information (like test results or
+task status), use JSON or other structured formats". When the PR is ready for
+Geoff's read, the session that hands it over opens it in his default browser with `gh pr view <n>
+-R <owner>/<repo> --web`; a pass that merges its own PR opens no tab (Geoff, 2026-10-11).
+
+Whoever merges a PR then brings that repo's main checkout up to date: `git -C <checkout> pull
+--ff-only` when the checkout is on its default branch, has no uncommitted change in a file the
+merge touches, and has no live session (`claude agents --json`). Otherwise it reports the checkout
+as stale and never forces it. A stale checkout loads the old CLAUDE.md and skills into the next
+session there: on 2026-10-11 six repos still ran the pre-cutover process a day after their lean
+PRs merged.
 
 ## Score
 
@@ -137,6 +176,13 @@ decisions. `ROADMAP.md` holds initiatives under `Active`, `Planned`, and `Someda
 `/log-project`. Git and PR bodies are the history; `docs/HISTORY.md` and post-mortems stop growing
 (ruling 8). A lesson lands where it executes: a skill, agent, tool, or repo doc. Memory holds only a
 preference or a ruling's why that no file can.
+
+A hand-over (the STATUS update, the next session's launch prompt, and the research records it
+carries) changes no behavior, so it is never brought to Geoff as a PR (Geoff, 2026-10-11). The
+handing-over session commits it on a branch, runs the gate, opens the PR, and merges it itself with
+`gh pr merge <n> --merge`, then pulls the checkout. Best practices for Claude Code
+(<https://code.claude.com/docs/en/best-practices>): "For tasks where the scope is clear and the fix
+is small ... ask Claude to do it directly."
 
 ## Scope
 

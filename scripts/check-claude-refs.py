@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Self-mode reference and retired-phrase checks over a Claude Code tree.
 
-Two ratchet checks, both scoped to the scan set below: ``claude/.claude/agents``, authored
+Three ratchet checks, all scoped to the scan set below: ``claude/.claude/agents``, authored
 ``skills`` (a directory named in ``vendored-skills.json``, or ``skills/synced``, is
 third-party), ``workflows``, ``docs`` (excluding ``docs/record``), ``output-styles``,
 ``instructions``, and ``CLAUDE.md``. Excluded everywhere: any ``evals/research`` path segment,
@@ -14,8 +14,12 @@ and ``.js``; ``.json`` and other data files never carry prose citations or retir
 rewrites to ``<root>/claude/.claude/<dir>/...`` only when ``<dir>`` is a stowed entry (the
 scanned dirs, ``tooling``, or the bare ``CLAUDE.md``); an unstowed ``~/.claude`` subpath (for
 example ``~/.claude/projects/...``, Claude Code's own session state) is out of self-mode reach
-and is never checked. A ``~/.local/bin/<x>`` span rewrites to ``<root>/bin/.local/bin/<x>``, so
-a worktree that adds or deletes a doc is judged on its own tree. A span into ``~/Projects``
+and is never checked. A ``~/.local/bin/<x>`` span is judged against the tree
+(``<root>/bin/.local/bin/<x>``) when that file exists there, or when the realpath of
+``<home>/.local/bin/<x>`` sits in a directory ending ``bin/.local/bin`` (a stow link, file-level
+or folded, dangling or not), so a branch that deletes a stowed bin still fails on a doc citing
+it. Any other ``~/.local/bin`` span resolves against ``--home`` like other tilde spans; an
+unstowed span's red means "install it or re-cite it". A span into ``~/Projects``
 (tilde or the injected home's literal expansion) or a bare
 repo-relative span (no leading ``~`` or ``/``) belongs to cross-repo mode and is never checked
 here. A span carrying a placeholder (``<``, ``{``, ``*``, or an ellipsis) always passes,
@@ -23,6 +27,12 @@ unchecked. A bare single-segment absolute span with no further ``/`` (``/loop``,
 never a path citation on this workstation (Claude Code slash commands and route stubs share the
 form); it is skipped. Every other absolute span, tilde or not, resolves as written against the
 ``--home``-relative real filesystem.
+
+``relative-link``: every markdown link ``[text](target)`` in a scanned ``.md`` file whose
+target is relative (no scheme, no leading ``/``, ``~``, or ``#``) must resolve from the file's
+directory once any ``#anchor`` is stripped. The fingerprint is the target as written, anchor
+stripped, so repeated dead links to one target in one file add up to one entry's ``count``. A
+line carrying the literal marker ``link-ok`` is exempt.
 
 ``retired-phrase``: a phrase from ``claude/.claude/tooling/retired-phrases.txt`` (one literal
 phrase per line, matched case-insensitively with internal whitespace tolerant of line wrap,
@@ -48,6 +58,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -61,7 +72,8 @@ ConfigError = ratchet.ConfigError
 
 DEAD_REFERENCE = "dead-reference"
 RETIRED_PHRASE = "retired-phrase"
-IMPLEMENTS = (DEAD_REFERENCE, RETIRED_PHRASE)
+RELATIVE_LINK = "relative-link"
+IMPLEMENTS = (DEAD_REFERENCE, RETIRED_PHRASE, RELATIVE_LINK)
 
 RETIRED_PHRASES_PATH = "claude/.claude/tooling/retired-phrases.txt"
 CLAUDE_DIR = ("agents", "skills", "workflows", "docs", "output-styles", "instructions")
@@ -72,6 +84,10 @@ BACKTICK_SPAN = re.compile(r"`([^`\n]+)`")
 DATED = re.compile(r"^\d{4}-\d{2}-\d{2}")
 PLACEHOLDER = re.compile(r"[<{*]|\.\.\.")
 RETIRED_OK = "retired-ok"
+LINK_OK = "link-ok"
+MD_LINK = re.compile(r"\[[^\]\n]*\]\(\s*<?([^)\s>]+)>?(?:\s+(?:\"[^\"]*\"|'[^']*'))?\s*\)")
+SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+STOW_BIN_TAIL = ("bin", ".local", "bin")
 
 
 def vendored_skill_names(root):
@@ -141,7 +157,9 @@ def resolve_self_mode(raw, root, home):
     entries (``STOWED_CLAUDE_ENTRIES``: the scanned dirs, ``tooling``, and the bare
     ``CLAUDE.md``); a span into an unstowed ``~/.claude`` subpath (``~/.claude/projects/...``,
     Claude Code's own session state) is out of self-mode reach and returns None, never resolved
-    against the real filesystem. ``~/.local/bin/<x>`` also rewrites under ``root``. A span into
+    against the real filesystem. ``~/.local/bin/<x>`` resolves under ``root`` when the tree holds it
+    or home's copy is a stow link into a ``bin/.local/bin`` directory, and against ``home``
+    otherwise. A span into
     ``~/Projects`` (tilde or the home's literal absolute form) and a bare repo-relative span
     belong to cross-repo mode and return None. A placeholder span, a protocol-relative URL
     (``//host/...``), and a bare single-segment absolute span (no further ``/``, a slash
@@ -157,7 +175,14 @@ def resolve_self_mode(raw, root, home):
             return None
         return root / "claude" / ".claude" / rest
     if raw.startswith("~/.local/bin/"):
-        return root / "bin" / ".local" / "bin" / raw[len("~/.local/bin/"):]
+        name = raw[len("~/.local/bin/"):]
+        in_tree = root / "bin" / ".local" / "bin" / name
+        if in_tree.exists():
+            return in_tree
+        home_copy = home / ".local" / "bin" / name
+        if Path(os.path.realpath(home_copy)).parent.parts[-3:] == STOW_BIN_TAIL:
+            return in_tree
+        return home_copy
     if raw.startswith("~/Projects/") or raw == "~/Projects":
         return None
     if raw.startswith("~/"):
@@ -193,6 +218,23 @@ def dead_reference_violations(root, home):
                 continue
             if not target.exists():
                 yield {"check": DEAD_REFERENCE, "file": rel, "fingerprint": raw}
+
+
+def relative_link_violations(root):
+    """Yield ``{"check", "file", "fingerprint"}`` for every dead relative markdown link."""
+    for path in scan_files(root, include_vendored=False):
+        if path.suffix != ".md":
+            continue
+        rel = str(path.relative_to(root))
+        for line in path.read_text(errors="replace").splitlines():
+            if LINK_OK in line:
+                continue
+            for m in MD_LINK.finditer(line):
+                target = m.group(1).split("#", 1)[0]
+                if not target or target[0] in "/~#" or SCHEME.match(target):
+                    continue
+                if not (path.parent / target).exists():
+                    yield {"check": RELATIVE_LINK, "file": rel, "fingerprint": target}
 
 
 def load_retired_phrases(root):
@@ -250,9 +292,10 @@ def _line_index(offsets, pos):
 
 
 def cmd_ratchet_report(root, home):
-    """Print the ratchet report for both checks; raise ConfigError on a bad phrase list."""
+    """Print the ratchet report for every check; raise ConfigError on a bad phrase list."""
     violations = list(dead_reference_violations(root, home))
     violations += list(retired_phrase_violations(root))
+    violations += list(relative_link_violations(root))
     ratchet.emit_report(IMPLEMENTS, violations)
     return 0
 
@@ -262,7 +305,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog="check-claude-refs",
                                      description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
-    report = sub.add_parser("ratchet-report", help="print the ratchet report for both checks")
+    report = sub.add_parser("ratchet-report", help="print the ratchet report for every check")
     report.add_argument("--root", required=True, type=Path)
     report.add_argument("--home", type=Path, default=Path.home())
     report.add_argument("--projects-root", type=Path, default=None)

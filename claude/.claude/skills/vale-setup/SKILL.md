@@ -3,13 +3,17 @@ name: vale-setup
 description: Install Vale, write a .vale.ini, sync styles, and get a first run. Use when the user says "set up vale", "add vale", "add prose linting", or "lint our docs" in a repository that has no Vale config yet.
 ---
 
+<!-- local-overlay -->
+A repo here commits its Vale styles and pins Vale in CI, so do not run `vale sync` against a committed `styles/` directory or edit the CI pin; a fix lands on a pass branch, never a branch per file.
+<!-- /local-overlay -->
+
 # Set up Vale in this repository
 
 ## When to use this
 
 The repository has no `.vale.ini`, or has one that does not resolve. If a
-working config already exists, the user probably wants `fix` or
-`triage` instead — check before writing anything.
+working config already exists, the user probably wants `vale-fix` or
+`vale-triage` instead — check before writing anything.
 
 ## Prerequisites
 
@@ -64,7 +68,7 @@ First run:   docs/ → 0 errors, 214 warnings, 1,988 suggestions
 ```
 
 A large corpus commonly produces thousands of suggestions on day one. Say the
-number, and offer `triage`. Do not quietly raise `MinAlertLevel` to make
+number, and offer `vale-triage`. Do not quietly raise `MinAlertLevel` to make
 it look smaller.
 
 ## Do not
