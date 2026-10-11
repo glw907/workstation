@@ -19,11 +19,11 @@ the first task. Read the plan and spec paths from the site's `CLAUDE.md` or STAT
 
 | Site | Gate | Fast lane | Full-suite home | Worktree setup |
 |---|---|---|---|---|
-| ecxc-ski | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci` |
-| 907-life | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci` |
-| aksailingclub-org | `npm run check` | check, plus `npx vitest run <touched test files>` | CI on the PR | `npm ci` |
-| xcathletes-org | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci` |
-| cairn-pub | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci` |
+| ecxc-ski | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci`, then `npx svelte-kit sync` |
+| 907-life | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci`, then `npx svelte-kit sync` |
+| aksailingclub-org | `npm run check` | check, plus `npx vitest run <touched test files>` | CI on the PR | `npm ci`, then `npx svelte-kit sync` |
+| xcathletes-org | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci`, then `npx svelte-kit sync` |
+| cairn-pub | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci`, then `npx svelte-kit sync` |
 
 **Gate**: `cairn-run-gate '<string>'` on the light lane (`CAIRN_GATE_LANE=light`), since no site gate
 launches a browser. `npm run check` must report 0 errors and 0 warnings.
@@ -35,7 +35,9 @@ that touches no engine source runs the site's own unit suite and nothing from ca
 11), so the local close run is the only full run; each site's ROADMAP carries a Planned item for it.
 Run the local close once, on the close head.
 
-**Worktree setup**: The launch's `.claude/worktrees/<name>`, then `npm ci`.
+**Worktree setup**: The launch's `.claude/worktrees/<name>`, then `npm ci` and `npx svelte-kit
+sync`. The sync writes `.svelte-kit/tsconfig.json`, which `npm run check` needs, so a fresh
+worktree's first gate fails without it.
 
 **CI watch**: Only aksailingclub-org: `gh pr checks <n> --watch --fail-fast` as a background Bash
 task after each push. The other four sites have no watch command.
