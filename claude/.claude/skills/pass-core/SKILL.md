@@ -122,6 +122,13 @@ the PR body carries what landed, each `auth-data` verdict, and the score. When t
 Geoff's read, the session that hands it over opens it in his default browser with `gh pr view <n>
 -R <owner>/<repo> --web`; a pass that merges its own PR opens no tab (Geoff, 2026-10-11).
 
+Whoever merges a PR then brings that repo's main checkout up to date: `git -C <checkout> pull
+--ff-only` when the checkout is on its default branch, has no uncommitted change in a file the
+merge touches, and has no live session (`claude agents --json`). Otherwise it reports the checkout
+as stale and never forces it. A stale checkout loads the old CLAUDE.md and skills into the next
+session there: on 2026-10-11 six repos still ran the pre-cutover process a day after their lean
+PRs merged.
+
 ## Score
 
 The PR body carries the spec's price table rows: Gates on the critical path, Work and review, CI
