@@ -7,8 +7,11 @@
 # tool's ten-minute cap). If the gate finishes inside that window, the exit status and
 # the last 60 lines print. If not, the call prints "gate still running" and exits 75;
 # the caller re-issues the SAME command, which reattaches to the running gate and waits
-# again. A finished gate's result is printed once and then cleared, so a later call with
-# the same string starts a fresh run.
+# again. A finished run's status, log, and start fingerprint persist in its state directory. A
+# repeat call, or a second waiter that arrives after the finish, reprints that result (with
+# "gate exit:") for as long as the tree fingerprint still equals the run's start one, and never
+# reports a vanish for a run that finished. A changed tree starts a new run, and --fresh reruns
+# the same tree. Reattaching to a run still in flight is never affected by --fresh.
 #
 # Vanish: if the tracked pid dies with no status file (an OOM kill outside the scope, a
 # signal that raced the writer, or a state directory an older copy of this script left with
@@ -19,9 +22,12 @@
 # times)" and exits 1. A gate that itself completes with exit 75 is still distinguishable,
 # since only a real completion prints "gate exit:". CAIRN_GATE_POLL_INTERVAL (default 5) and
 # CAIRN_GATE_GRACE (default 15) set the wait loop's poll and post-death grace seconds; a test
-# shortens both so a staged dead pid resolves in about a second.
+# shortens both so a staged dead pid resolves in about a second. The wait deadline counts
+# elapsed time with bash $SECONDS, so one call returns within CAIRN_GATE_WAIT plus one poll
+# interval even when a poll sleeps longer than asked. An argument that starts with "--" and is
+# not a known flag exits 2 with the usage line and starts nothing.
 #
-# Usage: cairn-run-gate '<gate string>' [log path]
+# Usage: cairn-run-gate [--fresh] '<gate string>' [log path]
 #        cairn-run-gate --receipt '<gate string>'
 #        cairn-run-gate --records <toplevel> <branch>
 # Memory: the gate runs in a transient user scope capped by CAIRN_GATE_MEMORY_HIGH (7G),
@@ -32,6 +38,12 @@
 # it never waits behind a browser gate, and it runs under a smaller cap (2G high, 3G max, 1G
 # swap) so one light gate beside one heavy gate still fits in RAM. Light gates serialize among
 # themselves. CAIRN_GATE_PARALLEL=1 skips every lock and is kept for callers that set it.
+# Defer: RUN_GATE_IF_BUSY=defer makes a heavy-lane call that would start a run, while another
+# run holds the heavy machine lock, exit 76 with one line leaving that leg to the push's CI,
+# and start nothing. A call that reattaches to its own in-flight run, or reprints a finished
+# one, never defers, and the light lane ignores the variable. This script cannot know a repo's
+# full-suite home or a task's risk class: the caller must not set the variable where the
+# full-suite home is local, or on an auth-data task.
 # Sleep: the gate runs under `awake`, which holds a sleep inhibitor (who "cairn-gate-<lane>")
 # for the gate's own run and releases it when the gate exits; see it in `systemd-inhibit --list`.
 # Exit status: the gate's when it has finished; 75 while it is still running.
@@ -78,10 +90,17 @@
 # or a failing run (a failing receipt never stands in for the gate). Lookup never starts a gate.
 set -u
 mode=run
-if [ "${1:-}" = "--receipt" ]; then
-  mode=receipt
-  shift
-fi
+fresh=0
+usage="usage: cairn-run-gate [--fresh] '<gate string>' [log path] | --receipt '<gate string>' | --records <toplevel> <branch>"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --receipt) mode=receipt; shift ;;
+    --fresh) fresh=1; shift ;;
+    --records) break ;;
+    --*) echo "cairn-run-gate: unknown flag $1" >&2; echo "$usage" >&2; exit 2 ;;
+    *) break ;;
+  esac
+done
 records_dir="${CAIRN_GATE_RECORDS_DIR:-$HOME/.local/state/cairn-run-gate}"
 
 if [ "${1:-}" = "--records" ]; then
@@ -237,7 +256,30 @@ pidfile="$state/pid"
 statusfile="$state/status"
 vanishfile="$state/vanished"
 
+clear_state() {
+  rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane" "$state/fingerprint" \
+    "$state/head" "$state/record-warning" "$state/reported"
+}
+
+# A finished run that a call already reported stays for repeat calls while the tree is the one
+# it started on. A changed tree, --fresh, or a state with no start fingerprint clears it.
+if [ -e "$pidfile" ] && [ -e "$statusfile" ] && [ -e "$state/reported" ]; then
+  keep=0
+  if [ "$fresh" = 0 ] && [ -f "$state/fingerprint" ]; then
+    read -r spid sfp <"$state/fingerprint"
+    [ -n "${sfp:-}" ] && [ "$spid" = "$(cat "$pidfile")" ] && [ "$sfp" = "$(gate_fingerprint)" ] && keep=1
+  fi
+  [ "$keep" = 1 ] || clear_state
+fi
+
 if [ ! -e "$pidfile" ]; then
+  find "$gatedir" -mindepth 1 -maxdepth 1 -type d -mtime +7 ! -path "$state" -exec rm -rf {} + 2>/dev/null
+  if [ "${RUN_GATE_IF_BUSY:-}" = defer ] && [ "${CAIRN_GATE_LANE:-heavy}" = heavy ] \
+    && [ "${CAIRN_GATE_PARALLEL:-0}" != 1 ] && ! flock -n "$gatedir/machine.lock" true 2>/dev/null; then
+    echo "cairn-run-gate: the heavy lock is held; leaving this leg to the push's CI (RUN_GATE_IF_BUSY=defer)"
+    rmdir "$state" 2>/dev/null
+    exit 76
+  fi
   rm -f "$statusfile"
   : >"$log"
   # Run the gate in its own transient cgroup with a memory ceiling, so a runaway headless
@@ -327,26 +369,26 @@ write_receipt() {
 }
 
 pid=$(cat "$pidfile")
-waited=0
-while [ ! -e "$statusfile" ] && [ "$waited" -lt "$wait_s" ]; do
+start_s=$SECONDS
+deadline=$((start_s + wait_s))
+while [ ! -e "$statusfile" ] && [ "$SECONDS" -lt "$deadline" ]; do
   sleep "$poll_s"
-  waited=$((waited + poll_s))
   if ! kill -0 "$pid" 2>/dev/null && [ ! -e "$statusfile" ]; then
     # The status file can land a few seconds after the recorded pid exits (the scope and flock
     # layers finish after it), so allow a grace period before calling the gate lost.
-    grace=0
-    while [ ! -e "$statusfile" ] && [ "$grace" -lt "$grace_s" ]; do
+    grace_end=$((SECONDS + grace_s))
+    while [ ! -e "$statusfile" ] && [ "$SECONDS" -lt "$grace_end" ]; do
       sleep 1
-      grace=$((grace + 1))
     done
     break
   fi
 done
+waited=$((SECONDS - start_s))
 
 if [ ! -e "$statusfile" ]; then
   if kill -0 "$pid" 2>/dev/null; then
     echo "gate still running after ${waited}s more (log: $log, $(wc -l <"$log") lines so far)."
-    echo "Re-run this exact cairn-run-gate command to keep waiting; do not tail, wc, ps, or sleep on the log."
+    echo "Re-issue this exact cairn-run-gate command, with the Bash tool's timeout: 600000, to keep waiting; do not tail, wc, ps, or sleep on the log."
     exit 75
   fi
   # The recorded pid died and no status file ever appeared (an OOM kill outside the scope, a
@@ -359,7 +401,7 @@ if [ ! -e "$statusfile" ]; then
   queued_at=$(cat "$state/queued" 2>/dev/null || date +%s)
   acquired_at=$(cat "$state/acquired" 2>/dev/null || echo "$queued_at")
   write_gate_record vanished null "$queued_at" "$((acquired_at - queued_at))" "$(cat "$state/head" 2>/dev/null || git rev-parse HEAD 2>/dev/null || echo none)" "$(cat "$state/lane" 2>/dev/null || echo "${CAIRN_GATE_LANE:-heavy}")"
-  rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane" "$state/fingerprint" "$state/head" "$state/record-warning"
+  clear_state
   if [ "$vanish_count" -ge 3 ]; then
     rm -f "$vanishfile"
     echo "gate exit: 1 (vanished 3 times)"
@@ -382,12 +424,14 @@ if [ -e "$state/queued" ] && [ -e "$state/acquired" ]; then
     echo "NOTE: this gate waited ${lock_wait}s for another gate to release the machine lock."
     echo "NOTE: if it launches no browser (a Go make check, a lint-only run), run it as"
     echo "NOTE:   CAIRN_GATE_LANE=light cairn-run-gate '<gate string>'"
-    echo "NOTE: which has its own lock. Report this NOTE to your conductor verbatim."
+    echo "NOTE: which has its own lock."
   fi
 fi
-write_receipt "$status"
-[ -s "$state/record-warning" ] && cat "$state/record-warning" >&2
-rm -f "$pidfile" "$statusfile" "$state/queued" "$state/acquired" "$state/lane" "$state/fingerprint" "$state/head" "$state/record-warning"
+if [ ! -e "$state/reported" ]; then
+  write_receipt "$status"
+  [ -s "$state/record-warning" ] && cat "$state/record-warning" >&2
+  : >"$state/reported"
+fi
 echo "gate exit: $status (log: $log, $(wc -l <"$log") lines)"
 echo "--- last 60 lines ---"
 tail -60 "$log"
