@@ -24,35 +24,15 @@ machine.** The manifests record intent; the script reports what happened.
 
 ## Rules
 
-- **Scope by reach.** A skill on disk reaches every agent, including the implementer and
-  reviewer subagents that run a fixed tool list; an MCP server reaches only the main loop and
-  unrestricted agents. When a library offers both, take the skill first and the server for
-  on-demand retrieval or tools the skill cannot carry.
-- **User scope for stack-wide, project scope only for repo-specific.** Everything the
-  cairn-family stack shares (Svelte, Playwright, DaisyUI) is user scope and in the manifest.
-  A repo's `.mcp.json` carries only what that repo alone needs, and its CLAUDE.md says so.
-- **Prefer a vendored skill to a plugin when the plugin brings hooks or servers that
-  duplicate workstation pieces** (Vale's plugin ships an edit hook the workstation
-  `vale-hook` already covers, so its skills are vendored and the plugin is not installed).
-  Record the source, commit, and license in the manifest.
-- **Credentials come from the age store.** A server's env values stay in `${VAR}` form in
-  the manifest and resolve from `~/.local/secrets` at session start; launch Claude Code from
-  a shell that sourced them. Never a value in `.mcp.json`, a manifest, or a transcript.
-- **Read a third-party skill before vendoring it.** It is instructions injected into every
-  future session. Check the license, the maintainer, and the text.
-- **Every addition gets three lines:** the manifest entry, a line in the workstation
-  `CLAUDE.md` section that governs it (or the repo's), and, when a rule of use came with it,
-  that rule in its execution path (the agent definitions or skills that use the piece, else
-  this file's inventory), never a memory. Then `claude-tooling-sync verify` and commit the
-  dotfiles.
-- **A restart loads new servers; skills and agents load live.** Restart at a session
-  boundary, never mid-run (a Workflow run dies with its session).
+The rules for adding or changing any piece live in the `claude-infra` skill.
+
+## Model pins
 
 Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; the seats are in
 `pass-core` "Models"): every reviewer agent under `agents/` and the workflow script
 `docs-page-chain.js` names `claude-opus-5-5` explicitly (`diff-reviewer`, the four domain
 reviewers, `engine-triage`, `go-architecture-reader`, `figure-verifier`, `visual-verifier`,
-`prose-voice-reviewer`, `cairn-register-editor`). `cairn-docs-drafter` (the docs page chain's
+`prose-voice-reviewer`, `cairn-register-editor`, `plan-reviewer`). `cairn-docs-drafter` (the docs page chain's
 default drafter, `effort: high`) also pins `claude-opus-5-5` explicitly and carries no `skills:`
 line; the page-inputs step's output (job, page type, exemplar excerpts, fact ids, claim inventory)
 arrives in the dispatch prompt, never a separate profile arg or file. No agent pins Fable 5.1; it
@@ -138,6 +118,7 @@ commit skills and manifest together.
   bump in every repo follows; the global CLAUDE.md "Dependencies" section is the standing rule.
 - **Spec and plan review:** the authored `spec-plan-review` skill (2026-10-10 rewrite), the three
   lenses, probing fold, and verification read every spec or plan takes before owner approval;
+  its depth scales with the design's size, and it dispatches the `plan-reviewer` agent.
   `pass-core` points at it.
 - **Svelte:** the official server (user scope, remote).
 - **Playwright:** Microsoft's server (user scope, stdio).

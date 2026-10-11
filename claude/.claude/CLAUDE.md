@@ -121,8 +121,8 @@ services, and never suggest a web dashboard unless the API cannot do it.
 ## Claude tooling: manifests, scopes, and the DaisyUI-first rule (Geoff, 2026-09-13)
 
 Every skill, agent, MCP server, and plugin has one home and one manifest, reconciled by
-`claude-tooling-sync verify` (run by `check-drift`): layout and rules in
-`~/.claude/docs/claude-tooling.md`, read before adding any. Every cairn-family admin is DaisyUI:
+`claude-tooling-sync verify` (run by `check-drift`): layout in
+`~/.claude/docs/claude-tooling.md`, rules in the `claude-infra` skill; read both before adding any. Every cairn-family admin is DaisyUI:
 prefer a stock component over a home-grown one unless the rulings ledger records the defect that
 forced it (the official DaisyUI skill is the reference, the licensed Blueprint server the pre-cut
 audit; the admin design system wins over both on conflict).
@@ -144,12 +144,7 @@ zero context: pre-extract what they need.
 
 ## A rule lives where it executes (Geoff, 2026-09-20)
 
-A rule reaches an agent only through its definition, its dispatch prompt, its runner, or a
-tool's output; a side doc reaches nobody. Land a rule the same session, strongest form first:
-tool, agent definition or skill, then CLAUDE.md (Geoff, 2026-09-27). Anything recorded routes
-by default: initiative state to STATUS or ROADMAP; a repo fact to its docs; a workstation fact
-to `~/.claude/docs`. Memory holds only a preference or a ruling's why that no file can. Act on
-a tool's NOTE before the next dispatch.
+Where a rule lives and how to land it: the `claude-infra` skill.
 
 ## Compact instructions
 
