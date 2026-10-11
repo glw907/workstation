@@ -37,8 +37,8 @@ All are `runner` class and land in dotfiles. Minutes are rough.
      finding that changes the approved design.
   2. *Conductor role.* The session that launches a pass keeps conducting. It watches with a new
      `pass-watch` tool (`bin/.local/bin/`, with fixture tests; `stow -R bin` at merge). After Geoff
-     approves a dotfiles PR, it merges, pulls a clean `~/.dotfiles` with `git pull --ff-only`, and
-     launches the next committed prompt.
+     approves a PR, it merges and launches the next committed prompt. The pull that follows a merge
+     is already `pass-core` "Close" for every repo (PR #7, 2026-10-11); `pass-watch` performs it.
   3. *Self-merge.* A pass whose highest class is `ordinary` merges its own PR after a green
      full-suite home and an accepted whole-branch review. `runner` and `auth-data` passes keep
      Geoff's read.
@@ -72,8 +72,9 @@ B, C, and D touch disjoint files, so they can run as pairs. F and G touch disjoi
 
 ## Out of scope
 
-Other repos: dubplate's (356 lines) and aksailingclub-org's (262) CLAUDE.md caps, and DC-23's ECXC
-anchors, go to those repos' ROADMAPs. Atomic writes and the head-SHA race in `fetch_skill`, and the
+Other repos: DC-23's ECXC anchors go to ecxc-ski's ROADMAP. (Sweep 1's report of dubplate and
+aksailingclub-org CLAUDE.md files over 200 lines measured stale checkouts; on `origin` they are 183
+and 200.) Atomic writes and the head-SHA race in `fetch_skill`, and the
 checks deferred by ruling R2. Recording each rule's basis (an Anthropic page or a catch record) and
 a quarterly prune by catch record are not in this pass; F's review surfaces them as it runs.
 
