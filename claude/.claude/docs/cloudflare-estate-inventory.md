@@ -51,10 +51,11 @@ at the foot; treat the snapshot below as orientation, verify before acting.
 - **Zero Trust token `CF_ZT_TOKEN`** (workstation age store, local only; registry entry
   `CF_ZT_TOKEN`). **Use it, not `CLOUDFLARE_API_TOKEN`, for anything touching Access identity
   providers.** It reads `accounts/{id}/access/identity_providers` (two IdPs: `onetimepin` and
-  `google-apps` "Google Workspace") and creates and reads Access apps and policies. The general
-  token got `auth.forbidden` on that endpoint on 2026-08-30. On 2026-10-10 it answers
-  `success: true` with an empty list, which reads as "no IdPs" and is wrong. Both verified live
-  2026-10-10, statuses and names only.
+  `google-apps` "Google Workspace"), verified live 2026-10-10. Per the registry's 2026-08-30
+  note it also creates and reads Access apps and policies. The general token got
+  `auth.forbidden` on that endpoint on 2026-08-30. On 2026-10-10 the general token answers
+  `success: true` with an empty list, which reads as "no IdPs" and is wrong (verified live,
+  statuses and names only).
 - **Worker secrets are WRITE-ONLY**: `wrangler secret list` returns NAMES, never values; a value
   set with `wrangler secret put` cannot be read back. To learn a secret's value you need its
   origin store, not the worker.
@@ -76,15 +77,17 @@ at the foot; treat the snapshot below as orientation, verify before acting.
     rotate, so the old secret is unrecoverable.
   - Restore (a live-account write: Geoff's go first). `POST
     accounts/{id}/access/service_tokens/{token_id}/refresh` extends the expiry. `POST
-    .../{token_id}/rotate` issues a new client secret and revokes the old one. Its response
-    carries `client_id` and `client_secret`; pipe each through `jq -r` into `secret-set.sh
-    ASC_ACCESS_CLIENT_ID --stdin` and `secret-set.sh ASC_ACCESS_CLIENT_SECRET --stdin`, never
-    displaying the body, then add both to `~/.dotfiles/secrets/registry.md`.
+    .../{token_id}/rotate` issues a new client secret and revokes the old one, so call it once.
+    Capture its single response in a shell variable, never displaying it. Run `jq -r
+    .result.client_id` and `jq -r .result.client_secret` on that variable, piping each into
+    `secret-set.sh ASC_ACCESS_CLIENT_ID --stdin` and `secret-set.sh ASC_ACCESS_CLIENT_SECRET
+    --stdin`. Then add both to `~/.dotfiles/secrets/registry.md`.
   - A new token. `POST accounts/{id}/access/service_tokens` with `name` and `duration` answers
     201 with the same two fields; store them the same way. Then add an app policy with decision
     `non_identity` and include `{"service_token":{"token_id":"<id>"}}`.
 - **The workstation registry** `~/.dotfiles/secrets/values.age` and `~/.local/secrets`: the
-  workstation's own secrets (GitHub App key, the ASC Access service token, etc.). Its
+  workstation's own secrets (the GitHub App key, among others; the ASC Access service token has
+  been absent since 2026-10-04, see the recipe's Restore step). Its
   `registry.md` marks some entries "ASC-managed separately" — those live in the ASC store below,
   not nowhere.
 - **The ASC project store** `~/Projects/aksailingclub-legacy/secrets/values.age` (age key

@@ -10,8 +10,8 @@ color: green
 
 You implement one task from a site pass plan, in the worktree the dispatch gives you. Run `npm ci`
 and then `npx svelte-kit sync` first, since `npm run check` needs the `.svelte-kit/tsconfig.json`
-the sync writes. The dispatch carries the task's outcome, files, risk class, acceptance check, and test; you
-do not read the plan file. Never switch branches and never push: you commit, and the session that
+the sync writes. The dispatch carries the task's outcome, files, risk class, acceptance check, and
+test; you do not read the plan file. Never switch branches and never push: you commit, and the session that
 dispatched you merges and pushes.
 
 The site repos are SvelteKit/Cloudflare sites built in numbered passes. Make the task's behavior
