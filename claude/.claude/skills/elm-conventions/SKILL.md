@@ -1,364 +1,305 @@
 ---
 name: elm-conventions
 description: >
-  Mandatory rules for the bubbletea v2 UI layer (poplar's `internal/ui/`).
-  Use before writing, reviewing, or modifying any bubbletea tea.Model,
-  Update, View, or Cmd. Keeps the tea loop predictable and auditable:
-  all state in models, mutations only in Update, I/O only in tea.Cmd,
-  children signal parents via Msg types, shared state hoisted to root.
+  Mandatory rules for Bubble Tea v2 UI code in Go. Use before writing,
+  reviewing, or modifying any bubbletea tea.Model, Update, View, or Cmd.
+  Keeps the tea loop predictable and auditable: one top-level model,
+  components as plain structs with imperative methods, mutations only in
+  Update, I/O only in tea.Cmd, shared state hoisted to the root.
 ---
 
-# Elm Architecture Conventions (Poplar UI)
+# Elm Architecture Conventions (Bubble Tea v2)
 
-Rules for the bubbletea UI layer in `internal/ui/`. These conventions
-keep the tea loop predictable and auditable.
+Rules for the UI layer of a Bubble Tea v2 program. They rest on Charm's
+own agent guide for the Crush UI, pinned at one commit:
+
+- The Charm guide: `https://github.com/charmbracelet/crush/blob/f02ffbcec15a9f95cb9bcff895833df10f829aae/internal/ui/AGENTS.md`
+  (FSL-1.1-MIT; cited by line, never copied).
+- Secondary sources: the Bubble Tea v2 announcement,
+  `https://github.com/charmbracelet/bubbletea/discussions/1374`, and the
+  v2.1.0 release, `https://github.com/charmbracelet/bubbletea/releases/tag/v2.1.0`.
+
+Every rule below names the source it follows. Where the house differs
+from Charm or Charm is silent, the rule carries a "House departure" line
+that says why. Charm wins any conflict a House departure does not record.
 
 ## Scope
 
-Applies exclusively to `internal/ui/`. Does not apply to:
+Applies to code that runs inside the tea loop: models, components,
+`Update`, `View`, and `tea.Cmd` constructors. It does not apply to
+backend adapters, worker goroutines, stdin/stdout filters, or the
+bootstrap wiring that runs before `tea.NewProgram`; goroutines and
+mutexes are normal there.
 
-- `internal/mail/`: backend adapter; goroutines and mutexes are normal
-- `internal/mailworker/`: forked worker code, channel-based async
-- `internal/filter/`: stdin/stdout filters, no tea loop
-- `cmd/poplar/`: bootstrap wiring before the tea loop starts
+Existing nested-model code (poplar's `internal/ui/`, for one) migrates in its repo's own refactor pass; new code follows these rules now.
 
-## Rule 1: All State in Models
+## Rule 1: One Model, Components Are Plain Structs
 
-Every component is a `tea.Model` struct. No package-level mutable
-variables, no singletons, no shared mutable state outside the model
-tree.
+Source: `https://github.com/charmbracelet/crush/blob/f02ffbcec15a9f95cb9bcff895833df10f829aae/internal/ui/AGENTS.md`, lines 8 ("do not nest models"), L58-77.
+
+The root is the only type that implements `tea.Model`. Every other
+component is a struct with imperative methods that the root calls
+directly. A method that needs a side effect returns a `tea.Cmd`. The
+component renders through `Render(width int) string` or a draw method,
+and the root decides when and how to call it.
+
+Keep routing, focus, layout, and dialog orchestration in the root. No
+package-level mutable variables and no singletons.
+
+Components from the bubbles module (`textarea`, `viewport`, `list`) are
+held as fields on the root or on a component, and their `Update` is
+called explicitly by the code that owns them. That is delegation to a
+library type, not a nested model of your own.
 
 **Right:**
 ```go
 type Sidebar struct {
-    folders []mail.Folder
+    folders []Folder
     cursor  int
     width   int
 }
+
+func (s *Sidebar) MoveCursor(delta int)  { /* clamp and set */ }
+func (s *Sidebar) Selected() Folder      { return s.folders[s.cursor] }
+func (s *Sidebar) Render(width int) string { /* ... */ }
 ```
 
 **Wrong:**
 ```go
-var currentFolders []mail.Folder // package-level mutable state
+var currentFolders []Folder // package-level mutable state
 
-type Sidebar struct {
-    cursor int
-}
+func (s Sidebar) Update(msg tea.Msg) (Sidebar, tea.Cmd) // a second model
 ```
 
 ## Rule 2: Update Is the Only Mutation Point
 
-State changes happen only by returning a new model from `Update`. No
-mutating model fields in `View`, `Init`, or `Cmd` closures.
+Source: `https://github.com/charmbracelet/crush/blob/f02ffbcec15a9f95cb9bcff895833df10f829aae/internal/ui/AGENTS.md`, lines 10-11 ("Never change the model state inside of a
+command").
+
+State changes in the root's `Update` and in the methods it calls. `View`
+and `Init` never mutate, and a `tea.Cmd` closure never touches the
+model: it computes a result and returns a message, and `Update` applies
+it.
 
 **Right:**
 ```go
-func (m Sidebar) Update(msg tea.Msg) (Sidebar, tea.Cmd) {
-    switch msg := msg.(type) {
-    case FoldersLoadedMsg:
-        m.folders = msg.Folders
-        return m, nil
-    }
+case foldersLoadedMsg:
+    m.sidebar.SetFolders(msg.folders)
     return m, nil
-}
 ```
 
-**Wrong (mutation in View):**
+**Wrong (mutation in a Cmd closure):**
 ```go
-func (m Sidebar) View() string {
-    m.lastRendered = time.Now() // mutation in View
-    return m.render()
-}
-```
-
-**Wrong (mutation in Cmd closure):**
-```go
-func fetchFolders(m *Sidebar, backend mail.Backend) tea.Cmd {
+func fetchFolders(s *Sidebar, b Backend) tea.Cmd {
     return func() tea.Msg {
-        folders, _ := backend.ListFolders()
-        m.folders = folders // mutation in Cmd closure
+        s.folders, _ = b.ListFolders() // races the render loop
         return nil
     }
 }
 ```
 
+**Wrong (mutation in View):**
+```go
+func (m App) View() tea.View {
+    m.lastRendered = time.Now()
+    return tea.NewView(m.render())
+}
+```
+
 ### The one recorded exception: a `tea.WithFilter` input coalescer
 
-A program-construction `tea.WithFilter` may collapse a burst of
-input messages before they reach `Update`. The motivating case is
-mouse wheel input, where an unfiltered burst costs one store round
-trip per tick against a latency budget. The filter samples over a
-short window (~16 ms), accumulates signed deltas, and resets on a
-direction change, emitting one message for the burst.
+House departure: Charm's guide does not address program filters, and
+the house permits exactly one pure shape.
 
-This is legal only because it is pure. The filter holds no model
-state, makes no decision the model could make differently, and
-changes message volume rather than meaning. A filter that reads or
-writes model state, drops messages conditionally on application
-state, or performs I/O is Rule 2 and Rule 3 violation, not this
-exception. Record any filter's window and reset semantics where the
-program is constructed, since it sits outside the loop a reader
-follows.
+A program-construction `tea.WithFilter` may collapse a burst of input
+messages before they reach `Update`; the motivating case is mouse-wheel
+input, where an unfiltered burst costs one store round trip per tick.
+The filter samples over a short window (about 16 ms), accumulates signed
+deltas, resets on a direction change, and emits one message per burst.
+
+It is legal only because it is pure: no model state, no decision the
+model could make differently, message volume changed rather than
+meaning. A filter that reads model state, drops messages conditionally
+on application state, or performs I/O violates Rules 2 and 3. Record
+the window and reset semantics where the program is constructed, since
+the filter sits outside the loop a reader follows.
 
 ## Rule 3: I/O Only in tea.Cmd
 
-Blocking calls (backend methods, file I/O, network) run inside
-`tea.Cmd` functions, never in `Update` or `View`. `Update` must return
-instantly.
+Source: `https://github.com/charmbracelet/crush/blob/f02ffbcec15a9f95cb9bcff895833df10f829aae/internal/ui/AGENTS.md`, lines 9 ("Never do IO or expensive work in `Update`").
+
+Blocking calls (backend methods, file and network I/O) run inside a
+`tea.Cmd`, never in `Update` or `View`. `Update` returns at once.
+Prefer a method on the owning type that returns the `tea.Cmd` over an
+inline closure (Charm guide L222).
 
 **Right:**
 ```go
-func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-    switch msg := msg.(type) {
-    case FolderSelectedMsg:
-        return m, fetchHeaders(m.backend, msg.Name)
-    }
-    return m, nil
-}
+case folderSelectedMsg:
+    return m, fetchHeaders(m.backend, msg.name)
 
-func fetchHeaders(b mail.Backend, folder string) tea.Cmd {
+func fetchHeaders(b Backend, folder string) tea.Cmd {
     return func() tea.Msg {
-        headers, err := b.FetchHeaders(folder, nil)
+        headers, err := b.FetchHeaders(folder)
         if err != nil {
-            return ErrMsg{Err: err}
+            return errMsg{err}
         }
-        return HeadersLoadedMsg{Headers: headers}
+        return headersLoadedMsg{headers}
     }
 }
 ```
 
 **Wrong:**
 ```go
-func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-    switch msg := msg.(type) {
-    case FolderSelectedMsg:
-        headers, _ := m.backend.FetchHeaders(msg.Name, nil) // blocks UI
-        m.headers = headers
-        return m, nil
-    }
-    return m, nil
-}
+case folderSelectedMsg:
+    headers, _ := m.backend.FetchHeaders(msg.name) // blocks the UI
+    m.headers = headers
 ```
 
-## Rule 4: Message-Driven Communication
+### Cmd closures capture values, not pointers
 
-Children signal parents by returning sentinel `Msg` types from
-`Update`. Parent method calls, upward pointers, and callbacks stored
-in child models are all prohibited.
+Source: follows from Charm guide L10-11.
+
+A closure runs after `Update` returns, so a captured pointer to the
+model reads stale or concurrently mutated state. Extract the values the
+command needs before returning it, as `fetchHeaders(m.backend,
+msg.name)` does above. A closure that reads `m.activeFolder` at run
+time is the wrong form.
+
+## Rule 4: Mutate Children Directly, Reserve Messages for Results
+
+Source: `https://github.com/charmbracelet/crush/blob/f02ffbcec15a9f95cb9bcff895833df10f829aae/internal/ui/AGENTS.md`, lines 5-6 ("Never use commands to send messages when you
+can directly mutate children or state"), L71-77.
+
+The root calls the child and reads what it needs from the child's
+return values or accessors. A child never sends a message to its parent
+to report a state change the parent can observe by calling it.
+
+Messages exist for work that finishes outside `Update`: results of a
+`tea.Cmd`, terminal events, and timers. A message type that only
+carries a child's state up to its parent is the pattern to remove.
+Callbacks stored in a child and parent pointers are also out; they
+couple the child to its caller.
 
 **Right:**
 ```go
-// Child defines its own message type
-type FolderSelectedMsg struct {
-    Name string
-}
-
-func (m Sidebar) Update(msg tea.Msg) (Sidebar, tea.Cmd) {
-    switch msg := msg.(type) {
-    case tea.KeyPressMsg:
-        if msg.String() == "enter" {
-            folder := m.folders[m.cursor]
-            return m, func() tea.Msg {
-                return FolderSelectedMsg{Name: folder.Name}
-            }
-        }
+case tea.KeyPressMsg:
+    if key.Matches(msg, m.keys.Open) {
+        folder := m.sidebar.Selected()
+        return m, fetchHeaders(m.backend, folder.Name)
     }
-    return m, nil
-}
-
-// Parent handles it in its own Update
-func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-    switch msg := msg.(type) {
-    case FolderSelectedMsg:
-        return m, fetchHeaders(m.backend, msg.Name)
-    }
-    // delegate to children...
-}
 ```
 
 **Wrong:**
 ```go
+// child emits a command whose only job is to tell the parent
+return s, func() tea.Msg { return folderSelectedMsg{s.Selected().Name} }
+
 type Sidebar struct {
-    onSelect func(string) // callback — couples child to parent
+    onSelect func(string) // callback couples child to parent
 }
 ```
 
 ## Rule 5: State Ownership, Not Duplication
 
-Shared state lives in the root model and is passed to children as
-read-only values during `Update` delegation or as constructor
-parameters. Children never own copies of data they don't exclusively
-control.
+Source: `https://github.com/charmbracelet/crush/blob/f02ffbcec15a9f95cb9bcff895833df10f829aae/internal/ui/AGENTS.md`, lines 49-54 ("Keep most logic and state here").
+
+House departure: Charm's guide names the root as the owner but gives no
+rule for read-only dependencies; this rule adds one.
+
+Shared state lives in the root and reaches children as method arguments
+or constructor parameters. A child holds only data it controls
+exclusively. A child may keep a reference to a read-only dependency (a
+backend handle) when it builds `tea.Cmd` values that call it; it never
+mutates the dependency or caches its results as owned state. Results
+return as messages through the normal `Update` flow.
 
 **Right:**
 ```go
 type App struct {
-    backend mail.Backend // owned by root
-    styles  Styles       // computed once, shared read-only
-    tabs    []Tab
-    active  int
+    backend Backend // owned by the root
+    styles  Styles  // computed once, read-only
+    sidebar Sidebar
 }
 
-// Styles passed to child View
-func (m App) View() string {
-    return m.tabs[m.active].View(m.styles)
-}
+func (m App) View() tea.View { return tea.NewView(m.sidebar.Render(m.styles, m.sidebarWidth)) }
 ```
 
 **Wrong:**
 ```go
-type Sidebar struct {
-    backend mail.Backend // child owns a copy of shared dependency
-}
-
-type MsgList struct {
-    backend mail.Backend // another copy — who's authoritative?
-}
+type Sidebar struct{ backend Backend } // each child holds its own copy
+type MsgList struct{ backend Backend } // who is authoritative?
 ```
-
-**Exception:** A child may hold a reference to a read-only dependency
-(like `mail.Backend`) if it needs to create `tea.Cmd` closures that
-call backend methods. The child must never mutate the dependency or
-cache its results as owned state. Results come back as `Msg` types
-through the normal Update flow.
-
-## Parent-Child Update Delegation Pattern
-
-Parent handles its own messages first, then delegates to the active
-child, collects all cmds via `tea.Batch`.
-
-```go
-func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-    var cmds []tea.Cmd
-
-    // 1. Handle messages owned by the parent
-    switch msg := msg.(type) {
-    case FolderSelectedMsg:
-        cmds = append(cmds, fetchHeaders(m.backend, msg.Name))
-    case tea.WindowSizeMsg:
-        m.width, m.height = msg.Width, msg.Height
-    }
-
-    // 2. Delegate to the active child
-    var cmd tea.Cmd
-    m.tabs[m.active], cmd = m.tabs[m.active].Update(msg)
-    cmds = append(cmds, cmd)
-
-    return m, tea.Batch(cmds...)
-}
-```
-
-Rules:
-- Parent handles its own Msg types before delegating.
-- Every child returns `(ChildModel, tea.Cmd)`, never `(tea.Model, tea.Cmd)`.
-- Collect all cmds into a slice; return `tea.Batch(cmds...)`.
-- Never discard a cmd. Missed cmds cause silent dropped messages.
 
 ## Rule 6: Components Own Their Size Contract
 
-Every component's `View()` returns content **at exactly its assigned
-width and height**, no wider, no taller. The parent calls
-`lipgloss.JoinHorizontal`/`JoinVertical` and trusts each child's
-output. A child that returns lines wider than its assigned width
-makes the joined output exceed terminal width. The terminal
-soft-wraps and content displaces adjacent panes. **This is always
-the child's bug, never the parent's.**
+Source: `https://github.com/charmbracelet/crush/blob/f02ffbcec15a9f95cb9bcff895833df10f829aae/internal/ui/AGENTS.md`, lines 219 ("Always account for padding/borders in width
+calculations"), L12-18 (ANSI-safe width).
 
-This is the canonical bubbles pattern: `viewport.View()` ends with
-`Width().Height().MaxHeight().MaxWidth().Render(content)` (Width +
-Height pad; MaxWidth + MaxHeight truncate). Research at
-`docs/poplar/research/2026-04-26-bubbletea-norms.md` §2 cites
-`viewport/viewport.go:518-525`. Poplar's `clipPane` helper in
-`internal/ui/viewer.go` implements the same idiom.
+House departure: Charm's guide states the width rules but not the
+exact-size contract below. The contract is the house's, and it is
+stricter than Charm's.
 
-**Right (self-guarded View):**
+A component's render returns content at exactly its assigned width and
+height, no wider and no taller. The parent joins the pieces and trusts
+them; a child that overflows makes the joined output exceed the
+terminal, the terminal soft-wraps, and neighbors are displaced. That is
+always the child's bug, never the parent's.
+
+- Enforce the contract inside the child: pad to the width and height,
+  truncate past them (lipgloss `Width`, `Height`, `MaxWidth`,
+  `MaxHeight`, or an equivalent helper).
+- A renderer that takes a width returns lines no wider than it. Pair
+  `ansi.Wordwrap` with `ansi.Hardwrap`: wordwrap alone lets a single
+  long URL or token overflow.
+- Measure with `ansi.StringWidth`, never `len()` or a rune count.
+  Wide glyphs (CJK, emoji, some Nerd Font icons) occupy two cells, and
+  a glyph's width can depend on the terminal font, so confirm icon
+  widths in the real terminal with `tui-visual-verify`.
+- A parent-side `MaxWidth` clip around a child's output papers over a
+  contract violation. Fix the child.
+- On `tea.WindowSizeMsg` the root stores the dimensions, computes
+  chrome margins, and calls `SetSize(w-wm, h-hm)` on each sized
+  component. A bubbles model held as a field also receives the message
+  through its own `Update`, because `SetSize` alone does not reset its
+  internal scroll and cursor state.
+
+**Right:**
 ```go
-func (m Component) View() string {
-    out := /* compose content */
-    return clipPane(out, m.width, m.height) // truncate + pad
+func (c Component) Render(width, height int) string {
+    out := c.compose(width)
+    return lipgloss.NewStyle().Width(width).Height(height).
+        MaxWidth(width).MaxHeight(height).Render(out)
 }
-```
 
-**Right (width-honoring renderer, wordwrap + hardwrap):**
-```go
-// A renderer that takes width returns lines no wider than width.
-// wordwrap respects word boundaries; hardwrap catches the residue
-// (long URLs, long identifiers) that wordwrap won't break.
-//
-// Wordwrap-alone is broken: a single long URL or pasted token
-// overflows. Always pair the two (norms §5).
 func render(text string, width int) string {
     return ansi.Hardwrap(ansi.Wordwrap(text, width, ""), width, false)
 }
 ```
 
-**Right (display-cell-aware width math):**
+**Wrong:**
 ```go
-// lipgloss.Width measures display cells correctly for ASCII, box-
-// drawing, and most BMP characters. Nerd Font SPUA-A glyphs
-// (U+F0000-U+FFFFD) render as 2 cells but runewidth reports 1 — use
-// displayCells (poplar's iconwidth.go helper) when measuring strings
-// that may contain Nerd Font icons. Never `len()` for layout math.
-w := displayCells(rowWithIcons)
+text = ansi.Wordwrap(text, width, "") // a long URL overflows
+
+// parent clipping a child that ignores its width
+child := lipgloss.NewStyle().MaxWidth(m.width).Render(m.child.Render(m.width))
 ```
-
-**Wrong (defensive parent-side clip):**
-```go
-// Papering over a child contract violation. Fix the child instead.
-func (m Parent) View() string {
-    childView := lipgloss.NewStyle().MaxWidth(m.width).Render(m.child.View())
-    return lipgloss.JoinHorizontal(lipgloss.Top, m.sidebar.View(), childView)
-}
-```
-
-**Wrong (wordwrap without hardwrap):**
-```go
-text = ansi.Wordwrap(text, width, "") // a single long URL overflows
-```
-
-### WindowSizeMsg propagation
-
-When a parent receives `tea.WindowSizeMsg`, it must:
-
-1. Store the new dimensions on the model (or shared context).
-2. Compute chrome margins and call `child.SetSize(width-wm, height-hm)`
-   on every sized child.
-3. **Also forward the message** into each child's `Update`. Bubbles
-   components (viewport, textarea, list) rely on the msg to reset
-   internal scroll/cursor state; `SetSize` alone is insufficient
-   (research at `docs/poplar/research/2026-04-26-reference-apps.md` §4,
-   §8 avoid #6).
-
-The full contract lives in `~/.claude/docs/bubbletea-conventions.md`,
-including the planning and review checklists that confirm this
-discipline before and after any UI change. Load that doc before
-planning UI/UX work, and run its review checklist after.
 
 ## Rule 7: Key Bindings via `key.Binding` and `key.Matches`
 
-Keys are declared as `key.Binding` values in a `KeyMap` struct and
-dispatched with `key.Matches(msg, binding)`, never via raw
-`switch msg.String()` for actionable keys.
+Source: none in Charm's guide; the bubbles `key` package is the
+mechanism.
 
-This is the canonical pattern across every reference app surveyed
-(soft-serve, gh-dash, official examples; research at
-`docs/poplar/research/2026-04-26-reference-apps.md` §3). Only glow
-falls back to string switches, and that's listed as an anti-pattern
-(ref-apps §8 avoid #4). `key.Matches` respects each binding's
-`Enabled()` flag (norms §3, `key/key.go:130-138`), making per-state
-activation declarative; string switches force inline state checks.
-
-Poplar's keybindings are modifier-free single keys (ADR-0012). That
-doesn't change the declaration form. The
-`KeyMap` struct still uses `key.Binding`; the help text just reads
-`"k"` instead of `"↑/k"`.
+House departure: Charm's guide says nothing about key dispatch. The
+house declares actionable keys as `key.Binding` values in a `KeyMap`
+struct and dispatches with `key.Matches`, because `bubbles/help` reads
+the bindings and `Enabled()` makes per-state activation declarative; a
+raw `switch msg.String()` is invisible to help and cannot be disabled or
+rebound.
 
 **Right:**
 ```go
-type GlobalKeys struct {
-    Help key.Binding
-    Quit key.Binding
-}
+type GlobalKeys struct{ Help, Quit key.Binding }
 
 func NewGlobalKeys() GlobalKeys {
     return GlobalKeys{
@@ -367,60 +308,56 @@ func NewGlobalKeys() GlobalKeys {
     }
 }
 
-func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-    if k, ok := msg.(tea.KeyPressMsg); ok {
-        switch {
-        case key.Matches(k, m.keys.Help):
-            return m.openHelp(), nil
-        case key.Matches(k, m.keys.Quit):
-            return m, tea.Quit
-        }
+if k, ok := msg.(tea.KeyPressMsg); ok {
+    switch {
+    case key.Matches(k, m.keys.Help):
+        return m.openHelp(), nil
+    case key.Matches(k, m.keys.Quit):
+        return m, tea.Quit
     }
-    // ...
 }
 ```
 
 **Wrong:**
 ```go
-// String switch is invisible to bubbles/help, can't be disabled
-// per-state, can't be rebound.
-switch msg.String() {
+switch msg.String() { // invisible to help, cannot be disabled per state
 case "?":
     return m.openHelp(), nil
-case "q":
-    return m, tea.Quit
 }
 ```
 
-## Rule 8: Cursor Hoist (v2)
+## Rule 8: Declarative View and Cursor Hoist
 
-A focusable child does not render its own cursor as a styled rune
-inside its `View()` string. It exposes `Cursor() *tea.Cursor`,
-returning a populated cursor when focused and `nil` otherwise. The
-parent App, in its own `View()`, walks the focus chain and pulls
-the active cursor up into its returned `tea.View.Cursor`. One blink
-ticker lives at the App level; per-input `cursor.Model` instances
-go away. Set `VirtualCursor=false` on every textinput/textarea so
-the App is the cursor authority. The input never paints a cursor
-into its string.
+Source: Bubble Tea v2 announcement,
+`https://github.com/charmbracelet/bubbletea/discussions/1374` ("Declarative, Not
+Imperative" and "An Actual Cursor"); Charm guide L58-61 for the root as
+the one model.
 
-This matches the shared-state-at-the-root rule (Rule 5): cursor
-position and blink phase are App-scope concerns expressed by the
-focused child.
+In v2 the root's `View()` returns `tea.View`, and terminal features
+(alt screen, mouse mode, focus reporting, window title, cursor) are
+fields on it, computed from root state. No `tea.EnterAltScreen`-style
+commands and no program options for them.
 
-**Right (child exposes a cursor):**
+A focusable component does not paint its own cursor into its string. It
+exposes `Cursor() *tea.Cursor`, non-nil only when focused, and the root
+copies the active one into `tea.View.Cursor`. One blink phase lives at
+the root. Set `VirtualCursor=false` on every `textinput` and `textarea`
+so the root is the cursor authority.
+
+**Right:**
 ```go
-func (m Compose) Cursor() *tea.Cursor {
-    if m.focus != focusBody {
+func (c Compose) Cursor() *tea.Cursor {
+    if c.focus != focusBody {
         return nil
     }
-    c := tea.NewCursor(m.bodyCursorX, m.bodyCursorY)
-    c.Style = m.styles.Cursor
-    return c
+    cur := tea.NewCursor(c.cursorX, c.cursorY)
+    cur.Style = c.styles.Cursor
+    return cur
 }
 
 func (m App) View() tea.View {
     v := tea.NewView(m.render())
+    v.AltScreen = true
     if m.compose != nil {
         v.Cursor = m.compose.Cursor()
     }
@@ -428,56 +365,79 @@ func (m App) View() tea.View {
 }
 ```
 
-**Wrong (child renders cursor inline):**
+**Wrong:**
 ```go
-// Bypasses tea.Cursor; defeats blink coordination at the root.
-func (m Compose) View() string {
-    line := before + m.styles.Cursor.Render("█") + after
-    return line
-}
+// paints a fake cursor and defeats root-level blink coordination
+line := before + c.styles.Cursor.Render("█") + after
 ```
 
-## Cmd Closures: Capture Values, Not Pointers
+## Rule 9: Compose Commands with `tea.Batch`
 
-Cmd closures run after `Update` returns. Capturing a pointer to the
-model means reading stale or mutated state.
+Source: `https://github.com/charmbracelet/crush/blob/f02ffbcec15a9f95cb9bcff895833df10f829aae/internal/ui/AGENTS.md`, lines 220 ("Use `tea.Batch()` when returning multiple
+commands").
+
+When one `Update` pass produces several commands, collect them in a
+slice and return `tea.Batch(cmds...)`. Never drop a returned `tea.Cmd`:
+a discarded command is a silently lost message.
 
 **Right:**
 ```go
-func fetchHeaders(b mail.Backend, folder string) tea.Cmd {
-    return func() tea.Msg {
-        headers, err := b.FetchHeaders(folder, nil)
-        if err != nil {
-            return ErrMsg{Err: err}
-        }
-        return HeadersLoadedMsg{Headers: headers}
-    }
+var cmds []tea.Cmd
+if cmd := m.chat.Animate(); cmd != nil {
+    cmds = append(cmds, cmd)
 }
+cmds = append(cmds, fetchHeaders(m.backend, name))
+return m, tea.Batch(cmds...)
+```
 
-// Called with values extracted from the model:
-return m, fetchHeaders(m.backend, msg.Name)
+## Rule 10: Lipgloss v2 Box Math and Styled Strings
+
+Source: `https://github.com/charmbracelet/crush/blob/f02ffbcec15a9f95cb9bcff895833df10f829aae/internal/ui/AGENTS.md`, lines 165-191 ("Dialog rendering rules"), L12-18.
+
+These hold anywhere a box is rendered or styled segments are joined.
+
+- **`Width(n)` is the total box width.** Border and padding live inside
+  it. Size content to the content area, not the outer width:
+  `w := width - style.GetHorizontalFrameSize()`. Sizing to the full width
+  makes the content a column or two too wide, and the frame re-wraps its
+  last characters.
+- **Inset with `Padding`, never `Margin`.** Margin sits outside the
+  declared width and pushes the block past the frame; padding sits inside
+  and applies to every wrapped line.
+- **Render styled segments individually, then concatenate.** Never nest
+  a rendered segment inside another style's input: the inner reset code
+  ends the outer style for everything after it.
+- **Cut styled strings only through `charmbracelet/x/ansi`**
+  (`ansi.Truncate`, `ansi.Strip`, `ansi.Cut`). Never slice a string that
+  may carry escape codes at the byte or rune level.
+- **Clamp to the drawable area** so boxes stay inside small terminals.
+
+**Right:**
+```go
+w := width - childStyle.GetHorizontalFrameSize()
+inner := ansi.Hardwrap(ansi.Wordwrap(content, w, ""), w, false)
+box := childStyle.Width(width).Padding(0, 1).Render(inner)
+
+line := label.Render("From: ") + value.Render(msg.From) + label.Render(" (verified)")
+trimmed := ansi.Truncate(styled, width, "…")
 ```
 
 **Wrong:**
 ```go
-func (m *App) fetchHeadersCmd() tea.Cmd {
-    return func() tea.Msg {
-        // m.activeFolder may have changed by the time this runs
-        headers, _ := m.backend.FetchHeaders(m.activeFolder, nil)
-        return HeadersLoadedMsg{Headers: headers}
-    }
-}
+inner := ansi.Wordwrap(content, width, "")          // ignores the frame
+box := childStyle.Width(width).Margin(0, 1).Render(inner) // margin escapes width
+line := outer.Render("From: " + value.Render(msg.From) + " (verified)")
+trimmed := styled[:width]                           // slices mid-escape
 ```
 
-Extract the values you need before returning the Cmd. The closure
-captures those values, not the model.
+## Rule 11: Style Tests Assert Resolved Attributes
 
-## Rule 9: Style Tests Assert Resolved Attributes
+Source: none in Charm's guide.
 
-`lipgloss.Style{}` (zero value) `Render`s its argument unchanged.
-`style.Render("test") != ""` passes for the zero-value style, so
-that check proves nothing. Style smoke tests must assert the
-*resolved attributes* that the style sets.
+House departure: Charm's guide has no testing section. A zero-value
+`lipgloss.Style{}` renders its argument unchanged, so
+`style.Render("test") != ""` passes for an unstyled style and proves
+nothing. A style smoke test asserts the attributes the style sets:
 
 **Right:**
 ```go
@@ -491,92 +451,14 @@ if !styles.HelpKey.GetBold() {
 
 **Wrong:**
 ```go
-// Passes against lipgloss.Style{} — proves nothing.
-if styles.HelpKey.Render("test") == "" {
+if styles.HelpKey.Render("test") == "" { // passes against Style{}
     t.Error("HelpKey rendered empty string")
 }
 ```
 
-`GetForeground` / `GetBackground` / `GetBold` / `GetItalic` /
-`GetUnderline` return the resolved attribute (nil / false / true)
-and let the test name a specific claim the style must satisfy.
+## Checklists
 
-## Rule 10: Lipgloss v2 Box Math and Styled Strings
-
-Charm's production guidance for bubbletea v2 (Crush's
-`internal/ui/AGENTS.md`) codifies four rules for width math and
-styled-string handling. They hold anywhere a box is rendered or
-styled segments are concatenated.
-
-**`Width(n)` sets the total box width before margins.** Border and
-padding live inside it; margins add outside it. A style carrying
-`Width(n)` wraps its own content at the inner width, so no pre-wrap
-is needed. Pre-wrap only when sizing content to fit inside a
-container, and subtract the child style's frame from the container's
-width. `GetHorizontalFrameSize` counts margins too, so the formula
-assumes the Padding rule below is being followed.
-
-**Right (child sized to fit a container):**
-```go
-w := width - childStyle.GetHorizontalFrameSize()
-inner := ansi.Hardwrap(ansi.Wordwrap(content, w, ""), w, false)
-box := childStyle.Render(inner)
-```
-
-**Wrong:**
-```go
-// Sized to the container's full width. The child's border and
-// padding push it over, and the last few characters re-wrap
-// inside the frame.
-inner := ansi.Wordwrap(content, width, "")
-box := childStyle.Render(inner)
-```
-
-**Inset with Padding, never Margin.** Margin sits outside the
-declared width and pushes the block past the frame. Padding sits
-inside the width and applies to every wrapped line.
-
-**Right:**
-```go
-style.Width(width).Padding(0, 1) // stays inside the declared width
-```
-
-**Wrong:**
-```go
-style.Width(width).Margin(0, 1) // pushes the block past width
-```
-
-**Render styled segments individually, then concatenate.** Build
-`styleA.Render(x) + styleB.Render(y)`. Never nest a rendered segment
-inside an outer style's input: the inner segment's ANSI reset code
-ends the outer style for everything after it.
-
-**Right:**
-```go
-line := label.Render("From: ") + value.Render(msg.From) +
-    label.Render(" (verified)")
-```
-
-**Wrong:**
-```go
-// value's reset ends outer's style; " (verified)" renders unstyled
-line := outer.Render("From: " + value.Render(msg.From) + " (verified)")
-```
-
-**Cut styled strings only through `charmbracelet/x/ansi`.** Route
-truncation, slicing, and cutting of content that may carry ANSI
-codes through `ansi.Truncate`, `ansi.Strip`, or `ansi.Cut`. Never
-slice or index a styled string at the byte or rune level; escape
-sequences aren't visible characters. For width, the display-cell
-rule in Rule 6 still governs: `lipgloss.Width`, or `displayCells`
-when Nerd Font glyphs are possible.
-
-**Right:**
-```go
-trimmed := ansi.Truncate(styled, width, "…")
-```
-
-**Wrong:**
-```go
-trimmed := styled[:width] // slices mid-escape-sequence, corrupts output
-```
+Before writing UI code, answer the planning questions; at the end of a
+UI pass, run the review checklist against the diff. Both live in
+[references/checklists.md](references/checklists.md), with the list of
+v1-only APIs to reject.
