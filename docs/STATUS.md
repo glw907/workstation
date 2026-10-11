@@ -28,6 +28,12 @@ artifacts. github.com/glw907/workstation.
   `claude-tail-guard` hook, and the guidance-citation warning (#8). Evidence for #8:
   `docs/superpowers/research/2026-10-11-anthropic-guidance-proportionality.md`.
 
+## Infra sweep 2 in flight
+
+Executor session `infra-sweep-2-build` (id `0c143a5c-e6c0-487a-b726-1a823645ceee`), branch
+`worktree-infra-sweep-2-build`, plan `docs/superpowers/plans/2026-10-11-infra-sweep-2.md`. Wave 1
+(A with I) dispatches next.
+
 ## Immediate next action
 
 Start a fresh conductor, so the work ahead runs under #8's rules (Geoff, 2026-10-11):
