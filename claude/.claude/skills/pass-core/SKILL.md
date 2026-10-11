@@ -118,7 +118,9 @@ finding, and fix) as the task's acceptance criteria, never a summary. In dubplat
 landed at zero fix rounds and paraphrased ones averaged one. An overruled verdict is stated with its
 reason in the PR body, and a correctness-critical overrule re-runs the review at `xhigh`. The
 adapter's close checklist runs (the auth smoke on `auth-data`), STATUS and ROADMAP are updated, and
-the PR body carries what landed, each `auth-data` verdict, and the score.
+the PR body carries what landed, each `auth-data` verdict, and the score. When the PR is ready for
+Geoff's read, the session that hands it over opens it in his default browser with `gh pr view <n>
+-R <owner>/<repo> --web`; a pass that merges its own PR opens no tab (Geoff, 2026-10-11).
 
 ## Score
 
