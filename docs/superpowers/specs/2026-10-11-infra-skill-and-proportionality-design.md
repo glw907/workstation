@@ -44,6 +44,18 @@ Each item names the need it traces to.
    - Depth: a design of a page or less needs no separate spec. A plan gets the mechanics lens only.
      The three lenses and the verification read are kept for `auth-data` and `live-account` passes.
      This follows the Opus 5 guidance against separate verification steps.
+3a. **A `plan-reviewer` agent** (Geoff, 2026-10-11 amendment, "as long as we're following Anthropic
+   best practice"). It is an agent definition under `claude/.claude/agents/`, about 40 lines:
+   read-only tools, `claude-opus-5-5` at `medium`, and the mechanics lens prompt with the
+   correctness-or-optional tagging. `spec-plan-review` stays the procedure and dispatches it, in
+   place of the lens prompt each planner retypes. Guidance: "Define a custom subagent when you keep
+   spawning the same kind of worker with the same instructions"
+   (<https://code.claude.com/docs/en/sub-agents>). A subagent is "an isolated worker with its own
+   context", and "a quick, focused worker: research a question, verify a claim, review a file"; and
+   "A skill spawns subagents" (<https://code.claude.com/docs/en/features-overview>). The agent adds no
+   review: per the Opus 5 guidance against verification subagents, it replaces the prompt for the
+   single review this design keeps. Its description stays short, since every agent description
+   takes up context.
 4. **A `tail` guard:** a check in the existing `PreToolUse` Bash hook chain. It denies (exit 2) a
    gate or CI-watch command (`cairn-run-gate`, `ci-green`, `scripts/check.sh`, `scripts/gate.sh`,
    `npm test`, `npm run check`, `gh pr checks`) piped into `tail` or `head`, and tells the session to
