@@ -85,43 +85,11 @@ private helper gets a `//` at most, and most get nothing.
 
 ## Linting: the copy-in ESLint flat config
 
-A consumer repo copies this `eslint.config.js` in (cairn is the first). It lints
-`src/lib/**/*.ts` on the jsdoc typescript-error base plus tsdoc. Adjust the `files` glob to
-the repo's source root.
-
-```js
-import jsdoc from 'eslint-plugin-jsdoc';
-import tsdoc from 'eslint-plugin-tsdoc';
-import tseslint from 'typescript-eslint';
-
-export default [
-  { files: ['src/lib/**/*.ts'], ...jsdoc.configs['flat/recommended-typescript-error'] },
-  {
-    files: ['src/lib/**/*.ts'],
-    languageOptions: { parser: tseslint.parser },
-    plugins: { jsdoc, tsdoc },
-    rules: {
-      // The contract, never the type. The signature already carries the types.
-      'jsdoc/no-types': 'error',
-      'jsdoc/check-tag-names': ['error', { typed: true }],
-      'tsdoc/syntax': 'error',
-      'jsdoc/check-param-names': 'error',
-      // A doc on exports only, at warn when a coverage gate owns the hard requirement.
-      'jsdoc/require-jsdoc': ['warn', { publicOnly: true }],
-      // The deterministic half of the paraphrase gate.
-      'jsdoc/informative-docs': 'warn',
-      // These manufacture the type-restatement TSDoc forbids.
-      'jsdoc/require-param': 'off',
-      'jsdoc/require-returns': 'off',
-      'jsdoc/require-param-description': 'off',
-      'jsdoc/require-returns-description': 'off',
-      // require-throws-type wants JSDoc-style `@throws {Type}`, which TSDoc rejects as a
-      // malformed inline tag. TSDoc keeps @throws as prose.
-      'jsdoc/require-throws-type': 'off',
-    },
-  },
-];
-```
+A consumer repo copies `~/Projects/cairn-cms/eslint.config.js` in as its `eslint.config.js`
+(cairn is the first consumer; that file is the single source, so a copy here would drift). It
+lints `src/lib/**/*.ts` on the jsdoc typescript-error base plus tsdoc, carries the
+`house/no-em-dash-in-comments` rule, and has a `.svelte` block. Adjust the `files` globs to the
+repo's source root.
 
 The base preset enforces the canonical expanded doc-block shape (`jsdoc/multiline-blocks`,
 `jsdoc/tag-lines`), the form a well-run TypeScript codebase uses. A repo whose comments predate

@@ -4,11 +4,10 @@ description: >
   Mandatory rules for writing Go code on this workstation. Use before
   writing, reviewing, or modifying any Go file. Covers anti-patterns
   (unnecessary interfaces, builder patterns, defensive nil checks),
-  project structure (cmd/ + internal/), cobra CLI shape, error
-  wrapping, atomic file writes, table-driven tests, Makefile gates,
-  naming, modern-stdlib idiom defaults (slices/maps/iter/slog/
-  OnceValue), and the comment standard (Go Doc Comments, Effective Go).
-  Every Go file, function, test, comment, and error message must conform.
+  project structure, cobra CLI shape, error wrapping, atomic file writes,
+  table-driven tests, Makefile gates, naming, modern-stdlib idioms, and
+  the comment standard. Every Go file, function, test, comment, and error
+  message must conform.
 ---
 
 # Go Conventions
@@ -81,111 +80,12 @@ the specific failure modes to reject:
 
 ## Modern Stdlib Idioms
 
-The Go we have is 1.21–1.26. Reach for the modern stdlib form by
-default; the pre-1.21 spelling signals that the code predates the
-toolchain. Each rule below names the preferred form and the one-line
-reason.
-
-### Sorting
-
-`slices.SortFunc` / `slices.SortStableFunc` with `cmp.Compare` or
-`cmp.Or`, not `sort.Slice` / `sort.SliceStable`. `slices.Sort(s)`
-for `[]string` / `[]int`, not `sort.Strings` / `sort.Ints`. The
-comparator returns `-1/0/+1`, so multi-key sorts collapse to one
-`cmp.Or(...)` line.
-
-```go
-// pre-1.21
-sort.SliceStable(xs, func(i, j int) bool {
-    if xs[i].Rank != xs[j].Rank { return xs[i].Rank < xs[j].Rank }
-    return xs[i].Name < xs[j].Name
-})
-
-// 1.21+
-slices.SortStableFunc(xs, func(a, b X) int {
-    return cmp.Or(cmp.Compare(a.Rank, b.Rank), cmp.Compare(a.Name, b.Name))
-})
-```
-
-### One-shot init
-
-`sync.OnceValue[T]` / `sync.OnceFunc`, not `sync.Once` paired
-with a package-level result var. The `Once` + var + wrapper trio
-exists only because pre-1.21 had no return-value form.
-
-```go
-// pre-1.21
-var (
-    cfgOnce sync.Once
-    cfg     *Config
-)
-func Cfg() *Config { cfgOnce.Do(func() { cfg = load() }); return cfg }
-
-// 1.21+
-var Cfg = sync.OnceValue(func() *Config { return load() })
-```
-
-### Iterators
-
-`iter.Seq[T]` / `iter.Seq2[K,V]` for push iterators with ≥ 2
-call sites. Hand-rolled `Next()/Stop()` pairs and `ForEach(func)`
-callbacks are pre-1.23. Single-caller helpers can stay as plain
-functions. The win is when consumers want real `break` and
-loop-local state.
-
-### Logging
-
-`log/slog` for internal-package log calls. `fmt.Fprintln(os.Stderr,
-...)` is acceptable only in `cmd/` for user-facing startup errors
-that aren't log-shaped. Inside `internal/`, structured log records
-beat printf strings; the receiver can filter, route, or drop them.
-
-### Loops
-
-`for range N` when the index is never read inside the body. The
-classic three-clause `for i := 0; i < N; i++` survives only when
-the body uses `i`.
-
-```go
-for range rows { ... }              // 1.22+
-for i := 0; i < rows; i++ { ... }   // only if i is read
-```
-
-### Maps
-
-`maps.Keys` / `maps.Values` (`iter.Seq` in 1.23) with
-`slices.Sorted` for deterministic order, not collect-then-sort
-loops. `maps.Clone` over hand-rolled copy loops.
-
-```go
-keys := slices.Sorted(maps.Keys(m))
-```
-
-### Builtins
-
-`min` / `max` / `clear` are language builtins (1.21). Conditional
-helpers (`if a < b { return a }; return b`) get inlined to the
-builtin. Generic `MinInt` / `MaxInt` helpers go away.
-
-### Comparators
-
-`cmp.Or(a, b, c)` for nil/zero coalescing across a fixed list of
-candidates, not stacked `if a != "" { return a }` chains. The
-absence is a voice-lens flag, not a grep gate: a manual coalescing
-chain that `cmp.Or` would collapse is what `/simplify` Agent 3
-looks for.
-
-### Errors
-
-`errors.Join(errs...)` for multi-error accumulation that all
-callers see. First-error-wins still wins when call order matters
-or when one error semantically supersedes the rest.
-
-### Loop scoping (1.22)
-
-Every `for` loop variable is per-iteration. Delete leftover
-`x := x` shadow lines (workarounds for the pre-1.22
-shared-variable footgun).
+Reach for the modern stdlib form by default (Go 1.21 or later); the older
+spelling signals that the code predates the toolchain. The rules cover
+sorting, one-shot init, iterators, logging, loops, maps, builtins,
+comparators, error joining, and loop scoping, each with the old and new
+form side by side: [references/modern-stdlib.md](references/modern-stdlib.md).
+`modernize` in the lint config reports most stale forms.
 
 ## Project Structure
 
@@ -222,10 +122,11 @@ func newRootCmd() *cobra.Command {
     var f flags
 
     cmd := &cobra.Command{
-        Use:          "tool [args...]",
-        Short:        "One-line description",
-        RunE:         func(cmd *cobra.Command, args []string) error { return run(cmd, args, &f) },
-        SilenceUsage: true,
+        Use:           "tool [args...]",
+        Short:         "One-line description",
+        RunE:          func(cmd *cobra.Command, args []string) error { return run(cmd, args, &f) },
+        SilenceUsage:  true,
+        SilenceErrors: true,
     }
     // register flags on cmd.Flags()
     return cmd
@@ -233,11 +134,18 @@ func newRootCmd() *cobra.Command {
 ```
 
 - `SilenceUsage: true` - cobra does not print usage on error.
+- `SilenceErrors: true` - cobra does not print the error itself, because
+  `main()` is the only error printer. Without it every error prints twice.
 - Flags in a struct, not loose variables.
 - `RunE` returns error. `main()` prints to stderr and exits 1.
 - Hidden flags for aliases: `cmd.Flag("name").Hidden = true`.
 - Subcommands only when the tool has distinct modes that don't flatten
   to flags. Prefer a flat command with flags for simple tools.
+- Where this skill and the vendored `golang-spf13-cobra` skill conflict,
+  this skill wins. The four known conflicts: a package-level `rootCmd`
+  (use `newRootCmd()`), testify (stdlib assertions only), output streams
+  (`cmd.OutOrStdout()` for status text; data goes to stdout and status to
+  stderr), and viper (not assumed).
 
 ## main.go
 
@@ -278,9 +186,11 @@ if errors.As(err, &pe) { ... }
 
 Rules:
 - **Lowercase, no trailing period.** The error appears mid-sentence
-  in caller logs.
+  in caller logs. Capitalize only a proper noun, an acronym, or a
+  package name used as the prefix.
 - **Context-first.** Noun-verb form: `"load config"`, `"create
-  directory"`. Never start with `"failed to"`.
+  directory"`, or a package prefix: `"json: unknown field %q"`. Never
+  start with `"failed to"`.
 - **`%w` only when callers branch on the sentinel.** Use `%w` if
   any caller calls `errors.Is` / `errors.As` on the result.
   Otherwise `%v` or omit wrapping. Reflexive `%w` exposes the
@@ -332,9 +242,8 @@ on sight:
   makes every error-path test in the suite trivially pass. Rule:
   any fake method that models a fallible production call gets a
   per-method `*Err error` field; the fake consults it on call;
-  error-path table rows set it. Same shape as ADR-0230's Pass 40.1
-  fix template: extend `MockBackend`, `fakeClient`, `fakeCache`,
-  not the call sites.
+  error-path table rows set it. Extend the shared fake, not the
+  call sites.
 - **Self-derived expectations.** Computing `want` from the system
   under test (`wantCol := m.popover.width()`) tests that a function
   equals itself. Hard-code the expected value, or derive it from
@@ -360,10 +269,9 @@ on sight:
   else, assert on parsed structure.
 
 The strong signal for assertion meaningfulness is mutation
-testing. Poplar runs `make check-deep` (gremlins) at pass-end;
-surviving mutants are tests that can't tell correct code from
-broken code. Treat surviving mutants as bug reports against the
-test suite, not the source.
+testing. Surviving mutants are tests that can't tell correct code
+from broken code. Treat them as bug reports against the test
+suite, not the source.
 
 ### End-to-End Tests
 
@@ -405,52 +313,12 @@ loudly. If reproducible tool versions matter, pin them in a
 separate `tools/go.mod` and invoke them with `go run -C tools`,
 which keeps the product module's dependency graph clean.
 
-No code generation, no build tags, no CGO.
+No code generation and no CGO. No build tags in product code; a
+test-only tag (for example `perf`) is allowed when the gate runs `go vet`
+and the tests under that tag too, so the tagged files do not rot.
 
-## Linting
-
-`.golangci.yml`:
-
-```yaml
-version: "2"
-
-linters:
-  default: none
-  enable:
-    - errcheck
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
-    - modernize
-    - misspell
-    - unparam
-  settings:
-    errcheck:
-      check-type-assertions: true
-
-formatters:
-  enable:
-    - gofmt
-    - goimports
-```
-
-The `version: "2"` key is required. A v1-schema file fails against a
-v2 binary with "unsupported version of the configuration", which is
-easy to mistake for a missing linter when a Makefile swallows the
-error.
-
-`default: none` plus an explicit enable list is the legible form,
-and it is also load-bearing: v2's `default: none` drops errcheck,
-unused, and ineffassign unless you name them. `staticcheck` in v2
-subsumes the old `gosimple` and `stylecheck`. `modernize` (built in
-since v2.6.0) reports stale stdlib idioms, so a separate grep pass
-for them is redundant. Verify a config with
-`golangci-lint config verify` before committing it.
-
-No `nolint` pragmas. Fix the code instead. Where a project must
-allow them, enable `nolintlint` and require both a rule id and a
-reason, so every suppression is legible to a reviewer.
+The lint config (`.golangci.yml`, linters, and the v2 schema traps) is in
+[references/linting.md](references/linting.md).
 
 ## Dependencies
 
@@ -475,12 +343,13 @@ Comments follow **Go Doc Comments** (https://go.dev/doc/comment).
 The exemplar is the standard library: when a comment's shape is in
 doubt, read the doc comments next to the same kind of code in the
 stdlib and match them. `go vet` flags malformed doc comments; `gofmt`
-canonicalizes their layout. The subsections below apply the standard's
-principles to the cases that come up most.
+canonicalizes their layout.
 
 ### Comment-or-not (write-time gate)
 
-Before reaching for the placement rubric below, run this three-question
+Before reaching for the placement rubric in
+[references/comments.md](references/comments.md) (which also holds the
+doc comment shape and the comment review), run this three-question
 gate:
 
 ```
@@ -501,84 +370,6 @@ only when name and signature leave something a competent Go reader
 would not immediately know. Silence is the default, the same as the
 standard library's own unexported code.
 
-### Decision rubric
-
-Apply before writing any comment:
-
-```
-1. Unexported symbol?
-   YES → Step 2.   NO → Doc comment required (Step 3).
-
-2. Does the unexported symbol have unobvious behavior the name
-   doesn't convey?
-   YES → Short doc.   NO → No comment.
-
-3. Is the public API contract fully implied by name + signature?
-   YES → One sentence. Period.
-   NO  → One sentence + what the caller needs to know. No
-         implementation detail.
-
-4. Concurrency hazard, surprising default, platform-specific
-   behavior?
-   YES → Add it.   NO → Stop.
-
-5. Inside a function: does this block differ from what the name /
-   control flow implies?
-   YES → One-line why-comment.   NO → No comment.
-
-6. Error strings: lowercase, no trailing period, context-first.
-   Never start with "failed to".
-```
-
-A comment that restates the code, describes what the name already
-conveys, or explains an internal algorithm to a caller has failed
-this rubric.
-
-### Doc comment shape
-
-- **Doc comments end with a period.** Always.
-- **Name-first.** First word is the identifier name. Type docs may
-  use "A" / "An" as article.
-- **Boolean returns:** use "reports whether": `// HasPrefix reports
-  whether s begins with prefix.`
-- **Length proportional to non-obvious behavior.** 1 sentence is
-  the floor; expand only when there is a contract, hazard, or
-  surprising default to communicate. Never expand to fill space.
-- **No first person.** Third-person declarative for godoc. "We"
-  permitted only at package-doc level (project voice). No "you".
-- **No hedging.** "maybe", "perhaps", "should probably", "might",
-  "could" are forbidden in doc comments.
-
-### Unexported godoc default
-
-Comment an unexported symbol when the name + signature leaves
-something a competent Go reader wouldn't immediately know.
-Otherwise no comment. Silence is the default.
-
-### Error strings
-
-1. **Lowercase.** Never capitalize the first word unless it's a
-   proper noun, an acronym, or a package name as prefix.
-2. **No trailing period.**
-3. **Context-first.** `"image: unknown format"`, not
-   `"unknown format"`.
-4. **Never start with "failed to".** Use a bare noun clause
-   (`"open db"`, `"read header"`) or context prefix (`"json:
-   unknown field %q"`).
-5. **`%w` only when callers branch on the sentinel.** Otherwise
-   `%v`. `%w` makes the underlying error type part of the
-   package's API surface.
-
-### Comment review
-
-Review comments against Go Doc Comments and the standard library, not a
-fixed checklist. Read the doc comments next to the same kind of code in
-the stdlib and ask whether yours match their density, shape, and candor.
-The recurring failure mode is the paraphrase comment that restates the
-code; run the write-time gate's mechanical test on every in-function
-comment before saving. `/simplify` runs a quality lens over the diff and
-flags comments that paraphrase the code or restate a type.
-
 ## Output
 
 - Data goes to stdout.
@@ -588,5 +379,5 @@ flags comments that paraphrase the code or restate a type.
 ## Module Naming
 
 Use `github.com/<owner>/<project-name>` as the module path, matching
-the repository it lives in. The Go version in go.mod should match what
-is installed on the system (currently 1.26.1).
+the repository it lives in. The Go version in go.mod should match the
+toolchain installed on the system (`go version`).

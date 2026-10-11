@@ -48,8 +48,8 @@ set -euo pipefail
 # inside a cell-unit resize, so a nonzero pad turns a requested COLSxROWS
 # into the wrong grid.
 #
-# Design note (2026-09-21): an earlier on-desktop harness (this repo's
-# tui-visual-verify skill, scripts/kitty-shot) drove kitty through xdotool
+# Design note (2026-09-21): an earlier on-desktop harness (a per-repo copy of
+# a tui-visual-verify template, since retired) drove kitty through xdotool
 # and ImageMagick's `import -window`, both X11 tools, against the owner's
 # real Wayland session forced onto XWayland. That works but puts a kitty
 # window on the owner's live desktop and steals focus for the duration.
