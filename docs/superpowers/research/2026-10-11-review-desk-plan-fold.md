@@ -138,3 +138,7 @@ refused, no owner fork. T4 goes from 20 to 25 minutes; the total is 315.
    `claude/.claude/skills`, `.claude/skills`, and `claude/.claude/docs` for "never merge" (no hit).
 3. `types/index.d.ts:1153` is `declare module '@sveltejs/kit/env'`; the scaffold's `src/env.ts` is
    the quoted file.
+
+## S1 disposition
+
+S1 (minor, optional): folded by the planning session. T4's acceptance searches a wrapped phrase with whitespace collapsed (`tr -s ' \n' ' ' | grep -c`), so a rewrap cannot fail correct text.

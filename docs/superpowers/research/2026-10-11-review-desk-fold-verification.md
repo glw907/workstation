@@ -152,3 +152,39 @@ probes in `/var/home/glw907/.claude/jobs/c01b6758/tmp/verify/`.
 2. `flock/`: the lock-inheritance probe in finding 1, with the leftover `sleep` processes killed.
 3. `gl/`: `gitleaks dir` over the scaffold's `package-lock.json` reported no leaks.
 4. `node -e`: an undici `Request` keeps a caller-set `host` header and has none by default.
+
+## Second read (on 423a89d, scoped to `git diff HEAD~1 -- docs/superpowers/plans/`)
+
+**Verdict:** 0 blockers, 0 majors, 0 minor (correctness), 1 minor (optional). V1 to V5 each
+closed at its location. The changes add no contradiction and leave the order buildable, and the
+new flock handling is proven.
+
+- **V1 closed:** plan:389-393 (T3 step 2: `setsid -f node <app>/build 9>&- >>"$log" 2>&1`, then
+  `exec 9>&-` once the app answers, before steps 3 and 4), plan:188-191 (the "Shell mechanics"
+  fact), and plan:30-31 (e2e step 2: the second and third hand-overs pass the lock at once).
+  **Probe** (`verify/flock/plan-shape.sh`, this exact shape): the script takes the lock, starts
+  `setsid -f sleep 20 9>&- >>server.log 2>&1`, releases with `exec 9>&-`, then keeps waiting. A
+  concurrent `flock -w 2 9` got the lock while the first script was still waiting, and got it
+  again after that script exited with its detached child still alive. Releasing "as soon as the
+  app answers" also covers an app already running at the first `curl`, so a later hand-over
+  never holds the lock through its poll or its Firefox launch. `npm ci` and `npm run build`
+  finish before the release and leave no child behind.
+- **V2 closed:** plan:436-438 (T4 "Launch prompt" sentence) and plan:443-445 (its grep). This
+  pass's prompt still says "never merge", and the new prompt sentence (prompt:46-47) and Close
+  step 7 (plan:480-482) explain why, so this is no contradiction.
+- **V3 closed:** plan:470-471.
+- **V4 closed:** plan:126-129. It matches the probed `src/env.ts` and `types/index.d.ts:1153`.
+- **V5 closed:** plan:480-482 and prompt:46-47.
+- **Minutes:** 315 (T4 now 25), under 420. The path figure of 250 adds up. The pair and gate
+  order is unchanged.
+
+### S1. Minor: T4's new grep phrase can wrap across lines in pass-core
+
+- **Tag:** optional
+- **Location:** `docs/superpowers/plans/2026-10-11-review-desk.md:443-445`
+- **Defect:** `grep -n` matches one line at a time. pass-core's prose is wrapped near 100
+  columns, and `merges only on Geoff's desk approve` is a five-word phrase that a rewrap can split.
+  The grep would then fail on text that is correct. The same risk applies, more weakly, to
+  `stays open until`.
+- **Proposed fold:** Add a clause to T4's acceptance saying each grepped phrase stays on one line
+  of `SKILL.md`. Or swap the grep for `tr '\n' ' ' < SKILL.md | grep -c "<phrase>"`.

@@ -441,7 +441,9 @@ Each was read from source or run on 2026-10-11; a task builds on these and never
 - **Acceptance.** `grep -c 'gh pr view' claude/.claude/skills/pass-core/SKILL.md` prints 0, and
   `grep -n` finds each behavior: `review-desk pr`, `review-desk triage`, and `review-desk design`
   (the last in "Lifecycle"); `stays open until`; `--match-head-commit` (in "Close" and in
-  "Launch prompt"); `fixes forward`; `merges only on Geoff's desk approve` (in "Launch prompt"). The
+  "Launch prompt"); `fixes forward`; `merges only on Geoff's desk approve` (in "Launch prompt").
+  A phrase the prose wraps across lines is searched with `tr -s ' \n' ' ' <
+  claude/.claude/skills/pass-core/SKILL.md | grep -c '<phrase>'`, never rewrapped to fit. The
   `PostToolUse` `vale-hook` and `tellgrader --hook` report nothing on the edit, and the gate prints
   `gate exit: 0`.
 - **Test.** Prose only; the greps and the hooks are the check.
