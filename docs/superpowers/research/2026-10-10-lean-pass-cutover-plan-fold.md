@@ -124,3 +124,73 @@ R-C 1).
   dubplate's base-free scope, the `auth-data` globs, the scratch merge worktree). 5 refused (R-F16's
   wrapper, R-F8's self-timed check, C-M6's `--bg` launcher, X-M1's `--bg` fallback, R-F6's
   `--no-autostash`).
+
+## Second fold
+
+Input: `2026-10-10-lean-pass-cutover-plan-fold-verification.md` (3 major, 8 minor) and Geoff's
+ruling R-D (2026-10-10), with the coordinator's R-D addendum. Probes ran in `/tmp/claude-1000/rd-fold/`.
+
+**What this fold verified before acting:**
+
+- **agent-view, "How file edits are isolated"** (fetched 2026-10-10): a `claude --bg` session "starts
+  in your working directory. Before editing files, Claude moves the session into an isolated git
+  worktree under `.claude/worktrees/`"; it "commits without asking, and pushes the branch"; "Your git
+  instructions take precedence: if the task, `CLAUDE.md`, or memory says you handle committing or
+  pushing yourself, Claude leaves git to you"; before the move it "can't use the `Edit`, `Write`, or
+  `NotebookEdit` tools on the shared checkout". The page also says "Agent view is in research preview."
+- **Changelog.** The verification's v2.1.198 quote is not verbatim. The row reads "Background agents
+  launched from `claude agents` now commit, push, and open a draft PR when they finish code work in a
+  worktree, instead of stopping to ask". The plan cites v2.1.221 instead: "Changed background
+  sessions to commit and push to preserve work, open a draft PR only when the task calls for one,
+  follow your CLAUDE.md git instructions".
+- **Trust.** The permissions page: a scripted `claude --bg` in an untrusted directory "exits with a
+  `Workspace not trusted` error", and trust "covers the whole repository apart from any git repository
+  nested inside it". `~/.claude.json` trusts `~/.dotfiles` and `~/Projects/cairn-cms`, not a fresh
+  scratch repo.
+- **`EnterWorktree`** (harness schema): "creates a new git worktree inside `.claude/worktrees/` on a
+  new branch"; `"head"` "branches from your current local HEAD".
+- **Quoting.** A stub `claude` received a backticked, double-quoted, `$`-bearing prompt intact through
+  `"$(cat ~/<file>)"`, with the tilde expanded.
+- **Gating.** The step 3 block, run with shimmed `git`, `npm`, and `claude`, launched on a clean run,
+  stopped before any worktree on an `AHEAD` line, and stopped before launch on a failed worktree add.
+- **Rollback.** Replayed in two scratch repos (STATUS and ROADMAP both conflicting; STATUS alone):
+  the chained recipe committed the revert, and `git diff --stat pre -- bin settings.json` was empty.
+- **Other probes.** `gh pr view <n> --json mergeCommit -q .mergeCommit.oid` printed a sha on a merged
+  cairn-cms PR. `git ls-files` matched 0 files for `**/preview/[token]/**` and 4 for the escaped form.
+  `cairn-run-gate:247` reads `lane="${CAIRN_GATE_LANE:-heavy}"`. `.claude/worktrees/` is ignored in
+  cairn-cms and dubplate only.
+
+**Dispositions:**
+
+| ID | Disposition | Where |
+|---|---|---|
+| V-M1 | Folded: five prompt files in `2026-10-10-lean-pass-cutover-prompts/`, each launched as `"$(cat <file>)"`; the inline prompts became pointers; S1-T5's "Launch prompt" section prescribes the file form. | Header; pre-launch 1a; merge block; launches 2, 3, 4; S1-T5 |
+| V-M2 | Folded, one deviation: the verification's two lines ran the restow and push even when `revert --continue` failed, so the recipe is now one `&&` chain. It restows before it pushes, and it is clean only before any step 2 to 4 PR merges. | S1-T14 rollback |
+| V-M3 | Settled by R-D (below). The open item is closed. | M2; S1-T5; Spec gaps |
+| V-m1 | Folded: the glob is now `**/preview/\[token\]/**`. | S1-T6 |
+| V-m2 | Folded: the merge block and the step 3 block chain every line behind their checks with `&&`; the merge check compares `claude agents --json` to `[]`. `<HEAD_SHA>` replaces a placeholder whose apostrophe would leave bash waiting for a closing quote. | Merge block; "Steps 2 to 4"; launches 2, 3, 4 |
+| V-m3 | Folded: S2-T2's subagent neither runs setup nor gates locally. | Prompt 2 |
+| V-m4 | Folded: cairn-pass lifts a leading `CAIRN_GATE_LANE=<lane>` onto the `cairn-run-gate` call, and S2-T3's acceptance runs each line that way. | S1-T6; S2-T3 |
+| V-m5 | Folded: no clock file while a step 3 pair runs; it is written when the pair returns, with `start=` the dispatch time. S1-T5's sentence now says "isolated pair worktrees". | Step 3 "Clock stop"; prompt 3; S1-T5 |
+| V-m6 | Folded: S1-T17 says the stop line is the expected result. | S1-T17 |
+| V-m7 | Folded: S1-T14 derives `M` from `gh pr view lean-cutover --json mergeCommit` first, which a resumed 1b re-derives, and tags only if the tag is absent. S1-T18 and the rollback use `M`. | S1-T14; S1-T18 |
+| V-m8 | Folded: each peak measurement runs as a background Bash task. | S2-T3 |
+| R-D | Applied. S1-T5 writes the launch into `pass-core`: the planning session runs `claude --bg` from the main checkout, the session calls `EnterWorktree` and runs the setup in the new worktree, and its PR comes from the branch it creates. A plan's first task adds `.claude/worktrees/` to `.gitignore` where missing; five site repos lack it today. S1-T6's site and dotfiles worktree fields follow. Spec gaps records the departure from Execution item 1, the research-preview status, the probe gate, and the paste fallback. New S1-T17b probes the launch live (20 minutes). It deviates on one point: it runs in trusted `~/.dotfiles`, not a scratch repo, since a fresh scratch repo is an untrusted nested repo and a scripted `--bg` there exits `Workspace not trusted`; the prompt says "do not push", so nothing reaches a remote. On failure 1b stops, and the paste fallback is Geoff's call. | M2; S1-T5; S1-T6; S1-T17b; S1-T18; Spec gaps |
+| R-D addendum | Applied: S1-T5's acceptance runs a git-ownership grep over `pass-core` and every prompt file, and S1-T9's runs it over the global `CLAUDE.md`. Both print nothing at HEAD today. | S1-T5; S1-T9 |
+
+**Which steps launch how:**
+
+- 1a: interactive, pasted by Geoff. It works in a linked worktree before `.claude/worktrees/` is
+  ignored or `baseRef` is set.
+- 1b: interactive, pasted in the merge block. It commits on `main` in the main checkout.
+- Step 2: `claude --bg`, started by 1b in S1-T18 from `~/Projects/cairn-cms`. Nothing in S2-T1 to
+  S2-T6 needs an existing worktree.
+- Step 3: interactive, pasted by Geoff. It starts in `~/Projects`, which is no repository, over six
+  existing worktrees.
+- Step 4: `claude --bg`, started by 1b in S1-T18 from `~/.dotfiles`. Nothing in S4-T1 to S4-T4
+  needs an existing worktree.
+- Steps 2 and 4 first assert that the main checkout's `HEAD` equals `origin/main`, since `"head"`
+  branches from local `HEAD`.
+
+**Measures:** plan 1,400 lines before, 1,423 after. Total estimate 1,990 task-minutes (S1-T17b adds
+20). Wall clock is about 1,140 minutes.

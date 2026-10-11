@@ -1,0 +1,16 @@
+You are executing rollout step 2 of the lean pass cutover, a `runner`-class pass with the
+`live-account` flag, started from the cairn-cms main checkout `~/Projects/cairn-cms`. Before any
+other act, call EnterWorktree with the name `lean-cutover`: it creates a worktree under
+`.claude/worktrees/` on a new branch from local `HEAD`. Your first act there is the adapter's setup
+command, `npm ci && npm ci --prefix examples/showcase`. Load `cairn-pass` (it loads `pass-core`)
+and follow it. Read `~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`
+(Conventions, Sources, Audit inputs, "Steps 2 to 4", and Step 2) and the spec beside it. Arm the
+API-drop wake-up and the lid-switch hold. Execute S2-T1, S2-T2, S2-T3, S2-T5, and S2-T6. S2-T1 and
+S2-T2 run first, as a pair from the branch head: two Agent-tool subagents with worktree isolation.
+S2-T1's subagent gates with the string `node scripts/checks/gate-tier.mjs --range <base>..HEAD`
+prints, since `--fast` does not exist until S2-T3. S2-T2's subagent neither runs setup nor gates
+locally, since CI on its commit is its gate. Push after each task; the first push opens a draft PR
+against `main` in `glw907/cairn-cms`, and `ci-green <sha> --pr <n> --wait` watches each push as a
+background Bash task. You may commit on your worktree's branch and push it to `glw907/cairn-cms`;
+never push `main`, never merge, never write `~/.dotfiles`. At S2-T6's end, mark the PR ready,
+notify Geoff, and end.
