@@ -1,10 +1,8 @@
 # The Fable overflow system (reframed 2026-07-26; originally the post-cutoff plan of 2026-07-07)
 
-**Note (2026-08-21):** this doc's original seat policy (Opus 5 holds the execution-conductor
-seat) was superseded by the global CLAUDE.md "Conducting a pass" section and
-`model-economy.md`; Fable now conducts plan through execution in one session, and that
-section has been removed from here. The overflow mechanics below (the access modes, the
-batch desk, the suggestion rules) remain in force for Fable use beyond the 50% weekly cap.
+**Note (2026-10-10):** this doc's original seat policy (Opus 5 holds the execution seat) was
+superseded by `pass-core` "Models". The overflow mechanics below (the access modes, the batch desk,
+the suggestion rules) remain in force for Fable use beyond the 50% weekly cap.
 
 There is no cutoff anymore: as of 2026-07-20 Fable 5 is permanently included on the Max plan
 at ~50% of regular usage limits. This doc now governs Fable use BEYOND that allocation, where
@@ -94,3 +92,25 @@ setup where it just needs to color inside the lines. Fable draws the lines."** F
 job is the lines — the structure, the acceptance, the worked instance; Opus's job is
 faithful, verified coloring. A Fable invocation that doesn't leave lines behind was
 probably the wrong invocation.
+
+## Pricing and allowance
+
+| Measure | Fable 5.1 | Opus 5.5 | Opus 5 | Sonnet 5.5 | Haiku 5.5 |
+|---|---|---|---|---|---|
+| Input / output, per MTok | $10 / $50 | $4 / $20 | $5 / $25 | $2 / $10 | $0.10 / $0.50 up to 100k context, $0.50 / $2.50 above |
+| Cache read, per MTok | $0.25 | not recorded here (claude.com/pricing) | $0.50 | $0.10 (halved from $0.20 on 2026-10-07) | $0.01 up to 100k, $0.05 above |
+| Batch | half of base | half of base | half of base | not recorded here | not recorded here |
+
+Haiku 5.5 source: https://www.anthropic.com/claude-haiku-5-5.
+
+- **The Max allowance (verified 2026-08-21, unchanged for 5.1).** Fable draws from the same weekly
+  pool as every model and may take up to 50% of it; past that, usage falls to credits at API rates.
+  Anthropic publishes no per-model draw rate, and `/usage` shows no per-model share, so the metering
+  cannot be measured here (https://support.claude.com/en/articles/15424964-claude-fable-5-on-your-plan).
+  The design therefore minimizes Fable's context, never its turns.
+- **Overflow.** Beyond the allocation, Fable runs on credits. This doc is the overflow playbook:
+  batch-first, per-dispatch one-shots, and never silently spend or silently absorb Fable-tier work.
+  Propose job, mode, and size in one sentence and let Geoff decide.
+- **Fable 5.1's saving is effort-dependent.** Anthropic estimates 25% to 45% below Fable 5.
+  Artificial Analysis measured 5.1 at `max` about 20% more per task, from roughly 1.7 times the
+  output tokens (https://artificialanalysis.ai/articles/claude-fable-5-1).
