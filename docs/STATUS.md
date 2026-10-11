@@ -51,6 +51,11 @@ queue, in order, with each item's detail in the launch prompt:
 
 Pending with Geoff: the review-desk and sweep-2 designs, and the dubplate alignment PR.
 
+## Review desk executor
+
+Session `review-desk-v1` (job id `205b8c14`) executes the review desk, lean v1, on branch
+`worktree-review-desk-v1`; plan `docs/superpowers/plans/2026-10-11-review-desk.md`.
+
 ## Open items
 
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not
