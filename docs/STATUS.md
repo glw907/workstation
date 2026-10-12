@@ -40,10 +40,13 @@ infra sweep 2 (#16) and its triage (#17, ecxc-ski #2, aksailingclub-org #13); th
    green gate, every review and the security read accepting, and no `## Before merge` steps
    outstanding; its found items still go to the desk as triage. Then `claude rm 18bbe825` (a
    stopped first launch that shares the executor's worktree).
-2. **Review desk UI pass** (planner `ebc278e8`; design and mockups on `worktree-desk-ui-design`).
-   Executor `desk-ui-build`, session id `8e8baf17`, running on branch `worktree-desk-ui-build`
-   (plan `docs/superpowers/plans/2026-10-11-review-desk-ui.md`). On merge, stop and rebuild the
-   running desk.
+2. **Review desk UI pass: stopped at Close step 4** (`desk-ui-build`, session `8e8baf17`, PR #22
+   draft, branch `worktree-desk-ui-build`). The second fresh visual-verifier grade passed 12 of 16
+   pairs; the four PR pairs fail on one structural item: file-row `+N` and `-N` counts render
+   neutral where the reference colors them green and red (`PrView.svelte`, `desk-add` and
+   `desk-del`). The gate, 38 end-to-end checks, tooling verify, and gitleaks are green. Question:
+   may the session color those counts, rerun step 3, take a third grade, then write the PR body and
+   hand over? Recommended: yes, one-line fix.
 3. **Poplar adapter.** Geoff asked for its design next. Its planning prompt runs as `cd
    ~/Projects/poplar && claude --model opus --effort high --name poplar-adapter-plan "$(git -C
    ~/.dotfiles show main:docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt)"`.
