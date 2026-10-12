@@ -48,8 +48,8 @@ account.
    > (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>)
 
    A design Geoff approves ahead of its pass, with unattended planning approved, lets the planning
-   session run steps 2 to 4, write the executor's launch prompt, and launch the executor after the
-   "Execute" pre-launch checks, without him. A plan over twice the design's estimate, or a finding
+   session run steps 2 to 4, write the executor's launch prompt, and launch the executor or hand it
+   to the project's conductor (see "Execute") after the "Execute" pre-launch checks, without him. A plan over twice the design's estimate, or a finding
    that changes the design, stops it: STATUS carries one question and `notify-send -u normal`
    tells Geoff. Before Geoff leaves the run, the approval batch asks how to answer each stop the
    run can foresee, an estimate overrun up to a named ceiling among them, and the design records
@@ -75,6 +75,8 @@ account.
 
 - Design and plan authorship: `claude-opus-5-5` at `high`, since planning may spend more for a
   better result. All other Opus work, reviewers included, runs at `medium`.
+- Conductor: `claude-opus-5-5` at `medium`. Its rare merge and relaunch calls carry the risk, and
+  it mostly waits.
 - Executing session and pair subagents: `sonnet` at `medium`. A clock stop or CI red traced to
   executor reasoning moves the next pass to `high` (Sonnet 5.5 page: "start at medium for
   well-specified tasks and move to high for harder or longer ones").
@@ -86,8 +88,27 @@ account.
 
 ## Execute
 
-One session executes. The planning session starts it from the repo's main checkout with `claude
---bg --model sonnet --effort medium --name <name> "$(cat <prompt file>)"`, so Geoff pastes nothing.
+One session executes. For an `ordinary` pass, the planning session starts it from the repo's main
+checkout with `claude --bg --model sonnet --effort medium --name <name> "$(cat <prompt file>)"`, so
+Geoff pastes nothing.
+
+A `runner` or `auth-data` pass goes to Geoff's desk, so its planner hands it to the project's
+conductor and closes instead of watching it (Geoff, 2026-10-12). Best practices for Claude Code
+(<https://code.claude.com/docs/en/best-practices>): "Once the spec is complete, start a fresh session
+to execute it." The conductor is `conductor-<project>`, where `<project>` is the basename of the repo
+whose main checkout launches the executor. The planner commits `<plan>-conductor-prompt.txt` (see
+"Launch prompt") and checks `claude agents --json` for a live `conductor-<project>`:
+
+1. If none is listed, the planner launches it from that main checkout with `claude --bg --model
+   claude-opus-5-5 --effort medium --name conductor-<project> "$(cat <file>)"` and closes.
+2. If one is listed, the planner sends it the prompt file's absolute path with `SendMessage`, waits
+   for its one-line reply naming the pass, and closes. A send that fails because the conductor
+   just ended falls back to step 1.
+3. If the conductor holds or refuses the message, or no reply comes within 10 minutes, the planner
+   stays open, writes the stall into STATUS, and runs `notify-send -u normal`. It never launches
+   the executor itself, which would put two watchers on one pass. Cross-session messaging
+   (<https://code.claude.com/docs/en/cross-session-messaging>): a message is "Delivered", "Held", or
+   "Refused", and a held one can expire unread.
 
 Before the launch, run `git -C <repo> fetch origin` and check that the main checkout is on its
 default branch and `git -C <repo> rev-list --count HEAD..origin/<default>` prints 0, since
@@ -143,21 +164,32 @@ cannot fire while the session waits on a pair.
 
 ## Conductor
 
-The conductor is the session that runs between passes. It watches unattended passes with the
-Monitor tool over `claude agents --json`, puts each PR or design before Geoff on the review desk, merges a PR
-with `gh pr merge <n> --merge` after he approves, pulls the checkout (see "Close"), and launches
-the next committed prompt from the main checkout after the "Execute" pre-launch checks. It brings
-Geoff only designs, PR reads, and product or priority calls.
+The conductor is the session that runs between passes. One runs per project, named
+`conductor-<project>` (see "Execute"), and it owns every PR its passes open, merged in the order its
+prompt names. It watches unattended passes with the Monitor tool over `claude agents --json --all`,
+which keeps a background session listed after its process exits. It puts each PR or design before
+Geoff on the review desk, merges and pulls the checkout per "Close" after he approves, and launches
+the next committed prompt from the main checkout after the "Execute" pre-launch checks. For a pass
+it owns, the conductor is the session that hands the PR over in "Close", so the executor's prompt
+ends at PR-ready and never runs `review-desk`. It brings Geoff only designs, PR reads, and product
+or priority calls.
 
 An executor refuses the conductor's cross-session messages, rightly: a peer's message carries no
 approval from Geoff. When an executor stops on a cause the conductor can fix, the conductor fixes
 it at the source (the plan branch, a merge from the default branch), then stops and relaunches the
 executor; otherwise Geoff attaches to it. The conductor never calls `EnterWorktree` while its own
 subagents run, because the isolation applies to them too; it edits a worktree by path instead.
-A watch over `claude agents --json` reads each field with `.get`, since a row can lack `id`.
+A watch over `claude agents --json --all` reads each field with `.get`, since a row can lack `id`.
 While a planner is out, the conductor merges no STATUS edit to the default branch, because the
 executor's merge of the plan branch then conflicts in STATUS (twice on 2026-10-11); it batches its
 STATUS changes into the hand-over after that pass lands (conductor `4bea6e68`, 2026-10-11).
+
+On a hand-off message, the conductor replies with one line naming the pass before anything else.
+It ends when no pass it owns is open (each PR merged or closed, the triage acted on, the checkout
+pulled or reported stale) and its project's STATUS names no launch prompt waiting for it. Its last
+acts are the STATUS hand-over (see "Ledgers") and `claude stop <id>`, taking `<id>` from its own row
+in `claude agents --json`. An idle conductor stays listed and keeps its name, so the next planner
+would hand a new pass to a session carrying the last initiative's context.
 
 ## Close
 
@@ -246,3 +278,11 @@ since a prompt pasted inside double quotes runs each backticked span as a comman
 The prompt for a pass that hands its PR over says the session waits for the desk, merges only on
 Geoff's desk approve with `--match-head-commit`, and ends after acting on the decision; it never
 says "never merge" or "end" outright. Close the session when the initiative lands.
+
+A conductor prompt opens with one line naming the session `conductor-<project>`, then carries the
+executor's `claude` line and its prompt file; the plan path and each repo and checkout the pass
+touches; the merge order across its PRs, with any `## Before merge` steps known at plan time; the
+standing answers from the design; and what goes to the desk. It restates nothing this skill
+already says. Prompting Claude Opus 5
+(<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
+the model "performs best when given the complete task specification up front and left to run".
