@@ -84,8 +84,8 @@ project skill (personal shadows project); `--projects-root` points the collision
 injected tree instead of the real `~/Projects`.
 
 Adding a user-scope server: write its entry in `mcp-servers.json` (with a `_why`), run
-`apply`, verify with `claude mcp get <name>` (with the secrets sourced), add the CLAUDE.md
-line, commit. Removing one: delete the entry, `claude mcp remove -s user <name>`, verify.
+`apply`, verify with `claude mcp get <name>` (with the secrets sourced), add a CLAUDE.md line only
+for a fact that applies every turn, commit. Removing one: delete the entry, `claude mcp remove -s user <name>`, verify.
 
 Adding a vendored skill: read it at the source, add its entry to `vendored-skills.json`, run
 `update-skills <name>`, review the diff, point the agents that need it at the skill file,

@@ -1,6 +1,6 @@
 ---
 name: prose-voice-reviewer
-description: Reviews Claude-drafted prose (docs, plans, specs, site content) against its register and the workstation tell catalogue. Use on a substantial prose artifact after the Vale floor passes and before a human read. Read-only.
+description: Reviews Claude-drafted prose (docs, plans, specs, site content) against its register and the writing-voice standard's tells. Use on a substantial prose artifact after the Vale floor passes and before a human read. Read-only.
 tools: Read, Grep, Glob, Bash
 model: claude-opus-5-5
 effort: medium
@@ -32,16 +32,10 @@ facts; carry them into the report as Blockers without re-litigating them, and no
 see: register fit, invented specifics the source facts do not support, shape and rhythm choices,
 and the tells that need reading rather than matching. Do not spend words re-reporting clean scans.
 
-If the report carries a `measures` object, the file's repo has opted into the docs-register
-profile. Report a measurement table: `sentences`, `hinged_pair_share`, and
-`short_sentence_share` read straight from that object (definitions in
-`~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`), plus your own count of average
-sentence length, the longest sentence, the paragraph count, and any paragraph you judge
-disproportionate for the register. The two shares carry no band and gate nothing; never treat
-either as a threshold. When the report carries no `measures` object, whether because
-`tellgrader` is not on PATH or the profile did not resolve, build the table from your own
-reading alone, note that the scanner measures were unavailable, and review everything else as
-normal.
+If the report carries a `measures` object, report a measurement table as
+`~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md` "Reporting" sets out. With no
+`measures` object, build the table from your own reading alone and note the scanner measures
+were unavailable.
 
 Ground your reading against a corpus when one is available. When the dispatching brief or the
 graded repo names a corpus manifest, open it and cite the entry your judgment rests on; when the

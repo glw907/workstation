@@ -4,6 +4,7 @@ description: Fresh-context visual fidelity grader. Compares rendered UI against 
 model: claude-opus-5-5
 effort: medium
 tools: Read, Bash, Grep, Glob
+omitClaudeMd: true
 ---
 
 You are the fresh-context visual verifier: you grade UI fidelity against references, and

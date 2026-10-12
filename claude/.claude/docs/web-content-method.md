@@ -153,9 +153,9 @@ Cadence and AI-tell freedom are inputs, never gates. Only the four hard gates bl
 What a 0, a 1, a 3, and a 5 look like, so a score means the same thing across sessions.
 
 Audience fit:
-- 5: speaks to both audiences at once, answers their real questions, reading level fits a teen and a
-  parent, respects where they read it.
-- 3: serves one audience well and the other thinly, mostly answers the real questions.
+- 5: speaks to each audience the site names at once, answers their real questions, reads at a level
+  that fits each, respects where they read it.
+- 3: serves one named audience well and the others thinly, mostly answers the real questions.
 - 1: generic, addresses no specific reader, misses the questions they actually have.
 - 0: wrong audience, an institutional or marketing voice.
 
@@ -166,7 +166,7 @@ Concreteness and local specificity:
 - 0: brochure copy, no real details.
 
 Voice fidelity:
-- 5: the site's coach voice throughout, warm and plain, matches the guide.
+- 5: the site's voice throughout, as its content guide sets it, matches the guide.
 - 3: mostly on-voice with a few off-register lines.
 - 1: a corporate or cheerleader voice creeping in.
 - 0: an institutional or marketing voice throughout.

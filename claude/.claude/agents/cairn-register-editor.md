@@ -69,16 +69,10 @@ findings are facts; carry them into your report without re-litigating them. Exit
 error: it means a finding carries `"gate": true` (a trailing-hinge run or an appositive stack under the
 docs-register profile), and the report on stdout is complete.
 
-If the report carries a `measures` object, the file's repo has opted into the docs-register
-profile. Report a measurement table: `sentences`, `hinged_pair_share`, and
-`short_sentence_share` read straight from that object (definitions in
-`~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`), plus your own count of
-average sentence length, the longest sentence, the paragraph count, and any paragraph you
-judge disproportionate for the register. The two shares carry no band and gate nothing;
-never treat either as a threshold. When the report carries no `measures` object, whether
-because `tellgrader` is not on PATH or the profile did not resolve, build the table from
-your own reading alone, note that the scanner measures were unavailable, and judge the draft
-as normal.
+If the report carries a `measures` object, report a measurement table as
+`~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md` "Reporting" sets out. With no
+`measures` object, build the table from your own reading alone and note the scanner measures
+were unavailable.
 
 ## The frame (fails a draft on its own)
 

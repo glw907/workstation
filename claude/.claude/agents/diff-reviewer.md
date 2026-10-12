@@ -5,6 +5,7 @@ tools: Read, Grep, Glob, Bash
 model: claude-opus-5-5
 effort: medium
 color: cyan
+omitClaudeMd: true
 ---
 
 You review a diff and return a verdict. The dispatch names the scope, the base and head, and the

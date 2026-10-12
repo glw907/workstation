@@ -8,14 +8,14 @@ at the foot; treat the snapshot below as orientation, verify before acting.
 ## Authorization: how each thing is reached non-interactively
 
 - **Cloudflare API / Wrangler — THE CANONICAL TOKEN-SCOPE RECORD (all projects defer here;
-  never restate scopes in a project doc, link to this file).** ONE managed token exists:
-  "Cloudflare Admin", id `48efe6a43d660d3fc649c799ec6c0892`. It lives in `~/.local/secrets`
-  (regenerated from the ASC age store; `~/.bashrc` sources that file at line ~167, but ONLY
+  never restate scopes in a project doc, link to this file).** One read-write token is live:
+  "Cloudflare Admin 2026-07", id `1d508f1ab69df49d3ef9572dc1917273` (a second, read-only token
+  is recorded below). Its origin store is the workstation `~/.dotfiles/secrets/values.age`;
+  `~/.local/secrets` is regenerated from it (`~/.bashrc` sources that file at line ~167, but ONLY
   in interactive shells — its line-5 interactivity guard means a script's
   `source ~/.bashrc` gets NOTHING; scripts must `source ~/.local/secrets` directly).
   GitHub Actions repos hold synced copies as the `CLOUDFLARE_API_TOKEN` secret.
-  Scopes, each verified empirically 2026-07-14 (token "Cloudflare Admin 2026-07",
-  id `1d508f1ab69df49d3ef9572dc1917273`, minted 2026-07-14 after dashboard edits to the
+  Scopes, each verified empirically 2026-07-14 (minted 2026-07-14 after dashboard edits to the
   prior token silently failed to persist): Workers scripts + schedules ✓, D1 ✓, R2 ✓,
   Access apps/policies ✓, Access service tokens ✓, Email Sending ✓ (REST + binding),
   Turnstile ✓ (granted, untested), zone read ✓, **Zone.DNS Edit ✓ (proven by live
@@ -24,7 +24,7 @@ at the foot; treat the snapshot below as orientation, verify before acting.
   cairn.pub zone, write granted per the edit but untested; recommended grant was
   Edit on ALL zones so a newly registered zone never repeats the gap),
   API-token management ✗ (deliberate: cannot self-extend).
-  Rotated into: the ASC age store, `~/.local/secrets`, and the four GH-Actions repos
+  Rotated into: the workstation age store, `~/.local/secrets`, and the four GH-Actions repos
   (aksailingclub-legacy/-org, ecxc-ski, 907-life). Predecessor deleted:
   "Cloudflare Admin" (`48efe6a4...`). `CF_ZT_TOKEN` was once listed here as deleted too, but
   it is live; its own bullet is below.

@@ -7,14 +7,5 @@
     "description-cap": { "tool": "bin/.local/bin/claude-tooling-sync" },
     "fork-skill": { "tool": "bin/.local/bin/claude-tooling-sync" }
   },
-  "entries": [
-    { "check": "dead-reference", "file": "claude/.claude/docs/oom-defense.md",
-      "fingerprint": "~/.config/systemd/user.conf.d/",
-      "finding": "GA-04", "pass": "C",
-      "defect": "names a per-user alternative path considered and not adopted (the dotfiles-staged /etc/systemd/user.conf.d/ was); the alternative was never meant to exist" },
-    { "check": "dead-reference", "file": "claude/.claude/docs/oom-defense.md",
-      "fingerprint": "~/.local/bin/scoped-test",
-      "finding": "GA-05", "pass": "C",
-      "defect": "names a hypothetical future shim, explicitly a deferred stretch idea never built" }
-  ]
+  "entries": []
 }

@@ -273,3 +273,14 @@ govern files edited that way.
 `sentences` counts the prose-only sentences the two shares are computed over, which can
 differ from the report's top-level `sentences` field when the document contains headings or
 list items.
+
+## Reporting
+
+When a report carries a `measures` object, the file's repo has opted into the docs-register
+profile. A reviewing agent reports a measurement table: `sentences`, `hinged_pair_share`, and
+`short_sentence_share` read straight from that object, plus its own count of average sentence
+length, the longest sentence, the paragraph count, and any paragraph it judges disproportionate
+for the register. The two shares carry no band and gate nothing; never treat either as a
+threshold. When the report carries no `measures` object, whether because `tellgrader` is not on
+PATH or the profile did not resolve, the agent builds the table from its own reading alone, notes
+that the scanner measures were unavailable, and judges the draft as normal.

@@ -29,7 +29,7 @@ gate launches no browser and its measured peak is 105 MB.
 
 **Risk-class path map**: `runner`: `claude/.claude/{skills,agents,workflows}/**`,
 `claude/.claude/settings.json`, `claude/.claude/tooling/**`, `.claude/skills/**`,
-`bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-clock-stop,claude-tooling-sync}`,
+`bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-clock-stop,claude-context-budget,claude-tooling-sync}`,
 `scripts/**`, `tests/**`. `auth-data`: `secrets/**`, `scripts/secrets/**`, `bash/.bashrc` (it sources the
 secrets), and `bin/.local/bin/{claude-block-op,claude-secret-guard,claude-tierguard,claude-askpass,
 claude-sudo-setup,claude-sudo-clear,secret-receive,fastmail-password,fastmail-dav-password}`.

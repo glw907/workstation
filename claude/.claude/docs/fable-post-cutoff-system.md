@@ -24,7 +24,7 @@ Non-interactive Fable jobs go through the Batch API (async, <24h, usually minute
 
 ## Mode 2 — PER-DISPATCH (one-shot judgment from a live session)
 
-A single `model: fable` subagent dispatch from the Opus 5-conducted session, for judgments
+A single `model: fable` subagent dispatch from the conducting session (`pass-core` "Models"), for judgments
 that gate immediate next steps. Rules: the brief is a prepared file; context <30k; output
 capped (ask for a verdict/decision table, not prose); never inside a loop.
 
@@ -42,7 +42,7 @@ brainstorm). Structured for cache economics:
 
 ## Governance
 
-- Fable-credits are budget #3 (with tokens-at-large and Geoff's attended time): every
+- Fable-credits are a budget of their own (with tokens-at-large and Geoff's attended time; `pass-core` "Models"): every
   invocation logged (purpose, mode, tokens) in the PR body's score.
 - A weekly credit ceiling Geoff sets; the session asks before exceeding it, never after.
 - Verify current Batch/caching terms at first use (50% batch discount and 5min/1h TTLs
