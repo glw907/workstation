@@ -193,9 +193,9 @@ the step that should have caught the escape, and only that changes.
 
 `docs/STATUS.md` is present tense and 60 lines or fewer: current state, next action, open
 decisions. `ROADMAP.md` holds initiatives under `Active`, `Planned`, and `Someday`, managed by
-`/log-project`. A commit id cited in a ledger is one that survives a merge: a merge commit, or an id on the
-default branch, since a squash or rebase rewrites ids. Git and PR bodies are the history; `docs/HISTORY.md` and post-mortems stop growing
-(ruling 8). A lesson lands where it executes: a skill, agent, tool, or repo doc. Memory holds only a
+`/log-project`. A commit id cited in a ledger is one that survives a merge: a merge commit, or an
+id on the default branch, since a squash or rebase rewrites ids. Git and PR bodies are the history;
+`docs/HISTORY.md` and post-mortems stop growing (ruling 8). A lesson lands where it executes: a skill, agent, tool, or repo doc. Memory holds only a
 preference or a ruling's why that no file can.
 
 A hand-over (the STATUS update, the next session's launch prompt, and the research records it
