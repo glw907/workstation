@@ -72,6 +72,12 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   `pull_request`. Until it lands, the full-suite home is the local close gate (ruling 11 of the
   lean pass process spec).
 
+- **Release the lid-switch hold when a session ends** (PR #34 triage, 2026-10-12). Neither an
+  executor nor a conductor releases a running `systemd-inhibit ... sleep NNN` lid hold before it
+  ends, so the hold can outlive its session until NNN runs out. Add the release step to
+  `~/.claude/docs/unattended-work-guards.md` and to the ending of `pass-core`'s "Execute" and
+  "Conductor".
+
 ## Someday
 
 - **Two gate-tool cleanups**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11):
