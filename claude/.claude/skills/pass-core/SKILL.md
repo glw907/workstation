@@ -150,8 +150,10 @@ approval from Geoff. When an executor stops on a cause the conductor can fix, th
 it at the source (the plan branch, a merge from the default branch), then stops and relaunches the
 executor; otherwise Geoff attaches to it. The conductor never calls `EnterWorktree` while its own
 subagents run, because the isolation applies to them too; it edits a worktree by path instead.
-A watch over `claude agents --json` reads each field with `.get`, since a row can lack `id`
-(conductor `4bea6e68`, 2026-10-11).
+A watch over `claude agents --json` reads each field with `.get`, since a row can lack `id`.
+While a planner is out, the conductor merges no STATUS edit to the default branch, because the
+executor's merge of the plan branch then conflicts in STATUS (twice on 2026-10-11); it batches its
+STATUS changes into the hand-over after that pass lands (conductor `4bea6e68`, 2026-10-11).
 
 ## Close
 
