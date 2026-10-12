@@ -51,7 +51,11 @@ account.
    session run steps 2 to 4, write the executor's launch prompt, and launch the executor after the
    "Execute" pre-launch checks, without him. A plan over twice the design's estimate, or a finding
    that changes the design, stops it: STATUS carries one question and `notify-send -u normal`
-   tells Geoff.
+   tells Geoff. Before Geoff leaves the run, the approval batch asks how to answer each stop the
+   run can foresee, an estimate overrun up to a named ceiling among them, and the design records
+   each answer as a standing approval the planner applies in place of stopping. A stop with no
+   standing answer still stops (Geoff, 2026-10-12: the intake-1 overnight run stopped at 01:17 on
+   a 995-minute plan against a 780-minute line, and nothing ran until morning).
 2. **Spec.** An agent writes the approved design at the length precision needs, only if
    `spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
    probed.
