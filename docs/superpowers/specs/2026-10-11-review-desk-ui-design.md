@@ -1,6 +1,6 @@
 # Review desk UI (design)
 
-**Status:** for Geoff's approval, 2026-10-11. Geoff chose the direction across three mockup rounds
+**Status:** approved by Geoff, 2026-10-11, for unattended planning. Geoff chose the direction across three mockup rounds
 in the conductor session (`4bea6e68`): a queue and item split, keyboard first, a dense PR summary
 with diffs on demand, triage grouped by decision with a gentle color cue, and a clean, quiet,
 readable treatment throughout.
