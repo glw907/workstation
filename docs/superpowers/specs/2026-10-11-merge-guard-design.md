@@ -46,5 +46,7 @@ with no prompt. The desk shows the section above Approve on the scratch PR.
 
 ## Risk and estimate
 
-Class `runner` (a hook and `pass-core`). About 75 minutes: the hook and its test 35, the
-`pass-core` text 10, the desk banner 20, close 10.
+Class `runner` (a hook and `pass-core`). About 30 minutes. It touches a handful of files and this
+page specifies it fully, so it skips the plan and goes straight through the gate (the global
+CLAUDE.md "Process proportionality"); the conductor builds it in one worktree and hands the PR to
+the desk.
