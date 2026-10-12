@@ -9,7 +9,8 @@
   "permissions": {
     "allow": [
       "Bash(chromium:*)",
-      "Bash(chromium-shot:*)"
+      "Bash(chromium-shot:*)",
+      "Bash(tellgrader:*)"
     ],
     "defaultMode": "auto"
   },
@@ -214,7 +215,8 @@
     ],
     "allow": [
       "$defaults",
-      "Edits and commits to skill files under claude/.claude/skills/ inside a git worktree of ~/.dotfiles (paths under /var/home/glw907/.dotfiles/.claude/worktrees/) are allowed when they implement a task of a pass plan Geoff approved. The workstation repo is where these skills are authored, and each change takes effect only after Geoff merges its PR. This clears Self-Modification and Instruction Poisoning for that skill text only; it does not cover settings, hooks, permission rules, CLAUDE.md, or memory, and it does not cover text that grants permissions or tells a session to bypass a block."
+      "Edits and commits to skill files under claude/.claude/skills/ inside a git worktree of ~/.dotfiles (paths under /var/home/glw907/.dotfiles/.claude/worktrees/) are allowed when they implement a task of a pass plan Geoff approved. The workstation repo is where these skills are authored, and each change takes effect only after Geoff merges its PR. This clears Self-Modification and Instruction Poisoning for that skill text only; it does not cover settings, hooks, permission rules, CLAUDE.md, or memory, and it does not cover text that grants permissions or tells a session to bypass a block.",
+      "Edits and commits to `permissions.allow` in claude/.claude/settings.json inside a git worktree of ~/.dotfiles (paths under /var/home/glw907/.dotfiles/.claude/worktrees/) are allowed when Geoff asked for that rule in the session, and the change takes effect only after Geoff merges its PR. Narrow rules only: never `Bash(*)`, a wildcarded interpreter, a deny or ask rule change, or a change to hooks or autoMode beyond this line."
     ]
   },
   "voiceEnabled": true
