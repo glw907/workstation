@@ -62,6 +62,12 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   also repins `poplar-reviewer` (`claude-opus-5` at `high`) and `poplar-implementer` (no effort),
   and drops the missing `glw907-vendor.sh` re-sync line (DC-11, DC-12).
 
+- **Document the brief's `local` field in `cairn-docs-drafter.md`** (PR #25, triage 2026-10-12).
+  The chain's `draftPrompt` tells the drafter about the brief's top-level `"local"` array, but the
+  agent definition does not, so a drafter dispatched outside the chain never sees it. PR #25 left
+  the definition untouched because definitions load from the stowed main checkout. With #25
+  merged, add the field and its one-writer sentence to `claude/.claude/agents/cairn-docs-drafter.md`.
+
 - **PR test CI for dotfiles.** Add a workflow that runs `bash scripts/check.sh` on
   `pull_request`. Until it lands, the full-suite home is the local close gate (ruling 11 of the
   lean pass process spec).
