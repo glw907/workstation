@@ -68,6 +68,10 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
 
 ## Someday
 
+- **Two gate-tool cleanups**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11):
+  simplify `cairn-docs-outline`'s lock and fix `gateMatches`' stale doc comment; and give
+  `cairn-run-gate` per-leg timing in its run records.
+
 - **The deferred infra-sweep checks** (ruling R2 of the 2026-10-11 re-plan: a check is built when
   it has a live catch). These are duplicate-paragraph with `parity.json`, plus cross-repo mode with
   heading-citation, orphan-doc, and `check-drift --only claude`. Definitions:

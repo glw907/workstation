@@ -25,7 +25,8 @@ account.
 
 1. **Design.** Opus at `high` brainstorms in chat. Geoff approves a design of a page or less: the
    outcome, files and interfaces touched, what is out of scope, one end-to-end check, and the risk
-   class. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
+   class. A design brought for approval is handed over with `review-desk design <repo> "<title>"
+   <file>`. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
    carries
    these two samples, and extras go in "Later", never built:
    > "Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
@@ -63,8 +64,8 @@ account.
    design's estimate goes back to Geoff with the reason before launch. Skip `writing-plans`' code
    steps and execution-method question. Test-first applies to `auth-data` tasks.
 5. **Execute.** See "Execute".
-6. **Close.** See "Close". Geoff reads the PR and merges, except that a pass whose highest class is
-   `ordinary` merges its own PR (see "Close").
+6. **Close.** See "Close". Geoff decides the PR on the review desk, except that a pass whose highest
+   class is `ordinary` merges its own PR (see "Close").
 
 ## Models
 
@@ -139,7 +140,7 @@ cannot fire while the session waits on a pair.
 ## Conductor
 
 The conductor is the session that runs between passes. It watches unattended passes with the
-Monitor tool over `claude agents --json`, opens each PR or design for Geoff in Firefox, merges a PR
+Monitor tool over `claude agents --json`, puts each PR or design before Geoff on the review desk, merges a PR
 with `gh pr merge <n> --merge` after he approves, pulls the checkout (see "Close"), and launches
 the next committed prompt from the main checkout after the "Execute" pre-launch checks. It brings
 Geoff only designs, PR reads, and product or priority calls.
@@ -163,9 +164,16 @@ the PR, and a "drop" item stays only in the PR. A merged PR body is history no s
 2026-10-11: dubplate PR #2 left 14 items there). Prompting best practices
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>):
 "Use structured formats for state data: When tracking structured information (like test results or
-task status), use JSON or other structured formats". When the PR is ready for
-Geoff's read, the session that hands it over opens it in his default browser with `gh pr view <n>
--R <owner>/<repo> --web`; a pass that merges its own PR opens no tab (Geoff, 2026-10-11).
+task status), use JSON or other structured formats".
+
+When the PR is ready for Geoff's read, the session that hands it over runs `review-desk pr
+<owner>/<repo> "<title>" <n>` as a background Bash command. It then hands the PR body's "Found, not
+done" items over as one `review-desk triage` item, and stays open until each command exits with
+Geoff's decision as JSON. An approve on the desk is Geoff's merge authorization, the one a launch
+prompt's "never merge" otherwise withholds: the session merges with `gh pr merge <n> --merge
+--match-head-commit <head>`, taking `<head>` from the decision, and pulls the checkout as the next
+paragraph says. On reject, it fixes forward from the note. It acts on each triage row as the triage
+sentences above say. A pass that merges its own PR opens nothing (Geoff, 2026-10-11).
 
 A pass whose highest class is `ordinary` merges its own PR with `gh pr merge <n> --merge` after a
 green full-suite home and an accepted whole-branch review, when its "Found, not done" list is
@@ -216,4 +224,6 @@ otherwise build on something known to be wrong (say so then).
 A STATUS next action carries the goal, the scope, the plan path, the checkout, and the exact
 `claude` line. The prompt text lives in a committed file and is launched as `"$(cat <file>)"`,
 since a prompt pasted inside double quotes runs each backticked span as a command substitution.
-Close the session when the initiative lands.
+The prompt for a pass that hands its PR over says the session waits for the desk, merges only on
+Geoff's desk approve with `--match-head-commit`, and ends after acting on the decision; it never
+says "never merge" or "end" outright. Close the session when the initiative lands.

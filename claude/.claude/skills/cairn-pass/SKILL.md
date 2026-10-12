@@ -21,7 +21,7 @@ unrecorded verdicts first (`engine-consult` carries the protocol).
 **Fast lane**: `node scripts/checks/gate-tier.mjs --fast --range <base>..HEAD` prints the legs.
 Run them in order, each through `cairn-run-gate` with a leading `CAIRN_GATE_LANE=<lane>` lifted onto
 the call (`CAIRN_GATE_LANE=light cairn-run-gate '<rest>'`), since the tool reads the lane from its
-own environment. The `--fast` flag lands in rollout step 2. The `tool` class gate is
+own environment. The `tool` class gate is
 `make -C tool check` on the light lane; a Node-only workspace suite such as `npm test -w
 packages/create-cairn-site` is light, and the engine's root `npm test` drives Chromium and is never
 light. A lone unrelated test failure, or `Cannot connect to the server in 60 seconds`, is a known
@@ -33,8 +33,9 @@ check:close`, which builds once) runs only on `ci-green` exit 3, with the e2e st
 The gate runs no gitleaks scan, so there is no branch-history scan to owe.
 
 **Worktree setup**: The launch's `.claude/worktrees/<branch>`, then `npm ci && npm ci --prefix
-examples/showcase`, since a worktree's showcase otherwise resolves the main checkout's engine
-(`docs/internal/durable-gotchas.md`).
+examples/showcase && (cd examples/showcase && npx svelte-kit sync)`. The second install keeps a
+worktree's showcase off the main checkout's engine, and the sync writes the `$app/tsconfig` that
+`check:public-skill` needs (`docs/internal/durable-gotchas.md`).
 
 **CI watch**: `ci-green <sha> --pr <n> --wait` as a background Bash task, re-issued on 75; exit 0
 is green, 1 red, 2 missing, 3 unavailable. The first push opens a draft PR, since cairn CI fires
@@ -71,7 +72,8 @@ and theme config; `go-conventions` for `tool/**`.
   updates the brief in the same change (the spec's "Edits after the chain").
 - A behavior change updates `CHANGELOG.md` under `## Unreleased` and the per-version record
   (`docs/extend/migration-notes.md`, with `docs/extend/upgrade-cairn.md`); a breaking change carries
-  one `Consumers must:` line per consumer action. A removed or renamed symbol is grepped across
+  one `Consumers must:` line per consumer action. Moving a per-version record updates this skill,
+  `CLAUDE.md`, and the facts README. A removed or renamed symbol is grepped across
   `docs/` and `README.md` and every hit repointed. An intended public-surface change runs `npm run
   check:surface -- --update` and commits `docs/internal/api-surface.md`. A ruling on a consultation
   item updates `docs/internal/engine-rulings.md`.

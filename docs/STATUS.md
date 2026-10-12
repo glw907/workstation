@@ -32,14 +32,9 @@ artifacts. github.com/glw907/workstation.
 
 Executor session `infra-sweep-2-build` (id `0c143a5c-e6c0-487a-b726-1a823645ceee`), branch
 `worktree-infra-sweep-2-build`, plan `docs/superpowers/plans/2026-10-11-infra-sweep-2.md`. All four
-waves (A to I) are merged, the gate is green, and the branch is pushed. **Stopped at Close step 1**:
-merging `origin/main` conflicts in `claude/.claude/skills/pass-core/SKILL.md`. PR #13 (the review
-desk) made "Geoff decides the PR on the review desk" the hand-over, and replaced the Firefox open
-with `review-desk pr` and `review-desk triage`. E's step 6 text, its `ordinary` self-merge
-paragraph, and its Conductor section ("opens each PR or design for Geoff in Firefox") sit against
-that. The one question: keep the desk as the hand-over for runner passes, with `ordinary`
-self-merge as the exception, and have the Conductor section name the desk instead of Firefox? The
-executor's Found-not-done ledger is in the job tmp dir, `found.md`.
+waves (A to I) are merged and the gate is green. The origin/main conflict in `pass-core` is resolved
+(the review desk stays the hand-over, `ordinary` self-merge is the exception). The Close runs next;
+Found-not-done ledger: `docs/superpowers/research/2026-10-11-infra-sweep-2-found.md`.
 
 ## Immediate next action
 
@@ -55,14 +50,14 @@ queue, in order, with each item's detail in the launch prompt:
 1. **Dubplate alignment PR.** After Geoff merges it, the conductor fast-forwards dubplate, backs up
    and then prunes dubplate's auto-memory per the PR body's dry run, and trashes the untracked
    `reports/` originals. Then dubplate's `admin-api-1` re-plan.
-2. **Review desk, lean v1.** Amend the design on `worktree-review-desk`, then bring it to Geoff.
-3. **cairn-cms alignment.** Approved by Geoff. Evidence and rulings:
+2. **cairn-cms alignment.** Approved by Geoff. Evidence and rulings:
    `docs/superpowers/research/2026-10-11-cairn-cms-alignment-audit.md`.
-4. **Infra sweep 2.** The design on `worktree-infra-sweep-2-design` waits for Geoff. Re-check it
+3. **Infra sweep 2.** The design on `worktree-infra-sweep-2-design` waits for Geoff. Re-check it
    against #8 first.
-5. **Poplar adapter**, then the cairn-cms ROADMAP restructure after docs stage 2b.
+4. **Poplar adapter**, then the cairn-cms ROADMAP restructure after docs stage 2b.
 
-Pending with Geoff: the review-desk and sweep-2 designs, and the dubplate alignment PR.
+Pending with Geoff: the review desk PR (#13), the sweep-2 design, and the dubplate alignment PR.
+After #13 merges and the checkout is pulled, `stow -R bin` puts `review-desk` on PATH.
 
 ## Open items
 
