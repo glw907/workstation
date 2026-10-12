@@ -31,8 +31,15 @@ artifacts. github.com/glw907/workstation.
 ## Infra sweep 2 in flight
 
 Executor session `infra-sweep-2-build` (id `0c143a5c-e6c0-487a-b726-1a823645ceee`), branch
-`worktree-infra-sweep-2-build`, plan `docs/superpowers/plans/2026-10-11-infra-sweep-2.md`. Wave 1
-(A with I) dispatches next.
+`worktree-infra-sweep-2-build`, plan `docs/superpowers/plans/2026-10-11-infra-sweep-2.md`. All four
+waves (A to I) are merged, the gate is green, and the branch is pushed. **Stopped at Close step 1**:
+merging `origin/main` conflicts in `claude/.claude/skills/pass-core/SKILL.md`. PR #13 (the review
+desk) made "Geoff decides the PR on the review desk" the hand-over, and replaced the Firefox open
+with `review-desk pr` and `review-desk triage`. E's step 6 text, its `ordinary` self-merge
+paragraph, and its Conductor section ("opens each PR or design for Geoff in Firefox") sit against
+that. The one question: keep the desk as the hand-over for runner passes, with `ordinary`
+self-merge as the exception, and have the Conductor section name the desk instead of Firefox? The
+executor's Found-not-done ledger is in the job tmp dir, `found.md`.
 
 ## Immediate next action
 
