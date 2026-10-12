@@ -2,7 +2,8 @@
 
 Lint rows build a fixture tree at <root>/claude/.claude/{tooling,skills}, the shape
 `scripts/check.sh` reads through `claude-tooling-sync lint --root .`. Verify rows build a
-fixture home holding .dotfiles/claude/.claude/{tooling,skills,settings.json} and .claude.json,
+fixture home holding .dotfiles/claude/.claude/{tooling,skills,settings.json}, a live
+.claude/settings.json, and .claude.json,
 with a stub `claude` binary on PATH so the machine checks run without touching the real
 workstation.
 """
@@ -112,12 +113,14 @@ def fixture_home(tmp_path):
     (tooling / "vendored-skills.json").write_text('{"skills": {}}')
     (home / ".dotfiles" / "claude" / ".claude" / "settings.json").write_text(
         '{"enabledPlugins": {}}')
+    (home / ".claude").mkdir()
+    (home / ".claude" / "settings.json").write_text('{"enabledPlugins": {}}')
     return home
 
 
 def stub_claude_on_path(tmp_path):
     bindir = tmp_path / "stubbin"
-    bindir.mkdir()
+    bindir.mkdir(exist_ok=True)
     stub = bindir / "claude"
     stub.write_text("#!/bin/sh\nexit 0\n")
     stub.chmod(0o755)
@@ -322,3 +325,101 @@ def test_ratchet_report_accepts_the_forwarded_flags_and_names_both_ids(tmp_path)
                   "--memory-root", str(tmp_path))
     assert data["implements"] == ["description-cap", "fork-skill"]
     assert data["violations"] == []
+
+
+# ---- the generated live settings.json ----
+
+
+def tracked_settings(home):
+    return home / ".dotfiles" / "claude" / ".claude" / "settings.json"
+
+
+def live_settings(home):
+    return home / ".claude" / "settings.json"
+
+
+def sync(command, home, tmp_path):
+    args = [command, "--home", str(home)]
+    if command == "verify":
+        args += ["--projects-root", str(tmp_path / "projects")]
+    return run(*args, env={"PATH": stub_claude_on_path(tmp_path)})
+
+
+def test_apply_replaces_a_symlink_and_keeps_live_only_keys(tmp_path):
+    home = fixture_home(tmp_path)
+    old = tmp_path / "old.json"
+    old.write_text('{"model": "opus", "enabledPlugins": {}}')
+    live_settings(home).unlink()
+    live_settings(home).symlink_to(old)
+    tracked_settings(home).write_text('{"enabledPlugins": {"a@b": true}}')
+
+    proc = sync("apply", home, tmp_path)
+    assert proc.returncode == 0, out(proc)
+    assert not live_settings(home).is_symlink()
+    assert json.loads(live_settings(home).read_text()) == {"model": "opus",
+                                                           "enabledPlugins": {"a@b": True}}
+    assert json.loads(old.read_text())["enabledPlugins"] == {}
+
+
+def test_second_apply_changes_nothing(tmp_path):
+    home = fixture_home(tmp_path)
+    tracked_settings(home).write_text('{"enabledPlugins": {}, "tui": "fullscreen"}')
+    assert sync("apply", home, tmp_path).returncode == 0
+    before = live_settings(home).stat().st_mtime_ns
+    proc = sync("apply", home, tmp_path)
+    assert proc.returncode == 0, out(proc)
+    assert "settings.json is current" in out(proc)
+    assert live_settings(home).stat().st_mtime_ns == before
+
+
+def test_verify_fails_on_a_missing_live_settings_file(tmp_path):
+    home = fixture_home(tmp_path)
+    live_settings(home).unlink()
+    proc = sync("verify", home, tmp_path)
+    assert proc.returncode == 1
+    assert "missing" in out(proc)
+
+
+def test_verify_fails_on_a_live_settings_link(tmp_path):
+    home = fixture_home(tmp_path)
+    live_settings(home).unlink()
+    live_settings(home).symlink_to(tracked_settings(home))
+    proc = sync("verify", home, tmp_path)
+    assert proc.returncode == 1
+    assert "a link" in out(proc)
+
+
+def test_verify_fails_on_a_changed_tracked_key_and_passes_on_a_live_only_key(tmp_path):
+    home = fixture_home(tmp_path)
+    tracked_settings(home).write_text('{"enabledPlugins": {}, "tui": "fullscreen"}')
+    live_settings(home).write_text('{"enabledPlugins": {}, "tui": "default"}')
+    proc = sync("verify", home, tmp_path)
+    assert proc.returncode == 1
+    assert "tui" in out(proc)
+
+    live_settings(home).write_text('{"enabledPlugins": {}, "tui": "fullscreen", "model": "opus"}')
+    proc = sync("verify", home, tmp_path)
+    assert proc.returncode == 0, out(proc)
+
+
+def test_cutover_keeps_preference_keys_and_leaves_the_tracked_file_alone(tmp_path):
+    home = fixture_home(tmp_path)
+    live_settings(home).write_text(json.dumps({
+        "enabledPlugins": {}, "model": "opus", "effortLevel": "medium",
+        "modelSettings": {"claude-fable-5-1": {"effortLevel": "high"}}}))
+    tracked_settings(home).write_text('{"enabledPlugins": {}, "tui": "fullscreen"}')
+    tracked_bytes = tracked_settings(home).read_bytes()
+
+    assert sync("apply", home, tmp_path).returncode == 0
+    live = json.loads(live_settings(home).read_text())
+    assert live["tui"] == "fullscreen"
+    assert live["model"] == "opus"
+    assert live["effortLevel"] == "medium"
+    assert live["modelSettings"] == {"claude-fable-5-1": {"effortLevel": "high"}}
+    assert sync("verify", home, tmp_path).returncode == 0
+
+    live["modelSettings"]["claude-opus-5-5"] = {"effortLevel": "low"}
+    live_settings(home).write_text(json.dumps(live))
+    proc = sync("verify", home, tmp_path)
+    assert proc.returncode == 0, out(proc)
+    assert tracked_settings(home).read_bytes() == tracked_bytes
