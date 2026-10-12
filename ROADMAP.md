@@ -71,6 +71,16 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
 - **Two gate-tool cleanups**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11):
   simplify `cairn-docs-outline`'s lock and fix `gateMatches`' stale doc comment; and give
   `cairn-run-gate` per-leg timing in its run records.
+- **Review desk hardening**, deferred by Geoff's triage of workstation PR #13 (2026-10-11). A
+  running app keeps serving its old build after a merge changes `review-desk/`. Nothing prunes
+  decided items from the state directory. A SIGKILL or power loss leaves the item on the index.
+  One malformed `decision.json` or `item.json` makes `listWaiting` throw and 500s the index. The
+  CSP limits only `script-src`, so a remote image in a PR body loads at view time (`img-src 'self'
+  data:` closes it). `tests/review-desk.test.sh` never runs the start-the-app branch, the
+  10-second "did not answer" exit, or the lock release.
+- **Two worktree-guard notes**, from the same triage: the pair-dispatch template should tell a
+  subagent that the worktree Bash guard refuses compound commands, so it uses plain calls and the
+  Write tool; and the guard refuses `gitleaks git` and a `node` run with a computed path.
 
 - **The deferred infra-sweep checks** (ruling R2 of the 2026-10-11 re-plan: a check is built when
   it has a live catch). These are duplicate-paragraph with `parity.json`, plus cross-repo mode with
