@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review desk: design (B)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,400..700;1,400&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-neon@5/400.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+@theme static {
+  /* Stacks name families exactly as Fontsource declares them. */
+  --font-display: "Spectral", serif;
+  --font-body: "Karla Variable", "Karla", system-ui, sans-serif;
+  --font-mono: "Monaspace Neon", ui-monospace, monospace;
+  --font-weight-heading: 500;
+
+  /* Type steps, from the manifest's size table. */
+  --text-step-1: 0.64rem;
+  --text-step-2: 0.74rem;
+  --text-step-3: 0.76rem;
+  --text-step-4: 0.78rem;
+  --text-step-5: 0.8rem;
+  --text-step-6: 0.82rem;
+  --text-step-7: 0.86rem;
+  --text-step-8: 0.88rem;
+  --text-step-9: 0.9rem;
+  --text-step-10: 0.95rem;
+  --text-step-11: 1rem;
+  --text-step-12: 1.2rem;
+  --text-step-13: 1.6rem;
+  --text-step-inline-code: 0.86em;
+
+  /* Spacing values, from the manifest's spacing table. */
+  --spacing-1px: 1px;
+  --spacing-2px: 2px;
+  --spacing-3px: 3px;
+  --spacing-4px: 4px;
+  --spacing-5px: 5px;
+  --spacing-6px: 6px;
+  --spacing-7px: 7px;
+  --spacing-8px: 8px;
+  --spacing-9px: 9px;
+  --spacing-10px: 10px;
+  --spacing-12px: 12px;
+  --spacing-13px: 13px;
+  --spacing-14px: 14px;
+  --spacing-16px: 16px;
+  --spacing-20px: 20px;
+  --spacing-24px: 24px;
+}
+</style>
+<style>
+/* Survey tokens, verbatim from review-desk/src/lib/survey/theme.css. Light, then dark. */
+:root {
+  color-scheme: light;
+  --color-base-100: #f7f7f3;
+  --color-base-200: #eeede6;
+  --color-base-300: #d9d6c9;
+  --color-base-content: #22262b;
+  --color-primary: #1c5a8c;
+  --color-primary-content: #f1f7fc;
+  --color-secondary: #8a5f36;
+  --color-secondary-content: #fbf5ee;
+  --color-accent: #2e4a5c;
+  --color-accent-content: #eef4f8;
+  --color-neutral: #33383f;
+  --color-neutral-content: #eef0f2;
+  --color-info: #1b7f86;
+  /* Tuned for contrast: was #effafa at 4.46:1 on --color-info, now 4.60:1. */
+  --color-info-content: #f5fdfd;
+  --color-success: #4c7538;
+  --color-success-content: #f3f9ef;
+  --color-warning: #c9952e;
+  --color-warning-content: #2b1d03;
+  --color-error: #b3261e;
+  --color-error-content: #fff4f2;
+  --radius-selector: 2rem;
+  --radius-field: 3px;
+  --radius-box: 4px;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+  --cairn-info-ink: #155f64;
+  --cairn-success-ink: #3b5c2b;
+  --cairn-warning-ink: #7a5510;
+  --cairn-error-ink: #9a2019;
+  --color-muted: #5d5f58;
+  --site-field-bg: #ffffff;
+  /* Control edge: 3.65:1 on base-100 and 3.92:1 on the field ground (WCAG 1.4.11). */
+  --site-field-border: #7d8187;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+  color-scheme: dark;
+  --color-base-100: #11171e;
+  --color-base-200: #18212a;
+  --color-base-300: #2a3542;
+  --color-base-content: #e6e8ea;
+  --color-primary: #7fb5e4;
+  --color-primary-content: #0b2236;
+  --color-secondary: #c79a6a;
+  --color-secondary-content: #24160a;
+  --color-accent: #9fb9cc;
+  --color-accent-content: #10202b;
+  --color-neutral: #262e38;
+  --color-neutral-content: #e6e8ea;
+  --color-info: #5cc3c9;
+  --color-info-content: #062729;
+  --color-success: #9ac884;
+  --color-success-content: #142410;
+  --color-warning: #e3b65a;
+  --color-warning-content: #2b1d03;
+  --color-error: #f08a80;
+  --color-error-content: #3a0a06;
+  --radius-selector: 2rem;
+  --radius-field: 3px;
+  --radius-box: 4px;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+  --cairn-info-ink: #7fd3d8;
+  --cairn-success-ink: #a9d394;
+  --cairn-warning-ink: #ebc678;
+  --cairn-error-ink: #f4a199;
+  --color-muted: #a2a9b1;
+  --site-field-bg: #0d1318;
+  /* Control edge: 3.63:1 on base-100 and 3.76:1 on the field ground (WCAG 1.4.11). */
+  --site-field-border: #66717e;
+  }
+}
+</style>
+<style>
+/* Copied from cairn-themes/survey-theme/core/components.css at commit dea983976f4d7951d3e2a7395938859a978d4bd8. Do not edit. */
+/* Survey components: the alert override and the site- signature details.
+   Every rule sits in a sublayer of utilities. daisyUI's component rules live in that layer
+   too, so a later sublayer beats them, while a Tailwind utility on the element still wins. */
+
+:root {
+  /* Contour brown follows the scheme because it reads the theme's secondary role. */
+  --site-contour: var(--color-secondary);
+  --site-contour-opacity: 0.25;
+  --site-rule-color: color-mix(in oklab, var(--site-contour) 55%, transparent);
+}
+
+@layer utilities {
+  @layer site {
+    /* Alert: daisyUI fills the whole box with the status color; the look is a 4px status rule on
+       a base-200 field, which --alert-color alone cannot give, so the rule is a ::before. */
+    .alert {
+      --alert-border-color: transparent;
+      position: relative;
+      background-color: var(--color-base-200);
+      color: var(--color-base-content);
+      padding-block: var(--spacing-6px);
+      padding-inline: var(--spacing-9px);
+      font-size: var(--text-step-8);
+      line-height: 1.5;
+      gap: var(--spacing-8px);
+    }
+
+    .alert::before {
+      content: "";
+      position: absolute;
+      inset-block: calc(-1 * var(--border));
+      inset-inline-start: calc(-1 * var(--border));
+      width: var(--spacing-4px);
+      background-color: var(--alert-color, var(--color-base-300));
+      border-start-start-radius: var(--radius-box);
+      border-end-start-radius: var(--radius-box);
+    }
+
+    .alert-info {
+      --site-alert-ink: var(--cairn-info-ink);
+    }
+
+    .alert-success {
+      --site-alert-ink: var(--cairn-success-ink);
+    }
+
+    .alert-warning {
+      --site-alert-ink: var(--cairn-warning-ink);
+    }
+
+    .alert-error {
+      --site-alert-ink: var(--cairn-error-ink);
+    }
+
+    .alert strong {
+      font-weight: 600;
+      color: var(--site-alert-ink, inherit);
+    }
+
+    /* Contour rule: a dashed divider under a section or list group; a consumer sets
+       --site-rule-color on the element for a full-strength line. */
+    .site-contour-rule {
+      border-bottom: var(--border) dashed var(--site-rule-color);
+    }
+
+    /* Benchmark triangle: a decorative mark beside a wordmark or a tool page's title. */
+    .site-benchmark {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-inline: var(--spacing-5px) solid transparent;
+      border-bottom: var(--spacing-9px) solid var(--site-contour);
+      margin-inline-end: var(--spacing-6px);
+      transform: translateY(calc(-1 * var(--spacing-1px)));
+    }
+
+    /* Contour texture: an inline SVG that fills a header (relative isolate), under its content. */
+    .site-contour-texture {
+      position: absolute;
+      inset: auto 0 0;
+      z-index: -1;
+      width: 100%;
+      height: 100%;
+      /* A wrapped header grows tall; the cap keeps the stretched curves a faint band at its foot. */
+      max-height: calc(3 * var(--spacing-20px));
+      pointer-events: none;
+      fill: none;
+      stroke: var(--site-contour);
+      opacity: var(--site-contour-opacity);
+    }
+
+    /* Margin collar: a footer strip like a quad sheet's margin. Its two fields come from markup,
+       and an empty field still holds its place so the other keeps its side. It is not built on
+       daisyUI's footer because that component is a grid of link columns (grid-auto-flow, gap,
+       place-items, and a grid child rule), so every property the collar needs would be an override. */
+    .site-collar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: var(--spacing-10px);
+      min-block-size: calc(2 * var(--spacing-9px) + var(--border) + 1lh);
+      padding-block: var(--spacing-9px);
+      padding-inline: var(--spacing-20px);
+      border-top: var(--border) solid var(--color-base-300);
+      background-color: var(--color-base-200);
+      color: var(--color-muted);
+      font-size: var(--text-step-2);
+    }
+
+    /* Borders: daisyUI 5 draws these component borders in base-200 or a base-content mix;
+       Survey's border role is base-300. Focus and error keep the stock border color. */
+    .card-border {
+      border-color: var(--color-base-300);
+    }
+
+    /* Field edge: a control boundary needs 3:1 (WCAG 1.4.11), which base-300 cannot give. */
+    .input:not(:focus, :focus-within, .input-error),
+    .select:not(:focus, :focus-within, .select-error) {
+      --input-color: var(--site-field-border);
+    }
+
+    /* Checkbox and radio: the stock ring is a 20% mix of ink, under 3:1. The :not guards leave
+       every color modifier (checkbox-primary, radio-primary) to daisyUI. Radio sets --input-color,
+       which also colors its dot; a checkbox sets border-color because --input-color fills it. */
+    .checkbox:not([class*="checkbox-"]) {
+      border-color: var(--site-field-border);
+    }
+
+    .radio:not([class*="radio-"]) {
+      --input-color: var(--site-field-border);
+    }
+
+    /* The list divider also runs edge to edge: the stock inset is the box radius. */
+    .list > :not(:last-child).list-row::after,
+    .list > :not(:last-child) .list-row::after {
+      border-color: var(--color-base-300);
+      inset-inline: 0;
+    }
+
+    /* Field: input and select sit on their own ground, which daisyUI has no theme variable for,
+       so the background reads --site-field-bg. The box is 7px by 9px; the line height of 1.2
+       keeps it near 33px, where daisyUI's inherited 1.5 makes it 37.6px. */
+    .input,
+    .select {
+      background-color: var(--site-field-bg);
+      height: auto;
+      line-height: 1.2;
+      padding-block: var(--spacing-7px);
+      padding-inline: var(--spacing-9px);
+    }
+
+    .select {
+      padding-inline-end: 1.75rem;
+    }
+
+    /* Tailwind's preflight mixes the placeholder to 50% of ink, which is under 4.5:1 on a white ground. */
+    .input::placeholder {
+      color: var(--color-muted);
+    }
+
+    /* Link: the browser's default focus ring is replaced to match buttons and the rail. */
+    a:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    /* Button: the focus ring is primary where daisyUI uses the button color or ink, and the
+       line height of 1.2 keeps the padded box near 33px where the inherited 1.5 gives 36.6px. */
+    .btn {
+      line-height: 1.2;
+    }
+
+    .btn:focus-visible {
+      outline-color: var(--color-primary);
+    }
+
+    /* Index rail: an alphabet thumb-index, the theme's one custom component since daisyUI ships
+       none. Each row is a 24px target; a letter with no section is a plain span. */
+    .site-index-rail {
+      /* Content-box so the 24px children fit beside the 1px start border. */
+      box-sizing: content-box;
+      inline-size: var(--spacing-24px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-block: var(--spacing-6px);
+      background-color: var(--color-base-200);
+      border-inline-start: var(--border) solid var(--color-base-300);
+      color: var(--color-muted);
+      font-size: var(--text-step-1);
+      line-height: 1;
+    }
+
+    .site-index-rail > * {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 100%;
+      min-block-size: var(--spacing-24px);
+      /* The transparent border keeps the target 24px wide while the current letter paints 17px. */
+      border: var(--spacing-3px) solid transparent;
+      border-inline-width: calc((var(--spacing-24px) - 17px) / 2);
+      border-radius: var(--radius-field);
+      background-clip: padding-box;
+    }
+
+    .site-index-rail a {
+      color: var(--color-base-content);
+      font-weight: 600;
+    }
+
+    .site-index-rail a:hover {
+      color: var(--color-primary);
+    }
+
+    .site-index-rail a:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: calc(-1 * var(--spacing-2px));
+    }
+
+    .site-index-rail [aria-current] {
+      background-color: var(--color-primary);
+      color: var(--color-primary-content);
+      font-weight: 700;
+    }
+  }
+}
+
+</style>
+<style>
+
+/* Desk layer: mockup-only rules, all on desk- classes or plain elements. */
+html, body { background-color: var(--color-base-100); color: var(--color-base-content); }
+body { font-family: var(--font-body); font-size: 1rem; line-height: 1.5; }
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.desk-title { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.005em; }
+.desk-muted { color: var(--color-muted); }
+.desk-mono { font-family: var(--font-mono); }
+.desk-add { color: var(--cairn-success-ink); }
+.desk-del { color: var(--cairn-error-ink); }
+
+/* kbd hints sit inside buttons and rows; they take the surrounding ink. */
+.desk-kbd { background-color: transparent; color: inherit; font-family: var(--font-body);
+  border-color: color-mix(in oklab, currentColor 45%, transparent); min-width: 1.4em; }
+
+/* Queue rows: two lines, kind and age on the first, the title on the second. */
+.desk-queue a { display: grid; grid-auto-flow: row; grid-template-columns: 1fr auto; row-gap: 2px; align-items: baseline;
+  padding-block: 7px; }
+.desk-queue .desk-q-title { grid-column: 1 / -1; font-weight: 600; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.desk-queue .desk-q-meta { opacity: 0.78; font-size: 0.78rem; }
+/* The current item also carries a primary rule: dark neutral sits close to base-200. */
+.desk-queue a { border-inline-start: 3px solid transparent; }
+.desk-queue a.menu-active { border-inline-start-color: var(--color-primary); }
+/* The search field's label draws the focus ring, so the inner input does not draw a second. */
+.input input:focus-visible { outline: none; }
+
+/* Compact stats: daisyUI's stat-title mixes ink to 60%, under 4.5:1 on base-100. */
+.desk-stats .stat { padding-block: 10px; padding-inline: 14px; row-gap: 1px; }
+.desk-stats .stat-title { color: var(--color-muted); font-size: 0.78rem; white-space: nowrap; }
+.desk-stats .stat-value { font-size: 1.15rem; font-weight: 700; line-height: 1.3; }
+.desk-stats .stat-desc { color: var(--color-muted); font-size: 0.78rem; opacity: 1; white-space: nowrap; }
+
+/* Compact collapses for file groups and files: the stock title is 1rem padded with a fixed arrow. */
+.desk-collapse > .collapse-title { min-height: 2.25rem; padding-block: 6px; padding-inline: 12px 40px;
+  display: flex; align-items: center; gap: 12px; }
+.desk-collapse.collapse-arrow > .collapse-title::after { top: 50%; inset-inline-end: 18px; }
+.desk-collapse > .collapse-content { padding-inline: 0; }
+.desk-collapse[open] > .collapse-content, .desk-collapse:focus-within > .collapse-content { padding-bottom: 0; }
+.desk-collapse > .collapse-title:hover { background-color: var(--color-base-200); }
+
+/* Plain red and green diff: a table so the two line-number gutters align. */
+.desk-diff { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.76rem; line-height: 1.55; }
+.desk-diff td { padding: 0; vertical-align: top; }
+.desk-diff .ln { width: 1%; min-width: 3.2em; padding-inline: 8px; text-align: right; white-space: nowrap;
+  color: var(--color-muted); font-variant-numeric: tabular-nums; user-select: none;
+  border-inline-end: 1px solid var(--color-base-300); }
+.desk-diff .sg { width: 1.4em; text-align: center; user-select: none; }
+.desk-diff .cd { white-space: pre-wrap; overflow-wrap: anywhere; padding-inline-end: 12px; }
+.desk-diff tr.add td { background-color: color-mix(in oklab, var(--color-success) 13%, var(--color-base-100)); }
+.desk-diff tr.add .sg { color: var(--cairn-success-ink); font-weight: 700; }
+.desk-diff tr.del td { background-color: color-mix(in oklab, var(--color-error) 11%, var(--color-base-100)); }
+.desk-diff tr.del .sg { color: var(--cairn-error-ink); font-weight: 700; }
+.desk-diff tr.hunk td { background-color: var(--color-base-200); color: var(--cairn-info-ink); padding-block: 2px; }
+
+/* Diffstat: five cells, the share of added and removed lines, as GitHub draws it. */
+.desk-stat5 { display: inline-flex; gap: 2px; }
+.desk-stat5 i { width: 7px; height: 7px; border-radius: 1px; background: var(--color-base-300); }
+.desk-stat5 i.a { background: var(--color-success); }
+.desk-stat5 i.d { background: var(--color-error); }
+
+/* Rendered markdown, compact for a PR body. */
+.desk-md { font-size: 0.9rem; line-height: 1.55; }
+.desk-md > :first-child { margin-top: 0; }
+.desk-md h2 { font-weight: 700; font-size: 0.95rem; margin: 1rem 0 0.35rem; }
+.desk-md h3 { font-weight: 700; font-size: 0.9rem; margin: 0.8rem 0 0.3rem; }
+.desk-md p, .desk-md ul, .desk-md ol, .desk-md table { margin: 0.45rem 0; }
+.desk-md p, .desk-md li { max-width: 88ch; }
+.desk-md ul { list-style: disc; padding-inline-start: 1.25rem; }
+.desk-md ol { list-style: decimal; padding-inline-start: 1.25rem; }
+.desk-md li + li { margin-top: 0.2rem; }
+.desk-md strong { font-weight: 700; }
+.desk-md a { color: var(--color-primary); text-decoration: underline; text-underline-offset: 3px; }
+.desk-md code { font-family: var(--font-mono); font-size: var(--text-step-inline-code); background: var(--color-base-200);
+  padding: 1px 4px; border-radius: 3px; overflow-wrap: anywhere; }
+.desk-md table { border-collapse: collapse; font-size: 0.84rem; width: 100%; }
+.desk-md th, .desk-md td { border-bottom: 1px solid var(--color-base-300); padding: 4px 10px 4px 0; text-align: left; vertical-align: top; }
+.desk-md th { font-weight: 600; color: var(--color-muted); }
+
+/* Reading width for a design document: Spectral, as Survey sets reading text. */
+.desk-read { font-family: var(--font-display); font-size: 1.06rem; line-height: 1.62; max-width: 70ch; }
+.desk-read h1 { display: none; }
+.desk-read h2 { font-weight: 500; font-size: 1.3rem; line-height: 1.25; margin: 1.6rem 0 0.4rem;
+  padding-bottom: 4px; border-bottom: 1px dashed var(--site-rule-color); }
+.desk-read p, .desk-read ul { margin: 0.6rem 0; }
+.desk-read ul { list-style: disc; padding-inline-start: 1.3rem; }
+.desk-read ul ul { margin: 0.25rem 0; list-style: circle; }
+.desk-read li + li { margin-top: 0.3rem; }
+.desk-read strong { font-weight: 600; }
+.desk-read code { font-family: var(--font-mono); font-size: var(--text-step-inline-code); background: var(--color-base-200);
+  padding: 1px 4px; border-radius: 3px; }
+
+/* Triage: the focused row carries a primary rule; the proposed choice keeps a dot. */
+.desk-triage tbody tr { outline-offset: -2px; }
+.desk-triage tbody tr.is-focused { background-color: var(--color-base-200); outline: 2px solid var(--color-primary); }
+.desk-triage .join-item.btn { min-width: 3.9rem; }
+/* daisyUI draws a radio button's label from aria-label in ::after, so the proposal is marked in text below the join, not with a pseudo-element. */
+
+.desk-field { background-color: var(--site-field-bg); border-color: var(--site-field-border); }
+
+/* Keep a focused control clear of the sticky decision bar and the toast (WCAG 2.4.11); JS sets the value. */
+html { scroll-padding-bottom: var(--desk-bar-pad, 9rem); }
+/* Main takes focus only as a landing spot after a decision; it draws no ring. */
+main[tabindex="-1"]:focus { outline: none; }
+/* With single-key shortcuts off, their hints go too, so no control advertises a dead key. */
+html.desk-no-sk .desk-sk { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+
+.desk-kbd { border-color: transparent; background: transparent; min-width: 0; padding-inline: 2px; font-size: 0.7rem; opacity: 0.7; }
+.desk-q-meta { font-size: 0.76rem; }
+.desk-md { line-height: 1.62; }
+.desk-md p, .desk-md li { max-width: 72ch; }
+.desk-read { line-height: 1.72; max-width: 68ch; }
+.desk-glance { background: transparent; overflow: visible; }
+.desk-glance .stat { border: 0; padding: 0 44px 0 0; row-gap: 2px; }
+.desk-glance .stat-title { color: var(--color-muted); font-size: 0.8rem; }
+.desk-glance .stat-value { font-size: 1rem; font-weight: 600; line-height: 1.4; }
+.desk-plain-list > * + * { border-top: 1px solid var(--color-base-300); }
+</style>
+</head>
+<body>
+<div class="drawer lg:drawer-open">
+  <input id="queue-toggle" type="checkbox" class="drawer-toggle" aria-label="Queue" tabindex="-1">
+  <div class="drawer-content flex min-h-dvh min-w-0 flex-col">
+    <header class="navbar min-h-12 border-b border-base-300 bg-base-200 px-3 lg:hidden">
+      <button type="button" class="btn btn-sm btn-ghost" id="queue-open" aria-controls="queue-nav" aria-expanded="false">Queue (3)</button>
+      <span class="ml-2 text-sm font-bold"><i class="site-benchmark"></i>Review desk</span>
+    </header>
+    <main class="flex-1 px-5 pt-5 pb-10 lg:px-8" id="main" tabindex="-1">
+      <header class="relative isolate pb-4">
+        <svg class="site-contour-texture" viewBox="0 0 400 60" preserveAspectRatio="none" aria-hidden="true"><path d="M160 58c40-18 70-6 110-20s80-22 130-6"/><path d="M160 48c40-18 70-6 110-20s80-22 130-6"/><path d="M160 38c40-18 70-6 110-20s80-22 130-6"/></svg>
+        <p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm desk-muted"><span>workstation</span><span>review-desk-design.md</span><span>3 min read</span></p>
+        <h1 class="desk-title mt-1 text-[1.6rem] leading-tight"><i class="site-benchmark"></i>Review desk (design)</h1>
+        
+      </header>
+      <article class="desk-read">
+<h1>Review desk (design)</h1>
+<p><strong>Status:</strong> approved by Geoff, 2026-10-11, and re-scoped the same day to a lean v1 (Geoff, in the
+conductor session <code>4bea6e68</code>). He approved planning and executing it unattended from this scope,
+added a triage item kind, and moved it into the workstation repo. This version supersedes the
+full-size design of the same date (systemd service, own repo, install step, e2e and fidelity
+gates), whose plan on <code>worktree-review-desk-plan</code> is retired.</p>
+<h2>Why</h2>
+<p>Geoff wants a clean review environment for what needs his decision, not the GitHub interface: &quot;I&#39;m
+looking for a clean review environment, not the github interface.&quot; It runs locally and uses the
+Survey theme the phonebook uses.</p>
+<h2>Outcome</h2>
+<p>A session hands Geoff an item with one command. The item opens in Firefox, Geoff decides there,
+and the command exits with his decision, which wakes the waiting session to act on it.</p>
+<h2>What Geoff sees</h2>
+<ul>
+<li><strong>Index:</strong> the items waiting, newest first: kind, repo, title.</li>
+<li><strong>Item page</strong>, one of three kinds:<ul>
+<li><strong>PR:</strong> the summary (the PR body, rendered), then the diff.</li>
+<li><strong>Design:</strong> the design document, rendered at a reading width.</li>
+<li><strong>Triage:</strong> a list of found-not-done items, each prefilled with the session&#39;s proposed
+disposition (now, defer, or drop) and its one-line reason. Geoff changes any row.</li>
+</ul>
+</li>
+<li><strong>Decision:</strong> Approve or Reject on PR and design items; Reject opens a short note field. A triage
+item has one Submit, which sends every row&#39;s disposition.</li>
+</ul>
+<h2>How it works</h2>
+<ul>
+<li><strong>Home:</strong> <code>review-desk/</code> at the top of <code>~/.dotfiles</code>, outside Stow (Geoff, 2026-10-11: &quot;it&#39;s
+effectively local claude infra&quot;). A SvelteKit app on phonebook&#39;s stack (TypeScript, Tailwind CSS 4,
+daisyUI 5) with <code>@sveltejs/adapter-node</code>, and the Survey theme core copied in from
+<code>~/Projects/cairn-themes</code> the way phonebook takes it. Fonts self-hosted; nothing fetched at view
+time.</li>
+<li><strong>Hand-over:</strong> <code>bin/.local/bin/review-desk</code>, stowed. It writes the item (kind, repo, title, and
+the content: <code>gh</code> output for a PR, the file for a design, a JSON list for triage) into a state
+directory, starts the built app on <code>127.0.0.1</code> if it isn&#39;t running, opens the item in Firefox,
+and waits. It exits when the decision file appears and prints the decision as JSON. A session
+runs it as a background Bash command, so the exit wakes the session.</li>
+<li><strong>Security</strong>, at the one boundary: the app binds loopback only, rejects a request whose <code>Host</code>
+isn&#39;t the loopback address and port (DNS rebinding), and keeps SvelteKit&#39;s built-in CSRF origin
+check on its form actions. The app never merges anything; the session acts on the decision.</li>
+<li><strong>Gate:</strong> <code>scripts/check.sh</code> runs the app&#39;s <code>npm run check</code> and unit tests when <code>review-desk/</code>
+changes.</li>
+<li><strong>Process:</strong> <code>pass-core</code> names <code>review-desk</code> as the hand-over for a PR, a design, and found-item
+triage, replacing the Firefox <code>gh pr view --web</code> step.</li>
+</ul>
+<h2>Out of scope</h2>
+<p>A systemd service, an install or bootstrap step, a drift probe, an e2e suite, a visual-fidelity
+pass, line comments, syntax highlighting beyond plain diff colors, and anyone but Geoff.</p>
+<h2>End-to-end check</h2>
+<p>From a scratch session, hand over one real PR, one design, and one triage list. Each opens in
+Firefox in the Survey style. Approve on the PR, Reject with a note on the design, and a changed
+triage row each make the waiting command exit with that decision. A form post from another origin
+is refused.</p>
+<h2>Risk and estimate</h2>
+<p>Class <code>runner</code> (Geoff, 2026-10-11), not <code>auth-data</code>: the app makes no merge or account call. About
+3 to 3.5 hours of clock: 2 to 3 for the lean v1 Geoff set, plus 30 to 45 minutes for triage. A
+plan over 7 hours comes back to Geoff before launch.</p>
+
+      </article>
+    </main>
+    <div class="sticky bottom-0 z-20 border-t border-base-300 bg-base-200" id="decision">
+      <form class="px-5 py-3 lg:px-8" onsubmit="return false" aria-label="Decision">
+        <div id="note-row" class="mb-3" hidden>
+          <label for="note" class="text-sm font-semibold">Rejection note <span class="font-normal desk-muted">(optional; the session reads it as the reason)</span></label>
+          <textarea id="note" name="note" rows="3" class="textarea desk-field mt-1 w-full max-w-[88ch] text-sm" placeholder="What needs to change before this can be approved"></textarea>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div class="mr-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" id="guard"><span>Approved in the doc on 2026-10-11, scoped to lean v1.</span></div>
+          <div class="flex items-center gap-2" id="idle-actions">
+            <button type="button" class="btn btn-outline btn-error" id="reject">Reject <kbd class="kbd kbd-xs desk-kbd desk-sk ">r</kbd></button>
+            <button type="button" class="btn btn-primary min-w-32" id="approve">Approve <kbd class="kbd kbd-xs desk-kbd desk-sk ">a</kbd></button>
+          </div>
+          <div class="flex items-center gap-2" id="reject-actions" hidden>
+            <button type="button" class="btn btn-ghost" id="cancel">Cancel <kbd class="kbd kbd-xs desk-kbd ">Esc</kbd></button>
+            <button type="button" class="btn btn-error" id="send">Send rejection <kbd class="kbd kbd-xs desk-kbd ">Ctrl</kbd><kbd class="kbd kbd-xs desk-kbd ">Enter</kbd></button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+  <div class="drawer-side z-30">
+    <label for="queue-toggle" aria-label="Close the queue" class="drawer-overlay"></label>
+    <nav id="queue-nav" aria-label="Review queue" class="flex min-h-full w-[19rem] flex-col border-r border-base-300 bg-base-200">
+      <div class="relative isolate border-b border-base-300 px-4 pt-4 pb-3">
+        <svg class="site-contour-texture" viewBox="0 0 400 60" preserveAspectRatio="none" aria-hidden="true"><path d="M160 58c40-18 70-6 110-20s80-22 130-6"/><path d="M160 48c40-18 70-6 110-20s80-22 130-6"/><path d="M160 38c40-18 70-6 110-20s80-22 130-6"/></svg>
+        <p class="text-[1.05rem] font-bold"><i class="site-benchmark"></i>Review desk</p>
+        <p class="mt-0.5 text-sm desk-muted" id="queue-count" aria-live="polite">3 waiting, oldest first</p>
+      </div>
+      <ul class="menu desk-queue w-full gap-0.5 px-2 py-2 text-sm" id="queue-list">
+      <li><a href="design-b.html" data-q="design" class="menu-active" aria-current="page">
+        <span class="desk-q-meta"><span class="mr-1">Design</span>workstation </span>
+        <span class="desk-q-meta tabular-nums">31 min</span>
+        <span class="desk-q-title">Review desk (design)</span>
+      </a></li>
+      <li><a href="triage-b.html" data-q="triage">
+        <span class="desk-q-meta"><span class="mr-1">Triage</span>workstation #13</span>
+        <span class="desk-q-meta tabular-nums">12 min</span>
+        <span class="desk-q-title">Found, not done: review desk lean v1</span>
+      </a></li>
+      <li><a href="#w13" data-q="w13">
+        <span class="desk-q-meta"><span class="mr-1">PR</span>workstation #13</span>
+        <span class="desk-q-meta tabular-nums">4 min</span>
+        <span class="desk-q-title">Add the review desk, lean v1</span>
+      </a></li>
+      </ul>
+    <div class="border-t border-dashed border-(--site-rule-color) px-4 py-3">
+      <h2 class="text-sm font-semibold desk-muted">Decided this session</h2>
+      <ul class="mt-1 text-[0.8rem]">
+        <li class="flex items-baseline justify-between gap-3 py-1"><span class="truncate">PR cairn-cms #113</span><span class="shrink-0  ">Approved</span></li>
+      </ul>
+    </div>
+      <div class="grow"></div>
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3 text-[0.8rem] desk-muted">
+        
+        <button type="button" class="btn btn-sm btn-ghost ml-auto" id="open-keys">Keyboard shortcuts <kbd class="kbd kbd-xs desk-kbd desk-sk ">?</kbd></button>
+      </div>
+      <footer class="site-collar"><span>127.0.0.1:7907</span><span>Survey</span></footer>
+    </nav>
+  </div>
+</div>
+<dialog id="keys" class="modal" aria-labelledby="keys-title">
+  <div class="modal-box max-w-xl rounded-box border border-base-300 p-5">
+    <h2 id="keys-title" class="desk-title text-xl">Keyboard shortcuts</h2>
+    <label class="mt-2 flex cursor-pointer items-center gap-3 rounded-box border border-base-300 px-3 py-2 text-sm">
+      <input type="checkbox" class="toggle toggle-sm toggle-primary" id="single-keys" checked aria-describedby="single-keys-desc">
+      <span><span class="font-semibold">Single-key shortcuts</span><br><span class="desk-muted" id="single-keys-desc">Letter, number, and symbol keys act on their own. Turn off if you use speech input or type stray keys. Esc, arrows, and Ctrl+Enter stay on.</span></span>
+    </label>
+    <div class="mt-3 grid gap-x-8 gap-y-4 text-sm sm:grid-cols-2">
+      <section>
+        <h3 class="mb-1 font-semibold desk-muted">Anywhere</h3>
+        <table class="table table-xs"><tbody>
+          <tr><td><kbd class="kbd kbd-xs desk-kbd desk-sk ">j</kbd></td><td>Next item in the queue</td></tr>
+          <tr><td><kbd class="kbd kbd-xs desk-kbd desk-sk ">k</kbd></td><td>Previous item in the queue</td></tr>
+          <tr><td><kbd class="kbd kbd-xs desk-kbd desk-sk ">z</kbd></td><td>Undo the last decision, until the next item loads</td></tr>
+          <tr><td><kbd class="kbd kbd-xs desk-kbd desk-sk ">?</kbd></td><td>Show or hide this sheet</td></tr>
+          <tr><td><kbd class="kbd kbd-xs desk-kbd ">Esc</kbd></td><td>Close the sheet or the note</td></tr>
+        </tbody></table>
+      </section>
+      <section>
+        <h3 class="mb-1 font-semibold desk-muted">PR and design</h3>
+        <table class="table table-xs"><tbody>
+          <tr><td><kbd class="kbd kbd-xs desk-kbd desk-sk ">a</kbd></td><td>Approve</td></tr>
+          <tr><td><kbd class="kbd kbd-xs desk-kbd desk-sk ">r</kbd></td><td>Reject, with the note field focused</td></tr>
+          <tr><td class="whitespace-nowrap"><kbd class="kbd kbd-xs desk-kbd ">Ctrl</kbd> <kbd class="kbd kbd-xs desk-kbd ">Enter</kbd></td><td>Send the rejection</td></tr>
+          <tr><td><kbd class="kbd kbd-xs desk-kbd desk-sk ">/</kbd></td><td>Filter files by path</td></tr>
+        </tbody></table>
+      </section>
+      <section>
+        <h3 class="mb-1 font-semibold desk-muted">Triage</h3>
+        <table class="table table-xs"><tbody>
+          <tr><td class="whitespace-nowrap"><kbd class="kbd kbd-xs desk-kbd ">↑</kbd> <kbd class="kbd kbd-xs desk-kbd ">↓</kbd></td><td>Move between rows</td></tr>
+          <tr><td class="whitespace-nowrap"><kbd class="kbd kbd-xs desk-kbd desk-sk ">1</kbd> <kbd class="kbd kbd-xs desk-kbd desk-sk ">2</kbd> <kbd class="kbd kbd-xs desk-kbd desk-sk ">3</kbd></td><td>Now, defer, or drop the focused row</td></tr>
+          <tr><td class="whitespace-nowrap"><kbd class="kbd kbd-xs desk-kbd ">Ctrl</kbd> <kbd class="kbd kbd-xs desk-kbd ">Enter</kbd></td><td>Submit every row</td></tr>
+        </tbody></table>
+      </section>
+    </div>
+    <div class="modal-action mt-4">
+      <form method="dialog"><button class="btn btn-sm">Close <kbd class="kbd kbd-xs desk-kbd ">Esc</kbd></button></form>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>Close</button></form>
+</dialog>
+<div class="sr-only" role="status" aria-live="polite" id="sr-status"></div>
+<div class="toast toast-center bottom-24 z-40" id="toast-wrap" hidden>
+  <div class="alert alert-info border border-base-300 text-sm" id="toast">
+    <span id="toast-text"></span>
+    <button type="button" class="btn btn-sm" id="undo">Undo <kbd class="kbd kbd-xs desk-kbd desk-sk ">z</kbd></button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const typing = (el) => !!el && (el.isContentEditable || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || (el.tagName === 'INPUT' && !['radio', 'checkbox', 'button', 'submit'].includes(el.type)));
+  // A printable key with no modifier is a single-key shortcut (WCAG 2.1.4); the switch turns them all off.
+  const single = (e) => e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
+  let skOn = true;
+  try { skOn = localStorage.getItem('desk.singleKeys') !== 'off'; } catch {}
+  const sw = document.getElementById('single-keys');
+  const applySk = () => { root.classList.toggle('desk-no-sk', !skOn); sw.checked = skOn; };
+  sw.addEventListener('change', () => { skOn = sw.checked; try { localStorage.setItem('desk.singleKeys', skOn ? 'on' : 'off'); } catch {} applySk(); });
+  applySk();
+
+  const sheet = document.getElementById('keys');
+  const toggleSheet = () => (sheet.open ? sheet.close() : sheet.showModal());
+  document.getElementById('open-keys').onclick = toggleSheet;
+
+  const status = document.getElementById('sr-status');
+  const announce = (msg) => { status.textContent = ''; setTimeout(() => { status.textContent = msg; }, 50); };
+
+  // j and k move keyboard focus through the queue; aria-current stays on the open item.
+  const q = [...document.querySelectorAll('[data-q]')];
+  let qi = q.findIndex((a) => a.hasAttribute('aria-current'));
+  function moveQueue(step) {
+    if (!q.length) return;
+    const at = q.indexOf(document.activeElement);
+    qi = Math.min(q.length - 1, Math.max(0, (at >= 0 ? at : Math.max(qi, 0)) + step));
+    q.forEach((a, i) => a.classList.toggle('menu-focus', i === qi));
+    q[qi].focus();
+  }
+  q.forEach((a) => a.addEventListener('blur', () => a.classList.remove('menu-focus')));
+
+  // Drawer on small screens: the button drives the toggle, focus moves in, Escape closes.
+  const drawer = document.getElementById('queue-toggle'), opener = document.getElementById('queue-open');
+  const setDrawer = (open) => { drawer.checked = open; opener.setAttribute('aria-expanded', String(open)); // daisyUI's panel becomes visible partway through its transition, so focus retries each frame until it lands.
+    const focusIn = (n = 0) => { const t = q[0] || document.getElementById('open-keys'); t.focus(); if (document.activeElement !== t && n < 60) requestAnimationFrame(() => focusIn(n + 1)); };
+    if (open) focusIn(); else opener.focus(); };
+  opener.onclick = () => setDrawer(true);
+  document.querySelector('.drawer-overlay').addEventListener('click', () => setTimeout(() => setDrawer(false)));
+
+  // Keep focused controls clear of the sticky bar and the toast.
+  const bar = document.getElementById('decision');
+  const pad = () => root.style.setProperty('--desk-bar-pad', `${(bar ? bar.offsetHeight : 0) + 72}px`);
+  if (bar && 'ResizeObserver' in window) new ResizeObserver(pad).observe(bar);
+  pad();
+
+  window.desk = { typing, moveQueue, announce, handlers: {} };
+  // Undo window: the decision is held in the page and written only when the next item loads.
+  let pending = null, returnTo = null;
+  const wrap = document.getElementById('toast-wrap'), undoBtn = document.getElementById('undo'), toastText = document.getElementById('toast-text');
+  window.desk.decide = (text, next, from) => {
+    let left = 5;
+    returnTo = from;
+    const where = next ? `Opening ${next.label}` : 'Closing the queue';
+    const render = () => { toastText.textContent = `${text} ${where} in ${left} s.`; };
+    render();
+    wrap.hidden = false; undoBtn.hidden = false;
+    undoBtn.focus();
+    announce(`${text} ${where} in 5 seconds. Press z or the Undo button to undo.`);
+    clearInterval(pending);
+    pending = setInterval(() => {
+      left -= 1;
+      if (left > 0) return render();
+      clearInterval(pending); pending = null;
+      undoBtn.hidden = true;
+      toastText.textContent = next && next.href ? `${text} Opening ${next.label}.` : `${text} ${next ? `${next.label} has no mockup; it would load here.` : ''}`;
+      announce(toastText.textContent);
+      document.getElementById('main').focus();
+      if (next && next.href) location.href = next.href;
+    }, 1000);
+  };
+  window.desk.undo = () => {
+    if (!pending) return;
+    clearInterval(pending); pending = null;
+    wrap.hidden = true;
+    window.desk.handlers.undone && window.desk.handlers.undone();
+    announce('Undone. Nothing was sent.');
+    returnTo && returnTo.focus();
+  };
+  undoBtn.addEventListener('click', () => window.desk.undo());
+
+  document.addEventListener('keydown', (e) => {
+    const h = window.desk.handlers;
+    if (e.key === 'Escape' && drawer.checked) { setDrawer(false); return; }
+    if (sheet.open) return;
+    if (h.any && h.any(e)) return;
+    if (typing(e.target)) return;
+    if (single(e) && !skOn) return;
+    if (e.key === '?') { e.preventDefault(); toggleSheet(); }
+    else if (e.key === 'j') { e.preventDefault(); moveQueue(1); }
+    else if (e.key === 'k') { e.preventDefault(); moveQueue(-1); }
+    else if (e.key === 'z') { e.preventDefault(); window.desk.undo(); }
+    else if (h[e.key] && !e.ctrlKey && !e.metaKey && !e.altKey) { h[e.key](e); }
+  });
+  if (location.hash === '#keys') sheet.showModal();
+  // The CDN Tailwind build styles the page after load, so an anchor scroll taken earlier lands wrong.
+  window.addEventListener('load', () => setTimeout(() => {
+    const t = location.hash.length > 1 && document.getElementById(location.hash.slice(1));
+    if (t && t !== sheet) t.scrollIntoView({ block: 'start' });
+  }, 400));
+})();
+</script>
+<script>
+(() => {
+  const next = {"label": "Found, not done: review desk lean v1", "href": "triage-b.html"};
+  const subject = "the review desk design";
+  const noteRow = document.getElementById('note-row'), note = document.getElementById('note');
+  const idle = document.getElementById('idle-actions'), rej = document.getElementById('reject-actions');
+  const openNote = () => { noteRow.hidden = false; idle.hidden = true; rej.hidden = false; note.focus(); };
+  const closeNote = () => { noteRow.hidden = true; idle.hidden = false; rej.hidden = true; document.getElementById('reject').focus(); };
+  const lock = (on) => document.querySelectorAll('#decision button, #note').forEach((b) => b.disabled = on);
+  const approve = () => { lock(true); desk.decide(`Approved ${subject}.`, next, document.getElementById('approve')); };
+  const send = () => { lock(true); desk.decide(`Rejected ${subject}${note.value.trim() ? ' with a note' : ''}.`, next, document.getElementById('send')); };
+  document.getElementById('reject').onclick = openNote;
+  document.getElementById('cancel').onclick = closeNote;
+  document.getElementById('approve').onclick = approve;
+  document.getElementById('send').onclick = send;
+  Object.assign(desk.handlers, {
+    a: (e) => { e.preventDefault(); approve(); },
+    r: (e) => { e.preventDefault(); openNote(); },
+    undone: () => lock(false),
+    any: (e) => {
+      if (e.target === note && e.key === 'Escape') { closeNote(); return true; }
+      if (e.target === note && e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); send(); return true; }
+      return false;
+    },
+  });
+  if (location.hash === '#reject') openNote();
+})();
+</script>
+
+</body>
+</html>
