@@ -42,19 +42,14 @@ queue, in order, with each item's detail in the launch prompt:
 1. **Dubplate alignment PR.** After Geoff merges it, the conductor fast-forwards dubplate, backs up
    and then prunes dubplate's auto-memory per the PR body's dry run, and trashes the untracked
    `reports/` originals. Then dubplate's `admin-api-1` re-plan.
-2. **Review desk, lean v1.** Amend the design on `worktree-review-desk`, then bring it to Geoff.
-3. **cairn-cms alignment.** Approved by Geoff. Evidence and rulings:
+2. **cairn-cms alignment.** Approved by Geoff. Evidence and rulings:
    `docs/superpowers/research/2026-10-11-cairn-cms-alignment-audit.md`.
-4. **Infra sweep 2.** The design on `worktree-infra-sweep-2-design` waits for Geoff. Re-check it
+3. **Infra sweep 2.** The design on `worktree-infra-sweep-2-design` waits for Geoff. Re-check it
    against #8 first.
-5. **Poplar adapter**, then the cairn-cms ROADMAP restructure after docs stage 2b.
+4. **Poplar adapter**, then the cairn-cms ROADMAP restructure after docs stage 2b.
 
-Pending with Geoff: the review-desk and sweep-2 designs, and the dubplate alignment PR.
-
-## Review desk executor
-
-Session `review-desk-v1` (job id `205b8c14`) executes the review desk, lean v1, on branch
-`worktree-review-desk-v1`; plan `docs/superpowers/plans/2026-10-11-review-desk.md`.
+Pending with Geoff: the review desk PR (#13), the sweep-2 design, and the dubplate alignment PR.
+After #13 merges and the checkout is pulled, `stow -R bin` puts `review-desk` on PATH.
 
 ## Open items
 
