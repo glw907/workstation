@@ -40,7 +40,5 @@ fi
 claude -p --model opus --effort high --permission-mode auto \
     -w "model-review-$(date +%Y-%m)" "$prompt" || {
     echo "review session failed"
-    (( dry_run )) || notify-send --urgency=normal "Monthly Claude model review failed" \
-        "See: journalctl --user -u model-review.service" 2>/dev/null || true
     exit 1
 }
