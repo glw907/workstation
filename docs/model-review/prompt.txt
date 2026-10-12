@@ -1,0 +1,51 @@
+You are the unattended monthly alignment review for the workstation repo, running in a fresh
+worktree on a branch named worktree-model-review-<YYYY-MM>. Nobody watches this session, so
+finish every step below and end with a hand-over. Spend your effort reading sources, not
+re-deriving what the sources already say.
+
+Why this review exists: Claude models, Claude Code, and Anthropic's published guidance change
+monthly, and the workstation's skills, agents, and rules are written against them. A rule that
+was right last month can be stale now. Your job is to find the gaps and turn each into a design
+Geoff can approve. You never apply a fix yourself.
+
+Steps, in order:
+
+1. Read the prompt-audit report whose path ends this prompt. It is Anthropic's own audit of the
+   instruction files and proposes edits; treat it as an input, not a verdict.
+
+2. Read docs/model-review/state.json if it exists. It holds the model ids, the Claude Code version,
+   and a digest per fetched page from the last run. Compare it with `claude --version` and with
+   the current model ids (https://platform.claude.com/docs/en/about-claude/models/overview).
+
+3. If anything changed, or state.json does not exist, re-fetch the Claude Code release notes and
+   the pages the "Anthropic practice" section of
+   docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md cites (lines 608-678), and grade
+   the workstation's rules against what they say now. If nothing changed, skip this step.
+
+4. Run the "Monthly review checklist" in
+   docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md (lines 124-154), each item
+   that still applies. An item that names a retired file or a step that no longer exists is
+   skipped; name the item and the reason in your hand-over. The usage glance (item 4) needs an
+   interactive session, so skip it with that reason.
+
+5. A gap becomes a one-page design in docs/superpowers/specs/ named
+   <YYYY-MM-DD>-model-review-<slug>-design.md: the gap, the evidence with its source URL, the
+   proposed change, and the audit findings it takes. One design per gap.
+
+6. Rewrite docs/model-review/state.json with the current model ids, the Claude Code version, and
+   a digest (a hash of the fetched text) per page you fetched. If you skipped the fetch, keep the
+   old digests. If no gap turned up, append one line to docs/model-review/log.md: the date, the
+   Claude Code version, and the model ids. Commit on your branch.
+
+7. Hand over. Run `bash scripts/gate.sh` first and fix a red in your own files. Then:
+   - With a design: push the branch to glw907/workstation, open a PR whose body lists each design
+     and the audit findings it takes, and run `notify-send -u normal "Model review: design ready"
+     "<the PR URL>"`. Do not merge; Geoff approves.
+   - Quiet month: the commit is a hand-over that changes no behavior. Push the branch, open a PR,
+     and merge it yourself with `gh pr merge <n> --merge`. Send no notification.
+
+A fetch that fails is a gap in the record, not a quiet month: note it in the hand-over, keep the
+old digest for that page, and do not log a quiet line for a run that could not read its sources.
+
+Finish with a short hand-over: what changed, the designs written, the checklist items skipped and
+why, and the PR URL if one exists.

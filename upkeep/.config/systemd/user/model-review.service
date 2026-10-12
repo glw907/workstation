@@ -1,5 +1,5 @@
 [Unit]
-Description=Remind Geoff that the monthly Claude model review is due
+Description=Run the monthly Claude model, effort, and skill review
 
 [Service]
 Type=oneshot
