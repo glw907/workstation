@@ -72,6 +72,24 @@ func TestScanFindings(t *testing.T) {
 			want:     []string{"slop-hard"},
 		},
 		{
+			name:     "the showcase site name is not slop",
+			input:    "Open the showcase and read its members channel.",
+			register: Docs,
+			absent:   []string{"slop-hard"},
+		},
+		{
+			name:     "showcases verb flagged",
+			input:    "The page showcases every option.",
+			register: Docs,
+			want:     []string{"slop-hard"},
+		},
+		{
+			name:     "showcasing verb flagged",
+			input:    "The page is showcasing every option.",
+			register: Docs,
+			want:     []string{"slop-hard"},
+		},
+		{
 			name:     "soft slop counted but not flagged",
 			input:    "The check must be robust against comprehensive input.",
 			register: Docs,
