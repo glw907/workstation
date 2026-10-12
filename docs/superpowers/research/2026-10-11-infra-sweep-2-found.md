@@ -32,3 +32,10 @@ F6 dry-run's own gate run failed on node-not-found (mise shims); fixed in script
 E1 auto-mode classifier flagged E's report ("Instruction Poisoning") after denying its Python edit script; E's diff reviewed in full and clean - drop
 G1 restore_place_home in bootstrap.sh (~l.679) re-stows claude but does not run apply, so ~/.claude/settings.json stays missing after a restore - defer
 G2 first live stow -R claude after merge: order is stow, then apply (PR "What goes live") - now (PR note)
+## Found (whole-branch review: accept, no blockers)
+R1 claude/.stow-local-ignore README/LICENSE/COPYING were unanchored, widening stow's defaults; anchored at close - fixed
+R2 G1 raised to now: restore_place_home re-stows claude without apply, so a restore leaves Claude Code without its guard hooks (secret, tierguard, block-op) until apply runs - now (one line in bootstrap.sh)
+R3 each monthly `-w model-review-<YYYY-MM>` worktree keeps its lock under the main checkout and builds up month by month - defer (prompt.txt or the script should unlock and remove after the merge)
+R4 the mise-shims PATH fix in model-review-notify is first exercised by the first live timer fire - note
+R5 G and D commit bodies do not record the stow -n check; D has no body - drop
+R6 stale "kitty-shot harness" wording at bootstrap.sh:365,383,504 and Brewfile:31 (A1) - defer
