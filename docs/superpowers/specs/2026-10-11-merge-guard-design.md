@@ -29,7 +29,13 @@ steps it needs.
    `## Before merge` section and the command does not start with `PREMERGE_DONE=<n>`, it blocks
    and returns the section's text, so the session sees the steps. It never runs text from a PR
    body, since some of these repos are public. Any other command, and any PR without the section,
-   passes untouched.
+   passes untouched. Per the hooks reference (<https://code.claude.com/docs/en/hooks>), it blocks
+   with `hookSpecificOutput.permissionDecision: "deny"` and a `permissionDecisionReason`, and its
+   registration sets a timeout and `onFailure: "block"`, because "a timed-out `command` ... hook
+   doesn't block the tool call" and this one calls `gh` over the network. It matches any command
+   that runs `gh pr merge`, including after `cd` or with `-R`. The same reference says to "use the
+   permission system rather than a hook to enforce a hard allow or deny"; this is a slip guard,
+   not a security boundary, and no permission rule can condition on a PR body.
 3. **Review desk.** A PR item whose body has a `## Before merge` section shows it as a warning
    above Approve, so Geoff knows the PR needs extra steps before he approves.
 
