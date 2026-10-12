@@ -20,7 +20,7 @@ Risk class: `runner` (T1's gate wrapper and T6's chain change). The other tasks 
 `live-account` flag: the planning session creates the GitHub repo before launch, and nothing in the
 pass calls an API or deploys. Geoff reads and merges the dotfiles PR; the drafter PR merges first.
 
-Estimate: 615 task-minutes against a design estimate of 350 (under the 2x line of 700).
+Estimate: 675 task-minutes (615 planned, plus T8's 60) against a design estimate of 350 (under the 2x line of 700).
 
 Dependencies, each at its newest release: `github.com/spf13/cobra` (v1.10.2), `go.yaml.in/yaml/v3`
 (v3.0.5, the YAML org's maintained module; `gopkg.in/yaml.v3` was archived April 1, 2025), and
@@ -282,6 +282,53 @@ spec's "The plan format" section and go-conventions govern the how.
   nonzero `checkPlan`, each with a passing twin. Markdown-mode renders equal the goldens byte for
   byte.
 - Test: `bash scripts/gate.sh` (`scripts/check.sh` already runs the outline test).
+
+### T8. Fold cairn's first format batch (60 min, ordinary)
+
+Added 2026-10-12 by the conductor on Geoff's approval in session `drafter-conductor`. cairn-cms
+tested plan format v1 against 11 real pages and sent a first batch of findings. Geoff approved
+folding them as triaged ("Fold as triaged"). T8 runs after T5 and before T7. Every change below is
+an optional addition, so `version: 1` and the stability rule hold, and every plan valid before T8
+stays valid.
+
+- Outcome, in `internal/plan`, `schema/plan.schema.json`, `docs/plan-format.md`, and the e2e and
+  unit fixtures:
+  1. A section gains an optional `level`, `2` or `3`, defaulting to `2`. The list stays flat, in
+     page order. Any other value is a decode finding. A same-page `#anchor` also matches the slug
+     of a level-3 heading, which the existing same-page rule already covers since it reads every
+     section `heading`.
+  2. `failure.from` becomes optional, and `failure` gains an optional `cause` (prose). A `failure`
+     with no `from` is a free-standing symptom row (a page of symptoms, causes, and fixes with no
+     steps). When `from` is present, it must still name a step. The recovery matrix is unchanged:
+     every `canFail` step still needs a `failure` whose `from` names it.
+  3. A new item kind, `code`: `source` (required, a path or `path#Symbol`) and `text` (required,
+     prose: what the block shows). The path part resolves from the page's directory, like a link
+     target, and must exist. The `#Symbol` part is not checked.
+  4. A new item kind, `figure`: `text` (required, prose: what the figure must show) and `source`
+     (optional, plain string, not checked).
+  5. A `fact` item gains an optional `use` (prose): the claim in the fact this placement backs.
+  6. A `sentence` item gains an optional `facts`, a list of fact ids. With `--facts`, each id must
+     resolve to exactly one bullet and be citable, like a `fact` item's id. Without `--facts`, each
+     list is skipped with the same no-facts warning.
+  7. Docs only: items within a section are listed in prose order.
+  8. Docs only: `preconditions` holds the state tokens the reader brings, and a "Before you begin"
+     section describes the same state in prose. Anything the reader must do there is a `step`
+     that produces its token, not a precondition.
+  9. Docs only: the plan doesn't carry exemplars or the outline's cross-links. The chain supplies
+     them from the page inputs, so a planner doesn't copy them into `constraints`.
+  Rejected, recorded in the dotfiles PR body under "Found, not done" with disposition "drop": a
+  warning on a `produces` token nothing consumes (every task's end state would trip it), and a
+  plan-level rework block (rework is run input the chain already passes to the plan step).
+- Files: `internal/plan/plan.go`, `decode.go`, `check.go`, `facts.go`, their tests,
+  `internal/plan/testdata/`, `schema/plan.schema.json`, `docs/plan-format.md`, `e2e/testdata/`.
+- Acceptance: for each of 1 to 6, a failing fixture and a clean twin (a `level: 4`; a `failure`
+  with no `from` that passes and one whose `from` names a non-step; a `code` item with a missing
+  path; a `figure` item with an unknown field; a `fact` item with `use`; a `sentence` whose `facts`
+  holds a rejected fact). The schema sync test and the T5 reference test pass with the new fields.
+  `docs/plan-format.md` states 7 to 9.
+- Test: `bash scripts/drafter-gate.sh`.
+
+The pass total becomes 675 task-minutes, under the 900 standing ceiling.
 
 ### T7. End-to-end on one cairn page (45 min, ordinary)
 
