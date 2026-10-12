@@ -107,7 +107,13 @@ the app":
    each decision by click: Approve; Reject, a note, and Send rejection; row 1's "Move to" menu set to Defer, and Submit. The commands print
    the approve, the reject with the note's text, and row 1 as `defer`.
 5. With nothing waiting, `timeout 60 /usr/bin/firefox --headless --no-remote --profile <temp dir>
-   http://127.0.0.1:7907/` exits 0, not 124: real Firefox closes the empty-state tab, and closing
+   http://127.0.0.1:7907/` exits 0, not 124, once the temp dir holds a `user.js` that turns the
+   first-run tab off (`browser.aboutwelcome.enabled`, `browser.shell.checkDefaultBrowser`,
+   `datareporting.policy.dataSubmissionEnabled`, and `toolkit.telemetry.reportingpolicy.firstRun` false;
+   `browser.startup.homepage_override.mstone` "ignore"; `startup.homepage_welcome_url`,
+   `startup.homepage_welcome_url.additional`, and `datareporting.policy.firstRunURL` empty). Without
+   it a fresh profile opens a welcome tab, closing the empty-state tab leaves that tab open, and the
+   run times out at 124 (found at the close of PR #22): real Firefox closes the empty-state tab, and closing
    its only window quits it. The absolute path skips step 2's stub, so the check cannot pass
    against it, and `--no-remote` keeps the run out of Geoff's running Firefox.
 6. The bind, CSP, and `Host` checks of the first desk pass still hold: `ss -ltnH 'sport = :7907'`

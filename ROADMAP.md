@@ -91,6 +91,21 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   and JoinHorizontal rules from the deleted `bubbletea-conventions.md` (poplar's refactor pass
   re-homes them). `registry.md` has no entry id for the Cloudflare token.
 
+- **Review desk UI leftovers**, deferred by Geoff's triage of workstation PR #22 (2026-10-11).
+  `cairn-run-gate --records` prints epoch-sized values instead of durations. `ItemPanel`'s teardown
+  clears every key handler, including the ones its views registered; each component should remove
+  only its own. The undo toast sits at a fixed `bottom-24` and can cover a tall decision bar, and a
+  failed-post toast cannot be dismissed. The shortcut hints inside colored buttons are estimated near
+  4:1 (Reject lowest) and need a measurement in both themes. Below `lg` the open drawer has no focus
+  trap and `j` and `k` do nothing while it is closed. Verify whether `beforeNavigate` fires for the
+  same-page `#` figure links, which would undo a decision held in the page. Smaller: the toast's
+  "Opening X" can name a different item than the server picks; a queue click while a post is in
+  flight is not cancelled; the triage arrows fire from outside `main`; the empty page can stick at
+  "Closing this tab." when `window.close()` is refused; `classifyDiff` has no caller; a triage move
+  speaks through two live regions; the unchecked toggle's edge is unmeasured at 3:1. Cosmetic: the
+  PR and design bar buttons sit right at 390 px, the file-row `+N` and `-N` gap is wider than the
+  mockup's, an opened file header takes a fill, and the triage reason text is about 1 px large.
+
 - **Two worktree-guard notes**, from the same triage: the pair-dispatch template should tell a
   subagent that the worktree Bash guard refuses compound commands, so it uses plain calls and the
   Write tool; and the guard refuses `gitleaks git` and a `node` run with a computed path.
