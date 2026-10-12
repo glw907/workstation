@@ -145,6 +145,14 @@ with `gh pr merge <n> --merge` after he approves, pulls the checkout (see "Close
 the next committed prompt from the main checkout after the "Execute" pre-launch checks. It brings
 Geoff only designs, PR reads, and product or priority calls.
 
+An executor refuses the conductor's cross-session messages, rightly: a peer's message carries no
+approval from Geoff. When an executor stops on a cause the conductor can fix, the conductor fixes
+it at the source (the plan branch, a merge from the default branch), then stops and relaunches the
+executor; otherwise Geoff attaches to it. The conductor never calls `EnterWorktree` while its own
+subagents run, because the isolation applies to them too; it edits a worktree by path instead.
+A watch over `claude agents --json` reads each field with `.get`, since a row can lack `id`
+(conductor `4bea6e68`, 2026-10-11).
+
 ## Close
 
 The repo's full-suite home is green on the head. One whole-branch Opus review follows:
