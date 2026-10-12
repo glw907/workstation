@@ -171,8 +171,12 @@ cannot fire while the session waits on a pair.
 
 The conductor is the session that runs between passes. One runs per project, named
 `conductor-<project>` (see "Execute"), and it owns every PR its passes open, merged in the order its
-prompt names. It watches unattended passes with the Monitor tool over `claude agents --json --all`,
-which keeps a background session listed after its process exits. It puts each PR or design before
+prompt names. Its first act is the API-drop wake-up (`/loop` with no interval) and, if the lid
+may close, the lid-switch hold, per `~/.claude/docs/unattended-work-guards.md`, as an executor's
+are (Geoff, 2026-10-12). It watches unattended passes with the Monitor tool over `claude agents
+--json --all`, which keeps a background session listed after its process exits. The Monitor event
+is the primary signal; each fallback tick re-arms the Monitor and checks the pass's sessions and
+PRs, since an event lost to an API drop leaves the conductor asleep. It puts each PR or design before
 Geoff on the review desk, merges and pulls the checkout per "Close" after he approves, and launches
 the next committed prompt from the main checkout after the "Execute" pre-launch checks. For a pass
 it owns, the conductor is the session that hands the PR over in "Close", so the executor's prompt
