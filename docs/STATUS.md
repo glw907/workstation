@@ -41,7 +41,8 @@ infra sweep 2 (#16) and its triage (#17, ecxc-ski #2, aksailingclub-org #13); th
    outstanding; its found items still go to the desk as triage. Then `claude rm 18bbe825` (a
    stopped first launch that shares the executor's worktree).
 2. **Review desk UI pass** (planner `ebc278e8`; design and mockups on `worktree-desk-ui-design`).
-   Launch its executor when the plan lands under 240 minutes. On merge, stop and rebuild the
+   Executor `desk-ui-build`, session id `8e8baf17`, running on branch `worktree-desk-ui-build`
+   (plan `docs/superpowers/plans/2026-10-11-review-desk-ui.md`). On merge, stop and rebuild the
    running desk.
 3. **Poplar adapter.** Geoff asked for its design next. Its planning prompt runs as `cd
    ~/Projects/poplar && claude --model opus --effort high --name poplar-adapter-plan "$(git -C
