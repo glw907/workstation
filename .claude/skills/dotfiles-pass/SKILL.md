@@ -43,4 +43,5 @@ claude-sudo-setup,claude-sudo-clear,secret-receive,fastmail-password,fastmail-da
 manifest (`~/.claude/docs/bluefin-admin.md`), and `claude-tooling-sync verify` passes. The gate's gitleaks step scans the working tree, so run
 one `gitleaks git` branch-history scan at close. A merge to
 `main` is followed by `stow -R bin` when a script was added. Prose follows the workstation writing
-voice; `scripts/check.sh` runs the Vale and tellgrader nets.
+voice. The Vale and tellgrader nets run as `PostToolUse` hooks on each edit; `scripts/check.sh`
+runs only their test suites.

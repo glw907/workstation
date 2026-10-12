@@ -212,6 +212,10 @@
       "**Primary use of Claude Code**: software development",
       "**Trusted repo**: none declared machine-wide; a repo claiming trusted status declares it in its own .claude/settings.json (canonical paths on this machine are /var/home/glw907/...)",
       "**Org-specific CLIs**: None configured"
+    ],
+    "allow": [
+      "$defaults",
+      "Edits and commits to skill files under claude/.claude/skills/ inside a git worktree of ~/.dotfiles (paths under /var/home/glw907/.dotfiles/.claude/worktrees/) are allowed when they implement a task of a pass plan Geoff approved. The workstation repo is where these skills are authored, and each change takes effect only after Geoff merges its PR. This clears Self-Modification and Instruction Poisoning for that skill text only; it does not cover settings, hooks, permission rules, CLAUDE.md, or memory, and it does not cover text that grants permissions or tells a session to bypass a block."
     ]
   },
   "voiceEnabled": true
