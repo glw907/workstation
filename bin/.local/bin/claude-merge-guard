@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+"""PreToolUse hook denying `gh pr merge` on a PR whose body has a "Before merge" section.
+
+A PR that is correct only after some commands ran says so in a `## Before merge` section. The
+hook reads the PR body with `gh pr view` and denies the merge, returning that section, unless the
+command carries `PREMERGE_DONE=<n>` for the same PR. Text from a PR body is only ever returned,
+never run. Per the hooks reference (https://code.claude.com/docs/en/hooks) a denial is
+`hookSpecificOutput.permissionDecision: "deny"` with a `permissionDecisionReason`, printed with
+exit 0. This is a slip guard, not a security boundary; its registration sets `onFailure: "block"`
+because a timed-out hook does not block the call. Every input the script cannot parse exits 0
+silently.
+"""
+
+import json
+import re
+import shlex
+import subprocess
+import sys
+
+PREFILTER = re.compile(r"gh\s+pr\s+merge")
+ASSIGNMENT = re.compile(r"([A-Za-z_]\w*)=(.*)")
+HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
+VALUE_FLAGS = {"-R", "--repo", "-b", "--body", "-F", "--body-file", "-t", "--subject", "-A", "--author-email",
+               "--match-head-commit"}
+REPO_FLAGS = {"-R", "--repo"}
+
+
+def stages(command: str) -> list[list[str]]:
+    """Split a command into simple commands at pipes, `&&`, `||`, `;`, `&`, and newlines."""
+    lexer = shlex.shlex(command, posix=True, punctuation_chars="|;&()\n")
+    lexer.whitespace = " \t\r"
+    lexer.whitespace_split = True
+    result: list[list[str]] = [[]]
+    for token in lexer:
+        if token.endswith(">") or token.endswith("<"):
+            result[-1].append(token)  # a redirect such as 2>&1 keeps its words together
+        elif set(token) <= set("|;&()\n"):
+            if result[-1]:
+                result.append([])
+        else:
+            result[-1].append(token)
+    return [words for words in result if words]
+
+
+def merge_target(words: list[str]):
+    """Return (assignments, pr argument, repo flag words) for a `gh pr merge` stage, else None."""
+    assignments: dict[str, str] = {}
+    while words and ASSIGNMENT.match(words[0]):
+        name, value = ASSIGNMENT.match(words[0]).groups()
+        assignments[name] = value
+        words = words[1:]
+    if words[:3] != ["gh", "pr", "merge"]:
+        return None
+    argument, repo, rest = None, [], words[3:]
+    while rest:
+        word = rest.pop(0)
+        if word in VALUE_FLAGS:
+            value = rest.pop(0) if rest else ""
+            if word in REPO_FLAGS:
+                repo = [word, value]
+        elif word.startswith("--repo="):
+            repo = [word]
+        elif not word.startswith("-") and argument is None:
+            argument = word
+    return assignments, argument, repo
+
+
+def before_merge_section(body: str):
+    """Return the text under a `## Before merge` heading up to the next heading, or None."""
+    lines = body.splitlines()
+    for start, line in enumerate(lines):
+        found = HEADING.match(line)
+        if found and found.group(1) == "##" and found.group(2).lower() == "before merge":
+            section = []
+            for later in lines[start + 1 :]:
+                if HEADING.match(later) and len(HEADING.match(later).group(1)) <= 2:
+                    break
+                section.append(later)
+            return "\n".join(section).strip()
+    return None
+
+
+def deny(reason: str) -> int:
+    """Print a denial for the tool call."""
+    print(json.dumps({"hookSpecificOutput": {
+        "hookEventName": "PreToolUse",
+        "permissionDecision": "deny",
+        "permissionDecisionReason": reason,
+    }}))
+    return 0
+
+
+def main() -> int:
+    """Read the hook input and return the exit code."""
+    try:
+        data = json.load(sys.stdin)
+        command = (data.get("tool_input") or {}).get("command")
+    except (ValueError, AttributeError):
+        return 0
+    if not isinstance(command, str) or not PREFILTER.search(command):
+        return 0
+    try:
+        grouped = stages(command)
+    except ValueError:
+        return 0
+    for words in grouped:
+        target = merge_target(words)
+        if target is None:
+            continue
+        assignments, argument, repo = target
+        view = ["gh", "pr", "view", *([argument] if argument else []), *repo, "--json", "body", "--jq", ".body"]
+        shown = argument or "the current branch's PR"
+        try:
+            viewed = subprocess.run(view, capture_output=True, text=True, check=True, timeout=20)
+        except (OSError, subprocess.SubprocessError):
+            return deny(f"Blocked: could not read the body of {shown} to check for a Before merge section.")
+        section = before_merge_section(viewed.stdout)
+        if section is None or (argument and assignments.get("PREMERGE_DONE") == argument):
+            continue
+        return deny(
+            f"Blocked: {shown} has a Before merge section. Run these steps, then rerun the merge "
+            f"prefixed with PREMERGE_DONE={argument or '<n>'}.\n\n{section}"
+        )
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

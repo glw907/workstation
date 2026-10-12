@@ -180,6 +180,11 @@ green full-suite home and an accepted whole-branch review, when its "Found, not 
 empty. A non-empty list, or a `runner` or `auth-data` pass, keeps Geoff's read and merge. An
 adapter line that says every PR waits for Geoff yields to this exception.
 
+A PR must be safe under a plain merge followed by a pull; the executor makes it so where it can.
+When it cannot, the PR body carries a `## Before merge` section: the exact commands in order and
+the one check that shows they ran. `claude-merge-guard` refuses `gh pr merge <n>` until the
+command is prefixed `PREMERGE_DONE=<n>`, after the merger has run those steps.
+
 Whoever merges a PR then brings that repo's main checkout up to date: `git -C <checkout> pull
 --ff-only` when the checkout is on its default branch, has no uncommitted change in a file the
 merge touches, and has no live session (`claude agents --json`). Otherwise it reports the checkout

@@ -37,6 +37,12 @@
             "type": "command",
             "command": "claude-tail-guard",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "claude-merge-guard",
+            "timeout": 30,
+            "onFailure": "block"
           }
         ]
       },
