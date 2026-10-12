@@ -1,11 +1,16 @@
 # Review desk UI plan: fold record
 
+**Over the limit.** After the fold verification's read (last section), the plan is 245
+task-minutes, 5 over the 240 limit (twice the design's 2 hours): T1 20, T2 35, T3 65, T4 55, close
+70. The 5 minutes are T3's per-item state check (verification major 1). The estimate is left
+honest, so under pass-core "Plan" the plan goes back to Geoff with that reason before launch.
+
 Folds the three lenses on `docs/superpowers/plans/2026-10-11-review-desk-ui.md` at `439f1b0`
 (mechanics, contract, risk) into the plan and its launch prompt, 2026-10-11. Each finding was
 checked against source, a probe, or a read before its disposition. Optional findings are dropped
 per `spec-plan-review` ("flag only gaps that affect correctness or the stated requirements, and
-treat the rest as optional", https://code.claude.com/docs/en/best-practices). The task minutes stay
-at the 240 limit: T1 20, T2 35, T3 60, T4 55 (T4 and T5 merged), close 70.
+treat the rest as optional", https://code.claude.com/docs/en/best-practices). After the three lenses
+the task minutes sat at the 240 limit: T1 20, T2 35, T3 60, T4 55 (T4 and T5 merged), close 70.
 
 Tally: 59 findings. 40 folded (four of them with a part refused: risk 1, 2, 4, and 6), 1
 refused, 18 dropped as optional. No owner fork.
@@ -199,3 +204,71 @@ None.
 - "What goes live" said "only when no item waits"; it now says what happens when one waits. The
   merger leaves the lock at once and retries a minute later, because a hand-over blocked on the
   lock has already written its `item.json`, so waiting inside the lock would deadlock.
+
+## Verification read
+
+Folds `docs/superpowers/research/2026-10-11-review-desk-ui-fold-verification.md` (a fresh read of
+the plan at `bc91f01`) into the plan and prompt. 12 findings: 9 folded (finding 10, tagged
+optional, at the planning session's direction), 0 refused, 3 dropped as optional. The tally at the
+top covers the three lenses only.
+
+1. major, correctness: per-item state survives a move to the next item. Folded. Verified against
+   the Svelte docs for `{#key}` ("Key blocks destroy and recreate their contents when the value of
+   an expression changes. When used around components, this will cause them to be reinstantiated
+   and reinitialised") and the SvelteKit load docs the verifier quotes (the page component is not
+   recreated, so its state is kept). A key block cannot reset `$state` declared in the page script
+   outside it, so T3 puts the per-item part in a new `ItemPanel.svelte` rendered inside `{#key
+   data.meta.id}`. The note, "Not sent", the path filter, and the triage rows (seeded from
+   `data.rows`) live there or in the views. The `beforeNavigate` hold cancel lives in `ItemPanel`
+   too: it runs before the navigation changes `data`, while the old instance is still mounted.
+   T3's acceptance seeds two PRs and two triage items of the same row count and checks that the
+   note and a moved row do not carry over. T4's meta line and triage binding move to `ItemPanel`.
+   T3 goes from 60 to 65 minutes.
+2. major, correctness: a failed run leaves 7907 held after the lock is released. Folded in the
+   verifier's shape: "Running the app" step 2 sets an EXIT trap, beside the first plan's `trap
+   'exit 143' TERM HUP INT`, that stops the worktree app by its bracket-form path and kills the
+   hand-over PIDs the script recorded. The e2e runs as a `run_in_background` task. Probe below:
+   the trap runs when a `set -e` script fails, but a TERM to the whole tree frees the lock before
+   bash runs the trap, which is why the e2e must not run under the tool's 600-second ceiling.
+3. major, correctness, raised as an OWNER FORK: the design's "the server and the `review-desk`
+   command do not change". Not a fork, by the planning session's ruling: the sentence has one
+   coherent reading. Read literally, it would forbid the design's own Checks figure (only `gh`, in
+   the command, can supply `statusCheckRollup`) and its queue beside the item (a layout load on
+   the server). So it is scoped to undo, and undo itself needs no server or command change. Option
+   (a) is taken: judgment call 1 now names every server change (the layout load, `listDecided`,
+   the `/` redirect, `pr.json` reads, the actions returning `{ next }`) and the command change,
+   with that reasoning.
+4. minor, correctness: "by 6 seconds" can fail on a correct build (a 5-second hold plus the
+   command's 1-second poll). Folded: "by 8 seconds"; the 4-second check stays.
+5. minor, correctness: round 2's state root is unnamed. Folded: round 2 uses round 1's temp
+   `XDG_STATE_HOME` and app (command lines 62-64 refuse an app that does not serve the root).
+6. minor, correctness: nothing says what to do if 7907 still answers after the `pkill`. Folded:
+   "Running the app" step 3 exits nonzero and the session applies "Stops".
+7. minor, correctness: the Close clock can fire during the desk wait. Folded: Close step 8 removes
+   the Close's clock file when the PR is marked ready; the prompt says so too.
+8. minor, correctness: the new exceptions contradict inherited conventions without naming them.
+   Folded: a new convention lists the three exceptions (the `pkill` in "Running the app", "What
+   goes live", and the PATH `review-desk` in Close step 9), and "the one sanctioned exception" is
+   gone.
+9. minor, optional: an orphaned live item parks every run until the clock stop. Dropped.
+10. minor, optional: the build's place relative to the lock. Folded at the planning session's
+    direction, which named it among the one-line minors to take: the app is built before the lock
+    is taken. The e2e keeps its build under the lock, since its step 2 tests the command's first
+    build.
+11. minor, optional: the PR guard slot's default text. Dropped. The PR read may want it: the
+    catalogue's `#guard` line "Checks passed. Nothing is blocking." has a data source, and the
+    visual grade may flag its absence, which the fix chain would then handle.
+12. minor, optional: the close estimate has the least margin. Dropped (the verifier proposed no
+    change).
+
+### Probes for the verification read
+
+- **EXIT trap under `flock -o`** (`/var/home/glw907/.claude/jobs/ebc278e8/tmp/fold/trap-probe.sh`,
+  `trap-run.sh`, `trap-run.out`; a scratch lock and a `setsid` stand-in app named
+  `fakeapp-sleep`). In fail mode, a `set -euo pipefail` script ran `false`: the EXIT trap ran, the
+  stand-in was gone (count 0), and a second `flock -w 1` got the lock (rc 0). In TERM mode,
+  `pkill -TERM` hit both `flock` and the script: the lock was free at once (rc 0), but the stand-in
+  was still up (count 1) 0.3 s later. bash ran the trap only after its foreground `sleep 20`
+  ended.
+- **`{#key}`**: the Svelte MCP documentation, section "{#key ...}", quoted above. Installed Svelte
+  is 5.57.2 (`review-desk/node_modules/svelte/package.json`).

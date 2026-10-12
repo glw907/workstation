@@ -49,7 +49,10 @@ You may commit on your worktree's branch and push it to `glw907/workstation`, an
 there. Never push `main`, and never write any repo other than `~/.dotfiles`. Every run of a
 worktree app on port 7907, in T3, T4, and the Close's end-to-end check, follows the plan's
 "Running the app" convention: it holds the live desk's start lock, stops the live desk only when
-nothing waits on it, and never restarts it. A stop follows the plan's "Stops" convention.
+nothing waits on it, stops its own app on any exit through its EXIT trap, and never restarts the
+live desk. The plan lists the only places you touch the main checkout's app or command. A stop
+follows the plan's "Stops" convention. Remove the Close's clock file when you mark the PR ready,
+before you wait on the desk.
 
 The PR goes to Geoff on the review desk, per pass-core "Close" and the plan's Close step 9: run
 `review-desk pr glw907/workstation "<title>" <n>` as a background Bash command, then hand the PR

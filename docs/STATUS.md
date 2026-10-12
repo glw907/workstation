@@ -43,6 +43,16 @@ claude/.claude/settings.json`. After the merge and pull, run `claude-tooling-syn
 start the poplar adapter planning: `cd ~/Projects/poplar && claude --model opus --effort high --name
 poplar-adapter-plan "$(git -C ~/.dotfiles show main:docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt)"`.
 
+## Review desk UI: a question for Geoff
+
+The plan is ready on branch `worktree-desk-ui-plan`
+(`docs/superpowers/plans/2026-10-11-review-desk-ui.md`, launch block in its "Launch" section). It
+comes to 245 task-minutes, 5 over the 240 line, so planning stopped before launch. The extra 5 are
+T3's check that a note or a triage move never carries into the next item. Without it, a decision
+could post the previous item's rows. **Launch at 245 as written?** Recommended: yes. The first desk
+pass ran 68 minutes of clock against 315 planned. A no means trimming criteria, and the per-item check
+is the one that guards a merge decision.
+
 ## Conductor
 
 Handed over by session `c747c352` after #8 merged. In flight: the dubplate alignment executor,

@@ -27,14 +27,23 @@ Playwright.
 **Judgment calls this plan makes** (none changes the design; each is recorded so the PR read can
 see it):
 
-1. **The command fetches more PR fields.** The PR mockup's figures and meta line need the check
-   runs, the PR number, URL, and branches, and the item store has only the body, head, and diff.
-   The command's existing `gh pr view` call adds `number,url,headRefName,baseRefName,statusCheckRollup`
-   and writes them to a new `pr.json`. Its arguments, stdout, and exit codes do not change, so its
-   protocol does not. The design says "Undo holds a decision in the page for 5 seconds before it
-   posts, so the server and the `review-desk` command do not change." The plan reads that sentence
-   as scoped to undo: the Checks figure the design asks for needs `statusCheckRollup`, which only
-   `gh` can supply, and the design's out-of-scope line limits only the command's protocol.
+1. **The command and the server change, outside undo.** The PR mockup's figures and meta line need
+   the check runs, the PR number, URL, and branches, and the item store has only the body, head,
+   and diff. The command's existing `gh pr view` call adds
+   `number,url,headRefName,baseRefName,statusCheckRollup` and writes them to a new `pr.json`. The
+   design says "Undo holds a decision in the page for 5 seconds before it posts, so the server and
+   the `review-desk` command do not change." The plan reads that sentence as scoped to undo, which
+   itself needs no server or command change. Read literally, the sentence would forbid the design's
+   own Checks figure (only `gh`, in the command, supplies `statusCheckRollup`) and its queue beside
+   the item (a layout load on the server). The design's out-of-scope line limits only the command's
+   protocol. Every change the plan makes:
+   - The command writes `pr.json`, and `number` or `file` in `item.json`.
+   - The server gains a layout load of the queue and of `listDecided`, the `/` redirect to the
+     oldest waiting item, and `pr.json` reads in the item store.
+   - The decision actions return `{ next }`. It is computed on the server because a next item taken
+     from the page's queue can be gone or already decided.
+
+   The decision JSON and the command's arguments, stdout, and exit codes do not change.
 2. **Class and review come from the PR body**, since nothing structured carries them. Class is the
    first `` class `<auth-data|runner|ordinary>` `` in the body, case-insensitive (workstation #13
    says ``Class `runner` ``, cairn-cms #113 says ``Risk class `auth-data` ``). Review is the
@@ -85,7 +94,7 @@ the app":
    `history.length === 1` and the queue's rows in the order PR, design, triage. Then, by key: `a`
    shows the toast with Undo focused; `z` returns focus to Approve, `#sr-status` reads "Undone.
    Nothing was sent.", and no `decision.json` exists at 6 seconds; `a` again leaves no
-   `decision.json` and the PR command running at 4 seconds, and by 6 seconds the command has
+   `decision.json` and the PR command running at 4 seconds, and by 8 seconds the command has
    exited 0 printing `{"decision":"approve","head":"<sha>"}`; the page then shows the design at
    its item URL with `history.length === 1`. On the design, `r`, a typed note, and Ctrl+Enter post
    a reject that carries the note. On triage, row 2 takes `3`, its reason is edited in place, and
@@ -93,9 +102,9 @@ the app":
    proposed` before the post, and the command prints row 2 as `drop` with the typed reason and rows
    1 and 3 as proposed. The page shows the empty state with Keep focused, and after 30 seconds the
    page's `close` event fires.
-4. A second round, sequenced the same way, hands over this pass's draft PR, a fresh design, and a
-   fresh triage item of the same three rows, and takes each decision by click: Approve; Reject, a
-   note, and Send rejection; row 1's "Move to" menu set to Defer, and Submit. The commands print
+4. A second round, sequenced the same way on round 1's temp `XDG_STATE_HOME` and app, hands over
+   this pass's draft PR, a fresh design, and a fresh triage item of the same three rows, and takes
+   each decision by click: Approve; Reject, a note, and Send rejection; row 1's "Move to" menu set to Defer, and Submit. The commands print
    the approve, the reject with the note's text, and row 1 as `defer`.
 5. With nothing waiting, `timeout 60 /usr/bin/firefox --headless --no-remote --profile <temp dir>
    http://127.0.0.1:7907/` exits 0, not 124: real Firefox closes the empty-state tab, and closing
@@ -108,11 +117,12 @@ the app":
    `daisyui-a11y-reviewer` and the Blueprint quality inspector find no blocker, with every a11y
    finding carried (Close step 4).
 
-**Clock estimate:** 240 task-minutes (T1 20, T2 35, T3 60, T4 55, close 70), against the design's
-2 hours and at twice it, the 240 limit. The review folds added about 20 minutes of criteria, and
-folding T5 into T4 saved one pair subagent's setup and screenshot loop. The first desk pass ran 68
-minutes of clock against 315 planned. T1 and T2 run as a pair, so the path is about 35 + 60 + 55 +
-70 = 220 minutes.
+**Clock estimate:** 245 task-minutes (T1 20, T2 35, T3 65, T4 55, close 70), against the design's
+2 hours: 5 minutes over twice it, the 240 limit, so the plan goes back to Geoff before launch
+(pass-core "Plan"). The review folds added about 20 minutes of criteria, folding T5 into T4 saved
+one pair subagent's setup and screenshot loop, and the fold verification's per-item state check
+added 5 minutes to T3. The first desk pass ran 68 minutes of clock against 315 planned. T1 and T2
+run as a pair, so the path is about 35 + 65 + 55 + 70 = 225 minutes.
 
 ## Launch
 
@@ -201,8 +211,8 @@ CSRF", "Rendered markdown", and "Shell mechanics" facts
   - `beforeNavigate` runs "before we navigate to a URL, whether by clicking a link, calling
     `goto(...)`, or using the browser back/forward controls", and "remains active as long as the
     component is mounted" (`types/index.d.ts:2772-2780`); a same-route link click goes through it
-    (`client.js:3176`). The item page stays mounted across items, so one callback sees every queue
-    move.
+    (`client.js:3176`). The callbacks run before the navigation changes `data`, so a callback in
+    the keyed `ItemPanel` (T3) still belongs to the item being left.
 - **`flock(1)` and the lock fd** (probe, util-linux 2.42.4, a scratch lock in the job's tmp
   directory). Without `-o`, a `setsid -f` child started under `flock <lock> -c ...` kept the lock
   after `flock` exited (a second `flock -w 2` timed out, exit 1); with `-o` ("Close the file
@@ -220,6 +230,17 @@ CSRF", "Rendered markdown", and "Shell mechanics" facts
 - **Binary files in a diff.** A new binary file is a `diff --git a/<p> b/<p>` header, `new file
   mode`, an `index` line, and `Binary files /dev/null and b/<p> differ`, with no `---`, `+++`, or
   hunk (`git diff origin/main...HEAD` on a render in this branch, which adds 16 PNGs).
+- **Per-item state** (Svelte 5.57.2 docs, "{#key ...}"): "Key blocks destroy and recreate their
+  contents when the value of an expression changes. When used around components, this will cause
+  them to be reinstantiated and reinitialised." SvelteKit's load docs, quoted by the fold
+  verification: rerunning `load` "will update the `data` prop ... it does _not_ cause the
+  component to be recreated. As a result, internal state is preserved."
+- **The EXIT trap under `flock -o`** (probe, a scratch lock and a `setsid` stand-in app). A
+  `set -euo pipefail` script whose command failed partway ran its EXIT trap, which stopped the
+  stand-in, and the lock was free after. On SIGTERM to the whole tree, `flock` died and freed the
+  lock at once, while bash ran the trap only after its current foreground command ended (a 20-second
+  `sleep` in the probe). So a run is never killed from outside: the e2e goes in a
+  `run_in_background` task, clear of the Bash tool's ceiling.
 - **The DaisyUI countdown guide** (`~/.claude/skills/daisyui/components/countdown.md:19`): "Add
   `aria-live="polite"` and `aria-label="{number}"`." Judgment call 4 overrides it.
 - **The live desk.** At planning, the main checkout's app ran on 7907 (`node
@@ -255,20 +276,30 @@ untouched, stopping an app, comments, UI, commits, clock, stops, scope), with th
 - **Running the app.** Every run of a worktree app on 7907 (a task's acceptance, its screenshot
   loop, and the e2e) happens inside `flock -o ~/.local/state/review-desk/start.lock bash <script>`,
   the live state root's lock, which the command takes before it starts an app. `-o` keeps the
-  lock's fd out of the script, so no app it starts holds the lock (probed). The script, in order:
+  lock's fd out of the script, so no app it starts holds the lock (probed). The app is built
+  before the lock is taken, so the lock is held only for the run; the e2e is the exception, since
+  its step 2 tests the command's first build. A run that may pass the Bash tool's 600-second
+  ceiling (the e2e) goes in a `run_in_background` task. The script, in order:
   1. If any item under `~/.local/state/review-desk/items/` waits (an `item.json` with no
      `decision.json`), it exits nonzero having touched nothing. The session waits until none waits
      and runs it again; a long wait ends in the clock stop.
-  2. It stops the live app with `pkill -f '/var/home/glw907/.dotfiles/review-desk/[b]uild'`, the
-     one sanctioned exception to "Stopping an app", and checks that `curl -s http://127.0.0.1:7907/`
-     fails.
-  3. It starts the worktree app on a temp state root (the e2e lets its hand-overs start it) and
+  2. It sets an EXIT trap, with the first desk plan's `trap 'exit 143' TERM HUP INT` beside it,
+     that stops the worktree app per "Stopping an app" and kills any hand-over PIDs the script
+     recorded, so a failing assertion never leaves 7907 held after the lock is released (probed).
+  3. It stops the live app with `pkill -f '/var/home/glw907/.dotfiles/review-desk/[b]uild'` (an
+     exception listed below) and checks that `curl -s http://127.0.0.1:7907/` fails. If 7907 still
+     answers, the script exits nonzero and the session applies "Stops".
+  4. It starts the worktree app on a temp state root (the e2e lets its hand-overs start it) and
      waits until `curl -sf http://127.0.0.1:7907/item/<a seeded id>` answers.
-  4. It runs the browser steps, then stops the worktree app per "Stopping an app".
+  5. It runs the browser steps; the trap stops the worktree app on the way out.
 
   A hand-over that arrives meanwhile writes its `item.json`, blocks on the lock, and after the
   release starts the live app itself. The session never restarts the live app; the next hand-over
   does. The live state root is only read.
+- **Exceptions to the main checkout staying untouched and to "Stopping an app".** Three, and only
+  these: "Running the app" step 3 stops the main checkout's app; "What goes live" (Close step 8)
+  stops it, runs `npm ci` and a build in `~/.dotfiles/review-desk`, and starts it, after the merge;
+  and Close step 9 hands over with the `review-desk` on `PATH`, the main checkout's command.
 - **Visual reference.** A UI task reads the catalogue's sections for its screens and opens the
   matching renders (light and dark, 1440 and 390) before writing markup, then works the canonical
   loop: build, screenshot with the Playwright pattern above, compare to the render, fix. The
@@ -379,8 +410,13 @@ untouched, stopping an app, comments, UI, commits, clock, stops, scope), with th
     queue row grid, the kbd style, `.desk-field`, the `desk-no-sk` hide rule, `scroll-padding-bottom`
     from `--desk-bar-pad` (the bar's height plus enough to clear the toast's top edge, which the
     catalogue measured at about 142 px against a 136 px pad), and the reduced-motion rule.
-  - The item page `+page.svelte` keeps the header (meta line, title), the sticky decision bar, and
-    the existing "Decided" state in place of the bar for a decided item, and mounts `PrView`,
+  - The item page `+page.svelte` renders `ItemPanel.svelte` inside `{#key data.meta.id}`. The
+    page component stays mounted across items, so state held there would carry to the next item;
+    a key block destroys and recreates its contents when the key changes, so every per-item state
+    (the note's open flag and text, "Not sent", the path filter, the triage rows seeded from
+    `data.rows`) lives in `ItemPanel` or the views and starts fresh for each item. `ItemPanel` keeps
+    the header (meta line, title), the sticky decision bar, and the existing "Decided" state in
+    place of the bar for a decided item, and mounts `PrView`,
     `DesignView`, or `TriageView` by kind (T4 fills them; T3 leaves each a stub that renders its
     existing content). The bar's form posts with `enhance`, whose submit function awaits
     `startHold(5000, ...)`: the toast text, Undo focused, one announcement, and the locked controls
@@ -399,17 +435,22 @@ untouched, stopping an app, comments, UI, commits, clock, stops, scope), with th
 - **Files.** `review-desk/src/app.html`, `src/app.css`, `src/routes/+layout.{svelte,server.ts}`,
   `src/routes/+page.{svelte,server.ts}`, `src/routes/page.server.test.ts` (new),
   `src/routes/item/[id=id]/+page.{svelte,server.ts}`, `src/routes/item/[id=id]/page.server.test.ts`,
-  and `src/lib/components/{PrView,DesignView,TriageView}.svelte` (stubs).
+  `src/lib/components/ItemPanel.svelte`, and `src/lib/components/{PrView,DesignView,TriageView}.svelte`
+  (stubs).
 - **Risk class.** `ordinary`.
-- **Acceptance.** The gate prints `gate exit: 0`. Then, per "Running the app", with two items
-  seeded under a temp state root and a Playwright page opened by `location.replace`:
+- **Acceptance.** The gate prints `gate exit: 0`. Then, per "Running the app", with items seeded
+  under a temp state root (two PRs, then two triage items with the same row count) and a
+  Playwright page opened by `location.replace`:
   - `/` lands on the older item with `history.length` 1; `j` then Enter opens the newer one,
     `history.length` still 1.
+  - With the reject note open and text typed on the first PR, `j` and Enter open the second PR with
+    the note closed and empty. A row moved on the first triage item does not follow to the second:
+    after `j` and Enter the second shows its own proposals and its status line reads 0 changed.
   - `a` and `z` show and undo the hold with no `decision.json` written. `a`, then `j` and Enter
     within the hold, loads the other item, and no `decision.json` exists after 6 seconds.
   - With the open item's `decision.json` written behind the page (as another tab would), `a` and 5
     seconds show "Not sent", the controls unlocked, and the URL unchanged. The item is reseeded.
-  - `a` and 5 seconds write the decision and load the other item: the decided item has left the
+  - `a` and 5 seconds write the decision and load the next item: the decided item has left the
     queue and shows under "Decided this session", and `aria-current` sits on the open item.
   - `?` opens the sheet. With the single-keys switch off, `a` starts no hold and shows no toast,
     and after `page.reload()` the switch still reads off; it is then turned back on.
@@ -422,7 +463,7 @@ untouched, stopping an app, comments, UI, commits, clock, stops, scope), with th
   asserts `next`, which skips an item whose `item.json` was removed and is null for the last item;
   `/`'s load test redirects with a waiting item and returns the empty state's data without one; the
   T2 modules carry the logic.
-- **Estimate.** 60 minutes.
+- **Estimate.** 65 minutes.
 
 ### T4. The PR, design, and triage views
 
@@ -445,10 +486,10 @@ untouched, stopping an app, comments, UI, commits, clock, stops, scope), with th
     `1`/`2`/`3`, the "Move to" popover menu (menuitemradio items, the "proposed" marker, arrows,
     Home, End, and Escape), the "was X" note tied by `aria-describedby`, the moved-row dot, focus
     following a moved row, one announcement per move, and the reason edited in place. It binds its
-    rows to the page, which renders the hidden inputs and the status line from `changedCount`.
+    rows to `ItemPanel`, which renders the hidden inputs and the status line from `changedCount`.
     Ctrl+Enter commits an open reason edit before it submits.
 - **Files.** `review-desk/src/lib/components/{PrView,DesignView,TriageView}.svelte`,
-  `src/routes/item/[id=id]/+page.svelte` (the meta line), and the PR and design parts of the item
+  `src/lib/components/ItemPanel.svelte` (the meta line), and the PR and design parts of the item
   page's `load`.
 - **Risk class.** `ordinary`.
 - **Acceptance.** The gate prints `gate exit: 0`. Then, per "Running the app", over a temp state
@@ -514,7 +555,8 @@ Per pass-core "Close" and dotfiles-pass "Close checklist", in order:
    >>$HOME/.local/state/review-desk/server.log 2>&1`), and checks that `curl -sf
    http://127.0.0.1:7907/` answers. An open desk tab loads the new desk on its next navigation. No
    `stow` run is needed. Rollback is `git revert -m 1 <merge>`, a pull, and the same rebuild. Mark
-   the PR ready.
+   the PR ready, and remove the Close's clock file, so the clock stop cannot fire while the session
+   waits on the desk.
 9. Hand the PR over per pass-core "Close": `review-desk pr glw907/workstation "<title>" <n>` as a
    background Bash command, then the "Found, not done" items as one `review-desk triage` item, and
    wait for both. On approve, merge with `gh pr merge <n> --merge --match-head-commit <head>`, pull
