@@ -64,14 +64,8 @@ See the register's Visuals section
 (`~/Projects/cairn-cms/docs/internal/docs-register.md`) for the current rules; this section
 only restates what a builder needs at hand.
 
-Every image and diagram carries alt text, capped at 150 characters: the kind first (diagram,
-screenshot, reproduction), never "Image of", stating what the reader learns rather than what
-the pixels show. A decorative image gets `alt=""`, never an omitted attribute, and is authored
-as HTML (`<img alt="" ...>`) so the empty alt is visibly deliberate; markdown image syntax
-(`![...]`) always carries real alt text. A complex diagram carries a two-part alternative, a
-short alt plus the essential information in body text, not only in the alt. Every authored
-diagram and every live reproduction carries a caption in complete sentences, never redundant
-with the alt and never referring to the figure spatially ("the image above").
+The register's Visuals section carries the alt-text, caption, and decorative-image rules; read it
+before authoring a figure rather than working from a copy here.
 
 A `repro` fence carries its caption a different way: the caption lives INSIDE the fence body,
 as the `caption` key, not as an emphasis paragraph after the fence, because the body must be
@@ -129,19 +123,15 @@ its real advantages, cairn's own trade-offs beside them). Where a figure must sh
 no adjective grades either side, no vendor is named, and every sub-label is verifiable as a
 general statement.
 
-## The gates do not exist yet
+## The mechanical gate
 
-`check:figures` and `check:visuals` are cairn-cms's mechanical floor for this standard:
-`check:figures` is meant to grow from today's staleness check to seven assertions covering
-the routing rule, the committed-source requirement, and the alt/caption rules, and
-`check:visuals` is meant to close the hole where an image with no alt attribute passes
-unseen. **Neither exists today.** Both are pass 2a's work (the cairn documentation standard's
-second plan), and this skill names them as the standard they will enforce, not as a gate you
-can run now. Do not go looking for `npm run check:figures` before pass 2a lands it.
+`npm run check:visuals` in cairn-cms is the mechanical floor for this standard. It checks mermaid
+`accTitle:` and `accDescr:`, captions, alt length, and `repro` fences. It does not judge whether a
+figure earns its place; that is the verifier's work.
 
 ## Verification: the figure-verifier agent
 
-Until the gates land, and after, the judgment layer for a figure is the `figure-verifier`
+The judgment layer for a figure is the `figure-verifier`
 agent (`~/.claude/agents/figure-verifier.md`, `model: claude-opus-5-5`, read-only). Dispatch it
 after a page carrying a figure is drafted or edited, before a human reads the page. It grades
 every figure on the page against the two figure tests above and the register's visual-layer

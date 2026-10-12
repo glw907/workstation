@@ -28,10 +28,20 @@ artifacts. github.com/glw907/workstation.
   `claude-tail-guard` hook, and the guidance-citation warning (#8). Evidence for #8:
   `docs/superpowers/research/2026-10-11-anthropic-guidance-proportionality.md`.
 
+## Infra sweep 2: PR open for Geoff
+
+Branch `worktree-infra-sweep-2-build`, plan `docs/superpowers/plans/2026-10-11-infra-sweep-2.md`;
+the executor session `infra-sweep-2-build` (id `0c143a5c`) has ended. The review verdict is accept.
+It moves to "merged" on Geoff's merge.
+
 ## Immediate next action
 
-Start a fresh conductor, so the work ahead runs under #8's rules (Geoff, 2026-10-11):
-`cd ~/.dotfiles && claude --model opus --effort high --name conductor "$(cat docs/superpowers/plans/2026-10-11-conductor-prompt.txt)"`.
+Before merging the sweep-2 PR, run G's two cutover commands, since the merge's pull would otherwise
+drop today's preferences or be refused over a dirty file: `cp --remove-destination "$(readlink -f
+~/.claude/settings.json)" ~/.claude/settings.json`, then `git -C ~/.dotfiles checkout --
+claude/.claude/settings.json`. After the merge and pull, run `claude-tooling-sync apply`. Then
+start the poplar adapter planning: `cd ~/Projects/poplar && claude --model opus --effort high --name
+poplar-adapter-plan "$(git -C ~/.dotfiles show main:docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt)"`.
 
 ## Conductor
 
@@ -44,11 +54,10 @@ queue, in order, with each item's detail in the launch prompt:
    `reports/` originals. Then dubplate's `admin-api-1` re-plan.
 2. **cairn-cms alignment.** Approved by Geoff. Evidence and rulings:
    `docs/superpowers/research/2026-10-11-cairn-cms-alignment-audit.md`.
-3. **Infra sweep 2.** The design on `worktree-infra-sweep-2-design` waits for Geoff. Re-check it
-   against #8 first.
+3. **Infra sweep 2.** Its PR waits for Geoff (see above).
 4. **Poplar adapter**, then the cairn-cms ROADMAP restructure after docs stage 2b.
 
-Pending with Geoff: the review desk PR (#13), the sweep-2 design, and the dubplate alignment PR.
+Pending with Geoff: the sweep-2 PR and the dubplate alignment PR.
 After #13 merges and the checkout is pulled, `stow -R bin` puts `review-desk` on PATH.
 
 ## Open items

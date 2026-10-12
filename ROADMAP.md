@@ -8,8 +8,8 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
 ## Active
 
 - **Monthly model, effort, and skill review** (Geoff, 2026-09-04): on the
-  first of each month `model-review.timer` raises a reminder and a small
-  pass runs the "Monthly review checklist" in
+  first of each month `model-review.timer` launches the review from the
+  committed prompt, `docs/model-review/prompt.txt`, which runs the "Monthly review checklist" in
   `docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md`:
   model releases against the pins, prices and the plan-usage page, effort
   defaults and saved levels, the usage glance, the open skill experiments,

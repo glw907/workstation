@@ -3,12 +3,15 @@
 
 The manifests live in ~/.claude/tooling/ (stowed from ~/.dotfiles/claude/.claude/tooling/): mcp-servers.json (user-scope MCP
 servers) and vendored-skills.json (third-party skills copied into the stowed skills
-directory). Plugins need no manifest here; settings.json's enabledPlugins is stowed
-and is the manifest.
+directory). Plugins need no manifest here; the tracked settings.json's enabledPlugins is the
+manifest. ~/.claude/settings.json is generated, not stowed: `apply` writes it as a real file, so
+Claude Code's own writes (`/effort`, `/model`) land outside git.
 
 Commands:
-  apply            add every manifest MCP server missing from user scope (idempotent)
-  verify           report drift: servers missing or extra at user scope, skills missing
+  apply            write ~/.claude/settings.json as the tracked file's keys over the live
+                   file's, and add every manifest MCP server missing from user scope (idempotent)
+  verify           report drift: the live settings.json missing, a link, or off a tracked
+                   key; servers missing or extra at user scope, skills missing
                    or without SKILL.md, plugins enabled but not installed, a personal
                    skill whose name shadows a project skill; exit 1 on drift
   update-skills [NAME ...]
@@ -37,6 +40,7 @@ ${VAR} form and resolve at runtime from ~/.local/secrets. See
 """
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -52,6 +56,7 @@ NOTE_BLOCK = re.compile(re.escape(NOTE_OPEN) + r"\n(.*?)\n?" + re.escape(NOTE_CL
 FENCE = re.compile(r"^ {0,3}(```|~~~)")
 SPAN = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
 DESCRIPTION_CAP = 500
+_MISSING = object()
 FORK_CONTEXT = re.compile(r"""^context:\s*["']?fork["']?\s*$""")
 # A fork skill runs in a fresh context: it cannot see the conversation or put a question to the user.
 FORK_PHRASES = ("under discussion", "during the session", "delegated", "ask the user",
@@ -75,6 +80,7 @@ class Paths:
         self.skills = home / ".dotfiles" / "claude" / ".claude" / "skills"
         self.claude_json = home / ".claude.json"
         self.settings = home / ".dotfiles" / "claude" / ".claude" / "settings.json"
+        self.live_settings = home / ".claude" / "settings.json"
 
 
 def load(path):
@@ -109,8 +115,27 @@ def user_servers(paths):
     return load(paths.claude_json).get("mcpServers", {}) or {}
 
 
+def apply_settings(paths):
+    """Write the live settings.json as the tracked keys over the live keys.
+
+    A live key the tracked file does not set keeps its value. A symlink is read through,
+    then replaced by a real file in one os.replace.
+    """
+    live = load(paths.live_settings) if paths.live_settings.exists() else {}
+    merged = {**live, **load(paths.settings)}
+    if merged == live and not paths.live_settings.is_symlink():
+        print("  + settings.json is current")
+        return
+    paths.live_settings.parent.mkdir(parents=True, exist_ok=True)
+    tmp = paths.live_settings.with_name("settings.json.tmp")
+    tmp.write_text(json.dumps(merged, indent=2) + "\n")
+    os.replace(tmp, paths.live_settings)
+    print("  + wrote settings.json")
+
+
 def apply(paths):
-    """Add every manifest MCP server missing from user scope."""
+    """Write the live settings.json, then add every manifest MCP server missing from user scope."""
+    apply_settings(paths)
     manifest_path = paths.tooling / "mcp-servers.json"
     manifest = require_object(load(manifest_path), "servers", manifest_path)
     present = user_servers(paths)
@@ -160,9 +185,29 @@ def check_collisions(paths, projects_root):
     return fail
 
 
+def check_settings(paths):
+    """Print and return whether the live settings.json is missing, a link, or off a tracked key."""
+    live_path = paths.live_settings
+    if live_path.is_symlink():
+        print(f"  x {live_path}: a link, not a generated file (run claude-tooling-sync apply)")
+        return True
+    if not live_path.exists():
+        print(f"  x {live_path}: missing (run claude-tooling-sync apply)")
+        return True
+    live = load(live_path)
+    stale = [k for k, v in load(paths.settings).items() if live.get(k, _MISSING) != v]
+    for key in stale:
+        print(f"  x {key}: differs from the tracked settings.json (commit the change there, "
+              "or run claude-tooling-sync apply to revert it)")
+    if not stale:
+        print("  + every tracked key holds its tracked value")
+    return bool(stale)
+
+
 def verify(paths, projects_root):
     """Report drift between the manifests, user scope, and installed plugins."""
-    fail = False
+    print("Live settings.json (generated from claude/.claude/settings.json):")
+    fail = check_settings(paths)
     mcp_path = paths.tooling / "mcp-servers.json"
     manifest = require_object(load(mcp_path), "servers", mcp_path)
     present = user_servers(paths)

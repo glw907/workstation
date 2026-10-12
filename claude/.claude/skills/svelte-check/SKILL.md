@@ -1,6 +1,11 @@
 ---
 name: svelte-check
-description: Run svelte-check type checking for this SvelteKit project. Use this skill whenever you've written or modified any .svelte, .ts, or .md (mdsvex) files and want to verify there are no TypeScript or Svelte compiler errors before committing or declaring work complete. Also use it after installing new packages, changing tsconfig.json, or updating svelte.config.js. Trigger on any request like "check for errors", "does this compile", "run type check", or "svelte-check". Scope: for a repo whose root package.json has a check script, not for a repo whose web app is a subdirectory under a non-Node gate.
+description: >-
+  Run svelte-check type checking for this SvelteKit project. Use after writing or modifying any
+  .svelte, .ts, or .md (mdsvex) file, after installing packages, changing tsconfig.json, or
+  updating svelte.config.js, and on requests like "check for errors", "does this compile", or "run
+  type check". Scope: a repo whose root package.json has a check script, not one whose web app is a
+  subdirectory under a non-Node gate.
 ---
 
 Run `npm run check` from the project root and interpret the results.

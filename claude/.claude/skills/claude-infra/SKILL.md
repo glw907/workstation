@@ -76,8 +76,7 @@ a tool's NOTE before the next dispatch.
   a shell that sourced them. Never a value in `.mcp.json`, a manifest, or a transcript.
 - Read a third-party skill before vendoring it. It is instructions injected into every
   future session. Check the license, the maintainer, and the text.
-- Every addition gets three lines: the manifest entry, a line in the workstation
-  `CLAUDE.md` section that governs it (or the repo's), and, when a rule of use came with it,
+- Every addition gets the manifest entry and, when a rule of use came with it,
   that rule in its execution path (the agent definitions or skills that use the piece, else
   the inventory in `claude-tooling.md`), never a memory. Then `claude-tooling-sync verify` and
   commit the dotfiles.

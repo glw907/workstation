@@ -14,7 +14,8 @@ machine.** The manifests record intent; the script reports what happened.
 | Agents | `~/.dotfiles/claude/.claude/agents/<name>.md` (stowed) | the directory itself | stow |
 | Docs (this file and its siblings) | `~/.dotfiles/claude/.claude/docs/` (stowed) | the directory itself | stow |
 | Instructions (cross-repo reference docs, linked from consumer CLAUDE.md files) | `~/.dotfiles/claude/.claude/instructions/` (stowed) | the directory itself | stow |
-| Workstation `CLAUDE.md`, `settings.json` (hooks, plugins, models) | `~/.dotfiles/claude/.claude/` (stowed) | `settings.json` | stow |
+| Workstation `CLAUDE.md` | `~/.dotfiles/claude/.claude/` (stowed) | the file itself | stow |
+| `settings.json` (hooks, plugins, env) | tracked at `~/.dotfiles/claude/.claude/settings.json`, generated into `~/.claude/settings.json` (a real file, never stowed) | the tracked file | `claude-tooling-sync apply` |
 | Plugins | Claude Code's plugin cache | `settings.json` `enabledPlugins` + `extraKnownMarketplaces` | `claude plugin install` |
 | MCP servers, user scope | `~/.claude.json` (not in git; holds other state) | `~/.claude/tooling/mcp-servers.json` (stowed) | `claude-tooling-sync apply` |
 | MCP servers, project scope | a repo's `.mcp.json` | that repo | the repo's own CLAUDE.md names it |
@@ -42,7 +43,7 @@ docs page chain drafts published pages on `claude-opus-5-5` (its `drafterModel` 
 through a per-dispatch `model`; verify a repin from a fresh headless session by grepping the
 subagent transcript's `"model"` field, never from the agent's own answer.
 
-`worktree.baseRef: "head"` in the stowed `settings.json` applies in every repo, so subagent and
+`worktree.baseRef: "head"` in the tracked `settings.json` applies in every repo, so subagent and
 `--worktree` branches start from the local `HEAD`, not the remote default (code.claude.com/docs/en/
 worktrees, "Choose the base branch").
 
@@ -53,7 +54,16 @@ dispatches with no model of their own: `general-purpose`, `claude`, unpinned cus
 Workflow `agent()` without `model`. Frontmatter pins and a per-dispatch `model` both win over it,
 and a settings value outranks a shell export, so it also reapplies to running sessions. Forcing it
 onto `Explore` or `Plan` would override every frontmatter pin. `/effort` persists per model into
-`settings.json` through the stow link, so reset it at the end of a session that raised it.
+`modelSettings` in the generated `~/.claude/settings.json`, which is outside git, so reset it at
+the end of a session that raised it.
+
+`~/.claude/settings.json` is generated, not stowed: `claude/.stow-local-ignore` names the tracked
+file, and `claude-tooling-sync apply` writes the live file as the tracked keys over the live
+keys. A key the tracked file does not set, such as `model`, `effortLevel`, and `modelSettings`,
+keeps its live value. The tracked keys win at `apply`: a Claude Code command that writes a tracked
+key, such as `/tui` (`tui`) or `/memory` (`autoMemoryEnabled`), shows as `verify` drift until the
+change is committed to the tracked file, and the next `apply` reverts it. A merge that changes the
+tracked file reaches the live one only through `apply`.
 
 ## Workflows
 
@@ -84,8 +94,8 @@ project skill (personal shadows project); `--projects-root` points the collision
 injected tree instead of the real `~/Projects`.
 
 Adding a user-scope server: write its entry in `mcp-servers.json` (with a `_why`), run
-`apply`, verify with `claude mcp get <name>` (with the secrets sourced), add the CLAUDE.md
-line, commit. Removing one: delete the entry, `claude mcp remove -s user <name>`, verify.
+`apply`, verify with `claude mcp get <name>` (with the secrets sourced), add a CLAUDE.md line only
+for a fact that applies every turn, commit. Removing one: delete the entry, `claude mcp remove -s user <name>`, verify.
 
 Adding a vendored skill: read it at the source, add its entry to `vendored-skills.json`, run
 `update-skills <name>`, review the diff, point the agents that need it at the skill file,
@@ -124,6 +134,10 @@ commit skills and manifest together.
 - **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook.
 - **Cobra:** one community skill (vendored, MIT) for the cairn Go tool; `go-conventions`
   and `elm-conventions` stay mandatory.
+- **TUI work:** the order of use is the house skills (`elm-conventions`, `bubbletea-design`,
+  `tui-visual-verify`), then Charm's agent guide for the Crush UI (pinned in `elm-conventions`),
+  then the `tui-design` plugin. `tui-design` (gfargo, MIT) is consulted for layout and
+  discoverability patterns; the house skills win on any conflict.
 - **Plugins:** superpowers, code-review, code-simplifier, frontend-design, skill-creator
   (Anthropic); cloudflare; tui-design.
 

@@ -29,7 +29,7 @@ gate launches no browser and its measured peak is 105 MB.
 
 **Risk-class path map**: `runner`: `claude/.claude/{skills,agents,workflows}/**`,
 `claude/.claude/settings.json`, `claude/.claude/tooling/**`, `.claude/skills/**`,
-`bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-clock-stop,claude-tooling-sync}`,
+`bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-clock-stop,claude-context-budget,claude-tooling-sync}`,
 `scripts/**`, `tests/**`. `auth-data`: `secrets/**`, `scripts/secrets/**`, `bash/.bashrc` (it sources the
 secrets), and `bin/.local/bin/{claude-block-op,claude-secret-guard,claude-tierguard,claude-askpass,
 claude-sudo-setup,claude-sudo-clear,secret-receive,fastmail-password,fastmail-dav-password}`.
@@ -42,6 +42,7 @@ claude-sudo-setup,claude-sudo-clear,secret-receive,fastmail-password,fastmail-da
 **Close checklist**: Beyond `pass-core` "Close": every new install records itself in its tier's
 manifest (`~/.claude/docs/bluefin-admin.md`), and `claude-tooling-sync verify` passes. The gate's gitleaks step scans the working tree, so run
 one `gitleaks git` branch-history scan at close. A merge to
-`main` is followed by `stow -R bin` when a script was added. Prose follows the workstation writing
+`main` is followed by `stow -R bin` when a script was added, and by `claude-tooling-sync apply` when it
+touched `claude/.claude/settings.json`, since the live file no longer follows a pull. Prose follows the workstation writing
 voice. The Vale and tellgrader nets run as `PostToolUse` hooks on each edit; `scripts/check.sh`
 runs only their test suites.

@@ -11,8 +11,9 @@ description: >
 # Site pass
 
 Load `pass-core` first; it holds the lifecycle and the rules this adapter fills in. Paths are
-relative to the site repo. The resume prompt is in `docs/STATUS.md`, the plan under
-`docs/superpowers/plans/`, and the spec usually under `docs/superpowers/specs/`. The plan header
+relative to the site repo. The resume prompt is in `docs/STATUS.md`. The plan, spec, archive, and
+architecture-doc paths come from the site's `CLAUDE.md` or STATUS; `docs/superpowers/{plans,specs}/`
+and `docs/architecture.md` are the usual case, not the only one. The plan header
 carries exactly one of a consultation-brief link or the line "no engine asks", plus a "Facts
 consulted" line, from `engine-consult`; a committed plan with neither gets the enumeration run before
 the first task. Read the plan and spec paths from the site's `CLAUDE.md` or STATUS.
@@ -59,10 +60,11 @@ rendered pages.
 
 - The local close run above, where the site has no PR CI. None of these gates scopes gitleaks to a
   change set, so no branch-history scan is owed.
-- Add the pass's design decisions to `docs/architecture.md` (decisions, not narration) and keep the
+- Add the pass's design decisions to the site's architecture doc (decisions, not narration) and keep the
   README and config comments current.
-- Archive the plan with `git mv docs/superpowers/plans/<this-pass>.md
-  docs/superpowers/archive/plans/`, and the spec to `docs/superpowers/archive/specs/`.
+- Archive the plan with `git mv` from the site's plans directory to its archive (usually
+  `docs/superpowers/plans/<this-pass>.md` to `docs/superpowers/archive/plans/`), and the spec the
+  same way.
 - List cairn friction the pass met under "Cairn friction" in the PR body, verified against cairn-cms.
   A cairn session files it in cairn-cms's `docs/internal/docs-friction-log.md`. A UI mechanic that
   belongs to the engine follows `~/.claude/docs/engine-ui-mechanics.md`.

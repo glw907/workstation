@@ -94,13 +94,6 @@ Related: #20, #21
 ### Race results platform `race-results`
 Research and build a solution for recording and displaying race results.
 Related: #18
-
-## Done
-
-### Infrastructure coherence improvement `infra-coherence`
-Standardized patterns across all services: error handling, logging, CSS
-architecture, notification routing, documentation sync. 16 sessions.
-Completed: 2026-03-22
 ```
 
 When creating a new roadmap file, use only the header; sections are

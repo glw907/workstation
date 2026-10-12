@@ -1,14 +1,21 @@
 ---
 name: register-check
-description: Run the full cairn three-gate prose review (mechanical slop gate, adversarial register edit, logic and claims check) on a draft and fold the findings. Use on any cairn prose artifact before Geoff reads it, or when Geoff asks for a register check.
+description: Run the full cairn four-gate prose review (mechanical slop gate, adversarial register edit, logic and claims check, links and citations) on one or more drafts and fold the findings. Use on any cairn prose artifact before Geoff reads it, or when Geoff asks for a register check.
 context: fork
 ---
 
 # Register check
 
-The one-command form of cairn's three-gate prose review. Input: one or more file paths
-(default: the file under discussion). Run the gates cheapest-first, consolidate, and present
-findings as proposals unless Geoff has delegated application.
+The one-command form of cairn's four-gate prose review. This skill runs in a fork with no
+conversation to read, so every input arrives as an explicit argument:
+
+- **files** (required): one or more file paths. With none, report that and stop.
+- **apply** (`yes` or `no`, default `no`): with `no`, present findings as proposals and edit
+  nothing; with `yes`, apply the MINE-to-fix findings and leave GEOFF'S-CALL ones as proposals.
+- **sanctioned phrases** (optional): phrases already cleared with Geoff that the
+  `cairn-register-editor` definition does not know yet, each with its file.
+
+Run the gates cheapest-first and consolidate.
 
 ## Gate 1: mechanical (seconds)
 
@@ -25,8 +32,7 @@ Gate 2, not automatic defects.
 ## Gate 2: register (the editor's ear)
 
 Dispatch the `cairn-register-editor` agent on the target(s). It reads the register's briefs
-itself and loads no corpus; give it the file paths, each file's track, and any session-specific
-sanctioned phrases the definition doesn't know yet. It returns ranked findings with proposed rewrites.
+itself and loads no corpus; give it the file paths, each file's track, and the sanctioned phrases argument. It returns ranked findings with proposed rewrites.
 
 ## Gate 3: logic and facts (the Russell and empirical dimension)
 
@@ -59,7 +65,7 @@ never bare URLs or "here").
 ## Fold and report
 
 Consolidate the four gates into one ranked list: each finding with the exact quoted text,
-what it trips, and the proposed fix. Separate MINE-to-fix (apply if delegated) from
+what it trips, and the proposed fix. Separate MINE-to-fix (applied when `apply` is `yes`) from
 GEOFF'S-CALL (his own phrases, product intent, taste forks). Note what was deliberately not
 flagged and why, when it would look like a miss. A clean report is a valid outcome; say so
 plainly and stop.
@@ -71,6 +77,7 @@ plainly and stop.
   It outranks everything here.
 - Findings in Geoff's own words are flagged, never silently applied or silently kept.
 - Rewrites are assembly (nearby facts, his fragments), never generated flourish.
-- New tells Geoff catches during the session go into the register first (the track's brief,
-  "Tells"), then into the `cairn-register-editor` definition only where the register cannot hold
-  them, before the session ends, so the system learns.
+- Report any new tell a finding exposes (a pattern the register's "Tells" and the
+  `cairn-register-editor` definition do not yet name) in a final "New tells" list, each with a
+  quoted example. The caller files them in the register first, then in the editor definition only
+  where the register cannot hold them; this skill edits neither.

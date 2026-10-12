@@ -46,6 +46,12 @@ account.
    > task as asked rather than quietly narrowing, widening, or transforming it. Finish the whole
    > task, and stop short of actions that are clearly beyond what was asked."
    > (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>)
+
+   A design Geoff approves ahead of its pass, with unattended planning approved, lets the planning
+   session run steps 2 to 4, write the executor's launch prompt, and launch the executor after the
+   "Execute" pre-launch checks, without him. A plan over twice the design's estimate, or a finding
+   that changes the design, stops it: STATUS carries one question and `notify-send -u normal`
+   tells Geoff.
 2. **Spec.** An agent writes the approved design at the length precision needs, only if
    `spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
    probed.
@@ -58,7 +64,8 @@ account.
    design's estimate goes back to Geoff with the reason before launch. Skip `writing-plans`' code
    steps and execution-method question. Test-first applies to `auth-data` tasks.
 5. **Execute.** See "Execute".
-6. **Close.** See "Close". Geoff decides the PR on the review desk.
+6. **Close.** See "Close". Geoff decides the PR on the review desk, except that a pass whose highest
+   class is `ordinary` merges its own PR (see "Close").
 
 ## Models
 
@@ -130,6 +137,14 @@ returns a stop line past twice the estimate. The session then writes STATUS, run
 `start=`, or `estimate=` to the figure Geoff names. Pair worktrees hold no clock file, so the stop
 cannot fire while the session waits on a pair.
 
+## Conductor
+
+The conductor is the session that runs between passes. It watches unattended passes with the
+Monitor tool over `claude agents --json`, puts each PR or design before Geoff on the review desk, merges a PR
+with `gh pr merge <n> --merge` after he approves, pulls the checkout (see "Close"), and launches
+the next committed prompt from the main checkout after the "Execute" pre-launch checks. It brings
+Geoff only designs, PR reads, and product or priority calls.
+
 ## Close
 
 The repo's full-suite home is green on the head. One whole-branch Opus review follows:
@@ -160,6 +175,11 @@ prompt's "never merge" otherwise withholds: the session merges with `gh pr merge
 paragraph says. On reject, it fixes forward from the note. It acts on each triage row as the triage
 sentences above say. A pass that merges its own PR opens nothing (Geoff, 2026-10-11).
 
+A pass whose highest class is `ordinary` merges its own PR with `gh pr merge <n> --merge` after a
+green full-suite home and an accepted whole-branch review, when its "Found, not done" list is
+empty. A non-empty list, or a `runner` or `auth-data` pass, keeps Geoff's read and merge. An
+adapter line that says every PR waits for Geoff yields to this exception.
+
 Whoever merges a PR then brings that repo's main checkout up to date: `git -C <checkout> pull
 --ff-only` when the checkout is on its default branch, has no uncommitted change in a file the
 merge touches, and has no live session (`claude agents --json`). Otherwise it reports the checkout
@@ -181,8 +201,9 @@ the step that should have caught the escape, and only that changes.
 
 `docs/STATUS.md` is present tense and 60 lines or fewer: current state, next action, open
 decisions. `ROADMAP.md` holds initiatives under `Active`, `Planned`, and `Someday`, managed by
-`/log-project`. Git and PR bodies are the history; `docs/HISTORY.md` and post-mortems stop growing
-(ruling 8). A lesson lands where it executes: a skill, agent, tool, or repo doc. Memory holds only a
+`/log-project`. A commit id cited in a ledger is one that survives a merge: a merge commit, or an
+id on the default branch, since a squash or rebase rewrites ids. Git and PR bodies are the history;
+`docs/HISTORY.md` and post-mortems stop growing (ruling 8). A lesson lands where it executes: a skill, agent, tool, or repo doc. Memory holds only a
 preference or a ruling's why that no file can.
 
 A hand-over (the STATUS update, the next session's launch prompt, and the research records it

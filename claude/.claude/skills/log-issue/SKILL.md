@@ -12,7 +12,7 @@ description: >
 # Log Issue
 
 Quickly capture a bug, feature request, or improvement idea to the project's
-`BACKLOG.md`. Infer what you can from context; prompt for anything missing.
+backlog file (`backlog_path` in the config, `BACKLOG.md` by default). Infer what you can from context; prompt for anything missing.
 The goal is to get the idea written down in under 10 seconds of user effort.
 
 ---
@@ -36,10 +36,15 @@ Read the config, read the backlog file, proceed to Step 2.
 
 This config is shared with the `/log-project` skill (which manages `ROADMAP.md`).
 
+### Config sets `"backlog": false`
+
+The repo keeps no backlog. Create no file, say so in one line, and stop. Offer to put the idea in
+the roadmap or the plan instead.
+
 ### Config exists but backlog file is missing
 
-Create the backlog file at the configured path using the template in Step 4.
-Proceed to Step 2.
+Do not create it unasked. Ask: "The configured backlog `<backlog_path>` does not exist. Create it?"
+On yes, create it using the template in Step 4 and proceed to Step 2; on no, stop.
 
 ### Config missing or backlog file isn't in the expected format
 
@@ -165,7 +170,7 @@ Tell the user what was logged, briefly:
 After adding, closing, or updating an issue, commit the backlog change and push:
 
 ```bash
-git add BACKLOG.md && git commit -m "Backlog: [brief description of change]" && git push
+git add <backlog_path> && git commit -m "Backlog: [brief description of change]" && git push
 ```
 
 Use a short commit message like "Backlog: add #26 ops max-width" or "Backlog: close #3".
@@ -198,8 +203,8 @@ When the user references a domain that isn't in the config:
 
 ## Notes
 
-- `BACKLOG.md` lives at the project root (alongside `README.md`) so it's
-  discoverable by anyone browsing the repo. Commit it to git.
+- The backlog lives at `backlog_path`, by default `BACKLOG.md` at the project root (alongside
+  `README.md`) so anyone browsing the repo finds it. Commit it to git.
 - This is a quick capture tool, not a project management system. If an issue
   needs detailed specs, create a separate document and link to it from the
   issue's detail line.

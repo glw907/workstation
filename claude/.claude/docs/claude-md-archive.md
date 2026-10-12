@@ -31,16 +31,6 @@ render read.
 `site-pass` has always carried the STATUS.md line cap, and every repo blew past it anyway because
 "prune" had no destination: ecxc-ski reached 173 lines, 907-life 236, cairn-cms 540.
 
-## Visual fidelity: the full rule set
-
-Moved out of CLAUDE.md 2026-09-27 (CLAUDE.md keeps a two-line pointer; the
-`visual-fidelity` skill is the method). Any UI work that must match an existing reference (a
-rebuild, a theme port, a migration) invokes the `visual-fidelity` skill at the start and gates
-on the `visual-verifier` agent. Core rules even without the skill: reference screenshots before
-any plan, never from a verbal description; the context that built the UI never grades it;
-nothing deploys to production without a full-page render read in the main loop; user-facing
-sites get Geoff's before/after.
-
 ## Cloudflare / Wrangler
 
 Trimmed 2026-09-27: the wrangler command cheat sheet (`npx wrangler deploy` / `dev` / `secret

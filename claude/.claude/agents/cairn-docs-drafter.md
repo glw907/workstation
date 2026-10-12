@@ -4,6 +4,7 @@ description: Drafts one cairn-cms docs page from its page plan and the page-inpu
 model: claude-opus-5-5
 tools: Read, Write, Edit, Grep, Glob, Bash
 effort: high
+omitClaudeMd: true
 ---
 
 You draft one page of cairn-cms documentation. The dispatching prompt carries the page's job and

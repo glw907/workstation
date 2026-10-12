@@ -7,7 +7,7 @@ description: Use when authoring a pass plan in ecxc-ski, 907-life, aksailingclub
 
 The pre-pass exchange between a cairn-consuming site and the engine. The site files what
 its pass will press on the engine before the pass builds, the `engine-triage` agent argues
-each item against the standard below, and accepted work lands ahead of the site task that
+each item against the standard, and accepted work lands ahead of the site task that
 needs it. It replaces reactive harvesting, in which a site hand-rolled around an engine
 gap and filed a staging doc, and the engine absorbed the finding only after the workaround
 had shipped, so the site paid for the workaround and the engine paid again to replace it.
@@ -15,14 +15,13 @@ had shipped, so the site paid for the workaround and the engine paid again to re
 ## When it fires (both hooks)
 
 **Authoring-time enumeration.** The engine-contact enumeration runs whenever a site pass's
-plan is authored, immediately before the plan is written, in whichever session authors it,
-including a prior pass's pass-end draft. For each thing the pass will build, the author
+plan is authored, immediately before the plan is written, in whichever session authors it. For each thing the pass will build, the author
 asks whether it presses an engine edge (admin surface, engine CSS, an exported component's
 contract, auth, any seam). Exactly two outcomes: a consultation brief, or a recorded
 one-line "no engine asks" in the plan header. The null outcome is deliberately cheap.
 
-The plan header carries exactly one of these two lines, plus the facts line, so the backstop
-can match on it:
+The plan header carries exactly one of the two engine-consultation lines, plus the
+facts-consulted line, so the backstop can match on it:
 
 ```markdown
 **Engine consultation:** no engine asks.
@@ -33,8 +32,8 @@ can match on it:
 Before the plan is written, the author's pre-plan read names the container arms the pass
 builds on, at `~/Projects/cairn-cms/docs/internal/facts/`, and the open entries in
 `~/Projects/cairn-cms/docs/internal/docs-friction-log.md`, so a hole the last site could not
-close reaches this plan. The open entries the read found are listed under the plan header's
-`**Facts consulted:**` line (or "none open").
+close reaches this plan. The plan header's `**Facts consulted:**` line records that read: the arm files it covered and the
+open friction entries it found (or "none" for either).
 
 **Pass-start backstop, for the resumed path.** After reading the plan and before the first
 implementer dispatch: if the plan header carries neither a consultation-brief link nor the
@@ -69,36 +68,9 @@ disputes (`docs/internal/facts/<arm>.md`, the bullet text or line).
 
 ## The standard
 
-<!-- Quoted verbatim from cairn-cms/docs/superpowers/specs/2026-08-26-engine-consultation-design.md,
-"The standard (codified; extends the 2026-08-26 triage test)". Do not edit here; the spec
-is the source. Section references ("the audit, below", "section 4") are the spec's own. -->
-
-An item reaches the engine only when:
-
-- the site **cannot legally reach or patch the surface** (engine-owned CSS, an unexported
-  component, a component's internal event contract), or
-- a **ratified, measured grammar has diverged** from what the engine ships.
-
-Constraints on top of that gate:
-
-1. **No accept-by-default.** Decline-with-reason is a normal, recorded outcome.
-2. **The bar is the anonymous consumer.** Family recurrence ("three of my sites need it")
-   is evidence toward generality, never sufficient by itself. The test is whether a cairn
-   consumer with no knowledge of this family plausibly hits the same edge.
-3. **Shape, not just membership.** Accepted functionality is re-derived in the form
-   easiest for any site, never transplanted from the requesting site's implementation,
-   even when that leaves the requesting site doing some hand-rolling. Worked example: the
-   StatusChip absorption takes one site's measured grammar but re-tunes every measured value
-   against the engine's own themes.
-4. **The standard applies retroactively** (the audit, below).
-
-An item fails the gate when the hand-roll is small, domain-shaped, or a discoverability
-problem an export would not fix.
-
-The gate serves a standing goal Geoff named at the sitting: the engine stays clean,
-even, beautiful, and broadly useful. Membership and shape are per-item tests; evenness
-and coherence are properties of the whole surface, and the audit judges them at that
-altitude (section 4).
+The codified standard lives once, in the `engine-triage` agent definition
+(`~/.claude/agents/engine-triage.md`, "The standard" section). Read it before filing a brief, so
+each item is written against the gate it will meet.
 
 ## Triage mechanics
 
