@@ -42,5 +42,6 @@ claude-sudo-setup,claude-sudo-clear,secret-receive,fastmail-password,fastmail-da
 **Close checklist**: Beyond `pass-core` "Close": every new install records itself in its tier's
 manifest (`~/.claude/docs/bluefin-admin.md`), and `claude-tooling-sync verify` passes. The gate's gitleaks step scans the working tree, so run
 one `gitleaks git` branch-history scan at close. A merge to
-`main` is followed by `stow -R bin` when a script was added. Prose follows the workstation writing
+`main` is followed by `stow -R bin` when a script was added, and by `claude-tooling-sync apply` when it
+touched `claude/.claude/settings.json`, since the live file no longer follows a pull. Prose follows the workstation writing
 voice; `scripts/check.sh` runs the Vale and tellgrader nets.

@@ -436,6 +436,11 @@ setup_verify_claude_code() {
     fi
 }
 
+setup_claude_settings() {
+    echo "== setup: generate ~/.claude/settings.json =="
+    "$DOTFILES_DIR/bin/.local/bin/claude-tooling-sync" apply
+}
+
 setup_syncthing() {
     echo "== setup: syncthing user service =="
     brew services start syncthing
@@ -862,6 +867,7 @@ phase_setup() {
         setup_kitty
         setup_gnome_settings
         setup_verify_claude_code
+        setup_claude_settings
         setup_syncthing
     )
     local failed=()
