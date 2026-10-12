@@ -33,8 +33,9 @@ check:close`, which builds once) runs only on `ci-green` exit 3, with the e2e st
 The gate runs no gitleaks scan, so there is no branch-history scan to owe.
 
 **Worktree setup**: The launch's `.claude/worktrees/<branch>`, then `npm ci && npm ci --prefix
-examples/showcase`, since a worktree's showcase otherwise resolves the main checkout's engine
-(`docs/internal/durable-gotchas.md`).
+examples/showcase && (cd examples/showcase && npx svelte-kit sync)`. The second install keeps a
+worktree's showcase off the main checkout's engine, and the sync writes the `$app/tsconfig` that
+`check:public-skill` needs (`docs/internal/durable-gotchas.md`).
 
 **CI watch**: `ci-green <sha> --pr <n> --wait` as a background Bash task, re-issued on 75; exit 0
 is green, 1 red, 2 missing, 3 unavailable. The first push opens a draft PR, since cairn CI fires
