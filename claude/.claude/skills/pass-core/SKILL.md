@@ -64,8 +64,13 @@ account.
    without him.
 4. **Plan.** A task list. Each task carries its outcome, files, risk class, acceptance check, test,
    and a clock estimate in minutes, and never implementation code. Independent tasks are marked as
-   pairs. Fold a single-deliverable task into a neighbor. A plan whose task-minutes exceed twice its
-   design's estimate goes back to Geoff with the reason before launch. Skip `writing-plans`' code
+   pairs. Fold a single-deliverable task into a neighbor. A plan whose path minutes exceed twice its
+   design's estimate goes back to Geoff with the reason before launch. The path is the longest chain
+   of tasks that run in sequence, a pair counting once at its larger estimate; the sum over every
+   task counts the pairs twice and never sets the stop (Geoff, 2026-10-12: intake-1 stopped on a
+   995-minute task sum whose path was 725, under its 780 line). The design states its estimate in
+   path minutes, set from the actual-against-planned path in recent passes' scores, never from a
+   share of a spec's figure. Skip `writing-plans`' code
    steps and execution-method question. Test-first applies to `auth-data` tasks.
 5. **Execute.** See "Execute".
 6. **Close.** See "Close". Geoff decides the PR on the review desk, except that a pass whose highest
@@ -243,7 +248,8 @@ PRs merged.
 The PR body carries the spec's price table rows: Gates on the critical path, Work and review, CI
 waits on the path, Fix rounds and reds, Close, and Total. Gate and lock time come from
 `cairn-run-gate --records <toplevel> <branch>`; the clock runs from the first execution commit to
-PR-ready. It lists the attended events (the design, the PR read, one per clock stop) and any escape,
+PR-ready. The Work and review row names the plan's path minutes beside the actual, the figure the
+next design's estimate is set from. It lists the attended events (the design, the PR read, one per clock stop) and any escape,
 a behavioral, security, or contract defect that surfaces through the next pass's close, CI on
 `main`, or Geoff's use; an escape also goes into STATUS with its commit. A miss names its row, or
 the step that should have caught the escape, and only that changes.
