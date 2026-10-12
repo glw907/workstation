@@ -117,10 +117,10 @@ def main() -> int:
         section = before_merge_section(viewed.stdout)
         if section is None or (argument and assignments.get("PREMERGE_DONE") == argument):
             continue
-        return deny(
-            f"Blocked: {shown} has a Before merge section. Run these steps, then rerun the merge "
-            f"prefixed with PREMERGE_DONE={argument or '<n>'}.\n\n{section}"
-        )
+        rerun = (f"rerun the merge prefixed with PREMERGE_DONE={argument}" if argument else
+                 "rerun the merge with it naming the PR number and prefixed with PREMERGE_DONE=<that number>"
+                 " (a merge that does not name the PR number can never be acknowledged)")
+        return deny(f"Blocked: {shown} has a Before merge section. Run these steps, then {rerun}.\n\n{section}")
     return 0
 
 

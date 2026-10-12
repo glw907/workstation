@@ -86,6 +86,12 @@ def test_acknowledged_passes(env, command):
     assert (result.returncode, result.stdout) == (0, "")
 
 
+def test_no_number_tells_merger_to_name_it(env):
+    reason = decision(run_hook(env, "PREMERGE_DONE=16 gh pr merge --merge"))["permissionDecisionReason"]
+    assert "name the PR number" in reason
+    assert "<n>" not in reason
+
+
 def test_pr_without_section_passes(env):
     result = run_hook(env, "gh pr merge 16 --merge", body=WITHOUT_SECTION)
     assert (result.returncode, result.stdout) == (0, "")
