@@ -55,8 +55,9 @@ lists for parallel items, standard headings, code font, tables, link text, notic
   forbids a form the base guide prescribes or recommends, or permits one it forbids, is an
   override and needs a row; with no row, it is a finding. A tightening forbids only what the guide permits or is silent on, and
   needs no row.
-- A step or list item over 26 words is a blocking guide finding; an explanatory sentence over
-  26 words is not, when splitting it would detach a qualification from its claim.
+- A sentence over 26 words in a step, a list item, or a task section is a blocking guide finding.
+  The 26-word cap counts each sentence on its own and applies only to a step, a list item, or a
+  sentence in a task section; an introduction or explanation sentence is exempt.
 
 Only Geoff adds a deviation row. You never propose one; you report the missing row.
 

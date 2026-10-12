@@ -12,7 +12,8 @@ var hardSlopPatterns = res(
 	// Tier A, r >= 4.5 (Kobak et al. 2025, 15.1M abstracts).
 	`(?i)\bdelv(?:e|es|ed|ing)\b`,
 	`(?i)\bunderscor(?:e|es|ed|ing)\b`,
-	`(?i)\bshowcas(?:e|es|ed|ing)\b`,
+	// The bare noun is not matched: it is the cairn example site's name.
+	`(?i)\bshowcas(?:es|ed|ing)\b`,
 	`(?i)\bmeticulous(?:ly)?\b`,
 	`(?i)\bintricate(?:ly)?\b`,
 	`(?i)\bintricacies\b`,
