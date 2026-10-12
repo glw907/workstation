@@ -30,24 +30,18 @@ artifacts. github.com/glw907/workstation.
 
 ## Conductor
 
-Conductor session `4bea6e68` (2026-10-11). Landed and merged: dubplate alignment (PR #2) and its
-triage (#3); cairn-cms alignment (#114, workstation #12) and its triage (#115, #14); the found-item
-triage rule (#11); the review desk v1 (#13) and its triage with Geoff's `autoMode.allow` rule (#15);
-infra sweep 2 (#16) and its triage (#17, ecxc-ski #2, aksailingclub-org #13); the merge guard (#18,
-#20). In flight, each watched:
+Conductor session `4bea6e68` closed the 2026-10-11 infrastructure initiative. Landed: dubplate
+alignment (#2, triage #3); cairn-cms alignment (#114, workstation #12, triage #115 and #14); the
+found-item triage rule (#11); the review desk (#13, its UI pass #22 and triage #23, with Geoff's
+`autoMode.allow` rule in #15); infra sweep 2 (#16, triage #17, ecxc-ski #2, aksailingclub-org #13);
+the merge guard (#18, #20); the conductor lessons in `pass-core` (#21); and poplar's `pass-core`
+adapter (poplar #1). The rebuilt desk serves #22's UI.
 
-1. **`admin-api-1`** (dubplate, executor `6baa2add`). Geoff pre-approved its merge: merge only on a
-   green gate, every review and the security read accepting, and no `## Before merge` steps
-   outstanding; its found items still go to the desk as triage. Then `claude rm 18bbe825` (a
-   stopped first launch that shares the executor's worktree).
-2. **Review desk UI pass.** Merged as #22 (2026-10-11). Still owed: its "What goes live" steps, which
-   need the main checkout pulled first (a live session sits in it) and then run the five steps in
-   #22's body inside the desk's start lock. Its triage landed in `ROADMAP.md` "Someday" and the
-   Firefox profile fix in the plan.
-3. **Poplar adapter.** Geoff asked for its design next. Its planning prompt runs as `cd
-   ~/Projects/poplar && claude --model opus --effort high --name poplar-adapter-plan "$(git -C
-   ~/.dotfiles show main:docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt)"`.
-4. Later, outside this initiative: the cairn-cms ROADMAP restructure after docs stage 2b.
+Outside this initiative, each for its own session: `admin-api-1` runs on in dubplate (executor
+`6baa2add`, no merge pre-approval; then `claude rm 18bbe825`, a stopped launch sharing its
+worktree); poplar's development work in its ROADMAP (2c's re-plan, the Bubble Tea refactor, the gate
+and toolchain repairs); the cairn-cms ROADMAP restructure after docs stage 2b. The next conductor
+starts from the repos' ROADMAPs.
 
 Escape (conductor, 2026-10-11): merged #16 before its pre-merge settings cutover, so a pull
 dropped Geoff's live `model`, `effortLevel`, and `modelSettings`; restored by hand. The merge guard
