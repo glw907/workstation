@@ -28,47 +28,29 @@ artifacts. github.com/glw907/workstation.
   `claude-tail-guard` hook, and the guidance-citation warning (#8). Evidence for #8:
   `docs/superpowers/research/2026-10-11-anthropic-guidance-proportionality.md`.
 
-## Infra sweep 2: PR open for Geoff
-
-Branch `worktree-infra-sweep-2-build`, plan `docs/superpowers/plans/2026-10-11-infra-sweep-2.md`;
-the executor session `infra-sweep-2-build` (id `0c143a5c`) has ended. The review verdict is accept.
-It moves to "merged" on Geoff's merge.
-
-## Immediate next action
-
-Before merging the sweep-2 PR, run G's two cutover commands, since the merge's pull would otherwise
-drop today's preferences or be refused over a dirty file: `cp --remove-destination "$(readlink -f
-~/.claude/settings.json)" ~/.claude/settings.json`, then `git -C ~/.dotfiles checkout --
-claude/.claude/settings.json`. After the merge and pull, run `claude-tooling-sync apply`. Then
-start the poplar adapter planning: `cd ~/Projects/poplar && claude --model opus --effort high --name
-poplar-adapter-plan "$(git -C ~/.dotfiles show main:docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt)"`.
-
-## Review desk UI: a question for Geoff
-
-The plan is ready on branch `worktree-desk-ui-plan`
-(`docs/superpowers/plans/2026-10-11-review-desk-ui.md`, launch block in its "Launch" section). It
-comes to 245 task-minutes, 5 over the 240 line, so planning stopped before launch. The extra 5 are
-T3's check that a note or a triage move never carries into the next item. Without it, a decision
-could post the previous item's rows. **Launch at 245 as written?** Recommended: yes. The first desk
-pass ran 68 minutes of clock against 315 planned. A no means trimming criteria, and the per-item check
-is the one that guards a merge decision.
-
 ## Conductor
 
-Handed over by session `c747c352` after #8 merged. In flight: the dubplate alignment executor,
-session `dubplate-alignment` (id `394cf8c0`), unwatched until the new conductor arms a watch. The
-queue, in order, with each item's detail in the launch prompt:
+Conductor session `4bea6e68` (2026-10-11). Landed and merged: dubplate alignment (PR #2) and its
+triage (#3); cairn-cms alignment (#114, workstation #12) and its triage (#115, #14); the found-item
+triage rule (#11); the review desk v1 (#13) and its triage with Geoff's `autoMode.allow` rule (#15);
+infra sweep 2 (#16) and its triage (#17, ecxc-ski #2, aksailingclub-org #13); the merge guard (#18,
+#20). In flight, each watched:
 
-1. **Dubplate alignment PR.** After Geoff merges it, the conductor fast-forwards dubplate, backs up
-   and then prunes dubplate's auto-memory per the PR body's dry run, and trashes the untracked
-   `reports/` originals. Then dubplate's `admin-api-1` re-plan.
-2. **cairn-cms alignment.** Approved by Geoff. Evidence and rulings:
-   `docs/superpowers/research/2026-10-11-cairn-cms-alignment-audit.md`.
-3. **Infra sweep 2.** Its PR waits for Geoff (see above).
-4. **Poplar adapter**, then the cairn-cms ROADMAP restructure after docs stage 2b.
+1. **`admin-api-1`** (dubplate, executor `6baa2add`). Geoff pre-approved its merge: merge only on a
+   green gate, every review and the security read accepting, and no `## Before merge` steps
+   outstanding; its found items still go to the desk as triage. Then `claude rm 18bbe825` (a
+   stopped first launch that shares the executor's worktree).
+2. **Review desk UI pass** (planner `ebc278e8`; design and mockups on `worktree-desk-ui-design`).
+   Launch its executor when the plan lands under 240 minutes. On merge, stop and rebuild the
+   running desk.
+3. **Poplar adapter.** Geoff asked for its design next. Its planning prompt runs as `cd
+   ~/Projects/poplar && claude --model opus --effort high --name poplar-adapter-plan "$(git -C
+   ~/.dotfiles show main:docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt)"`.
+4. Later, outside this initiative: the cairn-cms ROADMAP restructure after docs stage 2b.
 
-Pending with Geoff: the sweep-2 PR and the dubplate alignment PR.
-After #13 merges and the checkout is pulled, `stow -R bin` puts `review-desk` on PATH.
+Escape (conductor, 2026-10-11): merged #16 before its pre-merge settings cutover, so a pull
+dropped Geoff's live `model`, `effortLevel`, and `modelSettings`; restored by hand. The merge guard
+(#18) now blocks a merge whose PR has a `## Before merge` section until it is acknowledged.
 
 ## Open items
 
