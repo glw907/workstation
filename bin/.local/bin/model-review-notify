@@ -1,16 +1,46 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-# model-review-notify: timer-facing reminder for the monthly Claude model,
-# effort, and skill review. Always notifies; the review itself runs in a
-# Claude Code session from the spec named below. Logs to the journal so
-# a missed notification is still recorded.
+# model-review-notify: timer-facing launcher for the monthly Claude model,
+# effort, and skill review. Runs Anthropic's prompt audit, then an unattended
+# review session in a fresh worktree from docs/model-review/prompt.txt.
+# --dry-run skips the pull and tells the session to commit locally and stop:
+# no push, no PR, no notification. Logs to the journal.
 
-export PATH="$HOME/.local/bin:/usr/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/home/linuxbrew/.linuxbrew/bin:/usr/bin:$PATH"
 
-spec="$HOME/.dotfiles/docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md"
-echo "monthly model review due; template $spec"
-notify-send --urgency=normal "Monthly Claude model review due" \
-    "Open Claude Code and say: run the monthly model review. Checklist: ROADMAP.md, Active." \
-    2>/dev/null || true
-exit 0
+dry_run=0
+[[ "${1:-}" == "--dry-run" ]] && dry_run=1
+
+repo=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../../.." && pwd)
+report=$(mktemp /tmp/model-review-audit.XXXXXX)
+trap 'rm -f "$report"' EXIT
+
+# worktree.baseRef is "head", and the session cannot pull the main checkout
+# after its own self-merge, so the pull happens here. A refused pull leaves
+# the checkout as is and the review runs from local HEAD.
+if (( ! dry_run )); then
+    git -C "$repo" pull --ff-only || echo "pull refused; reviewing from local HEAD"
+fi
+
+cd "$repo" || exit 1
+echo "monthly model review starting from $repo (dry run: $dry_run)"
+
+claude -p --model opus --effort medium "/doctor prompt-audit" > "$report" || {
+    echo "prompt audit failed"
+    exit 1
+}
+
+prompt="$(cat "$repo/docs/model-review/prompt.txt")"
+prompt+=$'\n\n'"The audit report is at $report."
+if (( dry_run )); then
+    prompt+=$'\n\n'"This is a dry run: commit on your branch and stop. Do not push, open a PR, or send a notification."
+fi
+
+claude -p --model opus --effort high --permission-mode auto \
+    -w "model-review-$(date +%Y-%m)" "$prompt" || {
+    echo "review session failed"
+    (( dry_run )) || notify-send --urgency=normal "Monthly Claude model review failed" \
+        "See: journalctl --user -u model-review.service" 2>/dev/null || true
+    exit 1
+}
