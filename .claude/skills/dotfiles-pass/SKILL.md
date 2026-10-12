@@ -44,4 +44,5 @@ manifest (`~/.claude/docs/bluefin-admin.md`), and `claude-tooling-sync verify` p
 one `gitleaks git` branch-history scan at close. A merge to
 `main` is followed by `stow -R bin` when a script was added, and by `claude-tooling-sync apply` when it
 touched `claude/.claude/settings.json`, since the live file no longer follows a pull. Prose follows the workstation writing
-voice; `scripts/check.sh` runs the Vale and tellgrader nets.
+voice. The Vale and tellgrader nets run as `PostToolUse` hooks on each edit; `scripts/check.sh`
+runs only their test suites.
