@@ -682,6 +682,9 @@ restore_place_home() {
     mkdir -p "${STOW_SHARED_DIRS[@]}"
     stow_clear_conflicts
     (cd "$DOTFILES_DIR" && stow -R "${STOW_PACKAGES[@]}")
+    # settings.json is a generated file, not a stow link; without apply a
+    # restore leaves the guard hooks (secret, tierguard, block-op) unloaded.
+    "$DOTFILES_DIR/bin/.local/bin/claude-tooling-sync" apply
 
     # Direct restores: plain directories/files, no stow overlap.
     for item in .ssh .contacts .vdirsyncer .android Documents corpus Pictures; do

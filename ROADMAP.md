@@ -78,6 +78,19 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   CSP limits only `script-src`, so a remote image in a PR body loads at view time (`img-src 'self'
   data:` closes it). `tests/review-desk.test.sh` never runs the start-the-app branch, the
   10-second "did not answer" exit, or the lock release.
+- **Infra-sweep 2 leftovers**, deferred by Geoff's triage of workstation PR #16 (2026-10-11). The
+  model review's nine design topics (guard-fail-closed, saved-effort, dispatch-effort,
+  superpowers-pressure, agent-definitions, claude-md-style, convention-skills, vendored-overlays,
+  process-skills); re-run the review after the merge. Each monthly review worktree keeps its lock
+  under the main checkout, so `prompt.txt` or the script should unlock and remove it after the
+  merge. Stale "kitty-shot harness" wording at `bootstrap.sh`, `Brewfile`, the
+  `kitty-headless-shot` header comments, and the `tui-visual-verify` intro. `engine-consult`
+  hand-lists the `check:close` set, and `cairn-figure` and `figure-verifier` copy the register's
+  `repro` caption and diagram exemption text. A `verify` skill could carry the repo gate; three
+  skills dispatch without `effort`; `register-check` has no `argument-hint`. Poplar's icon-width
+  and JoinHorizontal rules from the deleted `bubbletea-conventions.md` (poplar's refactor pass
+  re-homes them). `registry.md` has no entry id for the Cloudflare token.
+
 - **Two worktree-guard notes**, from the same triage: the pair-dispatch template should tell a
   subagent that the worktree Bash guard refuses compound commands, so it uses plain calls and the
   Write tool; and the guard refuses `gitleaks git` and a `node` run with a computed path.
