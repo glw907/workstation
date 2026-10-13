@@ -94,8 +94,13 @@ account.
 ## Execute
 
 One session executes. For an `ordinary` pass, the planning session starts it from the repo's main
-checkout with `claude --bg --model sonnet --effort medium --name <name> "$(cat <prompt file>)"`, so
-Geoff pastes nothing.
+checkout with `claude --bg --model sonnet --effort medium --name <project>-<pass> "$(cat <prompt
+file>)"`, so Geoff pastes nothing.
+
+Every executor is named `<project>-<pass>`, whoever launches it. `<project>` is the repo basename
+the conductor's name uses, and `<pass>` is the plan's slug: `dubplate-intake-1`,
+`cairn-cms-draft-docs-2b-part2`. Geoff finds a session in `claude agents` by that name and attaches
+or sends to it, so a relaunch keeps the name (Geoff, 2026-10-12).
 
 A `runner` or `auth-data` pass goes to Geoff's desk, so its planner hands it to the project's
 conductor and closes instead of watching it (Geoff, 2026-10-12). Best practices for Claude Code
@@ -132,8 +137,9 @@ wake-up (`/loop` with no interval) and, if the lid may close, the lid-switch hol
 ## Pairs
 
 Two tasks whose files are disjoint, generated outputs included, go to two Agent-tool subagents
-with `isolation: "worktree"` after the session commits; `worktree.baseRef: "head"` branches them
-from that commit. A shared port is an environment variable. Each runs the adapter's setup command
+with `isolation: "worktree"` after the session commits, each with the `description` `<pass> task
+<n>` so the session's agent list shows which task each runs; `worktree.baseRef: "head"` branches
+them from that commit. A shared port is an environment variable. Each runs the adapter's setup command
 first, commits, and never pushes. The session merges both, runs the fast lane, and pushes. A merge
 conflict stops the line.
 
