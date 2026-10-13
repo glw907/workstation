@@ -100,6 +100,10 @@ not assumed here — though note that a custom image is the standard way to
 avoid the devmode rebase and the Flatpak removals below, by baking both into
 the image instead of undoing them per machine.
 
+The second workstation is `pavilion`, an HP desktop. `SECOND-WORKSTATION.md`
+is its runbook: the human steps, the Claude-run steps that stand in for
+`restore`, and the handoff bundle that carries laptop-only state.
+
 ## Changing the layered package set
 
 `layered-packages.txt` stays minimal by design. Before adding a package to
