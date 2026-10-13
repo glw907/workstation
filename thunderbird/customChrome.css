@@ -1,3 +1,5 @@
+@import "nord.css";
+
 /* Local overrides loaded last by thunderbird-gnome-theme.
  *
  * The theme covers the mail chrome. This file maps the Thunderbird colors
@@ -19,11 +21,11 @@
  * that reads --gnome-* follows. customContent.css repeats this block for the
  * settings pages. */
 :root {
-	--gnome-accent-bg: #5e81ac !important;      /* nord10 */
-	--gnome-success-bg: #a3be8c !important;     /* nord14 */
-	--gnome-warning-bg: #ebcb8b !important;     /* nord13 */
-	--gnome-error-bg: #bf616a !important;       /* nord11 */
-	--gnome-destructive-bg: #bf616a !important; /* nord11 */
+	--gnome-accent-bg: var(--nord10) !important;
+	--gnome-success-bg: var(--nord14) !important;
+	--gnome-warning-bg: var(--nord13) !important;
+	--gnome-error-bg: var(--nord11) !important;
+	--gnome-destructive-bg: var(--nord11) !important;
 }
 
 /* Accent: primary buttons, links, focus rings. The theme points
@@ -105,16 +107,16 @@
  * monochrome like the GNOME sidebar. The theme's standalone-colour rule
  * keeps each colour readable in light and dark. Error states stay red. */
 :root {
-	--folder-color-inbox: oklab(from #88c0d0 var(--gnome-standalone-color-oklab)) !important;      /* nord8 */
-	--folder-color-draft: oklab(from #ebcb8b var(--gnome-standalone-color-oklab)) !important;      /* nord13 */
-	--folder-color-sent: oklab(from #a3be8c var(--gnome-standalone-color-oklab)) !important;       /* nord14 */
-	--folder-color-archive: oklab(from #81a1c1 var(--gnome-standalone-color-oklab)) !important;    /* nord9 */
-	--folder-color-spam: oklab(from #d08770 var(--gnome-standalone-color-oklab)) !important;       /* nord12 */
-	--folder-color-trash: oklab(from #bf616a var(--gnome-standalone-color-oklab)) !important;      /* nord11 */
-	--folder-color-template: oklab(from #b48ead var(--gnome-standalone-color-oklab)) !important;   /* nord15 */
-	--folder-color-newsletter: oklab(from #8fbcbb var(--gnome-standalone-color-oklab)) !important; /* nord7 */
-	--folder-color-rss: oklab(from #8fbcbb var(--gnome-standalone-color-oklab)) !important;        /* nord7 */
-	--folder-color-outbox: oklab(from #d08770 var(--gnome-standalone-color-oklab)) !important;     /* nord12 */
+	--folder-color-inbox: oklab(from var(--nord8) var(--gnome-standalone-color-oklab)) !important;
+	--folder-color-draft: oklab(from var(--nord13) var(--gnome-standalone-color-oklab)) !important;
+	--folder-color-sent: oklab(from var(--nord14) var(--gnome-standalone-color-oklab)) !important;
+	--folder-color-archive: oklab(from var(--nord9) var(--gnome-standalone-color-oklab)) !important;
+	--folder-color-spam: oklab(from var(--nord12) var(--gnome-standalone-color-oklab)) !important;
+	--folder-color-trash: oklab(from var(--nord11) var(--gnome-standalone-color-oklab)) !important;
+	--folder-color-template: oklab(from var(--nord15) var(--gnome-standalone-color-oklab)) !important;
+	--folder-color-newsletter: oklab(from var(--nord7) var(--gnome-standalone-color-oklab)) !important;
+	--folder-color-rss: oklab(from var(--nord7) var(--gnome-standalone-color-oklab)) !important;
+	--folder-color-outbox: oklab(from var(--nord12) var(--gnome-standalone-color-oklab)) !important;
 	--folder-color-folder: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
 	--folder-color-folder-filter: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
 	--folder-color-folder-rss: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;

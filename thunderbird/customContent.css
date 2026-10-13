@@ -1,3 +1,5 @@
+@import "nord.css";
+
 /* Local overrides for Thunderbird's own about: pages, loaded by userContent.css.
  *
  * Settings, the address book and account settings load as content documents,
@@ -9,11 +11,11 @@
 
 	/* Nord accent and semantic colours, the same block as customChrome.css. */
 	:root {
-		--gnome-accent-bg: #5e81ac !important;      /* nord10 */
-		--gnome-success-bg: #a3be8c !important;     /* nord14 */
-		--gnome-warning-bg: #ebcb8b !important;     /* nord13 */
-		--gnome-error-bg: #bf616a !important;       /* nord11 */
-		--gnome-destructive-bg: #bf616a !important; /* nord11 */
+		--gnome-accent-bg: var(--nord10) !important;
+		--gnome-success-bg: var(--nord14) !important;
+		--gnome-warning-bg: var(--nord13) !important;
+		--gnome-error-bg: var(--nord11) !important;
+		--gnome-destructive-bg: var(--nord11) !important;
 	}
 
 	/* Neutral Adwaita surfaces in place of Thunderbird's zinc and blue-slate grays. */
