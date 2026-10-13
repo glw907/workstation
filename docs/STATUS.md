@@ -50,9 +50,9 @@ Pass 0 and F1 merged 2026-10-12 (drafter#1 `140bc00`, #6 `73ff07a`; workstation#
 
 ## Approval queue
 
-PR-ready on `worktree-approval-queue` (executor `.dotfiles-approval-queue`): the rename, the brief
-contract and register, the refusing command, and the rebuilt pages. Merge in the order of the PR's
-`## Before merge` and `## After merge` sections.
+Merged 2026-10-12 as workstation #43 (`fefe984`): briefs, the rebuilt pages, and the rename to
+`approval-queue` (no alias); the After merge steps ran. Deferrals: ROADMAP "Approval queue brief
+leftovers".
 
 ## Open items
 
