@@ -354,8 +354,9 @@ the rest unless the step says it is a hard stop.
    2026-10-13. The layers are runtimes, which `check-drift` doesn't list,
    so they live here rather than in `flatpaks.txt`. The image already
    carries controller udev rules, `/dev/uinput` access, GameMode, and
-   `vm.max_map_count` at 1048576. In Steam: Settings > Compatibility turns
-   on Steam Play for all titles, and Settings > Downloads keeps shader
+   `vm.max_map_count` at 1048576. In Steam, Proton covers every title by
+   default; Settings > Compatibility only picks the default tool (Proton
+   Experimental on 2026-10-13), and Settings > Downloads keeps shader
    pre-caching on. Per game, `gamemoderun %command%` in the launch options
    turns on GameMode, and `mangohud %command%` shows the overlay.
 6. Optional: install the Android SDK (see `README.md`, Android) and pair
