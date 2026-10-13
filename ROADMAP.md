@@ -132,6 +132,15 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   PR and design bar buttons sit right at 390 px, the file-row `+N` and `-N` gap is wider than the
   mockup's, an opened file header takes a fill, and the triage reason text is about 1 px large.
 
+- **Approval queue brief leftovers**, deferred by Geoff's triage of workstation PR #43 (2026-10-12).
+  Smart quotes in rendered session copy (`marked-smartypants`, through `dependency-upgrade`). A
+  component test for the effect that registers key handlers, once the app has a component harness.
+  Four small a11y items: the "Decide X" link scrolls without moving focus, ages read as "12m", the
+  bar's fade catches clicks, and button labels carry kbd names. A link inside a Details summary
+  nests interactive content in `<summary>`; it needs a summary-only renderer. `listItems` in
+  `brief.ts` reads `- 2. foo` as `foo` and a nested bullet as top level. `dotfiles-pass` should
+  name `gitleaks detect --source . --log-opts main..HEAD`, the form the worktree guard allows.
+
 - **Two worktree-guard notes**, from the same triage: the pair-dispatch template should tell a
   subagent that the worktree Bash guard refuses compound commands, so it uses plain calls and the
   Write tool; and the guard refuses `gitleaks git` and a `node` run with a computed path.
