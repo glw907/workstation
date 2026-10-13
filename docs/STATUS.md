@@ -49,10 +49,10 @@ dropped Geoff's live `model`, `effortLevel`, and `modelSettings`; restored by ha
 
 ## Drafter Pass 0
 
-PR-ready: glw907/drafter#1 (merge first) and glw907/workstation#36 (`worktree-drafter-pass0`). Executor
-sessions `b2d8e135` (T1 to T6) and `a324f4c7` (T8, T7, A2, close). Task-minutes: 685 estimated
-against the 900 ceiling, no clock stop. The conductor merges both PRs per the dotfiles PR's
-`## Before merge`. Plan: `docs/superpowers/plans/2026-10-12-drafter-pass0-plan.md`.
+Merged 2026-10-12: glw907/drafter#1 (`140bc00`) and glw907/workstation#36 (`70c1315`); `drafter`
+installed from drafter `main`, and the chain writes `.plan.yaml` by default. Next: follow-up F1,
+nine optional format additions from cairn's 11-plan test, listed in
+`~/.local/share/drafter/pass0-amendments.md`; it waits on Geoff's go.
 
 ## Open items
 

@@ -68,6 +68,13 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   the definition untouched because definitions load from the stowed main checkout. With #25
   merged, add the field and its one-writer sentence to `claude/.claude/agents/cairn-docs-drafter.md`.
 
+- **Docs page chain follow-ups from drafter Pass 0** (deferred in Geoff's triage of
+  glw907/workstation#36, 2026-10-12). Remove the `planFormat: "markdown"` escape hatch once no
+  markdown plans remain. Add goldens for the markdown `replan:` and rework prompts if either is
+  edited. Make the nonzero-`checkPlan` replan test assert `status === "escalate"` beside `reason`
+  (`tests/docs-page-chain-outline.test.mjs:1452`). Truncate the validator output in the escalation
+  reason, or move it to its own field (`docs-page-chain.js:2018`).
+
 - **PR test CI for dotfiles.** Add a workflow that runs `bash scripts/check.sh` on
   `pull_request`. Until it lands, the full-suite home is the local close gate (ruling 11 of the
   lean pass process spec).
