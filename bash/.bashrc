@@ -158,7 +158,10 @@ claude() {
             ;;
     esac
 
-    command claude "${args[@]}"
+    # ~/.local/secrets exports ANTHROPIC_API_KEY for scripts that call the API
+    # directly. Claude Code would bill that key ahead of the claude.ai login and
+    # turn off the claude.ai connectors, so it starts without the key.
+    env -u ANTHROPIC_API_KEY claude "${args[@]}"
     claude-sudo-clear 2>/dev/null
     ~/.dotfiles/scripts/secrets/secret-session-clear.sh >/dev/null 2>&1
 }
