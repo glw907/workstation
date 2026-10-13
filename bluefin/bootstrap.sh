@@ -304,9 +304,12 @@ setup_mise_uv() {
 
     # Python CLI tools ride uv rather than Homebrew. uv-tools.txt is the
     # source of truth; check-drift reconciles `uv tool list` against it.
-    local tool
-    while IFS= read -r tool; do
-        uv tool install "$tool" || return 1
+    # A line is an install spec plus optional extra arguments (a --python
+    # pin, say). read -a splits it without glob-expanding the extras brackets.
+    local line args
+    while IFS= read -r line; do
+        read -r -a args <<< "$line"
+        uv tool install "${args[@]}" || return 1
     done < <(read_list "$BLUEFIN_DIR/uv-tools.txt")
 }
 

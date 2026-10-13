@@ -2,9 +2,12 @@
 # source of truth: bootstrap.sh's setup_mise_uv installs from this file and
 # check-drift reconciles `uv tool list` against it. A bracketed extras
 # suffix is part of the install spec; the tool name is the part before it.
+# Anything after the spec is passed to `uv tool install` as extra arguments.
 khard
 vdirsyncer
 yt-dlp
 ruff
 jrnl
-beets[fetchart,embedart]
+# beets pins Python 3.14: its jellyfish dependency builds through PyO3, which
+# had no Python 3.15 support when pavilion was set up on 2026-10-13.
+beets[fetchart,embedart] --python 3.14
