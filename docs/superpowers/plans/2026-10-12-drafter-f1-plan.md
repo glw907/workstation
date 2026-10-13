@@ -20,7 +20,7 @@ the drafter checkout. Full-suite home: that same gate, once on the close head. T
 The dotfiles worktree exists only to hold the clock file and the session's working directory. The
 pass changes nothing in dotfiles and opens no dotfiles PR.
 
-Estimate: 165 task-minutes. The pass is `ordinary`, so it merges its own PR after a green close
+Estimate: 175 task-minutes. The pass is `ordinary`, so it merges its own PR after a green close
 gate and an accepted whole-branch review, when its "Found, not done" list is empty. Otherwise it
 stops at PR-ready.
 
@@ -41,26 +41,28 @@ anchors` command, raw `<a id>` anchors, a cross-plan anchor check, and the mirro
   6. `code.source` may be an `http(s)://` URL as well as a repo path.
   7. A level-2 section's `items` may be empty when the next section in the list is level 3. Any
      other empty `items` stays a finding.
+  8. `reason.facts`: an optional list of fact ids.
+  9. `code.source` becomes optional, for an illustrative snippet with no model file.
 - Files: `internal/plan/plan.go`, `decode.go`, `decode_test.go`, `schema/plan.schema.json`,
   `internal/plan/testdata/`.
 - Acceptance: one failing row and one clean twin per addition, with the expected line. The
-  failing rows are a wrong type for 1 to 5, and for 7 an empty level-2 `items` followed by another
+  failing rows are a wrong type for 1 to 5 and 8, and for 7 an empty level-2 `items` followed by another
   level-2 section. The schema sync test passes.
 - Test: `go -C ~/Projects/drafter test ./internal/plan/...`.
 
 ### F1.2 Check the new fields (60 min, ordinary)
 
 - Outcome, in `internal/plan/check.go` and `facts.go`:
-  1. The `facts` of an introduction and of a code item resolve and must be citable under
+  1. The `facts` of an introduction, a code item, and a reason item resolve and must be citable under
      `--facts`, like a sentence's `facts`. Without `--facts`, each list gets the no-facts warning.
-  2. Id integrity, with or without `--facts`: an id in any `facts` list (sentence, code item, or
-     introduction) that the plan disposes is an error. The fix is to cite a placed fact or to place
+  2. Id integrity, with or without `--facts`: an id in any `facts` list (sentence, code item, reason
+     item, or introduction) that the plan disposes is an error. The fix is to cite a placed fact or to place
      this one.
   3. A section's `anchor`, when present, must equal the GitHub slug of its `heading`, taken with
      the same slugger as the same-page anchor check. A mismatch is an error naming both values.
   4. The reader-state walk warns when a non-optional step `requires` a token that only optional
      steps produce, earlier in page order, and that no precondition supplies.
-  5. A `code.source` that is an `http(s)://` URL isn't checked.
+  5. A `code.source` that is an `http(s)://` URL, or absent, isn't checked.
 - Files: `internal/plan/check.go`, `facts.go`, `check_test.go`, `facts_test.go`, fixtures under
   `internal/plan/testdata/repo/`.
 - Acceptance: a failing fixture and a clean twin for each of 1 to 5. For 4 the twin has the token
@@ -82,8 +84,10 @@ anchors` command, raw `<a id>` anchors, a cross-plan anchor check, and the mirro
 - Outcome: `docs/plan-format.md` documents every F1 addition, and every convention in the interim
   sheet (`~/.local/share/drafter/plan-format-v1.md`) that the reference doesn't already state. That
   includes item order, how failures, handoffs, and links are used, restrictive `use`, tokens that
-  name states (shared tokens for either-or routes, summary tokens), and where facts behind opens,
-  steps, and the introduction go. It also covers what the format leaves out on purpose (tables,
+  name states (shared tokens for either-or routes, summary tokens), where facts behind opens,
+  steps, and the introduction go, and that a fact may be placed anywhere on the page. It also says
+  that a failure renders where its item sits, while `from` only links it to a step for the walk.
+  Its example shows a restricting `use` that starts with "only". It also covers what the format leaves out on purpose (tables,
   form, negatives, rework input, exemplars and cross-links) and `friction` as the list a run
   surfaces. Write it fresh in the reference's Google developer style. Cairn's page names in the
   sheet stay out of this public repo, and so does every workstation path.

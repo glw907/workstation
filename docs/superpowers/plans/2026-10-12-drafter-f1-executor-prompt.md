@@ -23,7 +23,7 @@ How to work:
   gate, once, on the close head.
 - A stop the plan doesn't answer (a finding that changes the design, or a blocker you can't
   resolve) runs `notify-send -u normal`, names the question in your final message, and waits.
-  Under 330 task-minutes (twice the estimate), an overrun continues without a stop.
+  Under 350 task-minutes (twice the estimate), an overrun continues without a stop.
 - Arm the API-drop wake-up (`/loop` with no interval) per `~/.claude/docs/unattended-work-guards.md`.
 
 At close, follow the plan's "Close" section. It merges the PR itself only when the review accepted
