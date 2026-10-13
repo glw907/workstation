@@ -360,9 +360,32 @@ the rest unless the step says it is a hard stop.
    Experimental on 2026-10-13), and Settings > Downloads keeps shader
    pre-caching on. Per game, `gamemoderun %command%` in the launch options
    turns on GameMode, and `mangohud %command%` shows the overlay.
-6. Optional: install the Android SDK (see `README.md`, Android) and pair
+6. Peripherals. The Logitech M720 mouse and the Keychron K3 keyboard pair
+   over the onboard Bluetooth. `bluetoothctl pair` needs an agent in the
+   same session, or it fails with `AuthenticationFailed` and bluetoothd logs
+   "No agent available". Pipe the commands into one session:
+   ```bash
+   { echo "agent NoInputNoOutput"; echo default-agent; echo "pair $MAC"; sleep 12
+     echo yes; sleep 3; echo "trust $MAC"; echo "connect $MAC"; sleep 5; echo quit; } | bluetoothctl
+   ```
+   The K3 pairs from Bluetooth mode by holding fn + 1 for 4 seconds, until
+   the light blinks fast. It is then the only keyboard, so start the pairing
+   before switching it over. The M720's thumb button sends Super through a
+   remap stored on the mouse, which Solaar (`flatpaks.txt`) set, so a
+   reinstall doesn't need it again.
+
+   Both batteries show in the top bar through the UPower Battery extension.
+   It has no manifest tier, so install it here. It loads at the next login:
+   ```bash
+   curl -sL -o /tmp/upower-battery.zip \
+       "https://extensions.gnome.org/download-extension/upower-battery@codilia.com.shell-extension.zip?shell_version=50"
+   gnome-extensions install --force /tmp/upower-battery.zip
+   cur=$(/usr/bin/gsettings get org.gnome.shell enabled-extensions)
+   /usr/bin/gsettings set org.gnome.shell enabled-extensions "${cur%]}, 'upower-battery@codilia.com']"
+   ```
+7. Optional: install the Android SDK (see `README.md`, Android) and pair
    Syncthing at `http://127.0.0.1:8384`.
-7. Shut down fully and power on, so the zram and OOM drops take effect, and
+8. Shut down fully and power on, so the zram and OOM drops take effect, and
    confirm GDM logs straight in. A cold start also tests the BIOS
    workaround: `journalctl -b -k | grep -c SOD3` should print 0.
 
