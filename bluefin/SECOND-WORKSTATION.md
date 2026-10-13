@@ -323,6 +323,13 @@ the rest unless the step says it is a hard stop.
    name. So `gnome-settings.txt` doesn't track the background until both
    machines run artwork with the same numbering.
 
+   The dock needs no step here. `setup` applies it from `gnome-settings.txt`:
+   Files, Terminal, Firefox, Thunderbird, Discord, noson, Rufin, Steam,
+   1Password, then Trash. Before that line existed, pavilion kept Bluefin's
+   stock dock, including the installer and a dead link to the removed
+   Thunderbird ESR. If an icon is missing, check that its app installed and
+   that `check-drift` reports `favorite-apps` matching.
+
    Then relax the screen lock. pavilion is a desktop in the home office, so
    it never locks and blanks after 15 idle minutes. The laptop keeps its
    lock, so these stay out of the shared `gnome-settings.txt`:
