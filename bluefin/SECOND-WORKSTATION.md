@@ -20,12 +20,35 @@ These were settled with Geoff on 2026-10-12. Follow them, don't reopen them.
 |---|---|
 | Hostname | `pavilion` |
 | Username | `glw907`, so every `/var/home/glw907` path, Claude memory key, and the GDM auto-login file carry over unchanged |
-| Image | `bluefin-stable-x86_64.iso`, Intel/AMD build, then the `devmode` rebase to DX |
+| Image | `bluefin-dx-nvidia-open:stable` for the GTX 1660 Super. The install used the Intel/AMD ISO, so Part 1 switches images in place of the `devmode` rebase |
 | Lid handling | Not installed. `bluefin/etc/systemd/logind.conf.d/10-lid-ignore.conf` is laptop-only, and no phase installs it |
 | Awake hooks | Kept. `claude-awake-holder` finds no battery and never trips its floor; the inhibitors still block idle suspend |
 | GDM auto-login | Mirrored from the laptop (LUKS guards the disk) |
 | Laptop-only state | Arrives in an age-encrypted handoff bundle on R2, built on thinkpad-x1 |
 | Credentials | Machine-owned ones are minted fresh: SSH key, `gh` login, gws user token. Tokens in the shared age store stay shared |
+
+## Hardware
+
+The machine is an HP Pavilion Gaming Desktop TG01-2xxx: 16 GB of DDR4-3200
+in two slots (32 GB maximum), a 512 GB NVMe SSD, a 32 GB Intel Optane module,
+and an Nvidia GTX 1660 Super. Three things blocked the 2026-10-12 install,
+and a reinstall hits them again.
+
+The add-in Wi-Fi card, an Intel Wireless-AC 7265 on a PCIe slot adapter,
+stops answering under Linux. It hangs `lspci`, the installer, shutdown, and
+boot, and `pcie_aspm=off` does not help. It stays out of the machine; the
+onboard Wi-Fi works.
+
+The SSD was paired with Optane, which hid it from the installer. The fix was
+to disable Optane in Windows with the Intel Optane Memory and Storage
+Management app. The firmware's SATA Emulation setting stays greyed out on
+RAID, and the installer works with it there. UEFI HII Configuration > Intel
+Rapid Storage Technology confirms the result: two non-RAID physical disks.
+
+Leftover Windows and Optane signatures then hung the installer's storage
+scan. `wipefs -a` on the SSD's partitions, the SSD, and the Optane module
+cleared them. Install to the 476.9 GB SSD only and leave the 27.2 GB Optane
+module unused.
 
 ## The handoff bundle
 
@@ -59,11 +82,13 @@ mismatch is a hard stop: never decrypt an unverified blob.
    logo). Install Bluefin to the whole disk with LUKS encryption. Create the
    user `glw907`.
 2. First boot: enroll the MOK with the password `universalblue`.
-3. Clone the dotfiles and run the first two bootstrap phases, rebooting after
-   each:
+3. Clone the dotfiles, switch to the Nvidia DX image, and run the bootstrap
+   phases, rebooting where shown. The `rpm-ostree rebase` line replaces
+   `bootstrap.sh devmode`, which would rebase to the non-Nvidia DX image. It
+   keeps layered packages, so it also works after `layer` has run:
    ```bash
    git clone https://github.com/glw907/workstation.git ~/.dotfiles
-   ~/.dotfiles/bluefin/bootstrap.sh devmode   # answer: yes, no, no
+   sudo rpm-ostree rebase ostree-image-signed:docker://ghcr.io/ublue-os/bluefin-dx-nvidia-open:stable
    sudo systemctl reboot
    ~/.dotfiles/bluefin/bootstrap.sh layer
    sudo systemctl reboot
