@@ -22,20 +22,15 @@ artifacts. github.com/glw907/workstation.
   (cairn-cms #113), took 6.1 hours of clock against the 9-hour test. Plan and spec:
   `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`,
   `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
-- **Merged since, 2026-10-11:** infra sweep 1, the guard (#5); PRs open in Geoff's browser (#4); a
-  repo's checkout is pulled after its PR merges (#7); the `claude-infra` skill, Anthropic's scope
-  prompts in `pass-core`, review depth by design size, the `plan-reviewer` agent, the
-  `claude-tail-guard` hook, and the guidance-citation warning (#8). Evidence for #8:
-  `docs/superpowers/research/2026-10-11-anthropic-guidance-proportionality.md`.
 
 ## Conductor
 
 Conductor session `4bea6e68` closed the 2026-10-11 infrastructure initiative. Landed: dubplate
 alignment (#2, triage #3); cairn-cms alignment (#114, workstation #12, triage #115 and #14); the
-found-item triage rule (#11); the review desk (#13, its UI pass #22 and triage #23, with Geoff's
+found-item triage rule (#11); the approval queue (#13, its UI pass #22 and triage #23, with Geoff's
 `autoMode.allow` rule in #15); infra sweep 2 (#16, triage #17, ecxc-ski #2, aksailingclub-org #13);
 the merge guard (#18, #20); the conductor lessons in `pass-core` (#21); and poplar's `pass-core`
-adapter (poplar #1). The rebuilt desk serves #22's UI.
+adapter (poplar #1). The rebuilt app serves #22's UI.
 
 Outside this initiative, each for its own session: `admin-api-1` runs on in dubplate (executor
 `6baa2add`, no merge pre-approval; then `claude rm 18bbe825`, a stopped launch sharing its
@@ -52,6 +47,12 @@ dropped Geoff's live `model`, `effortLevel`, and `modelSettings`; restored by ha
 Pass 0 and F1 merged 2026-10-12 (drafter#1 `140bc00`, #6 `73ff07a`; workstation#36 `70c1315`);
 `drafter` installed from `main`, and the chain writes `.plan.yaml`. cairn's 11 page plans pass
 `check-plan`. Open drafter items: glw907/drafter issues #2 to #5 and #7 to #10.
+
+## Approval queue
+
+PR-ready on `worktree-approval-queue` (executor `.dotfiles-approval-queue`): the rename, the brief
+contract and register, the refusing command, and the rebuilt pages. Merge in the order of the PR's
+`## Before merge` and `## After merge` sections.
 
 ## Open items
 
