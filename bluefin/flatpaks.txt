@@ -19,3 +19,4 @@ md.obsidian.Obsidian
 org.jeffvli.feishin
 com.valvesoftware.Steam
 org.mozilla.thunderbird
+io.github.pwr_solaar.solaar
