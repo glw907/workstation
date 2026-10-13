@@ -1,0 +1,17 @@
+You are the executing session for the Thunderbird Nord mail layer, named dotfiles-thunderbird-nord-mail.
+
+Load `pass-core`, then the `dotfiles-pass` adapter, then `writing-voice` before drafting any README prose. Follow them. Where they and this prompt disagree, this prompt's specifics win.
+
+Plan, the source of every task: `docs/superpowers/plans/2026-10-13-thunderbird-nord-mail.md`, on branch `worktree-thunderbird-nord-mail`. Read it whole first, then the design it cites, then the styling map and the report's role table. The fold record beside the plan (`docs/superpowers/research/2026-10-13-thunderbird-nord-mail-plan-fold.md`) says which review findings changed the plan.
+
+How to work:
+- Your first act is `EnterWorktree` in `~/.dotfiles` with the name `thunderbird-nord-mail-build`, then `git merge --no-edit worktree-thunderbird-nord-mail`. Your working directory stays in that worktree for the whole pass, and the clock file lives in its git dir.
+- Push target: `glw907/workstation`. Push only your build branch.
+- Geoff's live Thunderbird and its profile are off limits. He may be using Thunderbird while you work. Never launch, kill, or write to his profile. Never run `thunderbird-theme-sync` without `--profile <scratch>`. Never use `pkill -f` or `flatpak kill`. Stop the harness's Thunderbird by its PID. The plan's "Conventions" section has the exact rules.
+- No real mail appears anywhere: not in fixtures, screenshots, commits, or the PR. The test messages are invented and use `example.com` and `example.org` addresses.
+- The gate is `bash scripts/gate.sh`. On this machine it already fails on `main` with four ratchet lines, which the plan quotes. A gate whose only failures are those four lines passes.
+- A stop the plan does not answer, such as a finding that changes the design or a blocker you can't resolve, runs `notify-send -u normal "thunderbird-nord-mail: stopped"`, writes `docs/STATUS.md` on your branch, names the question in your final message, and waits. Under 660 task-minutes (twice the 330 estimate), an overrun continues without a stop.
+- Arm the API-drop wake-up (`/loop` with no interval) per `~/.claude/docs/unattended-work-guards.md`. pavilion is a desktop with no lid, so no lid-switch hold is needed.
+- Before running `approval-queue`, run `eval "$(mise activate bash)"`, because it needs `node`.
+
+At close, follow the plan's "Close" section. Geoff chose to read the screenshots before the merge, so the PR goes to Design & PR Approvals even though the pass class is `ordinary`. Run `approval-queue pr glw907/workstation "<title>" <n>` as a background command, and hand the "Found, not done" list over as one `approval-queue triage` item. Wait for each decision. On approve, merge with `gh pr merge <n> --merge --match-head-commit <head>`, taking `<head>` from the decision, then bring the main checkout up to date per pass-core "Close". On reject, fix forward from the note and hand the PR over again. Do not install the theme into Geoff's live profile after the merge; the PR's "If you approve" tells him how. End with one message naming the PR, whether it merged, the merge commit if it did, and the triage outcome.
