@@ -10,7 +10,8 @@
     "allow": [
       "Bash(chromium:*)",
       "Bash(chromium-shot:*)",
-      "Bash(tellgrader:*)"
+      "Bash(tellgrader:*)",
+      "Bash(gh pr merge * --match-head-commit *)"
     ],
     "defaultMode": "auto"
   },
@@ -116,6 +117,16 @@
             "command": "claude-context-budget --hook",
             "timeout": 10,
             "statusMessage": "Checking context-file budgets"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claude-desk-reminder",
+            "timeout": 5
           }
         ]
       },
