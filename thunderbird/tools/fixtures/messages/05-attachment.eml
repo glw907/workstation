@@ -1,0 +1,20 @@
+From: Casey Rowan <casey@example.com>
+To: Test Reader <reader@example.org>
+Subject: Meeting notes with an attachment
+Date: Tue, 13 Oct 2026 08:10:00 -0800
+Message-ID: <m05@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="BOUNDARY-05"
+
+--BOUNDARY-05
+Content-Type: text/plain; charset=utf-8
+
+The notes are attached as a small text file.
+
+--BOUNDARY-05
+Content-Type: text/plain; name="notes.txt"
+Content-Disposition: attachment; filename="notes.txt"
+
+Invented meeting notes for a test message.
+--BOUNDARY-05--
+
