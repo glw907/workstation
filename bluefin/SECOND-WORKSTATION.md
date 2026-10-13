@@ -147,11 +147,16 @@ mismatch is a hard stop: never decrypt an unverified blob.
 5. Open a NEW terminal, so the stowed `.bashrc` is loaded, and run:
    ```bash
    claude-sudo-setup
-   gh auth login        # GitHub.com, HTTPS, browser login
-   cd ~/.dotfiles && claude
+   gh auth login --hostname github.com --git-protocol https --web \
+       --scopes admin:public_key
+   cd ~/.dotfiles && claude --chrome
    ```
-   Log in to Claude when asked, then give it the prompt "Follow
-   bluefin/SECOND-WORKSTATION.md part 2."
+   `gh` prints a one-time code in the terminal; enter it at the page the
+   browser opens. The extra scope lets Part 2 register the SSH key without a
+   second login. Starting Claude with `--chrome` writes the native-messaging
+   host that the Chromium extension needs in Part 3. Log in to Claude when
+   asked, then give it the prompt "Follow bluefin/SECOND-WORKSTATION.md
+   part 2."
 
 ## Part 2: Claude on pavilion
 
@@ -233,7 +238,7 @@ the rest unless the step says it is a hard stop.
    git -C ~/Projects/dubplate remote set-url origin git@github.com:glw907/dubplate.git
    ```
    If `gh` lacks the `admin:public_key` scope, ask Geoff to run
-   `gh auth refresh -s admin:public_key` and retry.
+   `gh auth refresh -h github.com -s admin:public_key` and retry.
 8. Build the local binaries the laptop carries outside the stow tree:
    ```bash
    make -C ~/Projects/poplar install
@@ -265,19 +270,63 @@ the rest unless the step says it is a hard stop.
     lists the carried memory. Fix any drift that a step above should have
     covered. Report the rest to Geoff with the Part 3 list.
 
+    Also confirm Homebrew's `git` can reach GitHub over HTTPS, since
+    `thunderbird-theme-sync` uses it in Part 3:
+    ```bash
+    /home/linuxbrew/.linuxbrew/bin/git ls-remote https://github.com/glw907/workstation HEAD
+    ```
+    On 2026-10-13 this failed with "unable to get local issuer
+    certificate". Homebrew 6.0.1 could not run the `ca-certificates`
+    post-install (`unknown install step: run`), so no CA bundle existed, and
+    `brew update` stopped on a broken third-party cask. The fix runs the
+    formula's own script and links the bundle where Homebrew's OpenSSL 4
+    looks (`openssl version -d` names the directory):
+    ```bash
+    B=/home/linuxbrew/.linuxbrew; K=$(echo $B/Cellar/ca-certificates/*)
+    bash $K/libexec/post-install $K/share/ca-certificates/cacert.pem $B/etc/ca-certificates/cert.pem
+    mkdir -p $B/etc/openssl@4 && ln -sf ../ca-certificates/cert.pem $B/etc/openssl@4/cert.pem
+    ```
+
+    Running the repo gate (`bash scripts/gate.sh`) on a fresh machine fails
+    for two reasons unrelated to any change. The approval-queue test can't
+    find `node`, because the gate's clean environment lacks mise. The
+    ratchet flags documented paths that don't exist yet, such as `~/Android`
+    and the laptop-only lid folder.
+
 ## Part 3: Geoff, sign-ins
 
-1. `gws auth login -s docs,drive`. This mints the machine's own gws user
-   token; the OAuth client pair came from the age store in step 3.
+1. Open a NEW terminal and run `gws auth login -s docs,drive`. This mints
+   the machine's own gws user token. The OAuth client pair comes from
+   `~/.local/secrets`, which Part 2 step 3 wrote. A terminal opened before
+   then never loaded it, and `gws` reports "No OAuth client configured".
 2. In Chromium, sign in, install the Claude extension, and confirm it
    connects to Claude Code. Confirm the 1Password extension connects too. If
-   it doesn't, see the GID gotcha in `bluefin-admin.md`.
-3. In Thunderbird, sign in to Fastmail with OAuth, then run
+   it doesn't, see the GID gotcha in `bluefin-admin.md`. If the Claude
+   extension can't connect, check for
+   `~/.config/chromium/NativeMessagingHosts/com.anthropic.claude_code_browser_extension.json`.
+   A Claude session started without `--chrome` doesn't write it, and
+   neither does `/chrome` inside a session that started before setup.
+   Start a fresh `claude --chrome` and quit it. Don't use `--continue`
+   while another session on the same conversation is open.
+3. In Thunderbird, sign in to Fastmail with OAuth and quit, then run
    `thunderbird-theme-sync`.
-4. Optional: install the Android SDK (see `README.md`, Android) and pair
+4. Set the desktop background to `01-bluefin.xml`, the winter dinosaur in
+   Nord tones:
+   ```bash
+   for k in picture-uri picture-uri-dark; do
+       gsettings set org.gnome.desktop.background $k 'file:///usr/share/backgrounds/bluefin/01-bluefin.xml'
+   done
+   ```
+   Bluefin ships its artwork in the image and renumbered it between builds.
+   On 2026-10-13 the laptop's older build shows this picture as
+   `10-bluefin.xml`, while pavilion's build shows October's swamp under that
+   name. So `gnome-settings.txt` doesn't track the background until both
+   machines run artwork with the same numbering.
+5. Optional: install the Android SDK (see `README.md`, Android) and pair
    Syncthing at `http://127.0.0.1:8384`.
-5. Reboot once, so the zram and OOM drops take effect, and confirm GDM logs
-   straight in.
+6. Shut down fully and power on, so the zram and OOM drops take effect, and
+   confirm GDM logs straight in. A cold start also tests the BIOS
+   workaround: `journalctl -b -k | grep -c SOD3` should print 0.
 
 ## After pavilion is up
 
