@@ -7,6 +7,15 @@
 
 @-moz-document url-prefix("about:preferences"), url-prefix("about:settings"), url-prefix("about:addressbook"), url-prefix("about:accountsettings"), url-prefix("about:import"), url-prefix("about:accountsetup"), url-prefix("chrome://messenger/content/am-"), url-prefix("chrome://messenger/content/preferences/") {
 
+	/* Nord accent and semantic colours, the same block as customChrome.css. */
+	:root {
+		--gnome-accent-bg: #5e81ac !important;      /* nord10 */
+		--gnome-success-bg: #a3be8c !important;     /* nord14 */
+		--gnome-warning-bg: #ebcb8b !important;     /* nord13 */
+		--gnome-error-bg: #bf616a !important;       /* nord11 */
+		--gnome-destructive-bg: #bf616a !important; /* nord11 */
+	}
+
 	/* Neutral Adwaita surfaces in place of Thunderbird's zinc and blue-slate grays. */
 	:root {
 		--layout-background-0: var(--gnome-window-background) !important;

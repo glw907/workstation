@@ -10,6 +10,22 @@
  * User-chosen colors (calendars, tags, address-book categories) stay as set.
  * Every value follows the desktop in light and dark through --gnome-*. */
 
+/* Nord palette (https://www.nordtheme.com/docs/colors-and-palettes), applied
+ * gently: the surfaces stay neutral Adwaita, and Nord colours only carry
+ * meaning (Geoff, 2026-10-13). Frost nord10 replaces the desktop's slate
+ * accent; Aurora carries success, warning and error. The theme derives
+ * --gnome-accent and the other text colours from these -bg values, lifting
+ * them in dark mode and deepening them in light mode, so every rule below
+ * that reads --gnome-* follows. customContent.css repeats this block for the
+ * settings pages. */
+:root {
+	--gnome-accent-bg: #5e81ac !important;      /* nord10 */
+	--gnome-success-bg: #a3be8c !important;     /* nord14 */
+	--gnome-warning-bg: #ebcb8b !important;     /* nord13 */
+	--gnome-error-bg: #bf616a !important;       /* nord11 */
+	--gnome-destructive-bg: #bf616a !important; /* nord11 */
+}
+
 /* Accent: primary buttons, links, focus rings. The theme points
  * --selected-item-color at a neutral gray, so restore the accent where
  * Thunderbird derives these from it. */
@@ -84,19 +100,21 @@
 	--folderpane-unread-new-count-background: var(--gnome-accent-bg) !important;
 }
 
-/* Folder and account icons: monochrome like the GNOME sidebar. The user's
- * per-account color on the inbox icon is kept; error states stay red. */
+/* Folder and account icons. Each special folder gets one Nord colour so it
+ * is findable at a glance; ordinary folders and account icons stay
+ * monochrome like the GNOME sidebar. The theme's standalone-colour rule
+ * keeps each colour readable in light and dark. Error states stay red. */
 :root {
-	--folder-color-inbox: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
-	--folder-color-draft: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
-	--folder-color-sent: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
-	--folder-color-archive: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
-	--folder-color-spam: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
-	--folder-color-trash: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
-	--folder-color-template: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
-	--folder-color-newsletter: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
-	--folder-color-rss: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
-	--folder-color-outbox: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
+	--folder-color-inbox: oklab(from #88c0d0 var(--gnome-standalone-color-oklab)) !important;      /* nord8 */
+	--folder-color-draft: oklab(from #ebcb8b var(--gnome-standalone-color-oklab)) !important;      /* nord13 */
+	--folder-color-sent: oklab(from #a3be8c var(--gnome-standalone-color-oklab)) !important;       /* nord14 */
+	--folder-color-archive: oklab(from #81a1c1 var(--gnome-standalone-color-oklab)) !important;    /* nord9 */
+	--folder-color-spam: oklab(from #d08770 var(--gnome-standalone-color-oklab)) !important;       /* nord12 */
+	--folder-color-trash: oklab(from #bf616a var(--gnome-standalone-color-oklab)) !important;      /* nord11 */
+	--folder-color-template: oklab(from #b48ead var(--gnome-standalone-color-oklab)) !important;   /* nord15 */
+	--folder-color-newsletter: oklab(from #8fbcbb var(--gnome-standalone-color-oklab)) !important; /* nord7 */
+	--folder-color-rss: oklab(from #8fbcbb var(--gnome-standalone-color-oklab)) !important;        /* nord7 */
+	--folder-color-outbox: oklab(from #d08770 var(--gnome-standalone-color-oklab)) !important;     /* nord12 */
 	--folder-color-folder: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
 	--folder-color-folder-filter: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
 	--folder-color-folder-rss: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
@@ -144,6 +162,8 @@ tr[data-properties~="new"] .subject-line img,
 }
 
 :root {
+	--thread-pane-flag-fill: var(--gnome-warning) !important;
+	--thread-pane-flag-stroke: var(--gnome-warning) !important;
 	--thread-pane-spam-fill: var(--gnome-error) !important;
 	--thread-pane-spam-stroke: var(--gnome-error) !important;
 	--tree-card-border-hover-spam: color-mix(in srgb, var(--gnome-error) 50%, transparent) !important;
