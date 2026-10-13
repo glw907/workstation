@@ -89,12 +89,15 @@ current_image_name() {
     jq -rc '."image-name"' "$IMAGE_INFO_FILE" 2> /dev/null || echo unknown
 }
 
-# True when the booted deployment is a -dx image. Both `layer` and `setup`
+# True when the booted deployment is a -dx image, including the Nvidia
+# variants (bluefin-dx-nvidia-open on pavilion). Both `layer` and `setup`
 # gate on this: the whole point of the devmode phase is that everything after
 # it assumes DX, and silently proceeding on the base image produces a machine
 # that looks set up but has no docker, no dx-group, and no DX flatpaks.
 on_dx_image() {
-    [[ "$(current_image_name)" == *-dx ]]
+    local name
+    name="$(current_image_name)"
+    [[ "$name" == *-dx || "$name" == *-dx-nvidia* ]]
 }
 
 require_dx_image() {
