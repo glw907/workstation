@@ -42,7 +42,7 @@ A new register, `~/.claude/docs/voice/approval-brief.md`, is built on three stan
 The page follows the approved mock-ups in `2026-10-12-approval-queue-mockups/`: the generator, the rendered pages and screenshots, the settled decisions log, and the three audit ledgers. Highlights:
 
 - **Headline block:** one filled block holds the serif headline, the sans lede, and "What changes" and "If you approve".
-- **Decide first:** cards with choice buttons, and Approve stays locked until each card has a choice. The app itself promotes a failing check, a "fix" or "escalate" review, and a `## Before merge` step into these cards.
+- **Decide first:** cards with choice buttons, and Approve stays locked until each card has a choice. The app itself promotes a failing check, a "fix" or "escalate" review, and a `## Before merge` step into these cards. Only the app's own cards offer "Send back to fix it"; a session's `### Decide:` choices return to the session with the approval, and the bar's Send back stays available for anything else (Geoff, 2026-10-12, choosing what is most useful day to day).
 - **Details and Evidence:** quieter disclosure rows below the block.
 - **Triage:** rows with Do now / Do later / Don't do choices, a Note button, and a Technical detail toggle.
 - **Decision bar:** a floating bar with a status summary.
@@ -63,7 +63,7 @@ Five names change, and no alias is left behind.
 
 Every live reference goes, with no alias left behind (Geoff, 2026-10-12: "Make sure the review-desk references are fully expunged from the claude infa."). That covers all 16 dotfiles files that name the desk: `pass-core`, `settings.json`, the command and the hook, `scripts/check.sh`, the tests, STATUS, and ROADMAP. A new leg in `scripts/check.sh` fails the gate if `review-desk` or `claude-desk-reminder` appears anywhere in the repo outside `docs/superpowers/` and `docs/HISTORY.md`, so the name cannot come back. Plans and prompts that have already run, in any repo, are history and stay as written.
 
-The PR's `## Before merge` section carries two steps. First, confirm that no live session in cairn-cms or dubplate still needs `review-desk`, or send each one the new command. Second, move the state folder while no item is waiting.
+The PR's `## Before merge` section confirms that no session is calling `review-desk` and no item is waiting. Its `## After merge` section then moves the state folder and sends each live cairn-cms or dubplate session the new command name, since `approval-queue` does not exist until the merge (plan review M7).
 
 ### Out of scope
 
