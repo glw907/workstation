@@ -248,7 +248,11 @@ adapter line that says every PR waits for Geoff yields to this exception.
 A PR must be safe under a plain merge followed by a pull; the executor makes it so where it can.
 When it cannot, the PR body carries a `## Before merge` section: the exact commands in order and
 the one check that shows they ran. `claude-merge-guard` refuses `gh pr merge <n>` until the
-command is prefixed `PREMERGE_DONE=<n>`, after the merger has run those steps.
+command is prefixed `PREMERGE_DONE=<n>`, after the merger has run those steps. An approve's `choices`
+say who runs them: "The session runs it, then merges" sends the session through the steps and then
+the merge; "I'll run it myself" means the session does not merge, and it reports that Geoff runs
+the steps and will say when they are done. "Approve anyway" on a failed check or a fix review
+means merge as approved.
 
 Whoever merges a PR then brings that repo's main checkout up to date: `git -C <checkout> pull
 --ff-only` when the checkout is on its default branch, has no uncommitted change in a file the
@@ -296,7 +300,7 @@ A STATUS next action carries the goal, the scope, the plan path, the checkout, a
 `claude` line. The prompt text lives in a committed file and is launched as `"$(cat <file>)"`,
 since a prompt pasted inside double quotes runs each backticked span as a command substitution.
 The prompt for a pass that hands its PR over says the session waits for the approval, merges only on
-Geoff.s approve with `--match-head-commit`, and ends after acting on the decision; it never
+Geoff's approve with `--match-head-commit`, and ends after acting on the decision; it never
 says "never merge" or "end" outright. Close the session when the initiative lands.
 
 A conductor prompt opens with one line naming the session `conductor-<project>`, then carries the

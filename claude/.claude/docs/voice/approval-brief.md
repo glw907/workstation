@@ -69,7 +69,8 @@ below with this register's path, `~/.claude/docs/voice/approval-brief.md`. The p
     choice ends in `(recommended)`.
   - At most one `### Worth knowing`: a paragraph.
   - Zero or more `### <label>` detail sections. Each opens with a paragraph whose first
-    sentence is the row summary shown while the row is closed.
+    sentence is the row summary shown while the row is closed. After that paragraph a section
+    may hold lists, code blocks, and more paragraphs, and the page shows them all.
 - Headings match their exact spelling, case included.
 - The brief ends at the next `## ` heading. Everything after it is the technical notes.
 - A triage file is `{headline, lede, rows: [{action, why, detail, proposed}]}`. `detail` is
@@ -77,8 +78,9 @@ below with this register's path, `~/.claude/docs/voice/approval-brief.md`. The p
   later, and Don't do.
 - A submitted triage returns `{decision: 'submit', rows: [{action, disposition, note}]}`, so
   Geoff's edit arrives as `note` and the session's `why` is never overwritten. An approve
-  returns `{decision: 'approve', choices: [{title, choice}]}`, one entry per `### Decide:`
-  block.
+  returns `{decision: 'approve', choices: [{title, choice}]}`, one entry per "Decide first" card:
+  the app's own cards (a failed check, a review that asks for a fix, a `## Before merge` step)
+  first, then each `### Decide:` block.
 
 ### The states
 
@@ -94,6 +96,7 @@ below with this register's path, `~/.claude/docs/voice/approval-brief.md`. The p
 | `### Decide:` with no title, fewer than two choices, or two `(recommended)` | Refuse, naming the block and the defect |
 | A `Source:` line joined to the paragraph above it | Refuse: "`Source:` must stand as its own paragraph" |
 | A detail section that does not open with a paragraph | Refuse, naming the label |
+| A block after the one list under `### What changes` or `### If you approve`, or after the one paragraph under `### Worth knowing` | Refuse: "holds only its list" (or "paragraph"); move the rest to a detail section |
 | CRLF line endings | Accept (normalized) |
 | Triage: not valid JSON | Refuse: "not valid JSON" |
 | Triage: a JSON array (the old shape) | Refuse: "old triage shape; write `{headline, lede, rows}`" |
