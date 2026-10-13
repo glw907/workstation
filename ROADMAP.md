@@ -75,6 +75,13 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   (`tests/docs-page-chain-outline.test.mjs:1452`). Truncate the validator output in the escalation
   reason, or move it to its own field (`docs-page-chain.js:2018`).
 
+- **The plan read checks code before it asserts behavior** (cairn's 11-plan test, 2026-10-12).
+  On debug-your-site, the plan-mode structural read said refusals log no event, but
+  `section-action.ts:216` logs `auth.access.refused`. Tell the plan-mode `structurePrompt` in
+  `docs-page-chain.js` to check the code before stating a behavior, and to mark such a finding as a
+  lead. The same test suggests a cross-plan anchor check for the drafter pipeline's consistency
+  read: a link's anchor against the target page's plan headings.
+
 - **PR test CI for dotfiles.** Add a workflow that runs `bash scripts/check.sh` on
   `pull_request`. Until it lands, the full-suite home is the local close gate (ruling 11 of the
   lean pass process spec).

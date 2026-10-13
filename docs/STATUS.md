@@ -47,12 +47,11 @@ Escape (conductor, 2026-10-11): merged #16 before its pre-merge settings cutover
 dropped Geoff's live `model`, `effortLevel`, and `modelSettings`; restored by hand. The merge guard
 (#18) now blocks a merge whose PR has a `## Before merge` section until it is acknowledged.
 
-## Drafter Pass 0
+## Drafter
 
-Merged 2026-10-12: glw907/drafter#1 (`140bc00`) and glw907/workstation#36 (`70c1315`); `drafter`
-installed from drafter `main`, and the chain writes `.plan.yaml` by default. Next: follow-up F1,
-nine optional format additions from cairn's 11-plan test, listed in
-`~/.local/share/drafter/pass0-amendments.md`; it waits on Geoff's go.
+Pass 0 and F1 merged 2026-10-12 (drafter#1 `140bc00`, #6 `73ff07a`; workstation#36 `70c1315`);
+`drafter` installed from `main`, and the chain writes `.plan.yaml`. cairn's 11 page plans pass
+`check-plan`. Open drafter items: glw907/drafter issues #2 to #5 and #7 to #10.
 
 ## Open items
 
