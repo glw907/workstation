@@ -14,7 +14,7 @@ Today a session hands you its agent-facing notes: file paths, hook names, and a 
 
 ### Needs your attention
 
-The old `review-desk` name keeps working as an alias until the cairn-cms and dubplate passes that call it have closed. Removing it sooner would break their running sessions.
+The rename leaves no `review-desk` alias. The cairn-cms and dubplate passes now running call that name, so the merge waits until their sessions have handed over, or until each has been told the new name.
 
 ### The brief contract
 
@@ -52,7 +52,9 @@ The build is all DaisyUI components, and every surviving audit fix is applied.
 | `claude-desk-reminder` hook | `claude-approval-queue-reminder` |
 | "Review desk" window title | "Design & PR Approvals" |
 
-All 16 dotfiles files that name the desk change: `pass-core`, `settings.json`, `scripts/check.sh`, the tests, STATUS, and ROADMAP. Plans and prompts that have already run, in any repo, are history and stay as written. The state folder moves at merge, and only while no item is waiting; the PR carries that step in `## Before merge`.
+Every live reference goes, with no alias left behind (Geoff, 2026-10-12: "Make sure the review-desk references are fully expunged from the claude infa."). That covers all 16 dotfiles files that name the desk: `pass-core`, `settings.json`, the command and the hook, `scripts/check.sh`, the tests, STATUS, and ROADMAP. A new leg in `scripts/check.sh` fails the gate if `review-desk` or `claude-desk-reminder` appears anywhere in the repo outside `docs/superpowers/` and `docs/HISTORY.md`, so the name cannot come back. Plans and prompts that have already run, in any repo, are history and stay as written.
+
+The PR's `## Before merge` section carries two steps. First, confirm that no live session in cairn-cms or dubplate still needs `review-desk`, or send each one the new command. Second, move the state folder while no item is waiting.
 
 ### Out of scope
 
