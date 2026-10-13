@@ -337,9 +337,30 @@ the rest unless the step says it is a hard stop.
    gsettings set org.gnome.desktop.screensaver lock-enabled false
    gsettings set org.gnome.desktop.session idle-delay 'uint32 900'
    ```
-5. Optional: install the Android SDK (see `README.md`, Android) and pair
+5. Gaming. Steam is the Flathub build from `flatpaks.txt`. Check that its
+   Nvidia GL extensions match the driver: `flatpak list | grep GL.nvidia`
+   should show `GL.nvidia` and `GL32.nvidia` with the version
+   `/proc/driver/nvidia/version` reports. Flatpak updates replace them when
+   the image's driver changes. Then add the MangoHud and gamescope Vulkan
+   layers for the Steam runtime's branch, and keep Nvidia's shader cache from
+   being pruned:
+   ```bash
+   flatpak install --system -y flathub \
+       org.freedesktop.Platform.VulkanLayer.MangoHud//26.08 \
+       org.freedesktop.Platform.VulkanLayer.gamescope//26.08
+   flatpak override --user --env=__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1 com.valvesoftware.Steam
+   ```
+   `flatpak info com.valvesoftware.Steam` names the runtime branch, 26.08 on
+   2026-10-13. The layers are runtimes, which `check-drift` doesn't list,
+   so they live here rather than in `flatpaks.txt`. The image already
+   carries controller udev rules, `/dev/uinput` access, GameMode, and
+   `vm.max_map_count` at 1048576. In Steam: Settings > Compatibility turns
+   on Steam Play for all titles, and Settings > Downloads keeps shader
+   pre-caching on. Per game, `gamemoderun %command%` in the launch options
+   turns on GameMode, and `mangohud %command%` shows the overlay.
+6. Optional: install the Android SDK (see `README.md`, Android) and pair
    Syncthing at `http://127.0.0.1:8384`.
-6. Shut down fully and power on, so the zram and OOM drops take effect, and
+7. Shut down fully and power on, so the zram and OOM drops take effect, and
    confirm GDM logs straight in. A cold start also tests the BIOS
    workaround: `journalctl -b -k | grep -c SOD3` should print 0.
 
