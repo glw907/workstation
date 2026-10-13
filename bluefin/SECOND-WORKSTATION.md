@@ -31,8 +31,9 @@ These were settled with Geoff on 2026-10-12. Follow them, don't reopen them.
 
 The machine is an HP Pavilion Gaming Desktop TG01-2xxx: 16 GB of DDR4-3200
 in two slots (32 GB maximum), a 512 GB NVMe SSD, a 32 GB Intel Optane module,
-and an Nvidia GTX 1660 Super. Three things blocked the 2026-10-12 install,
-and a reinstall hits them again.
+and an Nvidia GTX 1660 Super, on BIOS F.24. Three things blocked the
+2026-10-12 install, and a fourth hung most boots afterwards. A reinstall hits
+all four again.
 
 The add-in Wi-Fi card, an Intel Wireless-AC 7265 on a PCIe slot adapter,
 stops answering under Linux. It hangs `lspci`, the installer, shutdown, and
@@ -49,6 +50,26 @@ Leftover Windows and Optane signatures then hung the installer's storage
 scan. `wipefs -a` on the SSD's partitions, the SSD, and the Optane module
 cleared them. Install to the 476.9 GB SSD only and leave the 27.2 GB Optane
 module unused.
+
+The BIOS then crashed about seven boots in ten at the Bluefin loading screen.
+HP's power-off method for the third LPSS I2C controller, `I2C3._PS3`, calls
+`SOD3 (IC03, …)`. `IC03` should be an address from the DSDT's NVS fields, but a
+96-byte HP SSDT declares `Device (\_SB.PC00.IC03)`, which shadows it from
+I2C3's scope. The method aborts on every boot. On most boots the aborted
+method also corrupts the kernel's ACPI object cache, which surfaces as
+`kernel BUG at mm/slub.c` from whichever driver evaluates ACPI next. Device
+setup then stalls and Wi-Fi never appears. Kernel bugzilla 221847 reports the
+same collision on the same model, unfixed as of 2026-10-13.
+
+Nothing is attached to the three LPSS I2C controllers, so the fix keeps their
+driver from loading. A PCI device with no driver is never powered down, so
+`_PS3` never runs. The driver is built into Fedora's kernel, so it takes
+`initcall_blacklist`, not `module_blacklist`. The boot arguments are in Part
+1 step 3. The `hp_wmi` blacklist came from an earlier, wrong diagnosis. It
+stays because HP's WMI methods also throw AML errors and nothing on the
+desktop needs them. A BIOS update is not known to fix the collision; the
+bugzilla reporter saw it on F.21 and F.24. To check a new BIOS, dump the
+tables and look for `Device (IC03)` in a small SSDT.
 
 ## The handoff bundle
 
@@ -81,21 +102,46 @@ mismatch is a hard stop: never decrypt an unverified blob.
 1. Boot the installer stick from the Pavilion's USB-C port (F9 at the HP
    logo). Install Bluefin to the whole disk with LUKS encryption. Create the
    user `glw907`.
-2. First boot: enroll the MOK with the password `universalblue`.
+2. Enroll the Universal Blue signing key so the Nvidia modules still load if
+   a BIOS reset turns Secure Boot on. With Secure Boot off, first boot shows
+   no prompt, so queue the key by hand. The next boot shows the blue MOK
+   screen: choose Enroll MOK, Continue, Yes, and the password `universalblue`.
+   ```bash
+   ujust enroll-secure-boot-key
+   ```
 3. Clone the dotfiles, switch to the Nvidia DX image, and run the bootstrap
    phases, rebooting where shown. The `rpm-ostree rebase` line replaces
    `bootstrap.sh devmode`, which would rebase to the non-Nvidia DX image. It
-   keeps layered packages, so it also works after `layer` has run:
+   keeps layered packages, so it also works after `layer` has run. The
+   `kargs` line adds two sets of boot arguments. The first four come from the
+   Nvidia image's `/usr/lib/bootc/kargs.d/00-nvidia.toml`, which `bootc
+   switch` applies and `rpm-ostree rebase` ignores. The last two are the BIOS
+   workarounds from Hardware above. The rebase, `layer`, and `kargs` all stage
+   onto the same pending deployment, so one reboot covers them:
    ```bash
    git clone https://github.com/glw907/workstation.git ~/.dotfiles
    sudo rpm-ostree rebase ostree-image-signed:docker://ghcr.io/ublue-os/bluefin-dx-nvidia-open:stable
-   sudo systemctl reboot
    ~/.dotfiles/bluefin/bootstrap.sh layer
+   sudo rpm-ostree kargs \
+       --append-if-missing=rd.driver.blacklist=nouveau \
+       --append-if-missing=modprobe.blacklist=nouveau \
+       --append-if-missing=nvidia-drm.modeset=1 \
+       --append-if-missing=initcall_blacklist=simpledrm_platform_driver_init \
+       --append-if-missing=module_blacklist=hp_wmi,hp_bioscfg \
+       --append-if-missing=initcall_blacklist=intel_lpss_pci_driver_init
+   rpm-ostree kargs     # confirm all six are staged
    sudo systemctl reboot
    ~/.dotfiles/bluefin/bootstrap.sh setup
    ```
-   Read the checklist `setup` prints. A failed step there is worth fixing
-   before Part 2.
+   After the reboot, `journalctl -b -k | grep -c SOD3` should print 0. Read
+   the checklist `setup` prints. A failed step there is worth fixing before
+   Part 2.
+
+   Don't install or launch Claude Code before `setup`. A `claude-code` cask
+   installed by hand blocks the Brewfile's `claude-code@latest`. A first
+   launch also creates a real `~/.claude/skills` directory, which stops stow
+   linking the repo's skills as one directory. If either happened, uninstall
+   the cask, move `~/.claude/skills` aside, and rerun `setup`.
 4. Open the 1Password app and sign in. Turn on Settings > Developer >
    "Integrate with 1Password CLI".
 5. Open a NEW terminal, so the stowed `.bashrc` is loaded, and run:
@@ -113,9 +159,12 @@ Run these in order. Each step is safe to rerun. Use `sudo -A` throughout; if
 it fails, rerun `claude-sudo-setup`. Report a failed step and carry on with
 the rest unless the step says it is a hard stop.
 
-1. Confirm the starting state. `bootc status` must show a `bluefin-dx`
-   image, `sudo -A true` must succeed, and `op whoami` must answer. Any
-   failure here is a hard stop: hand it back to Geoff.
+1. Confirm the starting state. `rpm-ostree status` must show the booted
+   deployment on `bluefin-dx-nvidia-open`, `sudo -A true` must succeed, and
+   `op vault list` must answer. Any failure here is a hard stop: hand it back
+   to Geoff. `bootc status` shows no image once packages are layered. `op
+   whoami` reports "account is not signed in" through the desktop app
+   integration even when the CLI works.
 2. Set the hostname:
    ```bash
    sudo -A hostnamectl set-hostname pavilion
@@ -200,7 +249,15 @@ the rest unless the step says it is a hard stop.
    kitty-headless-shot setup
    ```
    The second line builds the `term-headless` distrobox that the
-   `tui-visual-verify` gate uses.
+   `tui-visual-verify` gate uses. Then install the Claude Code plugins that
+   `settings.json` enables, adding the two third-party marketplaces first:
+   ```bash
+   claude plugin marketplace add cloudflare/skills
+   claude plugin marketplace add gfargo/tui-design-skill
+   for p in $(jq -r '.enabledPlugins | keys[]' ~/.claude/settings.json); do
+       claude plugin install "$p"
+   done
+   ```
 10. Verify. Run `check-drift` and `claude-tooling-sync verify`, then confirm
     each of these: `gh auth status`, `systemctl --user list-timers` shows
     check-drift, model-review, vdirsyncer, and cairn-tripwire,

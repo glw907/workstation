@@ -90,7 +90,7 @@ echo "uv tools (bluefin/uv-tools.txt):"
 # Package lines are "name vX.Y.Z"; executable lines start "- name" and are
 # not packages ("-" sits inside the character class, so filter them first).
 live_uv=$(uv tool list 2>/dev/null | grep -v '^- ' | awk '/ v[0-9]/{print $1}' | sort)
-want_uv=$(read_list "$BLUEFIN/uv-tools.txt" | sed 's/\[.*//' | sort)
+want_uv=$(read_list "$BLUEFIN/uv-tools.txt" | sed 's/[[ ].*//' | sort)
 if [[ "$live_uv" == "$want_uv" ]]; then
     ok "exact match"
 else
