@@ -47,6 +47,13 @@ Escape (conductor, 2026-10-11): merged #16 before its pre-merge settings cutover
 dropped Geoff's live `model`, `effortLevel`, and `modelSettings`; restored by hand. The merge guard
 (#18) now blocks a merge whose PR has a `## Before merge` section until it is acknowledged.
 
+## Drafter Pass 0
+
+PR-ready: glw907/drafter#1 (merge first) and glw907/workstation#36 (`worktree-drafter-pass0`). Executor
+sessions `b2d8e135` (T1 to T6) and `a324f4c7` (T8, T7, A2, close). Task-minutes: 685 estimated
+against the 900 ceiling, no clock stop. The conductor merges both PRs per the dotfiles PR's
+`## Before merge`. Plan: `docs/superpowers/plans/2026-10-12-drafter-pass0-plan.md`.
+
 ## Open items
 
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not
