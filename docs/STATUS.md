@@ -32,10 +32,10 @@ artifacts. github.com/glw907/workstation.
 
 Conductor session `4bea6e68` closed the 2026-10-11 infrastructure initiative. Landed: dubplate
 alignment (#2, triage #3); cairn-cms alignment (#114, workstation #12, triage #115 and #14); the
-found-item triage rule (#11); the review desk (#13, its UI pass #22 and triage #23, with Geoff's
+found-item triage rule (#11); the approval queue (#13, its UI pass #22 and triage #23, with Geoff's
 `autoMode.allow` rule in #15); infra sweep 2 (#16, triage #17, ecxc-ski #2, aksailingclub-org #13);
 the merge guard (#18, #20); the conductor lessons in `pass-core` (#21); and poplar's `pass-core`
-adapter (poplar #1). The rebuilt desk serves #22's UI.
+adapter (poplar #1). The rebuilt app serves #22's UI.
 
 Outside this initiative, each for its own session: `admin-api-1` runs on in dubplate (executor
 `6baa2add`, no merge pre-approval; then `claude rm 18bbe825`, a stopped launch sharing its

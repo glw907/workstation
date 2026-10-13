@@ -125,7 +125,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "claude-desk-reminder",
+            "command": "claude-approval-queue-reminder",
             "timeout": 5
           }
         ]

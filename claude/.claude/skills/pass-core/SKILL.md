@@ -25,7 +25,7 @@ account.
 
 1. **Design.** Opus at `high` brainstorms in chat. Geoff approves a design of a page or less: the
    outcome, files and interfaces touched, what is out of scope, one end-to-end check, and the risk
-   class. A design brought for approval is handed over with `review-desk design <repo> "<title>"
+   class. A design brought for approval is handed over with `approval-queue design <repo> "<title>"
    <file>`. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
    carries
    these two samples, and extras go in "Later", never built:
@@ -73,7 +73,7 @@ account.
    share of a spec's figure. Skip `writing-plans`' code
    steps and execution-method question. Test-first applies to `auth-data` tasks.
 5. **Execute.** See "Execute".
-6. **Close.** See "Close". Geoff decides the PR on the review desk, except that a pass whose highest
+6. **Close.** See "Close". Geoff decides the PR in Design & PR Approvals, except that a pass whose highest
    class is `ordinary` merges its own PR (see "Close").
 
 ## Models
@@ -102,7 +102,7 @@ the conductor's name uses, and `<pass>` is the plan's slug: `dubplate-intake-1`,
 `cairn-cms-draft-docs-2b-part2`. Geoff finds a session in `claude agents` by that name and attaches
 or sends to it, so a relaunch keeps the name (Geoff, 2026-10-12).
 
-A `runner` or `auth-data` pass goes to Geoff's desk, so its planner hands it to the project's
+A `runner` or `auth-data` pass goes to Geoff for approval, so its planner hands it to the project's
 conductor and closes instead of watching it (Geoff, 2026-10-12). Best practices for Claude Code
 (<https://code.claude.com/docs/en/best-practices>): "Once the spec is complete, start a fresh session
 to execute it." The conductor is `conductor-<project>`, where `<project>` is the basename of the repo
@@ -183,10 +183,10 @@ are (Geoff, 2026-10-12). It watches unattended passes with the Monitor tool over
 --json --all`, which keeps a background session listed after its process exits. The Monitor event
 is the primary signal; each fallback tick re-arms the Monitor and checks the pass's sessions and
 PRs, since an event lost to an API drop leaves the conductor asleep. It puts each PR or design before
-Geoff on the review desk, merges and pulls the checkout per "Close" after he approves, and launches
+Geoff in Design & PR Approvals, merges and pulls the checkout per "Close" after he approves, and launches
 the next committed prompt from the main checkout after the "Execute" pre-launch checks. For a pass
 it owns, the conductor is the session that hands the PR over in "Close", so the executor's prompt
-ends at PR-ready and never runs `review-desk`. It brings Geoff only designs, PR reads, and product
+ends at PR-ready and never runs `approval-queue`. It brings Geoff only designs, PR reads, and product
 or priority calls.
 
 An executor refuses the conductor's cross-session messages, rightly: a peer's message carries no
@@ -227,10 +227,10 @@ the PR, and a "drop" item stays only in the PR. A merged PR body is history no s
 "Use structured formats for state data: When tracking structured information (like test results or
 task status), use JSON or other structured formats".
 
-When the PR is ready for Geoff's read, the session that hands it over runs `review-desk pr
+When the PR is ready for Geoff's read, the session that hands it over runs `approval-queue pr
 <owner>/<repo> "<title>" <n>` as a background Bash command. It then hands the PR body's "Found, not
-done" items over as one `review-desk triage` item, and stays open until each command exits with
-Geoff's decision as JSON. An approve on the desk is Geoff's merge authorization, the one a launch
+done" items over as one `approval-queue triage` item, and stays open until each command exits with
+Geoff's decision as JSON. An approve in Design & PR Approvals is Geoff's merge authorization, the one a launch
 prompt's "never merge" otherwise withholds: the session merges with `gh pr merge <n> --merge
 --match-head-commit <head>`, taking `<head>` from the decision, and pulls the checkout as the next
 paragraph says. On reject, it fixes forward from the note. It acts on each triage row as the triage
@@ -291,14 +291,14 @@ otherwise build on something known to be wrong (say so then).
 A STATUS next action carries the goal, the scope, the plan path, the checkout, and the exact
 `claude` line. The prompt text lives in a committed file and is launched as `"$(cat <file>)"`,
 since a prompt pasted inside double quotes runs each backticked span as a command substitution.
-The prompt for a pass that hands its PR over says the session waits for the desk, merges only on
-Geoff's desk approve with `--match-head-commit`, and ends after acting on the decision; it never
+The prompt for a pass that hands its PR over says the session waits for the approval, merges only on
+Geoff.s approve with `--match-head-commit`, and ends after acting on the decision; it never
 says "never merge" or "end" outright. Close the session when the initiative lands.
 
 A conductor prompt opens with one line naming the session `conductor-<project>`, then carries the
 executor's `claude` line and its prompt file; the plan path and each repo and checkout the pass
 touches; the merge order across its PRs, with any `## Before merge` steps known at plan time; the
-standing answers from the design; and what goes to the desk. It restates nothing this skill
+standing answers from the design; and what goes to Design & PR Approvals. It restates nothing this skill
 already says. Prompting Claude Opus 5
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
 the model "performs best when given the complete task specification up front and left to run".

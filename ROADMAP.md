@@ -97,12 +97,12 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
 - **Two gate-tool cleanups**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11):
   simplify `cairn-docs-outline`'s lock and fix `gateMatches`' stale doc comment; and give
   `cairn-run-gate` per-leg timing in its run records.
-- **Review desk hardening**, deferred by Geoff's triage of workstation PR #13 (2026-10-11). A
-  running app keeps serving its old build after a merge changes `review-desk/`. Nothing prunes
+- **Approval queue hardening**, deferred by Geoff's triage of workstation PR #13 (2026-10-11). A
+  running app keeps serving its old build after a merge changes `approval-queue/`. Nothing prunes
   decided items from the state directory. A SIGKILL or power loss leaves the item on the index.
   One malformed `decision.json` or `item.json` makes `listWaiting` throw and 500s the index. The
   CSP limits only `script-src`, so a remote image in a PR body loads at view time (`img-src 'self'
-  data:` closes it). `tests/review-desk.test.sh` never runs the start-the-app branch, the
+  data:` closes it). `tests/approval-queue.test.sh` never runs the start-the-app branch, the
   10-second "did not answer" exit, or the lock release.
 - **Infra-sweep 2 leftovers**, deferred by Geoff's triage of workstation PR #16 (2026-10-11). The
   model review's nine design topics (guard-fail-closed, saved-effort, dispatch-effort,
@@ -117,7 +117,7 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   and JoinHorizontal rules from the deleted `bubbletea-conventions.md` (poplar's refactor pass
   re-homes them). `registry.md` has no entry id for the Cloudflare token.
 
-- **Review desk UI leftovers**, deferred by Geoff's triage of workstation PR #22 (2026-10-11).
+- **Approval queue UI leftovers**, deferred by Geoff's triage of workstation PR #22 (2026-10-11).
   `cairn-run-gate --records` prints epoch-sized values instead of durations. `ItemPanel`'s teardown
   clears every key handler, including the ones its views registered; each component should remove
   only its own. The undo toast sits at a fixed `bottom-24` and can cover a tall decision bar, and a

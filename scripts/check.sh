@@ -37,24 +37,35 @@ check_bash_syntax() {
 run "bash -n over tracked shell scripts" check_bash_syntax
 run "tellgrader go check" make -C claude/.claude/skills/writing-voice/evals/tellgrader check
 run "ruff docstring rules (python)" bash scripts/check-py-comments.sh
-check_review_desk() {
-    # The app's own check and tests, only when review-desk/ differs from
+check_approval_queue() {
+    # The app's own check and tests, only when approval-queue/ differs from
     # origin/main (committed, staged, unstaged, or untracked).
     local base
     base=$(git merge-base HEAD origin/main) || return 1
-    if git diff --quiet "$base" -- review-desk \
-        && [[ -z "$(git ls-files --others --exclude-standard review-desk)" ]]; then
-        echo "review-desk unchanged against origin/main; skipped"
+    if git diff --quiet "$base" -- approval-queue \
+        && [[ -z "$(git ls-files --others --exclude-standard approval-queue)" ]]; then
+        echo "approval-queue unchanged against origin/main; skipped"
         return 0
     fi
-    if [[ ! -d review-desk/node_modules ]]; then
-        npm --prefix review-desk ci || return 1
+    if [[ ! -d approval-queue/node_modules ]]; then
+        npm --prefix approval-queue ci || return 1
     fi
-    npm --prefix review-desk run check || return 1
-    npm --prefix review-desk test
+    npm --prefix approval-queue run check || return 1
+    npm --prefix approval-queue test
 }
 
-run "review-desk check and tests" check_review_desk
+run "approval-queue check and tests" check_approval_queue
+
+check_no_old_names() {
+    # The old app and hook names stay gone from live files. The brackets keep this pattern from
+    # matching its own line. git grep exits 1 when nothing matches.
+    if git grep -n -I -i -E 'review[-_ ]?desk|claude-desk-[r]eminder' -- . ':!docs/superpowers/' ':!docs/HISTORY.md'; then
+        echo "a retired name is back in a live file" >&2
+        return 1
+    fi
+}
+
+run "retired names absent" check_no_old_names
 run "vale-hook test suite" uv run --with pytest --no-project python -m pytest tests/ -q
 run "vale style fixtures" bash tests/vale/run-fixtures.sh
 run "docs-page-chain derivation test" node tests/docs-page-chain-derivation.test.mjs
@@ -62,8 +73,8 @@ run "docs-page-chain outline test" node tests/docs-page-chain-outline.test.mjs
 run "ci-green test" node tests/ci-green.test.mjs
 run "cairn-run-gate vanish handling" bash tests/cairn-run-gate.test.sh
 run "claude-clock-stop hook" bash tests/claude-clock-stop.test.sh
-run "claude-desk-reminder hook" bash tests/claude-desk-reminder.test.sh
-run "review-desk command" bash tests/review-desk.test.sh
+run "claude-approval-queue-reminder hook" bash tests/claude-approval-queue-reminder.test.sh
+run "approval-queue command" bash tests/approval-queue.test.sh
 run "guidance citation (warning only)" bash scripts/check-guidance-cite.sh
 run "guidance citation test" bash tests/check-guidance-cite.test.sh
 run "claude-context-budget line cap" bash tests/claude-context-budget.test.sh
