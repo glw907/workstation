@@ -69,3 +69,7 @@ Put this design in the queue with the built tool and confirm three things: it re
 ### Class and estimate
 
 `runner` (settings, skills, scripts, tests), no live-account flag. About 420 path minutes.
+
+### Standing approvals
+
+A plan or run whose path minutes overrun the estimate proceeds without stopping up to 1260 path minutes, three times the estimate (Geoff, 2026-10-12). Past 1260 it stops as `pass-core` says.
