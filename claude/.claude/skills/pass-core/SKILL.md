@@ -26,7 +26,8 @@ account.
 1. **Design.** Opus at `high` brainstorms in chat. Geoff approves a design of a page or less: the
    outcome, files and interfaces touched, what is out of scope, one end-to-end check, and the risk
    class. A design brought for approval is handed over with `approval-queue design <repo> "<title>"
-   <file>`. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
+   <file>`. A design doc opens with `## Brief` after its title, per
+   `~/.claude/docs/voice/approval-brief.md`. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
    carries
    these two samples, and extras go in "Later", never built:
    > "Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
@@ -217,9 +218,12 @@ finding, and fix) as the task's acceptance criteria, never a summary. In dubplat
 landed at zero fix rounds and paraphrased ones averaged one. An overruled verdict is stated with its
 reason in the PR body, and a correctness-critical overrule re-runs the review at `xhigh`. The
 adapter's close checklist runs (the auth smoke on `auth-data`), STATUS and ROADMAP are updated, and
-the PR body carries what landed, each `auth-data` verdict, and the score. Each "Found, not
-done" item in the PR body carries a proposed disposition (now, defer, or drop) and a one-line reason,
-and Geoff triages them at the PR read. Whoever merges acts on the triage: a "now" item becomes a
+the PR body opens with a `## Brief` per `~/.claude/docs/voice/approval-brief.md` and carries,
+below it, what landed, each `auth-data` verdict, and the score. Each "Found, not done" item in
+the PR body carries a proposed disposition (now, defer, or drop) and a one-line reason, and
+Geoff triages them at the PR read. The triage file is `{headline, lede, rows: [{action, why,
+detail, proposed}]}`, with `proposed` one of now, defer, or drop. Geoff's submitted rows come back
+as `{action, disposition, note}`, and an approve carries `choices: [{title, choice}]`. Whoever merges acts on the triage: a "now" item becomes a
 follow-up task or pass, a "defer" item is filed in BACKLOG or ROADMAP with its number cited back in
 the PR, and a "drop" item stays only in the PR. A merged PR body is history no session reads (Geoff,
 2026-10-11: dubplate PR #2 left 14 items there). Prompting best practices
@@ -229,7 +233,7 @@ task status), use JSON or other structured formats".
 
 When the PR is ready for Geoff's read, the session that hands it over runs `approval-queue pr
 <owner>/<repo> "<title>" <n>` as a background Bash command. It then hands the PR body's "Found, not
-done" items over as one `approval-queue triage` item, and stays open until each command exits with
+done" items over as one `approval-queue triage` item in that triage file shape, and stays open until each command exits with
 Geoff's decision as JSON. An approve in Design & PR Approvals is Geoff's merge authorization, the one a launch
 prompt's "never merge" otherwise withholds: the session merges with `gh pr merge <n> --merge
 --match-head-commit <head>`, taking `<head>` from the decision, and pulls the checkout as the next

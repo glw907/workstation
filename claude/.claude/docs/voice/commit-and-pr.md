@@ -28,6 +28,8 @@ are in `~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`.
   both. The footer describes what breaks and what a consumer must do.
 - Footers hold trailers (the co-author trailer, an issue reference) after a blank line, one per
   line.
+- A PR body for Geoff's approval opens with a `## Brief` written to
+  `~/.claude/docs/voice/approval-brief.md`, and the sections above stay below it as the technical notes.
 - Claim only what the diff and the session evidence. A test plan you did not run, an issue
   number that does not exist, or a motivation the change does not show misleads the future
   debugger who trusts the log. If you did not run it or see it, do not write it.
