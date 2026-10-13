@@ -22,11 +22,6 @@ artifacts. github.com/glw907/workstation.
   (cairn-cms #113), took 6.1 hours of clock against the 9-hour test. Plan and spec:
   `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`,
   `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
-- **Merged since, 2026-10-11:** infra sweep 1, the guard (#5); PRs open in Geoff's browser (#4); a
-  repo's checkout is pulled after its PR merges (#7); the `claude-infra` skill, Anthropic's scope
-  prompts in `pass-core`, review depth by design size, the `plan-reviewer` agent, the
-  `claude-tail-guard` hook, and the guidance-citation warning (#8). Evidence for #8:
-  `docs/superpowers/research/2026-10-11-anthropic-guidance-proportionality.md`.
 
 ## Conductor
 
@@ -52,6 +47,12 @@ dropped Geoff's live `model`, `effortLevel`, and `modelSettings`; restored by ha
 Pass 0 and F1 merged 2026-10-12 (drafter#1 `140bc00`, #6 `73ff07a`; workstation#36 `70c1315`);
 `drafter` installed from `main`, and the chain writes `.plan.yaml`. cairn's 11 page plans pass
 `check-plan`. Open drafter items: glw907/drafter issues #2 to #5 and #7 to #10.
+
+## Approval queue
+
+PR-ready on `worktree-approval-queue` (executor `.dotfiles-approval-queue`): the rename, the brief
+contract and register, the refusing command, and the rebuilt pages. Merge in the order of the PR's
+`## Before merge` and `## After merge` sections.
 
 ## Open items
 
