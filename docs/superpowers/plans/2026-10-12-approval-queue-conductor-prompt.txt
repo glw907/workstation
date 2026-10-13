@@ -2,16 +2,25 @@ You are conductor-.dotfiles, the conductor for the approval-queue pass in ~/.dot
 
 Executor: launch it from the main checkout ~/.dotfiles, after the pass-core Execute pre-launch checks, with
 claude --bg --model sonnet --effort medium --name .dotfiles-approval-queue "$(cat docs/superpowers/plans/2026-10-12-approval-queue-prompt.txt)"
-Read that prompt file from branch approval-queue-design (git show approval-queue-design:docs/superpowers/plans/2026-10-12-approval-queue-prompt.txt) if the main checkout does not have it yet.
+The plan, design, prompts, and fold record are on main.
 
-Plan: docs/superpowers/plans/2026-10-12-approval-queue.md on branch approval-queue-design. Repo and checkout: glw907/workstation at ~/.dotfiles. One PR; no merge order across repos.
+Plan: docs/superpowers/plans/2026-10-12-approval-queue.md on main. Repo and checkout: glw907/workstation at ~/.dotfiles. One PR; no merge order across repos.
 
 Standing answers from the design: an overrun continues to 1260 path minutes; there is no review-desk alias.
 
-Before merge (also in the PR body; claude-merge-guard enforces it):
-1. Confirm no live cairn-cms or dubplate session still needs `review-desk` (claude agents --json, each project's docs/STATUS.md), or send each live one the new command name and wait for its acknowledgment.
-2. When ~/.local/state/review-desk/items holds no item.json without a decision.json, stop the running app: pkill -f 'review-desk/[b]uild'.
-3. mv ~/.local/state/review-desk ~/.local/state/approval-queue.
-After merge: stow -R bin; confirm ~/.local/bin/review-desk and ~/.local/bin/claude-desk-reminder are gone and the new names resolve; claude-tooling-sync apply.
+To Geoff: the PR, through `review-desk pr glw907/workstation "<title>" <n>`, since the new command does not exist until the merge, and the PR's Found, not done items as one `review-desk triage` item. Merge only on his approval of the PR, after the Before merge steps.
 
-To Geoff: the PR, through `review-desk pr glw907/workstation "<title>" <n>`, since the new command does not exist until the merge, and the PR's Found, not done items as one triage item. Merge only on his approval, with --match-head-commit, then pull the checkout.
+Before merge (also in the PR body; claude-merge-guard returns it, and the merge runs with PREMERGE_DONE=<n> only after both steps):
+1. Confirm no live caller of the old command: pgrep -af '/review-desk (pr|design|triage)' prints nothing. Note which cairn-cms and dubplate sessions claude agents --json lists as live, for After merge step 8.
+2. Confirm no item is waiting: every ~/.local/state/review-desk/items/*/item.json has a decision.json beside it (your own PR and triage items included). An item left with no live caller is an orphan (a SIGKILL leaves one): list each, then remove its item.json.
+
+After merge, in this order:
+1. Merge with --match-head-commit, then pull the checkout. The pull removes bin/.local/bin/review-desk, so the old command is dead from here.
+2. pkill -f 'review-desk/[b]uild'
+3. mv ~/.local/state/review-desk ~/.local/state/approval-queue
+4. stow -R bin; confirm ~/.local/bin/review-desk is gone and command -v approval-queue claude-approval-queue-reminder prints both.
+5. claude-tooling-sync apply
+6. ls -A ~/.dotfiles/review-desk should show only build, node_modules, and .svelte-kit; then rm -rf ~/.dotfiles/review-desk.
+7. npm --prefix ~/.dotfiles/approval-queue ci && npm --prefix ~/.dotfiles/approval-queue run build
+8. Send each live session noted in Before merge step 1 one line with SendMessage: the command is now approval-queue, a PR body and a design doc now open with ## Brief, and the register is ~/.claude/docs/voice/approval-brief.md.
+Then act on the triage decision's rows as pass-core says.

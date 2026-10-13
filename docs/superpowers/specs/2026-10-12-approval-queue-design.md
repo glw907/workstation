@@ -4,7 +4,14 @@
 
 Every item a session sends you will open with a plain-language brief, and the page will lead with it.
 
-Today a session hands you its agent-facing notes: file paths, hook names, and a list of what landed. This pass gives every item a headline, a short lede, what approving sets off, and any decision you must make first, all written for you. The page puts that brief on top and moves the checks, diff, and technical notes below it. The tool is also renamed from `review-desk` to `approval-queue`, and the window becomes "Design & PR Approvals".
+Today a session hands you its agent-facing notes: file paths, hook names, and a list of what landed. This pass gives every item a headline, a short lede, what approving sets off, and any decision you must make first, all written for you.
+
+### What changes
+
+- Every PR, design, and triage list a session sends you opens with a brief written for you.
+- The page puts that brief on top and moves the checks, diff, and technical notes below it.
+- An item whose brief is missing or incomplete is refused.
+- The tool is renamed from `review-desk` to `approval-queue`, and the window becomes "Design & PR Approvals".
 
 ### If you approve
 
@@ -12,19 +19,19 @@ Today a session hands you its agent-facing notes: file paths, hook names, and a 
 2. The executor builds it and opens one PR, which comes to you for approval.
 3. After that PR merges, every new item arrives with a brief, and an item without one is refused.
 
-### Needs your attention
+### Worth knowing
 
 The rename leaves no `review-desk` alias. The cairn-cms and dubplate passes now running call that name, so the merge waits until their sessions have handed over, or until each has been told the new name.
 
 ### The brief contract
 
-A PR body, a design doc, and a triage list each open with the brief. In a PR or design, `## Brief` holds the headline as its first sentence, then the lede. `### What changes` and `### If you approve` follow as short lists. `### Needs your attention` comes only when something does. Then one `### <label>` per detail, whose first sentence is the one-line summary shown while the row is closed. The PR body's existing sections stay below as the technical notes.
+A PR body, a design doc, and a triage list each open with the brief. In a PR or design, `## Brief` is the first `##` heading, and it opens with the headline as its first sentence, then the lede. `### What changes` follows as a bulleted list and `### If you approve` as a numbered list. Zero or more `### Decide: <title>` blocks come next, each a short paragraph, an optional source line, and the choices, one of which may be marked recommended. An optional `### Worth knowing` paragraph comes after them. Then one `### <label>` per detail, whose first sentence is the one-line summary shown while the row is closed. The PR body's existing sections stay below the brief as the technical notes.
 
 A triage file becomes `{headline, lede, rows}`. Each row carries `action` (the plan in plain words), `why` (what's at stake and why it got this call), `detail` (today's technical text), and `proposed`. Geoff's edit returns as a separate `note`, so the session's reason is never overwritten.
 
 ### The writing rules
 
-A new register, `~/.claude/docs/voice/desk-brief.md`, is built on three standards: the inverted pyramid from news writing, the Federal Plain Language Guidelines (<https://www.plainlanguage.gov/guidelines/>), and Nielsen Norman Group's guidance on writing for the web and on progressive disclosure. Its exemplars are this session's two mock-up briefs (PR #40 and the drafter Pass 0 triage) and a before-and-after pair from a real PR body. The visible copy calls the app "Design & PR Approvals" or "approval", never "the desk".
+A new register, `~/.claude/docs/voice/approval-brief.md`, is built on three standards: the inverted pyramid from news writing, the Federal Plain Language Guidelines (<https://www.plainlanguage.gov/guidelines/>), and Nielsen Norman Group's guidance on writing for the web and on progressive disclosure. Its exemplars are this session's two mock-up briefs (PR #40 and the drafter Pass 0 triage) and a before-and-after pair from a real PR body. The visible copy calls the app "Design & PR Approvals" or "approval", never "the desk".
 
 ### Enforcement
 
@@ -44,6 +51,8 @@ The build is all DaisyUI components, and every surviving audit fix is applied.
 
 ### The rename
 
+Five names change, and no alias is left behind.
+
 | From | To |
 |---|---|
 | `review-desk` command | `approval-queue` |
@@ -57,6 +66,8 @@ Every live reference goes, with no alias left behind (Geoff, 2026-10-12: "Make s
 The PR's `## Before merge` section carries two steps. First, confirm that no live session in cairn-cms or dubplate still needs `review-desk`, or send each one the new command. Second, move the state folder while no item is waiting.
 
 ### Out of scope
+
+Three things stay out of this pass.
 
 - Changing the server, the port (7907), or how decisions are returned.
 - Generating briefs with a model.
