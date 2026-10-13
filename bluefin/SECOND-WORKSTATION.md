@@ -322,6 +322,14 @@ the rest unless the step says it is a hard stop.
    `10-bluefin.xml`, while pavilion's build shows October's swamp under that
    name. So `gnome-settings.txt` doesn't track the background until both
    machines run artwork with the same numbering.
+
+   Then relax the screen lock. pavilion is a desktop in the home office, so
+   it never locks and blanks after 15 idle minutes. The laptop keeps its
+   lock, so these stay out of the shared `gnome-settings.txt`:
+   ```bash
+   gsettings set org.gnome.desktop.screensaver lock-enabled false
+   gsettings set org.gnome.desktop.session idle-delay 'uint32 900'
+   ```
 5. Optional: install the Android SDK (see `README.md`, Android) and pair
    Syncthing at `http://127.0.0.1:8384`.
 6. Shut down fully and power on, so the zram and OOM drops take effect, and
