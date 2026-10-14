@@ -101,16 +101,18 @@ session dispatches the pair from the launch commit, then does F2.
 - Outcome: issue #12, in its two places and in `drafter spend`, which resolves its root the same
   way `drafter config` does.
   - `plan.GitRoot` runs git with `LC_ALL=C`, so git's messages are untranslated, and tells three
-    failures apart. Git can't run (not on `PATH`): an error saying git could not run. Git exits
-    128 and its first standard error line starts with one of the two not-a-repository forms git
-    2.56 prints, and only these: `fatal: not a git repository (or any of the parent directories)`
+    failures apart. Git can't run (not on `PATH`): an error containing the phrase "git could not
+    run". Git exits 128 and its first standard error line starts with one of the two
+    not-a-repository forms git 2.56 prints, and only these: `fatal: not a git repository (or any of the parent directories)`
     (a ceiling directory) and `fatal: not a git repository (or any parent up to mount point`
     (a filesystem boundary): an error wrapping `plan.ErrNotGitTree`, with the message `drafter
     check-plan` prints today. Any other git failure (inside `.git`, `fatal: this operation must be
     run in a work tree`; a missing directory, `fatal: cannot change to`; a worktree whose
     repository moved): an error carrying git's first standard error line, or its exit status when
     stderr is empty. Before coding, probe the installed git's message for each case, the
-    moved-repository worktree included, and record them in the commit message.
+    moved-repository worktree included, and record them in the commit message. If the
+    moved-repository worktree prints one of the two allowlisted forms, stop and report it before
+    coding, since the classifier would then send that worktree to the user layer.
   - `drafter config` and `drafter spend` treat only `plan.ErrNotGitTree` as "outside a project"
     and fall back to the user layer. Any other `GitRoot` error exits 1 with that error. Any other
     `plan.GitRoot(` caller on current `main` that falls back to the user layer does the same.
@@ -119,7 +121,8 @@ session dispatches the pair from the launch commit, then does F2.
     128 A fatal error was encountered." (git-check-ignore(1), EXIT STATUS). It runs git under
     `LC_ALL=C` too. Exit 1 keeps today's "not ignored by git" refusal. Any other exit is refused
     with git's first standard error line (or the exit status when stderr is empty), and git that
-    can't run is refused naming that. The refusal still fails closed in every case but exit 0.
+    can't run is refused with the same phrase "git could not run". The refusal still fails
+    closed in every case but exit 0.
 - Files: `internal/plan/run.go`, a new `internal/plan/run_test.go`, `internal/config/load.go` and
   its tests, `cmd/drafter/config.go`, `cmd/drafter/spend.go`, `e2e/e2e_test.go`. Tests that set
   `PATH` or the locale use `t.Setenv`, so they don't call `t.Parallel`, and they build their git
@@ -128,15 +131,16 @@ session dispatches the pair from the launch commit, then does F2.
   - The classifier, as a table over git's first stderr line: both quoted not-a-repository forms
     wrap `ErrNotGitTree`; the work-tree, cannot-change-to, and moved-repository lines don't.
   - `GitRoot` in a temp directory outside any repo (set `GIT_CEILING_DIRECTORIES`) wraps
-    `ErrNotGitTree`, and still does with `LANG=de_DE.UTF-8` and `LANGUAGE=de` set (git prints
-    German on this host without `LC_ALL=C`; a comment says the row is vacuous on a host with no
-    German catalog). With `PATH` holding no git, it doesn't wrap it, and the error says git could
+    `ErrNotGitTree`, and still does with `LANG=de_DE.UTF-8` and `LANGUAGE=de` set and `LC_ALL`
+    and `LC_MESSAGES` cleared (git prints German on this host without `LC_ALL=C`; a comment says
+    the row is vacuous on a host with no German catalog). With `PATH` holding no git, it doesn't wrap it, and the error says git could
     not run. Inside a fresh repo's `.git` directory, it doesn't wrap it, and the error holds git's
     message.
   - `Load` with a root holding `drafter.toml` and `drafter.local.toml` that isn't a git tree
     (`GIT_CEILING_DIRECTORIES` set): the error holds git's message and not the words "not
-    ignored". With `PATH` holding no git, the error says git could not run. In a real repo with
-    the file unignored: today's message, unchanged (guard). Ignored: loads (guard).
+    ignored". With `PATH` holding no git, the error holds the phrase "git could not run" (today's
+    error names the exec failure instead, `load.go`'s `check that %s is ignored`). In a real repo
+    with the file unignored: today's message, unchanged (guard). Ignored: loads (guard).
   - e2e, on the complete user fixture (`completeUser`, so no unset setting exits 1 first):
     `drafter config` and `drafter spend` with `PATH` holding no git each exit 1 with `GitRoot`'s
     could-not-run phrase. Outside a git tree, each exits 0 on the user layer, as today (guard).
@@ -173,14 +177,14 @@ session dispatches the pair from the launch commit, then does F2.
     red-first commit is the proof that the test fails without the read lock; the commit message
     cites it.
   - Readers share: with the test holding `LOCK_SH` on its own descriptor, `Spend` returns within
-    5 s (the same bounded `select`).
+    5 s (the same bounded `select`) (guard).
   - `Spend` on a state directory that doesn't exist returns zero, and the directory still doesn't
-    exist afterward. The e2e row "a missing ledger prints a zero total and exits 0" stays green
-    (guard).
+    exist afterward (guard). The e2e row "a missing ledger prints a zero total and exits 0" stays
+    green (guard).
   - `Spend` on a state directory that exists with no lock and no ledger returns zero, and
     `ledger.lock` then exists at 0600.
   - `Reserve` and `Settle` still work, and every existing ledger test passes, the two-process cap
-    test included.
+    test included (guard).
 - Test: the gate.
 - Pair: with F1.
 
@@ -210,17 +214,21 @@ session dispatches the pair from the launch commit, then does F2.
   today.
 - Files: `internal/ledger/store.go`, `internal/ledger/ledger_test.go`.
 - Acceptance:
-  - Every crash point: start from a ledger with complete lines `C` and a torn fragment `F`, where
-    `F` is a complete settle line with nonzero cost and no newline, so that "`F` never counts"
-    shows in `Spend.Total`. Run `Reserve(i2)` on a copy and take the final file `B`. The starting
-    ledger `C` plus `F`, and a ledger holding `B[:k]` for every length `k` from `len(C)` to
-    `len(B)`, each then take `Reserve(i3)`, `Settle(i3)`, and a `Spend` without error. The figures
-    are hand-computed: `F` never counts, and `i2` shows in `PageSpend` and `Spend.Open` only at
-    `k == len(B)`. One variant runs with `C` empty. Against today's code, this test fails at
-    `k == len(C) + len(F) + 1` (the fragment closed by a newline, the marker not yet written),
-    which is #20's failure.
+  - Every crash point: start from a ledger with complete lines `C` and a torn fragment `F`. Run
+    `Reserve(i2)` on a copy and take the final file `B`. The starting ledger `C` plus `F`, and a
+    ledger holding `B[:k]` for every length `k` from `len(C)` to `len(B)`, each then take
+    `Reserve(i3)`, `Settle(i3)`, and a `Spend` without error. The figures are hand-computed: `F`
+    never counts, and `i2` shows in `PageSpend` and `Spend.Open` only at `k == len(B)`. The sweep
+    runs over three variants:
+    - `F` unparseable, a cut-off line like the torn-tail test's fragment. Against today's code
+      this fails closed at `k == len(C) + len(F) + 1` (the fragment closed by a newline, the marker
+      not yet written), which is #20's failure.
+    - `F` a complete settle line with nonzero cost and no newline, so that "`F` never counts"
+      shows in `Spend.Total`. Against today's code `F` parses once a newline closes it, so it
+      counts from `k == len(C) + len(F) + 1` on, and the figures fail there.
+    - The unparseable `F` with `C` empty.
   - A settle torn just before its newline (complete JSON) and then retried counts once. This is
-    the existing test, kept.
+    the existing test, kept (guard).
   - The rewritten torn-tail test: after the repair the fragment is gone from the file, the file
     holds no NUL byte, every line parses, and the warning names the file, the line, and the byte
     count.

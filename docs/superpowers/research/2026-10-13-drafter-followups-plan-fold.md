@@ -113,3 +113,24 @@ Counts: 39 findings. 32 folded (3 of them in part: mechanics #1, contract #14, d
 
 Pair F1 (60) and F3 (50), with F2 (15) in the session meanwhile: 60. F4: 55. Close: 35. Path: 150
 minutes. The Shape figure, the Close score sentence, and the executor prompt's order match it.
+
+## Verification
+
+The verification read of 5ac520a (`2026-10-13-drafter-followups-fold-verification.md`) found no
+blocker. Dispositions:
+
+1. major, the sweep's red-first: folded. With a complete `F`, today's code counts `F` from
+   `k == len(C)+len(F)+1` instead of failing closed (`store.go` `read` parses any closed line).
+   F4's sweep now runs three variants: an unparseable `F`, which fails closed at that `k` today
+   (#20); the complete settle `F`, whose red is now stated as "`F` counts from that `k` on"; and
+   the unparseable `F` with `C` empty. On the new code every variant asserts no error at any `k`
+   and that `F` never counts.
+2. minor, the unprobed moved-repository message: folded. F1's probe step stops and reports if
+   that worktree prints an allowlisted form.
+3. minor, unmarked guard rows: folded. "(guard)" is on F3's readers-share, absent-dir, and
+   Reserve-and-Settle rows, and on F4's kept settle test. F1 names the phrase "git could not run"
+   for `GitRoot` and `checkIgnored`. The `Load` no-git row asserts that phrase and notes that
+   today's error (`load.go`, `check that %s is ignored: %w`) names the exec failure instead.
+4. minor, optional, the German row clears `LC_ALL` and `LC_MESSAGES`: folded, since it's free.
+
+No estimate changed. One sweep variant adds no material work, so the path stays at 150 minutes.
