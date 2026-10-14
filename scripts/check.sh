@@ -71,6 +71,7 @@ run "vale style fixtures" bash tests/vale/run-fixtures.sh
 run "docs-page-chain derivation test" node tests/docs-page-chain-derivation.test.mjs
 run "docs-page-chain outline test" node tests/docs-page-chain-outline.test.mjs
 run "docs-page-chain handoff test" node tests/docs-page-chain-handoff.test.mjs
+run "drafter prompt parity (goja against Node)" bash tests/drafter-prompts-parity.sh
 run "ci-green test" node tests/ci-green.test.mjs
 run "cairn-run-gate vanish handling" bash tests/cairn-run-gate.test.sh
 run "claude-clock-stop hook" bash tests/claude-clock-stop.test.sh
