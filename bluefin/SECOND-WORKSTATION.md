@@ -82,6 +82,23 @@ local folders `cairn-scratch`, `ecxc-ski-agent-memory`, and
 `Documents`, `Pictures`, and `corpus`. A `manifest.txt` at the root lists
 every path.
 
+The 2026-10-12 bundle missed three things, found on pavilion the next day.
+A future bundle carries them too:
+
+- `~/.local/share/drafter/`: drafter's spike evidence and interim notes (28 MB).
+- `~/.local/share/cairn/`: cairn's 69 exemplar captures (90 MB). cairn's
+  outline helper fails without them, so the docs page chain can't draft.
+- `~/.config/fastmail/fastmail-dav-token.age`: the token
+  `fastmail-dav-password` decrypts. Without it the vdirsyncer timer fails
+  every hour and `~/.contacts/` never appears.
+
+On pavilion they came across on 2026-10-13 with `rsync` from thinkpad-x1
+over a temporary SSH opening: a Remote Control session on the laptop
+appended pavilion's public key to `~/.ssh/authorized_keys` and ran
+`sudo systemctl start sshd`, pavilion pulled, then the laptop stopped sshd
+and removed the key. To find other gaps, compare
+`ls ~/.local/share ~/.config` on both machines.
+
 The tarball is encrypted to the workstation age key, the same key `restore`
 checks (`age197mcd2m3z90t49n9t5v3ujjntw7krfkw5y9sjfc545v28qvezugshg7jgk`).
 It is split into four chunks in R2:
@@ -181,6 +198,11 @@ the rest unless the step says it is a hard stop.
    source ~/.local/secrets
    systemctl --user enable --now vdirsyncer.timer
    ```
+   A new machine's first contacts sync needs the collections discovered
+   once, after the DAV token is in place (see "The handoff bundle"):
+   `PATH=~/.local/bin:/home/linuxbrew/.linuxbrew/bin:$PATH vdirsyncer discover`,
+   answering yes to each collection, then `vdirsyncer sync`. The timer
+   handles every sync after that.
 4. Install the staged `/etc` drops that `setup` leaves out. Skip the lid
    file.
    ```bash
@@ -244,7 +266,10 @@ the rest unless the step says it is a hard stop.
    ```bash
    make -C ~/Projects/poplar install
    make -C ~/Projects/drafter install
+   make -C ~/.dotfiles/claude/.claude/skills/writing-voice/evals/tellgrader install
    ```
+   `tellgrader` matters more than it looks: the writing-voice hook runs it on
+   every Edit and Write, and cairn's docs gate skips its check without it.
    If either repo has no `install` target, read its README for the build
    step. Leave the rest of `bluefin/untracked-bin.txt` (NumberLink, harper-ls,
    marksman, odin4, perfspike, samfusdl) uninstalled unless Geoff asks for
@@ -293,7 +318,10 @@ the rest unless the step says it is a hard stop.
     for two reasons unrelated to any change. The approval-queue test can't
     find `node`, because the gate's clean environment lacks mise. The
     ratchet flags documented paths that don't exist yet, such as `~/Android`
-    and the laptop-only lid folder.
+    and the laptop-only lid folder. A path that belongs on only one host
+    carries a `host-ok` marker on its line. `~/.contacts/` is not one of
+    those: it appears after the first contacts sync, which needs the DAV
+    token above.
 
 ## Part 3: Geoff, sign-ins
 
