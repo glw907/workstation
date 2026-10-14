@@ -140,37 +140,110 @@
 	--folderpane-total-count-text: var(--gnome-window-color) !important;
 }
 
-/* Thread list: unread and new markers in accent, junk in the error color,
- * neutral header and delete colors. Row selection stays the theme's gray. */
-#threadTree tr.card-layout[data-properties~="unread"] {
-	--read-status-fill: var(--gnome-accent) !important;
-	--read-status-stroke: var(--gnome-accent) !important;
+/* Message list. Both views carry the same cues: a nord8 dot and bold for
+ * unread, a nord8 sparkle for new, names-only senders (user.js), hidden
+ * unflagged stars, neutral reply icons, and the adjusted Nord tag colours. */
+
+/* Cards: restore the unread dot. The GNOME theme hides the read-status column
+ * (mail.css:108 sets grid-template-columns: 1fr and mail.css:111 sets
+ * display: none on .thread-card-column:first-child). Thunderbird hides that
+ * column on group-header rows itself (threadCard.css:554-560), so the
+ * :not(dummy) scope keeps them bare. */
+#threadTree tr.card-layout:not([data-properties~="dummy"]) .card-container {
+	grid-template-columns: auto 1fr !important;
 }
 
-tr[data-properties~="new"] {
-	--read-status-fill: var(--gnome-accent) !important;
-	--read-status-stroke: var(--gnome-accent) !important;
+#threadTree tr.card-layout:not([data-properties~="dummy"]) .card-container .thread-card-column:first-child {
+	display: flex !important;
 }
 
-tr[data-properties~="new"] .subject-line img,
-.card-layout[data-properties~="hasNew"] button.twisty::before {
-	fill: var(--gnome-accent) !important;
-	stroke: var(--gnome-accent) !important;
+/* The stock card fills the dot green (threadCard.css:82-83) and the sparkle
+ * yellow (threadCard.css:93-94); the roles replace both. The theme also
+ * forces every table image to its toolbar fill and to the context properties
+ * fill and fill-opacity (icons.css:36-37, :71-72), which leaves the dot with
+ * a white fill and no stroke, so the rule restates both. */
+#threadTree tr.card-layout[data-properties~="unread"],
+#threadTree tr.card-layout[data-properties~="new"] {
+	--read-status-fill: var(--mail-accent) !important;
+	--read-status-stroke: var(--mail-accent) !important;
 }
 
+#threadTree tr.card-layout .read-status:not(#hack) {
+	-moz-context-properties: fill, stroke !important;
+	fill: var(--read-status-fill) !important;
+	stroke: var(--read-status-stroke) !important;
+}
+
+/* A collapsed thread with unread or new replies marks its expander. */
+.card-layout[data-properties~="hasNew"] button.twisty::before,
 .card-layout[data-properties~="hasUnread"] button.twisty::before {
-	fill: var(--gnome-accent) !important;
-	stroke: var(--gnome-accent) !important;
+	fill: var(--mail-accent) !important;
+	stroke: var(--mail-accent) !important;
+}
+
+/* Table: the unread column dot. Answers icons.css:212-213, which fills it
+ * with --gnome-accent; the :not(#hack) copy ties its specificity. */
+tr[data-properties~="unread"] .tree-view-row-unread > .tree-button-unread > img:not(#hack) {
+	fill: var(--mail-accent) !important;
+}
+
+/* The same table rule paints a read row's dot white, so every row would show
+ * one. A read row's dot hides until the row is hovered and stays clickable. */
+tr.table-layout[data-properties~="read"]:not(:hover) .tree-button-unread img:not(#hack) {
+	opacity: 0 !important;
+}
+
+tr[data-properties~="new"] .subject-line img {
+	fill: var(--mail-accent) !important;
+	stroke: var(--mail-accent) !important;
+}
+
+/* Stars. An unflagged star keeps its place but fades to opacity 0 until the
+ * row is hovered, selected or holds focus; visibility: hidden would drop it
+ * from the accessibility tree and from the tab order. */
+#threadTree tr.card-layout:not([data-properties~="flagged"]) .button-star,
+#threadTree tr.table-layout:not([data-properties~="flagged"]) .tree-view-row-flag img {
+	opacity: 0 !important;
+}
+
+#threadTree tr.card-layout:not([data-properties~="flagged"]):is(:hover, .selected, :focus-within) .button-star,
+#threadTree tr.table-layout:not([data-properties~="flagged"]):is(:hover, .selected, :focus-within) .tree-view-row-flag img {
+	opacity: 1 !important;
+}
+
+/* A flagged star fills nord13. icons.css:206-207 fills it from
+ * --gnome-toolbar-star-button, so the variable carries the role. */
+:root {
+	--gnome-toolbar-star-button: var(--mail-attention) !important;
+	--thread-pane-flag-fill: var(--mail-attention) !important;
+	--thread-pane-flag-stroke: var(--mail-attention) !important;
+}
+
+tr[data-properties~="flagged"] .button-star:not(#hack) {
+	-moz-context-properties: fill, stroke !important;
+	stroke: var(--mail-attention) !important;
+}
+
+/* Replied, forwarded and redirected icons on cards carry a hard-coded purple,
+ * blue and orange (threadCard.css:164-228); they take the neutral icon fill.
+ * The table's icons are already neutral through icons.css:36-37. */
+#threadTree tr.card-layout :is(.subject-line img, .state) {
+	fill: var(--gnome-toolbar-icon-fill) !important;
+	stroke: var(--gnome-toolbar-icon-fill) !important;
+}
+
+/* Junk: neutral text and a red icon. The theme paints a junk card's text red
+ * (mail.css:173-174); this rule ties its specificity and loads later. */
+#threadTree tr.card-layout[data-properties~="junk"] .card-container :is(.sender, .date, .subject) {
+	color: var(--gnome-view-color) !important;
 }
 
 :root {
-	--thread-pane-flag-fill: var(--gnome-warning) !important;
-	--thread-pane-flag-stroke: var(--gnome-warning) !important;
-	--thread-pane-spam-fill: var(--gnome-error) !important;
-	--thread-pane-spam-stroke: var(--gnome-error) !important;
-	--tree-card-border-hover-spam: color-mix(in srgb, var(--gnome-error) 50%, transparent) !important;
-	--tree-card-border-selected-spam: color-mix(in srgb, var(--gnome-error) 50%, transparent) !important;
-	--thread-card-focus-spam: color-mix(in srgb, var(--gnome-error) 50%, transparent) !important;
+	--thread-pane-spam-fill: var(--mail-error) !important;
+	--thread-pane-spam-stroke: var(--mail-error) !important;
+	--tree-card-border-hover-spam: color-mix(in srgb, var(--mail-error) 50%, transparent) !important;
+	--tree-card-border-selected-spam: color-mix(in srgb, var(--mail-error) 50%, transparent) !important;
+	--thread-card-focus-spam: color-mix(in srgb, var(--mail-error) 50%, transparent) !important;
 	--tree-row-delete-button-color: var(--gnome-destructive) !important;
 	--tree-view-header-hover-bg: var(--gnome-hover-color) !important;
 	--tree-view-header-active-bg: var(--gnome-active-color) !important;
@@ -178,8 +251,36 @@ tr[data-properties~="new"] .subject-line img,
 	--row-grouped-header-bg-color: var(--gnome-window-background) !important;
 }
 
-#threadTree tr.card-layout[data-properties~="junk"] .card-container :is(.sender, .date, .subject) {
-	color: var(--gnome-error) !important;
+tr[data-properties~="junk"] .tree-button-spam > img:not(#hack) {
+	fill: var(--mail-error) !important;
+}
+
+/* Tags. Thunderbird writes each tag's colour into a rule per row (table text,
+ * --tag-color) and into inline --tag-$labelN-backcolor variables on body (card
+ * tag icons); a user !important beats both. The adjusted role colours keep
+ * the text contrast the check proves. */
+tr[data-properties~="T_24label1"] { --tag-color: var(--mail-tag-1) !important; }
+tr[data-properties~="T_24label2"] { --tag-color: var(--mail-tag-2) !important; }
+tr[data-properties~="T_24label3"] { --tag-color: var(--mail-tag-3) !important; }
+tr[data-properties~="T_24label4"] { --tag-color: var(--mail-tag-4) !important; }
+tr[data-properties~="T_24label5"] { --tag-color: var(--mail-tag-5) !important; }
+
+body {
+	--tag-\$label1-backcolor: var(--mail-tag-1) !important;
+	--tag-\$label2-backcolor: var(--mail-tag-2) !important;
+	--tag-\$label3-backcolor: var(--mail-tag-3) !important;
+	--tag-\$label4-backcolor: var(--mail-tag-4) !important;
+	--tag-\$label5-backcolor: var(--mail-tag-5) !important;
+}
+
+/* A focused, selected, tagged table row stays on the theme's neutral
+ * selection. Thunderbird paints it with the tag colour as background and a
+ * contrast colour taken from the raw pref colour (threadPane.css:185-190);
+ * the tag icon keeps its colour through icons.css:209-210. */
+[is="tree-view-table-body"]:is(:focus, :focus-within) > .table-layout.selected[data-properties~="tagged"],
+[is="tree-view-table-body"] > .table-layout.selected[data-properties~="tagged"]:focus-within {
+	background-color: var(--listbox-focused-selected-bg) !important;
+	color: var(--listbox-selected-color) !important;
 }
 
 /* Message header and avatars: neutral. */

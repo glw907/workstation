@@ -32,6 +32,13 @@ TAGS = {
     "m19@example.com": ["$label5"],
 }
 JUNK = "m20@example.com"
+# Answer-state flags by Message-ID: replied, forwarded, redirected.
+ANSWERED = {
+    "m02@example.org": ["Replied"],
+    "m10@example.org": ["Forwarded"],
+    "m11@example.com": ["Redirected"],
+    "m13@example.com": ["Replied", "Forwarded"],
+}
 NEW = "m21@example.org"
 
 # Reader cases: file name part -> Message-ID.
@@ -131,10 +138,10 @@ def set_view(h, view):
 
 
 def set_states(h):
-    """Set read, flag, tag, junk and new states by Message-ID."""
+    """Set read, flag, tag, junk, answered and new states by Message-ID."""
     result = h.js(
         """
-        const [unread, flagged, tags, junk, newId] = arguments;
+        const [unread, flagged, tags, junk, newId, answered] = arguments;
         const folder = inbox();
         const db = folder.msgDatabase;
         const out = {};
@@ -144,6 +151,9 @@ def set_states(h):
         }
         for (const [id, keys] of Object.entries(tags)) {
           folder.addKeywordsToMessages([hdr(id)], keys.join(" "));
+        }
+        for (const [id, names] of Object.entries(answered)) {
+          for (const name of names) hdr(id).orFlags(Ci.nsMsgMessageFlags[name]);
         }
         const j = hdr(junk);
         j.setStringProperty("junkscore", "100");
@@ -159,7 +169,7 @@ def set_states(h):
         db.commit(Ci.nsMsgDBCommitType.kLargeCommit);
         return out;
         """,
-        UNREAD, FLAGGED, TAGS, JUNK, NEW,
+        UNREAD, FLAGGED, TAGS, JUNK, NEW, ANSWERED,
     )
     if result["new"] != "set":
         h.notes.append(f"new state not set ({result['new']}); report it as unverified")
