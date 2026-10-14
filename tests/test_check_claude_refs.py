@@ -32,6 +32,9 @@ import atexit, json, os, runpy, sys, sysconfig
 log = os.environ["RATCHET_AUDIT_LOG"]
 own = {os.path.realpath(sysconfig.get_paths()[k])
        for k in ("stdlib", "platstdlib", "purelib", "platlib")}
+# A layered environment (uv run --with) puts more site-packages on sys.path than sysconfig
+# names, and the import system lists them; those reads are the interpreter's, not the tool's.
+own |= {os.path.realpath(p) for p in sys.path if os.path.basename(p) == "site-packages"}
 seen = []
 def note(p):
     if isinstance(p, int) or p is None:
