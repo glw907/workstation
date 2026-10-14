@@ -21,7 +21,9 @@ gate launches no browser and its measured peak is 105 MB.
 **Fast lane**: The same command. It takes about 76 seconds, so no narrower lane exists.
 
 **Full-suite home**: That same command, once on the close head. Dotfiles has no PR test CI (ruling
-11; ROADMAP carries the Planned item), so the local close run is the only full run.
+11; BACKLOG carries the item), so the local close run is the only full run.
+
+**Cross-repo docs**: Specs, plans, and research that span repos live in `~/Projects/initiatives/<id>/`.
 
 **Worktree setup**: The launch's `.claude/worktrees/<name>`; no setup command.
 

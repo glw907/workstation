@@ -10,7 +10,7 @@ description: >
 
 # Cairn pass
 
-Load `pass-core` first; it holds the lifecycle and the rules this adapter fills in. The sources
+Load `pass-core` first; it holds the lifecycle and the rules this adapter fills in. Cross-repo specs, plans, and research live in `~/Projects/initiatives/<id>/`. The sources
 are `docs/STATUS.md` (the rolling now) and the functional spec
 (`docs/superpowers/specs/2026-05-28-cairn-rebuild-functional-spec.md`, the locked decisions).
 STATUS's next action names the plan; trust it. Check `docs/internal/consultations/` for briefs with
