@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# claude-awake-holder: hold the laptop awake while any Claude session is active.
+# claude-awake-holder: hold the machine awake while any Claude session is active.
 #
 # Started (detached) by the claude-awake-touch hook, which refreshes the lease file on every
 # tool call. One holder runs per user, enforced with flock. It holds both sleep inhibitors
@@ -99,7 +99,7 @@ hold_loop() {
                 cap="$(battery_capacity)"
                 date +%s >"$floor_mark"
                 log "released: battery floor (${cap}% on battery, floor ${floor}%); the machine may now sleep"
-                notify "Battery at ${cap}% with no mains power. The sleep inhibitor is released so the laptop can suspend. Save state now."
+                notify "Battery at ${cap}% with no mains power. The sleep inhibitor is released so the machine can suspend. Save state now."
                 exit 0
             fi
         fi

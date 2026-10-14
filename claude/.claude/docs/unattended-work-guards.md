@@ -30,7 +30,7 @@ target, which makes `agent()` calls throw at the ceiling.
 
 ## Sleep inhibitor: tool-enforced (2026-09-23)
 
-GNOME suspends this laptop after 15 idle minutes ON BATTERY (AC never suspends), which
+GNOME suspends thinkpad-x1 after 15 idle minutes ON BATTERY (AC never suspends), which
 freezes agents mid-flight and can kill their API streams. The kernel sometimes reports the
 charger offline while it is charging, and the same suspend fires. Three recorded losses:
 2026-09-02 (a suspend orphaned an implementer's stream, about 2 hours), 2026-09-05 (8 h 13 m),
@@ -70,9 +70,10 @@ a suspend investigation reads it beside the suspend itself. A manual
 
 ## Battery floor (Geoff, 2026-09-02; enforced by the holder since 2026-09-23)
 
-An inhibitor on battery can drain the laptop to 0%, so the holder carries the floor. Every
+An inhibitor on battery can drain thinkpad-x1 to 0%, so the holder carries the floor. pavilion
+has no battery, so the floor never trips there. Every
 ~2 minutes it reads `/sys/class/power_supply/`. Test mains power by supply `type`, never by
-an `AC*` name glob: on this laptop `AC` reads `type=Mains`, while
+an `AC*` name glob: on thinkpad-x1 `AC` reads `type=Mains`, while
 `ucsi-source-psy-USBC000:001` and `:002` read `type=USB`; a name glob misses that an
 underpowered USB-C or dock supply can read `online` while the battery still drains, which
 is the one plugged-in case that still reaches 0%. The mains test is "any supply whose
@@ -120,7 +121,7 @@ next tool call refreshes the lease (confirm with `systemd-inhibit --list`). "It'
 right now" is not a reason to skip the battery layer: the holder's floor is silent on AC
 by design, so it is already watching when someone later unplugs.
 The one recorded failure: a session re-armed only the transcript guard after a crash,
-the laptop was unplugged hours later, and the battery hit 7% with nothing watching (caught by Geoff, not the machinery).
+thinkpad-x1 was unplugged hours later, and the battery hit 7% with nothing watching (caught by Geoff, not the machinery).
 
 ## Concurrent sessions (Geoff runs several at once)
 
@@ -140,7 +141,7 @@ logind handles a lid close even while `systemd-inhibit --what=sleep` and the GNO
 inhibitor are held (`LidSwitchIgnoreInhibited=yes` is the default). A run that must survive a
 closed lid also holds `systemd-inhibit --what=handle-lid-switch --who=<initiative> sleep NNN`,
 which stops logind from acting on the lid at all. Neither the lease holder nor `awake` takes this lock, so
-hold it by hand whenever the laptop may be closed or carried; `journalctl | grep "time jump detected"` shows the gap if it
+hold it by hand whenever thinkpad-x1 may be closed or carried (pavilion has no lid); `journalctl | grep "time jump detected"` shows the gap if it
 happens anyway.
 
 ## Shared gate lanes
