@@ -11,6 +11,8 @@ brew "age"
 brew "gh"
 brew "googleworkspace-cli"   # gws: Google Docs/Drive/Sheets from Claude Code (2026-09-14)
 brew "git"
+# Extracts for the repo-organization pass keep their history (2026-10-14).
+brew "git-filter-repo"
 brew "jq"
 brew "yq"
 brew "micro"
