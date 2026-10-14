@@ -152,6 +152,10 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   nests interactive content in `<summary>`; it needs a summary-only renderer. `listItems` in
   `brief.ts` reads `- 2. foo` as `foo` and a nested bullet as top level. `dotfiles-pass` should
   name `gitleaks detect --source . --log-opts main..HEAD`, the form the worktree guard allows.
+  Approving a design item drops its `### Decide:` picks: the repo organization design (2026-10-14)
+  came back as `{"decision":"approve"}` with no `choices`, though `approval-brief.md` promises one
+  per block, so either the design page renders no Decide cards or its approve omits them (logged
+  at Geoff's request, 2026-10-14).
 
 - **Two worktree-guard notes**, from the same triage: the pair-dispatch template should tell a
   subagent that the worktree Bash guard refuses compound commands, so it uses plain calls and the
