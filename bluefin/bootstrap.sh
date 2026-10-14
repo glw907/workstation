@@ -213,6 +213,10 @@ setup_etc_drops() {
         sudo install -m 0644 "${policies[@]}" /etc/chromium/policies/managed/ || return 1
     fi
 
+    # Firefox reads one policies.json; it sets Kagi as the default search engine and homepage.
+    sudo install -D -m 0644 "$BLUEFIN_DIR/etc/firefox-policies/policies.json" \
+        /etc/firefox/policies/policies.json || return 1
+
     sudo install -m 0644 "$BLUEFIN_DIR/etc/udev/51-android.rules" \
         /etc/udev/rules.d/51-android.rules || return 1
     sudo udevadm control --reload-rules || return 1
@@ -798,6 +802,8 @@ restore_etc() {
     sudo mkdir -p /etc/chromium/policies/managed
     find "$RESTORE_STAGING/etc-capture" -iname '*.json' -ipath '*chromium*' -print0 \
         | xargs -0 -r -I{} sudo cp {} /etc/chromium/policies/managed/
+    sudo install -D -m 0644 "$BLUEFIN_DIR/etc/firefox-policies/policies.json" \
+        /etc/firefox/policies/policies.json
 }
 
 # Runbook 4.9: mandatory. Bluefin enforces SELinux; the Mint backup carries

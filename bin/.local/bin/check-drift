@@ -115,6 +115,7 @@ etc_pair() {
 for f in "$BLUEFIN"/etc/chromium-policies/*.json; do
     etc_pair "$f" "/etc/chromium/policies/managed/$(basename "$f")"
 done
+etc_pair "$BLUEFIN/etc/firefox-policies/policies.json" /etc/firefox/policies/policies.json
 etc_pair "$BLUEFIN/etc/udev/51-android.rules" /etc/udev/rules.d/51-android.rules
 etc_pair "$BLUEFIN/etc/yum.repos.d/1password.repo" /etc/yum.repos.d/1password.repo
 etc_pair "$BLUEFIN/etc/gdm/custom.conf" /etc/gdm/custom.conf
