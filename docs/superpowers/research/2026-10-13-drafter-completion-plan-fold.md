@@ -345,7 +345,7 @@ None of these edits the spec; each records where the plans narrow or extend
 | 2 | 180 | 285 | 355 | 2.0 | 540 |
 | 3 | 180 | 275 | 315 | 1.75 | 540 |
 | 4 | 180 | 205 | 285 | 1.6 | 540 |
-| 5 | 240 | 465 | 620 | 2.6 | 720 |
+| 5 | 240 | 465 | 630 | 2.6 | 720 |
 
 No plan crosses Geoff's 3x stop line.
 
@@ -383,3 +383,31 @@ None refused. Path minutes: pass 2 stays 355 (text and row changes inside P2.2, 
 estimates); pass 5 rises to 620 (P5.1 from 200 to 210 for the void path, the seat-bearing IDs, and
 the state fields moved in), 2.6 times its 240 estimate, under the 720 line. The blocker calls for
 one more verification read under spec-plan-review.
+
+## Verification read 2
+
+Read: `2026-10-13-drafter-completion-fold-verification-2.md` (passes 2 and 5, at `df7d70d`): 0
+blockers, 2 majors, 3 minors. Each fold is a clause and a row; no new mechanism.
+
+- v2-1 major folded: `<attempt>` is a per-run counter for each page, stage, and seat that every
+  submission advances (a gate-fix exchange, an edit-contract retry, the reader retest, a
+  resubmission), so a `custom_id` is unique across the run, as the spec's "Resume" asks (P5
+  Interfaces). P5.1 row: two gate-fix exchanges and the reader-redraft path repeat no `custom_id` in
+  state. P5.2 row: a stop after the retest's `Create` with no batch ID adopts nothing from the ended
+  final-read batch inside the margin.
+- v2-2 major folded: the state intent records its settlement kind (P5 Interfaces, P5.1 money path);
+  resume settles `estimated` only for a sync intent with no saved response, no recorded settlement,
+  and an entry still in `OpenIntents` (P5.2). P5.2 twin row: a sync `ErrTransport` stop resumes to
+  one `void` line, no `estimated` line, and one new reserved attempt.
+- v2-3 minor folded: any 4xx (401, 403, 404, 413) escalates the page with the error, as `Classify`
+  does for an unnamed type; `ErrNoWorkspaceCheck` is returned by `pipeline.Run`, exit 2 (P5.1, with
+  a 403 row and an `ErrNoWorkspaceCheck` row). A separate stop reason for 401 and 403 was not
+  chosen: `CheckWorkspace` at start and at resume already stops a revoked or misplaced key before
+  any page spends.
+- v2-4 optional, folded (one line): P2's `void` means an intent the API never billed, reached or
+  refused.
+- v2-5 optional, folded (one line each): stage tokens `s1` to `s7` named; the length row builds the
+  longest stage, seat, and attempt instead of the longest page path.
+
+None refused. Path minutes: pass 2 stays 355; pass 5 rises to 630 (P5.1 215, P5.2 135), 2.6 times
+its 240 estimate, under the 720 line. No blocker, so no further verification read is called for.

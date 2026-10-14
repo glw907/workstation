@@ -139,8 +139,8 @@ these `*Client` methods, and its tests fake it)
   Every resubmission is a new intent with a reservation of its own.
 - `type Settlement struct`: `Entry`, `Intent`, `Key string`, `Usage batch.Usage`, `Cost float64`,
   `Kind string`: `actual`; `estimated` (a sync request whose response was lost, at its share of the
-  reservation, `Worst / Requests`); or `void` (an intent that never reached the API, at zero, one
-  line closing the whole intent). The key is `<batch-id>/<custom_id>` in `batch` mode. An `actual` sync
+  reservation, `Worst / Requests`); or `void` (an intent the API never billed: it never reached
+  the API, or the API refused it; at zero, one line closing the whole intent). The key is `<batch-id>/<custom_id>` in `batch` mode. An `actual` sync
   settlement keys on its message ID; an `estimated` one always keys `<intent>/<custom_id>`, whatever
   arrived, so a settle made in the run and repeated on resume is the same line; a `void` one keys
   `<intent>/void`. `custom_id`s are unique per request and attempt (pass 5), so no two settlements

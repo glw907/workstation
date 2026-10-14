@@ -43,7 +43,7 @@ pilot-ready, conditional on Geoff's Console comparison at the PR read.
   <sha> --pr <n> --wait` as a background watch.
 - Clock file: the drafter worktree's git dir. A wait on Geoff (P5.7 or P5.8) removes the clock
   file first, so the wait never trips the clock stop, and writes a new `start=` when it ends.
-- Path estimate: 620 minutes. P5.1 and P5.5 as a pair (210), P5.2 and P5.6 as a pair (130), P5.3 and
+- Path estimate: 630 minutes. P5.1 and P5.5 as a pair (215), P5.2 and P5.6 as a pair (135), P5.3 and
   P5.4 as a pair (70), P5.7 (40, not counting the wait), P5.8 (120), Close (50). The design's
   estimate is 240, so the path is 2.6 times it, inside the 3x line (720).
 - Pair subagents run on `sonnet` at `medium` with the `description` `p5-pipeline task <n>`.
@@ -97,12 +97,16 @@ Creates:
   when the run stopped, which outranks 1; 1 when it finished with any page escalated; 0 when every
   page was accepted.
 - `run.State` and `run.PageState` gain the intents (stage, attempt, timestamp, the ledger intent ID,
-  `custom_id`s and the map from each to its page and seat) and batch IDs, with `run.StateSchema`
-  bumped (P5.1), and the saved answers and write hashes resume needs (P5.2). A `custom_id` is
-  `<run ID's random suffix>_<first 12 hex of the SHA-256 of the page key>_<stage>_<seat>_<attempt>`,
-  its stage and seat tokens limited to `[a-z0-9]`, so the several seats of one stage-4 or stage-7
-  batch get distinct IDs and the longest (`consistency`) stays inside the API's 64-character
-  pattern for any page path.
+  the settlement kind once one is written, `custom_id`s and the map from each to its page and seat)
+  and batch IDs, with `run.StateSchema` bumped (P5.1), and the saved answers and write hashes resume
+  needs (P5.2). A `custom_id` is `<run ID's random suffix>_<first 12 hex of the SHA-256 of the page
+  key>_<stage>_<seat>_<attempt>`. The stage tokens are `s1` to `s7`, the spec's stage numbers; the
+  seat tokens are the seat names; both are `[a-z0-9]`. `<attempt>` is a per-run counter for each
+  page, stage, and seat that every submission advances (a gate-fix exchange, an edit-contract
+  retry, the reader retest, a failures-table resubmission), so a `custom_id` is unique across the
+  run, as the spec's "Resume" asks ("unique to run, page, stage, and attempt"), not only within one
+  batch. The longest ID (`consistency`, a three-digit attempt) stays well inside the API's
+  64-character pattern; the page path is hashed, so it never changes the length.
 - `internal/plan` gains one exported constructor that builds an `Outline` from outline files plus a
   list of repo-relative page paths, for stage 1.
 
@@ -117,7 +121,7 @@ review page's YAML plans, and the ledgers.
 Every drafter task starts by invoking `go-conventions`. The offline tasks (P5.1 to P5.6) all run
 before P5.7. Every pipeline test sets the key variable to a sentinel shaped like an `sk-ant-` key.
 
-### P5.1 The pipeline's stages and stop rules (210 min, auth-data)
+### P5.1 The pipeline's stages and stop rules (215 min, auth-data)
 
 - Order: the money rows (marked "money" below) are written and committed failing first, then the
   rest of the tests, then the code.
@@ -139,8 +143,12 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
     unmatched intent settles `void` and its resubmission is a new intent. An `ErrMaybeSent` from
     `Send` settles that attempt `estimated` and resubmits it as a new attempt. A `Create` or `Send`
     error that proves the request wasn't billed (a 4xx, `ErrSpendLimit` included; `ErrTransport`;
-    `ErrNoWorkspaceCheck`) settles its intent `void` at once, then takes its failures-table action
-    (a 400 escalates the page with the error), so no reservation stays open after a finished run.
+    `ErrNoWorkspaceCheck`) settles its intent `void` at once and records `void` in the state intent,
+    then takes its action, so no reservation stays open after a finished run: a 400, and any other
+    4xx (401, 403, 404, 413), escalates the page with the error, as `Classify` does for an unnamed
+    error type; `ErrSpendLimit` and `ErrTransport` stop the run as the stop reasons say;
+    `ErrNoWorkspaceCheck` is a programming error that `pipeline.Run` returns, so `drafter page`
+    exits 2. Every settlement the money path writes is recorded in its state intent the same way.
     Every resubmission counts against its failures-table budget.
   - The round-1 snapshot is written to the run directory and stored with `git hash-object -w --
     <snapshot>`, as the chain does (`docs-page-chain.js:1463`), so a seat input's `git cat-file blob
@@ -187,7 +195,10 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
     intent. A `Send` that returns `ErrMaybeSent` leaves one `estimated` line and one new reserved
     attempt. A `Create` that returns a 400 escalates the page with the error, leaves one `void` line,
     and `OpenIntents` is empty after the run. The three seats of a stage-4 batch, and the requests of
-    a stage-7 batch, carry distinct `custom_id`s.
+    a stage-7 batch, carry distinct `custom_id`s. A synthetic run with two gate-fix exchanges and the
+    reader-redraft path (the final read, then the retest) repeats no `custom_id` anywhere in state.
+    A `Create` 403 escalates the page; a `Create` with the workspace check skipped returns
+    `ErrNoWorkspaceCheck` from `pipeline.Run`.
   - One test per trigger, not per row: the draft's truncated answer, unparseable answer, and
     non-JSON brief; the final read's coverage miss, scoped re-read fix, and retest fix; a round-2
     read missing and one unreadable; a final read missing and one unreadable; `api_error`,
@@ -225,7 +236,7 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
 - Pair: with P5.5. P5.1 goes to a subagent with `isolation: "worktree"`; P5.5 to a subagent without
   isolation, working the cairn worktree by path as its only writer.
 
-### P5.2 Run inputs and resume (130 min, auth-data)
+### P5.2 Run inputs and resume (135 min, auth-data)
 
 - Outcome, in `internal/pipeline` and `internal/run` (the resume fields: saved answers and write
   hashes; P5.1 owns the intent fields), following the spec's "Run inputs", "One run per worktree",
@@ -247,14 +258,17 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
     write); adopts an in-flight batch through `List`, `Get` until each candidate ends, and `Results`
     matched on its `custom_id`s; settles any ended batch not yet ledgered; settles a batch whose
     results have expired (29 days after creation, per the batch guide) at its reservation share as
-    `estimated`; settles a sync intent with no saved response at its share as `estimated` and sends
-    it again as a new reserved attempt; continues from post-write hashes, redoes the write from the
+    `estimated`; settles a sync intent `estimated` at its share only when it has no saved response,
+    no settlement recorded in state, and an entry still in `OpenIntents`, and sends it again as a new
+    reserved attempt; continues from post-write hashes, redoes the write from the
     saved answer at pre-write hashes, and stops naming any other changed file.
 - Files: `internal/pipeline/`, `internal/run/`, their tests.
 - Acceptance, the spec's resume rows against the fake API, each with its twin:
   - A stop after `create` with no recorded ID: no second `create`, with the fake's `List` also
     returning a decoy created after the intent with other `custom_id`s and one created before it;
-    twin: no batch carries the intent's `custom_id`s, so it resubmits once.
+    twin: no batch carries the intent's `custom_id`s, so it resubmits once. A stop after the reader
+    retest's `Create` with no batch ID, where `List` also returns the ended final-read batch inside
+    the margin, adopts nothing from that batch.
   - A stop after a batch ended but before ledgering, resumed twice: one settle line per `custom_id`.
   - A stop for `cycle cap` with another page's batch in flight: the run exits resumable, and the
     resume settles that batch once.
@@ -267,7 +281,9 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
   - A resume with earlier page spend: the cap counts it. A `page_cap` tightened between the stop and
     the resume escalates `cap` where the first run would not.
   - A sync intent with no saved response: one `estimated` line, then a new reserved attempt; two
-    crash-and-resume cycles leave one `estimated` line for that attempt.
+    crash-and-resume cycles leave one `estimated` line for that attempt. Twin: a sync `Send` returns
+    `ErrTransport`, the run stops, and the resume leaves one `void` line, no `estimated` line, and one
+    new reserved attempt.
   - An open reservation with no state intent is voided on resume.
   - A batch whose results have expired settles `estimated`.
   - A plan edited between a stop and a resume is refused by the checksum.
@@ -281,7 +297,8 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
   - Workspace: the fake's `CheckWorkspace` fails, and `pipeline.Run` returns the mismatch error
     naming both IDs with zero `CountTokens`, `Create`, and `Send` calls; the same on `--resume`
     after `workspace_id` changed in the user config between the stop and the resume.
-  - Every `custom_id` built for the longest fixture page path matches `^[a-zA-Z0-9_-]{1,64}$`.
+  - The longest `custom_id` the form allows (stage `s7`, seat `consistency`, the largest attempt the
+    budgets allow) matches `^[a-zA-Z0-9_-]{1,64}$`.
   - The copied configuration holds no `key_command` value and no key sentinel.
 - Test: the drafter gate.
 - Pair: with P5.6.
@@ -496,7 +513,7 @@ Push and open the PRs, `glw907/drafter` and `glw907/cairn-cms` (draft until CI i
 each body naming the other. Each opens with `## Brief`. The drafter PR carries what landed, the
 review verdicts, P5.8's record, the smoke result, the score rows (gate time from
 `~/.local/state/cairn-run-gate/runs.jsonl` records whose `gate` names this worktree; the Work and
-review row puts the 620-minute path beside the actual, the wait for Geoff's setup listed as an
+review row puts the 630-minute path beside the actual, the wait for Geoff's setup listed as an
 attended event), and the pilot-ready statement: pilot-ready conditional on Geoff's Console
 comparison within 5%, the one open acceptance item, or "not pilot-ready" with the reason. Its "Found,
 not done" carries a proposed disposition each, including: the user configuration living outside the
