@@ -127,7 +127,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CAIRN_CF_READ_TOKEN | ✓     | —        | —    | —        | —          |
 | CAIRN_GH_READ_TOKEN | ✓     | —        | —    | —        | —          |
 | CAIRN_DOCS_READER_OAUTH_TOKEN | ✓ | — | — | — | — |
-| CAIRN_SCRATCH_CF_TOKEN | ✓ | — | — | — | — |
 | CF_ZT_TOKEN         | ✓     | —        | —    | —        | —          |
 | CF_ACCESS_CLIENT_SECRET | ✓ | —        | —    | —        | —          |
 | ANTHROPIC_API_KEY   | ✓     | —        | ✓    | ✓        | —          |
@@ -153,7 +152,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | DUBPLATE_SMTP_PASSWORD | ✓  | —        | —    | —        | —          |
 | MUSIC_R2_RO_ACCESS_KEY_ID | ✓ | —      | —    | —        | —          |
 | MUSIC_R2_RO_SECRET_ACCESS_KEY | ✓ | — | —    | —        | —          |
-| PINGS_ADMIN_TOKEN | ✓       | —      | —    | —        | —          |
 | DRAFTER_API_KEY   | ✓       | —      | —    | —        | —          |
 | DUBPLATE_MAGIC_LINK_SECRET | ✓ | —   | —    | —        | —          |
 | DUBPLATE_SESSION_SECRET | ✓ | —      | —    | —        | —          |
@@ -180,8 +178,8 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 > `FILEBROWSER_ADMIN_PASSWORD`, the tunnel tokens, the `DUBPLATE_PING_*` and `MUSICBOX_HC_*`
 > URLs, and the incumbent `DUBPLATE_*` path and Navidrome rows rendered to the retired
 > `/etc/dubplate/env`. Kept: the `DUBPLATE_R2_*` credentials (the bucket still exists),
-> `MUSIC_R2_RO_*`, the SMTP rows, the two HMAC keys, and `PINGS_ADMIN_TOKEN` (the pings
-> Worker still runs; it holds no dubplate checks now).
+> `MUSIC_R2_RO_*`, the SMTP rows, and the two HMAC keys. The pings Worker and its admin token
+> were retired later, in the 2026-10-14 repo organization pass.
 
 > The ecxc worker stopped needing `GITHUB_APP_ID`/`GITHUB_APP_INSTALLATION_ID` as secrets at
 > the Waymark rebuild (2026-07-05): the v2 adapter commits both in `cairn.config.ts` (they
@@ -245,18 +243,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   Tunnel: Edit (closed the same day, the musicbox `CF_ZT_TOKEN` blocker above). The token
   cannot edit its own permissions (confirmed: `GET /user/tokens/{id}` 403s even for this
   token against itself), so any future scope gap needs the same dashboard-edit path.
-
-### CAIRN_SCRATCH_CF_TOKEN
-- **Grants**: Cloudflare account-owned token "cairn-scratch-b docs readers", minted by Geoff
-  2026-09-23 (token id `f3598b65…`) for the cairn-cms docs-reset operator reader. One policy:
-  Individual Workers, `cairn-scratch-b` only, role Metadata Read-only. Verified 2026-09-23:
-  200 on the Worker's settings, 403 on another Worker's settings and on its own script content,
-  401 on D1. The account-level Workers Logs telemetry query returned 403; docs reset pass 1
-  Task 3 confirms whether `cairn logs` works under it. Local only; no Worker consumes it.
-- **Rotate or revoke**: no TTL (the dashboard's TTL edit set a one-day window; recreated without
-  one). Deleted at the close of the last docs reset drafting pass that runs `docs-and-binary`
-  readers, with the scratch site's teardown, which replaces an expiry. Replace by minting a new
-  account-owned token with the same single policy and `secret-receive CAIRN_SCRATCH_CF_TOKEN`.
 
 ### CAIRN_DOCS_READER_OAUTH_TOKEN
 - **Grants**: a long-lived Claude Code OAuth token minted by Geoff with `claude setup-token`
@@ -483,15 +469,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 - **Rotate at**: Cloudflare dashboard > R2 > Manage API tokens (revoke
   "claude-code-thinkpad-x1", mint a replacement scoped identically, then `secret-set.sh`
   both halves).
-
-### PINGS_ADMIN_TOKEN
-- **Grants**: the `pings` Worker's `/admin/checks` endpoints (register/deregister a
-  check) — a workstation-only credential, never held by any monitored service.
-- **Used by**: workstation scripts only (`~/Projects/pings/scripts/add-check`,
-  `remove-check`).
-- **Rotate at**: re-run `~/Projects/pings/scripts/provision.sh` (idempotent by design;
-  every run rotates `ADMIN_TOKEN` into both the Worker secret and this store, invalidating
-  any prior copy).
 
 ---
 
