@@ -166,7 +166,8 @@ work, arm the wake-up and guards `~/.claude/docs/unattended-work-guards.md` name
 ## Initiative-scoped sessions
 
 One session per initiative: every turn re-reads the whole cached conversation. Close the session
-when an initiative lands, and prefer dispatching reads.
+when an initiative lands, and prefer dispatching reads. Cross-repo initiatives are records in
+`~/Projects/initiatives`; its README holds the placement rule.
 
 ## Process proportionality
 

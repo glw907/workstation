@@ -66,6 +66,9 @@ check_no_old_names() {
 }
 
 run "retired names absent" check_no_old_names
+run "non-cairn ROADMAP references absent" bash scripts/check-roadmap-refs.sh
+run "roadmap-refs check test" bash tests/check-roadmap-refs.test.sh
+run "claude-memory-write-check hook" bash tests/claude-memory-write-check.test.sh
 run "vale-hook test suite" uv run --with pytest --no-project python -m pytest tests/ -q
 run "vale style fixtures" bash tests/vale/run-fixtures.sh
 run "docs-page-chain derivation test" node tests/docs-page-chain-derivation.test.mjs

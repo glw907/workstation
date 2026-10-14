@@ -33,8 +33,9 @@ launches a browser. `npm run check` must report 0 errors and 0 warnings.
 that touches no engine source runs the site's own unit suite and nothing from cairn-cms.
 
 **Full-suite home**: The table's column. No site except aksailingclub-org has PR test CI (ruling
-11), so the local close run is the only full run; each site's ROADMAP carries a Planned item for it.
-Run the local close once, on the close head.
+11), so the local close run is the only full run; each site's BACKLOG carries an item for it.
+Run the local close once, on the close head. Cross-repo specs, plans, and research live in
+`~/Projects/initiatives/<id>/`, not in the site repo.
 
 **Worktree setup**: The launch's `.claude/worktrees/<name>`, then `npm ci` and `npx svelte-kit
 sync`. The sync writes `.svelte-kit/tsconfig.json`, which `npm run check` needs, so a fresh
