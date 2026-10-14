@@ -58,21 +58,21 @@ cleanup() {
         flatpak kill "$id" 2>/dev/null || true
         # The sandbox's helper processes outlive the kill by a moment.
         local n
-        for n in $(seq 1 50); do
+        for _ in $(seq 1 50); do
             flatpak ps --columns=instance | grep -qx "$id" || break
             sleep 0.2
         done
     fi
     if [[ -n "$runpid" ]]; then
         local i
-        for i in $(seq 1 50); do
+        for _ in $(seq 1 50); do
             kill -0 "$runpid" 2>/dev/null || break
             sleep 0.2
         done
     fi
     # Read-only wait for the sandbox's last processes to go; nothing is signalled.
     local m
-    for m in $(seq 1 50); do
+    for _ in $(seq 1 50); do
         ps -eo args | grep -q '[t]b-nord-harness' || break
         sleep 0.2
     done

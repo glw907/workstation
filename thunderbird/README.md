@@ -14,7 +14,7 @@ package: `thunderbird-theme-sync` copies it into the Thunderbird profile.
 | `nord.css` | The 16 Nord colours and the mail colour roles; every other rule names a role from here, never a hex value |
 | `customChrome.css` | Color overrides for the main window, mapping Thunderbird's own colors onto the GNOME palette and the desktop accent |
 | `customContent.css` | The same palette for Settings, the address book, and account settings, which load as content pages that `userChrome.css` never reaches |
-| `user.js` | Preferences Thunderbird applies at every startup: the two the theme needs, the Adwaita tag colors, and new-mail popups and sounds turned off |
+| `user.js` | Preferences Thunderbird applies at every startup: the two the theme needs, the Nord tag colors, the message-list settings (names-only senders, two-row cards, the local junk filter off), and new-mail popups and sounds turned off |
 | `tools/` | The screenshot harness, its invented test messages, and the contrast check (see `tools/README.md`) |
 | `patches/*.patch` | Fixes carried until the theme merges them upstream; each file's header names its upstream PR |
 
@@ -25,8 +25,10 @@ folder and writes a `user.js`, which the sync replaces with the one here. The
 theme imports `customChrome.css`
 last and never ships one. It has no such hook for content pages, so the sync
 writes the profile's `userContent.css` itself, importing the theme and then
-`customContent.css`. `customContent.css` scopes every rule to Thunderbird's own
-pages with `@-moz-document`, so email bodies keep their own colors.
+`customContent.css`. `customContent.css` scopes its Settings rules to Thunderbird's own
+pages with `@-moz-document`. Its message-body rules sit outside that block and
+apply only under Thunderbird's own body classes, so a sender's HTML design
+keeps its colors.
 Thunderbird updates don't touch the profile at all.
 
 | Location | Role |
@@ -128,7 +130,7 @@ at every startup, so a value set there wins over a change made in Settings.
 To pick up upstream theme fixes, or to repair the look after a Thunderbird
 update, quit Thunderbird and run `thunderbird-theme-sync`. It resets the clone
 to upstream `main`, applies each carried patch, reinstalls the theme, and copies
-both override files and `user.js` in. `workstation-update` runs it too.
+every top-level `*.css` file and `user.js` in. `workstation-update` runs it too.
 
 To check the install without changing anything, run
 `thunderbird-theme-sync --check`. `check-drift` runs the same check weekly.

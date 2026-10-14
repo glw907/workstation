@@ -193,7 +193,27 @@ tr.table-layout[data-properties~="read"]:not(:hover) .tree-button-unread img:not
 	opacity: 0 !important;
 }
 
-tr[data-properties~="new"] .subject-line img {
+/* The table's new sparkle sits in a subject-line image. The theme's table
+ * image rule (icons.css:36-37, specificity (1,1,2)) fills it with the toolbar
+ * colour and limits context properties to fill, so the rule copies its
+ * :not(#hack) trick and restores the stroke. Thunderbird swaps in the sparkle
+ * at threadPane.css:392. */
+tr.table-layout[data-properties~="new"] .subject-line img:not(#hack) {
+	-moz-context-properties: fill, stroke !important;
+	fill: var(--mail-accent) !important;
+	stroke: var(--mail-accent) !important;
+}
+
+/* A thread with unread or new replies marks its table expander. The theme
+ * draws the twisty icon with the current text colour (icons.css:236); the
+ * colour goes on the button. */
+tr.table-layout[data-properties~="hasUnread"] .twisty,
+tr.table-layout[data-properties~="hasNew"] .twisty {
+	color: var(--mail-accent) !important;
+}
+
+tr.table-layout[data-properties~="hasUnread"] .twisty .twisty-icon:not(#hack),
+tr.table-layout[data-properties~="hasNew"] .twisty .twisty-icon:not(#hack) {
 	fill: var(--mail-accent) !important;
 	stroke: var(--mail-accent) !important;
 }
@@ -433,8 +453,8 @@ progress::-moz-progress-bar {
  * date answer those. The labels keep --message-header-label-opacity
  * (messageHeader.css:19) with no extra dimming. */
 .recipient-multi-line-name,
-.recipient-single-line {
-	font-weight: 600 !important;
+#expandedfromBox .recipient-single-line {
+	font-weight: 600 !important; /* the From row only; To and Cc stay secondary */
 }
 
 .recipient-multi-line-address {

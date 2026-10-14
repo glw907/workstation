@@ -5,7 +5,8 @@
  * Settings, the address book and account settings load as content documents,
  * so userChrome.css and customChrome.css never reach them. This file gives
  * those pages the same palette as customChrome.css, limited to the pages
- * below so email bodies and web pages are untouched. */
+ * below. The message-body rules further down are scoped by Thunderbird's own
+ * body classes, so a sender's HTML design and web pages keep their colours. */
 
 @-moz-document url-prefix("about:preferences"), url-prefix("about:settings"), url-prefix("about:addressbook"), url-prefix("about:accountsettings"), url-prefix("about:import"), url-prefix("about:accountsetup"), url-prefix("chrome://messenger/content/am-"), url-prefix("chrome://messenger/content/preferences/") {
 
@@ -220,16 +221,19 @@
 }
 
 /* Signatures dim to 0.6, and to 0.75 under the dark reader's own condition.
- * messageQuotes.css:22-28 sets 0.6 on the same elements. */
+ * messageQuotes.css:22-28 sets 0.6 opacity on the same elements, which would
+ * also fade a link in the signature below 3:1 on a white body. The text colour
+ * carries the dimming instead, so a link keeps its full colour. */
 :is(.moz-text-plain, .moz-text-flowed) :is(.moz-txt-sig, .moz-signature),
 pre.moz-signature {
-	opacity: 0.6 !important;
+	opacity: 1 !important;
+	color: color-mix(in srgb, currentColor 60%, transparent) !important;
 }
 
 @media (prefers-color-scheme: dark) and -moz-pref("mail.dark-reader.enabled") {
 	:is(.moz-text-plain, .moz-text-flowed) :is(.moz-txt-sig, .moz-signature),
 	pre.moz-signature {
-		opacity: 0.75 !important;
+		color: color-mix(in srgb, currentColor 75%, transparent) !important;
 	}
 }
 
