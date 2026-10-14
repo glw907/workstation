@@ -436,6 +436,16 @@ the rest unless the step says it is a hard stop.
    confirm GDM logs straight in. A cold start also tests the BIOS
    workaround: `journalctl -b -k | grep -c SOD3` should print 0.
 
+## Gaps found after setup
+
+Each row is something a session hit on pavilion that thinkpad-x1 already had, with the fix for the
+next setup.
+
+| Missing | Why it mattered | Fix |
+|---|---|---|
+| Claude Code workspace trust for `~/Projects/cairn-cms` (found 2026-10-14, drafter pass 5) | `claude --bg` refuses to launch in an untrusted folder, so the conductor couldn't start the cairn executor until Geoff ran `claude` there | In Part 3, run `claude` once in each repo under `~/Projects/` and accept the trust prompt |
+| A Playwright browser for cairn-cms (found 2026-10-14, drafter pass 5) | Two of cairn's fast-lane suites skipped locally; CI still ran them | Run `npx playwright install chromium` in `~/Projects/cairn-cms` after `npm ci` |
+
 ## After pavilion is up
 
 Delete the handoff bundle from R2. It holds a copy of the ASC age key.

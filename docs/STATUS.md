@@ -44,10 +44,9 @@ dropped Geoff's live `model`, `effortLevel`, and `modelSettings`; restored by ha
 
 ## Drafter
 
-Pass 0 and F1 merged 2026-10-12 (drafter#1 `140bc00`, #6 `73ff07a`; workstation#36 `70c1315`).
-Completion to pilot-ready: five passes, design `specs/2026-10-13-drafter-completion-design.md`
-(rulings in its notes), plans in workstation#56 `cc113dd`, run by `conductor-drafter` (`d1448cc6`).
-Geoff sets up the API key before pass 5; cairn's stage 2b part 2 run is the pilot.
+Completion ended 2026-10-14 (drafter#11-#37, workstation#61, cairn-cms#124): **not pilot-ready**, since both real pages escalated in the chain's plan step before drafter ran; no drafter fault, $0.001 spent.
+Next: drafter#38 (fix the plan step, then a third page); other "now" items drafter#39-41, workstation#72, cairn-cms#125-126, none launched. thinkpad-x1 runs `make -C ~/Projects/drafter install` before pulling dotfiles.
+The repo organization pass (spec ~/Projects/initiatives/repo-organization/specs/2026-10-14-repo-organization-design.md) moves drafter's docs and the docs page chain after pass 5 merges; it owns the local config path and the agent-*-worktree cleanup.
 
 ## Approval queue
 
