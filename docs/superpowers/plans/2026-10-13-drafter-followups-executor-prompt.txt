@@ -17,16 +17,17 @@ How to work:
   in the PR body.
 - This pass is `auth-data` by Geoff's ruling, since it touches the spend ledger. Every task but F2
   is test-first: write the tests, see them fail, commit them, then the code. `diff-reviewer` at
-  task scope reads F2, F3, and F4's commits; a `fix` or `escalate` stops the line until resolved.
+  task scope reads every task's commits (F1, F2, F3, and F4); a `fix` or `escalate` stops the
+  line until resolved.
   Never set `RUN_GATE_IF_BUSY`.
 - This pass makes no API call. Never read `~/.local/secrets` or any key.
 - Push target: `glw907/drafter`. Push only the branch `EnterWorktree` created.
 - The repo is public. Keep every workstation path, account detail, and key out of it.
 - Gate, from the worktree root: `DRAFTER_DIR="$PWD" bash ~/.dotfiles/scripts/drafter-gate.sh`,
   re-issued on exit 75. The full-suite home is that gate, once, on the close head. There is no CI.
-- F1 and F3 run as a pair after F2 commits, each subagent on `sonnet` at `medium` in its own
-  worktree (`isolation: "worktree"`, `description` `followups task F1` and `followups task F3`).
-  F4 follows the merge.
+- Dispatch F1 and F3 as a pair first, each subagent on `sonnet` at `medium` in its own worktree
+  (`isolation: "worktree"`, `description` `followups task F1` and `followups task F3`). Do F2
+  yourself while they run; its files are disjoint from theirs. Merge both, then F4.
 - A clock stop, a finding that changes the scope, or a blocker you can't resolve runs
   `notify-send -u normal`, names the question in your message, and waits.
 - Arm the API-drop wake-up (`/loop` with no interval) per `~/.claude/docs/unattended-work-guards.md`.
