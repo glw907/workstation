@@ -156,6 +156,10 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
   came back as `{"decision":"approve"}` with no `choices`, though `approval-brief.md` promises one
   per block, so either the design page renders no Decide cards or its approve omits them (logged
   at Geoff's request, 2026-10-14).
+  A pass plan never reaches the queue: `pass-core` hands a `runner` or `auth-data` plan straight
+  to its conductor, so Geoff can't read the plan of a pass that deletes repos or opens 16 PRs
+  before it runs. Give the queue a plan item, readable before launch, whose choices survive the
+  approve (Geoff, 2026-10-14).
 
 - **Two worktree-guard notes**, from the same triage: the pair-dispatch template should tell a
   subagent that the worktree Bash guard refuses compound commands, so it uses plain calls and the
