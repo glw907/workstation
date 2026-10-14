@@ -123,6 +123,19 @@
 	--folder-color-warning: var(--gnome-error) !important;
 }
 
+/* Outbox icon: the theme swaps every special folder's icon for a GNOME
+ * symbolic one (theme/parts/icons.css:104-113) and colours folder icons by
+ * fill alone (icons.css:200-202), but leaves the Outbox on Thunderbird's own
+ * outbox.svg, a stroke-drawn icon. Under fill-only colouring its outline
+ * vanishes and its body floods solid, so it renders as a smudge. The GNOME
+ * mailbox icon (mail waiting to go out) fits the fill-only rule and stays
+ * distinct from Sent's outbox tray. --folder-pane-outbox defaults to
+ * --icon-outbox (Thunderbird icons.css:266), so both are set. */
+:root {
+	--icon-outbox: var(--gnome-icon-mailbox-symbolic) !important;
+	--folder-pane-outbox: var(--gnome-icon-mailbox-symbolic) !important;
+}
+
 #folderTree li[data-server-type]:not([data-has-error="true"], .tls-error) > .container > .icon {
 	--icon-color: color-mix(in srgb, var(--gnome-window-color) 80%, transparent) !important;
 }
