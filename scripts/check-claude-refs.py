@@ -26,7 +26,9 @@ here. A span carrying a placeholder (``<``, ``{``, ``*``, or an ellipsis) always
 unchecked. A bare single-segment absolute span with no further ``/`` (``/loop``, ``/etc``) is
 never a path citation on this workstation (Claude Code slash commands and route stubs share the
 form); it is skipped. Every other absolute span, tilde or not, resolves as written against the
-``--home``-relative real filesystem.
+``--home``-relative real filesystem. A line carrying the literal marker ``host-ok`` is exempt:
+the path it cites exists on one workstation only (a laptop-only drop-in, say), so its absence
+on another host is not a dead reference.
 
 ``relative-link``: every markdown link ``[text](target)`` in a scanned ``.md`` file whose
 target is relative (no scheme, no leading ``/``, ``~``, or ``#``) must resolve from the file's
@@ -85,6 +87,7 @@ DATED = re.compile(r"^\d{4}-\d{2}-\d{2}")
 PLACEHOLDER = re.compile(r"[<{*]|\.\.\.")
 RETIRED_OK = "retired-ok"
 LINK_OK = "link-ok"
+HOST_OK = "host-ok"
 MD_LINK = re.compile(r"\[[^\]\n]*\]\(\s*<?([^)\s>]+)>?(?:\s+(?:\"[^\"]*\"|'[^']*'))?\s*\)")
 SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 STOW_BIN_TAIL = ("bin", ".local", "bin")
@@ -207,17 +210,19 @@ def dead_reference_violations(root, home):
     for path in scan_files(root, include_vendored=False):
         if path.suffix != ".md":
             continue
-        text = path.read_text(errors="replace")
         rel = str(path.relative_to(root))
-        for m in BACKTICK_SPAN.finditer(text):
-            raw = m.group(1)
-            if not (raw.startswith("~/") or raw.startswith("/")):
+        for line in path.read_text(errors="replace").splitlines():
+            if HOST_OK in line:
                 continue
-            target = resolve_self_mode(raw, root, home)
-            if target is None:
-                continue
-            if not target.exists():
-                yield {"check": DEAD_REFERENCE, "file": rel, "fingerprint": raw}
+            for m in BACKTICK_SPAN.finditer(line):
+                raw = m.group(1)
+                if not (raw.startswith("~/") or raw.startswith("/")):
+                    continue
+                target = resolve_self_mode(raw, root, home)
+                if target is None:
+                    continue
+                if not target.exists():
+                    yield {"check": DEAD_REFERENCE, "file": rel, "fingerprint": raw}
 
 
 def relative_link_violations(root):

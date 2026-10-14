@@ -175,6 +175,17 @@ def test_f1_doc_deleted_only_in_the_fixture_tree_is_a_dead_path(fx):
     assert "~/.claude/docs/gone.md" in out(proc)
 
 
+def test_a_host_only_span_on_a_host_ok_line_passes_and_its_twin_fails(fx):
+    fx.write("claude/.claude/docs/a.md",
+             "Laptop only: `/etc/nothing-here.d/` <!-- host-ok -->\n"
+             "Everywhere: `~/nothing-here/`\n")
+    fx.baseline([])
+    proc = fx.check()
+    assert proc.returncode == 1
+    assert "~/nothing-here/" in out(proc)
+    assert "/etc/nothing-here.d/" not in out(proc)
+
+
 def test_f2_local_bin_cited_present_in_the_fixtures_bin_passes(fx):
     fx.write("claude/.claude/docs/a.md", "Run `~/.local/bin/example-tool` to apply it.\n")
     fx.write_bin("example-tool")
