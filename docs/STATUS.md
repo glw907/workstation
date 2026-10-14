@@ -1,9 +1,9 @@
 # Status
 
-Dotfiles and machine configuration for one Bluefin DX workstation
-(`thinkpad-x1`, Fedora 44 base, `bootc`/`ostree`). GNU Stow links tracked
-config into `$HOME`; `bluefin/` holds the fresh-machine provisioning
-artifacts. github.com/glw907/workstation.
+Dotfiles and machine configuration for two Bluefin DX workstations, the
+`thinkpad-x1` laptop and the `pavilion` desktop (Fedora 44 base,
+`bootc`/`ostree`). GNU Stow links tracked config into `$HOME`; `bluefin/`
+holds the fresh-machine provisioning artifacts. github.com/glw907/workstation.
 
 ## Current state
 

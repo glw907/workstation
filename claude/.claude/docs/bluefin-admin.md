@@ -1,9 +1,11 @@
-# Bluefin DX admin reference: thinkpad-x1
+# Bluefin DX admin reference
 
 Standing reference for administering the Bluefin DX system (stable stream, Fedora 44
 base). Read this before installing software, editing `/etc`, running an update,
 touching browser configuration, installing or receiving a secret, or using `gws` on
-this machine.
+either workstation. It covers both `thinkpad-x1` (laptop) and `pavilion` (desktop); a fact
+that holds on one host only names that host, and `bluefin/SECOND-WORKSTATION.md` records
+pavilion's differences.
 
 The Mint-era `chromium-browser.md` was retired 2026-08-30 (recoverable from git
 history); this file's Browsers section is the authority. The old file's

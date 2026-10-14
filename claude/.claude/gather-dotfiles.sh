@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 # Surface shell-environment drift for Claude context: exports, aliases, and
-# shell functions only. The machine inventory lives in CLAUDE.md; this exists
-# to catch what changed since that file was last updated.
+# shell functions, after a line naming the host. The machine inventory lives in
+# CLAUDE.md; this exists to catch what changed since that file was last updated.
 
+# Two workstations share this config, so the host is read here, never from a doc.
+case $(cat /sys/class/dmi/id/chassis_type 2>/dev/null) in
+    8|9|10|14|31|32) form=laptop ;;
+    3|4|5|6|7|13|15|35|36) form=desktop ;;
+    *) form=unknown ;;
+esac
+echo "## Host: $(hostname) ($(cat /sys/class/dmi/id/product_name 2>/dev/null), $form)"
+echo ""
 echo "## Shell Environment (drift check; canonical inventory is CLAUDE.md)"
 echo ""
 

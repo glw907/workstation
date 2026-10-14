@@ -1,7 +1,8 @@
 # Workstation Configuration
 
-Dotfiles and machine configuration for a single Bluefin DX workstation
-(`thinkpad-x1`, Fedora 44 base, `bootc`/`ostree`), managed with
+Dotfiles and machine configuration for two Bluefin DX workstations
+(`thinkpad-x1`, a ThinkPad X1 laptop, and `pavilion`, an HP desktop; Fedora 44
+base, `bootc`/`ostree`), managed with
 [GNU Stow](https://www.gnu.org/software/stow/). The repo tracks two things:
 the dotfiles Stow links into `$HOME`, and the machine-provisioning artifacts
 that bring a fresh Bluefin install to a working state.

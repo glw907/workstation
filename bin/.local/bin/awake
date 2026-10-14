@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# awake: run a command while holding the laptop awake, then release.
+# awake: run a command while holding the machine awake, then release.
 #
 # Usage: awake [--who NAME] [--why TEXT] -- <command...>
 #

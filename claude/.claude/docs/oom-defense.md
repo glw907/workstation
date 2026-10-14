@@ -91,7 +91,7 @@ This is a **manager-level** setting (not a per-unit drop-in — confirmed `OOMPo
 
 **Deployment order**: land layer 4 first (cheapest, directly fixes the confirmed bug, no reboot); land layer 3 next (prevents the trigger from firing programmatically); land layer 1 last or opportunistically at a natural reboot (headroom, not a fix by itself). Layer 2 is a no-op by design — resist the urge to touch it.
 
-**Flag**: nothing above loosens systemd-oomd's kill posture on a 15GB laptop — the one option that would (raising `ManagedOOMMemoryPressureLimit`) is explicitly rejected in the table. `DefaultOOMPolicy=continue` is the one setting with a real, if narrow, downside: any single-process user unit that dies to the OOM killer now logs-and-continues rather than transitioning cleanly through systemd's normal failure/restart bookkeeping for that unit; for interactive multi-process terminal scopes (this machine's actual failure mode) that trade is correct and matches upstream's own post-253 choice for login sessions.
+**Flag**: nothing above loosens systemd-oomd's kill posture on a 15GB workstation — the one option that would (raising `ManagedOOMMemoryPressureLimit`) is explicitly rejected in the table. `DefaultOOMPolicy=continue` is the one setting with a real, if narrow, downside: any single-process user unit that dies to the OOM killer now logs-and-continues rather than transitioning cleanly through systemd's normal failure/restart bookkeeping for that unit; for interactive multi-process terminal scopes (this machine's actual failure mode) that trade is correct and matches upstream's own post-253 choice for login sessions.
 
 ---
 

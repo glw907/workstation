@@ -208,7 +208,7 @@
   "agentPushNotifEnabled": true,
   "autoMode": {
     "environment": [
-      "### Machine-wide (thinkpad-x1; per-repo trust lives in each repo's own .claude/settings.json)",
+      "### Machine-wide (both workstations, thinkpad-x1 and pavilion; per-repo trust lives in each repo's own .claude/settings.json)",
       "**Organization**: None configured",
       "**Cloud provider(s)**: Cloudflare (glw907 account, id 120c269ad6d3dfbe6d63a0bb53758ca0) — Workers, DNS/zones, Access, D1, R2",
       "**Repository visibility**: VARIES BY REPO — verify with `gh repo view --json visibility` before treating any repo as private. Known public: ~/.dotfiles (github.com/glw907/workstation) — its full history is world-readable; never commit secrets, tokens, personal data, or browser/state dumps there (enforced by claude-secret-guard hook + gitleaks + GitHub push protection)",
