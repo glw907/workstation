@@ -70,7 +70,9 @@ below with this register's path, `~/.claude/docs/voice/approval-brief.md`. The p
   - At most one `### Worth knowing`: a paragraph.
   - Zero or more `### <label>` detail sections. Each opens with a paragraph whose first
     sentence is the row summary shown while the row is closed. After that paragraph a section
-    may hold lists, code blocks, and more paragraphs, and the page shows them all.
+    may hold lists, code blocks, tables, and more paragraphs, and the page shows them all. A
+    section may open with a table instead, such as a score; its closed row shows the label
+    alone, so prefer a lead sentence whenever one can say what the table shows.
 - Headings match their exact spelling, case included.
 - The brief ends at the next `## ` heading. Everything after it is the technical notes.
 - A triage file is `{headline, lede, rows: [{action, why, detail, proposed}]}`. `detail` is
@@ -95,7 +97,8 @@ below with this register's path, `~/.claude/docs/voice/approval-brief.md`. The p
 | A heading that matches a contract heading only when case is ignored | Refuse: "write it as `### What changes`" (the exact spelling) |
 | `### Decide:` with no title, fewer than two choices, or two `(recommended)` | Refuse, naming the block and the defect |
 | A `Source:` line joined to the paragraph above it | Refuse: "`Source:` must stand as its own paragraph" |
-| A detail section that does not open with a paragraph | Refuse, naming the label |
+| A detail section that opens with neither a paragraph nor a table | Refuse, naming the label |
+| A detail section that opens with a table | Accept; the closed row shows the label alone |
 | A block after the one list under `### What changes` or `### If you approve`, or after the one paragraph under `### Worth knowing` | Refuse: "holds only its list" (or "paragraph"); move the rest to a detail section |
 | CRLF line endings | Accept (normalized) |
 | Triage: not valid JSON | Refuse: "not valid JSON" |
