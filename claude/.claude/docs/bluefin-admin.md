@@ -191,6 +191,7 @@ one-line fix — write the change into the dotfiles copy, then apply it, so the 
 stays the record of what's actually on disk. Current captured files:
 
 - `bluefin/etc/chromium-policies/*.json` → `/etc/chromium/policies/managed/`
+- `bluefin/etc/firefox-policies/policies.json` → `/etc/firefox/policies/` (Kagi as the default search engine and homepage; Geoff, 2026-10-13)
 - `bluefin/etc/udev/51-android.rules` → `/etc/udev/rules.d/`
 - `bluefin/etc/systemd/logind.conf.d/10-lid-ignore.conf` → `/etc/systemd/logind.conf.d/` (thinkpad-x1 only; pavilion has no lid and never installs it; lid close never suspends, Geoff 2026-09-12; after a change: `sudo -A systemctl kill -s HUP systemd-logind`) <!-- host-ok -->
 - `bluefin/etc/systemd/user.conf.d/10-oom-continue.conf` and
