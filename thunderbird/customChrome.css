@@ -426,3 +426,32 @@ progress::-moz-progress-bar {
 .secure-connection-icon {
 	fill: var(--gnome-success) !important;
 }
+
+/* The reader's header: the sender's name leads and everything else is
+ * secondary. Thunderbird sets the name at 500 weight and 105%
+ * (messageHeader.css:997-1000); the 600 weight and the dimmed address and
+ * date answer those. The labels keep --message-header-label-opacity
+ * (messageHeader.css:19) with no extra dimming. */
+.recipient-multi-line-name,
+.recipient-single-line {
+	font-weight: 600 !important;
+}
+
+.recipient-multi-line-address {
+	opacity: 0.75 !important; /* answers messageHeader.css:1002-1004 (0.9) */
+}
+
+.message-header-datetime {
+	opacity: 0.75 !important; /* answers messageHeader.css:461 */
+}
+
+/* The flagged star in the header. The theme fills it with the toolbar icon
+ * fill at (1,2,1) (icons.css:15 with :36-37), and Thunderbird fills it orange
+ * with !important at messageHeader.css:722-727. The :not(#hack) copy raises
+ * this rule above both, and --gnome-toolbar-star-button already carries
+ * --mail-attention (set above for the list). */
+button.email-action-flagged#starMessageButton.flagged:not(#hack) {
+	-moz-context-properties: fill, stroke !important;
+	fill: var(--mail-attention) !important;
+	stroke: var(--mail-attention) !important;
+}

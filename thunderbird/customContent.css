@@ -172,3 +172,77 @@
 		color: var(--gnome-error) !important;
 	}
 }
+
+/* Message bodies. libmime links messageBody.css as an author sheet, so every
+ * rule here carries !important, which a user sheet wins over author
+ * !important. Each rule is scoped by the body class libmime gives the message
+ * (.moz-text-plain, .moz-text-flowed, .moz-text-html), so the sender's HTML
+ * design and web pages stay untouched. The roles come from nord.css and flip
+ * with the dark reader through its own condition (messageBody.css:109). */
+
+/* Quote text returns to the body colour. messageQuotes.css:37 forces
+ * --color-text-highlight (blue) onto every cite quote with !important. */
+:is(.moz-text-plain, .moz-text-flowed, .moz-text-html) blockquote[type="cite"] {
+	color: inherit !important;
+}
+
+/* Quote bars: 3 px nord8 at level 1, fading at levels 2 and 3 and deeper.
+ * messageQuotes.css:38 sets 2 px sky blue and :41-57 colours levels 2 to 5,
+ * and messageBody.css:89-92 removes the border with graphical quotes off, so
+ * the plain-text scope leaves that case alone. Depth counts through both quote
+ * kinds, so a Gmail quote inside a cite quote is level 2. Each level adds an
+ * ancestor, so its selector outweighs the one before. */
+:is(.moz-text-flowed, .moz-text-html, .moz-text-plain:not([graphical-quote="false"])) blockquote[type="cite"] {
+	border-inline-start: 3px solid var(--mail-body-accent) !important;
+}
+
+:is(.moz-text-flowed, .moz-text-html, .moz-text-plain:not([graphical-quote="false"])) :is(blockquote[type="cite"], blockquote.gmail_quote) blockquote[type="cite"] {
+	border-inline-start-color: var(--mail-quote-2) !important;
+}
+
+:is(.moz-text-flowed, .moz-text-html, .moz-text-plain:not([graphical-quote="false"])) :is(blockquote[type="cite"], blockquote.gmail_quote) :is(blockquote[type="cite"], blockquote.gmail_quote) blockquote[type="cite"] {
+	border-inline-start-color: var(--mail-quote-3) !important;
+}
+
+/* Gmail's quote has an inline 1 px #ccc left border and no type=cite. Only
+ * the bar's colour and width change; margin and padding stay the sender's. */
+.moz-text-html blockquote.gmail_quote {
+	border-left-color: var(--mail-body-accent) !important;
+	border-left-width: 3px !important;
+}
+
+.moz-text-html :is(blockquote[type="cite"], blockquote.gmail_quote) blockquote.gmail_quote {
+	border-left-color: var(--mail-quote-2) !important;
+}
+
+.moz-text-html :is(blockquote[type="cite"], blockquote.gmail_quote) :is(blockquote[type="cite"], blockquote.gmail_quote) blockquote.gmail_quote {
+	border-left-color: var(--mail-quote-3) !important;
+}
+
+/* Signatures dim to 0.6, and to 0.75 under the dark reader's own condition.
+ * messageQuotes.css:22-28 sets 0.6 on the same elements. */
+:is(.moz-text-plain, .moz-text-flowed) :is(.moz-txt-sig, .moz-signature),
+pre.moz-signature {
+	opacity: 0.6 !important;
+}
+
+@media (prefers-color-scheme: dark) and -moz-pref("mail.dark-reader.enabled") {
+	:is(.moz-text-plain, .moz-text-flowed) :is(.moz-txt-sig, .moz-signature),
+	pre.moz-signature {
+		opacity: 0.75 !important;
+	}
+}
+
+/* Plain-text links: nord8, underlined. Under the dark reader messageBody.css:248-250
+ * colours every a:link with --color-text-highlight-dark; the variable below
+ * moves that cyan to the dark body form of nord8, which reaches HTML mail
+ * links too (the only other reader of the variable is colors.css:196, which
+ * feeds the quote colour replaced above). */
+:root {
+	--color-text-highlight-dark: oklab(from var(--nord8) max(l, 0.85) a b) !important;
+}
+
+:is(.moz-text-plain, .moz-text-flowed) a[class^="moz-txt-link-"] {
+	color: var(--mail-body-accent) !important;
+	text-decoration: underline !important;
+}
