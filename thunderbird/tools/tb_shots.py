@@ -278,9 +278,10 @@ def main(argv=None):
     # The dark system with the reader toggled off shows a white body.
     set_mode(h, "dark")
     h.js('Services.prefs.setBoolPref("mail.dark-reader.enabled", false);')
-    select(h, "m03@example.com")
-    select(h, READER_CASES["plain"])
-    h.shot(out, "reader-plain-dark-reader-off")
+    for case in ("plain", "flowed", "html-cite", "gmail"):
+        select(h, "m03@example.com")
+        select(h, READER_CASES[case])
+        h.shot(out, f"reader-{case}-dark-reader-off")
     h.js('Services.prefs.clearUserPref("mail.dark-reader.enabled");')
 
     for note in h.notes:

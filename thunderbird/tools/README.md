@@ -31,8 +31,9 @@ mode `light`, `dark`, or `dark-reader-off`:
   shots use a 1600 by 2000 window so every card shows.
 - `reader-plain`, `reader-flowed`, `reader-html-cite`, `reader-gmail`,
   `reader-yahoo`, `reader-outlook`, and `reader-flagged-tagged` (the header),
-  in light and dark at 1600 by 1000. `reader-plain-dark-reader-off` is a dark
-  system with the dark reader toggled off.
+  in light and dark at 1600 by 1000. The `reader-<case>-dark-reader-off` shots
+  (plain, flowed, HTML cite, Gmail) use a dark system with the dark reader
+  toggled off.
 
 ## Checking an install
 
