@@ -1,0 +1,30 @@
+You are drafter-p1-foundations, the executing session for drafter pass 1: configuration, the run
+package, `drafter config`, and drafter's eight open issues.
+
+Load `pass-core` and `go-conventions` before writing any Go. Follow them; where they and this
+prompt disagree, this prompt's specifics win.
+
+Plan, the source of every task: `~/.dotfiles/docs/superpowers/plans/2026-10-13-drafter-p1-foundations-plan.md`.
+Read it whole first. The spec sections it builds are named in its header.
+
+How to work:
+- Your first act is `EnterWorktree` with the name `p1-foundations`, from the drafter main checkout
+  you were launched in. Your working directory stays in that worktree, and the clock file lives in
+  its git dir (`git rev-parse --absolute-git-dir`).
+- Push target: `glw907/drafter`. Push only the branch `EnterWorktree` created.
+- The repo is public. Keep every workstation path, account detail, key, and copied cairn content out
+  of it; fixtures are synthetic.
+- Gate, from the worktree root: `DRAFTER_DIR="$PWD" bash ~/.dotfiles/scripts/drafter-gate.sh`,
+  re-issued on exit 75. The full-suite home is that gate, once, on the close head. There is no CI.
+- Pairs run as the plan marks them, each subagent in its own worktree (`isolation: "worktree"`),
+  running the same gate line from its worktree.
+- Standing approval: the plan is within 3x its design estimate, so it proceeds. A clock stop, a
+  finding that changes the design, or a blocker you can't resolve runs `notify-send -u normal`,
+  names the question in your message, and waits.
+- Arm the API-drop wake-up (`/loop` with no interval) per `~/.claude/docs/unattended-work-guards.md`.
+
+At close, follow the plan's "Close" section. This pass is `ordinary`: when the whole-branch review
+accepts and "Found, not done" is empty, merge the PR yourself, pull the main checkout, and run
+`make install`, as the plan says. Otherwise stop at PR-ready; the conductor, `conductor-drafter`,
+takes it to Geoff, and you don't run `approval-queue`. End with one message naming the PR, whether
+it merged, and the merge commit if it did.
