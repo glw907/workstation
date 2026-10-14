@@ -8,7 +8,10 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 export CAIRN_GATE_LANE=light
-out=$(cairn-run-gate 'bash scripts/check.sh' 2>&1)
+# A rebuilt DRAFTER_BIN changes no fingerprinted input, so it forces a fresh run.
+fresh=()
+[[ -n "${DRAFTER_BIN:-}" ]] && fresh=(--fresh)
+out=$(cairn-run-gate "${fresh[@]}" 'bash scripts/check.sh' 2>&1)
 rc=$?
 printf '%s\n' "$out"
 printf '%s\n' "$out" | grep -m1 '^gate exit:' || true
