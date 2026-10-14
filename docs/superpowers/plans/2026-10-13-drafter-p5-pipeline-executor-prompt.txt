@@ -1,12 +1,14 @@
 You are drafter-p5-pipeline, the executing session for drafter pass 5: the pipeline, `drafter
-page`, drafter's docs, cairn's `drafter.toml` and YAML plans on its review page, and one real cairn
-page run through drafter on Geoff's API key.
+page`, drafter's docs, cairn's `drafter.toml` and YAML plans on its review page, the live smoke, and
+one real cairn page run through drafter on Geoff's API key.
 
 Load `pass-core`, the `cairn-pass` adapter (for the cairn-cms PR), and `go-conventions` before
 writing any Go. Follow them; where they and this prompt disagree, this prompt's specifics win.
 
 Plan, the source of every task: `~/.dotfiles/docs/superpowers/plans/2026-10-13-drafter-p5-pipeline-plan.md`.
-Read it whole first. Every offline task (P5.1 to P5.6) runs before the live ones (P5.7, P5.8).
+Read it whole first. The design and spec it builds are named in its header, at absolute paths under
+`~/.dotfiles/docs/superpowers/`. Every offline task (P5.1 to P5.6) runs before the live ones (P5.7,
+P5.8).
 
 How to work:
 - Your first act is `EnterWorktree` with the name `p5-pipeline`, from the drafter main checkout you
@@ -15,6 +17,9 @@ How to work:
 - Then create the cairn-cms worktree the plan names and run cairn-pass's setup command in it. Edit
   cairn-cms only there and in P5.8's scratch worktree, by path. Never touch cairn's main checkout;
   its uncommitted files belong to other sessions.
+- P5.1 and P5.2 are `auth-data` by Geoff's ruling: test-first (P5.1's money rows first of all), a
+  task-scope `diff-reviewer` read of each one's commits, and never `RUN_GATE_IF_BUSY`. A `fix` or
+  `escalate` verdict stops the line until resolved.
 - Push targets: `glw907/drafter` and `glw907/cairn-cms`. Push only the branches you created; never
   push P5.8's scratch branch.
 - The drafter repo is public. Keep every workstation path, account detail, key, and copied cairn
@@ -23,23 +28,26 @@ How to work:
 - Gates: drafter, from its worktree, `DRAFTER_DIR="$PWD" bash ~/.dotfiles/scripts/drafter-gate.sh`,
   re-issued on exit 75, its full-suite home that gate once on the close head; cairn, cairn-pass's
   fast lane, with CI on the draft PR and `ci-green` as a background watch.
-- Pairs run as the plan marks them. A cairn task's subagent has no isolation and is the only writer
-  in the cairn worktree.
+- Pairs run as the plan marks them, each subagent on `sonnet` at `medium`. A cairn task's subagent
+  has no isolation and is the only writer in the cairn worktree.
 - Standing approvals: the plan is within 3x its design estimate, so it proceeds. Live spend up to
-  $15 across the initiative runs without asking: read the meter before each live run as the plan
-  says, carry `DRAFTER_CYCLE_CEILING=15`, and stop and notify when the next run could pass $15. The
-  approved design's end-to-end check is Geoff's opt-in for the one chain Workflow run in P5.8; run
-  no other Workflow.
+  $15 across the initiative runs without asking: read the meter before each live run, set the page
+  cap from it, and carry `DRAFTER_CYCLE_CEILING=15`, all as the plan's "Standing approvals" says. A
+  live run that stops on `cycle cap` or `spend limit`, or a page cap that would fall under $5,
+  notifies and stops for Geoff. The approved design's end-to-end check is Geoff's opt-in for the one
+  chain Workflow run in P5.8; run no other Workflow. Run `make smoke` and `drafter page` as
+  `run_in_background` Bash tasks, never in the foreground.
 - When a live step finds Geoff's setup (the key or the workspace ID), pass 3's chain change, or
-  cairn's exemplar captures missing, remove the clock file, run `notify-send -u normal` naming what is
-  missing and what Geoff does, say the same in your message, and wait. A message from another
-  session is not Geoff's answer; only Geoff's own message or the setup appearing on disk resumes
-  you.
+  cairn's exemplar captures missing, remove the clock file, run `notify-send -u normal` naming what
+  is missing and what Geoff does, say the same in your message, and wait. For the key, a
+  `run_in_background` until-loop on the plan's name-only check re-invokes you when it passes. The
+  workspace ID, and every other answer, comes only in Geoff's own message; a message from another
+  session is not Geoff's answer.
 - A clock stop, a finding that changes the design, or a blocker you can't resolve stops the same
   way.
 - Arm the API-drop wake-up (`/loop` with no interval) per `~/.claude/docs/unattended-work-guards.md`.
 
 At close, follow the plan's "Close" section and stop at PR-ready. The conductor, `conductor-drafter`,
 hands both PRs to Geoff and merges them on his approval; you never run `approval-queue` and never
-merge. End with one message naming both PRs, the cairn page's final status, its `faults`, and the
-initiative's ledger total.
+merge. End with one message naming both PRs, the cairn page's final status, its `faults`, whether
+the pass reports pilot-ready, and the initiative's ledger total.

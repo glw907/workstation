@@ -93,8 +93,8 @@ The pilot itself, cutover, and sub-projects 2 to 5. Figure and rework pages stay
   7. This machine is `pavilion`, set up 2026-10-12; `~/.local/share/drafter/` and
      `~/.local/share/cairn/` stayed on `thinkpad-x1`. Both were restored 2026-10-13 by rsync over
      a temporary SSH opening, since closed (28 MB and 90 MB, 69 captures). The spike evidence is
-     a reference again; drafter's tests stay synthetic, since the repo is public. `tellgrader` is
-     not installed here: pass 5 installs it before its live run.
+     a reference again; drafter's tests stay synthetic, since the repo is public. `tellgrader` was
+     missing here; the planning session installed it the same day and recorded it in `bluefin/untracked-bin.txt`.
   8. Plan-review rulings (Geoff, 2026-10-13):
      - Pass 5's reserve-before-submit path and its resume task are `auth-data`.
      - Pass 1's config task stays `ordinary`; its cap, layer-refusal, and ignore-check tests are
