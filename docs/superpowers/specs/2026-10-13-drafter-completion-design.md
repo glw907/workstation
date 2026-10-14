@@ -87,6 +87,26 @@ The pilot itself, cutover, and sub-projects 2 to 5. Figure and rework pages stay
      with one question in STATUS and `notify-send -u normal`.
   4. Pass 5's live steps wait for the key setup. If `DRAFTER_API_KEY` or the workspace ID is
      missing when pass 5 reaches them, the conductor notifies and waits; the offline tasks run first.
+  5. Geoff opts in to one Workflow run: pass 5's end-to-end chain run with `backHalf: "drafter"`
+     on one page. No other Workflow run is approved (2026-10-13).
+  6. `billing_cycle_day` is 1 (2026-10-13).
+  7. This machine is `pavilion`, set up 2026-10-12; `~/.local/share/drafter/` and
+     `~/.local/share/cairn/` stayed on `thinkpad-x1`. Both were restored 2026-10-13 by rsync over
+     a temporary SSH opening, since closed (28 MB and 90 MB, 69 captures). The spike evidence is
+     a reference again; drafter's tests stay synthetic, since the repo is public. `tellgrader` is
+     not installed here: pass 5 installs it before its live run.
+  8. Plan-review rulings (Geoff, 2026-10-13):
+     - Pass 5's reserve-before-submit path and its resume task are `auth-data`.
+     - Pass 1's config task stays `ordinary`; its cap, layer-refusal, and ignore-check tests are
+       written first and named in the close review's dispatch.
+     - The end-to-end check also requires the record to show the round-1 reads ran. An earlier
+       escalation gets one rerun if the budget allows; otherwise the PR says "not pilot-ready"
+       and why.
+     - The $15 stays. A rerun's page cap is set to the budget left, so the ledger itself stops
+       at $15; if that is too little to run, the pass stops for Geoff.
+     - Pass 2's live smoke moves to pass 5 (no key exists before then), and pass 2's PR brief
+       says so up front. The "within 5% of the Console" comparison is done by Geoff at the
+       pass 5 PR read; the PR states pilot-ready conditional on it.
 - Spec: `docs/superpowers/specs/2026-10-12-drafter-pipeline-design.md`, reviewed and folded 2026-10-12. No new spec; each pass plans from its sections. `spec-plan-review` sets plan review depth per pass.
 - Built so far: Pass 0 (drafter#1, workstation#36) and F1 (drafter#6), `internal/plan` only.
 - Recent actuals: Pass 0 ran about 64 minutes of clock against 685 task-minutes; F1 about 35 against 175. The estimates above sit between those actuals and the planned figures.
