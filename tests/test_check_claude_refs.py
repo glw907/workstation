@@ -32,6 +32,9 @@ import atexit, json, os, runpy, sys, sysconfig
 log = os.environ["RATCHET_AUDIT_LOG"]
 own = {os.path.realpath(sysconfig.get_paths()[k])
        for k in ("stdlib", "platstdlib", "purelib", "platlib")}
+# A layered environment (uv run --with) puts more site-packages on sys.path than sysconfig
+# names, and the import system lists them; those reads are the interpreter's, not the tool's.
+own |= {os.path.realpath(p) for p in sys.path if os.path.basename(p) == "site-packages"}
 seen = []
 def note(p):
     if isinstance(p, int) or p is None:
@@ -173,6 +176,17 @@ def test_f1_doc_deleted_only_in_the_fixture_tree_is_a_dead_path(fx):
     assert proc.returncode == 1
     assert "new violation" in out(proc)
     assert "~/.claude/docs/gone.md" in out(proc)
+
+
+def test_a_host_only_span_on_a_host_ok_line_passes_and_its_twin_fails(fx):
+    fx.write("claude/.claude/docs/a.md",
+             "Laptop only: `/etc/nothing-here.d/` <!-- host-ok -->\n"
+             "Everywhere: `~/nothing-here/`\n")
+    fx.baseline([])
+    proc = fx.check()
+    assert proc.returncode == 1
+    assert "~/nothing-here/" in out(proc)
+    assert "/etc/nothing-here.d/" not in out(proc)
 
 
 def test_f2_local_bin_cited_present_in_the_fixtures_bin_passes(fx):

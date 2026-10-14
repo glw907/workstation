@@ -22,6 +22,7 @@ These were settled with Geoff on 2026-10-12. Follow them, don't reopen them.
 | Username | `glw907`, so every `/var/home/glw907` path, Claude memory key, and the GDM auto-login file carry over unchanged |
 | Image | `bluefin-dx-nvidia-open:stable` for the GTX 1660 Super. The install used the Intel/AMD ISO, so Part 1 switches images in place of the `devmode` rebase |
 | Lid handling | Not installed. `bluefin/etc/systemd/logind.conf.d/10-lid-ignore.conf` is laptop-only, and no phase installs it |
+| Host identity | Shared files name no single host. The global CLAUDE.md and `bluefin-admin.md` cover both machines, and a fact true on one host names that host. The SessionStart hook (`~/.claude/gather-dotfiles.sh`) prints a `## Host` line from `hostname` and the DMI product name, so a session reads its host from the machine, never from a doc. Added 2026-10-13, after a pavilion session took the old "Workstation: thinkpad-x1" header at its word and reasoned about laptop RAM |
 | Awake hooks | Kept. `claude-awake-holder` finds no battery and never trips its floor; the inhibitors still block idle suspend |
 | GDM auto-login | Mirrored from the laptop (LUKS guards the disk) |
 | Laptop-only state | Arrives in an age-encrypted handoff bundle on R2, built on thinkpad-x1 |
@@ -30,7 +31,7 @@ These were settled with Geoff on 2026-10-12. Follow them, don't reopen them.
 ## Hardware
 
 The machine is an HP Pavilion Gaming Desktop TG01-2xxx: 16 GB of DDR4-3200
-in two slots (32 GB maximum), a 512 GB NVMe SSD, a 32 GB Intel Optane module,
+in two slots (64 GB maximum, as 2×32 GB), a 512 GB NVMe SSD, a 32 GB Intel Optane module,
 and an Nvidia GTX 1660 Super, on BIOS F.24. Three things blocked the
 2026-10-12 install, and a fourth hung most boots afterwards. A reinstall hits
 all four again.
@@ -266,8 +267,9 @@ the rest unless the step says it is a hard stop.
 10. Verify. Run `check-drift` and `claude-tooling-sync verify`, then confirm
     each of these: `gh auth status`, `systemctl --user list-timers` shows
     check-drift, model-review, vdirsyncer, and cairn-tripwire,
-    `hostnamectl` shows `pavilion`, and `ls ~/.claude/projects/*/memory`
-    lists the carried memory. Fix any drift that a step above should have
+    `hostnamectl` shows `pavilion`, a new Claude session opens with
+    `## Host: pavilion`, and `ls ~/.claude/projects/*/memory` lists the
+    carried memory. Fix any drift that a step above should have
     covered. Report the rest to Geoff with the Part 3 list.
 
     Also confirm Homebrew's `git` can reach GitHub over HTTPS, since
@@ -383,7 +385,14 @@ the rest unless the step says it is a hard stop.
    cur=$(/usr/bin/gsettings get org.gnome.shell enabled-extensions)
    /usr/bin/gsettings set org.gnome.shell enabled-extensions "${cur%]}, 'upower-battery@codilia.com']"
    ```
-7. Optional: install the Android SDK (see `README.md`, Android) and pair
+7. Install the Android SDK (Geoff, 2026-10-13: both hosts carry it). Take
+   the Linux command-line tools archive and its SHA-256 from
+   developer.android.com/studio, check it with `sha256sum -c`, and unzip its
+   `cmdline-tools` folder to `~/Android/cmdline-tools/latest`. Then run
+   `yes | sdkmanager --licenses` and `sdkmanager platform-tools
+   "platforms;android-36" "build-tools;37.0.0"` (the newest stable at the
+   time). `.bashrc` sets `JAVA_HOME` to Homebrew's keg-only `openjdk@17`,
+   which `sdkmanager` needs. Done on pavilion 2026-10-13. Optionally, pair
    Syncthing at `http://127.0.0.1:8384`.
 8. Shut down fully and power on, so the zram and OOM drops take effect, and
    confirm GDM logs straight in. A cold start also tests the BIOS

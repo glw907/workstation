@@ -1,4 +1,4 @@
-# Global Claude Code Patterns -- Workstation: thinkpad-x1
+# Global Claude Code Patterns
 
 ## Work Autonomously Until Done
 
@@ -31,6 +31,9 @@ verify it, report verified.
 
 ## Machine Environment
 
+- **Hosts**: two workstations share this file, `thinkpad-x1` (ThinkPad X1 laptop) and `pavilion`
+  (HP Pavilion desktop). The SessionStart hook's `## Host` line names the one you are on; never
+  infer the host from a doc.
 - **OS**: Bluefin DX, `stable` stream (Fedora 44 base, bootc/ostree)
 - **Desktop**: GNOME (Wayland) | **Shell**: bash | **Terminal**: Ptyxis. kitty exists only for
   the `tui-visual-verify` gate, never the daily terminal.

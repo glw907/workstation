@@ -33,7 +33,7 @@
 # Memory: the gate runs in a transient user scope capped by CAIRN_GATE_MEMORY_HIGH (7G),
 # CAIRN_GATE_MEMORY_MAX (8G), and CAIRN_GATE_SWAP_MAX (4G); override per call as needed.
 # Lanes: gates queue on one machine-wide lock per lane. The default lane, heavy, is for a
-# browser-bearing gate that peaks near the laptop's RAM. CAIRN_GATE_LANE=light is for a gate
+# browser-bearing gate that peaks near the machine's RAM. CAIRN_GATE_LANE=light is for a gate
 # that launches no browser (a Go `make check`, a lint-only run): it queues on its own lock, so
 # it never waits behind a browser gate, and it runs under a smaller cap (2G high, 3G max, 1G
 # swap) so one light gate beside one heavy gate still fits in RAM. Light gates serialize among
@@ -302,7 +302,7 @@ if [ ! -e "$pidfile" ]; then
       -p "MemoryMax=${CAIRN_GATE_MEMORY_MAX:-$mem_max}"
       -p "MemorySwapMax=${CAIRN_GATE_SWAP_MAX:-$swap_max}")
   fi
-  # One gate per machine at a time: a browser-bearing gate peaks near the laptop's RAM, so
+  # One gate per machine at a time: a browser-bearing gate peaks near the machine's RAM, so
   # concurrent gates from parallel chains queue on a shared lock instead of running side
   # by side. A browserless gate takes the light lane instead of waiting behind a browser.
   # The heavy lane keeps the original lock file name, so a gate started by an older copy of
@@ -314,7 +314,7 @@ if [ ! -e "$pidfile" ]; then
   else
     lock=(flock "$gatedir/machine.lock")
   fi
-  # Hold the laptop awake for exactly as long as the gate itself runs (inside the lock and
+  # Hold the machine awake for exactly as long as the gate itself runs (inside the lock and
   # the scope, so a queued gate holds nothing). A suspend mid-gate froze an overnight gate on
   # 2026-09-23. awake never fails the command; empty prefix where it is absent.
   keep_awake=()
