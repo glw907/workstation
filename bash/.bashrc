@@ -173,6 +173,8 @@ fi
 
 # Android SDK
 export ANDROID_HOME="$HOME/Android"
+# openjdk@17 is keg-only, so sdkmanager finds Java only through JAVA_HOME.
+export JAVA_HOME="/home/linuxbrew/.linuxbrew/opt/openjdk@17"
 export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
 
 # SSH Agent (auto-start for GitHub authentication)

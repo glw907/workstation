@@ -385,7 +385,14 @@ the rest unless the step says it is a hard stop.
    cur=$(/usr/bin/gsettings get org.gnome.shell enabled-extensions)
    /usr/bin/gsettings set org.gnome.shell enabled-extensions "${cur%]}, 'upower-battery@codilia.com']"
    ```
-7. Optional: install the Android SDK (see `README.md`, Android) and pair
+7. Install the Android SDK (Geoff, 2026-10-13: both hosts carry it). Take
+   the Linux command-line tools archive and its SHA-256 from
+   developer.android.com/studio, check it with `sha256sum -c`, and unzip its
+   `cmdline-tools` folder to `~/Android/cmdline-tools/latest`. Then run
+   `yes | sdkmanager --licenses` and `sdkmanager platform-tools
+   "platforms;android-36" "build-tools;37.0.0"` (the newest stable at the
+   time). `.bashrc` sets `JAVA_HOME` to Homebrew's keg-only `openjdk@17`,
+   which `sdkmanager` needs. Done on pavilion 2026-10-13. Optionally, pair
    Syncthing at `http://127.0.0.1:8384`.
 8. Shut down fully and power on, so the zram and OOM drops take effect, and
    confirm GDM logs straight in. A cold start also tests the BIOS

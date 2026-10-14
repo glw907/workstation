@@ -158,7 +158,7 @@ it's critical. Keep it that way in every change.
 
 Homebrew's `glib` (a dependency of cairo, ffmpeg, and others, so it stays) puts
 its own `gsettings` first on PATH. That build has no dconf module, so every
-`set` silently lands in a GLib keyfile under `~/.config/glib-2.0/`, which the desktop
+`set` silently lands in a GLib keyfile under `~/.config/glib-2.0/`, which the desktop <!-- host-ok -->
 never reads, and every `get` reads the same keyfile back, so a check looks
 green while the live desktop is unchanged. Found 2026-09-29, when the manifest's
 AC-suspend setting had never applied. Call `/usr/bin/gsettings` by full path.
@@ -192,7 +192,7 @@ stays the record of what's actually on disk. Current captured files:
 
 - `bluefin/etc/chromium-policies/*.json` → `/etc/chromium/policies/managed/`
 - `bluefin/etc/udev/51-android.rules` → `/etc/udev/rules.d/`
-- `bluefin/etc/systemd/logind.conf.d/10-lid-ignore.conf` → `/etc/systemd/logind.conf.d/` (thinkpad-x1 only; pavilion has no lid and never installs it; lid close never suspends, Geoff 2026-09-12; after a change: `sudo -A systemctl kill -s HUP systemd-logind`)
+- `bluefin/etc/systemd/logind.conf.d/10-lid-ignore.conf` → `/etc/systemd/logind.conf.d/` (thinkpad-x1 only; pavilion has no lid and never installs it; lid close never suspends, Geoff 2026-09-12; after a change: `sudo -A systemctl kill -s HUP systemd-logind`) <!-- host-ok -->
 - `bluefin/etc/systemd/user.conf.d/10-oom-continue.conf` and
   `bluefin/etc/systemd/zram-generator.conf.d/10-larger-zram.conf` → the memory-pressure
   defense; see `docs/oom-defense.md` for why they exist before touching either
