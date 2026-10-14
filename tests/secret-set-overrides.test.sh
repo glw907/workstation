@@ -37,7 +37,7 @@ printf '#!/usr/bin/env bash\ntouch "%s/op-called"\nexit 1\n' "$root" > "$root/bi
 chmod +x "$root/bin/op"
 
 out=$(HOME="$home" PATH="$root/bin:$PATH" \
-  VALUES="$root/wt/values.age" LOCAL_SECRETS="$home/.local/secrets" \
+  VALUES="$root/wt/values.age" LOCAL_SECRETS="$root/local-secrets" \
   RECIP="$recip" CACHE="$root/cache" \
   bash "$SCRIPT" RETIRED_ONE --delete 2>&1)
 rc=$?
@@ -47,8 +47,9 @@ names=$(age --decrypt -i "$root/key.txt" "$root/wt/values.age" | cut -d= -f1 | s
 assert_eq "$names" "KEEP_ONE KEEP_TWO " "worktree store drops only the retired name"
 assert_eq "$(sha256sum "$home/.dotfiles/secrets/values.age" | cut -d' ' -f1)" "$main_sum" \
   "fixture main store is byte-identical"
-assert_eq "$(grep -c '^export ' "$home/.local/secrets" 2>/dev/null)" "2" "temp local secrets rewritten from the override store"
-assert_eq "$(grep -c RETIRED_ONE "$home/.local/secrets" 2>/dev/null)" "0" "temp local secrets lacks the retired name"
+assert_eq "$(grep -c '^export ' "$root/local-secrets" 2>/dev/null)" "2" "temp local secrets rewritten from the override store"
+assert_eq "$(grep -c RETIRED_ONE "$root/local-secrets" 2>/dev/null)" "0" "temp local secrets lacks the retired name"
+[ ! -e "$home/.local/secrets" ] || { echo "FAIL: the default local secrets path was written"; fail=1; }
 [ ! -e "$root/op-called" ] || { echo "FAIL: the run reached 1Password"; fail=1; }
 assert_eq "$(mtime "$real_home/.local/secrets")" "$real_secrets_before" "real ~/.local/secrets mtime"
 assert_eq "$(mtime "$real_cache")" "$real_cache_before" "real /dev/shm cache mtime"
