@@ -35,7 +35,9 @@ How to work:
   cap from it, and carry `DRAFTER_CYCLE_CEILING=15`, all as the plan's "Standing approvals" says. A
   live run that stops on `cycle cap` or `spend limit`, or a page cap that would fall under $5,
   notifies and stops for Geoff. The approved design's end-to-end check is Geoff's opt-in for the one
-  chain Workflow run in P5.8; run no other Workflow. Run `make smoke` and `drafter page` as
+  chain Workflow run in P5.8; run no other Workflow. P5.8's one rerun is drafter only, on the same
+  Workflow run file; when another page would be needed, the pass ends "not pilot-ready" and the PR
+  asks Geoff to approve a second Workflow run. Run `make smoke` and `drafter page` as
   `run_in_background` Bash tasks, never in the foreground.
 - When a live step finds Geoff's setup (the key or the workspace ID), pass 3's chain change, or
   cairn's exemplar captures missing, remove the clock file, run `notify-send -u normal` naming what

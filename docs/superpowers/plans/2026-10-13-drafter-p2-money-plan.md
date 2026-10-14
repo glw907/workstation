@@ -81,7 +81,8 @@ these `*Client` methods, and its tests fake it)
 - `type Result struct`: `CustomID`, `MessageID`, `Kind` (`succeeded`, `errored`, `canceled`, or
   `expired`), `StopReason`, `Text`, `ErrType`, `ErrMessage string`, `Usage Usage`. A sync-mode HTTP
   400, 500, or 529 comes back as an `errored` result with the matching `ErrType`, so both modes
-  classify the same way.
+  classify the same way. A spend-limit 400 or 429 is `ErrSpendLimit` on every call, checked before
+  that mapping.
 - `type Batch struct`: `ID string`, `Ended bool`, `CreatedAt time.Time`.
 - `(*Client) CheckWorkspace(ctx) error`: one `GET /v1/models?limit=1` (free) whose
   `anthropic-workspace-id` response header must equal `Options.WorkspaceID`; an absent header is a
@@ -139,9 +140,11 @@ these `*Client` methods, and its tests fake it)
 - `type Settlement struct`: `Entry`, `Intent`, `Key string`, `Usage batch.Usage`, `Cost float64`,
   `Kind string`: `actual`; `estimated` (a sync request whose response was lost, at its share of the
   reservation, `Worst / Requests`); or `void` (an intent that never reached the API, at zero, one
-  line closing the whole intent). The key is `<batch-id>/<custom_id>` in `batch` mode; in `sync`
-  mode the message ID when one arrived, else `<intent>/<custom_id>`; for `void`, `<intent>/void`.
-  `custom_id`s are unique per attempt (pass 5), so no two settlements share a key. Unbilled results
+  line closing the whole intent). The key is `<batch-id>/<custom_id>` in `batch` mode. An `actual` sync
+  settlement keys on its message ID; an `estimated` one always keys `<intent>/<custom_id>`, whatever
+  arrived, so a settle made in the run and repeated on resume is the same line; a `void` one keys
+  `<intent>/void`. `custom_id`s are unique per request and attempt (pass 5), so no two settlements
+  share a key. Unbilled results
   (`errored`, `canceled`, `expired`; the batch guide: "You will not be billed for these requests")
   settle `actual` at zero, so their intent closes.
 - `type Caps struct`: `Page`, `Cycle float64`, `CycleStart time.Time`.
@@ -233,8 +236,10 @@ the test.
     lock call replaced by a no-op, both succeed and the test fails: seen once as a temporary local
     edit, and recorded in the task's commit message.
   - A settle applied twice leaves one line and one cost; `Settle` with an empty `Key` errors.
-  - Two errored sync results under one intent (distinct `custom_id`s, no message ID) leave two
-    lines, and the intent drops to its settled sum; an `estimated` and a `void` settlement each
+  - Two requests of one batch intent, each `errored` and keyed `<batch-id>/<custom_id>`, leave two
+    lines, and the intent drops to its settled sum; an `estimated` sync settlement whose stream
+    carried a message ID keys `<intent>/<custom_id>`, and settling it again after a resume is a
+    no-op; an `estimated` and a `void` settlement each
     count once as written; an `errored` result settled at zero closes its intent.
   - An intent counts at its worst case until its last request settles, then at its settled sum.
   - An intent reserved before `CycleStart` and still open counts in the new cycle; a settle line
@@ -289,8 +294,8 @@ the test.
   - Spend limits: a 429 with `details.error_code` `enforced_spend_limit_reached` and no
     `retry-after` is `ErrSpendLimit` after one hit, message kept; the 400s beginning `You have
     reached your specified API usage limits` and `You have reached your specified workspace API
-    usage limits` are each `ErrSpendLimit`; an `errored` batch result with either message is
-    `ActionSpendLimit`.
+    usage limits` are each `ErrSpendLimit`, on `Create` and on `Send` alike (never an `errored`
+    result); an `errored` batch result with either message is `ActionSpendLimit`.
   - Classify, one row per action: `errored` with `api_error`, `overloaded_error`,
     `invalid_request_error`, `billing_error`, and an empty type; `canceled`; `expired`;
     `stop_reason` `max_tokens`, `model_context_window_exceeded`, `refusal`, `pause_turn`, and
@@ -355,7 +360,9 @@ the test.
 - Acceptance, offline, in the gate against the fake: the shape table holds exactly the seven seats;
   each result parses to its schema; the ledger gains `len(shapes) + 1` settle lines, not zero; each
   line's recorded usage equals the fake's usage block field for field and its cost is above zero;
-  each result's `input_tokens` is at most its counted figure; a recorded, unsettled smoke batch is
+  each result's `input_tokens` is at most its counted figure; the batch's seven `custom_id`s are
+  distinct, and the fake rejects a `Create` whose `custom_id`s repeat, as the API does
+  (`messagebatch.go:346`: "Must be unique for each request within the Message Batch"); a recorded, unsettled smoke batch is
   settled by the next run, once. `go vet -tags smoke ./...` passes.
 - Test: the gate.
 

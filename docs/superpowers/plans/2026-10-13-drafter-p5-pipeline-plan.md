@@ -43,9 +43,9 @@ pilot-ready, conditional on Geoff's Console comparison at the PR read.
   <sha> --pr <n> --wait` as a background watch.
 - Clock file: the drafter worktree's git dir. A wait on Geoff (P5.7 or P5.8) removes the clock
   file first, so the wait never trips the clock stop, and writes a new `start=` when it ends.
-- Path estimate: 610 minutes. P5.1 and P5.5 as a pair (200), P5.2 and P5.6 as a pair (130), P5.3 and
+- Path estimate: 620 minutes. P5.1 and P5.5 as a pair (210), P5.2 and P5.6 as a pair (130), P5.3 and
   P5.4 as a pair (70), P5.7 (40, not counting the wait), P5.8 (120), Close (50). The design's
-  estimate is 240, so the path is 2.5 times it, inside the 3x line (720).
+  estimate is 240, so the path is 2.6 times it, inside the 3x line (720).
 - Pair subagents run on `sonnet` at `medium` with the `description` `p5-pipeline task <n>`.
 - Standing approvals (design, "Technical notes"):
   - The plan proceeds within 3x.
@@ -85,7 +85,9 @@ Creates:
 - `pipeline.API`: the consumer-side interface over `*batch.Client`'s methods (`CheckWorkspace`,
   `CountTokens`, `Create`, `Get`, `Results`, `List`, `Send`), declared here as go-conventions asks,
   since the fake is its second implementation. The fake rejects a `custom_id` that doesn't match
-  `^[a-zA-Z0-9_-]{1,64}$` (the batches create reference, read 2026-10-13).
+  `^[a-zA-Z0-9_-]{1,64}$` (the batches create reference, read 2026-10-13), and a `Create` whose
+  `custom_id`s repeat within the batch (`messagebatch.go:346`: "Must be unique for each request
+  within the Message Batch").
 - `pipeline.Options` (the configuration, the handoffs, the API, the resume run ID, dry run, and a
   clock) and `pipeline.Run(ctx, Options) (Summary, error)`. `Summary` holds each page's final status
   and the run's stop reason, one of: none (the run finished), `cycle cap`, `spend limit`,
@@ -95,10 +97,12 @@ Creates:
   when the run stopped, which outranks 1; 1 when it finished with any page escalated; 0 when every
   page was accepted.
 - `run.State` and `run.PageState` gain the intents (stage, attempt, timestamp, the ledger intent ID,
-  `custom_id`s and the map from each to its page), batch IDs, saved answers, and write hashes resume
-  needs, with `run.StateSchema` bumped. A `custom_id` is `<run ID's random suffix>_<first 12 hex of
-  the SHA-256 of the page key>_<stage>_<attempt>`, inside the API's 64-character pattern for any
-  page path.
+  `custom_id`s and the map from each to its page and seat) and batch IDs, with `run.StateSchema`
+  bumped (P5.1), and the saved answers and write hashes resume needs (P5.2). A `custom_id` is
+  `<run ID's random suffix>_<first 12 hex of the SHA-256 of the page key>_<stage>_<seat>_<attempt>`,
+  its stage and seat tokens limited to `[a-z0-9]`, so the several seats of one stage-4 or stage-7
+  batch get distinct IDs and the longest (`consistency`) stays inside the API's 64-character
+  pattern for any page path.
 - `internal/plan` gains one exported constructor that builds an `Outline` from outline files plus a
   list of repo-relative page paths, for stage 1.
 
@@ -113,7 +117,7 @@ review page's YAML plans, and the ledgers.
 Every drafter task starts by invoking `go-conventions`. The offline tasks (P5.1 to P5.6) all run
 before P5.7. Every pipeline test sets the key variable to a sentinel shaped like an `sk-ant-` key.
 
-### P5.1 The pipeline's stages and stop rules (200 min, auth-data)
+### P5.1 The pipeline's stages and stop rules (210 min, auth-data)
 
 - Order: the money rows (marked "money" below) are written and committed failing first, then the
   rest of the tests, then the code.
@@ -133,8 +137,11 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
     settles: unbilled ones at zero. An `ErrMaybeSent` from `Create` lists, waits on (`Get` until
     ended), and matches batches by `custom_id` through `Results` before anything is resubmitted; an
     unmatched intent settles `void` and its resubmission is a new intent. An `ErrMaybeSent` from
-    `Send` settles that attempt `estimated` and resubmits it as a new attempt. Every resubmission
-    counts against its failures-table budget.
+    `Send` settles that attempt `estimated` and resubmits it as a new attempt. A `Create` or `Send`
+    error that proves the request wasn't billed (a 4xx, `ErrSpendLimit` included; `ErrTransport`;
+    `ErrNoWorkspaceCheck`) settles its intent `void` at once, then takes its failures-table action
+    (a 400 escalates the page with the error), so no reservation stays open after a finished run.
+    Every resubmission counts against its failures-table budget.
   - The round-1 snapshot is written to the run directory and stored with `git hash-object -w --
     <snapshot>`, as the chain does (`docs-page-chain.js:1463`), so a seat input's `git cat-file blob
     {baseline}` reads it.
@@ -165,8 +172,8 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
   - Concurrency: up to `pages_in_flight` pages; in batch mode one sequential poll loop over every
     in-flight batch, in sync mode one streamed request at a time; gates one at a time; no goroutines.
 - Files: `internal/pipeline/` with tests and `testdata/` (a synthetic project, handoffs, a
-  chain-shaped prompts module, and scripted fake API answers); `internal/plan/outline.go` and its
-  test.
+  chain-shaped prompts module, and scripted fake API answers); `internal/run/` (the intent fields
+  and the `StateSchema` bump) and its tests; `internal/plan/outline.go` and its test.
 - Acceptance, the spec's pipeline state machine row and the rows pass 4 left here, against a fake
   `pipeline.API` whose every fallible method carries an error field:
   - Money: a stage whose `CountTokens` puts input under the page cap and input plus `max_tokens`
@@ -178,7 +185,9 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
     line. A `Create` that returns `ErrMaybeSent` after the fake recorded the batch is adopted with no
     second `Create`; its twin, where the fake recorded nothing, resubmits once and voids the first
     intent. A `Send` that returns `ErrMaybeSent` leaves one `estimated` line and one new reserved
-    attempt.
+    attempt. A `Create` that returns a 400 escalates the page with the error, leaves one `void` line,
+    and `OpenIntents` is empty after the run. The three seats of a stage-4 batch, and the requests of
+    a stage-7 batch, carry distinct `custom_id`s.
   - One test per trigger, not per row: the draft's truncated answer, unparseable answer, and
     non-JSON brief; the final read's coverage miss, scoped re-read fix, and retest fix; a round-2
     read missing and one unreadable; a final read missing and one unreadable; `api_error`,
@@ -218,8 +227,9 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
 
 ### P5.2 Run inputs and resume (130 min, auth-data)
 
-- Outcome, in `internal/pipeline` and `internal/run`, following the spec's "Run inputs", "One run
-  per worktree", and "Resume":
+- Outcome, in `internal/pipeline` and `internal/run` (the resume fields: saved answers and write
+  hashes; P5.1 owns the intent fields), following the spec's "Run inputs", "One run per worktree",
+  and "Resume":
   - At start: `run.Prune`; the worktree lock and the run-directory lock; a refusal of a worktree
     with any `git status --porcelain` line, untracked files included; every page listed as
     `pending`; the branch and HEAD in state; the prompts module, each seat's agent definition, and
@@ -389,7 +399,8 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
   When both hold:
   - Write `~/.config/drafter/config.toml`: `workspace_id` as given, `page_cap` 10, `cycle_ceiling`
     160, `key_env` `DRAFTER_API_KEY`, `billing_cycle_day` 1 (ruling 6), and `prices`
-    (`batch_discount` 0.5, and `claude-opus-5-5` and Haiku 5.5 with both its tiers) from the
+    (`batch_discount` 0.5, and `claude-opus-5-5` and Haiku 5.5 with both its tiers, the Haiku entry
+    keyed on the exact model ID the smoke sends, read from `claude-api`'s model table) from the
     published pricing page, read that day, with its URL and date. Cross-check each figure against
     the page as read on 2026-10-13: Opus 5.5 $4 input, $20 output, $5 and $8 cache writes, $0.20
     cache read per million tokens; Haiku 5.5 $0.10, $0.50, $0.125, $0.20, $0.01 up to 100,000 prompt
@@ -440,7 +451,9 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
     and notifies; several takes the newest by mtime, recorded in the PR. No such file existed on this
     machine at planning time, so confirm its `.result.handoff` shape against pass 3's; where it
     differs, fix forward the synthetic fixture and the decoder, with no cairn text in drafter.
-  - Run `drafter page --dry-run --workflow-run <wf-file>` for the first stage's estimate. Read the
+  - Run `bash -c '. ~/.local/secrets && <drafter worktree>/drafter page --dry-run --workflow-run
+    <wf-file>'` from the scratch worktree for the first stage's estimate, since the dry run also
+    resolves the key and checks the workspace. Read the
     meter and set the page cap as "Standing approvals" says. Then run, from the scratch worktree, as
     a `run_in_background` Bash task, `bash -c '. ~/.local/secrets && DRAFTER_CYCLE_CEILING=15
     DRAFTER_PAGE_CAP=<cap> <drafter worktree>/drafter page --workflow-run <wf-file>'` in batch mode.
@@ -451,10 +464,13 @@ before P5.7. Every pipeline test sets the key variable to a sentinel shaped like
     drafter-caused one (a refusal the answer didn't cause, a parse failure of a schema-valid answer)
     is fixed forward in the drafter worktree with a test; a model-caused one, and an escalation
     before the round-1 reads, are recorded with their cause. Then one rerun, when the budget allows
-    (the page cap rule above): the same page after a drafter fix, another qualifying page after an
-    input cause. Before a rerun or the worktree's removal, the earlier run's state shows no open
-    intent; a stopped run is resumed to settle first. A second miss, or no budget, ends the pass
-    with the PR saying "not pilot-ready" and why.
+    (the page cap rule above): drafter only, on the same Workflow run file and page, after a drafter
+    fix or with the input left as is. Ruling 5 approves one Workflow run, so an input cause that
+    needs a different page ends the pass "not pilot-ready", and the PR names the cause and asks Geoff
+    one batched question: approve a second Workflow run on a named qualifying page. Before a rerun or
+    the worktree's removal, the earlier run's state shows no open intent; a stopped run is resumed to
+    settle first. A second miss, or no budget, ends the pass with the PR saying "not pilot-ready" and
+    why.
   - Record in the drafter PR body: the page, its final status, the stop rule if any, `faults` with
     each one's class, the stages reached, and `drafter spend --since <first live date> --until <last
     live date>` by seat, covering every live drafter-workspace spend of the initiative (the smoke
@@ -480,7 +496,7 @@ Push and open the PRs, `glw907/drafter` and `glw907/cairn-cms` (draft until CI i
 each body naming the other. Each opens with `## Brief`. The drafter PR carries what landed, the
 review verdicts, P5.8's record, the smoke result, the score rows (gate time from
 `~/.local/state/cairn-run-gate/runs.jsonl` records whose `gate` names this worktree; the Work and
-review row puts the 610-minute path beside the actual, the wait for Geoff's setup listed as an
+review row puts the 620-minute path beside the actual, the wait for Geoff's setup listed as an
 attended event), and the pilot-ready statement: pilot-ready conditional on Geoff's Console
 comparison within 5%, the one open acceptance item, or "not pilot-ready" with the reason. Its "Found,
 not done" carries a proposed disposition each, including: the user configuration living outside the

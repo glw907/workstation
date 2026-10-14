@@ -331,8 +331,9 @@ None of these edits the spec; each records where the plans narrow or extend
    open intent whenever it was reserved.
 6. "Settings": `index_link_command` is spelled `gate.index_link_command`
    (`DRAFTER_GATE_INDEX_LINK_COMMAND`).
-7. "The ledger": a sync settlement's key is the message ID when one arrived, else
-   `<intent>/<custom_id>`; a void settlement's is `<intent>/void`.
+7. "The ledger": an `actual` sync settlement keys on its message ID; an `estimated` one always
+   keys `<intent>/<custom_id>`; a void settlement's is `<intent>/void` (revised by the verification
+   read, finding 4).
 8. "Resume": "the workspace's batches created after the intent's timestamp" is a client-side filter
    over newest-first pages, with a 10-minute margin for clock skew.
 
@@ -344,6 +345,41 @@ None of these edits the spec; each records where the plans narrow or extend
 | 2 | 180 | 285 | 355 | 2.0 | 540 |
 | 3 | 180 | 275 | 315 | 1.75 | 540 |
 | 4 | 180 | 205 | 285 | 1.6 | 540 |
-| 5 | 240 | 465 | 610 | 2.5 | 720 |
+| 5 | 240 | 465 | 620 | 2.6 | 720 |
 
 No plan crosses Geoff's 3x stop line.
+
+## Verification read
+
+Read: `2026-10-13-drafter-completion-fold-verification.md` (passes 2 and 5, at `d64a88b`). Its
+probes stand as evidence for the mechanisms they cover; the fold checked its finding 1 itself against
+`messagebatch.go:346` ("Must be unique for each request within the Message Batch") and the spec's
+stage 4 ("The structural edit, register editor, and fact read run in one batch").
+
+- v-1 blocker folded: the `custom_id` form gains the seat
+  (`<suffix>_<12 hex>_<stage>_<seat>_<attempt>`, `[a-z0-9]` tokens) and the state map names page and
+  seat (P5 Interfaces); the fake rejects repeated `custom_id`s in one batch (P5 Interfaces, P2.5's
+  fake); P5.1 asserts distinct IDs in stage-4 and stage-7 batches.
+- v-2 major folded: a `Create` or `Send` error that proves no billing (a 4xx, `ErrSpendLimit`
+  included; `ErrTransport`; `ErrNoWorkspaceCheck`) settles its intent `void` at once (P5.1 money
+  path), with a row: a `Create` 400 escalates, leaves one `void` line, and `OpenIntents` is empty.
+- v-3 major folded, with the coordinator's chosen fix: P5.8's rerun is drafter only, on the same
+  Workflow run file and page; an input cause that needs another page ends the pass "not
+  pilot-ready", and the PR asks Geoff to approve a second Workflow run (ruling 5 approves one).
+  P5.8 and the executor prompt.
+- v-4 minor folded: an `estimated` settlement always keys `<intent>/<custom_id>` (P2 Interfaces,
+  P2.2 row); erratum 7 revised.
+- v-5 minor folded: the intent fields and the `StateSchema` bump move to P5.1's Files
+  (`internal/run/`); P5.2 keeps the resume fields.
+- v-6 minor folded: a spend-limit 400 or 429 is `ErrSpendLimit` on every call, checked before the
+  sync `errored` mapping (P2 Interfaces, P2.3 row).
+- v-7 minor folded: P5.8's dry run runs under `bash -c '. ~/.local/secrets && ...'`.
+- v-8 minor folded: P5.7 keys the Haiku price entry on the exact model ID the smoke sends, from
+  `claude-api`'s model table.
+- v-9 optional, folded (a one-row rephrase, clearly right): P2.2's row uses two requests of one
+  batch intent, not a multi-request sync intent.
+
+None refused. Path minutes: pass 2 stays 355 (text and row changes inside P2.2, P2.3, P2.5's
+estimates); pass 5 rises to 620 (P5.1 from 200 to 210 for the void path, the seat-bearing IDs, and
+the state fields moved in), 2.6 times its 240 estimate, under the 720 line. The blocker calls for
+one more verification read under spec-plan-review.
