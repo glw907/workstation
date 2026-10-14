@@ -107,6 +107,10 @@ The pilot itself, cutover, and sub-projects 2 to 5. Figure and rework pages stay
      - Pass 2's live smoke moves to pass 5 (no key exists before then), and pass 2's PR brief
        says so up front. The "within 5% of the Console" comparison is done by Geoff at the
        pass 5 PR read; the PR states pilot-ready conditional on it.
+     - Pass 4's `assemble` stays `ordinary` on the same footing as pass 1's config task: its
+       path-safety rows (`..`, symlinks, separator boundaries) are written first and named in
+       the close review. Applied by the planning session from the pass 1 ruling; Geoff may
+       overrule at any PR read.
 - Spec: `docs/superpowers/specs/2026-10-12-drafter-pipeline-design.md`, reviewed and folded 2026-10-12. No new spec; each pass plans from its sections. `spec-plan-review` sets plan review depth per pass.
 - Built so far: Pass 0 (drafter#1, workstation#36) and F1 (drafter#6), `internal/plan` only.
 - Recent actuals: Pass 0 ran about 64 minutes of clock against 685 task-minutes; F1 about 35 against 175. The estimates above sit between those actuals and the planned figures.
