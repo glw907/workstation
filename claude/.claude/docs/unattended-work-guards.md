@@ -121,7 +121,7 @@ next tool call refreshes the lease (confirm with `systemd-inhibit --list`). "It'
 right now" is not a reason to skip the battery layer: the holder's floor is silent on AC
 by design, so it is already watching when someone later unplugs.
 The one recorded failure: a session re-armed only the transcript guard after a crash,
-the laptop was unplugged hours later, and the battery hit 7% with nothing watching (caught by Geoff, not the machinery).
+thinkpad-x1 was unplugged hours later, and the battery hit 7% with nothing watching (caught by Geoff, not the machinery).
 
 ## Concurrent sessions (Geoff runs several at once)
 

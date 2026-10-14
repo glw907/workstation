@@ -192,7 +192,7 @@ stays the record of what's actually on disk. Current captured files:
 
 - `bluefin/etc/chromium-policies/*.json` → `/etc/chromium/policies/managed/`
 - `bluefin/etc/udev/51-android.rules` → `/etc/udev/rules.d/`
-- `bluefin/etc/systemd/logind.conf.d/10-lid-ignore.conf` → `/etc/systemd/logind.conf.d/` (lid close never suspends, Geoff 2026-09-12; after a change: `sudo -A systemctl kill -s HUP systemd-logind`)
+- `bluefin/etc/systemd/logind.conf.d/10-lid-ignore.conf` → `/etc/systemd/logind.conf.d/` (thinkpad-x1 only; pavilion has no lid and never installs it; lid close never suspends, Geoff 2026-09-12; after a change: `sudo -A systemctl kill -s HUP systemd-logind`)
 - `bluefin/etc/systemd/user.conf.d/10-oom-continue.conf` and
   `bluefin/etc/systemd/zram-generator.conf.d/10-larger-zram.conf` → the memory-pressure
   defense; see `docs/oom-defense.md` for why they exist before touching either
