@@ -1,0 +1,7 @@
+id: beta-plan
+title: beta-plan
+summary: Plans the beta work.
+status: proposed
+owner: glw907
+created: 2026-10-12
+repos: [workstation]
