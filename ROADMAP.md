@@ -36,6 +36,18 @@ in `docs/HISTORY.md` is frozen (ruling 8); git and PR bodies are the history.
 
 ## Planned
 
+- **Thunderbird Nord mail follow-ups** (Geoff, 2026-10-13, triage of PR #49): one pass for
+  the six items he marked "now": (1) fix the gate's baseline on pavilion, the four ratchet
+  lines and 22 pytest failures that read Homebrew's Python 3.15 paths (a `runner` pass);
+  (2) add a `.vale.ini` so `vale thunderbird/README.md` lints something; (3) find the white
+  strip beside the message list in the dark reader shots; (4) derive
+  `--color-text-highlight-dark` in `customContent.css` from `nord.css`; (5) gate white text on
+  `--mail-accent-fill` (4.03:1); (6) brighten the card tag icons. Two items are deferred until
+  Geoff has run `thunderbird-theme-sync` on his live profile: recolour the header tag pills
+  with the Nord tag roles (needs a contrast check, since Thunderbird picks pill text from the
+  raw hex), and check the tag colours on the live profile (the test profile reads back
+  Thunderbird's defaults). Harness: `thunderbird/tools/tb-shots`.
+
 - **musicbox repo split**: the music-VPS spec, plan, and library design
   (`docs/superpowers/plans/2026-08-30-music-vps-build.md`,
   `docs/superpowers/specs/2026-08-30-music-vps-build-design.md`,
