@@ -367,7 +367,8 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 - **Rotate at**: Fastmail > Settings > Privacy & Security > App Passwords
 - **History**: minted 2026-10-13 and received on pavilion, replacing the loose
   `~/.config/fastmail/fastmail-dav-token.age` the helper read before. Revoke the old app
-  password once thinkpad-x1 pulls this and runs `sync.sh --local`.
+  password and delete that loose file once thinkpad-x1 pulls this and runs
+  `sync.sh --local`.
 
 ### GITHUB_APP_ID / GITHUB_APP_INSTALLATION_ID / GITHUB_APP_PRIVATE_KEY_B64
 - **Grants**: cairn-cms GitHub App — `Contents: Read & write` on glw907/ecnordic-ski and
