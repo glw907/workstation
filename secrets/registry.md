@@ -138,6 +138,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | DAISYUI_BLUEPRINT_EMAIL | ✓  | —        | —    | —        | —          |
 | HCLOUD_TOKEN        | ✓     | —        | —    | —        | —          |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
+| FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
 | GITHUB_APP_ID       | ✓     | ✓        | —    | —        | —          |
 | GITHUB_APP_INSTALLATION_ID | ✓ | ✓     | —    | —        | —          |
 | GITHUB_APP_PRIVATE_KEY_B64 | ✓ | ✓     | ✓    | —        | ✓          |
@@ -358,6 +359,15 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   1Password Fastmail item's `api access` field via secret-set.sh. If it goes stale again,
   the 1Password copy and this store have diverged; re-anchor after any Fastmail-side
   rotation.
+
+### FASTMAIL_DAV_PASSWORD
+- **Grants**: Fastmail app password with mail, calendar, and contacts access (IMAP, SMTP,
+  CalDAV, CardDAV)
+- **Used by**: vdirsyncer's CardDAV sync, through `fastmail-dav-password`
+- **Rotate at**: Fastmail > Settings > Privacy & Security > App Passwords
+- **History**: minted 2026-10-13 and received on pavilion, replacing the loose
+  `~/.config/fastmail/fastmail-dav-token.age` the helper read before. Revoke the old app
+  password once thinkpad-x1 pulls this and runs `sync.sh --local`.
 
 ### GITHUB_APP_ID / GITHUB_APP_INSTALLATION_ID / GITHUB_APP_PRIVATE_KEY_B64
 - **Grants**: cairn-cms GitHub App — `Contents: Read & write` on glw907/ecnordic-ski and

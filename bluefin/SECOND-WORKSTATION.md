@@ -175,10 +175,14 @@ the rest unless the step says it is a hard stop.
    ```bash
    sudo -A hostnamectl set-hostname pavilion
    ```
-3. Write the local secrets and enable the timer that waits on them:
+3. Write the local secrets, run the one-time contacts discovery, and enable
+   the timer. `fastmail-dav-password` reads `FASTMAIL_DAV_PASSWORD` from
+   `~/.local/secrets`, and a sync fails until `discover` has created the
+   local collections.
    ```bash
    ~/.dotfiles/scripts/secrets/sync.sh --local
    source ~/.local/secrets
+   mkdir -p ~/.contacts && yes | vdirsyncer discover fastmail_contacts
    systemctl --user enable --now vdirsyncer.timer
    ```
 4. Install the staged `/etc` drops that `setup` leaves out. Skip the lid
