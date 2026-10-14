@@ -198,6 +198,11 @@ the rest unless the step says it is a hard stop.
    source ~/.local/secrets
    systemctl --user enable --now vdirsyncer.timer
    ```
+   A new machine's first contacts sync needs the collections discovered
+   once, after the DAV token is in place (see "The handoff bundle"):
+   `PATH=~/.local/bin:/home/linuxbrew/.linuxbrew/bin:$PATH vdirsyncer discover`,
+   answering yes to each collection, then `vdirsyncer sync`. The timer
+   handles every sync after that.
 4. Install the staged `/etc` drops that `setup` leaves out. Skip the lid
    file.
    ```bash
