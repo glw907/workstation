@@ -11,9 +11,11 @@ package: `thunderbird-theme-sync` copies it into the Thunderbird profile.
 
 | Path | Contents |
 |------|----------|
+| `nord.css` | The 16 Nord colours and the mail colour roles; every other rule names a role from here, never a hex value |
 | `customChrome.css` | Color overrides for the main window, mapping Thunderbird's own colors onto the GNOME palette and the desktop accent |
 | `customContent.css` | The same palette for Settings, the address book, and account settings, which load as content pages that `userChrome.css` never reaches |
-| `user.js` | Preferences Thunderbird applies at every startup: the two the theme needs, the Adwaita tag colors, and new-mail popups and sounds turned off |
+| `user.js` | Preferences Thunderbird applies at every startup: the two the theme needs, the Nord tag colors, the message-list settings (names-only senders, two-row cards, the local junk filter off), and new-mail popups and sounds turned off |
+| `tools/` | The screenshot harness, its invented test messages, and the contrast check (see `tools/README.md`) |
 | `patches/*.patch` | Fixes carried until the theme merges them upstream; each file's header names its upstream PR |
 
 ## How it fits together
@@ -23,8 +25,10 @@ folder and writes a `user.js`, which the sync replaces with the one here. The
 theme imports `customChrome.css`
 last and never ships one. It has no such hook for content pages, so the sync
 writes the profile's `userContent.css` itself, importing the theme and then
-`customContent.css`. `customContent.css` scopes every rule to Thunderbird's own
-pages with `@-moz-document`, so email bodies keep their own colors.
+`customContent.css`. `customContent.css` scopes its Settings rules to Thunderbird's own
+pages with `@-moz-document`. Its message-body rules sit outside that block and
+apply only under Thunderbird's own body classes, so a sender's HTML design
+keeps its colors.
 Thunderbird updates don't touch the profile at all.
 
 | Location | Role |
@@ -52,6 +56,64 @@ list brings. Its checklist then walks through the rest:
 4. Quit Thunderbird (Ctrl+Q; closing the window can leave it running in the
    background) and run `thunderbird-theme-sync`.
 
+## Role map
+
+`nord.css` is the source of truth for the mail colours. It holds the 16 Nord
+colours by name and the roles below, and every other rule in this layer names a
+role. A client that wants the same look, such as poplar, can read the roles from
+that file. The report
+`docs/superpowers/research/2026-10-13-mail-colour-evidence/reports/Mail colour readability evidence.md`
+holds the evidence behind the choices.
+
+| Role | CSS variable | Nord colour | Cue that works without colour |
+|------|--------------|-------------|-------------------------------|
+| Accent fills: buttons, badges, selection | `--mail-accent-fill` | nord10, white text | None needed; the fill carries a label |
+| Accent text: unread dot, new sparkle, thread-unread marker | `--mail-accent` | nord8 | Dot or sparkle glyph |
+| Flagged and needs action | `--mail-attention` | nord13 | Star glyph |
+| Error, destructive, junk | `--mail-error` | nord11 | Icon and wording |
+| Success | `--mail-success` | nord14 | Icon and wording |
+| Tag: Important | `--mail-tag-1` | nord11 | Tag glyph and name |
+| Tag: Work | `--mail-tag-2` | nord12 | Tag glyph and name |
+| Tag: Personal | `--mail-tag-3` | nord14 | Tag glyph and name |
+| Tag: To Do | `--mail-tag-4` | nord13 | Tag glyph and name |
+| Tag: Later | `--mail-tag-5` | nord15 | Tag glyph and name |
+| Plain-text links and the first quote bar in message bodies | `--mail-body-accent` | nord8, body form | Underline on links; indent and attribution line on quotes |
+| Second-level quote bar | `--mail-quote-2` | `--mail-body-accent` at 60% | Indent, attribution line, 3 px bar |
+| Third-level quote bar | `--mail-quote-3` | `--mail-body-accent` at 35% | Indent, attribution line, 3 px bar |
+| Sender, subject, body text | none | Neutral | Position, weight, size |
+| Secondary text: dates, counts, labels, signature | none | Neutral, dimmed to 4.5:1 or better | Size and position |
+| Surfaces | none | Adwaita neutral, unchanged | None needed |
+
+Frost marks system state and Aurora marks your own meanings. The two Frost
+roles, `--mail-accent-fill` and `--mail-accent`, say that something is selected,
+unread, or new. The Aurora roles say what you decided: flagged, tagged, an
+error, a success. Under colour-vision deficiency only cool-against-warm pairs
+stay reliably apart, so no two roles depend on telling two blues, or red and
+green, apart. Each role also carries a cue from the table's last column.
+
+Each role colour goes through the GNOME theme's lightness rule, which lightens
+the colour in dark mode and deepens it in light mode while keeping its hue and
+chroma, so text passes WCAG 4.5:1 in both modes. The chrome roles use
+`--mail-oklab-text`, which follows the system colour scheme. The message-body
+roles (`--mail-body-accent`, and the quote bars built on it) use
+`--mail-oklab-body`, which follows the dark reader instead. Thunderbird darkens
+a message body only when the system is dark and `mail.dark-reader.enabled` is
+on, so a dark system with the dark reader off keeps a white body and gets the
+light form. The system scheme alone does not decide it.
+
+## After pulling a change
+
+When a pull changes this folder, apply it to your profile:
+
+1. Quit Thunderbird.
+2. Run `thunderbird-theme-sync`.
+3. Start Thunderbird.
+4. Once, after the Nord mail pass: open the inbox, select all messages, and
+   mark them as not junk with Shift+J. Turning the junk filter off leaves old
+   junk marks in place. Leave each account's "Enable adaptive junk mail
+   controls" box off, since checking it turns the filter back on for that
+   account.
+
 ## Common tasks
 
 To change a color:
@@ -68,7 +130,7 @@ at every startup, so a value set there wins over a change made in Settings.
 To pick up upstream theme fixes, or to repair the look after a Thunderbird
 update, quit Thunderbird and run `thunderbird-theme-sync`. It resets the clone
 to upstream `main`, applies each carried patch, reinstalls the theme, and copies
-both override files and `user.js` in. `workstation-update` runs it too.
+every top-level `*.css` file and `user.js` in. `workstation-update` runs it too.
 
 To check the install without changing anything, run
 `thunderbird-theme-sync --check`. `check-drift` runs the same check weekly.

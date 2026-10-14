@@ -1,0 +1,28 @@
+From: Sam Okafor <sam@example.org>
+To: Test Reader <reader@example.org>
+Subject: Re: Trail map review (plain text, flowed)
+Date: Tue, 13 Oct 2026 07:20:00 -0800
+Message-ID: <m10@example.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Thanks, the map looks good to me. The details are at
+https://www.example.org/trail-map for anyone who needs them.
+
+Sam Okafor wrote:
+> Test Reader wrote:
+>> Morgan Hale wrote:
+>>> Here is the first-level original line, quoted three levels deep, and it
+>>> is long enough that the flowed encoding joins the two lines again.
+>> This is the second-level reply to it, written so that it wraps across
+>> two lines and is joined back into one paragraph.
+> This is the first-level quote, one step from the new text.
+
+Short answer: ship it.
+
+-- 
+Sam Okafor
+Example Trails Cooperative
+https://www.example.org
+

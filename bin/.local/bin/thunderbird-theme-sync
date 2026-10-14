@@ -3,17 +3,24 @@ set -euo pipefail
 
 # thunderbird-theme-sync: rebuild the Thunderbird GNOME theme install from
 # upstream plus this repo's local layer.
-# Usage: thunderbird-theme-sync           # update and reinstall
-#        thunderbird-theme-sync --check   # read-only: does the profile match?
+# Usage: thunderbird-theme-sync                     # update and reinstall
+#        thunderbird-theme-sync --check             # read-only: does the profile match?
+#        thunderbird-theme-sync --profile <dir>     # install into one folder only
+#        thunderbird-theme-sync --check --profile <dir>
 #
 # The theme (rafaelmardojai/thunderbird-gnome-theme) is plain CSS copied into
 # each Thunderbird profile's chrome/ folder, so nothing updates it for us. The
-# local layer lives in ~/.dotfiles/thunderbird/:
+# local layer lives in thunderbird/ beside this script's own real path, so a
+# worktree copy installs its own files and the stowed command installs the main
+# checkout's. Every top-level thunderbird/*.css is copied in and compared by
+# --check:
 #   customChrome.css   overrides for the main window; the theme imports it
 #                      last and never ships one
 #   customContent.css  overrides for Settings, the address book, and account
 #                      settings, which load as content pages that
 #                      userChrome.css never reaches
+#   nord.css           the palette and role file the two above import
+# and one more file that is not a stylesheet:
 #   user.js            preferences (the theme's two, plus tag colors),
 #                      copied over the profile's user.js
 #   patches/*.patch    fixes carried until upstream merges them
@@ -23,23 +30,48 @@ set -euo pipefail
 #
 # A sync resets the clone to upstream main, applies each carried patch
 # (reporting any upstream has since merged), runs the theme's installer
-# against the Flatpak profile folder, copies both override files and user.js
-# in, and rewrites the profile's userChrome.css and userContent.css so they
-# import exactly the theme and the overrides. Quit Thunderbird first; it reads
-# its stylesheets and user.js only at startup. Run it after a Thunderbird update that breaks
-# the look, or whenever upstream moves.
+# against the Flatpak profile folder, copies the layer's stylesheets and
+# user.js in, and rewrites the profile's userChrome.css and userContent.css so
+# they import exactly the theme and the overrides. Quit Thunderbird first; it
+# reads its stylesheets and user.js only at startup. Run it after a Thunderbird
+# update that breaks the look, or whenever upstream moves.
+#
+# --profile <dir> is for a scratch profile (the screenshot harness under
+# thunderbird/tools/). It targets that one folder, never reads profiles.ini,
+# never runs the theme's installer (which installs into every listed profile),
+# and uses the clone as it stands, with no fetch, reset, clean or patch, so the
+# shared clone is untouched. A sync refuses a folder holding a "lock" symlink,
+# which a running Thunderbird keeps; ".parentlock" stays after every exit, so
+# it never counts. --check only reads, so a stale lock does not block it.
 
-LAYER="$HOME/.dotfiles/thunderbird"
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+LAYER="$(cd "$(dirname "$SELF")/../../../thunderbird" && pwd)"
 CLONE="$HOME/.local/share/thunderbird-gnome-theme"
 UPSTREAM="https://github.com/rafaelmardojai/thunderbird-gnome-theme"
 TB_DIR="$HOME/.var/app/org.mozilla.thunderbird/.thunderbird"
+# Set by --profile: the one folder to install into or check.
+ONLY_PROFILE=""
 
-# Prints each profile directory listed in profiles.ini, one per line.
+# Prints each profile directory listed in profiles.ini, one per line, or the
+# one --profile folder.
 profiles() {
+    if [[ -n "$ONLY_PROFILE" ]]; then
+        echo "$ONLY_PROFILE"
+        return 0
+    fi
     [[ -f "$TB_DIR/profiles.ini" ]] || return 0
     sed -n 's/^Path=//p' "$TB_DIR/profiles.ini" | while read -r p; do
         [[ "$p" == /* ]] && echo "$p" || echo "$TB_DIR/$p"
     done
+}
+
+# The layer's stylesheets: every top-level thunderbird/*.css.
+layer_css() {
+    local f
+    for f in "$LAYER"/*.css; do
+        [[ -e "$f" ]] && echo "$f"
+    done
+    return 0
 }
 
 # The profile's top-level stylesheets. The theme's installer appends its own
@@ -59,7 +91,7 @@ require_profile() {
 }
 
 check() {
-    local fail=0 p dest
+    local fail=0 p dest f
     require_profile || return 1
     [[ -d "$CLONE/.git" ]] || { echo "x theme clone missing at $CLONE"; return 1; }
     while read -r p; do
@@ -67,11 +99,12 @@ check() {
         if [[ ! -d "$dest" ]]; then
             echo "x $(basename "$p"): theme not installed"; fail=1; continue
         fi
-        for f in customChrome.css customContent.css; do
+        while read -r f; do
+            f="$(basename "$f")"
             if ! diff -q "$LAYER/$f" "$dest/$f" >/dev/null 2>&1; then
                 echo "x $(basename "$p"): $f differs from the dotfiles copy"; fail=1
             fi
-        done
+        done < <(layer_css)
         if ! diff -q "$LAYER/user.js" "$p/user.js" >/dev/null 2>&1; then
             echo "x $(basename "$p"): user.js differs from the dotfiles copy"; fail=1
         fi
@@ -86,7 +119,36 @@ check() {
     return "$fail"
 }
 
+# Copies the layer's stylesheets and user.js into a profile and rewrites its
+# two import files.
+install_layer() {
+    local p="$1" f
+    while read -r f; do
+        cp "$f" "$p/chrome/thunderbird-gnome-theme/"
+    done < <(layer_css)
+    chrome_imports > "$p/chrome/userChrome.css"
+    content_imports > "$p/chrome/userContent.css"
+    cp "$LAYER/user.js" "$p/user.js"
+}
+
+# The --profile install: the clone as it stands, without its .git, plus the
+# layer. The installer's two prefs are already in the layer's user.js.
+sync_scratch() {
+    local p="$ONLY_PROFILE"
+    [[ -d "$CLONE/.git" ]] || { echo "x theme clone missing at $CLONE"; exit 1; }
+    mkdir -p "$p/chrome"
+    rm -rf "$p/chrome/thunderbird-gnome-theme"
+    mkdir "$p/chrome/thunderbird-gnome-theme"
+    tar -C "$CLONE" --exclude=.git -cf - . | tar -C "$p/chrome/thunderbird-gnome-theme" -xf -
+    install_layer "$p"
+    check
+}
+
 sync() {
+    if [[ -n "$ONLY_PROFILE" ]]; then
+        sync_scratch
+        return
+    fi
     if pgrep -f '/app/lib/thunderbird/thunderbird' >/dev/null; then
         echo "Thunderbird is running; quit it first." >&2
         exit 1
@@ -117,16 +179,37 @@ sync() {
 
     local p
     while read -r p; do
-        cp "$LAYER/customChrome.css" "$LAYER/customContent.css" "$p/chrome/thunderbird-gnome-theme/"
-        chrome_imports > "$p/chrome/userChrome.css"
-        content_imports > "$p/chrome/userContent.css"
-        cp "$LAYER/user.js" "$p/user.js"
+        install_layer "$p"
     done < <(profiles)
     check
 }
 
-case "${1:-}" in
-    --check) check ;;
-    "") sync ;;
-    *) echo "usage: thunderbird-theme-sync [--check]" >&2; exit 2 ;;
-esac
+usage() {
+    echo "usage: thunderbird-theme-sync [--check] [--profile <dir>]" >&2
+    exit 2
+}
+
+mode=sync
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --check) mode=check; shift ;;
+        --profile)
+            [[ $# -ge 2 && -n "$2" ]] || usage
+            ONLY_PROFILE="$2"; shift 2 ;;
+        *) usage ;;
+    esac
+done
+
+if [[ -n "$ONLY_PROFILE" ]]; then
+    ONLY_PROFILE="$(realpath -m -- "$ONLY_PROFILE")"
+    if [[ ! -d "$ONLY_PROFILE" ]]; then
+        echo "x profile folder missing: $ONLY_PROFILE"
+        exit 1
+    fi
+    if [[ "$mode" == sync && -L "$ONLY_PROFILE/lock" ]]; then
+        echo "x $ONLY_PROFILE is in use (lock symlink); stop that Thunderbird first" >&2
+        exit 1
+    fi
+fi
+
+"$mode"

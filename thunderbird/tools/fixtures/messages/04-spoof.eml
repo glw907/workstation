@@ -1,0 +1,11 @@
+From: "director@example.org" <mallory@example.com>
+To: Test Reader <reader@example.org>
+Subject: Display name that is itself an address
+Date: Tue, 13 Oct 2026 08:30:00 -0800
+Message-ID: <m04@example.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+The display name is an email address that differs from the real sender, so
+the names-only format must show the real address instead.
+
