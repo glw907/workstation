@@ -309,7 +309,8 @@ the rest unless the step says it is a hard stop.
    Start a fresh `claude --chrome` and quit it. Don't use `--continue`
    while another session on the same conversation is open.
 3. In Thunderbird, sign in to Fastmail with OAuth and quit, then run
-   `thunderbird-theme-sync`.
+   `thunderbird-theme-sync`. The steps to repeat after a later pull are in
+   [After pulling a change](../thunderbird/README.md#after-pulling-a-change).
 4. Set the desktop background to `01-bluefin.xml`, the winter dinosaur in
    Nord tones:
    ```bash
