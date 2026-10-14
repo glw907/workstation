@@ -3,6 +3,6 @@ Description=Sync contacts via vdirsyncer
 
 [Service]
 Type=oneshot
-# The user manager's PATH holds neither ~/.local/bin (fastmail-dav-password) nor Homebrew (age).
-Environment=PATH=%h/.local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin
+# The user manager's PATH lacks ~/.local/bin, where fastmail-dav-password lives.
+Environment=PATH=%h/.local/bin:/usr/bin:/bin
 ExecStart=%h/.local/bin/vdirsyncer sync

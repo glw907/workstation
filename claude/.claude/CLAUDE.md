@@ -106,7 +106,8 @@ services, and never suggest a web dashboard unless the API cannot do it.
   secrets. **Runtime**: Cloudflare Workers secrets.
 - **A new long-lived secret originates in the workstation age store** (`secret-set.sh`), never
   a loose file, never only `wrangler secret put`. **A value from Geoff arrives via
-  `secret-receive NAME`**, never pasted into chat. **1Password has sudo semantics**: fetch once
+  `secret-receive NAME`**, which Claude launches itself (its dialog takes the value), never pasted
+  into chat. **1Password has sudo semantics**: fetch once
   per session, parse locally, never loop `op`.
 - **Check the stores before claiming a secret is missing**: `wrangler secret list`,
   `~/.local/secrets`, the age registry, per-project stores, the estate inventory. Name-only
