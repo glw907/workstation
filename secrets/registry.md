@@ -154,6 +154,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | MUSIC_R2_RO_ACCESS_KEY_ID | ✓ | —      | —    | —        | —          |
 | MUSIC_R2_RO_SECRET_ACCESS_KEY | ✓ | — | —    | —        | —          |
 | PINGS_ADMIN_TOKEN | ✓       | —      | —    | —        | —          |
+| DRAFTER_API_KEY   | ✓       | —      | —    | —        | —          |
 | DUBPLATE_MAGIC_LINK_SECRET | ✓ | —   | —    | —        | —          |
 | DUBPLATE_SESSION_SECRET | ✓ | —      | —    | —        | —          |
 | PHONEBOOK_PHONE_ADMIN_KITCHEN | ✓ | — | — | — | — |
@@ -369,6 +370,17 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   `~/.config/fastmail/fastmail-dav-token.age` the helper read before. Revoke the old app
   password and delete that loose file once thinkpad-x1 pulls this and runs
   `sync.sh --local`.
+
+### DRAFTER_API_KEY
+- **Grants**: Anthropic API access in the Console workspace created for drafter, under that
+  workspace's spend limit
+- **Used by**: `drafter`, which reads it through its `key_env` setting (default
+  `DRAFTER_API_KEY`) for batched drafting and review of docs pages
+- **Rotate at**: the Anthropic Console, in the drafter workspace's API keys; then
+  `secret-receive DRAFTER_API_KEY`
+- **History**: received on pavilion 2026-10-13 with `secret-receive`, per the drafter
+  completion design's setup step; this entry and the store commit landed 2026-10-14.
+  thinkpad-x1 picks it up on its next pull and `sync.sh --local`.
 
 ### GITHUB_APP_ID / GITHUB_APP_INSTALLATION_ID / GITHUB_APP_PRIVATE_KEY_B64
 - **Grants**: cairn-cms GitHub App — `Contents: Read & write` on glw907/ecnordic-ski and
