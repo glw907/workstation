@@ -258,6 +258,12 @@ the rest unless the step says it is a hard stop.
    ```
    On the laptop `dubplate` uses an SSH remote. Step 7 switches it once the
    new key is registered.
+
+   Claude Code trusts each project directory separately, and a background
+   session (`claude --bg`) can't show the trust prompt: it exits with
+   "Workspace not trusted". Geoff runs `claude` once in each repo a
+   background session will start in, accepts the prompt, and exits. On
+   2026-10-13 this blocked the drafter conductor's first launch.
 7. Mint this machine's SSH key and register it with GitHub:
    ```bash
    [ -f ~/.ssh/id_ed25519 ] || ssh-keygen -t ed25519 -C "glw907@pavilion" -N "" -f ~/.ssh/id_ed25519

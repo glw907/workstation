@@ -44,9 +44,10 @@ dropped Geoff's live `model`, `effortLevel`, and `modelSettings`; restored by ha
 
 ## Drafter
 
-Pass 0 and F1 merged 2026-10-12 (drafter#1 `140bc00`, #6 `73ff07a`; workstation#36 `70c1315`);
-`drafter` installed from `main`, and the chain writes `.plan.yaml`. cairn's 11 page plans pass
-`check-plan`. Open drafter items: glw907/drafter issues #2 to #5 and #7 to #10.
+Pass 0 and F1 merged 2026-10-12 (drafter#1 `140bc00`, #6 `73ff07a`; workstation#36 `70c1315`).
+Completion to pilot-ready: five passes, design `specs/2026-10-13-drafter-completion-design.md`
+(rulings in its notes), plans in workstation#56 `cc113dd`, run by `conductor-drafter` (`d1448cc6`).
+Geoff sets up the API key before pass 5; cairn's stage 2b part 2 run is the pilot.
 
 ## Approval queue
 
