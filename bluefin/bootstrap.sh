@@ -362,7 +362,7 @@ setup_contacts_timer() {
         # A sync fails until discover has created the local collections; it
         # asks once per missing collection, and a rerun asks nothing.
         mkdir -p "$HOME/.contacts"
-        vdirsyncer discover fastmail_contacts < <(yes) || return 1
+        "$HOME/.local/bin/vdirsyncer" discover fastmail_contacts < <(yes) || return 1
         systemctl --user enable --now vdirsyncer.timer
     else
         echo "skipped enable: no ~/.local/secrets yet. After the secrets sync, run:"
