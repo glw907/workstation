@@ -140,7 +140,7 @@ question, task 9's deferral).
 
 ## 2026-09-08 -- docs-standard Claude infrastructure pass (plan one of three)
 
-Plan `docs/superpowers/plans/2026-09-08-docs-standard-claude-infra.md`, spec
+Plan `~/Projects/initiatives/cairn-docs-standard/plans/2026-09-08-docs-standard-claude-infra.md`, spec
 `~/Projects/cairn-cms/docs/superpowers/specs/2026-09-08-docs-standard-design.md`. Seven
 dispatched tasks landed the workstation half of the cairn documentation standard: task 1a
 gave tellgrader a `docs-register` profile and `.tellgrader.json` opt-in discovery (c523f0b);
@@ -180,7 +180,7 @@ decision rather than a third dispatch.
   `~/Projects/cairn-cms/CLAUDE.md` sat 136 bytes over. Adding the standard's four lines to
   either file needs a displacement pick first, which is why unit 3c cannot close inside this
   pass; the ranked candidates are in
-  `docs/superpowers/plans/2026-09-08-claude-md-displacement-candidates.md`, and the edits are
+  `~/Projects/initiatives/cairn-docs-standard/plans/2026-09-08-claude-md-displacement-candidates.md`, and the edits are
   the owner sitting's, batched with the corpus approval (decision 7).
 - **No bands ship.** The hinged-pair definition moved twice during the proposal and no gate
   reads either measure; `MEASURES.md` states both shares as report-only and unbanded. A band

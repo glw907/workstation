@@ -38,7 +38,7 @@ recorded here as a note for that repo's next pass.
 4. **The global `CLAUDE.md` budget.** `claude/.claude/CLAUDE.md` is 27,807 bytes
    against `claude-context-budget`'s 24,000-byte cap, before the four docs-standard
    lines it still owes. The ranked displacement candidates are already measured at
-   `docs/superpowers/plans/2026-09-08-claude-md-displacement-candidates.md`. The round
+   `~/Projects/initiatives/cairn-docs-standard/plans/2026-09-08-claude-md-displacement-candidates.md`. The round
    displaces to pointers and lands the four lines, ending under the cap; it does not
    raise the cap. `cairn-cms/CLAUDE.md` (24,873 bytes) is over too and owes its own four
    lines; that is cairn's repo and a live session holds it, so the round records it as a

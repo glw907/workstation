@@ -28,7 +28,7 @@ and task 5). `~/Projects/907-life` and `~/Projects/ecxc-ski` for the duplicated 
 (tasks 3 and 4). Nothing is written in `~/Projects/cairn-cms`, `~/Projects/poplar`, or any
 other repo.
 
-**Format exemplar:** `docs/superpowers/plans/2026-09-08-docs-standard-claude-infra.md`, the
+**Format exemplar:** `~/Projects/initiatives/cairn-docs-standard/plans/2026-09-08-docs-standard-claude-infra.md`, the
 previous infra plan in this repo, whose executor precedent this plan inherits.
 
 ---
@@ -136,7 +136,7 @@ and a green gate is never offered as evidence that the prose is correct.
 
 **Correction 3: the four ranked displacement candidates no longer clear the budget.**
 `claude/.claude/CLAUDE.md` measured 23,995 bytes when
-`docs/superpowers/plans/2026-09-08-claude-md-displacement-candidates.md` ranked them. It now
+`~/Projects/initiatives/cairn-docs-standard/plans/2026-09-08-claude-md-displacement-candidates.md` ranked them. It now
 measures 27,807 bytes, after `08c132a` and `d2c4831` baked in the pass gate-economy rulings.
 The arithmetic is in task 8. The four ranked picks fall short, so task 8 carries a fifth pick
 measured during revision 1's drafting.
@@ -1031,7 +1031,7 @@ the paragraph was written to stop.
 existing `## Writing voice` section, after the "highest-frequency tells" list. That section
 already names `tellgrader` and the authoring charter, which is what the four lines extend. Use
 the `claude/.claude/CLAUDE.md` draft **verbatim** from
-`docs/superpowers/plans/2026-09-08-claude-md-displacement-candidates.md`, section "The four new
+`~/Projects/initiatives/cairn-docs-standard/plans/2026-09-08-claude-md-displacement-candidates.md`, section "The four new
 lines and their byte cost", measured here at 638 bytes rather than the 630 that document states.
 
 **Constraints.**
@@ -1359,7 +1359,7 @@ Four more notes, from the ruling's in-scope items and from this drafting.
 - **`cairn-cms/CLAUDE.md`.** 24,873 bytes, over the 24,000-byte cap, and it owes the same four
   docs-standard lines. That is cairn's repo and a live session holds it. Its ranked
   displacement candidates are already measured in
-  `docs/superpowers/plans/2026-09-08-claude-md-displacement-candidates.md`, section "Ranked
+  `~/Projects/initiatives/cairn-docs-standard/plans/2026-09-08-claude-md-displacement-candidates.md`, section "Ranked
   candidates: `cairn-cms/CLAUDE.md`". This round edits nothing there.
 - **The `ship` skill.** `aksailingclub-legacy/.claude/skills/ship/SKILL.md` and `ecxc-ski`'s
   share a name and have diverged in substance, so the survey ruled it a note. Whichever repo

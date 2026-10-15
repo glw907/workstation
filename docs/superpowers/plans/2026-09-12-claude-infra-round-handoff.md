@@ -61,7 +61,7 @@ artifacts. github.com/glw907/workstation.
 ## Immediate next action
 
 Plan two of the cairn documentation standard: its handoff is
-`docs/superpowers/plans/2026-09-08-docs-standard-claude-infra-handoff.md`. Once the cairn
+`~/Projects/initiatives/cairn-docs-standard/plans/2026-09-08-docs-standard-claude-infra-handoff.md`. Once the cairn
 overnight workflow has ended, also run the infra round's deferred task 9 (`pass-execute.js`
 and its skill text).
 
@@ -165,7 +165,7 @@ infrastructure, not a new multi-pass initiative.
   runs `make check` directly and never calls `cairn-run-gate`, so item 1's correction does not
   apply there, adoption is poplar's own decision; `cairn-cms/CLAUDE.md`'s ranked displacement
   candidates are already measured in
-  `docs/superpowers/plans/2026-09-08-claude-md-displacement-candidates.md`; the `ship` skill in
+  `~/Projects/initiatives/cairn-docs-standard/plans/2026-09-08-claude-md-displacement-candidates.md`; the `ship` skill in
   `aksailingclub-legacy` and `ecxc-ski` share a name and have diverged, convergence is whichever
   repo next touches its own copy; `907-life/.claude/instructions/css-rules.md` has one consumer
   and stays there; the site-pass experiment's verdict goes into `docs/HISTORY.md` when the next

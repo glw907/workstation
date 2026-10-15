@@ -59,6 +59,7 @@ run "drafter prompt parity (goja against Node)" bash tests/drafter-prompts-parit
 run "check-drift initiatives leg" bash tests/check-drift-initiatives.test.sh
 run "gather-dotfiles initiatives leg" bash tests/gather-dotfiles-initiatives.test.sh
 run "secret-set.sh path overrides" bash tests/secret-set-overrides.test.sh
+run "check-moves draft check" bash tests/check-moves.test.sh
 run "ci-green test" node tests/ci-green.test.mjs
 run "cairn-run-gate vanish handling" bash tests/cairn-run-gate.test.sh
 run "claude-clock-stop hook" bash tests/claude-clock-stop.test.sh

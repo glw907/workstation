@@ -53,7 +53,7 @@ carry a retired word is renamed, not quoted.
 
 The approval-queue command refuses an item that breaks it, exits 2, and prints the message
 below with this register's path, `~/.claude/docs/voice/approval-brief.md`. The parser is
-`approval-queue/src/lib/brief.ts`.
+`~/Projects/approval-queue/approval-queue/src/lib/brief.ts`.
 
 - The first `## ` heading outside a code fence is `## Brief`. A `# Title` line above it is
   allowed. CRLF line endings are normalized to LF before parsing.
