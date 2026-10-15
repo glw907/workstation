@@ -213,7 +213,6 @@ else
 fi
 
 echo ""
-echo ""
 check_initiatives
 
 echo ""

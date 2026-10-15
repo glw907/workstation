@@ -5,7 +5,7 @@ set -uo pipefail
 # and, for every row that moved something out of this repo, confirms three facts:
 #   1. the destination path exists on the destination repo's default branch (through `gh`);
 #   2. for a plain docs move, each destination file equals the source file at the row's pin, or
-#      differs only in lines that name a path from the map (the destination's reference rewrite).
+#      differs only where a `~/.dotfiles/<old path>` or `~/Projects/<repo>/<new path>` reference was rewritten.
 #      A collision row keeps the destination, and a code row is rewritten on arrival, so
 #      neither compares content; and
 #   3. the source path is unchanged between the pin and the head ref, so nothing edited the file
@@ -41,8 +41,13 @@ rewritten=0
 # Counted apart from the loop below, so a row the loop skips by mistake shows as a short count.
 expected=$(awk -F'\t' 'NR > 1 && $6 != "stays" && $6 !~ /^deferred:/ && $6 != "flagged"' "$map" | wc -l)
 
-# Every path the map names. A moved file may differ from its source only in lines naming one.
-mapfile -t map_paths < <(awk -F'\t' 'NR > 1 { for (i = 2; i <= 4; i += 2) if ($i != "") print $i }' "$map" | sed 's|/$||')
+# The reference forms a destination session rewrites: the old home path of every row and the new
+# home path of every row, one per line. A moved file may differ from its source only where these
+# appear, and the longest go first so a file path is stripped whole before its folder.
+awk -F'\t' 'NR > 1 && $2 != "" {
+    old = $2; sub(/\/$/, "", old); print "~/.dotfiles/" old
+    if ($4 != "") { new = $4; sub(/\/$/, "", new); print "~/Projects/" $3 "/" new }
+}' "$map" | awk '{ print length($0) "\t" $0 }' | sort -rn | cut -f2- > "$tmp/ref-forms"
 
 # dest_exists <repo> <path>: succeeds when the destination path is present.
 dest_exists() {
@@ -62,16 +67,11 @@ dest_fetch() {
     fi
 }
 
-# only_reference_lines <diff-file>: succeeds when every changed line names a path from the map.
-only_reference_lines() {
-    local line p named
-    while IFS= read -r line; do
-        named=0
-        for p in "${map_paths[@]}"; do
-            if [[ "$line" == *"$p"* ]]; then named=1; break; fi
-        done
-        [[ "$named" -eq 1 ]] || return 1
-    done < <(grep -E '^[<>]' "$1")
+# strip_refs <in> <out>: deletes every rewritable reference form from <in>, byte for byte, so two
+# files that differ only in those references come out identical.
+strip_refs() {
+    perl -e 'open(F, "<", shift) or die; chomp(my @f = <F>); local $/; my $t = <STDIN>;
+        for my $f (@f) { $t =~ s/\Q$f\E\/?//g } print $t' "$tmp/ref-forms" < "$1" > "$2"
 }
 
 # content_matches <old> <new_repo> <new_path> <pin>: compares one source file with its destination.
@@ -80,8 +80,9 @@ content_matches() {
     git -C "$repo" show "$pin:$src_file" > "$tmp/src" 2> /dev/null || return 1
     dest_fetch "$dst_repo" "$dst_file" "$tmp/dst" 2> /dev/null || return 1
     cmp -s "$tmp/src" "$tmp/dst" && return 0
-    diff "$tmp/src" "$tmp/dst" > "$tmp/diff"
-    if only_reference_lines "$tmp/diff"; then
+    strip_refs "$tmp/src" "$tmp/src.stripped"
+    strip_refs "$tmp/dst" "$tmp/dst.stripped"
+    if cmp -s "$tmp/src.stripped" "$tmp/dst.stripped"; then
         rewritten=$((rewritten + 1))
         return 0
     fi
@@ -90,7 +91,7 @@ content_matches() {
 
 while IFS=$'\037' read -r _ old_path new_repo new_path _ state pin; do
     case "$state" in
-        stays|deferred:*|flagged|state) continue ;;
+        ''|stays|deferred:*|flagged|state) continue ;;
     esac
     checked=$((checked + 1))
     row="$old_path ($state)"
@@ -121,7 +122,7 @@ while IFS=$'\037' read -r _ old_path new_repo new_path _ state pin; do
         echo "FAIL source edited after the pin: $row"
         fail=1
     fi
-done < <(tr '\t' '\037' < "$map")
+done < <(tr '\t' '\037' < "$map"; echo)
 
 echo "check-moves: checked $checked of $expected moved rows ($rewritten files differ only in rewritten references)"
 if [[ "$checked" -ne "$expected" ]]; then

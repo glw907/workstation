@@ -323,8 +323,7 @@ the rest unless the step says it is a hard stop.
     ```
 
     Running the repo gate (`bash scripts/gate.sh`) on a fresh machine fails
-    for two reasons unrelated to any change. The approval-queue test can't
-    find `node`, because the gate's clean environment lacks mise. The
+    for a reason unrelated to any change. The
     ratchet flags documented paths that don't exist yet, such as `~/Android`
     and the laptop-only lid folder. A path that belongs on only one host
     carries a `host-ok` marker on its line. `~/.contacts/` is not one of

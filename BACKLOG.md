@@ -4,42 +4,42 @@
 
 ## Medium
 
-- [ ] **#1** Thunderbird Nord mail follow-ups `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#1** Thunderbird Nord mail follow-ups `#improvement` `#workstation` *(2026-10-14)*
   **Thunderbird Nord mail follow-ups** (Geoff, 2026-10-13, triage of PR #49): one pass for the six items he marked "now": (1) fix the gate's baseline on pavilion, the four ratchet lines and 22 pytest failures that read Homebrew's Python 3.15 paths (a `runner` pass); (2) add a `.vale.ini` so `vale thunderbird/README.md` lints something; (3) find the white strip beside the message list in the dark reader shots; (4) derive `--color-text-highlight-dark` in `customContent.css` from `nord.css`; (5) gate white text on `--mail-accent-fill` (4.03:1); (6) brighten the card tag icons. Two items are deferred until Geoff has run `thunderbird-theme-sync` on his live profile: recolour the header tag pills with the Nord tag roles (needs a contrast check, since Thunderbird picks pill text from the raw hex), and check the tag colours on the live profile (the test profile reads back Thunderbird's defaults). Harness: `thunderbird/tools/tb-shots`.
 
-- [ ] **#2** musicbox repo split `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#2** musicbox repo split `#improvement` `#workstation` *(2026-10-14)*
   **musicbox repo split**: the music-VPS spec, plan, and library design (`~/Projects/dubplate/docs/superpowers/plans/2026-08-30-music-vps-build.md`, `~/Projects/dubplate/docs/superpowers/specs/2026-08-30-music-vps-build-design.md`, `~/Projects/dubplate/docs/superpowers/specs/2026-08-30-music-library-design.md`) describe a Hetzner server, another machine's config. They move to their own repo before server artifacts accrete; coordinate with the music session that owns them.
 
-- [ ] **#3** claude-wf-guard alarms on a run that finished cleanly `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#3** claude-wf-guard alarms on a run that finished cleanly `#improvement` `#workstation` *(2026-10-14)*
   **`claude-wf-guard` alarms on a run that finished cleanly.** Its idle alarm cannot tell a finished workflow from a stalled one (its own message says "a clean finish looks identical"), so every completed run ends with exit 2 and an ALARM, ten minutes after the run's real completion notification. Cairn Go tool pass A (2026-09-19/20) ran ten workflows and paid one session turn per run to confirm each alarm was false. The fix is not in `journal.jsonl`, which records only `launched`, `started`, and `result` and has no run-level completion event, and the guard already avoids journal idle on purpose. It needs a completion signal from outside the journal: the workflow task's own output file (`tasks/<task-id>.output` is written when the run completes) passed as an optional fourth argument, on whose appearance the guard exits 0 silently. Until then a session treats an idle ALARM that arrives AFTER the run's completion notification as expected, checks only that any live run still has a guard, and moves on.
 
-- [ ] **#4** Poplar adopts pass-core `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#4** Poplar adopts pass-core `#improvement` `#workstation` `#initiative:poplar-refounding` *(2026-10-14)*
   **Poplar adopts `pass-core`** (Geoff, 2026-10-11, ruling R4 of the infra sweep re-plan). After infra sweep 2, a poplar PR gives poplar a small adapter like dubplate's and replaces `poplar/CLAUDE.md`'s "Conducting a pass" section, which defers to a deleted global rule. It also repins `poplar-reviewer` (`claude-opus-5` at `high`) and `poplar-implementer` (no effort), and drops the missing `glw907-vendor.sh` re-sync line (DC-11, DC-12).
 
-- [ ] **#5** Document the brief's local field in cairn-docs-drafter.md `#improvement` `#workstation` `#initiative:drafter` *(2026-10-14)*
+- [ ] **#5** Document the brief's local field in cairn-docs-drafter.md `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-14)*
   **Document the brief's `local` field in `cairn-docs-drafter.md`** (PR #25, triage 2026-10-12). The chain's `draftPrompt` tells the drafter about the brief's top-level `"local"` array, but the agent definition does not, so a drafter dispatched outside the chain never sees it. PR #25 left the definition untouched because definitions load from the stowed main checkout. With #25 merged, add the field and its one-writer sentence to `claude/.claude/agents/cairn-docs-drafter.md`.
 
-- [ ] **#6** Docs page chain follow-ups from drafter Pass 0 `#improvement` `#workstation` `#initiative:drafter` *(2026-10-14)*
+- [ ] **#6** Docs page chain follow-ups from drafter Pass 0 `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-14)*
   **Docs page chain follow-ups from drafter Pass 0** (deferred in Geoff's triage of glw907/workstation#36, 2026-10-12). Remove the `planFormat: "markdown"` escape hatch once no markdown plans remain. Add goldens for the markdown `replan:` and rework prompts if either is edited. Make the nonzero-`checkPlan` replan test assert `status === "escalate"` beside `reason` (`tests/docs-page-chain-outline.test.mjs:1452`). Truncate the validator output in the escalation reason, or move it to its own field (`docs-page-chain.js:2018`).
 
-- [ ] **#7** The plan read checks code before it asserts behavior `#improvement` `#workstation` `#initiative:drafter` *(2026-10-14)*
+- [ ] **#7** The plan read checks code before it asserts behavior `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-14)*
   **The plan read checks code before it asserts behavior** (cairn's 11-plan test, 2026-10-12). On debug-your-site, the plan-mode structural read said refusals log no event, but `section-action.ts:216` logs `auth.access.refused`. Tell the plan-mode `structurePrompt` in `docs-page-chain.js` to check the code before stating a behavior, and to mark such a finding as a lead. The same test suggests a cross-plan anchor check for the drafter pipeline's consistency read: a link's anchor against the target page's plan headings.
 
-- [ ] **#8** PR test CI for dotfiles `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#8** PR test CI for dotfiles `#improvement` `#workstation` *(2026-10-14)*
   **PR test CI for dotfiles.** Add a workflow that runs `bash scripts/check.sh` on `pull_request`. Until it lands, the full-suite home is the local close gate (ruling 11 of the lean pass process spec).
 
-- [ ] **#9** Release the lid-switch hold when a session ends `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#9** Release the lid-switch hold when a session ends `#improvement` `#workstation` *(2026-10-14)*
   **Release the lid-switch hold when a session ends** (PR #34 triage, 2026-10-12). Neither an executor nor a conductor releases a running `systemd-inhibit ... sleep NNN` lid hold before it ends, so the hold can outlive its session until NNN runs out. Add the release step to `~/.claude/docs/unattended-work-guards.md` and to the ending of `pass-core`'s "Execute" and "Conductor".
 
 ## Low
 
-- [ ] **#10** Two gate-tool cleanups `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#10** Two gate-tool cleanups `#improvement` `#workstation` *(2026-10-14)*
   **Two gate-tool cleanups**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11): simplify `cairn-docs-outline`'s lock and fix `gateMatches`' stale doc comment; and give `cairn-run-gate` per-leg timing in its run records.
 
 - [ ] **#11** Approval queue hardening `#improvement` `#workstation` `#initiative:approval-queue` *(2026-10-14)*
   **Approval queue hardening**, deferred by Geoff's triage of workstation PR #13 (2026-10-11). A running app keeps serving its old build after a merge changes `~/Projects/approval-queue/approval-queue/`. Nothing prunes decided items from the state directory. A SIGKILL or power loss leaves the item on the index. One malformed `decision.json` or `item.json` makes `listWaiting` throw and 500s the index. The CSP limits only `script-src`, so a remote image in a PR body loads at view time (`img-src 'self' data:` closes it). `~/Projects/approval-queue/tests/approval-queue.test.sh` never runs the start-the-app branch, the 10-second "did not answer" exit, or the lock release.
 
-- [ ] **#12** Infra-sweep 2 leftovers `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#12** Infra-sweep 2 leftovers `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-10-14)*
   **Infra-sweep 2 leftovers**, deferred by Geoff's triage of workstation PR #16 (2026-10-11). The model review's nine design topics (guard-fail-closed, saved-effort, dispatch-effort, superpowers-pressure, agent-definitions, claude-md-style, convention-skills, vendored-overlays, process-skills); re-run the review after the merge. Each monthly review worktree keeps its lock under the main checkout, so `prompt.txt` or the script should unlock and remove it after the merge. Stale "kitty-shot harness" wording at `bootstrap.sh`, `Brewfile`, the `kitty-headless-shot` header comments, and the `tui-visual-verify` intro. `engine-consult` hand-lists the `check:close` set, and `cairn-figure` and `figure-verifier` copy the register's `repro` caption and diagram exemption text. A `verify` skill could carry the repo gate; three skills dispatch without `effort`; `register-check` has no `argument-hint`. Poplar's icon-width and JoinHorizontal rules from the deleted `bubbletea-conventions.md` (poplar's refactor pass re-homes them). `registry.md` has no entry id for the Cloudflare token.
 
 - [ ] **#13** Approval queue UI leftovers `#improvement` `#workstation` `#initiative:approval-queue` *(2026-10-14)*
@@ -48,20 +48,20 @@
 - [ ] **#14** Approval queue brief leftovers `#improvement` `#workstation` `#initiative:approval-queue` *(2026-10-14)*
   **Approval queue brief leftovers**, deferred by Geoff's triage of workstation PR #43 (2026-10-12). Smart quotes in rendered session copy (`marked-smartypants`, through `dependency-upgrade`). A component test for the effect that registers key handlers, once the app has a component harness. Four small a11y items: the "Decide X" link scrolls without moving focus, ages read as "12m", the bar's fade catches clicks, and button labels carry kbd names. A link inside a Details summary nests interactive content in `<summary>`; it needs a summary-only renderer. `listItems` in `brief.ts` reads `- 2. foo` as `foo` and a nested bullet as top level. `dotfiles-pass` should name `gitleaks detect --source . --log-opts main..HEAD`, the form the worktree guard allows. Approving a design item drops its `### Decide:` picks: the repo organization design (2026-10-14) came back as `{"decision":"approve"}` with no `choices`, though `approval-brief.md` promises one per block, so either the design page renders no Decide cards or its approve omits them (logged at Geoff's request, 2026-10-14). A pass plan never reaches the queue: `pass-core` hands a `runner` or `auth-data` plan straight to its conductor, so Geoff can't read the plan of a pass that deletes repos or opens 16 PRs before it runs. Give the queue a plan item, readable before launch, whose choices survive the approve (Geoff, 2026-10-14).
 
-- [ ] **#15** Two worktree-guard notes `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#15** Two worktree-guard notes `#improvement` `#workstation` *(2026-10-14)*
   **Two worktree-guard notes**, from the same triage: the pair-dispatch template should tell a subagent that the worktree Bash guard refuses compound commands, so it uses plain calls and the Write tool; and the guard refuses `gitleaks git` and a `node` run with a computed path.
 
-- [ ] **#16** The deferred infra-sweep checks `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#16** The deferred infra-sweep checks `#improvement` `#workstation` *(2026-10-14)*
   **The deferred infra-sweep checks** (ruling R2 of the 2026-10-11 re-plan: a check is built when it has a live catch). These are duplicate-paragraph with `parity.json`, plus cross-repo mode with heading-citation, orphan-doc, and `check-drift --only claude`. Definitions: `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md` "Pass A-rest". Build one when a defect of its class surfaces, which is its first catch.
 
-- [ ] **#17** Devcontainers `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#17** Devcontainers `#improvement` `#workstation` *(2026-10-14)*
   **Devcontainers** for the SvelteKit/Cloudflare site repos: logged per repo (907-life #2, ecxc-ski #39, xcathletes-org #4, the ASC STATUS chore), built as each repo matures. Research: `bluefin/devenv-research.md`.
 
-- [ ] **#18** kitty harness replacement `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#18** kitty harness replacement `#improvement` `#workstation` *(2026-10-14)*
   **kitty harness replacement**: kitty exists only as the `tui-visual-verify` capture platform (XWayland-forced). When a Wayland-native or terminal-agnostic capture method proves out, the harness moves and kitty leaves the machine entirely.
 
-- [ ] **#19** Custom uBlue image `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#19** Custom uBlue image `#improvement` `#workstation` *(2026-10-14)*
   **Custom uBlue image** for the second workstation: bakes the devmode rebase and Flatpak set into the image instead of undoing defaults per machine. An explicit later decision, not assumed.
 
-- [ ] **#20** bootstrap.sh restore split `#improvement` `#workstation` `#initiative:shared-standards` *(2026-10-14)*
+- [ ] **#20** bootstrap.sh restore split `#improvement` `#workstation` *(2026-10-14)*
   **bootstrap.sh restore split**: the restore phase is two-thirds of the file and a different risk class (destructive, run cold). Split into `bluefin/restore.sh` with shared helpers when workstation #2 lands.

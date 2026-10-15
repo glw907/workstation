@@ -224,7 +224,7 @@ the PR body carries a proposed disposition (now, defer, or drop) and a one-line 
 Geoff triages them at the PR read. The triage file is `{headline, lede, rows: [{action, why,
 detail, proposed}]}`, with `proposed` one of now, defer, or drop. Geoff's submitted rows come back
 as `{action, disposition, note}`, and an approve carries `choices: [{title, choice}]`. Whoever merges acts on the triage: a "now" item becomes a
-follow-up task or pass, a "defer" item is filed in the repo's `BACKLOG.md` with an `#initiative:<id>` tag and its number cited back in
+follow-up task or pass, a "defer" item is filed in the repo's `BACKLOG.md` with an `#initiative:<id>` tag when a record fits, and its number cited back in
 the PR, an initiative-sized "now" item becomes a record, and a "drop" item stays only in the PR. A merged PR body is history no session reads (Geoff,
 2026-10-11: dubplate PR #2 left 14 items there). Prompting best practices
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>):
