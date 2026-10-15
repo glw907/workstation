@@ -70,7 +70,9 @@ tracked file reaches the live one only through `apply`.
 
 `docs-page-chain.js` and its `cairn-docs-outline` helper live in `~/Projects/drafter`
 (`claude/.claude/workflows/`, `bin/.local/bin/`), and `make -C ~/Projects/drafter install` links them
-into the live workflows directory and `~/.local/bin/`. This repo keeps no workflow script.
+into the live workflows directory and `~/.local/bin/`. This repo keeps no workflow script. A
+machine that still has the old stow links restows (`stow -R bin claude`) before running the install,
+which refuses to write through a symlink.
 
 Invoke a workflow by name, never from a scratchpad copy, so every run executes the
 committed script. By-name resolution can serve a stale copy after the script changed in the same
