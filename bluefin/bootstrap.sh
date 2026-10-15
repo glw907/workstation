@@ -329,6 +329,25 @@ setup_stow() {
     (cd "$DOTFILES_DIR" && stow -R "${STOW_PACKAGES[@]}")
 }
 
+setup_projects_repos() {
+    echo "== setup: initiatives, drafter, and approval-queue clones =="
+    local repo
+    for repo in initiatives drafter approval-queue; do
+        if [[ ! -d "$HOME/Projects/$repo/.git" ]]; then
+            mkdir -p "$HOME/Projects" || return 1
+            gh repo clone "glw907/$repo" "$HOME/Projects/$repo" || return 1
+        fi
+    done
+    # Each repo owns its install step; one that has not landed yet is skipped.
+    if [[ -f "$HOME/Projects/drafter/Makefile" ]] \
+        && grep -q '^install:' "$HOME/Projects/drafter/Makefile"; then
+        make -C "$HOME/Projects/drafter" install || return 1
+    fi
+    if [[ -f "$HOME/Projects/approval-queue/scripts/install.sh" ]]; then
+        bash "$HOME/Projects/approval-queue/scripts/install.sh" || return 1
+    fi
+}
+
 setup_git_hooks() {
     echo "== setup: repo git hooks =="
     # The pre-commit hook runs gitleaks over staged content; this repo is
@@ -779,15 +798,9 @@ restore_place_home() {
 # Runbook 4.7.
 restore_projects() {
     echo "== restore: projects from the tarball =="
-    local item
     mkdir -p "$HOME/Projects"
     # The workstation repo is ~/.dotfiles (stow's home); this link puts it beside the other repos.
     ln -sfn "$HOME/.dotfiles" "$HOME/Projects/workstation"
-    for item in aksailingclub-sveltekit cairn-scratch ecxc-ski-agent-memory; do
-        if [[ -d "$RESTORE_STAGING/projects/$item" ]]; then
-            rsync -a --ignore-existing "$RESTORE_STAGING/projects/$item/" "$HOME/Projects/$item/"
-        fi
-    done
     if [[ ! -d "$HOME/Projects/smallbusinessak-org" ]]; then
         git clone "$RESTORE_STAGING/projects/smallbusinessak-org.bundle" \
             "$HOME/Projects/smallbusinessak-org"
@@ -879,6 +892,7 @@ phase_setup() {
         setup_brew
         setup_mise_uv
         setup_stow
+        setup_projects_repos
         setup_git_hooks
         setup_vale_styles
         setup_upkeep_timer

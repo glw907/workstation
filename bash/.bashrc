@@ -131,7 +131,7 @@ export SUDO_ASKPASS="$HOME/.local/bin/claude-askpass"
 
 # Claude wrapper function - adds browser tools in web repos, clears sudo token on exit.
 # Browser tools cost context in every session, so only the web repos opt in; Go work
-# (poplar, jrnl-md) stays lean. Override either way with an explicit --chrome / --no-chrome.
+# (poplar) stays lean. Override either way with an explicit --chrome / --no-chrome.
 claude() {
     local args=("$@")
 
@@ -148,8 +148,7 @@ claude() {
                         "$HOME"/Projects/cairn-*/*|\
                         "$HOME"/Projects/aksailingclub-*/*|\
                         "$HOME"/Projects/asc-*/*|\
-                        "$HOME"/Projects/smallbusinessak-org/*|\
-                        "$HOME"/Projects/hugo-blog-template/*)
+                        "$HOME"/Projects/smallbusinessak-org/*)
                             args+=(--chrome)
                             ;;
                     esac

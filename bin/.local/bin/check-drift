@@ -17,10 +17,41 @@ BLUEFIN="$DOTFILES/bluefin"
 fail=0
 bad() { echo "  x $*"; fail=1; }
 ok()  { echo "  + $*"; }
+warn() { echo "  ! $*"; }
 
 # Reads a list file, dropping comment and blank lines. Same expression as
 # bootstrap.sh's read_list; duplicated so this script stays standalone.
 read_list() { grep -vE '^[[:space:]]*(#|$)' "$1"; }
+
+# The initiatives clone: the SessionStart hook reads its records. A missing or
+# stale clone warns and never fails the run, and an unreachable remote is its
+# own line, since the machine may simply be offline.
+check_initiatives() {
+    local dir="${INITIATIVES_DIR:-$HOME/Projects/initiatives}" url remote local_head
+    echo "Initiatives clone (~/Projects/initiatives):"
+    if [[ ! -d "$dir/.git" ]]; then
+        warn "no clone at $dir (gh repo clone glw907/initiatives $dir)"
+        return 0
+    fi
+    url=$(git -C "$dir" config remote.origin.url) || url=""
+    local_head=$(git -C "$dir" rev-parse HEAD 2>/dev/null) || local_head=""
+    if [[ -z "$url" ]] || ! remote=$(timeout "${INITIATIVES_TIMEOUT:-5}" git ls-remote "$url" HEAD 2>/dev/null) \
+        || [[ -z "$remote" ]]; then
+        warn "remote unreachable, behind-ness not checked"
+        return 0
+    fi
+    remote=${remote%%[[:space:]]*}
+    if [[ "$remote" == "$local_head" ]] || git -C "$dir" merge-base --is-ancestor "$remote" HEAD 2>/dev/null; then
+        ok "clone is current"
+    else
+        warn "clone is behind origin (git -C $dir pull --ff-only)"
+    fi
+}
+
+if [[ "${1:-}" == "--initiatives-only" ]]; then
+    check_initiatives
+    exit 0
+fi
 
 echo "Stow state (bluefin/stow-packages.txt):"
 mapfile -t packages < <(read_list "$BLUEFIN/stow-packages.txt")
@@ -182,6 +213,8 @@ else
 fi
 
 echo ""
+check_initiatives
+
 echo ""
 echo "Claude Code tooling (claude/tooling manifests):"
 if command -v claude-tooling-sync >/dev/null 2>&1; then

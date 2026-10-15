@@ -28,18 +28,17 @@ Read the config, read the backlog file, proceed to Step 2.
 ```json
 {
   "backlog_path": "BACKLOG.md",
-  "roadmap_path": "ROADMAP.md",
   "domains": ["ops-dashboard", "website", "handbook"],
   "default_priority": "medium"
 }
 ```
 
-This config is shared with the `/log-project` skill (which manages `ROADMAP.md`).
+Initiatives live in the initiatives repo, managed by `/log-project`; this config does not point at them.
 
 ### Config sets `"backlog": false`
 
 The repo keeps no backlog. Create no file, say so in one line, and stop. Offer to put the idea in
-the roadmap or the plan instead.
+the plan or an initiative record instead.
 
 ### Config exists but backlog file is missing
 
@@ -52,11 +51,9 @@ This is first-run setup. Ask the user these questions in a single message:
 
 1. **Backlog location:** "Where should the backlog file live? (default: `BACKLOG.md`
    at project root)"
-2. **Roadmap location:** "Where should the roadmap file live? (default: `ROADMAP.md`
-   at project root)"
-3. **Domains:** "What are the main work areas for this project? These become tags
+2. **Domains:** "What are the main work areas for this project? These become tags
    for categorizing issues. Examples: `frontend`, `backend`, `api`, `infra`, `docs`"
-4. **Default priority:** "What default priority for new issues? (default: `medium`)"
+3. **Default priority:** "What default priority for new issues? (default: `medium`)"
 
 After the user answers:
 
@@ -87,7 +84,7 @@ Extract what you can from the user's message and current context. You need:
 | **Domain** | Yes | Match against config domains; infer from open files or what the user is working on |
 | **Priority** | Yes | `high`, `medium`, or `low`; fall back to config default if user doesn't specify |
 | **Description** | No | One or two sentences of context if the title isn't self-explanatory |
-| **Project** | No | Link to a `ROADMAP.md` initiative if this issue is part of one (tag as `#project:slug`) |
+| **Initiative** | No | Link to an initiative record in `~/Projects/initiatives` if this issue serves one (tag as `#initiative:<id>`) |
 | **Related files** | No | Include if obvious from context (e.g., the file being edited when the issue was noticed) |
 
 If the user gave enough information to fill everything, confirm the entry in one message
@@ -151,7 +148,7 @@ Priority sections are created as needed when issues are added.
 
 - **Priority sections**: `## High`, `## Medium`, `## Low`, `## Done`
 - **Issue line**: `- [ ] **#N** Title text \`#type\` \`#domain\` *(YYYY-MM-DD)*`
-- **Project tag** (optional): append `\`#project:slug\`` to link the issue to a `ROADMAP.md` initiative
+- **Initiative tag** (optional): append `\`#initiative:<id>\`` to link the issue to an initiative record
 - **Optional detail**: indented line(s) below the issue for description and related files
 - **New issues**: add at the top of the appropriate priority section (most recent first)
 - **Tags**: use backtick-wrapped hashtags for type (`#bug`, `#feature`, `#improvement`)

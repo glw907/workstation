@@ -30,15 +30,17 @@ umask 077  # every temp and cache file is born private, no chmod race
 # After adding, document the secret in registry.md and (for Workers) add it to the
 # routing table in sync.sh, then run sync.sh --worker NAME.
 
-RECIP="age197mcd2m3z90t49n9t5v3ujjntw7krfkw5y9sjfc545v28qvezugshg7jgk"
-VALUES="$HOME/.dotfiles/secrets/values.age"
-LOCAL_SECRETS="$HOME/.local/secrets"
-CACHE="/dev/shm/.age-key-$(id -u)"      # session-cached age key (RAM, chmod 600)
+# Each path can be overridden from the environment, so a test or a worktree edit can point the
+# script at a scratch store without touching the live one.
+RECIP="${RECIP:-age197mcd2m3z90t49n9t5v3ujjntw7krfkw5y9sjfc545v28qvezugshg7jgk}"
+VALUES="${VALUES:-$HOME/.dotfiles/secrets/values.age}"
+LOCAL_SECRETS="${LOCAL_SECRETS:-$HOME/.local/secrets}"
+CACHE="${CACHE:-/dev/shm/.age-key-$(id -u)}"      # session-cached age key (RAM, chmod 600)
 OP_ITEM="Workstation age encryption key"
 
 die() { echo "Error: $*" >&2; exit 1; }
 
-usage() { sed -n '4,35p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '4,31p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 # --- Parse arguments ---
 NAME=""
@@ -134,7 +136,7 @@ if [[ "$DELETE" == true ]]; then
         rm -f "$VALUES.tmp"; die "verification failed: values.age left untouched"
     fi
     write_local "$NEW"
-    echo "OK: ${NAME} deleted from values.age + ~/.local/secrets. Remember to update registry.md."
+    echo "OK: ${NAME} deleted from values.age + $LOCAL_SECRETS. Remember to update registry.md."
     exit 0
 fi
 
@@ -174,4 +176,4 @@ else
 fi
 
 write_local "$NEW"
-echo "OK: ${NAME} ${EXISTED} in values.age + ~/.local/secrets. Remember to update registry.md."
+echo "OK: ${NAME} ${EXISTED} in values.age + $LOCAL_SECRETS. Remember to update registry.md."

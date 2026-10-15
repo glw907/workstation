@@ -560,7 +560,7 @@ Per pass-core "Close" and dotfiles-pass "Close checklist", in order:
 3. `claude-tooling-sync verify` (the stowed `main` copy, a machine-state check) passes, and one
    `gitleaks git` branch-history scan is clean.
 4. The next step's prompt, committed as
-   `docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt` in the shape of
+   `~/Projects/poplar/docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt` in the shape of
    `docs/superpowers/plans/2026-10-11-infra-sweep-2-planning-prompt.txt`: an attended planning
    session in `~/Projects/poplar` that designs, with Geoff, poplar's `pass-core` adapter (ROADMAP
    "Planned", "Poplar adopts `pass-core`", including its CLAUDE.md "Conducting a pass" section and
@@ -570,7 +570,7 @@ Per pass-core "Close" and dotfiles-pass "Close checklist", in order:
 5. `docs/STATUS.md`: the infra sweep line moves to "merged" on Geoff's merge. The next action
    starts with G's two pre-merge cutover commands (step 6), to run before the merge. It then names
    that prompt with the exact line `cd ~/Projects/poplar && claude --model opus --effort high --name
-   poplar-adapter-plan "$(git -C ~/.dotfiles show main:docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt)"`.
+   poplar-adapter-plan "$(git -C ~/.dotfiles show main:~/Projects/poplar/docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt)"`.
 6. Push `glw907/workstation`, open the PR (draft until the close is done), and write its body. Its
    first line tells the merger to run G's two pre-merge commands before merging, because whoever
    merges pulls at once (pass-core "Close"), and a pull while `~/.claude/settings.json` is still a

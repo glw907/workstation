@@ -76,11 +76,9 @@ tables and look for `Device (IC03)` in a small SSDT.
 
 thinkpad-x1 built the bundle on 2026-10-12. It holds what git and the
 bootstrap cannot carry. That includes the Claude memory directories, the
-three repos with no remote (`healthy-diet`, `personal-styles`, `pings`), the
-local folders `cairn-scratch`, `ecxc-ski-agent-memory`, and
-`aksailingclub-sveltekit`, the ASC age key, the `jrnl-md` config, and
-`Documents`, `Pictures`, and `corpus`. A `manifest.txt` at the root lists
-every path.
+ASC age key, and `Documents`, `Pictures`, and `corpus`. A `manifest.txt` at
+the root lists every path. The repos and folders it once carried besides
+these are retired, and the 2026-10-14 repo organization pass archived them.
 
 The 2026-10-12 bundle missed three things, found on pavilion the next day.
 A future bundle carries them too:
@@ -250,7 +248,7 @@ the rest unless the step says it is a hard stop.
    ```bash
    cd ~/Projects
    for r in 907-life aksailingclub-legacy aksailingclub-org cairn-cms cairn-pub \
-            cairn-themes displaywidth drafter dubplate ecxc-ski phonebook poplar \
+            cairn-themes drafter dubplate ecxc-ski phonebook poplar \
             xcathletes-org; do
        [ -d "$r" ] || git clone "https://github.com/glw907/$r.git"
    done
@@ -325,8 +323,7 @@ the rest unless the step says it is a hard stop.
     ```
 
     Running the repo gate (`bash scripts/gate.sh`) on a fresh machine fails
-    for two reasons unrelated to any change. The approval-queue test can't
-    find `node`, because the gate's clean environment lacks mise. The
+    for a reason unrelated to any change. The
     ratchet flags documented paths that don't exist yet, such as `~/Android`
     and the laptop-only lid folder. A path that belongs on only one host
     carries a `host-ok` marker on its line. `~/.contacts/` is not one of

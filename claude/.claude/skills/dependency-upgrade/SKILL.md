@@ -67,7 +67,7 @@ This is the deliverable the survey exists for. For every feature-to-leverage ite
 that hand-rolls it and rule one of:
 
 - Take now: A small, safe change with an existing test; it lands in this upgrade's own task.
-- File: A ROADMAP line naming the code, the capability, and the pass that first leans on it.
+- File: A BACKLOG.md line naming the code, the capability, and the pass that first leans on it.
 - Refactoring pass: When the take-now list outgrows a small task, or several items touch one
   subsystem, propose a formal refactoring pass with its own plan instead of folding the work into
   the sweep. Say so in the report and file the pass; do not quietly widen the sweep.
@@ -115,7 +115,7 @@ path, and read; an undeclared move is a stop.
   moved (a packaged stylesheet, a bundled icon set, a peer range).
 - Held majors with their unblock conditions in the release record, and a scheduled tripwire
   (the `schedule` skill) for each machine-detectable condition, pinging only when it trips.
-- ROADMAP lines for every filed item and any proposed refactoring pass.
+- BACKLOG.md lines for every filed item, and an initiative record for any proposed refactoring pass.
 
 ## The report
 

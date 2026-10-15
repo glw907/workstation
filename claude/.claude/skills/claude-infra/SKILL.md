@@ -54,7 +54,7 @@ the inventory are in `~/.claude/docs/claude-tooling.md`.
 A rule reaches an agent only through its definition, its dispatch prompt, its runner, or a
 tool's output; a side doc reaches nobody. Land a rule the same session, strongest form first:
 tool, agent definition or skill, then CLAUDE.md (Geoff, 2026-09-27). Anything recorded routes
-by default: initiative state to STATUS or ROADMAP; a repo fact to its docs; a workstation fact
+by default: initiative state to STATUS or an initiative record; a repo fact to its docs; a workstation fact
 to `~/.claude/docs`. Memory holds only a preference or a ruling's why that no file can. Act on
 a tool's NOTE before the next dispatch.
 

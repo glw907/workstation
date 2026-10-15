@@ -1,0 +1,7 @@
+id: alpha-run
+title: alpha-run
+summary: Runs the alpha work.
+status: active
+owner: glw907
+created: 2026-10-12
+repos: [alpha, workstation]

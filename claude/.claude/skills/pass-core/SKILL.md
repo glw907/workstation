@@ -27,7 +27,7 @@ account.
    outcome, files and interfaces touched, what is out of scope, one end-to-end check, and the risk
    class. A design brought for approval is handed over with `approval-queue design <repo> "<title>"
    <file>`. A design doc opens with `## Brief` after its title, per
-   `~/.claude/docs/voice/approval-brief.md`. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
+   `~/.claude/docs/voice/approval-brief.md`. The design names its initiative (a record in `~/Projects/initiatives`) or says none applies; cross-repo specs, plans, and research go in `initiatives/<id>/`, and the plan header carries an `Initiative: <id>` line. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
    carries
    these two samples, and extras go in "Later", never built:
    > "Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
@@ -217,15 +217,15 @@ second review only on a blocker. A fix dispatch quotes each reviewer finding ver
 finding, and fix) as the task's acceptance criteria, never a summary. In dubplate, verbatim criteria
 landed at zero fix rounds and paraphrased ones averaged one. An overruled verdict is stated with its
 reason in the PR body, and a correctness-critical overrule re-runs the review at `xhigh`. The
-adapter's close checklist runs (the auth smoke on `auth-data`), STATUS and ROADMAP are updated, and
+adapter's close checklist runs (the auth smoke on `auth-data`), STATUS is updated, and
 the PR body opens with a `## Brief` per `~/.claude/docs/voice/approval-brief.md` and carries,
 below it, what landed, each `auth-data` verdict, and the score. Each "Found, not done" item in
 the PR body carries a proposed disposition (now, defer, or drop) and a one-line reason, and
 Geoff triages them at the PR read. The triage file is `{headline, lede, rows: [{action, why,
 detail, proposed}]}`, with `proposed` one of now, defer, or drop. Geoff's submitted rows come back
 as `{action, disposition, note}`, and an approve carries `choices: [{title, choice}]`. Whoever merges acts on the triage: a "now" item becomes a
-follow-up task or pass, a "defer" item is filed in BACKLOG or ROADMAP with its number cited back in
-the PR, and a "drop" item stays only in the PR. A merged PR body is history no session reads (Geoff,
+follow-up task or pass, a "defer" item is filed in the repo's `BACKLOG.md` with an `#initiative:<id>` tag when a record fits, and its number cited back in
+the PR, an initiative-sized "now" item becomes a record, and a "drop" item stays only in the PR. A merged PR body is history no session reads (Geoff,
 2026-10-11: dubplate PR #2 left 14 items there). Prompting best practices
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>):
 "Use structured formats for state data: When tracking structured information (like test results or
@@ -275,8 +275,7 @@ the step that should have caught the escape, and only that changes.
 ## Ledgers
 
 `docs/STATUS.md` is present tense and 60 lines or fewer: current state, next action, open
-decisions. `ROADMAP.md` holds initiatives under `Active`, `Planned`, and `Someday`, managed by
-`/log-project`. A commit id cited in a ledger is one that survives a merge: a merge commit, or an
+decisions. Initiatives are records in the initiatives repo, managed by `/log-project`; a repo's own backlog is `BACKLOG.md`. A commit id cited in a ledger is one that survives a merge: a merge commit, or an
 id on the default branch, since a squash or rebase rewrites ids. Git and PR bodies are the history;
 `docs/HISTORY.md` and post-mortems stop growing (ruling 8). A lesson lands where it executes: a skill, agent, tool, or repo doc. Memory holds only a
 preference or a ruling's why that no file can.
@@ -291,7 +290,7 @@ is small ... ask Claude to do it directly."
 ## Scope
 
 A grant authorizes a mechanism or a boundary, never more work. Work found mid-task goes to the PR
-body's "Found, not done" list or to ROADMAP, never into the task in flight, unless the task would
+body's "Found, not done" list or to BACKLOG, never into the task in flight, unless the task would
 otherwise build on something known to be wrong (say so then).
 
 ## Launch prompt
