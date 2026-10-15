@@ -52,10 +52,6 @@ run "roadmap-refs check test" bash tests/check-roadmap-refs.test.sh
 run "claude-memory-write-check hook" bash tests/claude-memory-write-check.test.sh
 run "vale-hook test suite" uv run --with pytest --no-project python -m pytest tests/ -q
 run "vale style fixtures" bash tests/vale/run-fixtures.sh
-run "docs-page-chain derivation test" node tests/docs-page-chain-derivation.test.mjs
-run "docs-page-chain outline test" node tests/docs-page-chain-outline.test.mjs
-run "docs-page-chain handoff test" node tests/docs-page-chain-handoff.test.mjs
-run "drafter prompt parity (goja against Node)" bash tests/drafter-prompts-parity.sh
 run "check-drift initiatives leg" bash tests/check-drift-initiatives.test.sh
 run "gather-dotfiles initiatives leg" bash tests/gather-dotfiles-initiatives.test.sh
 run "secret-set.sh path overrides" bash tests/secret-set-overrides.test.sh

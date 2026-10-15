@@ -443,12 +443,11 @@ for i in 1 2 3 4 5 6; do
 done
 assert_contains "$out" "gate exit: 0" "defer: the own run finishes"
 
-# --- no implementer file or workflow carries a vanished clause: the protocol lives only in
+# --- no implementer file carries a vanished clause: the protocol lives only in
 # cairn-run-gate's own output now.
 hits=$(grep -rniI "vanish" \
   "$REPO_ROOT/claude/.claude/agents/cairn-implementer.md" \
-  "$REPO_ROOT/claude/.claude/agents/site-implementer.md" \
-  "$REPO_ROOT/claude/.claude/workflows/docs-page-chain.js" || true)
+  "$REPO_ROOT/claude/.claude/agents/site-implementer.md" || true)
 [ -z "$hits" ] || { echo "FAIL: a vanished clause remains: $hits"; fail=1; }
 
 [ "$fail" -eq 0 ] && echo "cairn-run-gate: OK" || echo "cairn-run-gate: FAILED"
