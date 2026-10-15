@@ -7,9 +7,9 @@ set -uo pipefail
 # Sections: stow state per package, rpm-ostree layered set, Homebrew,
 # flatpaks (against the manifest, with Bluefin's stock set implicit), uv
 # tools, staged /etc drops, untracked ~/.local/bin executables, the
-# Thunderbird theme install, and git state. Exit 0 only when everything
-# matches; exit 1 with per-item detail otherwise. The manifests record
-# intent; this script reports what happened.
+# Thunderbird theme install, git state, and user lingering. Exit 0 only
+# when everything matches; exit 1 with per-item detail otherwise. The
+# manifests record intent; this script reports what happened.
 
 DOTFILES="$HOME/.dotfiles"
 BLUEFIN="$DOTFILES/bluefin"
@@ -210,6 +210,14 @@ if [[ -n "$drift" ]]; then
     echo "  Review and commit the specific files (never git add -A)."
 else
     ok "working tree clean"
+fi
+
+echo ""
+echo "User lingering (bootstrap.sh setup_upkeep_timer):"
+if [[ "$(loginctl show-user "$USER" -p Linger --value 2>/dev/null)" == "yes" ]]; then
+    ok "on"
+else
+    bad "off; user timers stop at logout. Run: loginctl enable-linger \"\$USER\""
 fi
 
 echo ""

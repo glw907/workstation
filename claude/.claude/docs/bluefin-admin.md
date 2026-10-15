@@ -58,7 +58,9 @@ until a probe is added). `/etc` changes stage under
 `bluefin/etc/` first, per the drift discipline below. `check-drift` reconciles all
 of these against the live machine; a weekly user timer (`check-drift.timer`, the
 `upkeep` package) notifies on drift, and a session that installed or reconfigured
-anything runs `check-drift` before it closes. An install without its manifest line
+anything runs `check-drift` before it closes. Lingering is on for the user on both hosts
+(`loginctl enable-linger`, Geoff 2026-10-14), so a user timer fires after a logout or a
+reboot with no login; `bootstrap.sh` turns it on and `check-drift` reports it off. An install without its manifest line
 is drift you created knowingly.
 
 ### layered-packages.txt is the source of truth
