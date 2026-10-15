@@ -21,7 +21,7 @@ machine.** The manifests record intent; the script reports what happened.
 | MCP servers, project scope | a repo's `.mcp.json` | that repo | the repo's own CLAUDE.md names it |
 | Secrets a server needs | the age store, `~/.local/secrets` | `~/.dotfiles/secrets/registry.md` | `secret-receive`, `sync.sh` |
 | Memory | `~/.claude/projects/<repo>/memory/` | `MEMORY.md` index per repo | the session |
-| Workflows | `~/.claude/workflows/` (invoked by name; see "Workflows" below) | the directory | the Workflow tool |
+| Workflows | `claude/.claude/workflows/` in `~/Projects/drafter`, installed by its `make install` (invoked by name; see "Workflows" below) | the directory | the Workflow tool |
 
 ## Rules
 
@@ -31,7 +31,8 @@ The rules for adding or changing any piece live in the `claude-infra` skill.
 
 Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; the seats are in
 `pass-core` "Models"): every reviewer agent under `agents/` and the workflow script
-`docs-page-chain.js` names `claude-opus-5-5` explicitly (`diff-reviewer`, the four domain
+`docs-page-chain.js` (source repo `~/Projects/drafter`, linked into the live
+workflows directory by `make install`) names `claude-opus-5-5` explicitly (`diff-reviewer`, the four domain
 reviewers, `engine-triage`, `go-architecture-reader`, `figure-verifier`, `visual-verifier`,
 `prose-voice-reviewer`, `cairn-register-editor`, `plan-reviewer`). `cairn-docs-drafter` (the docs page chain's
 default drafter, `effort: high`) also pins `claude-opus-5-5` explicitly and carries no `skills:`
@@ -67,7 +68,13 @@ tracked file reaches the live one only through `apply`.
 
 ## Workflows
 
-Invoke a workstation workflow by name, never from a scratchpad copy, so every run executes the
+`docs-page-chain.js` and its `cairn-docs-outline` helper live in `~/Projects/drafter`
+(`claude/.claude/workflows/`, `bin/.local/bin/`), and `make -C ~/Projects/drafter install` links them
+into the live workflows directory and `~/.local/bin/`. This repo keeps no workflow script. A
+machine that still has the old stow links restows (`stow -R bin claude`) before running the install,
+which refuses to write through a symlink.
+
+Invoke a workflow by name, never from a scratchpad copy, so every run executes the
 committed script. By-name resolution can serve a stale copy after the script changed in the same
 session (2026-10-01: run `wf_55b254af-82a` ran an earlier commit and redrafted six pages). Before
 relying on a run, `cmp` the persisted script the tool returns against the committed file. On a
