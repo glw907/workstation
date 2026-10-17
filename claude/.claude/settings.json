@@ -11,7 +11,9 @@
       "Bash(chromium:*)",
       "Bash(chromium-shot:*)",
       "Bash(tellgrader:*)",
-      "Bash(gh pr merge * --match-head-commit *)"
+      "Bash(gh pr merge * --match-head-commit *)",
+    "WebSearch",
+    "WebFetch"
     ],
     "defaultMode": "auto"
   },
