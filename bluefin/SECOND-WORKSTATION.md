@@ -215,10 +215,15 @@ the rest unless the step says it is a hard stop.
    sudo -A install -D -m 644 "$E/systemd/zram-generator.conf.d/10-larger-zram.conf" \
        /etc/systemd/zram-generator.conf.d/10-larger-zram.conf
    sudo -A ln -sf /dev/null /etc/systemd/system/systemd-remount-fs.service
+   sudo -A install -m 644 "$E/bluetooth/main.conf" /etc/bluetooth/main.conf
+   sudo -A install -m 644 "$E/modprobe.d/btusb-no-autosuspend.conf" \
+       /etc/modprobe.d/btusb-no-autosuspend.conf
    sudo -A systemctl daemon-reload
    ```
    The zram size formula scales with RAM and caps at 20 GB, so it needs no
    change for the desktop. The new size takes effect at the next boot.
+   The two Bluetooth files are pavilion-only. They keep the Keychron K3's
+   reconnect after idle sleep fast (Geoff, 2026-10-17).
 5. Fetch, verify, and unpack the handoff bundle:
    ```bash
    S=~/handoff-staging; mkdir -p "$S"
