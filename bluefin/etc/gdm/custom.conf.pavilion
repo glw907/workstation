@@ -1,0 +1,13 @@
+# GDM configuration storage
+
+[daemon]
+# Pavilion only (Geoff, 2026-10-17): the disk unlocks through the TPM, so the
+# GDM password is the credential gate. Auto-login stays off; the Bluetooth
+# keyboard works at the login screen. Installed to /etc/gdm/custom.conf from
+# ~/.dotfiles/bluefin/etc/gdm/ per the /etc drift discipline.
+
+[security]
+
+[debug]
+# Uncomment the line below to turn on debugging
+#Enable=true
