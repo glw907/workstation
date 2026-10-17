@@ -4,6 +4,15 @@
 
 ## Medium
 
+- [ ] **#23** Vale lints no file of `docs/voice/` `#improvement` `#workstation` `#initiative:approval-packets` *(2026-10-17)*
+  `vale claude/.claude/docs/voice/approval-brief.md` scopes the register out (0 files linted), so only the `tellgrader` register gate reads it. Decide whether the register belongs in `.vale.ini`'s scope.
+
+- [ ] **#22** `ci-green` cannot watch a `master` repo `#improvement` `#workstation` `#initiative:approval-packets` *(2026-10-17)*
+  `bin/.local/bin/ci-green` merge-bases against `origin/main`, so `ci-green <sha> --pr <n> --wait` exits 3 ("couldn't find remote ref main") in poplar and dubplate, whose default branch is `master`. Read the default branch from the repo. The pass watched poplar PR 3 with `gh pr checks --watch` instead.
+
+- [ ] **#21** The approval-packets design names a manifest entry the tooling doc does not require `#improvement` `#workstation` `#initiative:approval-packets` *(2026-10-17)*
+  "Workstation Claude infrastructure" and "Landing order" item 3 say the `approval-packet` skill takes an entry in the tooling manifest and the inventory. `claude-tooling.md` ("Skills (authored here)") says an authored skill's manifest is its directory, and `claude-tooling-sync lint` passes with none. Correct the design in `initiatives/approval-packets/specs/`.
+
 - [ ] **#1** Thunderbird Nord mail follow-ups `#improvement` `#workstation` *(2026-10-14)*
   **Thunderbird Nord mail follow-ups** (Geoff, 2026-10-13, triage of PR #49): one pass for the six items he marked "now": (1) fix the gate's baseline on pavilion, the four ratchet lines and 22 pytest failures that read Homebrew's Python 3.15 paths (a `runner` pass); (2) add a `.vale.ini` so `vale thunderbird/README.md` lints something; (3) find the white strip beside the message list in the dark reader shots; (4) derive `--color-text-highlight-dark` in `customContent.css` from `nord.css`; (5) gate white text on `--mail-accent-fill` (4.03:1); (6) brighten the card tag icons. Two items are deferred until Geoff has run `thunderbird-theme-sync` on his live profile: recolour the header tag pills with the Nord tag roles (needs a contrast check, since Thunderbird picks pill text from the raw hex), and check the tag colours on the live profile (the test profile reads back Thunderbird's defaults). Harness: `thunderbird/tools/tb-shots`.
 

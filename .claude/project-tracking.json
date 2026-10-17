@@ -1,0 +1,5 @@
+{
+  "backlog_path": "BACKLOG.md",
+  "domains": ["workstation"],
+  "default_priority": "medium"
+}
