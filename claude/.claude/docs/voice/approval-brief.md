@@ -1,9 +1,11 @@
 # Register: the approval-queue brief
 
-The reader is Geoff, deciding whether to approve a PR, a design, or a triage list in Design & PR
-Approvals. The writer is a Claude session. Geoff reads the brief first, often on a phone, and
-should be able to decide from it without opening the diff. Applies to every `## Brief` in a PR
-body or a design doc, and to the headline, lede, and rows of a triage file.
+The reader is Geoff, deciding what to approve in Design & PR Approvals. The writer is a Claude
+session. The unit he decides on is the **packet**: one file that carries every PR, design, and plan
+step a session hands over at a decision point, with the questions only he can answer. Geoff reads on
+a phone, closed states first, and should be able to decide from them without opening a diff. Applies
+to every packet. The older kinds still exist and keep their contract below: the `## Brief` of a PR
+body or a design doc, and a triage file.
 
 Three published standards govern it. The **inverted pyramid** from news writing puts the
 conclusion first and each later layer under it in falling order of importance, so a reader who
@@ -18,6 +20,28 @@ approval-brief arm of the authoring charter (`~/.claude/docs/authoring-charter.m
 
 The `tellgrader` cadence measures are report-only and defined in
 `~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`.
+
+## The four rules
+
+The packet adds four rules to the standards. They are what separates a packet that decides from
+one that only reports.
+
+1. **Layer, summary first.** Every block a reader can open has a closed state that states its
+   point as a full sentence. Draft that sentence first and the detail second. Most decisions
+   should be possible from the closed states alone.
+2. **Completed staff work.** An ask arrives researched. Read the files, PRs, review findings, and
+   logs the decision turns on, and cite each fact's source. A question the facts settle is a
+   routine part, not an ask. A PR Geoff held before comes back as an ask under
+   `contradicts-ruling`, never as a routine row.
+3. **Not checked never hides a deciding fact.** When an ask turns on an unchecked fact, check it,
+   or raise the ask as `low-confidence` and say why the fact is out of reach. `## Not checked`
+   holds only what no ask depends on.
+4. **Background for every packet.** Two to four sentences place the packet in its initiative and
+   define any term a reader would not know. The first sentence stands alone as the closed row.
+
+Aim for about 250 words from the headline through `## Not checked`, counted as whitespace-separated
+tokens outside code fences. The command does not enforce it; the monthly review reports packets
+over it.
 
 ## What the standards ask for
 
@@ -49,9 +73,92 @@ The app is "Design & PR Approvals", or "approval" in running text. Never "the de
 desk", or any retired name, in a brief or in a triage file. A real identifier that happens to
 carry a retired word is renamed, not quoted.
 
-## The contract
+## The packet contract
 
-The approval-queue command refuses an item that breaks it, exits 2, and prints the message
+The command `approval-queue packet <initiative> <file>` refuses a packet that breaks the contract,
+exits 2, and names the defect with this register's path. The parser is
+`~/Projects/approval-queue/approval-queue/src/lib/packet.ts`. The skeleton below shows every part.
+
+- `# <headline>` is one sentence: what the packet does and what approving causes. A lede paragraph
+  of one to three sentences follows.
+- The sections come in this order: `## Background`, `## If you approve`, `## Not checked`, then
+  zero to three `## Ask: <question>`, then an optional `## Routine`. No other `##` heading is
+  allowed outside a code fence.
+- A plan step is `N. [session] <text>` (the session runs it and can revert it),
+  `[irreversible]` (it cannot be undone), or `[you: <label>]` (Geoff runs it; the label is the
+  "You'll need to" line on the page).
+- An ask carries `Rule`, `Part`, `Recommended`, `Reason`, and `Summary` lines, then a `Background:`
+  paragraph, a `Facts:` sentence with bullets each ending in a source in backticks inside
+  parentheses, and `Choices:` of at least two, each `- <label>: <consequence>`. The label holds
+  no colon. `Evidence:` with a fenced excerpt is optional.
+- `Rule` is one of seven: `irreversible`, `public-surface`, `cross-repo`, `owner-call`,
+  `low-confidence`, `gate-failed`, `contradicts-ruling`. A PR with a failing check or a `fix` or
+  `escalate` review verdict needs a `gate-failed` ask, and a PR whose body has `## Before merge`
+  needs an ask naming it.
+- `Part` is a canonical ref or `none`. A PR is `<owner>/<repo>#<n>`, a design is
+  `<owner>/<repo>:<path>`, and a step is `step:<n>`. Each PR and design appears once, in one ask or
+  one routine row. When `Part` names a part, every choice ends in a verdict tag in brackets:
+  `[approve]`, `[hold]`, or `[send-back]` for a PR or design. When `Part: none`, no choice has a
+  tag.
+- `## Routine` is one table with the header `| Part | Verdict | Fact | Why |`. A PR or design
+  takes `approve`, `hold`, or `send-back`; a step takes `session`, `you`, or `skip`. The fact is
+  the one that changes the verdict.
+- A packet holds at least one PR or design.
+
+Because an ask can hold a three-backtick Evidence fence, a packet exemplar sits in a four-backtick
+fence below.
+
+### The packet skeleton
+
+The angle-bracket text is a slot.
+
+````markdown
+# <One sentence: what this packet does and what approving causes.>
+
+<Why it matters now, in one to three sentences.>
+
+## Background
+<Two to four sentences: the initiative, where this packet sits, what came before, and a plain
+meaning for any term a reader would not know.>
+
+## If you approve
+1. [session] <A step the session runs that can be reverted.>
+2. [irreversible] <A step that cannot be undone.>
+3. [you: <label>] <A step you run yourself.>
+
+## Not checked
+<What was not verified. Never a fact an ask depends on.>
+
+## Ask: <the question>
+Rule: <one of the seven>
+Part: <a part ref, or none>
+Recommended: <the number of the recommended choice>
+Reason: <why, grounded in the facts>
+Summary: <one or two sentences carrying the background and the deciding fact>
+
+Background: <one paragraph defining every term and why the question exists>
+
+Facts: <one sentence stating the key fact>
+- <a fact> (`<its source>`)
+
+Choices:
+- <label>: <what happens, and whether it can be undone> [approve]
+- <label>: <what happens> [hold]
+
+Evidence: <one sentence stating what the excerpt shows>
+```text
+<a short excerpt>
+```
+
+## Routine
+| Part | Verdict | Fact | Why |
+|---|---|---|---|
+| <owner>/<repo>#<n> | approve | <the verdict-changing fact> | <one line> |
+````
+
+## The brief contract
+
+The approval-queue command refuses a `pr`, `design`, or `triage` item that breaks it, exits 2, and prints the message
 below with this register's path, `~/.claude/docs/voice/approval-brief.md`. The parser is
 `~/Projects/approval-queue/approval-queue/src/lib/brief.ts`.
 
@@ -109,12 +216,15 @@ below with this register's path, `~/.claude/docs/voice/approval-brief.md`. The p
 
 ## Exemplars
 
-Each exemplar is a fenced block. A block whose info string is `brief` is a Markdown brief and a
-block whose info string is `brief-triage` is a triage file; the approval-queue tests extract
-both and run the parser over them, so each one must satisfy the contract exactly. A block
+Each exemplar is a fenced block. A block whose info string is `brief` is a Markdown brief, a block
+whose info string is `brief-triage` is a triage file, and a block whose info string is `packet` is
+a packet in a four-backtick fence; the approval-queue tests extract all three, close each at a
+fence of the opening width, and run the parser over them, so each one must satisfy its contract
+exactly. The three packet exemplars show a packet with two asks, a routine-only packet, and a
+packet with a `gate-failed` ask. A block
 tagged plain `markdown` is a counter-example or a skeleton and is never parsed.
 
-### The skeleton
+### The brief skeleton
 
 Every part of the contract, with a decision block. The angle-bracket text is a slot.
 
@@ -158,6 +268,144 @@ Source: <where the question came from>
 
 <The agent-facing sections: what landed, the review, the score.>
 ```
+
+### A packet with two asks (drafter link checker)
+
+The headline names the outcome, the first ask is bound to a PR and tagged, and the second is a
+call with no part. Each ask's `Summary:` carries the deciding fact, so the closed card decides.
+
+````packet
+# This packet ships the drafter link checker and publishes version 0.3.0, and approving merges both PRs.
+
+The publish cannot be undone, and one default is yours to set before it goes out.
+
+## Background
+The drafter initiative gives the docs writer a tool that checks a page before a person reads it. This packet carries the link checker, the third of four stages. A release tag is the label on a published version, and a package registry keeps every published version for good.
+
+## If you approve
+1. [session] Merge glw907/drafter#51, then glw907/drafter#52.
+2. [irreversible] Publishing version 0.3.0 to the package registry runs when #51 merges.
+3. [you: confirm the registry login] Check the version page once the publish ends.
+
+## Not checked
+The checker was run on the sample pages only, not on the full docs set.
+
+## Ask: Publish version 0.3.0 with the link checker on?
+Rule: irreversible
+Part: glw907/drafter#51
+Recommended: 1
+Reason: All checks pass and the review verdict is accept, and the package version is new.
+Summary: PR 51 publishes 0.3.0 to the registry, and a published version cannot be taken back. Every check passes.
+
+Background: The registry refuses a second upload of the same version number. A mistake in 0.3.0 would need a 0.3.1 to correct it.
+
+Facts: The version number is unused and the checks are green.
+- Version 0.3.0 is not in the registry list (`docs/releases.md`)
+- All four checks pass (`glw907/drafter#51`)
+
+Choices:
+- Publish: merges the PR and publishes 0.3.0; a later release can replace it but never remove it [approve]
+- Wait: leaves the PR open with nothing published [hold]
+- Send back: returns the PR to the session to change and send again [send-back]
+
+## Ask: Should the link checker fail the build by default?
+Rule: owner-call
+Part: none
+Recommended: 2
+Reason: Docs authors have not seen the checker yet, so a warning gives them time to fix old links.
+Summary: The checker can warn or fail the build on a broken link. Warning first lets authors fix the backlog of old links.
+
+Background: A failing build blocks every docs change until the broken link is fixed. A warning prints the link and lets the change through.
+
+Facts: The sample run found eleven broken links.
+- The sample run printed eleven broken links (`docs/link-check-sample.txt`)
+
+Choices:
+- Fail the build: a broken link blocks the change until it is fixed
+- Warn only: a broken link prints and the change goes through
+
+## Routine
+| Part | Verdict | Fact | Why |
+|---|---|---|---|
+| glw907/drafter#52 | approve | The change is a changelog entry and the checks pass. | Nothing in it needs a call. |
+| step:1 | session | A merge can be reverted. | The order is fixed by the plan. |
+````
+
+### A routine-only packet (drafter docs fixes)
+
+When the facts settle every part, the packet has no ask. The reader approves from the headline,
+the lede, and the table.
+
+````packet
+# This packet merges two drafter documentation fixes, and approving changes no behavior.
+
+Both PRs correct text only, and every check passes.
+
+## Background
+The drafter initiative keeps its own guide current as the tool grows. This packet carries small corrections found while the link checker was built. A changelog is the list of changes a release made.
+
+## If you approve
+1. [session] Merge glw907/drafter#53, then glw907/drafter#54.
+
+## Not checked
+The guide was not rebuilt on the live site; the build runs after the merge.
+
+## Routine
+| Part | Verdict | Fact | Why |
+|---|---|---|---|
+| glw907/drafter#53 | approve | The diff changes three words in the guide and the checks pass. | A typo fix. |
+| glw907/drafter#54 | approve | The diff adds one changelog line and the checks pass. | The line matches the merged release. |
+| step:1 | session | A merge can be reverted. | The order does not matter. |
+````
+
+### A packet with a gate-failed ask (drafter note template)
+
+A failing check is always an ask, and it names the PR. The evidence excerpt shows the failure
+itself, so the reader need not open the log.
+
+````packet
+# This packet merges a drafter note template change that failed one check, and approving waives that check.
+
+The failing check is a style rule on a generated file, and the choice is yours.
+
+## Background
+The drafter initiative replaces hand-written release notes with generated ones. This packet carries the template for the notes. A gate is the set of checks and the review a PR must pass.
+
+## If you approve
+1. [session] Merge glw907/drafter#61, then glw907/drafter#62.
+
+## Not checked
+The generated notes were not read on the live project page.
+
+## Ask: Merge the note template with its lint check red?
+Rule: gate-failed
+Part: glw907/drafter#61
+Recommended: 1
+Reason: The only failure is in a generated file that the repo exempts from the style rule.
+Summary: PR 61 fails one lint check, and the failure is in a generated file. The repo waives that rule for generated files.
+
+Background: A lint check scans files for style rules. The repo's policy exempts generated files, but the check's config predates the policy and still scans them.
+
+Facts: The one error is in a generated file.
+- The lint check reports one error, in `notes.generated.ts` (`glw907/drafter#61`)
+- The style policy exempts generated files (`docs/style.md`)
+
+Choices:
+- Merge anyway: merges the PR with the lint check red; a revert PR undoes it [approve]
+- Hold: leaves the PR open with nothing done [hold]
+- Send back: returns the PR to the session to fix the check and send again [send-back]
+
+Evidence: The lint output names the generated file only.
+```text
+notes.generated.ts:12:1  error  line too long (max-len)
+```
+
+## Routine
+| Part | Verdict | Fact | Why |
+|---|---|---|---|
+| glw907/drafter#62 | approve | All checks pass and the review verdict is accept. | Nothing in it needs a call. |
+| step:1 | session | A merge can be reverted. | The order is fixed by the plan. |
+````
 
 ### A PR with nothing to decide (PR #40)
 
