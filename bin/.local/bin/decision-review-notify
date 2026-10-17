@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# decision-review-notify: timer-facing reminder for the monthly review of
+# approval-packet decisions. Raises a normal-urgency desktop notification and
+# nothing else; the review itself is a session started from
+# docs/decision-review/prompt.txt in approval-queue.
+
+export PATH="$HOME/.local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:$PATH"
+
+echo "decision review reminder"
+notify-send --urgency=normal "Monthly decision review" \
+    "Start a session from docs/decision-review/prompt.txt in approval-queue." \
+    2>/dev/null || true
+exit 0

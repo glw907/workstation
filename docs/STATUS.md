@@ -57,4 +57,4 @@ leftovers".
 ## Open items
 
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not
-done" are owed to the next dotfiles pass.
+done" go to `BACKLOG.md` through `log-issue`.

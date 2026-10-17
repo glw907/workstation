@@ -315,7 +315,7 @@ the rest unless the step says it is a hard stop.
    ```
 10. Verify. Run `check-drift` and `claude-tooling-sync verify`, then confirm
     each of these: `gh auth status`, `systemctl --user list-timers` shows
-    check-drift, model-review, vdirsyncer, and cairn-tripwire,
+    check-drift, model-review, decision-review, vdirsyncer, and cairn-tripwire,
     `hostnamectl` shows `pavilion`, a new Claude session opens with
     `## Host: pavilion`, and `ls ~/.claude/projects/*/memory` lists the
     carried memory. Fix any drift that a step above should have

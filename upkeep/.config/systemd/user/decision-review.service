@@ -1,0 +1,6 @@
+[Unit]
+Description=Remind Geoff to run the monthly approval-packet decision review
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/decision-review-notify

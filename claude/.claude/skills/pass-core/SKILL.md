@@ -25,8 +25,8 @@ account.
 
 1. **Design.** Opus at `high` brainstorms in chat. Geoff approves a design of a page or less: the
    outcome, files and interfaces touched, what is out of scope, one end-to-end check, and the risk
-   class. A design brought for approval is handed over with `approval-queue design <repo> "<title>"
-   <file>`. A design doc opens with `## Brief` after its title, per
+   class. A design brought for approval goes to Geoff as a design part in a packet, per `approval-packet`.
+   An owner fork in the design is a `### Decide:` block in its brief. A design doc opens with `## Brief` after its title, per
    `~/.claude/docs/voice/approval-brief.md`. The design names its initiative (a record in `~/Projects/initiatives`) or says none applies; cross-repo specs, plans, and research go in `initiatives/<id>/`, and the plan header carries an `Initiative: <id>` line. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
    carries
    these two samples, and extras go in "Later", never built:
@@ -74,7 +74,7 @@ account.
    share of a spec's figure. Skip `writing-plans`' code
    steps and execution-method question. Test-first applies to `auth-data` tasks.
 5. **Execute.** See "Execute".
-6. **Close.** See "Close". Geoff decides the PR in Design & PR Approvals, except that a pass whose highest
+6. **Close.** See "Close". Geoff decides the packet in Design & PR Approvals, except that a pass whose highest
    class is `ordinary` merges its own PR (see "Close").
 
 ## Models
@@ -183,11 +183,11 @@ may close, the lid-switch hold, per `~/.claude/docs/unattended-work-guards.md`, 
 are (Geoff, 2026-10-12). It watches unattended passes with the Monitor tool over `claude agents
 --json --all`, which keeps a background session listed after its process exits. The Monitor event
 is the primary signal; each fallback tick re-arms the Monitor and checks the pass's sessions and
-PRs, since an event lost to an API drop leaves the conductor asleep. It puts each PR or design before
-Geoff in Design & PR Approvals, merges and pulls the checkout per "Close" after he approves, and launches
+PRs, since an event lost to an API drop leaves the conductor asleep. At each decision point it sends one packet for the PRs and designs it holds, never one per
+executor PR, per `approval-packet`. It merges and pulls the checkout per "Close" after he approves, and launches
 the next committed prompt from the main checkout after the "Execute" pre-launch checks. For a pass
-it owns, the conductor is the session that hands the PR over in "Close", so the executor's prompt
-ends at PR-ready and never runs `approval-queue`. It brings Geoff only designs, PR reads, and product
+it owns, the conductor is the session that hands the packet over in "Close", so the executor's prompt
+ends at PR-ready and never runs `approval-queue`. It brings Geoff only packets and product
 or priority calls.
 
 An executor refuses the conductor's cross-session messages, rightly: a peer's message carries no
@@ -201,7 +201,7 @@ executor's merge of the plan branch then conflicts in STATUS (twice on 2026-10-1
 STATUS changes into the hand-over after that pass lands (conductor `4bea6e68`, 2026-10-11).
 
 On a hand-off message, the conductor replies with one line naming the pass before anything else.
-It ends when no pass it owns is open (each PR merged or closed, the triage acted on, the checkout
+It ends when no pass it owns is open (each PR merged or closed, the packet's decision acted on, the checkout
 pulled or reported stale) and its project's STATUS names no launch prompt waiting for it. Its last
 acts are the STATUS hand-over (see "Ledgers") and `claude stop <id>`, taking `<id>` from its own row
 in `claude agents --json`. An idle conductor stays listed and keeps its name, so the next planner
@@ -219,39 +219,34 @@ landed at zero fix rounds and paraphrased ones averaged one. An overruled verdic
 reason in the PR body, and a correctness-critical overrule re-runs the review at `xhigh`. The
 adapter's close checklist runs (the auth smoke on `auth-data`), STATUS is updated, and
 the PR body opens with a `## Brief` per `~/.claude/docs/voice/approval-brief.md` and carries,
-below it, what landed, each `auth-data` verdict, and the score. Each "Found, not done" item in
-the PR body carries a proposed disposition (now, defer, or drop) and a one-line reason, and
-Geoff triages them at the PR read. The triage file is `{headline, lede, rows: [{action, why,
-detail, proposed}]}`, with `proposed` one of now, defer, or drop. Geoff's submitted rows come back
-as `{action, disposition, note}`, and an approve carries `choices: [{title, choice}]`. Whoever merges acts on the triage: a "now" item becomes a
-follow-up task or pass, a "defer" item is filed in the repo's `BACKLOG.md` with an `#initiative:<id>` tag when a record fits, and its number cited back in
-the PR, an initiative-sized "now" item becomes a record, and a "drop" item stays only in the PR. A merged PR body is history no session reads (Geoff,
-2026-10-11: dubplate PR #2 left 14 items there). Prompting best practices
-(<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>):
-"Use structured formats for state data: When tracking structured information (like test results or
-task status), use JSON or other structured formats".
+below it, what landed, each `auth-data` verdict, and the score. Each "Found, not done" item worth doing is
+filed through `log-issue` in its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits,
+and listed in the PR body with its backlog number; an item not worth doing stays in the PR body,
+marked dropped. No follow-up is sent to Geoff as its own item, and an initiative-sized one becomes a
+record. A merged PR body is history no session reads (Geoff,
+2026-10-11: dubplate PR #2 left 14 items there).
 
-When the PR is ready for Geoff's read, the session that hands it over runs `approval-queue pr
-<owner>/<repo> "<title>" <n>` as a background Bash command. It then hands the PR body's "Found, not
-done" items over as one `approval-queue triage` item in that triage file shape, and stays open until each command exits with
-Geoff's decision as JSON. An approve in Design & PR Approvals is Geoff's merge authorization, the one a launch
-prompt's "never merge" otherwise withholds: the session merges with `gh pr merge <n> --merge
---match-head-commit <head>`, taking `<head>` from the decision, and pulls the checkout as the next
-paragraph says. On reject, it fixes forward from the note. It acts on each triage row as the triage
-sentences above say. A pass that merges its own PR opens nothing (Geoff, 2026-10-11).
+When the work is ready for Geoff's read, the session that hands it over sends one packet with
+`approval-queue packet <initiative> <file>`, following `approval-packet`, and stays open until the
+command exits with Geoff's decision as JSON. An approve is Geoff's merge authorization for each part
+whose verdict is `approve`, the authorization a launch prompt's "never merge" otherwise withholds:
+the session merges as `approval-packet` step 7 sets out, with `--match-head-commit <head>` taken
+from the decision, and pulls the checkout as below. On reject, it fixes forward from the note. A
+pass that merges its own PR sends nothing (Geoff, 2026-10-11). `approval-queue triage` survives
+only for an explicit backlog triage.
 
 A pass whose highest class is `ordinary` merges its own PR with `gh pr merge <n> --merge` after a
-green full-suite home and an accepted whole-branch review, when its "Found, not done" list is
-empty. A non-empty list, or a `runner` or `auth-data` pass, keeps Geoff's read and merge. An
+green full-suite home and an accepted whole-branch review, when it filed no follow-ups at all.
+A pass that filed any follow-up, or a `runner` or `auth-data` pass, sends a packet for Geoff's read and merge. An
 adapter line that says every PR waits for Geoff yields to this exception.
 
 A PR must be safe under a plain merge followed by a pull; the executor makes it so where it can.
 When it cannot, the PR body carries a `## Before merge` section: the exact commands in order and
 the one check that shows they ran. `claude-merge-guard` refuses `gh pr merge <n>` until the
-command is prefixed `PREMERGE_DONE=<n>`, after the merger has run those steps. An approve's `choices`
-say who runs them: "The session runs it, then merges" sends the session through the steps and then
+command is prefixed `PREMERGE_DONE=<n>`, after the merger has run those steps. The packet raises the
+section as an ask naming the PR, and the choice picked says who runs them: "The session runs it, then merges" sends the session through the steps and then
 the merge; "I'll run it myself" means the session does not merge, and it reports that Geoff runs
-the steps and will say when they are done. "Approve anyway" on a failed check or a fix review
+the steps and will say when they are done. A `[approve]` choice on a failed check or a fix review
 means merge as approved.
 
 Whoever merges a PR then brings that repo's main checkout up to date: `git -C <checkout> pull
@@ -267,7 +262,7 @@ The PR body carries the spec's price table rows: Gates on the critical path, Wor
 waits on the path, Fix rounds and reds, Close, and Total. Gate and lock time come from
 `cairn-run-gate --records <toplevel> <branch>`; the clock runs from the first execution commit to
 PR-ready. The Work and review row names the plan's path minutes beside the actual, the figure the
-next design's estimate is set from. It lists the attended events (the design, the PR read, one per clock stop) and any escape,
+next design's estimate is set from. It lists the attended events (the design, the packet read, one per clock stop) and any escape,
 a behavioral, security, or contract defect that surfaces through the next pass's close, CI on
 `main`, or Geoff's use; an escape also goes into STATUS with its commit. A miss names its row, or
 the step that should have caught the escape, and only that changes.
@@ -289,8 +284,7 @@ is small ... ask Claude to do it directly."
 
 ## Scope
 
-A grant authorizes a mechanism or a boundary, never more work. Work found mid-task goes to the PR
-body's "Found, not done" list or to BACKLOG, never into the task in flight, unless the task would
+A grant authorizes a mechanism or a boundary, never more work. Work found mid-task is filed in BACKLOG through `log-issue` and listed in the PR body, never sent to the packet as an item, never put into the task in flight, unless the task would
 otherwise build on something known to be wrong (say so then).
 
 ## Launch prompt
@@ -298,14 +292,13 @@ otherwise build on something known to be wrong (say so then).
 A STATUS next action carries the goal, the scope, the plan path, the checkout, and the exact
 `claude` line. The prompt text lives in a committed file and is launched as `"$(cat <file>)"`,
 since a prompt pasted inside double quotes runs each backticked span as a command substitution.
-The prompt for a pass that hands its PR over says the session waits for the approval, merges only on
-Geoff's approve with `--match-head-commit`, and ends after acting on the decision; it never
+The prompt for a pass that hands its PR over says the session sends its packet through `approval-packet`, waits for the decision, merges only a part Geoff approved with `--match-head-commit`, and ends after acting on the decision; it never
 says "never merge" or "end" outright. Close the session when the initiative lands.
 
 A conductor prompt opens with one line naming the session `conductor-<project>`, then carries the
 executor's `claude` line and its prompt file; the plan path and each repo and checkout the pass
 touches; the merge order across its PRs, with any `## Before merge` steps known at plan time; the
-standing answers from the design; and what goes to Design & PR Approvals. It restates nothing this skill
+standing answers from the design; and what goes in its packet to Design & PR Approvals. It restates nothing this skill
 already says. Prompting Claude Opus 5
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
 the model "performs best when given the complete task specification up front and left to run".

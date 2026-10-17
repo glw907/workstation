@@ -10,7 +10,7 @@ provide.
 
 Planning, executing, and closing a pass is the `pass-core` skill, with `cairn-pass`, `site-pass`,
 and `dotfiles-pass` as per-repo adapters. Invoke it for any planned pass. Geoff's touchpoints are
-the design in chat and the PR.
+the design in chat and the approval packet (`approval-packet`), one per hand-over.
 
 ## Search before you spelunk (Geoff, 2026-07-13)
 

@@ -82,7 +82,9 @@ revision carries it), refused (a one-line reason), or owner fork.
   (Geoff, 2026-09-28: "I want a proven and battle-tested system").
 - It never rules an owner fork. It consolidates the forks into one numbered rulings section, each a
   yes-or-no question with a recommendation and what each answer builds. A question with one clearly
-  correct answer is not a fork: the document takes it and records why (Geoff, 2026-09-25).
+  correct answer is not a fork: the document takes it and records why (Geoff, 2026-09-25). In the
+  design's brief each fork becomes a `### Decide:` block, so Geoff rules it as an ask in the
+  design's approval packet (`approval-packet`).
 - When the revision silently changes a ratified document's meaning, the fold records an owed
   erratum and does not edit that document.
 
