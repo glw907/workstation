@@ -27,6 +27,7 @@ DENIED = [
     "timeout -k 5 600 npm test | tail",
     "env CI=1 npm test | tail",
     "time npm test | head",
+    "gh pr checks 7 --interval 5 --watch | tail",
 ]
 
 HEREDOC_NO_APOSTROPHE = "git commit -F - <<'EOF'\nNotes on npm test | tail\nEOF"
@@ -52,6 +53,11 @@ ALLOWED = [
     HEREDOC_APOSTROPHE,
     HEREDOC_SUBSTITUTION,
     MULTILINE_MESSAGE,
+    "gh pr checks 7 | tail -3",
+    "gh pr checks 7 --json name,state | head",
+    "npm test --help | head",
+    "cairn-run-gate --help | head -20",
+    "bash scripts/check.sh -h | tail",
 ]
 
 

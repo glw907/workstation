@@ -4,9 +4,11 @@
 A pipe into tail or head hides the command's output until it exits, so a
 long gate or CI watch looks hung and its exit code is lost. The guarded
 commands are cairn-run-gate, ci-green, scripts/check.sh, scripts/gate.sh,
-npm test, npm run check[:suffix], and gh pr checks. Exit 2 denies the call;
-any other non-zero exit is a non-blocking error that puts a notice on every
-such call (https://code.claude.com/docs/en/hooks), so every input the script
+npm test, npm run check[:suffix], and gh pr checks --watch. A command run
+with --help or -h prints its usage and exits, so the guard skips it, and it
+skips gh pr checks without --watch, which prints once. Exit 2 denies the
+call; any other non-zero exit is a non-blocking error that puts a notice on
+every such call (https://code.claude.com/docs/en/hooks), so every input the script
 cannot parse exits 0 silently.
 
 This is a hook, not a permission deny rule, because permission rules split a
@@ -111,7 +113,7 @@ def is_guarded(words: list[str]) -> bool:
     """Report whether the stage runs one of the guarded commands."""
     if words and words[0] in ("bash", "sh"):
         words = words[1:]
-    if not words:
+    if not words or "--help" in words or "-h" in words:
         return False
     first = words[0]
     if os.path.basename(first) in ("cairn-run-gate", "ci-green"):
@@ -124,7 +126,7 @@ def is_guarded(words: list[str]) -> bool:
             and len(words) > 2
             and re.fullmatch(r"check(?::.*)?", words[2]) is not None
         )
-    return words[:3] == ["gh", "pr", "checks"]
+    return words[:3] == ["gh", "pr", "checks"] and "--watch" in words[3:]
 
 
 def main() -> int:
