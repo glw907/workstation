@@ -73,6 +73,8 @@ because they own their own install or update path:
 
 - **poplar** -- a terminal email client, installed from its own repo via
   `make install`, not Stow or Homebrew.
+- **cairn** -- the cairn-cms Go CLI, built by `make install` in that repo's `tool/` folder to
+  `~/.local/bin`.
 - **tellgrader** -- the tell-scanner CLI. Its source is tracked in this repo under the
   `claude` package, at `claude/.claude/skills/writing-voice/evals/tellgrader/`, and its own
   `make install` builds the binary to `~/.local/bin`, alongside poplar's entry.

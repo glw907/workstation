@@ -26,6 +26,8 @@ brew "ffmpeg"
 brew "socat"
 brew "ttyd"
 brew "rsync"
+# hcloud: dubplate's scripts/deploy.sh looks up the musicbox server IP with it.
+brew "hcloud"
 brew "vale"
 brew "syncthing"
 brew "chafa"
