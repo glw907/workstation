@@ -1,0 +1,10 @@
+[Unit]
+Description=Monthly approval-packet decision review reminder
+
+[Timer]
+OnCalendar=monthly
+Persistent=true
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target

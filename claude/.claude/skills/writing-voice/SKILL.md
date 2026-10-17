@@ -29,7 +29,7 @@ authoring charter (`~/.claude/docs/authoring-charter.md`).
 | End-user and editor product copy, UI-only walkthroughs with no terminal step | Microsoft Writing Style Guide | `~/.claude/docs/voice/editor.md` |
 | CLAUDE.md, skills, agent definitions, hook text | Anthropic Claude Code best practices | `~/.claude/docs/voice/agent-facing.md` |
 | Commit messages and PR bodies | Conventional Commits and the git-commit canon | `~/.claude/docs/voice/commit-and-pr.md` |
-| Approval-queue brief (the `## Brief` of a PR body or design doc, and a triage file) | Inverted pyramid, Federal Plain Language Guidelines, Nielsen Norman Group on web writing and progressive disclosure | `~/.claude/docs/voice/approval-brief.md` |
+| Approval packet and PR-body brief (the packet file; the `## Brief` of a PR body or design doc); the triage file stays for a backlog triage | Inverted pyramid, Federal Plain Language Guidelines, Nielsen Norman Group on web writing and progressive disclosure | `~/.claude/docs/voice/approval-brief.md` |
 | Go code comments | Go Doc Comments, Effective Go | the go-conventions skill |
 | TypeScript code comments | TSDoc | the ts-conventions skill |
 | Svelte code comments | TSDoc plus the Svelte `@component` convention | the svelte-conventions skill |

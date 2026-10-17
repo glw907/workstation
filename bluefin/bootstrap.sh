@@ -365,12 +365,13 @@ setup_vale_styles() {
 }
 
 setup_upkeep_timer() {
-    echo "== setup: upkeep timers (weekly drift, monthly model review) =="
+    echo "== setup: upkeep timers (weekly drift, monthly model and decision reviews) =="
     # check-drift.timer arrives via the upkeep stow package; it notifies
     # only when the repo and the live machine disagree.
     systemctl --user daemon-reload || return 1
     systemctl --user enable --now check-drift.timer
     systemctl --user enable --now model-review.timer
+    systemctl --user enable --now decision-review.timer
     # Lingering keeps the user manager up with no login session, so user
     # timers fire after a logout or a reboot (Geoff, 2026-10-14).
     loginctl enable-linger "$USER" || sudo -A loginctl enable-linger "$USER"

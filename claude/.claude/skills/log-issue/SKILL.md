@@ -45,9 +45,16 @@ the plan or an initiative record instead.
 Do not create it unasked. Ask: "The configured backlog `<backlog_path>` does not exist. Create it?"
 On yes, create it using the template in Step 4 and proceed to Step 2; on no, stop.
 
+### No questions: a session filing a pass follow-up
+
+A session filing a "Found, not done" follow-up (`approval-packet`, "Follow-ups") asks nothing, in a
+repo with no backlog too (Geoff, 2026-10-14). It writes `.claude/project-tracking.json` with the
+defaults (`BACKLOG.md`, the repo's name as its one domain, `medium`), creates `BACKLOG.md` from the
+Step 4 template where it is missing, and files the item.
+
 ### Config missing or backlog file isn't in the expected format
 
-This is first-run setup. Ask the user these questions in a single message:
+This is first-run setup for an interactive request. Ask the user these questions in a single message:
 
 1. **Backlog location:** "Where should the backlog file live? (default: `BACKLOG.md`
    at project root)"
