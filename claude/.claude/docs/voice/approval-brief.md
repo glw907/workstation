@@ -96,10 +96,10 @@ exits 2, and names the defect with this register's path. The parser is
   `escalate` review verdict needs a `gate-failed` ask, and a PR whose body has `## Before merge`
   needs an ask naming it.
 - `Part` is a canonical ref or `none`. A PR is `<owner>/<repo>#<n>`, a design is
-  `<owner>/<repo>:<path>`, and a step is `step:<n>`. Each PR and design appears once, in one ask or
-  one routine row. When `Part` names a part, every choice ends in a verdict tag in brackets:
-  `[approve]`, `[hold]`, or `[send-back]` for a PR or design. When `Part: none`, no choice has a
-  tag.
+  `<owner>/<repo>:<path>`, and a step is `step:<n>`. Each part appears once, in one ask or one
+  routine row. When `Part` names a part, every choice ends in a verdict tag in brackets:
+  `[approve]`, `[hold]`, or `[send-back]` for a PR or design, and `[session]`, `[you]`, or `[skip]`
+  for a step. When `Part: none`, no choice has a tag.
 - `## Routine` is one table with the header `| Part | Verdict | Fact | Why |`. A PR or design
   takes `approve`, `hold`, or `send-back`; a step takes `session`, `you`, or `skip`. The fact is
   the one that changes the verdict.
