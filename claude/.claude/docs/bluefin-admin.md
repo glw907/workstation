@@ -199,6 +199,12 @@ stays the record of what's actually on disk. Current captured files:
 - `bluefin/etc/systemd/user.conf.d/10-oom-continue.conf` and
   `bluefin/etc/systemd/zram-generator.conf.d/10-larger-zram.conf` → the memory-pressure
   defense; see `docs/oom-defense.md` for why they exist before touching either
+- `bluefin/etc/bluetooth/main.conf` → `/etc/bluetooth/` and
+  `bluefin/etc/modprobe.d/btusb-no-autosuspend.conf` → `/etc/modprobe.d/` (pavilion only,
+  Geoff 2026-10-17): `FastConnectable` and no adapter autosuspend, so the Keychron K3
+  reconnects quickly after its idle sleep. The main.conf is a whole copy of the stock file;
+  diff it against `/usr/etc/bluetooth/main.conf` after a BlueZ upgrade. After a change:
+  `sudo -A btmgmt fast-conn on` applies the first live, the second takes effect at boot <!-- host-ok -->
 
 `/etc` is writable on Bluefin and persists across image updates (unlike `/usr`), so
 there's no technical reason to skip the dotfiles round-trip — treat any direct edit as
