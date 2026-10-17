@@ -158,6 +158,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | PHONEBOOK_PHONE_ADMIN_KITCHEN | ✓ | — | — | — | — |
 | VOIPMS_API_USERNAME | ✓ | — | — | — | — |
 | VOIPMS_API_PASSWORD | ✓ | — | — | — | — |
+| IMMICH_PIKAPODS_API_KEY | ✓ | — | — | — | — |
 
 > `DUBPLATE_MAGIC_LINK_SECRET` and `DUBPLATE_SESSION_SECRET` (minted 2026-10-05, dubplate rung
 > 5d's first-deploy sitting): the greenfield server's two HMAC keys, 48 random bytes each
@@ -367,6 +368,16 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 - **History**: received on pavilion 2026-10-13 with `secret-receive`, per the drafter
   completion design's setup step; this entry and the store commit landed 2026-10-14.
   thinkpad-x1 picks it up on its next pull and `sync.sh --local`.
+
+### IMMICH_PIKAPODS_API_KEY
+- **Grants**: an Immich API key on the PikaPods instance at photos.907.life, minted from
+  Geoff's admin account with full permissions
+- **Used by**: the hetzner-mail-host initiative, to read library statistics and later to
+  drive the Immich migration off PikaPods
+- **Rotate at**: photos.907.life, Account Settings > API Keys; then
+  `secret-receive IMMICH_PIKAPODS_API_KEY`
+- **History**: received on pavilion 2026-10-17 with `secret-receive`. Revoke it in Immich and
+  drop it from the store once the migration retires the PikaPods instance.
 
 ### GITHUB_APP_ID / GITHUB_APP_INSTALLATION_ID / GITHUB_APP_PRIVATE_KEY_B64
 - **Grants**: cairn-cms GitHub App — `Contents: Read & write` on glw907/ecnordic-ski and
