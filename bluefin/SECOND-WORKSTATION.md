@@ -19,7 +19,7 @@ These were settled with Geoff on 2026-10-12. Follow them, don't reopen them.
 | Item | Decision |
 |---|---|
 | Hostname | `pavilion` |
-| Username | `glw907`, so every `/var/home/glw907` path, Claude memory key, and the GDM auto-login file carry over unchanged |
+| Username | `glw907`, so every `/var/home/glw907` path and Claude memory key carry over unchanged |
 | Image | `bluefin-dx-nvidia-open:stable` for the GTX 1660 Super. The install used the Intel/AMD ISO, so Part 1 switches images in place of the `devmode` rebase |
 | Lid handling | Not installed. `bluefin/etc/systemd/logind.conf.d/10-lid-ignore.conf` is laptop-only, and no phase installs it |
 | Host identity | Shared files name no single host. The global CLAUDE.md and `bluefin-admin.md` cover both machines, and a fact true on one host names that host. The SessionStart hook (`~/.claude/gather-dotfiles.sh`) prints a `## Host` line from `hostname` and the DMI product name, so a session reads its host from the machine, never from a doc. Added 2026-10-13, after a pavilion session took the old "Workstation: thinkpad-x1" header at its word and reasoned about laptop RAM |
@@ -117,7 +117,9 @@ mismatch is a hard stop: never decrypt an unverified blob.
 
 1. Boot the installer stick from the Pavilion's USB-C port (F9 at the HP
    logo). Install Bluefin to the whole disk with LUKS encryption. Create the
-   user `glw907`.
+   user `glw907`. Keep the Keychron K3 on its USB cable until part 2 step 4
+   enrolls the TPM: a Bluetooth keyboard can't type the disk passphrase at
+   boot.
 2. Enroll the Universal Blue signing key so the Nvidia modules still load if
    a BIOS reset turns Secure Boot on. With Secure Boot off, first boot shows
    no prompt, so queue the key by hand. The next boot shows the blue MOK
@@ -424,6 +426,15 @@ the rest unless the step says it is a hard stop.
    before switching it over. The M720's thumb button sends Super through a
    remap stored on the mouse, which Solaar (`flatpaks.txt`) set, so a
    reinstall doesn't need it again.
+
+   Once step 4 has enrolled the TPM, the machine boots to the GDM login
+   screen with no cable, and the K3 types the password there over
+   Bluetooth. Two boots still need the cable: the passphrase fallback after
+   a BIOS update or a Secure Boot change, and any visit to the BIOS or the
+   GRUB menu. The K3 drops its link after 10 idle minutes. Step 4's
+   Bluetooth files make the reconnect fast, and holding fn + S + O (plain
+   keys, no Shift) for about 3 seconds in Bluetooth mode turns that sleep
+   off.
 
    Both batteries show in the top bar through the UPower Battery extension.
    It has no manifest tier, so install it here. It loads at the next login:
