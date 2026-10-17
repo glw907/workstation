@@ -199,6 +199,12 @@ stays the record of what's actually on disk. Current captured files:
 - `bluefin/etc/systemd/user.conf.d/10-oom-continue.conf` and
   `bluefin/etc/systemd/zram-generator.conf.d/10-larger-zram.conf` → the memory-pressure
   defense; see `docs/oom-defense.md` for why they exist before touching either
+- `bluefin/etc/gdm/custom.conf` → `/etc/gdm/custom.conf` on thinkpad-x1 (auto-login on),
+  `bluefin/etc/gdm/custom.conf.pavilion` → the same path on pavilion (auto-login off: the disk
+  unlocks through the TPM bound to PCR 7, so the GDM password is the credential gate; Geoff
+  2026-10-17). A BIOS update or Secure Boot change on pavilion alters PCR 7: that boot asks for
+  the disk passphrase on a cabled keyboard, then re-enroll per `SECOND-WORKSTATION.md` part 2
+  step 4 <!-- host-ok -->
 - `bluefin/etc/bluetooth/main.conf` → `/etc/bluetooth/` and
   `bluefin/etc/modprobe.d/btusb-no-autosuspend.conf` → `/etc/modprobe.d/` (pavilion only,
   Geoff 2026-10-17): `FastConnectable` and no adapter autosuspend, so the Keychron K3
