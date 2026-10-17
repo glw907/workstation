@@ -224,10 +224,7 @@ filed through `log-issue` in its repo's `BACKLOG.md`, tagged `#initiative:<id>` 
 and listed in the PR body with its backlog number; an item not worth doing stays in the PR body,
 marked dropped. No follow-up is sent to Geoff as its own item, and an initiative-sized one becomes a
 record. A merged PR body is history no session reads (Geoff,
-2026-10-11: dubplate PR #2 left 14 items there). Prompting best practices
-(<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>):
-"Use structured formats for state data: When tracking structured information (like test results or
-task status), use JSON or other structured formats".
+2026-10-11: dubplate PR #2 left 14 items there).
 
 When the work is ready for Geoff's read, the session that hands it over sends one packet with
 `approval-queue packet <initiative> <file>`, following `approval-packet`, and stays open until the

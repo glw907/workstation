@@ -1,11 +1,11 @@
 ---
 name: approval-packet
 description: >
-  The hand-over procedure for a session that puts work before Geoff: when to send one packet,
-  gathering and typing its parts, sorting each into an ask or a routine row, researching asks,
-  checking the file, and acting on the decision. Use when a session hands a PR, a design, or a
-  plan to Geoff for approval, when a conductor reaches a decision point in a sweep, or when
-  `pass-core` points here.
+  The hand-over procedure for a session that puts work before Geoff: sending one packet,
+  sorting parts into asks and routine rows, researching asks, checking the file, and acting on
+  the decision. Use whenever a session hands a PR, a design, or a plan to Geoff for approval
+  ("send this for approval", a PR just opened by a pass, a conductor at a decision point), or
+  when `pass-core` or the approval-queue reminder hook points here.
 ---
 
 # Approval packet
@@ -39,9 +39,8 @@ skill adds the procedure and never restates the register.
    row. More than three asks is unfinished staff work: settle what the facts settle.
 4. **Research each ask as completed staff work.** Read the files, PRs, review findings, and logs
    the decision turns on, and cite each fact's source (a path, a PR number, a commit). A question
-   the facts settle becomes a routine row. Check an unchecked fact an ask depends on, or raise the
-   ask as `low-confidence` and say why the fact is out of reach. "Not checked" never holds a
-   deciding fact.
+   the facts settle becomes a routine row. An unchecked fact an ask depends on is checked, or the ask is raised as
+   `low-confidence`; the register's third rule says why.
 5. **Write the layers, summary first.** Draft each closed state's sentence before its detail, per
    the register. The file grammar is in the design's "The packet file" and the register's `packet`
    exemplars; imitate an exemplar, and let step 6 validate the shape.

@@ -48,9 +48,10 @@ On yes, create it using the template in Step 4 and proceed to Step 2; on no, sto
 ### No questions: a session filing a pass follow-up
 
 A session filing a "Found, not done" follow-up (`approval-packet`, "Follow-ups") asks nothing, in a
-repo with no backlog too (Geoff, 2026-10-14). It writes `.claude/project-tracking.json` with the
-defaults (`BACKLOG.md`, the repo's name as its one domain, `medium`), creates `BACKLOG.md` from the
-Step 4 template where it is missing, and files the item.
+repo with no backlog too (Geoff, 2026-10-14), and skips Step 2's "OK?" confirmation. It writes
+`.claude/project-tracking.json` with the defaults (`BACKLOG.md`, the repo's name as its one domain,
+`medium`) only where that file is missing, and uses an existing config as it stands. It creates
+`BACKLOG.md` from the Step 4 template where it is missing, and files the item.
 
 ### Config missing or backlog file isn't in the expected format
 
