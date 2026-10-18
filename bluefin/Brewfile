@@ -27,6 +27,14 @@ brew "socat"
 brew "ttyd"
 brew "rsync"
 brew "vale"
+# Self-hosting initiative (2026-10-17): the servers repo's gate and scripts.
+brew "hcloud"
+brew "shfmt"
+brew "yamllint"
+brew "imapsync"
+# Held with `brew pin proton-pass-cli`; the Pass 0 plan pins it so a
+# routine `ujust update` cannot change the CLI under the key scripts.
+brew "proton-pass-cli"
 brew "syncthing"
 brew "chafa"
 
