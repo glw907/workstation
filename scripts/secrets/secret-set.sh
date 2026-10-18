@@ -26,6 +26,12 @@ umask 077  # every temp and cache file is born private, no chmod race
 #   secret-set.sh --sync                   # just regenerate ~/.local/secrets, no edit
 #   secret-set.sh NAME --delete            # remove NAME from values.age (git keeps history)
 #   secret-set.sh --dry-run NAME --value … # show what would change, write nothing
+#   secret-set.sh … --values PATH          # read and write this store, not the main checkout's
+#   secret-set.sh … --local PATH           # regenerate this file, not ~/.local/secrets
+#
+# Every run holds an exclusive flock on $XDG_RUNTIME_DIR/secret-store.lock for its whole
+# read-modify-write, and fails, leaving the store alone, unless every name in the old store
+# is still in the new one (the name a --delete run removes excepted).
 #
 # After adding, document the secret in registry.md and (for Workers) add it to the
 # routing table in sync.sh, then run sync.sh --worker NAME.
@@ -40,7 +46,7 @@ OP_ITEM="Workstation age encryption key"
 
 die() { echo "Error: $*" >&2; exit 1; }
 
-usage() { sed -n '4,31p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '4,37p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 # --- Parse arguments ---
 NAME=""
@@ -58,11 +64,18 @@ while [[ $# -gt 0 ]]; do
         --sync)     SYNC_ONLY=true;  shift ;;
         --delete)   DELETE=true;     shift ;;
         --dry-run)  DRY_RUN=true;    shift ;;
+        --values)   VALUES="${2:?--values needs a path}";       shift 2 ;;
+        --local)    LOCAL_SECRETS="${2:?--local needs a path}"; shift 2 ;;
         -h|--help)  usage 0 ;;
         -*)         die "unknown option: $1" ;;
         *)          [[ -z "$NAME" ]] && NAME="$1" || die "unexpected arg: $1"; shift ;;
     esac
 done
+
+# --- Serialize every read-modify-write: two writers must not each re-encrypt from the same read ---
+LOCK="${XDG_RUNTIME_DIR:-/dev/shm}/secret-store.lock"
+exec 9>"$LOCK"
+flock 9
 
 # --- Fetch age key once per session, cache in tmpfs ---
 ensure_key() {
@@ -97,6 +110,17 @@ write_local() {
     shred -u "$out" 2>/dev/null || rm -f "$out"
 }
 
+# Fail unless every name in the old plaintext ($DEC) is in the new ciphertext. $1 is the one name
+# a --delete run may drop.
+check_no_drops() {
+    local new_names missing
+    new_names="$(age --decrypt -i "$CACHE" "$VALUES.tmp" | cut -d= -f1)"
+    missing="$(cut -d= -f1 "$DEC" | grep -v '^$' | grep -vxF -- "${1:-}" | grep -vxFf <(printf '%s\n' "$new_names") || true)"
+    if [[ -n "$missing" ]]; then
+        rm -f "$VALUES.tmp"; die "the new store would drop: $(echo "$missing" | tr '\n' ' ')— $VALUES left untouched"
+    fi
+}
+
 DEC="$(mktemp /dev/shm/values-dec-XXXXXX)"
 NEW="$(mktemp /dev/shm/values-new-XXXXXX)"
 trap 'shred -u "$DEC" "$NEW" 2>/dev/null; rm -f "$VALUES.tmp" 2>/dev/null' EXIT
@@ -129,6 +153,7 @@ if [[ "$DELETE" == true ]]; then
         exit 0
     fi
     age -r "$RECIP" -o "$VALUES.tmp" "$NEW"
+    check_no_drops "$NAME"
     if ! age --decrypt -i "$CACHE" "$VALUES.tmp" | grep -q "^${NAME}=" \
         && [[ "$(age --decrypt -i "$CACHE" "$VALUES.tmp" | grep -c '=')" -eq "$(grep -c '=' "$NEW")" ]]; then
         mv "$VALUES.tmp" "$VALUES"
@@ -169,6 +194,7 @@ fi
 
 # --- Re-encrypt, verify the new ciphertext before swapping ---
 age -r "$RECIP" -o "$VALUES.tmp" "$NEW"
+check_no_drops
 if age --decrypt -i "$CACHE" "$VALUES.tmp" | grep -q "^${NAME}="; then
     mv "$VALUES.tmp" "$VALUES"
 else
