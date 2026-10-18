@@ -96,8 +96,8 @@ as read-only. The MCP token is read-only for Access/Workers-domain writes; use c
 `$CLOUDFLARE_API_TOKEN` for those. The token lives in `~/.local/secrets`, sourced for interactive
 shells only, so a script must `source ~/.local/secrets` itself. Account id, token scopes,
 D1/R2/workers/Access, and how each secret is reached: `~/.claude/docs/cloudflare-estate-inventory.md`;
-read it before hunting a credential or provisioning infra. Use an API or CLI first for external
-services, and never suggest a web dashboard unless the API cannot do it.
+read it before hunting a credential, provisioning infra, or touching any token (its token
+scheme). Use an API or CLI first for external services; no dashboard unless the API can't.
 
 ## Secrets
 
