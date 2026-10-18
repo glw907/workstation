@@ -321,6 +321,16 @@ the rest unless the step says it is a hard stop.
     carried memory. Fix any drift that a step above should have
     covered. Report the rest to Geoff with the Part 3 list.
 
+    Then confirm the auto-mode rules reached the live settings.
+    `claude auto-mode config` should list the github.com/glw907 Source
+    control entry, the `~/Projects` and `~/.dotfiles` Trusted repo entry, and
+    the `allow` rules for worktree rebases and directed PR merges. All of
+    them live in the tracked `claude/.claude/settings.json`. Only
+    `claude-tooling-sync apply` writes them into `~/.claude/settings.json`,
+    and a pull or `stow` alone does not. A session can't add a missing rule
+    itself, because the classifier blocks that as Self-Modification, so a
+    missing rule means rerunning `apply`, not editing settings by hand.
+
     Also confirm Homebrew's `git` can reach GitHub over HTTPS, since
     `thunderbird-theme-sync` uses it in Part 3:
     ```bash
@@ -466,6 +476,7 @@ next setup.
 | Missing | Why it mattered | Fix |
 |---|---|---|
 | Claude Code workspace trust for `~/Projects/cairn-cms` (found 2026-10-14, drafter pass 5) | `claude --bg` refuses to launch in an untrusted folder, so the conductor couldn't start the cairn executor until Geoff ran `claude` there | In Part 3, run `claude` once in each repo under `~/Projects/` and accept the trust prompt |
+| Auto-mode trust and allow rules in the live `~/.claude/settings.json` (found 2026-10-17) | The classifier blocked cross-repo pushes, a worktree rebase onto main, and a merge Geoff had directed, and each fix needed his approval mid-task | The rules now ship in the tracked `settings.json` (workstation fbf3919 and #89). Run `claude-tooling-sync apply` after every pull, then check `claude auto-mode config` as Part 2 step 10 says |
 | A Playwright browser for cairn-cms (found 2026-10-14, drafter pass 5) | Two of cairn's fast-lane suites skipped locally; CI still ran them | Run `npx playwright install chromium` in `~/Projects/cairn-cms` after `npm ci` |
 
 ## After pavilion is up
