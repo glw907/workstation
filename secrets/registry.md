@@ -136,6 +136,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | DAISYUI_BLUEPRINT_LICENSE | ✓ | —      | —    | —        | —          |
 | DAISYUI_BLUEPRINT_EMAIL | ✓  | —        | —    | —        | —          |
 | HCLOUD_TOKEN        | ✓     | —        | —    | —        | —          |
+| HCLOUD_TOKEN_SERVERS | ✓    | —        | —    | —        | —          |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
 | GITHUB_APP_ID       | ✓     | ✓        | —    | —        | —          |
@@ -287,6 +288,16 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 - **Rotated 2026-08-30**: the value in the store as of this date is the rotated token
   (superseding whatever the account held before); confirmed live via `hcloud` calls
   during musicbox Task 4 provisioning the same day.
+
+### HCLOUD_TOKEN_SERVERS
+- **Grants**: Hetzner Cloud API read/write, project `servers` only (self-hosting initiative)
+- **Token name at issuer**: servers-claude
+- **Used by**: the servers repo's `infra/provision.sh` and `scripts/dry-run.sh`, which pass it to
+  `hcloud` as `HCLOUD_TOKEN` through the environment. No `hcloud context` exists, because
+  `hcloud context create` writes the token to `~/.config/hcloud/cli.toml`.
+- **Rotate at**: console.hetzner.cloud > project servers > Security > API tokens
+- **Received 2026-10-17** via `secret-receive` (desktop dialog, value never in transcript);
+  verified with an empty `hcloud server list` and an SSH key created then deleted.
 
 ### CF_ZT_TOKEN
 - **Grants**: Cloudflare Zero Trust API (Access apps, policies, identity providers).
