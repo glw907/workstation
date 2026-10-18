@@ -3,5 +3,4 @@
 # curated from, not the other way around.
 1password
 1password-cli
-firefox
 chromium

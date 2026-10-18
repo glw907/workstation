@@ -11,7 +11,7 @@ holds the fresh-machine provisioning artifacts. github.com/glw907/workstation.
   bin claude contacts git kitty mise upkeep vale`. `bluefin/bootstrap.sh` and
   `check-drift` both read that file.
 - **Layered RPMs** (`bluefin/layered-packages.txt`): `1password
-  1password-cli firefox chromium`, kept minimal and change-controlled through
+  1password-cli chromium`, kept minimal and change-controlled through
   `docs/MIGRATION-BRIEF.md`.
 - **CLI tools**: Homebrew (`bluefin/Brewfile`); `uv tool install` for Python
   CLIs; `mise` for per-project Node. **Flatpaks**: `bluefin/flatpaks.txt`.
