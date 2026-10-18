@@ -191,3 +191,66 @@ def test_main_refuses_empty_input(monkeypatch, capsys):
     monkeypatch.setattr("sys.stdin", __import__("io").StringIO(""))
     assert mod.main(["--out", "/dev/shm/never.1pux"]) == 2
     assert "no items" in capsys.readouterr().err
+
+
+def test_write_1pux_never_overwrites(tmp_path):
+    data, _ = mod.build([login()], limit=None)
+    out = tmp_path / "x.1pux"
+    mod.write_1pux(out, data)
+    before = out.read_bytes()
+    with pytest.raises(FileExistsError):
+        mod.write_1pux(out, data)
+    assert out.read_bytes() == before
+
+
+def test_main_writes_under_the_shm_root(tmp_path, monkeypatch, capsys):
+    shm = tmp_path / "shm"
+    shm.mkdir()
+    monkeypatch.setattr(mod, "SHM", str(shm) + "/")
+    monkeypatch.setattr("sys.stdin", __import__("io").StringIO(json.dumps(login())))
+    assert mod.main(["--out", str(shm / "x.1pux")]) == 0
+    assert (shm / "x.1pux").exists()
+    assert "LOGIN" in capsys.readouterr().out
+
+
+def test_main_refuses_a_symlinked_parent_that_leaves_the_shm_root(tmp_path, monkeypatch, capsys):
+    shm, disk = tmp_path / "shm", tmp_path / "disk"
+    shm.mkdir()
+    disk.mkdir()
+    (shm / "link").symlink_to(disk)
+    monkeypatch.setattr(mod, "SHM", str(shm) + "/")
+    monkeypatch.setattr("sys.stdin", __import__("io").StringIO(json.dumps(login())))
+    assert mod.main(["--out", str(shm / "link" / "x.1pux")]) == 2
+    assert not (disk / "x.1pux").exists()
+
+
+def test_main_refuses_dotdot_that_leaves_the_shm_root(tmp_path, monkeypatch):
+    shm = tmp_path / "shm"
+    shm.mkdir()
+    monkeypatch.setattr(mod, "SHM", str(shm) + "/")
+    monkeypatch.setattr("sys.stdin", __import__("io").StringIO(json.dumps(login())))
+    assert mod.main(["--out", str(shm / ".." / "x.1pux")]) == 2
+
+
+def test_month_year_accepts_slash_form():
+    item = {
+        "id": "c2", "title": "Card", "category": "CREDIT_CARD", "vault": VAULT,
+        "fields": [{"id": "expiry", "type": "MONTH_YEAR", "label": "expiry", "value": "03/2031"}],
+    }
+    fields = {f["id"]: f["value"] for s in convert(item)["details"]["sections"] for f in s["fields"]}
+    assert fields["expiry"] == {"monthYear": 203103}
+
+
+def test_null_label_does_not_abort_the_passkey_scan():
+    item = login()
+    item["fields"].append({"id": "n", "type": "STRING", "label": None, "value": "x"})
+    mod.build([item], limit=None)
+
+
+def test_limit_marks_the_report_truncated():
+    items = [login(id=str(n)) for n in range(4)]
+    _, report = mod.build(items, limit=2)
+    assert report["truncated"] is True
+    assert "first 2" in mod.format_report(report)
+    _, full = mod.build(items, limit=None)
+    assert full["truncated"] is False

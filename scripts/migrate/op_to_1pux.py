@@ -73,8 +73,13 @@ def _value(field: dict) -> dict:
         return {"creditCardNumber": value}
     if kind == "CREDIT_CARD_TYPE":
         return {"creditCardType": value}
-    if kind == "MONTH_YEAR" and str(value).isdigit():
-        return {"monthYear": int(value)}
+    if kind == "MONTH_YEAR":
+        text = str(value)
+        if text.isdigit():
+            return {"monthYear": int(text)}
+        month, _, year = text.partition("/")
+        if month.isdigit() and year.isdigit():
+            return {"monthYear": int(year + month.zfill(2))}
     return {"string": value}
 
 
@@ -157,7 +162,7 @@ def convert_item(item: dict) -> dict:
 def build(items: list[dict], limit: int | None) -> tuple[dict, dict]:
     """Return the export.data tree and a report of counts, skips, and manual follow-ups."""
     vaults: dict[str, dict] = {}
-    report: dict = {"converted": {}, "skipped": {}, "attachments": [], "passkeys": []}
+    report: dict = {"converted": {}, "skipped": {}, "attachments": [], "passkeys": [], "truncated": False, "limit": limit}
     taken = 0
     for item in items:
         vault = item.get("vault", {})
@@ -167,6 +172,7 @@ def build(items: list[dict], limit: int | None) -> tuple[dict, dict]:
             report["skipped"][key] = report["skipped"].get(key, 0) + 1
             continue
         if limit is not None and taken >= limit:
+            report["truncated"] = True
             break
         taken += 1
         target = vaults.setdefault(
@@ -178,7 +184,7 @@ def build(items: list[dict], limit: int | None) -> tuple[dict, dict]:
         report["converted"][key] = report["converted"].get(key, 0) + 1
         for attachment in item.get("files", []):
             report["attachments"].append((vname, item.get("title", ""), attachment.get("name", "")))
-        if any("passkey" in f.get("type", "").lower() + f.get("label", "").lower() for f in item.get("fields", [])):
+        if any("passkey" in (f.get("type") or "").lower() + (f.get("label") or "").lower() for f in item.get("fields", [])):
             report["passkeys"].append((vname, item.get("title", "")))
     data = {"accounts": [{"attrs": ACCOUNT, "vaults": list(vaults.values())}]}
     return data, report
@@ -186,7 +192,10 @@ def build(items: list[dict], limit: int | None) -> tuple[dict, dict]:
 
 def format_report(report: dict) -> str:
     """Render counts and follow-up names; field values are never included."""
-    lines = ["Converted:"]
+    lines = []
+    if report["truncated"]:
+        lines.append(f"Trial run: stopped after the first {report['limit']} items, so the counts below omit the rest.")
+    lines.append("Converted:")
     lines += [f"  {v} / {c}: {n}" for (v, c), n in sorted(report["converted"].items())] or ["  none"]
     if report["skipped"]:
         lines.append("Skipped (move by hand):")
@@ -209,13 +218,20 @@ def write_1pux(path: Path, data: dict) -> None:
         archive.writestr("export.data", json.dumps(data))
 
 
+def _under_shm(path: str) -> bool:
+    """Return whether `path` lands in memory-backed storage once symlinks and `..` resolve."""
+    root = os.path.realpath(SHM)
+    parent = os.path.realpath(os.path.dirname(os.path.abspath(path)))
+    return parent == root or parent.startswith(root + os.sep)
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", required=True, help="output path, which must be under /dev/shm")
     parser.add_argument("--limit", type=int, help="convert only the first N items, for a trial import")
     args = parser.parse_args(argv)
 
-    if not os.path.abspath(args.out).startswith(SHM):
+    if not _under_shm(args.out):
         print(f"error: --out must be under {SHM} so the plaintext never touches disk", file=sys.stderr)
         return 2
     items = read_items(sys.stdin.read())
