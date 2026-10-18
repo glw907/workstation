@@ -44,9 +44,8 @@ dropped Geoff's live `model`, `effortLevel`, and `modelSettings`; restored by ha
 
 ## Drafter
 
-Completion ended 2026-10-14 (drafter#11-#37, workstation#61, cairn-cms#124): **not pilot-ready**, since both real pages escalated in the chain's plan step before drafter ran; no drafter fault, $0.001 spent.
-Next: drafter#38 (fix the plan step, then a third page); other "now" items drafter#39-41, workstation#72, cairn-cms#125-126, none launched. thinkpad-x1 runs `make -C ~/Projects/drafter install` before pulling dotfiles.
-The repo organization pass (spec ~/Projects/initiatives/repo-organization/specs/2026-10-14-repo-organization-design.md) moves drafter's docs and the docs page chain after pass 5 merges; it owns the local config path and the agent-*-worktree cleanup.
+Drafter work is tracked in the docs-system record (`~/Projects/initiatives/docs-system/README.md`), which holds the current status and the next launch prompt.
+Last landed 2026-10-17: pass B1, the blueprint format (drafter#46, cairn-cms#128), with its first milestone missed. Next: B2's planning session.
 
 ## Approval queue
 
