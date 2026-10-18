@@ -90,6 +90,11 @@
             "type": "command",
             "command": "claude-memory-write-check",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "command -v drafter-page-hook >/dev/null && drafter-page-hook || true",
+            "timeout": 10
           }
         ]
       },
