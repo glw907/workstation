@@ -136,6 +136,11 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | DAISYUI_BLUEPRINT_LICENSE | ✓ | —      | —    | —        | —          |
 | DAISYUI_BLUEPRINT_EMAIL | ✓  | —        | —    | —        | —          |
 | HCLOUD_TOKEN_SERVERS | ✓    | —        | —    | —        | —          |
+| CF_WS_SERVERS_TOKEN | ✓     | —        | —    | —        | —          |
+| CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| CF_MAIL_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| CF_MEDIA_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
 | GITHUB_APP_ID       | ✓     | ✓        | —    | —        | —          |
@@ -287,6 +292,34 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 - **Rotate at**: console.hetzner.cloud > project servers > Security > API tokens
 - **Received 2026-10-17** via `secret-receive` (desktop dialog, value never in transcript);
   verified with an empty `hcloud server list` and an SSH key created then deleted.
+
+### CF_WS_SERVERS_TOKEN
+- **Grants**: Cloudflare account-owned token `ws-servers` (id `6a5623b2...`). Zone 907.life
+  only: DNS Write, Dynamic URL Redirects Write (Single Redirect), Workers Routes Write, Zone
+  Read. Account: Workers Admin (the scripts create and delete Workers), D1 Write, Email Sending
+  Write, Access: Apps and Policies Write, Cloudflare Tunnel Write, Access: Audit Logs Read.
+- **Used by**: the servers repo's `cloudflare/dns.sh`, `access.sh`, `deploy.sh`, and
+  `scripts/dry-run.sh`.
+- **Minted 2026-10-18** through the API under the API token scheme
+  (`~/.claude/docs/cloudflare-estate-inventory.md`); the value went from the response into the
+  store unseen. Smoke-tested: 907.life DNS read 200, ecxc.ski DNS read 403, R2 403.
+- **Rotate**: the scheme's temporary token procedure (rule 6), then the servers runbook's
+  "Rotating a Cloudflare token".
+
+### CF_WS_R2_ARCHIVE_RW_* / CF_WS_R2_BACKUPS_RO_* / CF_MAIL_R2_BACKUP_RW_* / CF_MEDIA_R2_BACKUP_RW_*
+- **Grants**: four account-owned R2 tokens, each stored as `_TOKEN` plus its S3 pair
+  (`_KEY_ID` is the token id, `_SECRET` the SHA-256 of the value, per
+  https://developers.cloudflare.com/r2/api/tokens/). `ws-r2-archive-rw` (`9ab3b968...`): object
+  read and write on `servers-archive`. `ws-r2-backups-ro` (`d76af5a1...`): object read on
+  `servers-backup-mail` and `servers-backup-media`. `mail-r2-backup-rw` (`da9e36ef...`) and
+  `media-r2-backup-rw` (`9caa9891...`): object read and write on their own backup bucket.
+- **Used by**: workstation archive copies; restores, drills, and the restore kit; the mail
+  server's and the media server's restic. Readers per name: the servers repo's
+  `secrets/registry.md`.
+- **Minted 2026-10-18** as above. Smoke-tested over S3: each lists its own bucket (200) and is
+  refused another (403); the read-only token lists both backup buckets.
+- **Rotate**: as for `CF_WS_SERVERS_TOKEN`; a server's token also rotates when that server is
+  rebuilt or compromised.
 
 ### CF_ZT_TOKEN
 - **Grants**: Cloudflare Zero Trust API (Access apps, policies, identity providers).
