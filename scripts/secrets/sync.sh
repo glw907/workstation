@@ -13,6 +13,8 @@ umask 077  # every temp and cache file is born private, no chmod race
 #   sync.sh               # Sync local + all workers
 #   sync.sh --local       # Local secrets only (no worker push)
 #   sync.sh --worker NAME # Push to a single named worker
+#   sync.sh --local PATH  # Local secrets only, written to PATH (a next argument not starting --)
+#   sync.sh --values PATH # Decrypt PATH, not the main checkout's values.age
 #   sync.sh --dry-run     # Show what would be pushed, no changes made
 #   sync.sh --verify      # Diff targets vs registry; exits non-zero if mismatch
 #
@@ -23,15 +25,15 @@ umask 077  # every temp and cache file is born private, no chmod race
 #   - Use count=$((count + 1)) not ((count++)) — the latter aborts under set -e.
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SECRETS_FILE="$DOTFILES_DIR/secrets/values.age"
-LOCAL_SECRETS="$HOME/.local/secrets"
+SECRETS_FILE="${VALUES:-$DOTFILES_DIR/secrets/values.age}"
+LOCAL_SECRETS="${LOCAL_SECRETS:-$HOME/.local/secrets}"
 
-CACHE="/dev/shm/.age-key-$(id -u)"      # session-cached age key (RAM, chmod 600; shared with secret-set.sh)
+CACHE="${CACHE:-/dev/shm/.age-key-$(id -u)}"      # session-cached age key (RAM, chmod 600; shared with secret-set.sh)
 DECRYPTED_FILE="$(mktemp /dev/shm/secrets-XXXXXX)"
 
 # Cleanup on any exit. The session cache deliberately survives, since secret-session-clear.sh owns its lifecycle.
 OUT_FILE=""  # push_local's staging file; shredded by the same trap
-trap 'shred -u "$DECRYPTED_FILE" "$OUT_FILE" 2>/dev/null; true' EXIT
+trap 'shred -u "$DECRYPTED_FILE" "$OUT_FILE" 2>/dev/null || true' EXIT
 
 # --- Worker routing table ---
 # Maps worker name -> space-separated list of secrets to push
@@ -73,6 +75,18 @@ while [[ $# -gt 0 ]]; do
         --local)
             MODE="local"
             shift
+            if [[ -n "${1:-}" && "$1" != --* ]]; then
+                LOCAL_SECRETS="$1"
+                shift
+            fi
+            ;;
+        --values)
+            if [[ -z "${1:+${2:-}}" ]]; then
+                echo "Error: --values requires a path argument." >&2
+                exit 1
+            fi
+            SECRETS_FILE="$2"
+            shift 2
             ;;
         --worker)
             if [[ -z "${2:-}" ]]; then
@@ -93,7 +107,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Unknown option: $1" >&2
-            echo "Usage: sync.sh [--local] [--worker NAME] [--dry-run] [--verify]" >&2
+            echo "Usage: sync.sh [--local [PATH]] [--values PATH] [--worker NAME] [--dry-run] [--verify]" >&2
             exit 1
             ;;
     esac
@@ -152,6 +166,10 @@ if [[ "$VERIFY" == true ]]; then
         exit 0
     fi
 fi
+
+# --- Serialize with secret-set.sh: one writer at a time across every store ---
+exec 9>"${XDG_RUNTIME_DIR:-/dev/shm}/secret-store.lock"
+flock 9
 
 # --- Decrypt ---
 # Fetch the age key from 1Password only on a cache miss. The notesPlain field contains
