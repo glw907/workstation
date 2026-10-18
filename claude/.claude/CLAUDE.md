@@ -181,8 +181,8 @@ from published evidence, the framework's documented convention, or architectural
 bring the whole design for one approval, and flag only contestable points. Questions to Geoff are
 for product, taste, priority, scope, and budget.
 
-A change touching a handful of files, fully specified by the request or existing tests, with no new
-public surface, schema, or auth behavior, goes straight through the gates.
+A fully specified one-sentence change with no `auth-data` path or new surface lands on the default
+branch after the gate, with no PR or packet: `pass-core` "Direct changes" (Geoff, 2026-10-17).
 
 ## Writing voice
 
