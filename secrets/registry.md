@@ -141,6 +141,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | CF_MAIL_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | CF_MEDIA_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
 | GITHUB_APP_ID       | ✓     | ✓        | —    | —        | —          |
@@ -320,6 +321,16 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   refused another (403); the read-only token lists both backup buckets.
 - **Rotate**: as for `CF_WS_SERVERS_TOKEN`; a server's token also rotates when that server is
   rebuilt or compromised.
+
+### PIKAPODS_SFTP_HOST / PIKAPODS_SFTP_USER / PIKAPODS_SFTP_PASSWORD
+- **Grants**: SFTP into the PikaPods Immich pod's storage (`photos/` holds Immich's six data
+  directories, `config/` and `libraries/` the rest). The host and user are private, not secret:
+  they live here and in the servers repo's privacy patterns, never in a public file.
+- **Used by**: the self-hosting Immich cutover (Pass 3), which copies the six directories, and
+  the servers repo's `scripts/dry-run.sh`. Log in with `sshpass -e` so the password stays off
+  the command line.
+- **Received 2026-10-18**: the password through a desktop dialog; verified with an SFTP listing.
+- **Rotate at**: PikaPods > the pod > Settings > SFTP. Dies with the pod when PikaPods is retired.
 
 ### CF_ZT_TOKEN
 - **Grants**: Cloudflare Zero Trust API (Access apps, policies, identity providers).
