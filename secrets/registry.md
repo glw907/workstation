@@ -135,7 +135,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CONTACT_EMAIL       | ✓     | —        | —    | —        | ✓          |
 | DAISYUI_BLUEPRINT_LICENSE | ✓ | —      | —    | —        | —          |
 | DAISYUI_BLUEPRINT_EMAIL | ✓  | —        | —    | —        | —          |
-| HCLOUD_TOKEN        | ✓     | —        | —    | —        | —          |
 | HCLOUD_TOKEN_SERVERS | ✓    | —        | —    | —        | —          |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
@@ -278,16 +277,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   Contents permission and still probed 200 on all four; only private `xcathletes-org` exposed
   it (404). Verify any re-mint against `xcathletes-org`.
 - **Symptom of expiry**: every GitHub-backed check in `cairn health` turns unknown at once.
-
-### HCLOUD_TOKEN
-- **Grants**: Hetzner Cloud API read/write, project `musicbox` only
-- **Token name at issuer**: claude-code-thinkpad-x1
-- **Used by**: musicbox provisioning (`scripts/provision.sh`, hcloud CLI)
-- **Rotate at**: console.hetzner.cloud > project musicbox > Security > API tokens
-- **Received 2026-08-30** via `secret-receive` (desktop dialog, value never in transcript)
-- **Rotated 2026-08-30**: the value in the store as of this date is the rotated token
-  (superseding whatever the account held before); confirmed live via `hcloud` calls
-  during musicbox Task 4 provisioning the same day.
 
 ### HCLOUD_TOKEN_SERVERS
 - **Grants**: Hetzner Cloud API read/write, project `servers` only (self-hosting initiative)
