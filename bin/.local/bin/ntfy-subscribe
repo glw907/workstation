@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# ntfy-subscribe: the user service behind the servers' alerts. It holds one connection to the
+# urgent and routine ntfy topics and turns each message into a desktop notification: urgent as
+# critical (it shows through Do Not Disturb), routine as normal. The monitor's six-hourly
+# "all-quiet" message is recorded and never shown; if none has arrived in 26 hours the service
+# raises a local notice, which covers the Worker's cron, ntfy, and this service in one check.
+#
+# On start it asks ntfy for what it missed (since=: the last message time, else 12 hours) and
+# skips ids it has shown. When the stream ends it exits with curl's status, and systemd restarts it.
+#
+# The topic names come from NTFY_URGENT_TOPIC and NTFY_ROUTINE_TOPIC in the environment or in
+# ~/.local/secrets. Test hooks: NTFY_BASE, NTFY_QUIET_LIMIT (seconds, default 93600),
+# NTFY_CHECK_EVERY (default 600), NTFY_STALE_REPEAT (default 21600), XDG_STATE_HOME.
+
+# systemd user units start with a bare PATH, so the usual directories are appended, not prepended.
+export PATH="$PATH:$HOME/.local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/usr/sbin"
+
+base=${NTFY_BASE:-https://ntfy.sh}
+quiet_limit=${NTFY_QUIET_LIMIT:-93600}
+check_every=${NTFY_CHECK_EVERY:-600}
+stale_repeat=${NTFY_STALE_REPEAT:-21600}
+state=${XDG_STATE_HOME:-$HOME/.local/state}/ntfy-subscribe
+mkdir -p "$state"
+
+# Read a name from ~/.local/secrets without sourcing it.
+from_secrets() {
+  sed -n "s/^export $1=//p" "$HOME/.local/secrets" 2>/dev/null | tail -n1
+}
+urgent=${NTFY_URGENT_TOPIC:-$(from_secrets NTFY_URGENT_TOPIC)}
+routine=${NTFY_ROUTINE_TOPIC:-$(from_secrets NTFY_ROUTINE_TOPIC)}
+[ -n "$urgent" ] && [ -n "$routine" ] || {
+  echo "ntfy-subscribe: NTFY_URGENT_TOPIC and NTFY_ROUTINE_TOPIC are not set" >&2
+  exit 1
+}
+
+now() { date +%s; }
+[ -f "$state/first_seen" ] || now >"$state/first_seen"
+
+# The watchdog: with no all-quiet for the limit, raise one notice per repeat interval.
+watch_quiet() {
+  local last first baseline notified
+  while sleep "$check_every"; do
+    last=$(cat "$state/quiet" 2>/dev/null || echo 0)
+    first=$(cat "$state/first_seen")
+    baseline=$((last > first ? last : first))
+    notified=$(cat "$state/stale_notified" 2>/dev/null || echo 0)
+    if [ $(($(now) - baseline)) -gt "$quiet_limit" ] && [ $(($(now) - notified)) -gt "$stale_repeat" ]; then
+      notify-send -u normal "Server monitor silent" \
+        "No all-quiet message for $(((($(now) - baseline)) / 3600)) hours. Check the monitor Worker, ntfy, and this service." 2>/dev/null || true
+      now >"$state/stale_notified"
+    fi
+  done
+}
+watch_quiet &
+watchdog=$!
+trap 'kill "$watchdog" 2>/dev/null' EXIT
+
+since=12h
+[ -s "$state/last_time" ] && since=$(cat "$state/last_time")
+
+# show ID TIME TOPIC TITLE MESSAGE: one message from the stream.
+show() {
+  local id=$1 time=$2 topic=$3 title=$4 message=$5 level=normal
+  grep -qxF "$id" "$state/seen" 2>/dev/null && return
+  echo "$id" >>"$state/seen"
+  tail -n 200 "$state/seen" >"$state/seen.tmp" && mv "$state/seen.tmp" "$state/seen"
+  [ "$time" -gt "$(cat "$state/last_time" 2>/dev/null || echo 0)" ] && echo "$time" >"$state/last_time"
+  if [ "$title" = "all-quiet" ]; then
+    echo "$time" >"$state/quiet"
+    return
+  fi
+  [ "$topic" = "$urgent" ] && level=critical
+  notify-send -u "$level" "$title" "$message" 2>/dev/null || true
+}
+
+curl -sSN --fail "$base/$urgent,$routine/json?since=$since" |
+  jq -R -r --unbuffered 'fromjson? | select(.event == "message")
+    | [.id, (.time | tostring), .topic, (.title // ""), (.message // "")] | @tsv' |
+  while IFS=$'\t' read -r id time topic title message; do
+    show "$id" "$time" "$topic" "$title" "$message"
+  done

@@ -60,6 +60,7 @@ run "check-moves draft check" bash tests/check-moves.test.sh
 run "ci-green test" node tests/ci-green.test.mjs
 run "cairn-run-gate vanish handling" bash tests/cairn-run-gate.test.sh
 run "claude-clock-stop hook" bash tests/claude-clock-stop.test.sh
+run "ntfy-subscribe service" bash tests/ntfy-subscribe.test.sh
 run "guidance citation (warning only)" bash scripts/check-guidance-cite.sh
 run "guidance citation test" bash tests/check-guidance-cite.test.sh
 run "claude-context-budget line cap" bash tests/claude-context-budget.test.sh

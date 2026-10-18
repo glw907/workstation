@@ -1,0 +1,13 @@
+[Unit]
+Description=Desktop notifications for the servers' ntfy alerts
+Documentation=file://%h/Projects/servers/docs/runbook.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=%h/.local/bin/ntfy-subscribe
+Restart=always
+RestartSec=20
+
+[Install]
+WantedBy=default.target
