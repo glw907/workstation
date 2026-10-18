@@ -196,7 +196,7 @@ legacy ops event photos), 907-life-media, ecxc-media, cairn-pub-media.
 legacy site until cutover), aksailingclub-org (build worker), asc-ops (+ -dev, -staging; the
 retiring dashboard), asc-handbook, asc-uptime, 907-life, ecxc, cairn-pub, eudaimonia.
 
-**Zero Trust organization:** "Wright Family", team domain `907wrights.cloudflareaccess.com` (renamed 2026-10-18 from "Alaska Sailing Club" and `aksailingclub`, whose name another account now could take). Each identity provider's callback is `https://907wrights.cloudflareaccess.com/cdn-cgi/access/callback`; the Google Workspace provider's OAuth client (`450617487145-hqf3h2ge…`, the club's Google Cloud project) must list it.
+**Zero Trust organization:** "Wright Family", team domain `907wrights.cloudflareaccess.com` (renamed 2026-10-18 from "Alaska Sailing Club" and `aksailingclub`). Each identity provider's callback is `https://907wrights.cloudflareaccess.com/cdn-cgi/access/callback`; the Google Workspace provider's OAuth client (`450617487145-hqf3h2ge…`, the club's Google Cloud project) must list it.
 
 **Access apps** (live 2026-10-10): ASC Staging, ASC Handbook (+ its CMS), Ops Dashboard (ops +
 staging), the Ops Schema API (public, consumed cross-origin by the handbook — do not lock it),
