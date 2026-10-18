@@ -118,6 +118,33 @@ assert_eq "$(grep -c '^export ' "$root/local-secrets" 2>/dev/null)" "2" "sync wr
 [ ! -e "$home/.local/secrets" ] || { echo "FAIL: sync wrote the default local secrets path"; fail=1; }
 assert_eq "$(sha256sum "$home/.dotfiles/secrets/values.age" | cut -d' ' -f1)" "$main_sum" "main store untouched by sync"
 
+# 7. A repeated --values or --local, or a path holding .., is refused by all three scripts and
+# leaves the stores alone. The allow rules end in `*`, so the flag order must not matter.
+refuses() { # name, want-fragment, command...
+  local name=$1 frag=$2 out rc
+  shift 2
+  fresh_store
+  before=$(sha256sum "$root/wt/values.age" "$home/.dotfiles/secrets/values.age" | cut -d' ' -f1 | tr '\n' ' ')
+  out=$(env HOME="$home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" RECIP="$recip" CACHE="$root/cache" "$@" 2>&1)
+  rc=$?
+  [ "$rc" -ne 0 ] || { echo "FAIL: $name exited 0"; fail=1; }
+  case "$out" in *"$frag"*) ;; *) echo "FAIL: $name: no '$frag' in: $out"; fail=1 ;; esac
+  assert_eq "$(sha256sum "$root/wt/values.age" "$home/.dotfiles/secrets/values.age" | cut -d' ' -f1 | tr '\n' ' ')" "$before" "$name leaves both stores untouched"
+  [ ! -e "$root/local-secrets" ] || { echo "FAIL: $name wrote the local file"; fail=1; }
+}
+main_store="$home/.dotfiles/secrets/values.age"
+for tool in set receive sync; do
+  case $tool in
+    set)     cmd=(bash "$SET" NEW_ONE --value fresh) ;;
+    receive) cmd=(bash "$RECEIVE" NEW_ONE) ;;
+    sync)    cmd=(bash "$SYNC") ;;
+  esac
+  refuses "$tool repeated --values" "repeated" "${cmd[@]}" --values "$root/wt/values.age" --local "$root/local-secrets" --values "$main_store"
+  refuses "$tool repeated --local" "repeated" "${cmd[@]}" --values "$root/wt/values.age" --local "$root/local-secrets" --local "$home/.local/secrets"
+  refuses "$tool .. in --values" ".." "${cmd[@]}" --values "$root/wt/../wt/values.age" --local "$root/local-secrets"
+  refuses "$tool .. in --local" ".." "${cmd[@]}" --values "$root/wt/values.age" --local "$root/run/../local-secrets"
+done
+
 assert_eq "$(mtime "$HOME/.local/secrets")" "$real_secrets_before" "real ~/.local/secrets mtime"
 assert_eq "$(mtime "$real_cache")" "$real_cache_before" "real /dev/shm cache mtime"
 
