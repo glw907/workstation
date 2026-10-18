@@ -6,7 +6,7 @@
 # stub `op`, and an `age` wrapper that can slow or corrupt an encrypt. The fixture main store must
 # stay byte-identical, and the real ~/.local/secrets and /dev/shm key cache keep their mtimes.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 repo="$(pwd)"
 SET="$repo/scripts/secrets/secret-set.sh"
 SYNC="$repo/scripts/secrets/sync.sh"

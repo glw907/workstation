@@ -81,7 +81,7 @@ while [[ $# -gt 0 ]]; do
             fi
             ;;
         --values)
-            if [[ -z "${1:+${2:-}}" ]]; then
+            if [[ -z "${2:-}" || "$2" == --* ]]; then
                 echo "Error: --values requires a path argument." >&2
                 exit 1
             fi
@@ -120,13 +120,13 @@ if [[ "$VERIFY" == true ]]; then
 
     # Check local secrets
     if [[ -f "$LOCAL_SECRETS" ]]; then
-        echo "Local (~/.local/secrets): present"
+        echo "Local ($LOCAL_SECRETS): present"
         # List keys present in local secrets
         while IFS='=' read -r key _; do
             [[ "$key" =~ ^export\ ([A-Z0-9_]+)$ ]] && echo "  ✓ ${BASH_REMATCH[1]}"
         done < "$LOCAL_SECRETS"
     else
-        echo "Local (~/.local/secrets): MISSING" >&2
+        echo "Local ($LOCAL_SECRETS): MISSING" >&2
         FAILED=true
     fi
 
@@ -202,7 +202,7 @@ get_secret() {
 # --- Push local secrets ---
 push_local() {
     echo ""
-    echo "=== Pushing to ~/.local/secrets ==="
+    echo "=== Pushing to $LOCAL_SECRETS ==="
     mkdir -p "$(dirname "$LOCAL_SECRETS")"
 
     if [[ "$DRY_RUN" == true ]]; then
@@ -263,7 +263,7 @@ push_worker() {
         if [[ "$DRY_RUN" == true ]]; then
             echo "[dry-run]   $key=*** → $worker"
         else
-            npx wrangler secret put "$key" --name "$worker" > /dev/null <<< "$value"
+            npx wrangler secret put "$key" --name "$worker" > /dev/null 9>&- <<< "$value"
             echo "  ✓ $key"
         fi
         count=$((count + 1))
