@@ -238,21 +238,20 @@
   "agentPushNotifEnabled": true,
   "autoMode": {
     "environment": [
-      "### Machine-wide (both workstations, thinkpad-x1 and pavilion; per-repo trust lives in each repo's own .claude/settings.json)",
-      "**Organization**: None configured",
+      "$defaults",
       "**Cloud provider(s)**: Cloudflare (glw907 account, id 120c269ad6d3dfbe6d63a0bb53758ca0) — Workers, DNS/zones, Access, D1, R2",
-      "**Repository visibility**: VARIES BY REPO — verify with `gh repo view --json visibility` before treating any repo as private. Known public: ~/.dotfiles (github.com/glw907/workstation) — its full history is world-readable; never commit secrets, tokens, personal data, or browser/state dumps there (enforced by claude-secret-guard hook + gitleaks + GitHub push protection)",
       "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
       "**Secrets management**: Workstation age store (`~/.dotfiles/scripts/secrets/secret-set.sh`) sourced into `~/.local/secrets`; 1Password holds only the age key; Cloudflare Workers secrets at runtime; GitHub Actions secrets for CI. A secret belongs in the store, never in a tracked file",
       "**CI/CD deploy targets**: Cloudflare Workers via `.github/workflows` and `npx wrangler deploy`",
-      "**Network posture**: None configured",
-      "**Sensitive data locations & audiences**: any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material; preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar",
       "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment (hyphen/underscore/dot-delimited — e.g. matches `prod-db`, not `producer`)",
       "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
-      "### User-specific",
-      "**Primary use of Claude Code**: software development",
-      "**Trusted repo**: none declared machine-wide; a repo claiming trusted status declares it in its own .claude/settings.json (canonical paths on this machine are /var/home/glw907/...)",
-      "**Org-specific CLIs**: None configured"
+      "**Organization**: Personal workstation of one developer, Geoff (GitHub user glw907). No company org; every repo, account, and domain below is his.",
+      "**Source control**: github.com/glw907 and every repository under it, public and private. Pushing branches, opening PRs, reading PR state, and merging PRs in these repositories is routine work.",
+      "**Trusted repo**: every git repository and worktree under /var/home/glw907/Projects/ and /var/home/glw907/.dotfiles (including their .claude/worktrees/), with their github.com/glw907 remotes. Sessions routinely read, edit, commit, and push across these sibling repositories, so a session's working directory is not the trust boundary.",
+      "**Repository visibility** (confirmed with gh on 2026-10-17): public: workstation (~/.dotfiles), initiatives, drafter, cairn-cms, poplar, dubplate, approval-queue, 907-life, aksailingclub-org, ecxc-ski. Private: servers, phonebook, cairn-themes, cairn-pub, xcathletes-org, fishwright, aksailingclub-legacy. A public repository's history is world-readable: never commit secrets, tokens, personal data, or browser or state dumps to one.",
+      "**Trusted internal domains**: 907.life, ecxc.ski, aksailingclub.org, xcathletes.org, cairn.pub, and their subdomains (Geoff's own sites on Cloudflare); localhost and 127.0.0.1, including the approval queue on 127.0.0.1:7907.",
+      "**Key internal services**: GitHub (glw907), the Cloudflare account 120c269ad6d3dfbe6d63a0bb53758ca0, the npm package @glw907/cairn-cms, and Geoff's own Fastmail account over JMAP.",
+      "**Sensitive data locations & audiences**: ~/.local/secrets, ~/.dotfiles/secrets/ (age-encrypted), the age key, 1Password, Geoff's mail (Fastmail) and Google Drive, and session transcripts under ~/.claude/projects/. Their audience is Geoff only. Public documentation, vendor docs, and pricing pages are not sensitive data."
     ],
     "allow": [
       "$defaults",
