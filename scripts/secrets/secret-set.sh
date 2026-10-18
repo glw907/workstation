@@ -48,7 +48,17 @@ die() { echo "Error: $*" >&2; exit 1; }
 
 usage() { sed -n '4,37p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
+# A --values or --local path must be given once and hold no "..", so a rule that allows a
+# worktree prefix cannot be steered to the main checkout's store.
+flag_path() {
+    [[ -n "$2" && "$2" != --* ]] || die "$1 needs a path"
+    [[ "$2" != *..* ]] || die "$1 path may not contain '..': $2"
+    printf '%s' "$2"
+}
+
 # --- Parse arguments ---
+SAW_VALUES=""
+SAW_LOCAL=""
 NAME=""
 MODE=""
 SRC=""
@@ -64,8 +74,10 @@ while [[ $# -gt 0 ]]; do
         --sync)     SYNC_ONLY=true;  shift ;;
         --delete)   DELETE=true;     shift ;;
         --dry-run)  DRY_RUN=true;    shift ;;
-        --values)   VALUES="${2:?--values needs a path}";       shift 2 ;;
-        --local)    LOCAL_SECRETS="${2:?--local needs a path}"; shift 2 ;;
+        --values)   [[ -z "$SAW_VALUES" ]] || die "--values given twice (repeated flag refused)"
+                    SAW_VALUES=1; VALUES="$(flag_path --values "${2:-}")"; shift 2 ;;
+        --local)    [[ -z "$SAW_LOCAL" ]] || die "--local given twice (repeated flag refused)"
+                    SAW_LOCAL=1; LOCAL_SECRETS="$(flag_path --local "${2:-}")"; shift 2 ;;
         -h|--help)  usage 0 ;;
         -*)         die "unknown option: $1" ;;
         *)          [[ -z "$NAME" ]] && NAME="$1" || die "unexpected arg: $1"; shift ;;

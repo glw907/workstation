@@ -65,6 +65,16 @@ WORKER_SECRETS["asc-site"]="ANTHROPIC_API_KEY"
 WORKER_SECRETS["xcathletes"]="GITHUB_APP_PRIVATE_KEY_B64 TWILIO_ACCOUNT_SID TWILIO_API_KEY_SID TWILIO_API_KEY_SECRET TWILIO_AUTH_TOKEN VAPID_PRIVATE_KEY CONTACT_EMAIL"
 
 # --- Argument parsing ---
+# A --values or --local path must be given once and hold no "..", so a rule that allows a
+# worktree prefix cannot be steered to the main checkout's store.
+flag_path() {
+    if [[ "$2" == *..* ]]; then
+        echo "Error: $1 path may not contain '..': $2" >&2
+        exit 1
+    fi
+}
+SAW_VALUES=""
+SAW_LOCAL=""
 MODE="all"
 WORKER_TARGET=""
 DRY_RUN=false
@@ -76,6 +86,9 @@ while [[ $# -gt 0 ]]; do
             MODE="local"
             shift
             if [[ -n "${1:-}" && "$1" != --* ]]; then
+                [[ -z "$SAW_LOCAL" ]] || { echo "Error: --local given twice (repeated flag refused)." >&2; exit 1; }
+                SAW_LOCAL=1
+                flag_path --local "$1"
                 LOCAL_SECRETS="$1"
                 shift
             fi
@@ -85,6 +98,9 @@ while [[ $# -gt 0 ]]; do
                 echo "Error: --values requires a path argument." >&2
                 exit 1
             fi
+            [[ -z "$SAW_VALUES" ]] || { echo "Error: --values given twice (repeated flag refused)." >&2; exit 1; }
+            SAW_VALUES=1
+            flag_path --values "$2"
             SECRETS_FILE="$2"
             shift 2
             ;;
