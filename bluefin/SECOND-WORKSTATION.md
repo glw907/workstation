@@ -321,8 +321,17 @@ the rest unless the step says it is a hard stop.
     carried memory. Fix any drift that a step above should have
     covered. Report the rest to Geoff with the Part 3 list.
 
-    Also confirm Homebrew's `git` can reach GitHub over HTTPS, since
-    `thunderbird-theme-sync` uses it in Part 3:
+    Then confirm the auto-mode rules reached the live settings.
+    `claude auto-mode config` should list the github.com/glw907 Source
+    control entry, the `~/Projects` and `~/.dotfiles` Trusted repo entry, and
+    the `allow` rules for worktree rebases and directed PR merges. All of
+    them live in the tracked `claude/.claude/settings.json`. Only
+    `claude-tooling-sync apply` writes them into `~/.claude/settings.json`,
+    and a pull or `stow` alone does not. A session can't add a missing rule
+    itself, because the classifier blocks that as Self-Modification, so a
+    missing rule means rerunning `apply`, not editing settings by hand.
+
+    Also confirm Homebrew's `git` can reach GitHub over HTTPS:
     ```bash
     /home/linuxbrew/.linuxbrew/bin/git ls-remote https://github.com/glw907/workstation HEAD
     ```
@@ -352,18 +361,20 @@ the rest unless the step says it is a hard stop.
    the machine's own gws user token. The OAuth client pair comes from
    `~/.local/secrets`, which Part 2 step 3 wrote. A terminal opened before
    then never loaded it, and `gws` reports "No OAuth client configured".
-2. In Chromium, sign in, install the Claude extension, and confirm it
-   connects to Claude Code. Confirm the 1Password extension connects too. If
-   it doesn't, see the GID gotcha in `bluefin-admin.md`. If the Claude
-   extension can't connect, check for
+2. In Chromium's `Default` profile (Claude's), install the Claude extension
+   and confirm it connects to Claude Code. In Geoff's own profile, install
+   the Proton Pass extension (`ghmbeldphafepmbegfdlkpapadhbakde`). Install
+   each by hand: Chromium policy is browser-wide, so neither extension is
+   force-installed, and no profile carries a 1Password extension. If the
+   Claude extension can't connect, check for
    `~/.config/chromium/NativeMessagingHosts/com.anthropic.claude_code_browser_extension.json`.
    A Claude session started without `--chrome` doesn't write it, and
    neither does `/chrome` inside a session that started before setup.
    Start a fresh `claude --chrome` and quit it. Don't use `--continue`
    while another session on the same conversation is open.
-3. In Thunderbird, sign in to Fastmail with OAuth and quit, then run
-   `thunderbird-theme-sync`. The steps to repeat after a later pull are in
-   [After pulling a change](../thunderbird/README.md#after-pulling-a-change).
+3. Add the Fastmail CalDAV/CardDAV account in Settings > Online Accounts
+   (GNOME Contacts and Calendar read it), then launch Hylki and sign in to
+   Fastmail.
 4. Set the desktop background to `01-bluefin.xml`, the winter dinosaur in
    Nord tones:
    ```bash
@@ -378,10 +389,10 @@ the rest unless the step says it is a hard stop.
    machines run artwork with the same numbering.
 
    The dock needs no step here. `setup` applies it from `gnome-settings.txt`:
-   Files, Terminal, Firefox, Thunderbird, Discord, noson, Rufin, Steam,
+   Files, Terminal, Chromium, Hylki, Discord, noson, Rufin, Steam,
    1Password, then Trash. Before that line existed, pavilion kept Bluefin's
    stock dock, including the installer and a dead link to the removed
-   Thunderbird ESR. If an icon is missing, check that its app installed and
+   Thunderbird ESR (Thunderbird is retired). If an icon is missing, check that its app installed and
    that `check-drift` reports `favorite-apps` matching.
 
    Then relax the screen lock. pavilion is a desktop in the home office, so
@@ -466,6 +477,7 @@ next setup.
 | Missing | Why it mattered | Fix |
 |---|---|---|
 | Claude Code workspace trust for `~/Projects/cairn-cms` (found 2026-10-14, drafter pass 5) | `claude --bg` refuses to launch in an untrusted folder, so the conductor couldn't start the cairn executor until Geoff ran `claude` there | In Part 3, run `claude` once in each repo under `~/Projects/` and accept the trust prompt |
+| Auto-mode trust and allow rules in the live `~/.claude/settings.json` (found 2026-10-17) | The classifier blocked cross-repo pushes, a worktree rebase onto main, and a merge Geoff had directed, and each fix needed his approval mid-task | The rules now ship in the tracked `settings.json` (workstation fbf3919 and #89). Run `claude-tooling-sync apply` after every pull, then check `claude auto-mode config` as Part 2 step 10 says |
 | A Playwright browser for cairn-cms (found 2026-10-14, drafter pass 5) | Two of cairn's fast-lane suites skipped locally; CI still ran them | Run `npx playwright install chromium` in `~/Projects/cairn-cms` after `npm ci` |
 
 ## After pavilion is up

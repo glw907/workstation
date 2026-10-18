@@ -18,5 +18,5 @@ io.github.screwys.Rufin
 md.obsidian.Obsidian
 org.jeffvli.feishin
 com.valvesoftware.Steam
-org.mozilla.thunderbird
+co.hyprlab.Hylki
 io.github.pwr_solaar.solaar

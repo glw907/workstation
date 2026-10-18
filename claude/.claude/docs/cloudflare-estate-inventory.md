@@ -5,12 +5,87 @@ Workstation-wide reference, loaded by any project. Account `120c269ad6d3dfbe6d63
 EXISTS and HOW to reach it, never a secret's value. Regenerate the live lists with the commands
 at the foot; treat the snapshot below as orientation, verify before acting.
 
+## API token scheme (Geoff, 2026-10-18)
+
+Every Cloudflare API token on the account follows this scheme. Read it before you create,
+rename, rescope, store, or delete one. Geoff asked for ease of management balanced against
+reasonable security, so a token is split only where the split keeps a compromise of one holder
+from reaching something it otherwise could.
+
+The rules come from three published sources:
+
+- Cloudflare's API token docs: least privilege, "descriptive token names", "document token
+  usage", account-owned tokens for "durable integrations ... like CI/CD" and user tokens "for ad
+  hoc tasks like scripting", and limiting a powerful token "via client IP address filtering or
+  TTL" (<https://developers.cloudflare.com/fundamentals/api/get-started/account-owned-tokens/>,
+  <https://developers.cloudflare.com/fundamentals/api/how-to/create-via-api/>). The Workers
+  permissions page lists "Automated deployments from CI/CD or agents" as a token with Workers
+  Editor at product scope (<https://developers.cloudflare.com/workers/authorization/>).
+- The OWASP Secrets Management Cheat Sheet: least privilege (2.3), "limit shared secrets" and no
+  CI secret with "a wide blast radius" (3.2.1), and a record of each secret's consumer, purpose,
+  and rotation (2.11)
+  (<https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html>).
+- GitHub's Actions hardening guide: "Any user with write access to your repository has read
+  access to all secrets configured in your repository", so workflow credentials get "the least
+  privileges required"
+  (<https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions>).
+
+The scheme:
+
+1. **One token per holder and job.** The holder is where the value lives: `ws` (this
+   workstation), `ci` (GitHub Actions and Workers Builds), or a server (`mail`, `media`). Two
+   jobs on the same holder share a token unless a script's bug in one would otherwise reach the
+   other's resources.
+2. **Ownership.** A new token that a script, a server, or CI depends on is account-owned, so it
+   outlives any one person's login. Only `ws-admin`, used interactively as Geoff, is user-owned
+   by design. The two older user-owned script tokens (`ws-cairn-read`, `ws-r2-music-ro`) move to
+   account ownership at their next rotation.
+3. **Scope to the resource.** One zone, one bucket, or Workers Editor (deploy, never delete)
+   wherever the job allows. Read-only wherever the job only reads.
+4. **Names.** At Cloudflare, `<holder>-<purpose>`, lowercase with hyphens. In the age store,
+   `CF_` plus the Cloudflare name in upper snake case plus `_TOKEN`; an R2 token adds the S3
+   pair as `_KEY_ID` and `_SECRET`. A name that a tool or existing code already reads keeps its
+   store name, and the table records it.
+5. **Restrictions.** No IP filter, which breaks when an address changes. No expiry except on a
+   temporary token. `ws-admin` and `ci-deploy` carry a rotate-by date in the registry; a
+   server's token rotates when the server is rebuilt or compromised.
+6. **Token management.** No standing token can manage tokens. When one is needed, Geoff creates
+   `tmp-token-setup` (My Profile > API Tokens > Create Token, the "Create Additional Tokens"
+   template at the foot of the list, nothing added, a TTL ending tomorrow) and, for account-owned
+   tokens, `tmp-account-tokens` (Account > Account API Tokens > Edit, the same TTL) from
+   <https://dash.cloudflare.com/?to=/:account/api-tokens&permissionGroupKeys=%5B%7B%22key%22%3A%22account_api_tokens%22%2C%22type%22%3A%22edit%22%7D%5D&name=tmp-account-tokens>.
+   Cloudflare refuses to let one make the other: "sub-token is not allowed to have permissions
+   to manage other tokens" (error 1001, 2026-10-18). Each arrives in a RAM-only scratch store
+   (`VALUES=/dev/shm/tmp-setup-$(id -u).age`, `LOCAL_SECRETS=$XDG_RUNTIME_DIR/self-hosting/secrets-tmp-setup`),
+   never the age store, and is deleted through the API when the work ends. If a fresh token
+   verifies active but answers `9109 Invalid access token` on the token endpoints, check its
+   TTL start date; correcting the TTL fixed it on 2026-10-18.
+
+| Cloudflare name | Owner | Scope | Store name | Holder and job |
+|---|---|---|---|---|
+| `ws-admin` | user | The scopes in the next section | `CLOUDFLARE_API_TOKEN` (wrangler's variable) | Interactive admin on the workstation |
+| `ws-cairn-read` | user | Seven Read groups, below | `CAIRN_CF_READ_TOKEN` (the cairn tool reads it) | The Go `cairn` operator tool |
+| `ws-r2-music-ro` | user | R2 object read, `music-library` | `MUSIC_R2_RO_ACCESS_KEY_ID` / `MUSIC_R2_RO_SECRET_ACCESS_KEY` (`music-pull` reads them) | `music-pull` |
+| `ws-servers` | account | 907.life DNS, Single Redirect, and Workers Routes edit; Workers Admin (its scripts create and delete Workers), D1, Email Sending; Access apps and policies, Tunnel, Access audit logs read | `CF_WS_SERVERS_TOKEN` | The servers repo's scripts |
+| `ws-r2-archive-rw` | account | R2 object read and write, `servers-archive` | `CF_WS_R2_ARCHIVE_RW_TOKEN` + pair | Workstation archive copies |
+| `ws-r2-backups-ro` | account | R2 object read, `servers-backup-mail` and `servers-backup-media` | `CF_WS_R2_BACKUPS_RO_TOKEN` + pair | Restores and drills |
+| `mail-r2-backup-rw` | account | R2 object read and write, `servers-backup-mail` | `CF_MAIL_R2_BACKUP_RW_TOKEN` + pair | The mail server's restic |
+| `media-r2-backup-rw` | account | R2 object read and write, `servers-backup-media` | `CF_MEDIA_R2_BACKUP_RW_TOKEN` + pair | The media server's restic |
+| `ci-deploy` | account | Workers Editor across all Workers | Each repo's `CLOUDFLARE_API_TOKEN` Actions secret; origin `CF_CI_DEPLOY_TOKEN` | Every site deploy and Workers Builds |
+
+`ci-deploy` is planned, not live. Until it lands, five repos' Actions secrets and the Workers
+Builds build token hold `ws-admin`, and `CF_ZT_TOKEN` ("Zero Trust Edit") stays because the
+aksailingclub-legacy deploy reads it. That later change swaps the five secrets and the build
+token, adds Access identity-provider read to `ws-admin`, repoints `CF_ZT_TOKEN`'s readers, and
+deletes it. A per-Worker Editor token can deploy over a configured custom domain or route but
+cannot add or change one; that edit goes through `ws-admin`.
+
 ## Authorization: how each thing is reached non-interactively
 
 - **Cloudflare API / Wrangler — THE CANONICAL TOKEN-SCOPE RECORD (all projects defer here;
   never restate scopes in a project doc, link to this file).** One read-write token is live:
-  "Cloudflare Admin 2026-07", id `1d508f1ab69df49d3ef9572dc1917273` (a second, read-only token
-  is recorded below). Its origin store is the workstation `~/.dotfiles/secrets/values.age`;
+  `ws-admin` (named "Cloudflare Admin 2026-07" until 2026-10-18), id
+  `1d508f1ab69df49d3ef9572dc1917273` (a second, read-only token is recorded below). Its origin store is the workstation `~/.dotfiles/secrets/values.age`;
   `~/.local/secrets` is regenerated from it (`~/.bashrc` sources that file at line ~167, but ONLY
   in interactive shells — its line-5 interactivity guard means a script's
   `source ~/.bashrc` gets NOTHING; scripts must `source ~/.local/secrets` directly).
@@ -33,7 +108,7 @@ at the foot; treat the snapshot below as orientation, verify before acting.
   bullet, same session; after a rotation, a RUNNING Claude session's env still holds
   the OLD token (the harness captures env at session start) — prefix commands with
   `source ~/.local/secrets` until the session cycles.
-- **Second managed token, read-only: "cairn tool read" (minted 2026-09-19)**, stored as
+- **Second managed token, read-only: `ws-cairn-read` (minted 2026-09-19 as "cairn tool read")**, stored as
   `CAIRN_CF_READ_TOKEN` (age store, local only) for the Go `cairn` operator tool in cairn-cms
   `tool/`. Seven Read permission groups, by their dashboard names: Workers Scripts, Workers
   Builds Configuration, Workers Observability, Zone, Zone Settings, DNS, Email Sending; account
@@ -45,11 +120,13 @@ at the foot; treat the snapshot below as orientation, verify before acting.
   `workers/observability/telemetry/keys`; 403 on a DNS record POST and a zone-setting PATCH.
   `accounts/{id}/tokens/verify` answers error 1000 for this user-owned token; use the `user/`
   path. The Zone Settings group was added by a dashboard edit that DID persist (contrast the
-  2026-07-14 failure above). Permission-group ids are not recorded: listing them needs
-  token-management scope, which neither token carries. Registry entry:
+  2026-07-14 failure above). Permission-group ids come from `user/tokens/permission_groups`
+  and `accounts/{id}/tokens/permission_groups`, which only a temporary token-management token
+  (scheme rule 6) can read. Registry entry:
   `~/.dotfiles/secrets/registry.md`.
-- **Zero Trust token `CF_ZT_TOKEN`** (workstation age store, local only; registry entry
-  `CF_ZT_TOKEN`). **Use it, not `CLOUDFLARE_API_TOKEN`, for anything touching Access identity
+- **Zero Trust token `CF_ZT_TOKEN`**, "Zero Trust Edit" at Cloudflare (workstation age store,
+  and the aksailingclub-legacy Actions secret; registry entry `CF_ZT_TOKEN`). The scheme
+  retires it once `ci-deploy` lands. **Use it, not `CLOUDFLARE_API_TOKEN`, for anything touching Access identity
   providers.** It reads `accounts/{id}/access/identity_providers` (two IdPs: `onetimepin` and
   `google-apps` "Google Workspace"), verified live 2026-10-10. Per the registry's 2026-08-30
   note it also creates and reads Access apps and policies. The general token got
@@ -118,6 +195,8 @@ legacy ops event photos), 907-life-media, ecxc-media, cairn-pub-media.
 **Workers:** asc-site (the NEW cairn ASC site, served at dev.aksailingclub.org; the apex is the
 legacy site until cutover), aksailingclub-org (build worker), asc-ops (+ -dev, -staging; the
 retiring dashboard), asc-handbook, asc-uptime, 907-life, ecxc, cairn-pub, eudaimonia.
+
+**Zero Trust organization:** "Wright Family", team domain `907wrights.cloudflareaccess.com` (renamed 2026-10-18 from "Alaska Sailing Club" and `aksailingclub`). Each identity provider's callback is `https://907wrights.cloudflareaccess.com/cdn-cgi/access/callback`; the Google Workspace provider's OAuth client (`450617487145-hqf3h2ge…`, the club's Google Cloud project) must list it.
 
 **Access apps** (live 2026-10-10): ASC Staging, ASC Handbook (+ its CMS), Ops Dashboard (ops +
 staging), the Ops Schema API (public, consumed cross-origin by the handbook — do not lock it),

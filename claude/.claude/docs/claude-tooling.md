@@ -11,6 +11,7 @@ machine.** The manifests record intent; the script reports what happened.
 | --- | --- | --- | --- |
 | Skills (authored here) | `~/.dotfiles/claude/.claude/skills/<name>/` (stowed) | the directory itself | stow |
 | Skills (vendored, third party) | same directory | `~/.claude/tooling/vendored-skills.json` (stowed) | `claude-tooling-sync update-skills` |
+| Skills (authored in a project repo) | `claude/.claude/skills/<name>/` in `~/Projects/drafter` (the `blueprint` skill), linked into `~/.claude/skills/` by its `make install` | the directory | `make install` in that repo |
 | Agents | `~/.dotfiles/claude/.claude/agents/<name>.md` (stowed) | the directory itself | stow |
 | Docs (this file and its siblings) | `~/.dotfiles/claude/.claude/docs/` (stowed) | the directory itself | stow |
 | Instructions (cross-repo reference docs, linked from consumer CLAUDE.md files) | `~/.dotfiles/claude/.claude/instructions/` (stowed) | the directory itself | stow |

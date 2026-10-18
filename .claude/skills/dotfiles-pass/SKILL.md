@@ -36,7 +36,9 @@ gate launches no browser and its measured peak is 105 MB.
 secrets), and `bin/.local/bin/{claude-block-op,claude-secret-guard,claude-tierguard,claude-askpass,
 claude-sudo-setup,claude-sudo-clear,secret-receive,fastmail-password,fastmail-dav-password}`.
 `ordinary`: everything else. A path in both classes takes the higher (`scripts/secrets/**` is
-`auth-data`).
+`auth-data`). A wording-only edit to a `runner` path can land as a direct change (`pass-core`,
+"Direct changes"). The gate and `claude-tooling-sync verify` still run, and the main checkout's
+pull is what makes it live.
 
 **Checklist globs**: The close review loads `python-conventions` for `*.py`, `go-conventions` for
 `*.go`, and `ts-conventions` for `*.{js,mjs,ts}`.

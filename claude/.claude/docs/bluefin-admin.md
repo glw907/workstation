@@ -33,7 +33,7 @@ default.
    which is slower and has more failure modes than any tier above. Reach for it only
    when nothing else can provide the package: a system-level binary, a kernel module,
    or a dependency a layered app needs that isn't itself packaged elsewhere (this is
-   why `1password`, `1password-cli`, `firefox`, and `chromium` are layered — see
+   why `1password`, `1password-cli`, and `chromium` are layered — see
    below).
 
 kitty is the exception to all of the above: install via the upstream binary installer
@@ -41,7 +41,7 @@ into `~/.local/kitty.app`, never layered, never Flatpak (native messaging and
 sandboxing concerns don't apply to a terminal, but the upstream installer is simply
 the right tier for a self-contained binary app with its own update mechanism).
 
-Homebrew has no Chromium or Firefox formula/cask on Linux — confirmed dead end, do not
+Homebrew has no Chromium formula/cask on Linux — confirmed dead end, do not
 retry `brew install chromium` or similar.
 
 ### Every install updates its manifest, same session
@@ -71,7 +71,6 @@ is drift you created knowingly.
 ```
 1password
 1password-cli
-firefox
 chromium
 ```
 
@@ -145,14 +144,14 @@ it's critical. Keep it that way in every change.
   wiggles for attention.
 - A new app gets its own interruptions turned off at install: new-item popups,
   sounds, unread badges, tray nags, and "what's new" or start pages. Record the
-  setting where the app's config lives (Thunderbird's is
-  `~/.dotfiles/thunderbird/user.js`).
+  setting where the app's config lives (a Chromium preference goes in
+  `bluefin/etc/chromium-policies/`).
 - A script that notifies uses normal urgency for routine news, which lands
   silently in the notification list. Reserve `--urgency=critical` for things
   Geoff must act on now, such as a released sleep hold or a failure that loses
   work. Never repeat or loop a notification, and never add sound.
 - Colors stay muted: GNOME's palette, with the slate accent as the only
-  highlight. The Thunderbird overrides are the worked example.
+  highlight.
 - Desktop settings go in `bluefin/gnome-settings.txt`, applied with
   `/usr/bin/gsettings` (see the next section).
 
@@ -192,8 +191,7 @@ onto the live system from there. Never edit a file under `/etc` ad hoc, even for
 one-line fix — write the change into the dotfiles copy, then apply it, so the repo
 stays the record of what's actually on disk. Current captured files:
 
-- `bluefin/etc/chromium-policies/*.json` → `/etc/chromium/policies/managed/`
-- `bluefin/etc/firefox-policies/policies.json` → `/etc/firefox/policies/` (Kagi as the default search engine and homepage; Geoff, 2026-10-13)
+- `bluefin/etc/chromium-policies/*.json` → `/etc/chromium/policies/managed/` (includes `kagi-search.json`: Kagi as the default search engine and homepage, Geoff 2026-10-13, moved from Firefox 2026-10-18)
 - `bluefin/etc/udev/51-android.rules` → `/etc/udev/rules.d/`
 - `bluefin/etc/systemd/logind.conf.d/10-lid-ignore.conf` → `/etc/systemd/logind.conf.d/` (thinkpad-x1 only; pavilion has no lid and never installs it; lid close never suspends, Geoff 2026-09-12; after a change: `sudo -A systemctl kill -s HUP systemd-logind`) <!-- host-ok -->
 - `bluefin/etc/systemd/user.conf.d/10-oom-continue.conf` and
@@ -221,17 +219,21 @@ sudo -A udevadm trigger`.
 
 ## Browsers
 
-- **Firefox** (layered RPM) — daily browser, with 1Password integration. Needs the
-  RPM build specifically; native messaging manifests for 1Password land in the
-  standard Mozilla paths and expect a non-sandboxed browser.
-- **Chromium** (layered RPM) — development and testing browser. This is what Claude
-  Code drives: the claude-in-chrome native-messaging host, chrome-devtools MCP
-  automation, and `chromium-shot` all target this browser.
-- **Flatpak builds of either browser: never.** Both 1Password's browser integration
-  and Claude's native-messaging hosts need to reach into the browser process directly;
-  Flatpak's sandbox blocks that for both. This isn't a preference, it's a hard
-  incompatibility — don't suggest a Flatpak browser as a fallback for anything that
-  needs either integration.
+- **Chromium** (layered RPM) — the daily browser (Geoff, 2026-10-18; Firefox is
+  retired). Two profiles split the roles: Geoff browses in his own profile, and
+  Claude Code drives the `Default` profile (the claude-in-chrome native-messaging
+  host, chrome-devtools MCP automation, and `chromium-shot`), so automation never
+  runs beside his sessions or password manager.
+- **Extensions are installed by hand, per profile.** Chromium policy is browser-wide
+  with no per-profile scope, so no policy force-installs an extension. Geoff's
+  profile carries the Proton Pass extension (Chrome Web Store id
+  `ghmbeldphafepmbegfdlkpapadhbakde`) and never Claude's; the `Default` profile
+  carries only the Claude extension. No Chromium profile carries a 1Password
+  extension.
+- **Flatpak builds of a browser: never.** Claude's native-messaging hosts need to
+  reach into the browser process directly; Flatpak's sandbox blocks that. This isn't
+  a preference, it's a hard incompatibility — don't suggest a Flatpak browser as a
+  fallback.
 
 ### Showing Geoff a visual (Geoff, 2026-09-13, every repo)
 
@@ -239,17 +241,17 @@ Before-and-after renders, mockups, screenshots, and HTML pages built for a visua
 open in the desktop browser by default, one tab per state, so he can tab between states, zoom,
 and compare at full size. Send them as files in the conversation as well only when he is away
 from the workstation. Artifacts are one-off tools: they open in Chromium and get no
-cross-browser work. Sitting pages and mockups open in Firefox, his daily browser, so a
-rendering issue there surfaces during the review (Geoff, 2026-09-28). For a page Claude
+cross-browser work. Sitting pages and mockups open in Chromium too (Geoff, 2026-10-18). For a page Claude
 must drive itself through claude-in-chrome: the extension connects only once Chromium is running,
 and it refuses `file://` URLs, so serve the directory from the scratchpad with
 `python3 -m http.server <port> --bind 127.0.0.1` and open `http://127.0.0.1:<port>/...`, one
 `navigate` plus `tabs_create_mcp` per state. `tabs_create_mcp` can fail transiently while a
 tab is being dragged; retry it alone.
 
-Chromium policy files (telemetry, extensions, 1Password) are captured at
+Chromium policy files (Kagi search and homepage, the built-in password manager and
+autofill turned off, telemetry) are captured at
 `bluefin/etc/chromium-policies/` and installed to `/etc/chromium/policies/managed/`.
-Verify on first boot: `chrome://policy` in the layered Chromium lists all three
+Verify on first boot: `chrome://policy` in the layered Chromium lists all
 managed policies as active. (The retired Mint-era `chromium-browser.md` carried
 deeper verification recipes; it lives in git history, removed 2026-08-30.)
 
@@ -293,12 +295,12 @@ the R2 backup, for example).
 ## 1Password GID gotcha
 
 Known residual issue on ostree systems: the 1Password helper tool's GID can mismatch
-what the browser extension or `op` CLI expects, breaking the desktop-app connection
+what the `op` CLI expects, breaking the desktop-app connection
 that `claude-askpass` and the `sudo -A` flow depend on. The pre-July-2026 "updates
 fail on ostree" bug itself is fixed upstream (v8.12.30-19); this GID issue is a
 separate, narrower, still-open gotcha.
 
-- Symptom: browser extension or `op` CLI can't connect to the 1Password desktop app,
+- Symptom: the `op` CLI can't connect to the 1Password desktop app,
   despite the app running and unlocked.
 - Fix: community fix script, gist `b-/ed2cdc182ae5a92bdcd6b73308832a70`. Verify on
   first boot whether this is even needed — it may not reproduce on a fresh install.
@@ -362,10 +364,8 @@ built from `~/Projects/poplar/`; binary `~/.local/bin/poplar` (`make install`). 
 JMAP, `$FASTMAIL_API_TOKEN` in `~/.local/secrets`. API reference:
 `~/.claude/instructions/fastmail-api.md`.
 
-Until poplar is ready, Thunderbird is the desktop client (Geoff, 2026-09-29): the Flathub
-`org.mozilla.thunderbird` monthly channel, signed in to Fastmail with OAuth (no app
-password), styled with the Thunderbird GNOME theme. The theme is CSS in the profile, so
-customize it only through `~/.dotfiles/thunderbird/` and `thunderbird-theme-sync`, never by
-editing the profile's `chrome/` folder directly; `~/.dotfiles/thunderbird/README.md` has
-the layout and tasks. Fixes that belong in the theme go upstream as PRs, after Geoff
-approves each one.
+Until poplar is ready, Hylki (Flatpak `co.hyprlab.Hylki`) is the desktop mail client
+(Geoff, 2026-10-18; Thunderbird is retired, its mail filters backed up under
+`~/.local/state/browser-mail-retire-2026-10-18/`). Contacts and calendars are GNOME
+Contacts and GNOME Calendar, fed by a CalDAV/CardDAV account in GNOME Online Accounts;
+Hylki reads the Evolution Data Server address books and adds invitations to the calendar.

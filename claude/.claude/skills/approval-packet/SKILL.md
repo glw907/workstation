@@ -24,8 +24,8 @@ skill adds the procedure and never restates the register.
 1. **Decide when to send.** Send one packet per hand-over, when the work reaches a decision point.
    A conductor's sweep is one hand-over: one packet for the PRs it holds at that point, never one
    per executor PR. A design brought for approval is a design part in a packet. An executor whose
-   conductor hands over sends nothing. An `ordinary` pass that found no follow-ups merges itself
-   and sends nothing (`pass-core`, "Close").
+   conductor hands over sends nothing. An `ordinary` pass merges itself and sends nothing, and
+   so does a direct change (`pass-core`, "Close" and "Direct changes").
 2. **Gather the parts and give each its canonical ref.** PR `<owner>/<repo>#<n>`, design
    `<owner>/<repo>:<path>`, plan step `step:<n>` of "If you approve". Each PR and design appears
    exactly once. The initiative is a record id in `~/Projects/initiatives`, or `none`.

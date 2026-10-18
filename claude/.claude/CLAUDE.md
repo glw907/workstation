@@ -40,9 +40,9 @@ verify it, report verified.
 - **Key paths**: `~/Projects/` (repos), `~/.dotfiles/`, `~/.local/bin/` (scripts)
 - **Dev tools**: Node via mise, Python via uv, Go via Homebrew, Java 17 for Android
   (`~/Android/`, `ANDROID_HOME` set in `.bashrc`)
-- **Browsers**: Firefox is the daily browser; Claude Code drives Chromium (`chromium-browser`).
-  Artifacts open in Chromium; sitting pages and mockups open in Firefox, so a rendering issue
-  there surfaces (Geoff, 2026-09-28). Never a Flatpak build of either (the sandbox blocks native
+- **Browsers**: Chromium is the daily browser, in Geoff's own profile; Claude Code drives
+  Chromium's `Default` profile, never Geoff's. Artifacts, sitting pages, and mockups open in
+  Chromium (Geoff, 2026-10-18). Never a Flatpak build (the sandbox blocks native
   messaging); read `~/.claude/docs/bluefin-admin.md` before browser work.
 
 ## Sysadmin Preferences
@@ -96,8 +96,8 @@ as read-only. The MCP token is read-only for Access/Workers-domain writes; use c
 `$CLOUDFLARE_API_TOKEN` for those. The token lives in `~/.local/secrets`, sourced for interactive
 shells only, so a script must `source ~/.local/secrets` itself. Account id, token scopes,
 D1/R2/workers/Access, and how each secret is reached: `~/.claude/docs/cloudflare-estate-inventory.md`;
-read it before hunting a credential or provisioning infra. Use an API or CLI first for external
-services, and never suggest a web dashboard unless the API cannot do it.
+read it before hunting a credential, provisioning infra, or touching any token (its token
+scheme). Use an API or CLI first for external services; no dashboard unless the API can't.
 
 ## Secrets
 
@@ -119,8 +119,8 @@ services, and never suggest a web dashboard unless the API cannot do it.
 - **Google Docs / Drive / Sheets**: `gws` CLI, never an MCP server. Auth modes and write
   patterns: `bluefin-admin.md` "Google Docs / Drive (gws)".
 - **Email**: poplar (`~/Projects/poplar/`, Fastmail via JMAP; API reference
-  `~/.claude/instructions/fastmail-api.md`). Thunderbird is interim; its theme changes go only
-  through `~/.dotfiles/thunderbird/`.
+  `~/.claude/instructions/fastmail-api.md`). Hylki is the desktop mail client; GNOME Contacts
+  and Calendar hold contacts and calendars.
 
 ## Claude tooling: manifests, scopes, and the DaisyUI-first rule (Geoff, 2026-09-13)
 
@@ -181,8 +181,8 @@ from published evidence, the framework's documented convention, or architectural
 bring the whole design for one approval, and flag only contestable points. Questions to Geoff are
 for product, taste, priority, scope, and budget.
 
-A change touching a handful of files, fully specified by the request or existing tests, with no new
-public surface, schema, or auth behavior, goes straight through the gates.
+A fully specified one-sentence change with no `auth-data` path or new surface lands on the default
+branch after the gate, with no PR or packet: `pass-core` "Direct changes" (Geoff, 2026-10-17).
 
 ## Writing voice
 

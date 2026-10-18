@@ -244,8 +244,10 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   auto-deploy for both workers until a new build token is created
   (`POST /accounts/{id}/builds/tokens` with the new token id and value) and each trigger
   is PATCHed to it. Scope added 2026-08-22: Workers Builds Configuration: Edit.
-- **Issuer-side token name**: "Cloudflare Admin 2026-07" (Cloudflare dashboard > Manage
-  Account > API Tokens). Permission groups added 2026-08-30 for the pings Worker build-out
+- **Issuer-side token name**: `ws-admin`, renamed from "Cloudflare Admin 2026-07" on
+  2026-10-18 under the API token scheme in `~/.claude/docs/cloudflare-estate-inventory.md`
+  (My Profile > API Tokens; user-owned). The scheme replaces its CI and Workers Builds copies
+  with `ci-deploy`, which is still planned. **Rotate by 2027-10-18.** Permission groups added 2026-08-30 for the pings Worker build-out
   (Task P2b): Workers KV Storage: Edit, Email Routing Addresses: Edit — plus Cloudflare
   Tunnel: Edit (closed the same day, the musicbox `CF_ZT_TOKEN` blocker above). The token
   cannot edit its own permissions (confirmed: `GET /user/tokens/{id}` 403s even for this
@@ -264,7 +266,8 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 ### CAIRN_CF_READ_TOKEN / CAIRN_CF_ACCOUNT_ID / CAIRN_GH_READ_TOKEN
 - **Grants**: the Go `cairn` operator tool's read-only credentials (cairn-cms `tool/`), minted
   2026-09-19 as the tool's Task 10 verification set. Local only; no Worker consumes them.
-- **CAIRN_CF_READ_TOKEN**: Cloudflare token "cairn tool read". Seven Read groups: Workers
+- **CAIRN_CF_READ_TOKEN**: Cloudflare token `ws-cairn-read` ("cairn tool read" until
+  2026-10-18; user-owned, moves to account ownership at its next rotation). Seven Read groups: Workers
   Scripts, Workers Builds Configuration, Workers Observability, Zone, Zone Settings, DNS, Email
   Sending; account `glw907`, all zones. Zone Settings was added by dashboard edit the same day
   (the HTTPS-forced check reads `always_use_https` and `security_header`; the edit persisted).
@@ -333,6 +336,9 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 - **Rotate at**: PikaPods > the pod > Settings > SFTP. Dies with the pod when PikaPods is retired.
 
 ### CF_ZT_TOKEN
+- **Issuer-side token name**: "Zero Trust Edit" (user-owned). Also the aksailingclub-legacy
+  Actions secret. The API token scheme retires it once `ci-deploy` lands and `ws-admin` gains
+  Access identity-provider read.
 - **Grants**: Cloudflare Zero Trust API (Access apps, policies, identity providers).
   Empirically confirmed 2026-08-30 (musicbox Task 5): can create/read Access
   applications and policies, and read Access identity providers (`onetimepin`,
@@ -515,15 +521,15 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   change `VAPID_PUBLIC_KEY` in `wrangler.jsonc` in the same deploy.
 
 ### MUSIC_R2_RO_ACCESS_KEY_ID / MUSIC_R2_RO_SECRET_ACCESS_KEY
-- **Grants**: R2 API token "claude-code-thinkpad-x1" — Object Read only, scoped to bucket
-  `music-library` only. Deliberately read-only: the workstation mirror pull
-  (`music-pull`, Task 8) can never delete or overwrite the box's backup, so no
-  argument-order slip in a local script can wipe R2.
+- **Grants**: R2 API token `ws-r2-music-ro` (id `1de499ec...`; "Claude Code ThinkPad X1"
+  until 2026-10-18): Object Read only, scoped to bucket `music-library` only. Deliberately
+  read-only: the workstation mirror pull (`music-pull`, Task 8) can never delete or overwrite
+  the bucket, which has been the library's only copy since musicbox was deleted on 2026-10-17.
 - **Used by**: the workstation's `music-pull` script (`rclone copy` of `library/` to
   `~/Music`).
-- **Rotate at**: Cloudflare dashboard > R2 > Manage API tokens (revoke
-  "claude-code-thinkpad-x1", mint a replacement scoped identically, then `secret-set.sh`
-  both halves).
+- **Rotate at**: My Profile > API Tokens (user-owned today; its replacement is account-owned
+  under the API token scheme in `~/.claude/docs/cloudflare-estate-inventory.md`). Mint it scoped
+  identically, then `secret-set.sh` both halves.
 
 ---
 

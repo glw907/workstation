@@ -213,10 +213,6 @@ setup_etc_drops() {
         sudo install -m 0644 "${policies[@]}" /etc/chromium/policies/managed/ || return 1
     fi
 
-    # Firefox reads one policies.json; it sets Kagi as the default search engine and homepage.
-    sudo install -D -m 0644 "$BLUEFIN_DIR/etc/firefox-policies/policies.json" \
-        /etc/firefox/policies/policies.json || return 1
-
     sudo install -m 0644 "$BLUEFIN_DIR/etc/udev/51-android.rules" \
         /etc/udev/rules.d/51-android.rules || return 1
     sudo udevadm control --reload-rules || return 1
@@ -232,10 +228,10 @@ setup_dx_group() {
 }
 
 # Bluefin preinstalls a Flatpak Firefox, and the base image's default browser
-# points at it. The brief requires the layered RPM builds instead: Flatpak's
-# sandbox blocks the native messaging that 1Password and Claude's browser
-# tooling both depend on. Leaving the Flatpak installed means two Firefoxes
-# with the sandboxed one still winning every link click.
+# points at it. Chromium (a layered RPM) is the browser here: Flatpak's
+# sandbox blocks the native messaging that the password manager and Claude's
+# browser tooling both depend on. Leaving the Flatpak installed means a
+# sandboxed second browser still winning every link click.
 #
 # This sticks. The system Flatpak set is installed by `ujust
 # install-system-flatpaks`, which is a manual "for rebasers" recipe, not
@@ -243,7 +239,7 @@ setup_dx_group() {
 # Firefox (privileged-setup.hooks.d/99-flatpaks.sh) writes prefs into an
 # extension directory and never installs the app.
 setup_remove_conflicting_flatpaks() {
-    echo "== setup: remove superseded Flatpaks (layered RPMs, Thunderbird ESR) =="
+    echo "== setup: remove superseded Flatpaks (Chromium is the browser, Hylki the mail client) =="
     local app
     for app in org.mozilla.firefox com.onepassword.OnePassword; do
         if flatpak info "$app" > /dev/null 2>&1; then
@@ -254,27 +250,24 @@ setup_remove_conflicting_flatpaks() {
         fi
     done
 
-    # Bluefin's stock set still names org.mozilla.Thunderbird, which Flathub
-    # end-of-lifed and rebased to org.mozilla.thunderbird_esr. Thunderbird
-    # runs on the monthly channel instead (org.mozilla.thunderbird, in
-    # flatpaks.txt; Geoff, 2026-09-29), so drop the ESR the stock set brings.
-    for app in org.mozilla.Thunderbird org.mozilla.thunderbird_esr; do
+    # Bluefin's stock set still names Thunderbird. Thunderbird is retired
+    # (Geoff, 2026-10-18; Hylki is the mail client, in flatpaks.txt), so drop
+    # every build the stock set brings.
+    for app in org.mozilla.Thunderbird org.mozilla.thunderbird_esr org.mozilla.thunderbird; do
         if flatpak info "$app" > /dev/null 2>&1; then
-            echo "removing $app (ESR; the monthly org.mozilla.thunderbird replaces it)"
+            echo "removing $app (retired)"
             flatpak uninstall --system -y --delete-data "$app" || return 1
         fi
     done
 
-    # Hand the default-browser association to the layered RPM. The Fedora 44
-    # firefox RPM ships org.mozilla.firefox.desktop, the same desktop id the
-    # Flatpak exported, so once the Flatpak is gone the id resolves to the
-    # RPM; setting it explicitly covers a system where it pointed elsewhere.
-    if [[ -f /usr/share/applications/org.mozilla.firefox.desktop ]]; then
-        xdg-settings set default-web-browser org.mozilla.firefox.desktop
-        echo "default browser set to org.mozilla.firefox.desktop (layered RPM)"
+    # Hand the default-browser association to the layered Chromium RPM;
+    # setting it explicitly covers a system where it pointed at Firefox.
+    if [[ -f /usr/share/applications/chromium-browser.desktop ]]; then
+        xdg-settings set default-web-browser chromium-browser.desktop
+        echo "default browser set to chromium-browser.desktop (layered RPM)"
     else
-        echo "WARNING: /usr/share/applications/org.mozilla.firefox.desktop not found;" >&2
-        echo "         is the firefox RPM layered? (bootstrap.sh layer)" >&2
+        echo "WARNING: /usr/share/applications/chromium-browser.desktop not found;" >&2
+        echo "         is the chromium RPM layered? (bootstrap.sh layer)" >&2
     fi
 }
 
@@ -491,34 +484,33 @@ print_checklist() {
 1Password (brief: known GID mismatch gotcha on ostree):
   - Open 1Password desktop, confirm it unlocks.
   - Confirm `op whoami` works from a terminal.
-  - Confirm the browser extension (Firefox and Chromium) connects to the
-    desktop app. If it does not: this is the documented helper-tool GID
-    mismatch on ostree. Fix script: gist b-/ed2cdc182ae5a92bdcd6b73308832a70.
+  - If `op` or the desktop app cannot connect: this is the documented
+    helper-tool GID mismatch on ostree. Fix script:
+    gist b-/ed2cdc182ae5a92bdcd6b73308832a70.
 
 SELinux (brief: skipping this is a documented cause of broken logins):
   - After restoring anything into /var/home, run:
       sudo restorecon -R -v /var/home/glw907
 
 Browsers:
-  - chrome://policy in Chromium shows the three managed policies applied.
-  - Firefox 1Password integration connects (needs the RPM build, not flatpak).
+  - chrome://policy in Chromium shows the managed policies applied (Kagi
+    search and homepage, no Google telemetry, built-in password manager off).
+  - Geoff's own Chromium profile carries the Proton Pass extension
+    (ghmbeldphafepmbegfdlkpapadhbakde) and never Claude's; Claude's `Default`
+    profile carries only Claude's extension. No Chromium profile carries a
+    1Password extension. Install each by hand: policy is browser-wide and
+    cannot split them.
   - `flatpak list | grep -iE 'firefox|onepassword'` returns nothing: the
-    preinstalled Flatpak builds are gone and the layered RPMs are what runs.
-  - `xdg-settings get default-web-browser` prints org.mozilla.firefox.desktop,
-    which with the Flatpak gone resolves to the RPM's desktop file under
-    /usr/share/applications, not the Flatpak export.
-  - `about:support` in Firefox shows an RPM install path, not /app or
-    /var/lib/flatpak.
+    preinstalled Flatpak builds are gone and the layered Chromium is what runs.
+  - `xdg-settings get default-web-browser` prints chromium-browser.desktop,
+    the layered RPM's desktop file under /usr/share/applications.
 
-Thunderbird (interim Fastmail client; thunderbird/README.md):
-  - `flatpak list | grep -i thunderbird` shows only org.mozilla.thunderbird
-    (the monthly channel); the stock ESR build is gone.
-  - Launch Thunderbird once and sign in to Fastmail (geoff@907.life, OAuth;
-    no app password). Link calendars (caldav.fastmail.com) and contacts
-    (carddav.fastmail.com) as thunderbird/README.md describes.
-  - Quit Thunderbird, then run `thunderbird-theme-sync`: it installs the GNOME
-    theme, the color overrides, and user.js into the new profile.
-  - `thunderbird-theme-sync --check` prints "theme and overrides match".
+Hylki (desktop mail client) and GNOME Online Accounts:
+  - `flatpak list | grep -i thunderbird` returns nothing.
+  - Add the Fastmail CalDAV/CardDAV account in Settings > Online Accounts;
+    GNOME Contacts and GNOME Calendar read it, and Hylki uses those address
+    books and calendars.
+  - Launch Hylki once and sign in to Fastmail (geoff@907.life).
 
 Android:
   - `adb devices` sees a plugged-in device (uaccess tagging applies
@@ -554,7 +546,7 @@ Claude Code, syncthing:
 
 Image:
   - `rpm-ostree status` shows a bluefin-dx image, and lists 1password,
-    1password-cli, firefox, and chromium as layered packages.
+    1password-cli, and chromium as layered packages.
   - `docker --version` works (DX ships it; its absence means the devmode
     rebase never landed).
 
@@ -823,8 +815,6 @@ restore_etc() {
     sudo mkdir -p /etc/chromium/policies/managed
     find "$RESTORE_STAGING/etc-capture" -iname '*.json' -ipath '*chromium*' -print0 \
         | xargs -0 -r -I{} sudo cp {} /etc/chromium/policies/managed/
-    sudo install -D -m 0644 "$BLUEFIN_DIR/etc/firefox-policies/policies.json" \
-        /etc/firefox/policies/policies.json
 }
 
 # Runbook 4.9: mandatory. Bluefin enforces SELinux; the Mint backup carries

@@ -22,6 +22,7 @@ Each task takes a risk class from the adapter's path map: `auth-data`, `runner`,
 Only Geoff's ruling raises a class, stated in the design in one sentence. A pass takes its highest
 task's class. A `live-account` flag marks a run that can touch a real Cloudflare, GitHub, or npm
 account.
+A change that meets "Direct changes" skips this lifecycle.
 
 1. **Design.** Opus at `high` brainstorms in chat. Geoff approves a design of a page or less: the
    outcome, files and interfaces touched, what is out of scope, one end-to-end check, and the risk
@@ -76,6 +77,25 @@ account.
 5. **Execute.** See "Execute".
 6. **Close.** See "Close". Geoff decides the packet in Design & PR Approvals, except that a pass whose highest
    class is `ordinary` merges its own PR (see "Close").
+
+## Direct changes
+
+A change lands on the default branch with no design, plan, PR, review agent, or packet when all
+of these hold (Geoff, 2026-10-17):
+
+- Geoff's request fully specifies it, and the diff fits in one sentence.
+- It touches no `auth-data` path and adds no public surface, schema, command, or setting.
+- In a `runner` path it changes wording only: the skill or agent tells a session the same thing,
+  and no step, rule, trigger, or tool list changes.
+
+The session runs the adapter's gate, commits the named files, pushes to the default branch, and
+names the commit in its reply. When another session is live in the main checkout, it commits in a
+worktree cut from `origin/<default>`, pushes with `git push origin HEAD:<default>`, and brings the
+checkout up to date as "Close" sets out. Where a push to the default branch deploys, as on the
+sites, the change also passes what the repo requires before a deploy: the full-page render read of
+each touched page. A finding past the one sentence makes it a pass. Best practices for Claude Code
+(<https://code.claude.com/docs/en/best-practices>): "For tasks where the scope is clear and the fix
+is small ... ask Claude to do it directly."
 
 ## Models
 
@@ -236,8 +256,9 @@ pass that merges its own PR sends nothing (Geoff, 2026-10-11). `approval-queue t
 only for an explicit backlog triage.
 
 A pass whose highest class is `ordinary` merges its own PR with `gh pr merge <n> --merge` after a
-green full-suite home and an accepted whole-branch review, when it filed no follow-ups at all.
-A pass that filed any follow-up, or a `runner` or `auth-data` pass, sends a packet for Geoff's read and merge. An
+green full-suite home and an accepted whole-branch review. Its follow-ups go to `BACKLOG.md` and the
+PR body as above, never to a packet (Geoff, 2026-10-17). A `runner` or `auth-data` pass sends a
+packet for Geoff's read and merge. An
 adapter line that says every PR waits for Geoff yields to this exception.
 
 A PR must be safe under a plain merge followed by a pull; the executor makes it so where it can.
