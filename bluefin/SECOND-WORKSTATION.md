@@ -331,8 +331,7 @@ the rest unless the step says it is a hard stop.
     itself, because the classifier blocks that as Self-Modification, so a
     missing rule means rerunning `apply`, not editing settings by hand.
 
-    Also confirm Homebrew's `git` can reach GitHub over HTTPS, since
-    `thunderbird-theme-sync` uses it in Part 3:
+    Also confirm Homebrew's `git` can reach GitHub over HTTPS:
     ```bash
     /home/linuxbrew/.linuxbrew/bin/git ls-remote https://github.com/glw907/workstation HEAD
     ```
@@ -362,18 +361,20 @@ the rest unless the step says it is a hard stop.
    the machine's own gws user token. The OAuth client pair comes from
    `~/.local/secrets`, which Part 2 step 3 wrote. A terminal opened before
    then never loaded it, and `gws` reports "No OAuth client configured".
-2. In Chromium, sign in, install the Claude extension, and confirm it
-   connects to Claude Code. Confirm the 1Password extension connects too. If
-   it doesn't, see the GID gotcha in `bluefin-admin.md`. If the Claude
-   extension can't connect, check for
+2. In Chromium's `Default` profile (Claude's), install the Claude extension
+   and confirm it connects to Claude Code. In Geoff's own profile, install
+   the Proton Pass extension (`ghmbeldphafepmbegfdlkpapadhbakde`). Install
+   each by hand: Chromium policy is browser-wide, so neither extension is
+   force-installed, and no profile carries a 1Password extension. If the
+   Claude extension can't connect, check for
    `~/.config/chromium/NativeMessagingHosts/com.anthropic.claude_code_browser_extension.json`.
    A Claude session started without `--chrome` doesn't write it, and
    neither does `/chrome` inside a session that started before setup.
    Start a fresh `claude --chrome` and quit it. Don't use `--continue`
    while another session on the same conversation is open.
-3. In Thunderbird, sign in to Fastmail with OAuth and quit, then run
-   `thunderbird-theme-sync`. The steps to repeat after a later pull are in
-   [After pulling a change](../thunderbird/README.md#after-pulling-a-change).
+3. Add the Fastmail CalDAV/CardDAV account in Settings > Online Accounts
+   (GNOME Contacts and Calendar read it), then launch Hylki and sign in to
+   Fastmail.
 4. Set the desktop background to `01-bluefin.xml`, the winter dinosaur in
    Nord tones:
    ```bash
@@ -388,10 +389,10 @@ the rest unless the step says it is a hard stop.
    machines run artwork with the same numbering.
 
    The dock needs no step here. `setup` applies it from `gnome-settings.txt`:
-   Files, Terminal, Firefox, Thunderbird, Discord, noson, Rufin, Steam,
+   Files, Terminal, Chromium, Hylki, Discord, noson, Rufin, Steam,
    1Password, then Trash. Before that line existed, pavilion kept Bluefin's
    stock dock, including the installer and a dead link to the removed
-   Thunderbird ESR. If an icon is missing, check that its app installed and
+   Thunderbird ESR (Thunderbird is retired). If an icon is missing, check that its app installed and
    that `check-drift` reports `favorite-apps` matching.
 
    Then relax the screen lock. pavilion is a desktop in the home office, so

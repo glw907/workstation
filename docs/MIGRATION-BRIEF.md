@@ -171,8 +171,8 @@ Found while executing setup and restore on the installed system.
 - Homebrew Chromium/Firefox do not exist on Linux (casks are macOS-only for
   browsers; no formulae). Confirmed dead end, do not revisit.
 - Chromium policies: /etc/chromium/policies/managed/*.json works identically
-  to Mint for the layered RPM. Captured policies: 1password.json,
-  extensions.json, no-google-telemetry.json (in etc/chromium-policies/).
+  to Mint for the layered RPM. Captured policies: password-manager.json, kagi-search.json,
+  no-google-telemetry.json (in etc/chromium-policies/).
 - Firefox 1Password integration needs the RPM (non-sandboxed) build; native
   messaging manifests land in the standard Mozilla paths.
 - Android: Bluefin ships no adb udev rules. 51-android.rules is captured in

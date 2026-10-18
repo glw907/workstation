@@ -1,0 +1,10 @@
+{
+  "DefaultSearchProviderEnabled": true,
+  "DefaultSearchProviderName": "Kagi",
+  "DefaultSearchProviderKeyword": "kagi.com",
+  "DefaultSearchProviderSearchURL": "https://kagi.com/search?q={searchTerms}",
+  "DefaultSearchProviderSuggestURL": "https://kagi.com/api/autosuggest?q={searchTerms}",
+  "HomepageLocation": "https://kagi.com/",
+  "HomepageIsNewTabPage": false,
+  "ShowHomeButton": true
+}
