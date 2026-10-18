@@ -135,7 +135,13 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CONTACT_EMAIL       | ✓     | —        | —    | —        | ✓          |
 | DAISYUI_BLUEPRINT_LICENSE | ✓ | —      | —    | —        | —          |
 | DAISYUI_BLUEPRINT_EMAIL | ✓  | —        | —    | —        | —          |
-| HCLOUD_TOKEN        | ✓     | —        | —    | —        | —          |
+| HCLOUD_TOKEN_SERVERS | ✓    | —        | —    | —        | —          |
+| CF_WS_SERVERS_TOKEN | ✓     | —        | —    | —        | —          |
+| CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| CF_MAIL_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| CF_MEDIA_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
 | GITHUB_APP_ID       | ✓     | ✓        | —    | —        | —          |
@@ -281,15 +287,53 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   it (404). Verify any re-mint against `xcathletes-org`.
 - **Symptom of expiry**: every GitHub-backed check in `cairn health` turns unknown at once.
 
-### HCLOUD_TOKEN
-- **Grants**: Hetzner Cloud API read/write, project `musicbox` only
-- **Token name at issuer**: claude-code-thinkpad-x1
-- **Used by**: musicbox provisioning (`scripts/provision.sh`, hcloud CLI)
-- **Rotate at**: console.hetzner.cloud > project musicbox > Security > API tokens
-- **Received 2026-08-30** via `secret-receive` (desktop dialog, value never in transcript)
-- **Rotated 2026-08-30**: the value in the store as of this date is the rotated token
-  (superseding whatever the account held before); confirmed live via `hcloud` calls
-  during musicbox Task 4 provisioning the same day.
+### HCLOUD_TOKEN_SERVERS
+- **Grants**: Hetzner Cloud API read/write, project `servers` only (self-hosting initiative)
+- **Token name at issuer**: servers-claude
+- **Used by**: the servers repo's `infra/provision.sh` and `scripts/dry-run.sh`, which pass it to
+  `hcloud` as `HCLOUD_TOKEN` through the environment. No `hcloud context` exists, because
+  `hcloud context create` writes the token to `~/.config/hcloud/cli.toml`.
+- **Rotate at**: console.hetzner.cloud > project servers > Security > API tokens
+- **Received 2026-10-17** via `secret-receive` (desktop dialog, value never in transcript);
+  verified with an empty `hcloud server list` and an SSH key created then deleted.
+
+### CF_WS_SERVERS_TOKEN
+- **Grants**: Cloudflare account-owned token `ws-servers` (id `6a5623b2...`). Zone 907.life
+  only: DNS Write, Dynamic URL Redirects Write (Single Redirect), Workers Routes Write, Zone
+  Read. Account: Workers Admin (the scripts create and delete Workers), D1 Write, Email Sending
+  Write, Access: Apps and Policies Write, Cloudflare Tunnel Write, Access: Audit Logs Read.
+- **Used by**: the servers repo's `cloudflare/dns.sh`, `access.sh`, `deploy.sh`, and
+  `scripts/dry-run.sh`.
+- **Minted 2026-10-18** through the API under the API token scheme
+  (`~/.claude/docs/cloudflare-estate-inventory.md`); the value went from the response into the
+  store unseen. Smoke-tested: 907.life DNS read 200, ecxc.ski DNS read 403, R2 403.
+- **Rotate**: the scheme's temporary token procedure (rule 6), then the servers runbook's
+  "Rotating a Cloudflare token".
+
+### CF_WS_R2_ARCHIVE_RW_* / CF_WS_R2_BACKUPS_RO_* / CF_MAIL_R2_BACKUP_RW_* / CF_MEDIA_R2_BACKUP_RW_*
+- **Grants**: four account-owned R2 tokens, each stored as `_TOKEN` plus its S3 pair
+  (`_KEY_ID` is the token id, `_SECRET` the SHA-256 of the value, per
+  https://developers.cloudflare.com/r2/api/tokens/). `ws-r2-archive-rw` (`9ab3b968...`): object
+  read and write on `servers-archive`. `ws-r2-backups-ro` (`d76af5a1...`): object read on
+  `servers-backup-mail` and `servers-backup-media`. `mail-r2-backup-rw` (`da9e36ef...`) and
+  `media-r2-backup-rw` (`9caa9891...`): object read and write on their own backup bucket.
+- **Used by**: workstation archive copies; restores, drills, and the restore kit; the mail
+  server's and the media server's restic. Readers per name: the servers repo's
+  `secrets/registry.md`.
+- **Minted 2026-10-18** as above. Smoke-tested over S3: each lists its own bucket (200) and is
+  refused another (403); the read-only token lists both backup buckets.
+- **Rotate**: as for `CF_WS_SERVERS_TOKEN`; a server's token also rotates when that server is
+  rebuilt or compromised.
+
+### PIKAPODS_SFTP_HOST / PIKAPODS_SFTP_USER / PIKAPODS_SFTP_PASSWORD
+- **Grants**: SFTP into the PikaPods Immich pod's storage (`photos/` holds Immich's six data
+  directories, `config/` and `libraries/` the rest). The host and user are private, not secret:
+  they live here and in the servers repo's privacy patterns, never in a public file.
+- **Used by**: the self-hosting Immich cutover (Pass 3), which copies the six directories, and
+  the servers repo's `scripts/dry-run.sh`. Log in with `sshpass -e` so the password stays off
+  the command line.
+- **Received 2026-10-18**: the password through a desktop dialog; verified with an SFTP listing.
+- **Rotate at**: PikaPods > the pod > Settings > SFTP. Dies with the pod when PikaPods is retired.
 
 ### CF_ZT_TOKEN
 - **Issuer-side token name**: "Zero Trust Edit" (user-owned). Also the aksailingclub-legacy
