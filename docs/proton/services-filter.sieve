@@ -4,9 +4,10 @@
 # Services already created. proton-mail-read reads that one folder through Proton Mail Bridge
 # and nothing else in the mailbox.
 #
-# Senders filed: Cloudflare, GitHub, Hetzner, Fastmail, PikaPods, Proton's own billing and
-# notices, and the servers monitor (monitor@907.life, from cloudflare/monitor/config.json in
-# the servers repo).
+# Senders filed: Cloudflare, GitHub, Hetzner, PikaPods, and the servers monitor (monitor@907.life,
+# from cloudflare/monitor/config.json in the servers repo). Proton and Fastmail are filed only from
+# their automated local parts (no-reply, notify, billing and the like), because a person can write
+# from a proton.me or fastmail.com address of their own.
 #
 # A message whose subject holds a word that marks account access stays in the inbox. The
 # exclusion runs first and ends the script, so a reset link or a sign-in code from any of these
@@ -56,14 +57,17 @@ if anyof (
         "github.com", "*.github.com",
         "hetzner.com", "*.hetzner.com",
         "hetzner.de", "*.hetzner.de",
-        "fastmail.com", "*.fastmail.com",
-        "messagingengine.com", "*.messagingengine.com",
-        "pikapods.com", "*.pikapods.com",
-        "proton.me", "*.proton.me",
-        "protonmail.com", "*.protonmail.com",
-        "protonmail.ch", "*.protonmail.ch",
-        "pm.me", "*.pm.me"
-    ]
+        "pikapods.com", "*.pikapods.com"
+    ],
+    allof (
+        address :domain :matches "from" [
+            "proton.me", "*.proton.me", "protonmail.com", "*.protonmail.com",
+            "fastmail.com", "*.fastmail.com"
+        ],
+        address :localpart :matches "from" [
+            "no-reply", "noreply", "notify", "notifications", "billing", "*-noreply"
+        ]
+    )
 ) {
     fileinto "Services";
 }
