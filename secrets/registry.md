@@ -141,6 +141,8 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | CF_MAIL_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | CF_MEDIA_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| NTFY_URGENT_TOPIC / NTFY_ROUTINE_TOPIC | ✓ | — | — | — | — |
+| HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
@@ -309,6 +311,25 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
   store unseen. Smoke-tested: 907.life DNS read 200, ecxc.ski DNS read 403, R2 403.
 - **Rotate**: the scheme's temporary token procedure (rule 6), then the servers runbook's
   "Rotating a Cloudflare token".
+
+### NTFY_URGENT_TOPIC / NTFY_ROUTINE_TOPIC
+- **Grants**: nothing by itself. Each is an unguessable ntfy.sh topic name (random, 128 bits);
+  anyone who knows a name can read and post to that topic, so the names are secrets.
+- **Used by**: the servers repo's monitor Worker (Worker secrets, put by `cloudflare/deploy.sh
+  monitor`) and the workstation's `ntfy-subscribe` user service, which reads them from
+  `~/.local/secrets`.
+- **Generated 2026-10-18** on pavilion; the values never appeared in a transcript.
+- **Rotate**: generate two new names, store them, redeploy the monitor, and restart
+  `ntfy-subscribe` on each workstation and the second operator's phone subscription.
+
+### HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA
+- **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token
+  writes only its own server's row.
+- **Used by**: the monitor Worker (Worker secrets) and, rendered by `secrets/render.sh`, that
+  server's health timer only.
+- **Generated 2026-10-18** on pavilion (32 random bytes, base64url); never regenerated, per the
+  self-hosting plan.
+- **Rotate**: store a new value, redeploy the monitor, and re-render the server's secrets.
 
 ### CF_WS_R2_ARCHIVE_RW_* / CF_WS_R2_BACKUPS_RO_* / CF_MAIL_R2_BACKUP_RW_* / CF_MEDIA_R2_BACKUP_RW_*
 - **Grants**: four account-owned R2 tokens, each stored as `_TOKEN` plus its S3 pair
