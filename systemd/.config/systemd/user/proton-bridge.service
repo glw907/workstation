@@ -1,0 +1,17 @@
+[Unit]
+Description=Proton Mail Bridge, headless, for the read-only mail reader
+Documentation=file://%h/.claude/docs/bluefin-admin.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Bridge runs inside the proton-bridge distrobox and listens on 127.0.0.1 only, its default.
+# Sign in attended with this unit stopped: distrobox enter proton-bridge -- protonmail-bridge --cli
+ExecStart=/usr/bin/distrobox enter --no-tty proton-bridge -- protonmail-bridge --noninteractive
+Restart=on-failure
+RestartSec=20
+# distrobox enter does not pass SIGTERM on promptly; without a cap a stop waits 90 seconds.
+TimeoutStopSec=15
+
+[Install]
+WantedBy=default.target

@@ -77,3 +77,6 @@
 
 - [ ] **#20** bootstrap.sh restore split `#improvement` `#workstation` *(2026-10-14)*
   **bootstrap.sh restore split**: the restore phase is two-thirds of the file and a different risk class (destructive, run cold). Split into `bluefin/restore.sh` with shared helpers when workstation #2 lands.
+
+- [ ] **#21** secret-set.sh writes values unquoted `#bug` `#workstation` `#initiative:self-hosting` *(2026-10-19)*
+  **secret-set.sh writes `export NAME=value` unquoted**, so a value holding a space, quote, `$(...)`, or backtick breaks or runs when a shell sources `~/.local/secrets`. Emit `printf "export %s=%q\n"` and have readers expect one shell word. Found by the proton-mail-read credential review; Bridge passwords are alphanumeric, so nothing is exposed today.

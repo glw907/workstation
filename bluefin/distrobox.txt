@@ -5,3 +5,4 @@
 # setup command.
 
 term-headless fedora:41 headless real-terminal capture (kitty-headless-shot); setup: kitty-headless-shot setup
+proton-bridge fedora:44 Proton Mail Bridge for proton-mail-read (headless, proton-bridge.service); setup: distrobox create --name proton-bridge --image registry.fedoraproject.org/fedora:44, then import https://proton.me/download/bridge/bridge_pubkey.gpg into the box (rpm --import), download https://proton.me/download/bridge/protonmail-bridge-3.22.0-1.x86_64.rpm, install only if rpm -K prints "digests signatures OK"
