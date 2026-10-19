@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+"""PreToolUse hook keeping Claude's Bash away from Proton Pass and the paths that hold its keys.
+
+Claude runs as Geoff's UID, so anything a logged-in pass-cli session can read, Claude's Bash
+tool could read silently. The reviewed scripts (ws-pass-key, secret-receive --pass) own every
+legitimate read. This hook denies the direct routes to the same material:
+
+- pass-cli in command position, since a user session can mint tokens and read any vault;
+- secret-tool lookup and search, which print the agent token held in GNOME Keyring;
+- keyctl print, pipe, and read, which dump the kernel keyring pass-cli keeps its key in;
+- any mention of a pass-cli session directory (pass-ws.*, pass-recv.*, pass-count.*, the
+  default ~/.local/share/proton-pass-cli).
+
+Unlike claude-block-op there is no allowance: the agent token pops up no prompt, so a rate
+limit would protect nothing. A mention inside a quoted argument (a commit message, an echo)
+is not a command and passes.
+
+This is a guardrail, not a boundary: Claude runs as the same UID, so an indirect call
+(PC=pass-cli; $PC info) or another interpreter gets past any regex. Known false positives:
+a line that starts with pass-cli inside a heredoc or multi-line message, and a plain grep for
+the session-directory names.
+"""
+
+import json
+import re
+import sys
+
+DENY_REASON = (
+    "Proton Pass access denied: Claude never calls pass-cli, reads the agent token "
+    "(secret-tool lookup), dumps the kernel keyring (keyctl print/pipe/read), or opens a "
+    "pass-cli session directory. Use the reviewed scripts: ws-pass-key for the age key, "
+    "secret-set.sh and sync.sh for the store, or ask Geoff to run secret-receive --pass."
+)
+
+# A command starts at the line start or after a shell separator or keyword, behind variable
+# assignments and the wrappers that pass a command through (each with options that may take a
+# value, and timeout's duration). An absolute or $(...)-built path to the binary counts.
+SEP = r"(?:^|[;&|(`{!\n]|\$\()\s*(?:(?:if|then|else|elif|do|while|until)\s+)*"
+ASSIGN = r"(?:\w+=\S*\s+)*"
+OPTS = r"(?:-\S+\s+(?:[^-\s]\S*\s+)?)*"
+WRAP = (
+    r"(?:(?:sudo|doas|env|nohup|time|exec|command|nice|ionice|timeout|xargs|eval|watch|stdbuf|setsid|flock"
+    r"|strace|unbuffer|(?:busybox\s+)?(?:ba|z|da|k)?sh\s+(?:-\S+\s+)*?-\w*c)\s+" + OPTS + r"(?:\d+\S*\s+)?" + ASSIGN + r")*"
+)
+BIN = r"(?:\$\([^)]*\)[^\s;&|]*/|[^\s;&|]*/)?"
+START = SEP + ASSIGN + WRAP + BIN
+PATTERNS = [
+    re.compile(START + r"pass-cli(?:\s|$)"),
+    re.compile(START + r"secret-tool\s+" + OPTS + r"(?:lookup|search)\b"),
+    re.compile(START + r"keyctl\s+" + OPTS + r"(?:print|pipe|read)\b"),
+    re.compile(
+        r"(?<![\w-])pass-(?:w[s*](?:[./*]|\s|$)|recv\.|count\.|[*?\[]|[wrc][*?\[])"
+        r"|\.local/share/proton-pass|share/proton-pass-[*?c]"
+    ),
+]
+
+
+def normalize(cmd):
+    """Undo the quoting tricks that hide a command name from the patterns.
+
+    Line continuations, empty quote pairs, backslash escapes, and quote characters are removed,
+    so a quoted name, a name split by an empty quote pair, and a backslash-escaped name all
+    read as the plain command.
+    """
+    cmd = cmd.replace("\\\n", "")
+    cmd = re.sub(r"''|\"\"", "", cmd)
+    cmd = re.sub(r"\\(?=\w)", "", cmd)
+    return cmd.replace("'", "").replace('"', "")
+
+
+def main():
+    """Deny a Bash command that reaches Proton Pass; allow everything else."""
+    try:
+        data = json.load(sys.stdin)
+    except (json.JSONDecodeError, ValueError):
+        return 0
+    if data.get("tool_name") != "Bash":
+        return 0
+    cmd = (data.get("tool_input") or {}).get("command", "")
+    cmd = normalize(cmd)
+    if not any(p.search(cmd) for p in PATTERNS):
+        return 0
+    print(json.dumps({
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "deny",
+            "permissionDecisionReason": DENY_REASON,
+        }
+    }))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

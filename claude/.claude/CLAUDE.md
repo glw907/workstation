@@ -49,7 +49,7 @@ verify it, report verified.
 
 - **Troubleshooting**: Search the web after 1-2 failed attempts, with "Bluefin DX" in the query
 - **sudo**: `sudo -A` via `claude-askpass` (tmpfs cache); stale cache -> `claude-sudo-setup`
-  (1Password unlocked); failures -> GID gotcha in `bluefin-admin.md`.
+  (a dialog takes the password); failures -> GID gotcha in `bluefin-admin.md`.
 - **Software tiers**: mise/uv runtimes, Homebrew CLI, Flatpak GUI, distrobox/devcontainers for
   dev envs, rpm-ostree layering last resort (`bluefin-admin.md`; source of truth
   `~/.dotfiles/bluefin/layered-packages.txt`).
