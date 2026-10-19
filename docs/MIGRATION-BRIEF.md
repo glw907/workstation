@@ -28,17 +28,17 @@ deliberate exception, forced by native messaging).
   password is the string `universalblue`.
 - Fresh home directory, selective restore from the encrypted backup. Nothing
   restored wholesale; ~/Downloads abandoned.
-- Browsers: Firefox (Fedora RPM, layered) is the daily browser with 1Password
-  integration. Chromium (Fedora RPM, layered) is the development and testing
+- Browsers: Firefox (Fedora RPM, layered) is the daily browser. Chromium (Fedora RPM, layered) is the development and testing
   browser used by Claude Code (claude-in-chrome native host, DevTools
-  automation, chromium-shot). Flatpak builds of either are ruled out: 1Password
-  and Claude's native-messaging hosts cannot reach sandboxed browsers.
+  automation, chromium-shot). Flatpak builds of either are ruled out:
+  Claude's native-messaging hosts cannot reach sandboxed browsers.
 - Node via mise (replacing nvm). Python tools via uv. Go via Homebrew.
 - Neovim is dropped entirely; Geoff does not use it. micro is the terminal
   editor. The eudaimonia project is dead: do not carry its cron entries or
   config.
-- Layered RPM set, kept deliberately minimal: `1password`, `1password-cli`,
-  `firefox`, `chromium`. Everything else lives in Homebrew, Flatpak, mise/uv,
+- Layered RPM set, kept deliberately minimal: `firefox`, `chromium`
+  (1Password was removed on 2026-10-19 in favor of Proton Pass, Geoff 2026-10-18,
+  with pass-cli from Homebrew). Everything else lives in Homebrew, Flatpak, mise/uv,
   or the home directory.
 - Enforcement: the `claude-tierguard` PreToolUse hook (dotfiles bin package,
   wired in claude/.claude/settings.json) denies any Claude-run `rpm-ostree
@@ -161,20 +161,15 @@ Found while executing setup and restore on the installed system.
 - Updates check every 6 hours automatically; system image applies at reboot.
 - `/etc` is writable and persists across image updates; `/home` symlinks to
   `/var/home` (stow works unchanged).
-- 1Password: layer the official RPM (repo file + key into /etc/yum.repos.d).
-  The pre-July-2026 "updates fail on ostree" bug is fixed upstream
-  (v8.12.30-19). Known residual gotcha: helper-tool GID mismatch on ostree
-  (community fix script, gist b-/ed2cdc182ae5a92bdcd6b73308832a70) if the
-  browser extension or CLI cannot connect. The Homebrew cask 1Password is
-  broken (missing setgid); never use it. Layered 1Password updates ride
-  `ujust update`, no self-update.
+- 1Password was removed on 2026-10-19 in favor of Proton Pass (Geoff, 2026-10-18), with
+  pass-cli from Homebrew; nothing 1Password is layered.
 - Homebrew Chromium/Firefox do not exist on Linux (casks are macOS-only for
   browsers; no formulae). Confirmed dead end, do not revisit.
 - Chromium policies: /etc/chromium/policies/managed/*.json works identically
   to Mint for the layered RPM. Captured policies: password-manager.json, kagi-search.json,
   no-google-telemetry.json (in etc/chromium-policies/).
-- Firefox 1Password integration needs the RPM (non-sandboxed) build; native
-  messaging manifests land in the standard Mozilla paths.
+- Native messaging manifests for the RPM (non-sandboxed) Firefox land in the standard
+  Mozilla paths.
 - Android: Bluefin ships no adb udev rules. 51-android.rules is captured in
   etc/udev/, install to /etc/udev/rules.d/ + udevadm reload. SDK reinstalls
   via cmdline-tools into ~/Android; adb keys restored from backup (~/.android).
@@ -204,7 +199,7 @@ Found while executing setup and restore on the installed system.
   complete" alone.
 - Encrypted to the workstation age recipient
   age197mcd2m3z90t49n9t5v3ujjntw7krfkw5y9sjfc545v28qvezugshg7jgk. The
-  identity key lives in 1Password (fetch once per session, sudo semantics).
+  identity key lives in Proton Pass and is fetched through `ws-pass-key`.
   Decrypt: `age -d -i <keyfile> pre-bluefin-backup.tar.age | tar -x`.
 - Tarball contents: home/ (.dotfiles, .ssh, .contacts, .vdirsyncer, .android,
   Documents, corpus, Pictures, .local/bin, .local/share/keyrings, selected
@@ -238,9 +233,9 @@ Found while executing setup and restore on the installed system.
 - Claude Code via the Homebrew cask (see the amendment above; this line
   originally said the native installer to ~/.local/bin/claude). ~/.claude is
   restored from backup before first launch either way.
-- 1Password askpass flow: SUDO_ASKPASS=~/.local/bin/claude-askpass (script in
-  dotfiles bin package); depends on 1Password desktop + op CLI desktop-app
-  integration; `claude-sudo-setup` refreshes the tmpfs cache (updated
+- Askpass flow: SUDO_ASKPASS=~/.local/bin/claude-askpass (script in
+  dotfiles bin package); takes the sudo password from a zenity dialog,
+  never a password manager; `claude-sudo-setup` refreshes the tmpfs cache (updated
   2026-08-30; the original age-file cache design was never built).
 - Stow packages: the list in `bluefin/stow-packages.txt` (updated 2026-08-30;
   this line originally froze a six-package set that has since grown).

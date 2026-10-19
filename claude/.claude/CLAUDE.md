@@ -54,10 +54,10 @@ verify it, report verified.
   dev envs, rpm-ostree layering last resort (`bluefin-admin.md`; source of truth
   `~/.dotfiles/bluefin/layered-packages.txt`).
 - **Destructive ops**: Show a dry run or confirmation step first
+- **Vendors** (Geoff, 2026-10-18): use the existing set; add one where it has no good way, saying why.
 - **Home dir minimal**: scripts -> `~/.local/bin/`, configs -> `~/.config/`; check
   `~/.dotfiles/` first. `/etc` changes land in `~/.dotfiles/bluefin/etc/` first, then install
-  from there; never edit `/etc` directly. micro is the editor; Neovim is not installed, never
-  suggest it.
+  from there; never edit `/etc` directly. micro is the editor; never suggest Neovim.
 
 ## Calm desktop (Geoff, 2026-09-29)
 
@@ -107,8 +107,8 @@ scheme). Use an API or CLI first for external services; no dashboard unless the 
 - **A new long-lived secret originates in the workstation age store** (`secret-set.sh`), never
   a loose file, never only `wrangler secret put`. **A value from Geoff arrives via
   `secret-receive NAME`**, which Claude launches itself (its dialog takes the value), never pasted
-  into chat. **1Password has sudo semantics**: fetch once
-  per session, parse locally, never loop `op`.
+  into chat. **Claude never calls `pass-cli`**: scripts read the age key through `ws-pass-key`,
+  and a value from Geoff's own vaults comes through `secret-receive NAME --pass REF`.
 - **Check the stores before claiming a secret is missing**: `wrangler secret list`,
   `~/.local/secrets`, the age registry, per-project stores, the estate inventory. Name-only
   checks, never print values.

@@ -83,11 +83,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "claude-block-op",
-            "timeout": 10
-          },
-          {
-            "type": "command",
             "command": "claude-block-pass",
             "timeout": 10
           },
@@ -282,7 +277,7 @@
       "$defaults",
       "**Cloud provider(s)**: Cloudflare (glw907 account, id 120c269ad6d3dfbe6d63a0bb53758ca0) — Workers, DNS/zones, Access, D1, R2",
       "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
-      "**Secrets management**: Workstation age store (`~/.dotfiles/scripts/secrets/secret-set.sh`) sourced into `~/.local/secrets`; 1Password holds only the age key; Cloudflare Workers secrets at runtime; GitHub Actions secrets for CI. A secret belongs in the store, never in a tracked file",
+      "**Secrets management**: Workstation age store (`~/.dotfiles/scripts/secrets/secret-set.sh`) sourced into `~/.local/secrets`; Proton Pass holds the age key (one item, read by `ws-pass-key` through the host's agent token); Cloudflare Workers secrets at runtime; GitHub Actions secrets for CI. A secret belongs in the store, never in a tracked file",
       "**CI/CD deploy targets**: Cloudflare Workers via `.github/workflows` and `npx wrangler deploy`",
       "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment (hyphen/underscore/dot-delimited — e.g. matches `prod-db`, not `producer`)",
       "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
@@ -292,7 +287,7 @@
       "**Repository visibility** (confirmed with gh on 2026-10-17): public: workstation (~/.dotfiles), initiatives, drafter, cairn-cms, poplar, dubplate, approval-queue, 907-life, aksailingclub-org, ecxc-ski. Private: servers, phonebook, cairn-themes, cairn-pub, xcathletes-org, fishwright, aksailingclub-legacy. A public repository's history is world-readable: never commit secrets, tokens, personal data, or browser or state dumps to one.",
       "**Trusted internal domains**: 907.life, ecxc.ski, aksailingclub.org, xcathletes.org, cairn.pub, and their subdomains (Geoff's own sites on Cloudflare); localhost and 127.0.0.1, including the approval queue on 127.0.0.1:7907.",
       "**Key internal services**: GitHub (glw907), the Cloudflare account 120c269ad6d3dfbe6d63a0bb53758ca0, the npm package @glw907/cairn-cms, and Geoff's own Fastmail account over JMAP.",
-      "**Sensitive data locations & audiences**: ~/.local/secrets, ~/.dotfiles/secrets/ (age-encrypted), the age key, 1Password, Geoff's mail (Fastmail) and Google Drive, and session transcripts under ~/.claude/projects/. Their audience is Geoff only. Public documentation, vendor docs, and pricing pages are not sensitive data."
+      "**Sensitive data locations & audiences**: ~/.local/secrets, ~/.dotfiles/secrets/ (age-encrypted), the age key, Proton Pass, Geoff's mail (Fastmail) and Google Drive, and session transcripts under ~/.claude/projects/. Their audience is Geoff only. Public documentation, vendor docs, and pricing pages are not sensitive data."
     ],
     "allow": [
       "$defaults",

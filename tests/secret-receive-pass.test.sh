@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # secret-receive-pass.test.sh: prove `secret-receive --pass REF` logs in to a throwaway tmpfs
 # session, reads REF, stores it, and logs out and removes the session on every exit; and that
-# claude-sudo-setup takes the sudo password from a zenity dialog and never reaches op. Every run
-# uses the fake pass-cli (tests/fixtures/pass-cli), stub zenity and op, a scratch store, and a
-# scratch cache path. The real op, pass-cli, and /dev/shm sudo cache are never touched.
+# claude-sudo-setup takes the sudo password from a zenity dialog. Every run uses the fake
+# pass-cli (tests/fixtures/pass-cli), stub zenity, a scratch store, and a scratch cache path. The
+# real pass-cli and /dev/shm sudo cache are never touched.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 repo="$(pwd)"
@@ -33,7 +33,6 @@ chmod 600 "$root/cache"
 printf 'pulled-from-proton' > "$root/vault/Personal/Item/password"
 
 cp "$repo/tests/fixtures/pass-cli" "$root/bin/pass-cli"
-printf '#!/usr/bin/env bash\ntouch "%s/op-called"\nexit 1\n' "$root" > "$root/bin/op"
 printf '#!/usr/bin/env bash\necho "$*" >> "%s/zenity.log"\ncat "%s/dialog" 2>/dev/null || exit 1\n' "$root" "$root" > "$root/bin/zenity"
 chmod +x "$root/bin/"*
 
@@ -42,7 +41,7 @@ recv() {  # recv <args...>
     FAKE_PASS_LOG="$root/pass.log" FAKE_PASS_FIXTURE="$root/vault" "$@" 2>&1
 }
 stored() { age --decrypt -i "$root/key.txt" "$root/values.age" | grep -c "^$1=pulled-from-proton\$"; }
-reset() { cp "$root/values.age" "$root/values.bak" 2>/dev/null; rm -f "$root/pass.log" "$root/op-called" "$root/local"; rm -rf "$root/run/pass-recv."*; }
+reset() { cp "$root/values.age" "$root/values.bak" 2>/dev/null; rm -f "$root/pass.log" "$root/local"; rm -rf "$root/run/pass-recv."*; }
 
 # 1. --pass logs in on the web, reads the reference, stores the value, and leaves no session.
 reset
@@ -55,7 +54,6 @@ grep -q 'item view pass://Personal/Item/password' "$root/pass.log" || { echo "FA
 grep -q '^logout' "$root/pass.log" || { echo "FAIL: --pass never logged out"; fail=1; }
 assert_eq "$(grep -vc "session=$root/run/pass-recv\." "$root/pass.log")" "0" "every call used a throwaway session under XDG_RUNTIME_DIR"
 assert_eq "$(ls -d "$root/run/pass-recv."* 2>/dev/null | wc -l)" "0" "the throwaway session directory is removed"
-[ ! -e "$root/op-called" ] || { echo "FAIL: --pass reached op"; fail=1; }
 case "$out" in *pulled-from-proton*) echo "FAIL: --pass printed the value"; fail=1 ;; esac
 
 # 2. A failed login stores nothing, says so, and still removes the session directory.
@@ -74,13 +72,15 @@ rc=$?
 grep -q '^logout' "$root/pass.log" || { echo "FAIL: a missing reference skipped the logout"; fail=1; }
 assert_eq "$(age --decrypt -i "$root/key.txt" "$root/values.age" | grep -c '^MISSING_ONE=')" "0" "a missing reference stores nothing"
 
-# 4. --pass and --op together are refused.
+# 4. The retired --op mode is refused as an unknown option.
 reset
-out=$(recv bash "$RECEIVE" BOTH_ONE --pass pass://a/b/c --op op://a/b/c --values "$root/values.age" --local "$root/local")
+out=$(recv bash "$RECEIVE" OP_ONE --op op://a/b/c --values "$root/values.age" --local "$root/local")
 rc=$?
-[ "$rc" -ne 0 ] || { echo "FAIL: --pass with --op exited 0"; fail=1; }
+[ "$rc" -ne 0 ] || { echo "FAIL: --op exited 0"; fail=1; }
+case "$out" in *"unknown option: --op"*) ;; *) echo "FAIL: --op was not refused as unknown: $out"; fail=1 ;; esac
+[ ! -s "$root/local" ] || ! grep -q OP_ONE "$root/local" || { echo "FAIL: --op stored a value"; fail=1; }
 
-# 5. claude-sudo-setup caches the dialog's password, mode 600, and never reaches op.
+# 5. claude-sudo-setup caches the dialog's password, mode 600.
 printf 'hunter2-sudo' > "$root/dialog"
 out=$(env HOME="$home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" CLAUDE_SUDO_CACHE="$root/run/sudo-cache" bash "$SUDO_SETUP" 2>&1)
 assert_eq "$?" "0" "claude-sudo-setup exits 0 ($out)"
@@ -90,7 +90,6 @@ grep -q -- '--hide-text' "$root/zenity.log" || { echo "FAIL: the sudo dialog doe
 out2=$(env HOME="$home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" CLAUDE_SUDO_CACHE="$root/disk-cache" bash "$SUDO_SETUP" 2>&1)
 [ "$?" -ne 0 ] || { echo "FAIL: a cache path off tmpfs exited 0"; fail=1; }
 [ ! -e "$root/disk-cache" ] || { echo "FAIL: the password was cached off tmpfs"; fail=1; }
-[ ! -e "$root/op-called" ] || { echo "FAIL: claude-sudo-setup reached op"; fail=1; }
 case "$out" in *hunter2-sudo*) echo "FAIL: claude-sudo-setup printed the password"; fail=1 ;; esac
 
 # 6. A cancelled or empty dialog caches nothing and fails, leaving an earlier cache alone.

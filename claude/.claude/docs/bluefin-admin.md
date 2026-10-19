@@ -33,7 +33,7 @@ default.
    which is slower and has more failure modes than any tier above. Reach for it only
    when nothing else can provide the package: a system-level binary, a kernel module,
    or a dependency a layered app needs that isn't itself packaged elsewhere (this is
-   why `1password`, `1password-cli`, and `chromium` are layered — see
+   why `chromium` is layered — see
    below).
 
 kitty is the exception to all of the above: install via the upstream binary installer
@@ -69,8 +69,6 @@ is drift you created knowingly.
 `rpm-ostree install` on this machine. As of the migration brief it holds exactly:
 
 ```
-1password
-1password-cli
 chromium
 ```
 
@@ -81,7 +79,7 @@ move. **Every addition to the layered set gets recorded in both this file and
 fits). A layered package that isn't in this file is drift — reconcile it in one
 direction or the other rather than leaving the mismatch.
 
-If this file doesn't exist yet on a fresh checkout, create it with the four packages
+If this file doesn't exist yet on a fresh checkout, create it with the package
 above before layering anything.
 
 ## Command map
@@ -229,7 +227,7 @@ sudo -A udevadm trigger`.
   profile carries the Proton Pass extension (Chrome Web Store id
   `ghmbeldphafepmbegfdlkpapadhbakde`) and never Claude's; the `Default` profile
   carries only the Claude extension. No Chromium profile carries a 1Password
-  extension.
+  extension (no workstation runs 1Password since 2026-10-19).
 - **Flatpak builds of a browser: never.** Claude's native-messaging hosts need to
   reach into the browser process directly; Flatpak's sandbox blocks that. This isn't
   a preference, it's a hard incompatibility — don't suggest a Flatpak browser as a
@@ -292,47 +290,30 @@ failures that look unrelated to SELinux. Run it once after the full restore, and
 again after any later restore of additional data (a forgotten directory pulled from
 the R2 backup, for example).
 
-## 1Password GID gotcha
-
-Known residual issue on ostree systems: the 1Password helper tool's GID can mismatch
-what the `op` CLI expects, breaking the desktop-app connection
-that `op` reads depend on (since Pass W, only `secret-receive --op` and the age-key
-fallback on a host with no agent token; sudo no longer reads `op`). The pre-July-2026 "updates
-fail on ostree" bug itself is fixed upstream (v8.12.30-19); this GID issue is a
-separate, narrower, still-open gotcha.
-
-- Symptom: the `op` CLI can't connect to the 1Password desktop app,
-  despite the app running and unlocked.
-- Fix: community fix script, gist `b-/ed2cdc182ae5a92bdcd6b73308832a70`. Verify on
-  first boot whether this is even needed — it may not reproduce on a fresh install.
-- Never use the Homebrew cask for 1Password (`brew install --cask 1password`) as a
-  workaround — it's missing setgid and is broken outright, not a milder alternative.
-- Layered 1Password updates ride `ujust update` like everything else in the layered
-  set; there's no separate self-update path to worry about.
-
-If an `op` read fails after a fresh install, check this gotcha first. A failing
-`sudo -A` is the dialog's cache, not this: rerun `claude-sudo-setup`.
-
-## Secrets: installing, receiving, and 1Password
+## Secrets: installing, receiving, and Proton Pass
 
 Moved from the global CLAUDE.md "Secrets" section (2026-09-27); CLAUDE.md keeps the
 never-commit rules and a pointer here.
 
-- **1Password: sudo semantics, never a loop.** The first `op` call per session
-  authenticates it; fetch once (`op item get <id> --format json`) and parse locally.
-  `claude-block-op` denies 3+ `op` calls in a minute (once per session, like sudo).
-  Passkeys route through the browser for Geoff's touch, never read directly.
 - **Proton Pass (Pass W, 2026-10-18): Claude never calls `pass-cli`.** `claude-block-pass`
   denies `pass-cli`, `secret-tool lookup`, `keyctl print|pipe|read`, and any
   `pass-ws.*`, `pass-recv.*`, or default pass-cli session-directory path. The age key
   reaches `secret-set.sh` and `sync.sh` through `ws-pass-key`: the host's agent token
   (GNOME Keyring, `ws-pass-key --store` keeps a new one), a per-run tmpfs session, a
-  read with a reason, then logout. A host with no token reads `op` as before, so
-  `check-drift` reports each host's path and the token's expiry (`ws-pass-key --status`).
+  read with a reason, then logout. A host with no token fails with a message to run
+  `ws-pass-key --store`; there is no `op` fallback. `check-drift` fails such a host and
+  reports each host's path and the token's expiry (`ws-pass-key --status`, three-month
+  expiry). The `Workstation` vault holds one item, the age key; each host has its own agent
+  (`pavilion-scripts`, later `thinkpad-scripts`, viewer role on that vault only), which Geoff
+  creates in a throwaway session with `pass-cli agent create <host>-scripts --expiration 3m
+  --vault Workstation`. A paper copy of the key also exists. The ASC age key stays in
+  its own key file (`~/.config/age/asc-key.txt`); when that is missing, Geoff restores it by
+  hand from Proton Pass, never through the agent token. Passkeys route through the browser
+  for Geoff's touch, never read directly.
   `secret-receive NAME --pass REF` takes a value from Geoff's own Proton login, and
   `pass-count` prints his per-vault counts (`--hashes` for `Servers emergency`).
-  `claude-sudo-setup` takes the sudo password from a dialog. The `op` paths stay until the
-  1Password uninstall PR.
+  `claude-sudo-setup` takes the sudo password from a dialog; sudo never reads a password
+  manager. 1Password was removed from the workstations on 2026-10-19 (Geoff, 2026-10-18).
 - **Installing a NEW long-lived secret, every project (Geoff, 2026-07-13): the
   workstation age store is the origin, never a loose file, never only `wrangler secret
   put`.** Flow: `~/.dotfiles/scripts/secrets/secret-set.sh NAME --value|--file|--b64-file`
@@ -343,7 +324,7 @@ never-commit rules and a pointer here.
   replacements. Exception: ASC secrets use `aksailingclub-legacy/secrets/`; per-site
   rotatable HMAC keys (MAGIC_LINK_SECRET, SESSION_SECRET) stay worker-only.
 - **Receiving a secret value FROM Geoff (Geoff, 2026-08-31): run `secret-receive NAME
-  [--hint …|--op REF]`**, a desktop paste dialog (or 1Password read) piped into the age
+  [--hint …|--pass REF]`**, a desktop paste dialog (or a Proton Pass read through Geoff's own login) piped into the age
   store. Never paste-into-chat or hand-run commands. Wire the name first (manifest,
   registry `pending`, consumer config); flip the registry checkmark after the mint.
 - **Check the stores before claiming a secret is missing**, in order: `npx wrangler

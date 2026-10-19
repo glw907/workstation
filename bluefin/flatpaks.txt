@@ -8,6 +8,7 @@
 # / the image build) stays implicit here because the image already provides
 # it. An app ID belongs in this file only if it is NOT present in either
 # upstream Brewfile. Check both files before adding or removing an entry.
+com.belmoussaoui.Authenticator
 com.discordapp.Discord
 com.fastmail.Fastmail
 com.plexamp.Plexamp

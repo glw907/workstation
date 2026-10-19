@@ -44,7 +44,8 @@ restoring from the encrypted backup.
 
 ## Secrets
 
-1Password is the source of truth. Secret values are age-encrypted in
+The age store is the source of truth, and Proton Pass holds its key. Secret values are
+age-encrypted in
 `secrets/values.age` and synced out to `~/.local/secrets` and Cloudflare
 Workers by `scripts/secrets/sync.sh`. Architecture, inventory, and rotation:
 [secrets/registry.md](secrets/registry.md).

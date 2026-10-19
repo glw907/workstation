@@ -11,7 +11,7 @@ legitimate read. This hook denies the direct routes to the same material:
 - any mention of a pass-cli session directory (pass-ws.*, pass-recv.*, pass-count.*, the
   default ~/.local/share/proton-pass-cli).
 
-Unlike claude-block-op there is no allowance: the agent token pops up no prompt, so a rate
+There is no allowance: the agent token pops up no prompt, so a rate
 limit would protect nothing. A mention inside a quoted argument (a commit message, an echo)
 is not a command and passes.
 
