@@ -29,7 +29,7 @@ echo "curl $*" >>"$FAKE_LOG"
 # The URL arrives as a curl config on stdin; log it on its own line so a test can tell it from argv.
 [ -t 0 ] || echo "stdin $(cat)" >>"$FAKE_LOG"
 cat "$FAKE_STREAM"
-sleep "${FAKE_HOLD:-0}"
+sleep "${FAKE_HOLD:-0}" >/dev/null # off the pipe, so killing this script closes the stream
 exit "${FAKE_CURL_RC:-0}"
 F
 cat >"$root/bin/notify-send" <<'F'
@@ -82,7 +82,10 @@ rm -rf "$root/state"
   printf '{"id":"m9","time":3000,"event":"message","topic":"%s","title":"Mail down","message":"x","priority":5}\n' "$URGENT"
   printf '{"id":"q9","time":3001,"event":"message","topic":"%s","title":"all-quiet","message":"ok","priority":1}\n' "$ROUTINE"
 } >"$root/stream"
-assert_eq "$(run PATH="$root/bin2:$root/bin:$PATH")" 1 "a failed notice ends the stream with exit 1"
+# The connection stays open for 5 seconds; the failed notice must end the stream well before that.
+start=$(date +%s)
+assert_eq "$(run PATH="$root/bin2:$root/bin:$PATH" FAKE_HOLD=5)" 1 "a failed notice ends the stream with exit 1"
+assert_eq "$(( $(date +%s) - start < 4 ? 1 : 0 ))" 1 "a failed notice ends the stream without waiting for the connection"
 assert_eq "$(ls "$root/state/ntfy-subscribe/last_time" 2>/dev/null | wc -l | tr -d ' ')" 0 "a later all-quiet does not advance last_time past a failed notice"
 assert_eq "$(run)" 0 "the restart exits 0"
 assert_has "$(cat "$root/notify")" "notify-send -u critical -- Mail down x" "the restart shows the notice that failed before"
@@ -116,6 +119,19 @@ printf '{"id":"q3","time":"a[$(touch %s)]","event":"message","topic":"%s","title
 run NTFY_QUIET_LIMIT=600 NTFY_CHECK_EVERY=1 FAKE_HOLD=3 >/dev/null
 assert_eq "$([ -e "$root/pwn" ] && echo ran || echo clean)" clean "a string time is never evaluated"
 assert_eq "$(ls "$root/state/ntfy-subscribe/quiet" 2>/dev/null | wc -l | tr -d ' ')" 0 "a string time is not recorded"
+
+# A leading zero would be read as octal; refuse it, and refuse a stored value that is not a clean integer.
+rm -rf "$root/state" "$root/pwn"
+printf '{"id":"q4","time":"08","event":"message","topic":"%s","title":"all-quiet","message":"ok","priority":1}\n' "$ROUTINE" >"$root/stream"
+run >/dev/null
+assert_eq "$(ls "$root/state/ntfy-subscribe/quiet" 2>/dev/null | wc -l | tr -d ' ')" 0 "a leading-zero time is not recorded"
+rm -rf "$root/state"
+mkdir -p "$root/state/ntfy-subscribe"
+echo 08 >"$root/state/ntfy-subscribe/quiet"
+echo 1000 >"$root/state/ntfy-subscribe/first_seen"
+: >"$root/stream"
+run NTFY_QUIET_LIMIT=600 NTFY_CHECK_EVERY=1 FAKE_HOLD=3 >/dev/null
+assert_lacks "$(cat "$root/out")" "too great" "a bad stored quiet time never reaches the watchdog's arithmetic"
 
 # --- The stale notice -------------------------------------------------------------------------------
 rm -rf "$root/state"

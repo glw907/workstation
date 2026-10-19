@@ -9,6 +9,7 @@ set -uo pipefail
 #
 # On start it asks ntfy for what it missed (since=: the last message time, else 12 hours) and
 # skips ids it has shown. When the stream ends it exits with curl's status, and systemd restarts it.
+# A notice that fails to show kills curl and exits 1, so the restart replays it at once.
 #
 # The topic names come from NTFY_URGENT_TOPIC and NTFY_ROUTINE_TOPIC in the environment or in
 # ~/.local/secrets. Test hooks: NTFY_BASE, NTFY_QUIET_LIMIT (seconds, default 93600),
@@ -37,6 +38,9 @@ routine=${NTFY_ROUTINE_TOPIC:-$(from_secrets NTFY_ROUTINE_TOPIC)}
 
 now() { date +%s; }
 
+# A time is a positive integer of at most 19 digits with no leading zero (bash reads 08 as octal).
+int='^[1-9][0-9]{0,18}$'
+
 # write_state NAME VALUE: replace a state file atomically, so a reader never sees it half-written.
 write_state() {
   printf '%s\n' "$2" >"$state/$1.tmp" && mv "$state/$1.tmp" "$state/$1"
@@ -48,7 +52,9 @@ watch_quiet() {
   local last first baseline notified
   while sleep "$check_every"; do
     last=$(cat "$state/quiet" 2>/dev/null || echo 0)
+    [[ $last =~ $int ]] || last=0
     first=$(cat "$state/first_seen")
+    [[ $first =~ $int ]] || first=$(now)
     baseline=$((last > first ? last : first))
     notified=$(cat "$state/stale_notified" 2>/dev/null || echo 0)
     if [ $(($(now) - baseline)) -gt "$quiet_limit" ] && [ $(($(now) - notified)) -gt "$stale_repeat" ]; then
@@ -70,14 +76,14 @@ show() {
   local id=$1 time=$2 topic=$3 title=$4 message=$5 level=normal
   grep -qxF -- "$id" "$state/seen" 2>/dev/null && return
   # The time feeds shell arithmetic later, which would run a command hidden in a subscript.
-  [[ $time =~ ^[0-9]+$ ]] || return 0
+  [[ $time =~ $int ]] || return 0
   if [ "$title" = "all-quiet" ]; then
     write_state quiet "$time"
   else
     [ "$topic" = "$urgent" ] && level=critical
     # A notice that could not be shown ends the stream unrecorded, so systemd restarts the service
     # and since= replays it; carrying on would let a later message move last_time past it.
-    notify-send -u "$level" -- "$title" "$message" 2>/dev/null || exit 1
+    notify-send -u "$level" -- "$title" "$message" 2>/dev/null || { pkill -P $$ -f curl; exit 1; }
   fi
   echo "$id" >>"$state/seen"
   tail -n 200 "$state/seen" >"$state/seen.tmp" && mv "$state/seen.tmp" "$state/seen"
