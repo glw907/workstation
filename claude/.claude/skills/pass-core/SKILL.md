@@ -79,8 +79,7 @@ A change that meets "Direct changes" skips this lifecycle.
    task counts the pairs twice and never sets the stop (Geoff, 2026-10-12: intake-1 stopped on a
    995-minute task sum whose path was 725, under its 780 line). The design states its estimate in
    path minutes, set from the actual-against-planned path in recent passes' scores, never from a
-   share of a spec's figure. Skip `writing-plans`' code
-   steps and execution-method question. Test-first applies to `auth-data` tasks.
+   share of a spec's figure. Test-first applies to `auth-data` tasks.
 
    The plan opens with a `## Pre-flight` list: every step only Geoff can do, such as a sign-in, a
    value through `secret-receive`, a dialog, a permission rule, a browser or app action, or a
