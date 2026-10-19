@@ -321,6 +321,17 @@ never-commit rules and a pointer here.
   authenticates it; fetch once (`op item get <id> --format json`) and parse locally.
   `claude-block-op` denies 3+ `op` calls in a minute (once per session, like sudo).
   Passkeys route through the browser for Geoff's touch, never read directly.
+- **Proton Pass (Pass W, 2026-10-18): Claude never calls `pass-cli`.** `claude-block-pass`
+  denies `pass-cli`, `secret-tool lookup`, `keyctl print|pipe|read`, and any
+  `pass-ws.*`, `pass-recv.*`, or default pass-cli session-directory path. The age key
+  reaches `secret-set.sh` and `sync.sh` through `ws-pass-key`: the host's agent token
+  (GNOME Keyring, `ws-pass-key --store` keeps a new one), a per-run tmpfs session, a
+  read with a reason, then logout. A host with no token reads `op` as before, so
+  `check-drift` reports each host's path and the token's expiry (`ws-pass-key --status`).
+  `secret-receive NAME --pass REF` takes a value from Geoff's own Proton login, and
+  `pass-count` prints his per-vault counts (`--hashes` for `Servers emergency`).
+  `claude-sudo-setup` takes the sudo password from a dialog. The `op` paths stay until the
+  1Password uninstall PR.
 - **Installing a NEW long-lived secret, every project (Geoff, 2026-07-13): the
   workstation age store is the origin, never a loose file, never only `wrangler secret
   put`.** Flow: `~/.dotfiles/scripts/secrets/secret-set.sh NAME --value|--file|--b64-file`

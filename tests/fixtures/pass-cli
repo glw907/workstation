@@ -41,7 +41,19 @@ case "$cmd" in
     logout)
         rm -f "$sess/session"
         ;;
+    vault)
+        [[ "${1:-}" == list ]] || { echo "fake pass-cli: unsupported: vault ${1:-}" >&2; exit 2; }
+        [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }
+        cat "${FAKE_PASS_FIXTURE:?FAKE_PASS_FIXTURE is not set}/_vaults.json"
+        ;;
     item)
+        if [[ "${1:-}" == list ]]; then
+            [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }
+            share=""
+            while [[ $# -gt 0 ]]; do [[ "$1" == --share-id ]] && share="${2:-}"; shift; done
+            cat "${FAKE_PASS_FIXTURE:?FAKE_PASS_FIXTURE is not set}/_items-$share.json"
+            exit $?
+        fi
         [[ "${1:-}" == view ]] || { echo "fake pass-cli: unsupported: item ${1:-}" >&2; exit 2; }
         shift
         [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }

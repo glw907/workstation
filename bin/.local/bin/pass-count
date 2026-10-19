@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# pass-count: Geoff's own Proton Pass check after an import or an emergency-vault copy. It
+# prints counts and hashes, never a value, so Claude can read the output without reading a vault.
+#
+#   pass-count            # one line per vault and category: "<vault>TAB<category>TAB<count>"
+#   pass-count --hashes   # one line per item of "Servers emergency": "<title>TAB<sha256>", the
+#                         #   hash of the item's password (a login) or text (a note)
+#
+# It logs in on the web into a throwaway tmpfs session, never the default one, and logs out and
+# removes the session on every exit. The JSON shape of `pass-cli ... --output json` is read
+# tolerantly; an item whose category cannot be read counts under "unknown", and a list that is
+# not JSON stops the run, so a changed shape never prints a quiet zero.
+set -euo pipefail
+umask 077
+
+EMERGENCY="${PASS_COUNT_EMERGENCY:-Servers emergency}"
+MODE="counts"
+case "${1:-}" in
+    "") ;;
+    --hashes) MODE="hashes" ;;
+    -h|--help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) echo "pass-count: unknown option: $1" >&2; exit 1 ;;
+esac
+
+command -v pass-cli >/dev/null || { echo "pass-count: pass-cli not installed" >&2; exit 1; }
+command -v jq >/dev/null || { echo "pass-count: jq not installed" >&2; exit 1; }
+[[ -n "${XDG_RUNTIME_DIR:-}" ]] || { echo "pass-count: XDG_RUNTIME_DIR is not set" >&2; exit 1; }
+
+PASS_SESSION="$(mktemp -d "$XDG_RUNTIME_DIR/pass-count.XXXXXX")"
+export PROTON_PASS_SESSION_DIR="$PASS_SESSION"
+export PROTON_PASS_DISABLE_TELEMETRY=1
+trap 'pass-cli logout >/dev/null 2>&1 || true; rm -rf "$PASS_SESSION"' EXIT
+
+echo "pass-count: log in to Proton Pass in the browser when asked." >&2
+pass-cli login >&2
+
+# Both lists accept an object holding an array or a bare array.
+VAULTS="$(pass-cli vault list --output json | jq -c '(.vaults // .shares // .)[]')"
+
+while IFS= read -r vault; do
+    name="$(jq -r '.name // .vault_name // "unnamed"' <<< "$vault")"
+    share="$(jq -r '.share_id // .shareId // .id' <<< "$vault")"
+    if [[ "$MODE" == "hashes" && "$name" != "$EMERGENCY" ]]; then
+        continue
+    fi
+    items="$(pass-cli item list --share-id "$share" --output json)"
+    jq -e . >/dev/null <<< "$items" || { echo "pass-count: the item list of $name is not JSON" >&2; exit 1; }
+    if [[ "$MODE" == "counts" ]]; then
+        jq -r --arg v "$name" '
+            (.items // .)[]
+            | ((.content.content // .content // {}) | if type == "object" then (keys[0] // "unknown") else "unknown" end) as $c
+            | [$v, $c] | @tsv' <<< "$items" | sort | uniq -c \
+            | awk -v OFS='\t' '{ n = $1; sub(/^ *[0-9]+ /, ""); print $0, n }'
+    else
+        while IFS= read -r item; do
+            title="$(jq -r '.content.title // .title // "untitled"' <<< "$item")"
+            value="$(jq -r '(.content.content // .content // {}) | [.. | objects | (.password // .Note // .note // empty)] | map(select(type == "string")) | .[0] // ""' <<< "$item")"
+            if [[ -z "$value" ]]; then
+                printf '%s\tno-value\n' "$title"
+            else
+                printf '%s\t%s\n' "$title" "$(printf '%s' "$value" | sha256sum | cut -d' ' -f1)"
+            fi
+        done < <(jq -c '(.items // .)[]' <<< "$items")
+    fi
+done <<< "$VAULTS"

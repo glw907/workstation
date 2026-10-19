@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+"""PreToolUse hook keeping Claude's Bash away from Proton Pass and the paths that hold its keys.
+
+Claude runs as Geoff's UID, so anything a logged-in pass-cli session can read, Claude's Bash
+tool could read silently. The reviewed scripts (ws-pass-key, secret-receive --pass) own every
+legitimate read. This hook denies the direct routes to the same material:
+
+- pass-cli in command position, since a user session can mint tokens and read any vault;
+- secret-tool lookup, which prints the agent token held in GNOME Keyring;
+- keyctl print, pipe, and read, which dump the kernel keyring pass-cli keeps its key in;
+- any mention of a pass-cli session directory (pass-ws, pass-recv.*, the default
+  ~/.local/share/proton-pass-cli).
+
+Unlike claude-block-op there is no allowance: the agent token pops up no prompt, so a rate
+limit would protect nothing. A mention inside a quoted argument (a commit message, an echo)
+is not a command and passes.
+"""
+
+import json
+import re
+import sys
+
+DENY_REASON = (
+    "Proton Pass access denied: Claude never calls pass-cli, reads the agent token "
+    "(secret-tool lookup), dumps the kernel keyring (keyctl print/pipe/read), or opens a "
+    "pass-cli session directory. Use the reviewed scripts: ws-pass-key for the age key, "
+    "secret-set.sh and sync.sh for the store, or ask Geoff to run secret-receive --pass."
+)
+
+# A command starts at the line start or after a shell separator, optionally behind variable
+# assignments and the wrappers that pass a command through.
+START = (
+    r"(?:^|[;&|(`\n]|\$\()\s*"
+    r"(?:\w+=\S*\s+)*"
+    r"(?:(?:sudo|env|nohup|time|exec|command|nice|timeout\s+\S+)\s+(?:-\S+\s+|\w+=\S*\s+)*)*"
+)
+PATTERNS = [
+    re.compile(START + r"pass-cli(?:\s|$)"),
+    re.compile(START + r"secret-tool\s+lookup\b"),
+    re.compile(START + r"keyctl\s+(?:print|pipe|read)\b"),
+    re.compile(r"/pass-ws(?:/|\b)|/pass-recv\.|\.local/share/proton-pass-cli"),
+]
+
+
+def main():
+    """Deny a Bash command that reaches Proton Pass; allow everything else."""
+    try:
+        data = json.load(sys.stdin)
+    except (json.JSONDecodeError, ValueError):
+        return 0
+    if data.get("tool_name") != "Bash":
+        return 0
+    cmd = (data.get("tool_input") or {}).get("command", "")
+    if not any(p.search(cmd) for p in PATTERNS):
+        return 0
+    print(json.dumps({
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "deny",
+            "permissionDecisionReason": DENY_REASON,
+        }
+    }))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
