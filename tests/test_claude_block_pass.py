@@ -67,6 +67,21 @@ DENIED = [
     "cat $XDG_RUNTIME_DIR/pass-w*/session",
     "ls ~/.local/share/proton-pass-*",
     "cd $XDG_RUNTIME_DIR && cat pass-ws.abc/session",
+    # Combined and leading shell flags, other pass-through wrappers.
+    'bash -lc "pass-cli info"',
+    "sh -ec pass-cli",
+    "zsh -ic pass-cli",
+    'bash -x -c "pass-cli"',
+    "bash --norc -c pass-cli",
+    'busybox sh -c "pass-cli"',
+    "ionice -c 3 pass-cli info",
+    "strace -f pass-cli info",
+    "unbuffer pass-cli info",
+    # More session-directory globs.
+    "cat /run/user/1000/pass-*/session",
+    "cat /run/user/1000/pass-c*/x",
+    "cat /run/user/1000/pass-w?.abc/x",
+    "cat /run/user/1000/pass-[w]s.a/x",
 ]
 
 ALLOWED = [

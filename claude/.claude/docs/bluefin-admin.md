@@ -296,7 +296,8 @@ the R2 backup, for example).
 
 Known residual issue on ostree systems: the 1Password helper tool's GID can mismatch
 what the `op` CLI expects, breaking the desktop-app connection
-that `claude-askpass` and the `sudo -A` flow depend on. The pre-July-2026 "updates
+that `op` reads depend on (since Pass W, only `secret-receive --op` and the age-key
+fallback on a host with no agent token; sudo no longer reads `op`). The pre-July-2026 "updates
 fail on ostree" bug itself is fixed upstream (v8.12.30-19); this GID issue is a
 separate, narrower, still-open gotcha.
 
@@ -309,8 +310,8 @@ separate, narrower, still-open gotcha.
 - Layered 1Password updates ride `ujust update` like everything else in the layered
   set; there's no separate self-update path to worry about.
 
-If `claude-sudo-setup` or the `sudo -A` flow fails after a fresh install, check this
-gotcha before assuming the askpass script itself is broken.
+If an `op` read fails after a fresh install, check this gotcha first. A failing
+`sudo -A` is the dialog's cache, not this: rerun `claude-sudo-setup`.
 
 ## Secrets: installing, receiving, and 1Password
 

@@ -11,6 +11,7 @@ set -euo pipefail
 CACHE="${CLAUDE_SUDO_CACHE:-/dev/shm/claude-sudo-$(id -u)}"
 # claude-askpass and claude-sudo-clear read and shred only the /dev/shm path, so an override is for
 # tests and must stay on tmpfs: a password never lands on persistent disk.
+CACHE="$(realpath -m -- "$CACHE")"
 case "$CACHE" in
     /dev/shm/*|"${XDG_RUNTIME_DIR:-/nonexistent}"/*) ;;
     *) echo "Error: CLAUDE_SUDO_CACHE must be under /dev/shm or \$XDG_RUNTIME_DIR." >&2; exit 1 ;;

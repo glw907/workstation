@@ -39,8 +39,8 @@ SEP = r"(?:^|[;&|(`{!\n]|\$\()\s*(?:(?:if|then|else|elif|do|while|until)\s+)*"
 ASSIGN = r"(?:\w+=\S*\s+)*"
 OPTS = r"(?:-\S+\s+(?:[^-\s]\S*\s+)?)*"
 WRAP = (
-    r"(?:(?:sudo|doas|env|nohup|time|exec|command|nice|timeout|xargs|eval|watch|stdbuf|setsid|flock"
-    r"|(?:ba|z|da)?sh\s+-c)\s+" + OPTS + r"(?:\d+\S*\s+)?" + ASSIGN + r")*"
+    r"(?:(?:sudo|doas|env|nohup|time|exec|command|nice|ionice|timeout|xargs|eval|watch|stdbuf|setsid|flock"
+    r"|strace|unbuffer|(?:busybox\s+)?(?:ba|z|da|k)?sh\s+(?:-\S+\s+)*?-\w*c)\s+" + OPTS + r"(?:\d+\S*\s+)?" + ASSIGN + r")*"
 )
 BIN = r"(?:\$\([^)]*\)[^\s;&|]*/|[^\s;&|]*/)?"
 START = SEP + ASSIGN + WRAP + BIN
@@ -49,7 +49,7 @@ PATTERNS = [
     re.compile(START + r"secret-tool\s+" + OPTS + r"(?:lookup|search)\b"),
     re.compile(START + r"keyctl\s+" + OPTS + r"(?:print|pipe|read)\b"),
     re.compile(
-        r"(?<![\w-])pass-(?:w[s*](?:[./*]|\s|$)|recv\.|count\.)"
+        r"(?<![\w-])pass-(?:w[s*](?:[./*]|\s|$)|recv\.|count\.|[*?\[]|[wrc][*?\[])"
         r"|\.local/share/proton-pass|share/proton-pass-[*?c]"
     ),
 ]

@@ -7,7 +7,7 @@ umask 077  # every temp and cache file is born private, no chmod race
 # Fetches the age private key at most ONCE per login session: ws-pass-key reads it through
 # the host's Proton agent token on first use (1Password with `op` on a host that has no token
 # yet) and caches it in tmpfs (/dev/shm, RAM-backed, chmod 600), then later runs in the same
-# session reuse it — no repeat prompts.
+# session reuse it, with no repeat prompts.
 # The cache is wiped on reboot, when the `claude` shell function exits
 # (claude-sudo-clear pattern), or explicitly via secret-session-clear.sh.
 #
@@ -96,7 +96,7 @@ ensure_key() {
     if [[ ! -s "$CACHE" ]]; then
         echo "Fetching age key (once per session)…" >&2
         WS_PASS_CALLER=secret-set.sh CACHE="$CACHE" "$WS_PASS_KEY" \
-            || die "could not fetch age key — is the agent token valid, or the 1Password app unlocked?"
+            || die "could not fetch age key; is the agent token valid, or the 1Password app unlocked?"
     fi
 }
 
