@@ -58,9 +58,13 @@ A change that meets "Direct changes" skips this lifecycle.
    each answer as a standing approval the planner applies in place of stopping. A stop with no
    standing answer still stops (Geoff, 2026-10-12: the intake-1 overnight run stopped at 01:17 on
    a 995-minute plan against a 780-minute line, and nothing ran until morning). So every stop the
-   plan writes (a cap, a line stop, a ceiling) carries a standing answer for its cheap case, such
-   as a retry within budget, and stops only once that answer runs out (2026-10-19: B3c stopped at
-   its four-read cap with $5 of $80 spent, and Geoff took the recommended fifth read).
+   plan writes (a cap, a line stop, a ceiling) carries a standing answer. A count cap on reads,
+   retries, rounds, or reruns is a loop guard, never a stop for Geoff. Past it, the run goes on
+   while each retry fixes a cause the session has traced and spend stays inside the ceiling, and
+   each fix is a reversible change listed in the PR's `## Decisions`. The run stops only on the
+   spend or path ceiling, a cause it cannot trace, the same cause returning after its fix, or a
+   change to the design (2026-10-19: B3c stopped at its read cap, then at its escalation rule, each
+   time with an in-budget fix to a traced cause as the recommendation, and Geoff took it).
 2. **Spec.** An agent writes the approved design at the length precision needs, only if
    `spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
    probed.
