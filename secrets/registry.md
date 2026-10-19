@@ -318,7 +318,7 @@ tmpfs cache; no password manager holds it for scripts.
 - **Used by**: the servers repo's monitor Worker (a Worker secret, put by `cloudflare/deploy.sh
   monitor`) and the workstation's `monitor-subscribe` user service, which reads it from
   `~/.local/secrets`.
-- **Generated** on the workstation (32 random bytes, base64url), distinct from both heartbeat
+- **Generated** on the workstation (32 random bytes, hex-encoded), distinct from both heartbeat
   tokens; the value never appears in a transcript.
 - **Rotate**: generate a new value, store it, redeploy the monitor, and restart
   `monitor-subscribe` on each workstation.
