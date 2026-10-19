@@ -142,7 +142,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CF_MAIL_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | CF_MEDIA_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | MONITOR_READ_TOKEN | ✓ | — | — | — | — |
-| PROTON_BRIDGE_USER / _PASSWORD | ✓ | — | — | — | — |
 | HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
@@ -323,16 +322,6 @@ tmpfs cache; no password manager holds it for scripts.
   tokens; the value never appears in a transcript.
 - **Rotate**: generate a new value, store it, redeploy the monitor, and restart
   `monitor-subscribe` on each workstation.
-
-### PROTON_BRIDGE_USER / PROTON_BRIDGE_PASSWORD
-- **Grants**: the IMAP login Proton Mail Bridge generates for the mailbox. Bridge serves the whole
-  mailbox on loopback, so the credential could read all of it; `proton-mail-read` limits itself to
-  `Folders/Services`, and the Sieve filter keeps account-access mail out of that folder.
-- **Used by**: `proton-mail-read`, which reads both from `~/.local/secrets`.
-- **Received** through `secret-receive` from the Bridge CLI's `info` output. The username is a
-  private address, so it appears only in the store.
-- **Rotate**: in the Bridge CLI (`distrobox enter proton-bridge -- protonmail-bridge --cli`)
-  signing the account out and in generates a new Bridge password; receive both names again.
 
 ### HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA
 - **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token
