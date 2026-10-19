@@ -2,15 +2,15 @@
 
 ## Work Autonomously Until Done
 
-Do not ask for review or approval until the task is fully complete; keep working until every
-quality gate passes. Stop only for a genuine blocker needing information only the user can
-provide.
+Do not ask for review or approval until the task is fully complete; keep working until every quality
+gate passes. Stop early only for information only the user can provide or a `pass-core` "Judgment
+calls" stop (an irreversible or destructive act, a secret, overspend, a scope or design change).
 
 ## The pass process lives in `pass-core`
 
 Planning, executing, and closing a pass is the `pass-core` skill, with `cairn-pass`, `site-pass`,
 and `dotfiles-pass` as per-repo adapters. Invoke it for any planned pass. Geoff's touchpoints are
-the design in chat and the approval packet (`approval-packet`), one per hand-over.
+the design in chat, its pre-flight sitting, and one packet per hand-over (`approval-packet`).
 
 ## Search before you spelunk (Geoff, 2026-07-13)
 
@@ -69,7 +69,7 @@ Geoff must act now (`bluefin-admin.md` "Calm desktop").
 
 `~/.dotfiles`, GNU Stow (`bluefin/stow-packages.txt`). **Every install records itself in its
 tier's manifest, same session** (`bluefin-admin.md`); `check-drift` reconciles. Repo gate:
-`scripts/check.sh`. New script: `bin/.local/bin/` + `stow -R bin`.
+`bash scripts/gate.sh` (wraps `scripts/check.sh`). New script: `bin/.local/bin/` + `stow -R bin`.
 
 ## Git Conventions
 
@@ -91,8 +91,8 @@ invoke `tui-visual-verify`: only a screenshot of the real terminal is evidence.
 
 ## Cloudflare and API-first
 
-**FULL ACCOUNT ACCESS (2026-07-06).** Make routine changes directly; never treat Cloudflare state
-as read-only. The MCP token is read-only for Access/Workers-domain writes; use curl with
+**Full account access (Geoff, 2026-07-06).** Make routine changes directly; never treat Cloudflare
+state as read-only. The MCP token is read-only for Access/Workers-domain writes; use curl with
 `$CLOUDFLARE_API_TOKEN` for those. The token lives in `~/.local/secrets`, sourced for interactive
 shells only, so a script must `source ~/.local/secrets` itself. Account id, token scopes,
 D1/R2/workers/Access, and how each secret is reached: `~/.claude/docs/cloudflare-estate-inventory.md`;

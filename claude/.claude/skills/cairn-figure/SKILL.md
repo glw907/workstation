@@ -70,8 +70,8 @@ before authoring a figure rather than working from a copy here.
 A `repro` fence carries its caption a different way: the caption lives INSIDE the fence body,
 as the `caption` key, not as an emphasis paragraph after the fence, because the body must be
 self-describing where the mermaid plugin does not run (GitHub, the tarball). The fence's
-`width` key is what satisfies the 320/390 bar the diagram bullet above is exempt from; a live
-reproduction stays bound by that bar. The key shape, as the register states it:
+`width` key satisfies the 320/390 responsive bar, which binds every live reproduction even
+though diagrams are exempt from it (below). The key shape, as the register states it:
 
 ```repro
 caption: "..."

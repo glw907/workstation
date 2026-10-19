@@ -172,11 +172,15 @@ Tell the user what was logged, briefly:
 
 ## Step 6: Commit and push
 
-After adding, closing, or updating an issue, commit the backlog change and push:
+After adding, closing, or updating an issue, commit the backlog file alone:
 
 ```bash
-git add <backlog_path> && git commit -m "Backlog: [brief description of change]" && git push
+git add <backlog_path> && git commit -m "Backlog: [brief description of change]"
 ```
+
+Inside a pass, the commit rides the pass branch and its PR. Outside one, it is a direct change:
+push it to the default branch as `pass-core` "Direct changes" sets out, committing from a worktree
+cut from `origin/<default>` when another session is live in the main checkout.
 
 Use a short commit message like "Backlog: add #26 ops max-width" or "Backlog: close #3".
 

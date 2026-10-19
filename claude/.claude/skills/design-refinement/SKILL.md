@@ -278,10 +278,13 @@ Everything else is dispatched, and the dispatch is role-matched:
   responsive site), plus dark mode where the design ships it, plus interaction states — a
   single-desktop-screenshot audit reliably misses the defects owners find first.
 - Every audit includes one explicit coherence question: **does anything here read as
-  AI-default?** (the recognizable template looks, kept in sync with frontend-design's
-  calibration list: the cream-serif-terracotta cluster, the dark-page-acid-accent cluster,
-  the broadsheet cluster — hairline rules, zero border-radius, dense newspaper columns —
-  uniform rounded cards with accent rails, gradient heroes, emoji section markers).
+  AI-default?** Use frontend-design's calibration list as the source (its five clusters:
+  cream-serif-terracotta; near-black with one acid accent; broadsheet hairlines with zero
+  radius; the SaaS-card kit of identical rounded cards, one radius, one grey shadow, and
+  gradient washes; template chrome such as ALL-CAPS eyebrows over every heading,
+  middle-dot meta strings, monospace data labels, and '→' on link text), plus these
+  defaults: one italic or colored accent word in a headline, 01/02/03 markers on content
+  that is not a sequence, pill-shaped buttons, and emoji section markers.
   Refinement that installs a template look has failed even if every knob passes.
 
 ## Knob calibration (the kinds of thing an audit evaluates — not a checklist to satisfy)

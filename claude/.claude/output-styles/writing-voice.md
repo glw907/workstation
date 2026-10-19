@@ -56,12 +56,7 @@ Avoid these structural habits:
   point instead of stating it. Say the point plainly.
 - The two-headed heading: a section heading that names two things joined by "and" or by
   a colon is two sections, or one heading with the second half dropped; page titles are
-  exempt. On a cairn page the register's narrower definition governs: the "X, and Y" comma
-  shape is the tell, and a serial list in a heading ("Roles, capability, and the access map")
-  passes. This is the workstation register ruling of 2026-09-08, recorded in cairn's
-  docs-register.md, with Google's headings guidance standing as adjacent support only:
-  "Keep punctuation simple. Punctuation can be a sign that your heading is too
-  complicated." (https://developers.google.com/style/headings)
+  exempt. A repo's register may narrow this (cairn's does).
 - The abstract noun standing in for the concrete thing ("the solution", "the
   approach", "the mechanism") where the concrete name was already available. Name the
   function, the file, or the flag instead. This is reported-only, from the 2026-09

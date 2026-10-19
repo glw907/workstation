@@ -5,13 +5,11 @@ description: Verify a terminal UI (bubbletea or any TUI) by driving the REAL ter
 
 # TUI visual verification
 
-Born 2026-08-21 at poplar's pass 2 gate. The pass had 159 green gallery
-goldens, a teatest flow suite, tmux smoke checks, and two review rounds
-per task, and the first thing Geoff did in his own kitty exposed that
-none of those media had ever looked at a painted frame. Every one of
-them checks text. A terminal paints grounds, erases to the current
-background, drops blank cells from text dumps, and delivers pointer
-events only when the app asked for them. Those are the things that
+Goldens, teatest flows, and tmux smoke checks all check text (born
+2026-08-21: a poplar gate passed every one, and the owner's first look
+in kitty found what none had seen). A terminal paints grounds, erases
+to the current background, drops blank cells from text dumps, and
+delivers pointer events only when the app asked for them. Those are the things that
 break, and only the painted terminal shows them.
 
 The rule: **a TUI claim is verified when a screenshot of a real

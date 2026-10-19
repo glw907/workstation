@@ -33,9 +33,9 @@ change just burns numbers. When in doubt, hold.
 
 ## 2. Confirm the window is on `main` and the gate is green
 
-The release publishes from `main`. Get the held work onto `main` first: one worktree per pass off `main`,
-so fast-forward `main` from the feature branch (`git push origin HEAD:main`, never force) or confirm it is
-already merged. The branch must be a clean fast-forward of `origin/main` (`git merge-base --is-ancestor
+The release publishes from `main`. Each pass in the window reaches `main` through its own PR
+(`pass-core` "Close"), so confirm each is merged; a pass branch is never pushed to `main` to stage a cut.
+The release commit's branch must be a clean fast-forward of `origin/main` (`git merge-base --is-ancestor
 origin/main HEAD`).
 
 Dependencies are current before the gate runs. A release starts from the newest production version of
@@ -105,17 +105,17 @@ Published numbers are global and immutable. The pre-rebuild releases already bur
 assume the next number is free. List the full set and pick the first free one:
 
 ```bash
-npm view @glw907/cairn-cms versions --json   # the FULL list, not the `latest` tag
+npm view @glw907/cairn-cms versions --json   # the full list, not the `latest` tag
 ```
 
-Size the bump under SemVer. In `0.x` a minor (`0.X.0`) is reserved for a NEW SUBSYSTEM OR PUBLIC SURFACE
+Size the bump under SemVer. In `0.x` a minor (`0.X.0`) is reserved for a new subsystem or public surface
 that did not exist before; everything else (refinement, fix, DX, internal, even new optional exports on an
 existing surface) is a patch. The number signals scale, not compatibility: the changelog carries
 compatibility via `Consumers must:` lines. A minor must carry a `<!-- release-size: minor -->` marker in
 its CHANGELOG section (the `check:version` gate requires it). When unsure, it is a patch.
 
-**Derive the size HERE, at the cut, against this rule and the actual `## Unreleased` window — never
-inherit it from the conversation.** A number or size named earlier (in the launch prompt, a plan, or by
+**Derive the size here, at the cut, against this rule and the actual `## Unreleased` window, never
+from the conversation.** A number or size named earlier (in the launch prompt, a plan, or by
 Geoff in passing: "minor point release", "this'll be 0.90") is a hypothesis to re-derive, not an
 instruction; phrases like "point release" are ambiguous and a passing size call predates the window's
 final content anyway. When the derived size disagrees with what was said earlier, state the rule, name
@@ -136,9 +136,9 @@ Rename the held heading `## Unreleased` to `## <x.y.z>` (no date; match the repo
 format, which is the heading then a blank line then the `<!-- release-size: ... -->` marker). Scrub any
 stale "stays unpublished until then" or "set at release time" phrasing from the finalized section.
 
-The release body is the changelog window since the last PUBLISHED tag. When several held minors roll into
-one publish (the common case in this initiative, because passes hold and batch), the body summarizes EACH
-held section in the window and carries EVERY `Consumers must:` line from the breaking ones. Compose it into
+The release body is the changelog window since the last published tag. When several held minors roll into
+one publish (the common case in this initiative, because passes hold and batch), the body summarizes each
+held section in the window and carries every `Consumers must:` line from the breaking ones. Compose it into
 a notes file rather than by hand at the `gh` prompt. Add the matching per-version entry to
 `docs/extend/upgrade-cairn.md` if the pass did not already.
 
@@ -168,8 +168,7 @@ gh release create v<x.y.z> --target main \
 This fires `publish.yml` (OIDC trusted publishing, `npm publish --access public`). The workflow derives
 the dist-tag from the version: a stable number goes to `latest`, and any version carrying a prerelease
 suffix goes to `next`, so a candidate never reaches a bare `npm install` (wired 2026-08-05 for the
-`0.94.0-rc.1` cut; before that the workflow passed no `--tag` and npm's `latest` default applied to
-everything). Pass `--prerelease` to `gh release create` on a candidate so the GitHub "Latest" badge
+`0.94.0-rc.1` cut). Pass `--prerelease` to `gh release create` on a candidate so the GitHub "Latest" badge
 follows suit. A prerelease also has to clear `check:version`, which sizes an entry against the nearest
 earlier heading whose numeric core differs, so `0.94.0-rc.1` and the `0.94.0` it promotes into declare
 their shared `<!-- release-size: minor -->` marker once, on whichever heading is current.
@@ -177,8 +176,7 @@ their shared `<!-- release-size: minor -->` marker once, on whichever heading is
 **A consumer cannot reach a prerelease through its caret range.** A `^0.93.0` dependency does not resolve
 `0.94.0-rc.1`, by SemVer's own rule, so a site testing against a candidate pins the exact version
 (`"@glw907/cairn-cms": "0.94.0-rc.1"`) and moves back to a caret when the stable lands. The workflow runs `npm install -g npm@latest` first because trusted publishing needs npm >= 11.5.1.
-Under trusted publishing the `--provenance` flag is unnecessary: provenance is automatic (the repo went
-public 2026-07-03 and the old `NPM_CONFIG_PROVENANCE=false` override was removed with it).
+Under trusted publishing the `--provenance` flag is unnecessary: provenance is automatic for this public repo.
 
 ## 7. Verify the publish
 

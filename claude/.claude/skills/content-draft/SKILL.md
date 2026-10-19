@@ -7,7 +7,7 @@ description: "Draft website content (pages, posts, form copy) brief-first. Use B
 
 Drive website-content drafting from a structured brief through the site's generative guide. This
 skill is for the web-content register only. For code comments, docs, specs, or commit messages,
-use the technical voice instead.
+use the writing-voice skill to pick their standard instead.
 
 Load the shared method at `~/.claude/docs/web-content-method.md` and the site's
 `docs/content-guide.md` (the generative authority: load-bearing rules, container budgets, and a
