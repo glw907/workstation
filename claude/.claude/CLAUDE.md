@@ -54,10 +54,10 @@ verify it, report verified.
   dev envs, rpm-ostree layering last resort (`bluefin-admin.md`; source of truth
   `~/.dotfiles/bluefin/layered-packages.txt`).
 - **Destructive ops**: Show a dry run or confirmation step first
+- **Vendors** (Geoff, 2026-10-18): keep them minimal; a new one, even free, is an owner-call ask.
 - **Home dir minimal**: scripts -> `~/.local/bin/`, configs -> `~/.config/`; check
   `~/.dotfiles/` first. `/etc` changes land in `~/.dotfiles/bluefin/etc/` first, then install
-  from there; never edit `/etc` directly. micro is the editor; Neovim is not installed, never
-  suggest it.
+  from there; never edit `/etc` directly. micro is the editor; never suggest Neovim.
 
 ## Calm desktop (Geoff, 2026-09-29)
 
