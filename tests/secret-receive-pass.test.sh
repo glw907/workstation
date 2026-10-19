@@ -34,7 +34,7 @@ printf 'pulled-from-proton' > "$root/vault/Personal/Item/password"
 
 cp "$repo/tests/fixtures/pass-cli" "$root/bin/pass-cli"
 printf '#!/usr/bin/env bash\ntouch "%s/op-called"\nexit 1\n' "$root" > "$root/bin/op"
-printf '#!/usr/bin/env bash\ncat "%s/dialog" 2>/dev/null || exit 1\n' "$root" > "$root/bin/zenity"
+printf '#!/usr/bin/env bash\necho "$*" >> "%s/zenity.log"\ncat "%s/dialog" 2>/dev/null || exit 1\n' "$root" "$root" > "$root/bin/zenity"
 chmod +x "$root/bin/"*
 
 recv() {  # recv <args...>
@@ -82,21 +82,25 @@ rc=$?
 
 # 5. claude-sudo-setup caches the dialog's password, mode 600, and never reaches op.
 printf 'hunter2-sudo' > "$root/dialog"
-out=$(env HOME="$home" PATH="$root/bin:$PATH" CLAUDE_SUDO_CACHE="$root/sudo-cache" bash "$SUDO_SETUP" 2>&1)
+out=$(env HOME="$home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" CLAUDE_SUDO_CACHE="$root/run/sudo-cache" bash "$SUDO_SETUP" 2>&1)
 assert_eq "$?" "0" "claude-sudo-setup exits 0 ($out)"
-assert_eq "$(cat "$root/sudo-cache" 2>/dev/null)" "hunter2-sudo" "the dialog's password is cached"
-assert_eq "$(stat -c %a "$root/sudo-cache" 2>/dev/null)" "600" "the sudo cache is mode 600"
+assert_eq "$(cat "$root/run/sudo-cache" 2>/dev/null)" "hunter2-sudo" "the dialog's password is cached"
+assert_eq "$(stat -c %a "$root/run/sudo-cache" 2>/dev/null)" "600" "the sudo cache is mode 600"
+grep -q -- '--hide-text' "$root/zenity.log" || { echo "FAIL: the sudo dialog does not hide its text"; fail=1; }
+out2=$(env HOME="$home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" CLAUDE_SUDO_CACHE="$root/disk-cache" bash "$SUDO_SETUP" 2>&1)
+[ "$?" -ne 0 ] || { echo "FAIL: a cache path off tmpfs exited 0"; fail=1; }
+[ ! -e "$root/disk-cache" ] || { echo "FAIL: the password was cached off tmpfs"; fail=1; }
 [ ! -e "$root/op-called" ] || { echo "FAIL: claude-sudo-setup reached op"; fail=1; }
 case "$out" in *hunter2-sudo*) echo "FAIL: claude-sudo-setup printed the password"; fail=1 ;; esac
 
 # 6. A cancelled or empty dialog caches nothing and fails, leaving an earlier cache alone.
 rm -f "$root/dialog"
-out=$(env HOME="$home" PATH="$root/bin:$PATH" CLAUDE_SUDO_CACHE="$root/sudo-cache" bash "$SUDO_SETUP" 2>&1)
+out=$(env HOME="$home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" CLAUDE_SUDO_CACHE="$root/run/sudo-cache" bash "$SUDO_SETUP" 2>&1)
 rc=$?
 [ "$rc" -ne 0 ] || { echo "FAIL: a cancelled dialog exited 0"; fail=1; }
-assert_eq "$(cat "$root/sudo-cache" 2>/dev/null)" "hunter2-sudo" "a cancelled dialog leaves the earlier cache alone"
+assert_eq "$(cat "$root/run/sudo-cache" 2>/dev/null)" "hunter2-sudo" "a cancelled dialog leaves the earlier cache alone"
 : > "$root/dialog"
-out=$(env HOME="$home" PATH="$root/bin:$PATH" CLAUDE_SUDO_CACHE="$root/sudo-cache" bash "$SUDO_SETUP" 2>&1)
+out=$(env HOME="$home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" CLAUDE_SUDO_CACHE="$root/run/sudo-cache" bash "$SUDO_SETUP" 2>&1)
 [ "$?" -ne 0 ] || { echo "FAIL: an empty dialog exited 0"; fail=1; }
 
 assert_eq "$(mtime "$real_sudo")" "$real_sudo_before" "real /dev/shm sudo cache mtime"

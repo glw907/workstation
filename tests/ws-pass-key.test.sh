@@ -56,7 +56,8 @@ EOF
 printf '#!/usr/bin/env bash\necho "%s"\n' "$TOKEN" > "$root/bin/zenity"
 chmod +x "$root/bin/"*
 
-reset() { rm -f "$root/cache" "$root/op-called" "$root/pass.log" "$root/token" "$root/expiry" "$root/secret-tool.log"; rm -rf "$root/run/pass-ws"; }
+reset() { rm -f "$root/cache" "$root/op-called" "$root/pass.log" "$root/token" "$root/expiry" "$root/secret-tool.log"; rm -rf "$root"/run/pass-ws.*; }
+sessions_left() { ls -d "$root"/run/pass-ws.* 2>/dev/null | wc -l; }
 helper() {  # helper <args...>; env: WS_HOST, CACHE point at the scratch
   env HOME="$root/home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" WS_HOST=testhost \
     CACHE="$root/cache" FAKE_PASS_LOG="$root/pass.log" FAKE_PASS_FIXTURE="$root/vault" \
@@ -73,10 +74,10 @@ assert_eq "$(stat -c %a "$root/cache" 2>/dev/null)" "600" "cache is mode 600"
 [ ! -e "$root/op-called" ] || { echo "FAIL: the token path reached op"; fail=1; }
 grep -q 'reason=test-suite: read age key on testhost' "$root/pass.log" || { echo "FAIL: the read carries no reason naming script and host"; fail=1; }
 grep -q 'item view pass://Workstation/age/key' "$root/pass.log" || { echo "FAIL: the read did not use a pass:// reference"; fail=1; }
-grep -q "session=$root/run/pass-ws " "$root/pass.log" || { echo "FAIL: not every call used the isolated session directory"; fail=1; }
-assert_eq "$(grep -vc "session=$root/run/pass-ws " "$root/pass.log")" "0" "no call used another session directory"
+assert_eq "$(grep -c "session=$root/run/pass-ws\.[A-Za-z0-9]* " "$root/pass.log")" "$(pass_calls)" "every call used a per-run session directory under XDG_RUNTIME_DIR"
 grep -q "$TOKEN" "$root/pass.log" && { echo "FAIL: the token leaked into a recorded argument"; fail=1; }
-[ ! -e "$root/run/pass-ws/session" ] || { echo "FAIL: the session was left logged in"; fail=1; }
+case "$out" in *"$TOKEN"*) echo "FAIL: the token leaked into the helper's output"; fail=1 ;; esac
+assert_eq "$(sessions_left)" "0" "the session directory is removed"
 grep -q 'logout' "$root/pass.log" || { echo "FAIL: the helper never logged out"; fail=1; }
 
 # 2. A cached key needs no pass-cli call at all.
@@ -102,6 +103,8 @@ rc=$?
 [ ! -e "$root/op-called" ] || { echo "FAIL: a bad token fell back to op"; fail=1; }
 [ ! -s "$root/cache" ] || { echo "FAIL: a bad token left a cache"; fail=1; }
 case "$out" in *"login failed"*) ;; *) echo "FAIL: a bad token did not say the login failed: $out"; fail=1 ;; esac
+assert_eq "$(sessions_left)" "0" "a bad token leaves no session directory"
+grep -q 'logout' "$root/pass.log" || { echo "FAIL: a bad token skipped the logout"; fail=1; }
 
 # 5. A good token but a missing vault item also fails loudly.
 reset; echo "$TOKEN" > "$root/token"
@@ -111,6 +114,20 @@ rc=$?
 [ "$rc" -ne 0 ] || { echo "FAIL: a missing item exited 0"; fail=1; }
 [ ! -s "$root/cache" ] || { echo "FAIL: a missing item left a cache"; fail=1; }
 [ ! -e "$root/op-called" ] || { echo "FAIL: a missing item fell back to op"; fail=1; }
+assert_eq "$(sessions_left)" "0" "a missing item leaves no session directory"
+
+# 5b. A stale session planted by an earlier run is never reused: the helper always logs in.
+reset; echo "$TOKEN" > "$root/token"
+mkdir -p "$root/run/pass-ws.planted"; echo agent > "$root/run/pass-ws.planted/session"
+out=$(helper)
+grep -q '^login' "$root/pass.log" || { echo "FAIL: the helper skipped its own login"; fail=1; }
+
+# 5c. No XDG_RUNTIME_DIR means no tmpfs for a session, so the token path refuses to run.
+reset; echo "$TOKEN" > "$root/token"
+out=$(env -u XDG_RUNTIME_DIR HOME="$root/home" PATH="$root/bin:$PATH" WS_HOST=testhost CACHE="$root/cache" \
+  FAKE_PASS_LOG="$root/pass.log" bash "$KEY_HELPER" 2>&1)
+[ "$?" -ne 0 ] || { echo "FAIL: a missing XDG_RUNTIME_DIR exited 0"; fail=1; }
+[ ! -s "$root/cache" ] || { echo "FAIL: a missing XDG_RUNTIME_DIR left a cache"; fail=1; }
 
 # 6. --status names the path and the expiry without printing the token.
 reset; echo "$TOKEN" > "$root/token"; echo "2027-01-15" > "$root/expiry"

@@ -37,14 +37,15 @@ lookup_token() { secret-tool lookup service proton-pass-agent host "$HOST" 2>/de
 lookup_expiry() { secret-tool lookup service proton-pass-agent-expiry host "$HOST" 2>/dev/null || true; }
 
 status() {
-    local token expiry days
+    local token expiry days epoch
     token="$(lookup_token)"
     if [[ -z "$token" ]]; then
         echo "path=op host=$HOST"
         return 0
     fi
     expiry="$(lookup_expiry)"
-    if [[ -n "$expiry" ]] && days=$(( ($(date -d "$expiry" +%s) - $(date +%s)) / 86400 )) 2>/dev/null; then
+    if [[ -n "$expiry" ]] && epoch="$(date -d "$expiry" +%s 2>/dev/null)"; then
+        days=$(( (epoch - $(date +%s)) / 86400 ))
         echo "path=proton host=$HOST expires=$expiry days=$days"
     else
         echo "path=proton host=$HOST expires=unknown"
@@ -82,15 +83,14 @@ fetch_op() {
 fetch_proton() {
     local token="$1" reason
     [[ -n "${XDG_RUNTIME_DIR:-}" ]] || die "XDG_RUNTIME_DIR is not set; no tmpfs for a session"
-    sess="$XDG_RUNTIME_DIR/pass-ws"  # global: the EXIT trap outlives this function
-    mkdir -p "$sess"
-    chmod 700 "$sess"
+    # One directory per run, so a planted or orphaned session is never reused and two direct
+    # callers never log each other out. Global: the EXIT trap outlives this function.
+    sess="$(mktemp -d "$XDG_RUNTIME_DIR/pass-ws.XXXXXX")"
     export PROTON_PASS_SESSION_DIR="$sess"
     export PROTON_PASS_DISABLE_TELEMETRY=1
     # The session is gone when this function's work is done, whatever the outcome.
     trap 'pass-cli logout >/dev/null 2>&1 || true; rm -rf "$sess"' EXIT
-    pass-cli info >/dev/null 2>&1 ||
-        PROTON_PASS_PERSONAL_ACCESS_TOKEN="$token" pass-cli login >/dev/null 2>&1 ||
+    PROTON_PASS_PERSONAL_ACCESS_TOKEN="$token" pass-cli login >/dev/null 2>&1 ||
         die "agent login failed for $HOST (token expired or revoked?); not falling back to op"
     reason="$CALLER: read age key on $HOST"
     PROTON_PASS_AGENT_REASON="$reason" pass-cli item view "pass://$VAULT/$ITEM/$FIELD" 2>/dev/null \

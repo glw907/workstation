@@ -9,6 +9,12 @@ set -euo pipefail
 # Usage: claude-sudo-setup
 
 CACHE="${CLAUDE_SUDO_CACHE:-/dev/shm/claude-sudo-$(id -u)}"
+# claude-askpass and claude-sudo-clear read and shred only the /dev/shm path, so an override is for
+# tests and must stay on tmpfs: a password never lands on persistent disk.
+case "$CACHE" in
+    /dev/shm/*|"${XDG_RUNTIME_DIR:-/nonexistent}"/*) ;;
+    *) echo "Error: CLAUDE_SUDO_CACHE must be under /dev/shm or \$XDG_RUNTIME_DIR." >&2; exit 1 ;;
+esac
 
 command -v zenity >/dev/null || { echo "Error: zenity not installed." >&2; exit 1; }
 
@@ -18,7 +24,7 @@ PASSWORD=$(zenity --entry --hide-text --title "Claude sudo" --ok-label "Cache" \
     --text "Type or paste the sudo password for $(hostname -s)." --timeout 300 2>/dev/null) || PASSWORD=""
 
 if [ -z "$PASSWORD" ]; then
-    echo "Error: no sudo password entered (dialog cancelled or timed out); nothing cached." >&2
+    echo "Error: no sudo password entered (dialog cancelled, timed out, or no display); nothing cached." >&2
     exit 1
 fi
 
