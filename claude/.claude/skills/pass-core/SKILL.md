@@ -25,8 +25,8 @@ account.
 A change that meets "Direct changes" skips this lifecycle.
 
 1. **Design.** Opus at `high` brainstorms in chat. Geoff approves a design of a page or less: the
-   outcome, files and interfaces touched, what is out of scope, one end-to-end check, and the risk
-   class. A design brought for approval goes to Geoff as a design part in a packet, per `approval-packet`.
+   outcome, files and interfaces touched, what is out of scope, one end-to-end check, the risk
+   class, and every pre-flight item it can foresee (step 4). A design brought for approval goes to Geoff as a design part in a packet, per `approval-packet`.
    An owner fork in the design is a `### Decide:` block in its brief. A design doc opens with `## Brief` after its title, per
    `~/.claude/docs/voice/approval-brief.md`. The design names its initiative (a record in `~/Projects/initiatives`) or says none applies; cross-repo specs, plans, and research go in `initiatives/<id>/`, and the plan header carries an `Initiative: <id>` line. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
    carries
@@ -84,9 +84,11 @@ A change that meets "Direct changes" skips this lifecycle.
 
    The plan opens with a `## Pre-flight` list: every step only Geoff can do, such as a sign-in, a
    value through `secret-receive`, a dialog, a permission rule, a browser or app action, or a
-   physical touch. The design's packet carries the list as its `[you: ...]` steps
-   (`approval-packet`), and the planner runs it with Geoff in one sitting right after he
-   approves. The executor launches only once each item is done and checked (a sign-in that
+   physical touch. The design's packet carries the items it foresaw as `[you: ...]` steps
+   (`approval-packet`), and Geoff runs them in the sitting where he approves the design, since a
+   planner that runs unattended has no sitting of its own. An item the plan adds holds the launch:
+   the planner sends it to Geoff as a pre-launch packet and records a planning miss at the design
+   stage. The executor launches only once each item is done and checked (a sign-in that
    answers, a store name present, a rule in `settings.json`). A step that needs the pass's own
    output is moved earlier or given a path without Geoff where it can be. Whatever remains goes
    into one named sitting at a set point in the plan, and the design approval says when. A run
@@ -373,7 +375,7 @@ says "never merge" or "end" outright. Close the session when the initiative land
 A conductor prompt opens with one line naming the session `conductor-<project>`, then carries the
 executor's `claude` line and its prompt file; the plan path and each repo and checkout the pass
 touches; the merge order across its PRs, with any `## Before merge` steps known at plan time; the
-standing answers from the design; and what goes in its packet to Design & PR Approvals. It restates nothing this skill
+standing answers from the design; the `## Pre-flight` checks it runs before each launch; and what goes in its packet to Design & PR Approvals. It restates nothing this skill
 already says. Prompting Claude Opus 5
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
 the model "performs best when given the complete task specification up front and left to run".
