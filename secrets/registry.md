@@ -146,6 +146,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA | ✓ | — | — | — | — |
 | IMMICH_DB_PASSWORD | ✓ | — | — | — | — |
 | RESTIC_PASSWORD_MEDIA | ✓ | — | — | — | — |
+| TUNNEL_TOKEN_MEDIA | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
@@ -341,6 +342,12 @@ tmpfs cache; no password manager holds it for scripts.
 - **Used by**: the servers repo's `roles/immich` compose file, rendered to `/etc/immich/immich.env` on the media server only.
 - **Generated 2026-10-19** on pavilion (40 random alphanumeric characters), in Pass 2 (M3).
 - **Rotate**: store a new value, re-render the media server's secrets, and change the role's password inside Postgres.
+
+### TUNNEL_TOKEN_MEDIA
+- **Grants**: the right to run the `servers-media` Cloudflare Tunnel connector, which carries the media server's Access browser terminal. Anyone holding it can attach a connector to that tunnel.
+- **Used by**: the servers repo's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on the media server only.
+- **Generated 2026-10-19** by `cloudflare/access.sh --token media` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in Pass 2 (M4).
+- **Rotate**: rotate the tunnel's token in Cloudflare (or recreate the tunnel with `access.sh`), store the new value, and re-render the media server's secrets.
 
 ### RESTIC_PASSWORD_MEDIA
 - **Grants**: the right to open the media restic repository in `servers-backup-media`. Losing it makes every media backup unreadable.
