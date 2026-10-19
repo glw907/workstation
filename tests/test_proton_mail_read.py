@@ -368,5 +368,21 @@ def test_sieve_filter_shape():
     assert text.index("stop") < text.index('fileinto "Services"')
     # Subdomain senders (notify.cloudflare.com) must match, so each domain is listed as a wildcard too.
     assert ":matches" in text
-    for domain in ("cloudflare.com", "github.com", "hetzner.com", "fastmail.com", "pikapods.com", "proton.me", "protonmail.ch", "pm.me"):
+    for domain in ("cloudflare.com", "github.com", "hetzner.com", "fastmail.com", "pikapods.com", "proton.me", "protonmail.com"):
         assert f'"*.{domain}"' in text, domain
+    # A person can write from their own Proton or Fastmail address, so those domains file only
+    # together with an automated local part.
+    assert "allof" in text and ":localpart" in text
+    guarded = text[text.index("allof"):]
+    for domain in ("proton.me", "fastmail.com"):
+        assert f'"{domain}"' in guarded, domain
+        assert f'"{domain}"' not in text[:text.index("allof")], domain
+
+
+def test_fetch_without_uid_fails_closed():
+    class Conn:
+        def uid(self, *args):
+            return "OK", [(b"1 (BODY[HEADER.FIELDS (DATE FROM SUBJECT)] {9}", b"Subject: x\r\n"), b")"]
+
+    with pytest.raises(pmr.ReadError, match="no UID"):
+        pmr.summaries(Conn(), [1])

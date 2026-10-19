@@ -7,7 +7,8 @@
 # Senders filed: Cloudflare, GitHub, Hetzner, PikaPods, and the servers monitor (monitor@907.life,
 # from cloudflare/monitor/config.json in the servers repo). Proton and Fastmail are filed only from
 # their automated local parts (no-reply, notify, billing and the like), because a person can write
-# from a proton.me or fastmail.com address of their own.
+# from a proton.me or fastmail.com address of their own. pm.me, protonmail.ch, and
+# messagingengine.com carry personal mail, so they are left out.
 #
 # A message whose subject holds a word that marks account access stays in the inbox. The
 # exclusion runs first and ends the script, so a reset link or a sign-in code from any of these
