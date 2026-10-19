@@ -178,12 +178,14 @@ def summaries(conn, uids):
     if status != "OK":
         raise ReadError("fetch failed")
     rows = []
-    for item in data:
+    for i, item in enumerate(data):
         if not isinstance(item, tuple):
             continue
-        uid = re.search(rb"UID (\d+)", item[0])
+        # Bridge sends UID after the header literal, so it lands in the bytes item that follows the tuple.
+        trailer = data[i + 1] if i + 1 < len(data) and isinstance(data[i + 1], bytes) else b""
+        uid = re.search(rb"UID (\d+)", item[0]) or re.search(rb"UID (\d+)", trailer)
         if uid is None:
-            continue
+            raise ReadError("fetch response carried no UID")
         headers = email.message_from_bytes(item[1], policy=email.policy.default)
         rows.append((int(uid.group(1)), clean(headers["Date"]), clean(headers["From"]), clean(headers["Subject"])))
     return sorted(rows)

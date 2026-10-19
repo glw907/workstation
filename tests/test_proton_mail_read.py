@@ -94,6 +94,13 @@ class Handler(socketserver.StreamRequestHandler):
             else:
                 self.send(f"{tag} BAD unsupported")
 
+    def literal(self, uid, item, payload):
+        """Write one FETCH response, placing UID before the literal or after it as Bridge does."""
+        if self.server.uid_after:
+            self.wfile.write(f"* {uid} FETCH ({item} {{{len(payload)}}}\r\n".encode() + payload + f" UID {uid})\r\n".encode())
+        else:
+            self.wfile.write(f"* {uid} FETCH (UID {uid} {item} {{{len(payload)}}}\r\n".encode() + payload + b")\r\n")
+
     def fetch(self, tag, sargs):
         seq, _, items = sargs.partition(" ")
         for uid in (int(u) for u in seq.split(",") if u.isdigit()):
@@ -102,9 +109,9 @@ class Handler(socketserver.StreamRequestHandler):
             raw = MESSAGES[uid]
             if "HEADER" in items.upper() and "BODY.PEEK[]" not in items:
                 head = raw.split(b"\r\n\r\n", 1)[0] + b"\r\n\r\n"
-                self.wfile.write(f"* {uid} FETCH (UID {uid} BODY[HEADER.FIELDS (DATE FROM SUBJECT)] {{{len(head)}}}\r\n".encode() + head + b")\r\n")
+                self.literal(uid, "BODY[HEADER.FIELDS (DATE FROM SUBJECT)]", head)
             else:
-                self.wfile.write(f"* {uid} FETCH (UID {uid} BODY[] {{{len(raw)}}}\r\n".encode() + raw + b")\r\n")
+                self.literal(uid, "BODY[]", raw)
         self.send(f"{tag} OK fetched")
 
 
@@ -124,11 +131,12 @@ def make_tls_context(tmp_path):
     return context
 
 
-@pytest.fixture
-def bridge(tmp_path, monkeypatch):
+@pytest.fixture(params=["uid-first", "uid-after-literal"])
+def bridge(request, tmp_path, monkeypatch):
     server = FakeServer(("127.0.0.1", 0), Handler)
     server.log = []
     server.no_tls = False
+    server.uid_after = request.param == "uid-after-literal"
     server.tls = make_tls_context(tmp_path)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     secrets = tmp_path / "secrets"
