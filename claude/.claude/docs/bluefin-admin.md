@@ -296,7 +296,8 @@ the R2 backup, for example).
 
 Known residual issue on ostree systems: the 1Password helper tool's GID can mismatch
 what the `op` CLI expects, breaking the desktop-app connection
-that `claude-askpass` and the `sudo -A` flow depend on. The pre-July-2026 "updates
+that `op` reads depend on (since Pass W, only `secret-receive --op` and the age-key
+fallback on a host with no agent token; sudo no longer reads `op`). The pre-July-2026 "updates
 fail on ostree" bug itself is fixed upstream (v8.12.30-19); this GID issue is a
 separate, narrower, still-open gotcha.
 
@@ -309,8 +310,8 @@ separate, narrower, still-open gotcha.
 - Layered 1Password updates ride `ujust update` like everything else in the layered
   set; there's no separate self-update path to worry about.
 
-If `claude-sudo-setup` or the `sudo -A` flow fails after a fresh install, check this
-gotcha before assuming the askpass script itself is broken.
+If an `op` read fails after a fresh install, check this gotcha first. A failing
+`sudo -A` is the dialog's cache, not this: rerun `claude-sudo-setup`.
 
 ## Secrets: installing, receiving, and 1Password
 
@@ -321,6 +322,17 @@ never-commit rules and a pointer here.
   authenticates it; fetch once (`op item get <id> --format json`) and parse locally.
   `claude-block-op` denies 3+ `op` calls in a minute (once per session, like sudo).
   Passkeys route through the browser for Geoff's touch, never read directly.
+- **Proton Pass (Pass W, 2026-10-18): Claude never calls `pass-cli`.** `claude-block-pass`
+  denies `pass-cli`, `secret-tool lookup`, `keyctl print|pipe|read`, and any
+  `pass-ws.*`, `pass-recv.*`, or default pass-cli session-directory path. The age key
+  reaches `secret-set.sh` and `sync.sh` through `ws-pass-key`: the host's agent token
+  (GNOME Keyring, `ws-pass-key --store` keeps a new one), a per-run tmpfs session, a
+  read with a reason, then logout. A host with no token reads `op` as before, so
+  `check-drift` reports each host's path and the token's expiry (`ws-pass-key --status`).
+  `secret-receive NAME --pass REF` takes a value from Geoff's own Proton login, and
+  `pass-count` prints his per-vault counts (`--hashes` for `Servers emergency`).
+  `claude-sudo-setup` takes the sudo password from a dialog. The `op` paths stay until the
+  1Password uninstall PR.
 - **Installing a NEW long-lived secret, every project (Geoff, 2026-07-13): the
   workstation age store is the origin, never a loose file, never only `wrangler secret
   put`.** Flow: `~/.dotfiles/scripts/secrets/secret-set.sh NAME --value|--file|--b64-file`

@@ -23,7 +23,7 @@ secrets/values.age (encrypted, safe to commit)
 
 - **1Password** holds all secret values and the age encryption key
 - **values.age** is the encrypted bundle committed to this repo
-- **sync.sh** decrypts via 1Password CLI and pushes to targets
+- **sync.sh** decrypts with the age key from `ws-pass-key` (the host's Proton agent token; a host with no token yet reads 1Password with `op`) and pushes to targets
 - **~/.local/secrets** is chmod 600, gitignored, sourced by `.bashrc`
 - Decryption happens in `/dev/shm` (tmpfs); plaintext never touches disk
 
@@ -32,8 +32,8 @@ when secrets change. **Runtime** (day to day, no 1Password): secrets are env
 vars already sourced by `.bashrc`; read `$FASTMAIL_API_TOKEN` etc. directly and
 never call `op` to fetch what the environment already carries.
 
-**Sudo helper**: `claude-sudo-setup` fetches the sudo password from 1Password
-into a tmpfs cache (`/dev/shm/claude-sudo-$UID`, umask 077); `claude-askpass`
+**Sudo helper**: `claude-sudo-setup` asks Geoff for the sudo password in a
+hidden-entry dialog and caches it in tmpfs (`/dev/shm/claude-sudo-$UID`, umask 077); `claude-askpass`
 supplies it to `sudo -A`; `claude-sudo-clear` shreds it when a Claude session
 exits, and reboot clears it regardless. The password persists nowhere on disk.
 

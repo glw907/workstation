@@ -4,9 +4,9 @@ umask 077  # every temp and cache file is born private, no chmod race
 
 # Workstation secrets sync — decrypts values.age and pushes secrets to local and Cloudflare targets.
 #
-# Authenticates to 1Password at most ONCE per login session: the age private key is
-# fetched on first use and cached in tmpfs (same shared cache as secret-set.sh), then
-# reused by later runs: no repeat desktop-approval prompts. The cache is wiped on
+# Fetches the age private key at most ONCE per login session through ws-pass-key (the host's
+# Proton agent token; 1Password with op on a host that has none yet) and caches it in tmpfs (same
+# shared cache as secret-set.sh), then reuses it on later runs. The cache is wiped on
 # reboot, when the `claude` shell function exits, or via secret-session-clear.sh.
 #
 # Usage:
@@ -19,13 +19,14 @@ umask 077  # every temp and cache file is born private, no chmod race
 #   sync.sh --verify      # Diff targets vs registry; exits non-zero if mismatch
 #
 # Design notes:
-#   - Private age key persists only in 1Password and the tmpfs session cache.
+#   - Private age key persists only in the password manager and the tmpfs session cache.
 #   - Decrypted secrets written to /dev/shm (tmpfs, not persisted to disk).
 #   - Trap ensures shred cleans up temp files even if script exits early.
 #   - Use count=$((count + 1)) not ((count++)) — the latter aborts under set -e.
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SECRETS_FILE="${VALUES:-$DOTFILES_DIR/secrets/values.age}"
+WS_PASS_KEY="${WS_PASS_KEY:-$DOTFILES_DIR/bin/.local/bin/ws-pass-key}"
 LOCAL_SECRETS="${LOCAL_SECRETS:-$HOME/.local/secrets}"
 
 CACHE="${CACHE:-/dev/shm/.age-key-$(id -u)}"      # session-cached age key (RAM, chmod 600; shared with secret-set.sh)
@@ -188,18 +189,12 @@ exec 9>"${XDG_RUNTIME_DIR:-/dev/shm}/secret-store.lock"
 flock 9
 
 # --- Decrypt ---
-# Fetch the age key from 1Password only on a cache miss. The notesPlain field contains
-# the full age key file text; sed strips surrounding quotes that op may add.
+# Fetch the age key only on a cache miss. ws-pass-key reads the host's Proton agent token from the
+# keyring; a host with none reads 1Password with op.
 if [[ ! -s "$CACHE" ]]; then
-    echo "Fetching age private key from 1Password..."
-    op item get "Workstation age encryption key" --fields notesPlain --reveal 2>/dev/null \
-        | sed 's/^"//;s/"$//' > "$CACHE" || true
-    chmod 600 "$CACHE" 2>/dev/null || true
-    if [[ ! -s "$CACHE" ]]; then
-        rm -f "$CACHE"
-        echo "Error: Could not fetch age key from 1Password. Is the app unlocked?" >&2
-        exit 1
-    fi
+    echo "Fetching age private key..."
+    WS_PASS_CALLER=sync.sh CACHE="$CACHE" "$WS_PASS_KEY" \
+        || { echo "Error: Could not fetch the age key. Is the agent token valid, or the 1Password app unlocked?" >&2; exit 1; }
 else
     echo "Using session-cached age key."
 fi

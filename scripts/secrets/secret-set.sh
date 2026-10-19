@@ -4,9 +4,10 @@ umask 077  # every temp and cache file is born private, no chmod race
 
 # Add or update ONE secret in values.age, then regenerate ~/.local/secrets.
 #
-# Authenticates to 1Password at most ONCE per login session: the age private key
-# is fetched from 1Password on first use and cached in tmpfs (/dev/shm, RAM-backed,
-# chmod 600), then reused by later runs in the same session — no repeat prompts.
+# Fetches the age private key at most ONCE per login session: ws-pass-key reads it through
+# the host's Proton agent token on first use (1Password with `op` on a host that has no token
+# yet) and caches it in tmpfs (/dev/shm, RAM-backed, chmod 600), then later runs in the same
+# session reuse it, with no repeat prompts.
 # The cache is wiped on reboot, when the `claude` shell function exits
 # (claude-sudo-clear pattern), or explicitly via secret-session-clear.sh.
 #
@@ -42,7 +43,7 @@ RECIP="${RECIP:-age197mcd2m3z90t49n9t5v3ujjntw7krfkw5y9sjfc545v28qvezugshg7jgk}"
 VALUES="${VALUES:-$HOME/.dotfiles/secrets/values.age}"
 LOCAL_SECRETS="${LOCAL_SECRETS:-$HOME/.local/secrets}"
 CACHE="${CACHE:-/dev/shm/.age-key-$(id -u)}"      # session-cached age key (RAM, chmod 600)
-OP_ITEM="Workstation age encryption key"
+WS_PASS_KEY="${WS_PASS_KEY:-$(cd "$(dirname "$0")/../.." && pwd -P)/bin/.local/bin/ws-pass-key}"
 
 die() { echo "Error: $*" >&2; exit 1; }
 
@@ -90,16 +91,12 @@ exec 9>"$LOCK"
 flock 9
 
 # --- Fetch age key once per session, cache in tmpfs ---
+# ws-pass-key reads the host's Proton agent token from the keyring; a host with none reads op.
 ensure_key() {
     if [[ ! -s "$CACHE" ]]; then
-        echo "Fetching age key from 1Password (once per session)…" >&2
-        op item get "$OP_ITEM" --fields notesPlain --reveal 2>/dev/null \
-            | sed 's/^"//;s/"$//' > "$CACHE" || true
-        chmod 600 "$CACHE" 2>/dev/null || true
-        if [[ ! -s "$CACHE" ]]; then
-            rm -f "$CACHE"
-            die "could not fetch age key — is the 1Password app unlocked?"
-        fi
+        echo "Fetching age key (once per session)…" >&2
+        WS_PASS_CALLER=secret-set.sh CACHE="$CACHE" "$WS_PASS_KEY" \
+            || die "could not fetch age key; is the agent token valid, or the 1Password app unlocked?"
     fi
 }
 
