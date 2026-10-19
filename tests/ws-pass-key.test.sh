@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # ws-pass-key.test.sh: prove ws-pass-key reads the age key through the host's Proton agent token
-# with a reason, in an isolated session directory that is gone afterward; falls back to `op` only
-# when the keyring holds no token; fails loudly when a token is present but bad; and that
-# secret-set.sh and sync.sh get their key through it. Every run uses the fake pass-cli
-# (tests/fixtures/pass-cli), stub secret-tool, zenity, and op, a scratch store, and a scratch
-# XDG_RUNTIME_DIR. The real op, pass-cli, keyring, and /dev/shm key cache are never touched.
+# with a reason, in an isolated session directory that is gone afterward; refuses when the keyring
+# holds no token; fails loudly when a token is present but bad; and that secret-set.sh and
+# sync.sh get their key through it. Every run uses the fake pass-cli (tests/fixtures/pass-cli),
+# stub secret-tool and zenity, a scratch store, and a scratch XDG_RUNTIME_DIR. The real
+# pass-cli, keyring, and /dev/shm key cache are never touched.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 repo="$(pwd)"
@@ -46,17 +46,11 @@ case "\$1" in
           esac ;;
 esac
 EOF
-# op stub: leaves a marker and serves the key as the old notesPlain field did.
-cat > "$root/bin/op" <<EOF
-#!/usr/bin/env bash
-touch "$root/op-called"
-cat "$root/key.txt"
-EOF
 # zenity stub: answers the token dialog.
 printf '#!/usr/bin/env bash\necho "%s"\n' "$TOKEN" > "$root/bin/zenity"
 chmod +x "$root/bin/"*
 
-reset() { rm -f "$root/cache" "$root/op-called" "$root/pass.log" "$root/token" "$root/expiry" "$root/secret-tool.log"; rm -rf "$root"/run/pass-ws.*; }
+reset() { rm -f "$root/cache" "$root/pass.log" "$root/token" "$root/expiry" "$root/secret-tool.log"; rm -rf "$root"/run/pass-ws.*; }
 sessions_left() { ls -d "$root"/run/pass-ws.* 2>/dev/null | wc -l; }
 helper() {  # helper <args...>; env: WS_HOST, CACHE point at the scratch
   env HOME="$root/home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" WS_HOST=testhost \
@@ -71,7 +65,6 @@ out=$(helper)
 assert_eq "$?" "0" "token path exits 0 ($out)"
 assert_eq "$(cat "$root/cache" 2>/dev/null)" "$(cat "$root/key.txt")" "cache holds the vault's key"
 assert_eq "$(stat -c %a "$root/cache" 2>/dev/null)" "600" "cache is mode 600"
-[ ! -e "$root/op-called" ] || { echo "FAIL: the token path reached op"; fail=1; }
 grep -q 'reason=test-suite: read age key on testhost' "$root/pass.log" || { echo "FAIL: the read carries no reason naming script and host"; fail=1; }
 grep -q 'item view pass://Workstation/age/key' "$root/pass.log" || { echo "FAIL: the read did not use a pass:// reference"; fail=1; }
 assert_eq "$(grep -c "session=$root/run/pass-ws\.[A-Za-z0-9]* " "$root/pass.log")" "$(pass_calls)" "every call used a per-run session directory under XDG_RUNTIME_DIR"
@@ -86,21 +79,20 @@ out=$(helper)
 assert_eq "$?" "0" "cached run exits 0"
 assert_eq "$(pass_calls)" "$before" "cached run makes no pass-cli call"
 
-# 3. No token in the keyring: op is read as today, and stderr says so.
+# 3. No token in the keyring: the helper refuses, says how to store one, and leaves no cache.
 reset
 out=$(helper)
-assert_eq "$?" "0" "no-token path exits 0 ($out)"
-[ -e "$root/op-called" ] || { echo "FAIL: the no-token path did not read op"; fail=1; }
-case "$out" in *"no agent token"*"1Password"*) ;; *) echo "FAIL: the no-token path did not say so: $out"; fail=1 ;; esac
-assert_eq "$(cat "$root/cache" 2>/dev/null)" "$(cat "$root/key.txt")" "no-token cache holds the op key"
+rc=$?
+[ "$rc" -ne 0 ] || { echo "FAIL: the no-token path exited 0"; fail=1; }
+case "$out" in *"no agent token"*"--store"*) ;; *) echo "FAIL: the no-token path did not say so: $out"; fail=1 ;; esac
+[ ! -s "$root/cache" ] || { echo "FAIL: the no-token path left a cache"; fail=1; }
 assert_eq "$(pass_calls)" "0" "no-token path makes no pass-cli call"
 
-# 4. A token that is present but bad fails loudly, with no op fallback and no cache.
+# 4. A token that is present but bad fails loudly and leaves no cache.
 reset; echo "pst_wrong::KEY" > "$root/token"
 out=$(helper)
 rc=$?
 [ "$rc" -ne 0 ] || { echo "FAIL: a bad token exited 0"; fail=1; }
-[ ! -e "$root/op-called" ] || { echo "FAIL: a bad token fell back to op"; fail=1; }
 [ ! -s "$root/cache" ] || { echo "FAIL: a bad token left a cache"; fail=1; }
 case "$out" in *"login failed"*) ;; *) echo "FAIL: a bad token did not say the login failed: $out"; fail=1 ;; esac
 assert_eq "$(sessions_left)" "0" "a bad token leaves no session directory"
@@ -113,7 +105,6 @@ out=$(env WS_PASS_ITEM=age WS_PASS_VAULT=Nowhere HOME="$root/home" PATH="$root/b
 rc=$?
 [ "$rc" -ne 0 ] || { echo "FAIL: a missing item exited 0"; fail=1; }
 [ ! -s "$root/cache" ] || { echo "FAIL: a missing item left a cache"; fail=1; }
-[ ! -e "$root/op-called" ] || { echo "FAIL: a missing item fell back to op"; fail=1; }
 assert_eq "$(sessions_left)" "0" "a missing item leaves no session directory"
 
 # 5b. A stale session planted by an earlier run is never reused: the helper always logs in.
@@ -136,7 +127,7 @@ case "$out" in *"path=proton"*"expires=2027-01-15"*) ;; *) echo "FAIL: --status 
 case "$out" in *"$TOKEN"*) echo "FAIL: --status printed the token"; fail=1 ;; esac
 reset
 out=$(helper --status)
-case "$out" in *"path=op"*) ;; *) echo "FAIL: --status without a token: $out"; fail=1 ;; esac
+case "$out" in *"path=none"*) ;; *) echo "FAIL: --status without a token: $out"; fail=1 ;; esac
 
 # 7. --store reads the token from the dialog into the keyring, with an expiry three months out.
 reset
@@ -158,12 +149,10 @@ out=$(env "${export_env[@]}" RECIP="$recip" bash "$SET" NEW_ONE --value fresh --
 assert_eq "$?" "0" "secret-set.sh on the token path exits 0 ($out)"
 assert_eq "$(age --decrypt -i "$root/key.txt" "$root/values.age" | cut -d= -f1 | sort | tr '\n' ' ')" "KEEP_ONE NEW_ONE " "secret-set.sh stored through the helper's key"
 grep -q 'reason=secret-set.sh: read age key on testhost' "$root/pass.log" || { echo "FAIL: secret-set.sh's reason does not name it: $(cat "$root/pass.log")"; fail=1; }
-[ ! -e "$root/op-called" ] || { echo "FAIL: secret-set.sh reached op with a token present"; fail=1; }
 rm -f "$root/cache" "$root/pass.log" "$root/local"
 out=$(env "${export_env[@]}" bash "$SYNC" --values "$root/values.age" --local "$root/local" 2>&1)
 assert_eq "$?" "0" "sync.sh on the token path exits 0 ($out)"
 grep -q 'reason=sync.sh: read age key on testhost' "$root/pass.log" || { echo "FAIL: sync.sh's reason does not name it"; fail=1; }
-[ ! -e "$root/op-called" ] || { echo "FAIL: sync.sh reached op with a token present"; fail=1; }
 
 assert_eq "$(mtime "$real_cache")" "$real_cache_before" "real /dev/shm cache mtime"
 exit "$fail"

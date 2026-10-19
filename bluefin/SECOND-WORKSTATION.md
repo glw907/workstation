@@ -160,8 +160,10 @@ mismatch is a hard stop: never decrypt an unverified blob.
    launch also creates a real `~/.claude/skills` directory, which stops stow
    linking the repo's skills as one directory. If either happened, uninstall
    the cask, move `~/.claude/skills` aside, and rerun `setup`.
-4. Open the 1Password app and sign in. Turn on Settings > Developer >
-   "Integrate with 1Password CLI".
+4. Create the host's Proton agent token. In a throwaway `pass-cli` session, Geoff
+   runs `pass-cli agent create pavilion-scripts --expiration 3m --vault
+   Workstation` (viewer role on that vault only), then runs
+   `ws-pass-key --store` and enters the token in the hidden dialog.
 5. Open a NEW terminal, so the stowed `.bashrc` is loaded, and run:
    ```bash
    claude-sudo-setup
@@ -184,10 +186,9 @@ the rest unless the step says it is a hard stop.
 
 1. Confirm the starting state. `rpm-ostree status` must show the booted
    deployment on `bluefin-dx-nvidia-open`, `sudo -A true` must succeed, and
-   `op vault list` must answer. Any failure here is a hard stop: hand it back
-   to Geoff. `bootc status` shows no image once packages are layered. `op
-   whoami` reports "account is not signed in" through the desktop app
-   integration even when the CLI works.
+   `ws-pass-key --status` must print `path=proton`. Any failure here is a hard
+   stop: hand it back to Geoff. `bootc status` shows no image once packages
+   are layered.
 2. Set the hostname:
    ```bash
    sudo -A hostnamectl set-hostname pavilion
@@ -390,7 +391,7 @@ the rest unless the step says it is a hard stop.
 
    The dock needs no step here. `setup` applies it from `gnome-settings.txt`:
    Files, Terminal, Chromium, Hylki, Discord, noson, Rufin, Steam,
-   1Password, then Trash. Before that line existed, pavilion kept Bluefin's
+   then Trash. Before that line existed, pavilion kept Bluefin's
    stock dock, including the installer and a dead link to the removed
    Thunderbird ESR (Thunderbird is retired). If an icon is missing, check that its app installed and
    that `check-drift` reports `favorite-apps` matching.

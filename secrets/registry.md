@@ -10,7 +10,9 @@ Plaintext inventory — no secret values here. All values live in `secrets/value
 secrets document, at the path every project's doctrine already references.)
 
 ```
-1Password (source of truth)
+Proton Pass Workstation vault (age key only)
+    |
+    v  ws-pass-key
     |
     v
 secrets/values.age (encrypted, safe to commit)
@@ -21,16 +23,16 @@ secrets/values.age (encrypted, safe to commit)
     +---> Cloudflare Workers (per-worker secrets via wrangler)
 ```
 
-- **1Password** holds all secret values and the age encryption key
-- **values.age** is the encrypted bundle committed to this repo
-- **sync.sh** decrypts with the age key from `ws-pass-key` (the host's Proton agent token; a host with no token yet reads 1Password with `op`) and pushes to targets
+- **Proton Pass** holds the age encryption key, in the `Workstation` vault (one item); a paper copy exists too
+- **values.age** is the encrypted bundle committed to this repo and holds all secret values
+- **sync.sh** decrypts with the age key from `ws-pass-key` (the host's Proton agent token; a host with no token fails and is told to run `ws-pass-key --store`) and pushes to targets
 - **~/.local/secrets** is chmod 600, gitignored, sourced by `.bashrc`
 - Decryption happens in `/dev/shm` (tmpfs); plaintext never touches disk
 
-**Sync-time** (occasional, needs 1Password): `sync.sh --local` after cloning or
-when secrets change. **Runtime** (day to day, no 1Password): secrets are env
+**Sync-time** (occasional, needs the agent token): `sync.sh --local` after cloning or
+when secrets change. **Runtime** (day to day, no key needed): secrets are env
 vars already sourced by `.bashrc`; read `$FASTMAIL_API_TOKEN` etc. directly and
-never call `op` to fetch what the environment already carries.
+never fetch what the environment already carries.
 
 **Sudo helper**: `claude-sudo-setup` asks Geoff for the sudo password in a
 hidden-entry dialog and caches it in tmpfs (`/dev/shm/claude-sudo-$UID`, umask 077); `claude-askpass`
@@ -40,22 +42,21 @@ exits, and reboot clears it regardless. The password persists nowhere on disk.
 **What goes where**: sensitive tokens in `~/.local/secrets` via sync.sh;
 non-sensitive config (paths, emails, model names) as plain `.bashrc` exports;
 worker secrets pushed by sync.sh via `wrangler secret put`; the sudo password
-in 1Password plus the tmpfs cache above.
+nowhere but the tmpfs cache above (`claude-sudo-setup` takes it from a dialog).
 
 ---
 
 ## How to Decrypt
 
-1. **Authenticate 1Password CLI** (required once per session):
+1. **Fill the key cache** (once per session; no prompt when the host's agent token is stored):
    ```bash
-   eval $(op signin)
+   ws-pass-key
    ```
 
 2. **Decrypt interactively** (for inspection):
    ```bash
    age --decrypt \
-     -i <(op item get "Workstation age encryption key" --fields notesPlain --reveal \
-          | sed 's/^"//;s/"$//') \
+     -i /dev/shm/.age-key-$UID \
      ~/.dotfiles/secrets/values.age
    ```
 
@@ -100,9 +101,8 @@ RSA PEM) **must** be stored base64-encoded via `--b64-file`; decode at the consu
 (`atob()` in a Worker, `base64 -d` in shell). Re-encryption targets the single recipient
 `age197mcd2m3z90t49n9t5v3ujjntw7krfkw5y9sjfc545v28qvezugshg7jgk`.
 
-**Authenticate once per session.** This box uses 1Password **desktop-app integration** —
-there is no reusable CLI session token (`op signin --raw` returns nothing). So `secret-set.sh`
-fetches the age key from 1Password on first use, caches it in tmpfs
+**Authenticate once per session.** The host's Proton agent token sits in GNOME Keyring, so
+`secret-set.sh` fetches the age key through `ws-pass-key` on first use, caches it in tmpfs
 (`/dev/shm/.age-key-$UID`, chmod 600), and reuses it for the rest of the session — only the
 first call prompts. The cache is wiped on reboot, when the `claude` shell function exits, or
 via `scripts/secrets/secret-session-clear.sh`. `sync.sh` shares the same cache and the
@@ -205,8 +205,8 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 > invalidate all active links/sessions. `sync.sh --verify` will list them as "extra" on both the
 > ecxc and 907-life workers — expected (same as CONTACT_EMAIL / TURNSTILE_SECRET_KEY).
 
-**1Password only** (not in values.age):
-- `WORKSTATION_SUDO` — sudo password, stored as `op://Private/Workstation sudo/password`
+**Not in values.age:** the sudo password. `claude-sudo-setup` takes it from a dialog into the
+tmpfs cache; no password manager holds it for scripts.
 
 **Out of scope** (ASC project manages separately):
 - STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
@@ -390,13 +390,12 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 ### FASTMAIL_API_TOKEN
 - **Grants**: Full Fastmail JMAP access (mail, contacts, calendars, files, settings)
 - **Domain**: 907.life (business plan)
-- **Used by**: aerc (via `op read`), Claude Code JMAP scripting (via env var), poplar
+- **Used by**: aerc, Claude Code JMAP scripting (via env var), poplar
   corpus harvest
 - **Rotate at**: Fastmail > Settings > Privacy & Security > App Passwords
 - **History**: 2026-07-19 the stored value had gone stale (JMAP 401); re-anchored from the
-  1Password Fastmail item's `api access` field via secret-set.sh. If it goes stale again,
-  the 1Password copy and this store have diverged; re-anchor after any Fastmail-side
-  rotation.
+  1Password Fastmail item's `api access` field via secret-set.sh (1Password has since left
+  the workstations). If it goes stale again, re-anchor after any Fastmail-side rotation.
 
 ### FASTMAIL_DAV_PASSWORD
 - **Grants**: Fastmail app password with mail, calendar, and contacts access (IMAP, SMTP,
@@ -578,8 +577,12 @@ Secrets this registry will set:
 
 - **Algorithm**: X25519 (age native)
 - **Public key**: age197mcd2m3z90t49n9t5v3ujjntw7krfkw5y9sjfc545v28qvezugshg7jgk
-- **Private key storage**: 1Password > Private vault > "Workstation age encryption key"
-- **No persistent copy of THIS store's key on disk** — it is fetched from 1Password at
+- **Private key storage**: Proton Pass > `Workstation` vault > "Workstation age encryption key"
+  (the only item in that vault), plus a paper copy checked 2026-10-19 against the recipient
+  with `age-keygen -y`. Each host reads it with its own agent token (`pavilion-scripts`, later
+  `thinkpad-scripts`; viewer role on that vault only). The ASC age key stays in its own key
+  file; Geoff restores it by hand from Proton Pass when that file is missing.
+- **No persistent copy of THIS store's key on disk** — it is fetched through `ws-pass-key` at
   decrypt time and cached only in tmpfs. (The separate ASC project key at
   `~/.config/age/asc-key.txt` is a different key for a different store and does live on
   disk, mode 600, by that project's own design.)

@@ -31,9 +31,9 @@ assert_has "$out" "age key path: Proton Pass agent token" "proton path line"
 assert_has "$out" "agent token expires in 900 days" "expiry line"
 assert_has "$out" "rc=0" "healthy host exits 0"
 
-out=$(drift "path=op host=h")
-assert_has "$out" "age key path: 1Password" "op path line"
-assert_has "$out" "rc=0" "a host still on op warns without failing"
+out=$(drift "path=none host=h")
+assert_has "$out" "no agent token in the keyring" "no-token line"
+assert_has "$out" "rc=1" "a host with no agent token fails"
 
 out=$(drift "path=proton host=h expires=2026-11-01 days=14")
 assert_has "$out" "expires in 14 days (renew it)" "near-expiry warning"
@@ -46,7 +46,7 @@ assert_has "$out" "rc=1" "an expired token fails"
 out=$(drift "path=proton host=h expires=unknown")
 assert_has "$out" "expiry unknown" "unknown expiry warning"
 
-out=$(drift "path=op host=h" STUB_NO_BREW=1)
+out=$(drift "path=proton host=h expires=2999-01-01 days=900" STUB_NO_BREW=1)
 assert_has "$out" "proton-pass-cli is not installed" "missing package line"
 assert_has "$out" "rc=1" "a missing package fails"
 

@@ -176,10 +176,10 @@ cannot add or change one; that edit goes through `ws-admin`.
   npx wrangler secret put NAME` (value piped, never printed). A per-project store like this is
   the pattern: any repo with a `secrets/` dir + sync script is its own origin store — check it
   before declaring a credential unmanaged.
-- **1Password** (interactive, `op` CLI): the fallback for a value in no scripted store — a
-  dashboard LOGIN, a rarely-needed credential. **Each `op` call can prompt a desktop approval, so
-  batch them: one `op item get --format json` and parse locally, never a loop of calls.** See the
-  global CLAUDE.md Secrets rule.
+- **Proton Pass** (Geoff's vaults): the home for a value in no scripted store, such as a
+  dashboard login or a rarely needed credential. Claude never calls `pass-cli`; a value Claude
+  needs arrives through `secret-receive NAME --pass REF`, which runs Geoff's own login in a
+  throwaway session. See the global CLAUDE.md Secrets rule.
 
 ## What's installed (snapshot 2026-07-07; verify live before acting)
 

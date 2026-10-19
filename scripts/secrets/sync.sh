@@ -5,8 +5,8 @@ umask 077  # every temp and cache file is born private, no chmod race
 # Workstation secrets sync — decrypts values.age and pushes secrets to local and Cloudflare targets.
 #
 # Fetches the age private key at most ONCE per login session through ws-pass-key (the host's
-# Proton agent token; 1Password with op on a host that has none yet) and caches it in tmpfs (same
-# shared cache as secret-set.sh), then reuses it on later runs. The cache is wiped on
+# Proton agent token) and caches it in tmpfs (same shared cache as secret-set.sh), then reuses
+# it on later runs. The cache is wiped on
 # reboot, when the `claude` shell function exits, or via secret-session-clear.sh.
 #
 # Usage:
@@ -190,11 +190,11 @@ flock 9
 
 # --- Decrypt ---
 # Fetch the age key only on a cache miss. ws-pass-key reads the host's Proton agent token from the
-# keyring; a host with none reads 1Password with op.
+# keyring.
 if [[ ! -s "$CACHE" ]]; then
     echo "Fetching age private key..."
     WS_PASS_CALLER=sync.sh CACHE="$CACHE" "$WS_PASS_KEY" \
-        || { echo "Error: Could not fetch the age key. Is the agent token valid, or the 1Password app unlocked?" >&2; exit 1; }
+        || { echo "Error: Could not fetch the age key. Is the agent token valid (ws-pass-key --status)?" >&2; exit 1; }
 else
     echo "Using session-cached age key."
 fi

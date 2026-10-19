@@ -32,9 +32,10 @@ cp "$root/key.txt" "$root/cache"
 chmod 600 "$root/cache"
 main_sum=$(sha256sum "$home/.dotfiles/secrets/values.age" | cut -d' ' -f1)
 
-# A stub that fails and leaves a marker, so a run that reaches 1Password is caught.
-printf '#!/usr/bin/env bash\ntouch "%s/op-called"\nexit 1\n' "$root" > "$root/bin/op"
-chmod +x "$root/bin/op"
+# A ws-pass-key stub that fails and leaves a marker, so a run that fetches the key is caught.
+printf '#!/usr/bin/env bash\ntouch "%s/key-fetched"\nexit 1\n' "$root" > "$root/bin/ws-pass-key"
+chmod +x "$root/bin/ws-pass-key"
+export WS_PASS_KEY="$root/bin/ws-pass-key"
 
 out=$(HOME="$home" PATH="$root/bin:$PATH" \
   VALUES="$root/wt/values.age" LOCAL_SECRETS="$root/local-secrets" \
@@ -50,7 +51,7 @@ assert_eq "$(sha256sum "$home/.dotfiles/secrets/values.age" | cut -d' ' -f1)" "$
 assert_eq "$(grep -c '^export ' "$root/local-secrets" 2>/dev/null)" "2" "temp local secrets rewritten from the override store"
 assert_eq "$(grep -c RETIRED_ONE "$root/local-secrets" 2>/dev/null)" "0" "temp local secrets lacks the retired name"
 [ ! -e "$home/.local/secrets" ] || { echo "FAIL: the default local secrets path was written"; fail=1; }
-[ ! -e "$root/op-called" ] || { echo "FAIL: the run reached 1Password"; fail=1; }
+[ ! -e "$root/key-fetched" ] || { echo "FAIL: the run fetched the age key"; fail=1; }
 assert_eq "$(mtime "$real_home/.local/secrets")" "$real_secrets_before" "real ~/.local/secrets mtime"
 assert_eq "$(mtime "$real_cache")" "$real_cache_before" "real /dev/shm cache mtime"
 
