@@ -62,6 +62,10 @@ assert_eq "$(grep -c "^stalwart admin	$want_admin\$" <<< "$out")" "1" "stalwart 
 assert_eq "$(grep -vc "^pass-count:" <<< "$out")" "2" "one line per item"
 case "$out" in *hush-*) echo "FAIL: --hashes printed a value"; fail=1 ;; esac
 
+# A missing emergency vault fails loudly instead of printing nothing.
+out=$(PASS_COUNT_EMERGENCY=Nope run --hashes)
+[ "$?" -ne 0 ] || { echo "FAIL: --hashes with no emergency vault exited 0"; fail=1; }
+
 # A vault the script cannot parse fails loudly instead of printing zero counts.
 echo 'not json' > "$root/vault/_items-sh1.json"
 out=$(run)

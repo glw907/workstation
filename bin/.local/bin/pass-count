@@ -37,12 +37,14 @@ pass-cli login >&2
 # Both lists accept an object holding an array or a bare array.
 VAULTS="$(pass-cli vault list --output json | jq -c '(.vaults // .shares // .)[]')"
 
+FOUND=""
 while IFS= read -r vault; do
     name="$(jq -r '.name // .vault_name // "unnamed"' <<< "$vault")"
     share="$(jq -r '.share_id // .shareId // .id' <<< "$vault")"
     if [[ "$MODE" == "hashes" && "$name" != "$EMERGENCY" ]]; then
         continue
     fi
+    FOUND=1
     items="$(pass-cli item list --share-id "$share" --output json)"
     jq -e . >/dev/null <<< "$items" || { echo "pass-count: the item list of $name is not JSON" >&2; exit 1; }
     if [[ "$MODE" == "counts" ]]; then
@@ -63,3 +65,5 @@ while IFS= read -r vault; do
         done < <(jq -c '(.items // .)[]' <<< "$items")
     fi
 done <<< "$VAULTS"
+
+[[ -n "$FOUND" ]] || { echo "pass-count: no vault named $EMERGENCY to hash" >&2; exit 1; }

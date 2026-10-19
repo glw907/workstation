@@ -32,6 +32,41 @@ DENIED = [
     "ls /run/user/1000/pass-recv.AbC123",
     "cat ~/.local/share/proton-pass-cli/.session/data",
     "tar c ~/.local/share/proton-pass-cli",
+    # Wrappers, shell keywords, and nesting.
+    "bash -c 'pass-cli info'",
+    'bash -c "pass-cli info"',
+    "echo info | xargs pass-cli",
+    "eval pass-cli info",
+    "watch pass-cli info",
+    "stdbuf -o0 pass-cli info",
+    "sudo -u glw907 pass-cli info",
+    "nice -n 5 pass-cli info",
+    "timeout -s KILL 5 pass-cli info",
+    "timeout 5 pass-cli info",
+    "if pass-cli info; then :; fi",
+    "! pass-cli info",
+    "{ pass-cli info; }",
+    "for i in 1; do pass-cli info; done",
+    # Path prefixes and options before the subcommand.
+    "/home/linuxbrew/.linuxbrew/bin/pass-cli info",
+    "$(brew --prefix)/bin/pass-cli info",
+    "/usr/bin/secret-tool lookup service x",
+    "/usr/bin/keyctl print 1",
+    "keyctl -v print 1",
+    # secret-tool search prints the secret too.
+    "secret-tool search service proton-pass-agent",
+    "secret-tool search --all service x",
+    # Quoting and continuation tricks.
+    "'pass-cli' info",
+    '"pass-cli" info',
+    "p''ass-cli info",
+    "\\pass-cli info",
+    "pass\\\n-cli info",
+    # Session directories by glob or the count script's own.
+    "ls $XDG_RUNTIME_DIR/pass-count.abc",
+    "cat $XDG_RUNTIME_DIR/pass-w*/session",
+    "ls ~/.local/share/proton-pass-*",
+    "cd $XDG_RUNTIME_DIR && cat pass-ws.abc/session",
 ]
 
 ALLOWED = [
