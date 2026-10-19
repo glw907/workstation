@@ -374,9 +374,11 @@ def test_sieve_filter_shape():
     # together with an automated local part.
     assert "allof" in text and ":localpart" in text
     guarded = text[text.index("allof"):]
-    for domain in ("proton.me", "fastmail.com"):
+    for domain in ("proton.me", "*.proton.me", "protonmail.com", "*.protonmail.com", "fastmail.com", "*.fastmail.com"):
         assert f'"{domain}"' in guarded, domain
         assert f'"{domain}"' not in text[:text.index("allof")], domain
+    localparts = re.search(r':localpart\s*:matches\s*"from"\s*\[([^\]]*)\]', guarded).group(1)
+    assert set(re.findall(r'"([^"]*)"', localparts)) == {"no-reply", "noreply", "notify", "notifications", "billing", "*-noreply"}
 
 
 def test_fetch_without_uid_fails_closed():
