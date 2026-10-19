@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+# ws-pass-key: put the workstation age key into the tmpfs session cache without a prompt.
+#
+# The host's Proton agent token sits in GNOME Keyring (service proton-pass-agent, host <host>).
+# With it, this helper logs in to a session directory under $XDG_RUNTIME_DIR, reads the one item
+# in the Workstation vault with a reason that names the caller and host, writes the key to the
+# cache, then logs out and removes the session directory. No standing session is left behind.
+#
+# A host whose keyring holds no token reads 1Password with `op`, as before, and says so on
+# stderr. A token that is present but fails never falls back to op: the failure is the signal.
+#
+# Usage:
+#   ws-pass-key            # fill the cache ($CACHE, default /dev/shm/.age-key-UID) if empty
+#   ws-pass-key --status   # print "path=proton|op host=H expires=DATE days=N"; fetches nothing
+#   ws-pass-key --store    # keep a new agent token (from a hidden dialog) in the keyring
+#                          #   (--expires YYYY-MM-DD overrides the default three months)
+#
+# Environment: WS_PASS_CALLER names the calling script in the read's reason; WS_HOST overrides
+# `hostname -s`; WS_PASS_VAULT, WS_PASS_ITEM, and WS_PASS_FIELD name the item (Workstation, the
+# age key item, key).
+set -euo pipefail
+umask 077
+sess=""
+
+CACHE="${CACHE:-/dev/shm/.age-key-$(id -u)}"
+HOST="${WS_HOST:-$(hostname -s)}"
+CALLER="${WS_PASS_CALLER:-ws-pass-key}"
+VAULT="${WS_PASS_VAULT:-Workstation}"
+ITEM="${WS_PASS_ITEM:-Workstation age encryption key}"
+FIELD="${WS_PASS_FIELD:-key}"
+OP_ITEM="Workstation age encryption key"
+
+die() { echo "ws-pass-key: $*" >&2; exit 1; }
+
+# The agent token, or nothing when the keyring holds none for this host.
+lookup_token() { secret-tool lookup service proton-pass-agent host "$HOST" 2>/dev/null || true; }
+lookup_expiry() { secret-tool lookup service proton-pass-agent-expiry host "$HOST" 2>/dev/null || true; }
+
+status() {
+    local token expiry days
+    token="$(lookup_token)"
+    if [[ -z "$token" ]]; then
+        echo "path=op host=$HOST"
+        return 0
+    fi
+    expiry="$(lookup_expiry)"
+    if [[ -n "$expiry" ]] && days=$(( ($(date -d "$expiry" +%s) - $(date +%s)) / 86400 )) 2>/dev/null; then
+        echo "path=proton host=$HOST expires=$expiry days=$days"
+    else
+        echo "path=proton host=$HOST expires=unknown"
+    fi
+}
+
+store() {
+    local expires="" token
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --expires) expires="${2:?--expires needs YYYY-MM-DD}"; shift 2 ;;
+            *) die "unknown option: $1" ;;
+        esac
+    done
+    [[ -n "$expires" ]] || expires="$(date -d '+3 months' +%F)"
+    date -d "$expires" +%F >/dev/null 2>&1 || die "bad expiry date: $expires"
+    command -v zenity >/dev/null || die "zenity not installed"
+    token="$(zenity --entry --hide-text --title "Store an agent token" --ok-label "Store" \
+        --text "Paste the Proton agent token for $HOST." --timeout 300 2>/dev/null)" ||
+        die "dialog cancelled or timed out; nothing stored"
+    [[ -n "$token" ]] || die "empty token; nothing stored"
+    printf '%s' "$token" | secret-tool store --label "Proton Pass agent token ($HOST)" \
+        service proton-pass-agent host "$HOST"
+    printf '%s' "$expires" | secret-tool store --label "Proton Pass agent token expiry ($HOST)" \
+        service proton-pass-agent-expiry host "$HOST"
+    unset token
+    echo "ws-pass-key: agent token for $HOST stored in the keyring; expires $expires."
+}
+
+fetch_op() {
+    echo "ws-pass-key: no agent token for $HOST in the keyring; reading 1Password (op) instead." >&2
+    op item get "$OP_ITEM" --fields notesPlain --reveal 2>/dev/null | sed 's/^"//;s/"$//' > "$CACHE" || true
+}
+
+fetch_proton() {
+    local token="$1" reason
+    [[ -n "${XDG_RUNTIME_DIR:-}" ]] || die "XDG_RUNTIME_DIR is not set; no tmpfs for a session"
+    sess="$XDG_RUNTIME_DIR/pass-ws"  # global: the EXIT trap outlives this function
+    mkdir -p "$sess"
+    chmod 700 "$sess"
+    export PROTON_PASS_SESSION_DIR="$sess"
+    export PROTON_PASS_DISABLE_TELEMETRY=1
+    # The session is gone when this function's work is done, whatever the outcome.
+    trap 'pass-cli logout >/dev/null 2>&1 || true; rm -rf "$sess"' EXIT
+    pass-cli info >/dev/null 2>&1 ||
+        PROTON_PASS_PERSONAL_ACCESS_TOKEN="$token" pass-cli login >/dev/null 2>&1 ||
+        die "agent login failed for $HOST (token expired or revoked?); not falling back to op"
+    reason="$CALLER: read age key on $HOST"
+    PROTON_PASS_AGENT_REASON="$reason" pass-cli item view "pass://$VAULT/$ITEM/$FIELD" 2>/dev/null \
+        | sed 's/^"//;s/"$//' > "$CACHE" || true
+}
+
+case "${1:-}" in
+    --status) status; exit 0 ;;
+    --store)  shift; store "$@"; exit 0 ;;
+    -h|--help) sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    "") ;;
+    *) die "unknown option: $1" ;;
+esac
+
+[[ -s "$CACHE" ]] && exit 0
+
+token="$(lookup_token)"
+if [[ -z "$token" ]]; then
+    fetch_op
+else
+    fetch_proton "$token"
+fi
+unset token
+
+chmod 600 "$CACHE" 2>/dev/null || true
+if [[ ! -s "$CACHE" ]]; then
+    rm -f "$CACHE"
+    die "could not fetch the age key (is the agent token valid and the vault item named $VAULT/$ITEM?)"
+fi

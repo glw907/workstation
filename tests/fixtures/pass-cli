@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# A fake pass-cli for the secret-script tests. It records every call, serves a fixture vault from
+# disk, and mimics the three behaviors the scripts depend on: a session lives in
+# PROTON_PASS_SESSION_DIR, an agent session refuses a read with no PROTON_PASS_AGENT_REASON, and
+# a bad token fails the login. It touches no network and no real Proton session.
+#
+# Environment (all set by the test):
+#   FAKE_PASS_LOG        file; one line per call: "<args> | session=<dir> reason=<text> token=<set|none>"
+#   FAKE_PASS_FIXTURE    directory; pass://V/I/F is served from the file $FAKE_PASS_FIXTURE/V/I/F
+#   FAKE_PASS_GOOD_TOKEN the one token a login accepts (default pst_fake::KEY)
+#   FAKE_PASS_WEB_FAIL   non-empty: a web login (no token) fails
+set -uo pipefail
+
+log="${FAKE_PASS_LOG:?FAKE_PASS_LOG is not set}"
+sess="${PROTON_PASS_SESSION_DIR:-}"
+token="${PROTON_PASS_PERSONAL_ACCESS_TOKEN:-}"
+printf '%s | session=%s reason=%s token=%s\n' "$*" "${sess:-UNSET}" "${PROTON_PASS_AGENT_REASON:-}" \
+    "$([[ -n "$token" ]] && echo set || echo none)" >> "$log"
+
+# The default session directory is the one a real user session lives in; a script must never use it.
+[[ -n "$sess" && "$sess" != "$HOME/.local/share/proton-pass-cli"* ]] || {
+    echo "fake pass-cli: refusing the default session directory" >&2
+    exit 90
+}
+
+cmd="${1:-}"
+[[ $# -gt 0 ]] && shift
+case "$cmd" in
+    login)
+        if [[ -n "$token" ]]; then
+            [[ "$token" == "${FAKE_PASS_GOOD_TOKEN:-pst_fake::KEY}" ]] || { echo "fake pass-cli: token rejected" >&2; exit 1; }
+            mkdir -p "$sess" && echo agent > "$sess/session"
+        else
+            [[ -z "${FAKE_PASS_WEB_FAIL:-}" ]] || { echo "fake pass-cli: web login failed" >&2; exit 1; }
+            mkdir -p "$sess" && echo web > "$sess/session"
+        fi
+        ;;
+    info)
+        [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }
+        ;;
+    logout)
+        rm -f "$sess/session"
+        ;;
+    item)
+        [[ "${1:-}" == view ]] || { echo "fake pass-cli: unsupported: item ${1:-}" >&2; exit 2; }
+        shift
+        [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }
+        if [[ "$(cat "$sess/session")" == agent ]]; then
+            reason="${PROTON_PASS_AGENT_REASON:-}"
+            [[ -n "$reason" && ${#reason} -le 300 ]] || { echo "fake pass-cli: agent read needs a reason of 1 to 300 characters" >&2; exit 1; }
+        fi
+        ref="${1:-}"
+        [[ "$ref" == pass://* ]] || { echo "fake pass-cli: want a pass:// reference" >&2; exit 2; }
+        file="${FAKE_PASS_FIXTURE:?FAKE_PASS_FIXTURE is not set}/${ref#pass://}"
+        [[ -f "$file" ]] || { echo "fake pass-cli: no such item: $ref" >&2; exit 1; }
+        cat "$file"
+        ;;
+    *)
+        echo "fake pass-cli: unsupported command: $cmd" >&2
+        exit 2
+        ;;
+esac
