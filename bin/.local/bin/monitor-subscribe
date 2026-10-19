@@ -117,14 +117,14 @@ show_conditions() {
   local line
   while IFS=$'\t' read -r key last; do
     [ -n "$key" ] && [[ $last =~ $int ]] && shown[$key]=$last
-  done <"$state/shown" 2>/dev/null
+  done < <(cat "$state/shown" 2>/dev/null)
   declare -A open=()
   t=$(now)
   while IFS=$'\t' read -r id severity opened title message; do
     # The time feeds shell arithmetic later, which would run a command hidden in a subscript.
     [[ $opened =~ $int ]] || continue
     [ "$severity" = urgent ] || [ "$severity" = routine ] || continue
-    key="$id|$opened"
+    key="$id|$opened|$severity"
     open[$key]=1
     last=${shown[$key]:-0}
     if [ "$last" -eq 0 ] || [ $((t - last)) -ge "$repeat" ]; then
