@@ -25,8 +25,8 @@ account.
 A change that meets "Direct changes" skips this lifecycle.
 
 1. **Design.** Opus at `high` brainstorms in chat. Geoff approves a design of a page or less: the
-   outcome, files and interfaces touched, what is out of scope, one end-to-end check, and the risk
-   class. A design brought for approval goes to Geoff as a design part in a packet, per `approval-packet`.
+   outcome, files and interfaces touched, what is out of scope, one end-to-end check, the risk
+   class, and every pre-flight item it can foresee (step 4). A design brought for approval goes to Geoff as a design part in a packet, per `approval-packet`.
    An owner fork in the design is a `### Decide:` block in its brief. A design doc opens with `## Brief` after its title, per
    `~/.claude/docs/voice/approval-brief.md`. The design names its initiative (a record in `~/Projects/initiatives`) or says none applies; cross-repo specs, plans, and research go in `initiatives/<id>/`, and the plan header carries an `Initiative: <id>` line. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
    carries
@@ -58,9 +58,13 @@ A change that meets "Direct changes" skips this lifecycle.
    each answer as a standing approval the planner applies in place of stopping. A stop with no
    standing answer still stops (Geoff, 2026-10-12: the intake-1 overnight run stopped at 01:17 on
    a 995-minute plan against a 780-minute line, and nothing ran until morning). So every stop the
-   plan writes (a cap, a line stop, a ceiling) carries a standing answer for its cheap case, such
-   as a retry within budget, and stops only once that answer runs out (2026-10-19: B3c stopped at
-   its four-read cap with $5 of $80 spent, and Geoff took the recommended fifth read).
+   plan writes (a cap, a line stop, a ceiling) carries a standing answer. A count cap on reads,
+   retries, rounds, or reruns is a loop guard, never a stop for Geoff. Past it, the run goes on
+   while each retry fixes a cause the session has traced and spend stays inside the ceiling, and
+   each fix is a reversible change listed in the PR's `## Decisions`. The run stops only on the
+   spend or path ceiling, a cause it cannot trace, the same cause returning after its fix, or a
+   change to the design (2026-10-19: B3c stopped at its read cap, then at its escalation rule, each
+   time with an in-budget fix to a traced cause as the recommendation, and Geoff took it).
 2. **Spec.** An agent writes the approved design at the length precision needs, only if
    `spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
    probed.
@@ -77,6 +81,19 @@ A change that meets "Direct changes" skips this lifecycle.
    path minutes, set from the actual-against-planned path in recent passes' scores, never from a
    share of a spec's figure. Skip `writing-plans`' code
    steps and execution-method question. Test-first applies to `auth-data` tasks.
+
+   The plan opens with a `## Pre-flight` list: every step only Geoff can do, such as a sign-in, a
+   value through `secret-receive`, a dialog, a permission rule, a browser or app action, or a
+   physical touch. The design's packet carries the items it foresaw as `[you: ...]` steps
+   (`approval-packet`), and Geoff runs them in the sitting where he approves the design, since a
+   planner that runs unattended has no sitting of its own. An item the plan adds holds the launch:
+   the planner sends it to Geoff as a pre-launch packet and records a planning miss at the design
+   stage. The executor launches only once each item is done and checked (a sign-in that
+   answers, a store name present, a rule in `settings.json`). A step that needs the pass's own
+   output is moved earlier or given a path without Geoff where it can be. Whatever remains goes
+   into one named sitting at a set point in the plan, and the design approval says when. A run
+   that waits on Geoff for a step the list left out is a planning miss (2026-10-19: Pass 1's mail
+   reader waited 40 minutes on a Proton Bridge sign-in that needed nothing the pass built).
 5. **Execute.** See "Execute".
 6. **Close.** See "Close". Geoff decides the packet in Design & PR Approvals, except that a pass whose highest
    class is `ordinary` merges its own PR (see "Close").
@@ -144,7 +161,8 @@ whose main checkout launches the executor. The planner commits `<plan>-conductor
    (<https://code.claude.com/docs/en/cross-session-messaging>): a message is "Delivered", "Held", or
    "Refused", and a held one can expire unread.
 
-Before the launch, run `git -C <repo> fetch origin` and check that the main checkout is on its
+Before the launch, every `## Pre-flight` item is done and checked (see "Lifecycle" step 4). Run
+`git -C <repo> fetch origin` and check that the main checkout is on its
 default branch and `git -C <repo> rev-list --count HEAD..origin/<default>` prints 0, since
 `worktree.baseRef: "head"` branches from local `HEAD`. Where `git -C <repo> check-ignore -q
 .claude/worktrees/x` fails, append `.claude/worktrees/` to the file `git -C <repo> rev-parse
@@ -169,7 +187,7 @@ the approved design, budget, and path ceiling and can be undone after the merge.
 goes in the PR body's `## Decisions` section: the call, the choice, the alternative, and the
 reason. The session stops for Geoff only on spend past the budget, an irreversible or destructive
 act, a secret, a change of scope or design, a product or taste call the design leaves open, a
-stop the plan writes once its standing answer runs out (see "Design"), or a clock stop. In the three days to 2026-10-19, Geoff took the recommended option on 24 of 36 questions, five of
+stop the plan writes once its standing answer runs out (see "Lifecycle" step 1), or a clock stop. In the three days to 2026-10-19, Geoff took the recommended option on 24 of 36 questions, five of
 them mid-run calls inside approved scope. Prompting Claude Opus 5
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
 "Make routine judgment calls yourself, and check in only when different readings of the request
@@ -357,7 +375,7 @@ says "never merge" or "end" outright. Close the session when the initiative land
 A conductor prompt opens with one line naming the session `conductor-<project>`, then carries the
 executor's `claude` line and its prompt file; the plan path and each repo and checkout the pass
 touches; the merge order across its PRs, with any `## Before merge` steps known at plan time; the
-standing answers from the design; and what goes in its packet to Design & PR Approvals. It restates nothing this skill
+standing answers from the design; the `## Pre-flight` checks it runs before each launch; and what goes in its packet to Design & PR Approvals. It restates nothing this skill
 already says. Prompting Claude Opus 5
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
 the model "performs best when given the complete task specification up front and left to run".

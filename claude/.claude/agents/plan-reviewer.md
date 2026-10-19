@@ -32,7 +32,7 @@ On a plan, also check these items:
 - Each task carries a clock estimate, and any single-deliverable task is folded into a neighbor.
 - Every stop the plan writes (a cap, a line stop, a ceiling) has a standing answer for its cheap
   case, and each judgment call the run can plausibly meet is named with its answer, so the run
-  asks Geoff only what the plan could not foresee (`pass-core`, "Design" step 1 and "Judgment
+  asks Geoff only what the plan could not foresee (`pass-core`, "Lifecycle" step 1 and "Judgment
   calls"). Each item
   below this one was added from a past pass's planning miss.
 - A pass that changes workstation config states what each host (`pavilion`, `thinkpad-x1`)
@@ -44,6 +44,15 @@ On a plan, also check these items:
 - Every value the run needs from Geoff is looked up in the stores and records first, and only a
   value no file holds is asked at design time (Pass 1, 2026-10-19: the recovery address was
   already on file).
+- The `## Pre-flight` list names every step only Geoff can do (sign-ins, `secret-receive` values,
+  dialogs, permission rules, app or physical actions), each with the check that shows it done.
+  Read every task for a hidden one, and move a step that waits on the pass's output earlier where
+  it can go, and flag any item the design did not foresee, since it holds the launch for a
+  pre-launch packet (Pass 1, 2026-10-19: a Proton Bridge sign-in surfaced mid-run).
+- No count cap (reads, retries, rounds, reruns) and no list of fixable causes stops the line on
+  its own. Each carries the traced-cause standing answer in `pass-core` "Lifecycle" step 1, so only
+  a ceiling, an untraced or returning cause, or a design change stops it (B3c, 2026-10-19: a
+  five-read cap, then an escalation traced to a blueprint, a cause the plan's fix list left out).
 
 ## Findings
 
