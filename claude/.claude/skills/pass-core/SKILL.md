@@ -57,7 +57,10 @@ A change that meets "Direct changes" skips this lifecycle.
    run can foresee, an estimate overrun up to a named ceiling among them, and the design records
    each answer as a standing approval the planner applies in place of stopping. A stop with no
    standing answer still stops (Geoff, 2026-10-12: the intake-1 overnight run stopped at 01:17 on
-   a 995-minute plan against a 780-minute line, and nothing ran until morning).
+   a 995-minute plan against a 780-minute line, and nothing ran until morning). So every stop the
+   plan writes (a cap, a line stop, a ceiling) carries a standing answer for its cheap case, such
+   as a retry within budget, and stops only once that answer runs out (2026-10-19: B3c stopped at
+   its four-read cap with $5 of $80 spent, and Geoff took the recommended fifth read).
 2. **Spec.** An agent writes the approved design at the length precision needs, only if
    `spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
    probed.
@@ -148,12 +151,44 @@ default branch and `git -C <repo> rev-list --count HEAD..origin/<default>` print
 --path-format=absolute --git-path info/exclude` names.
 
 The session's first act is `EnterWorktree`, then the adapter's setup command in the new worktree.
+It calls `EnterWorktree` only that once. Work in another repo or worktree goes by absolute path
+and `git -C`, because an `EnterWorktree` made from another repo's worktree raises a permission
+prompt that stalls the run (servers-foundation, 2026-10-19).
 It commits without asking, pushes the branch it created, and opens the PR from it. A pass that
 continues an existing branch merges or cherry-picks that branch into the new one first. STATUS
 records the session's name and id. The launch prompt names the push target as `glw907/<repo>`, since
 auto mode blocks a push to a repository the user did not name. The session arms the API-drop
 wake-up (`/loop` with no interval) and, if the lid may close, the lid-switch hold, per
 `~/.claude/docs/unattended-work-guards.md`, then reads, edits, writes the tests, and commits.
+
+## Judgment calls
+
+The plan answers the calls its run can foresee, and the session answers the rest and records them
+in the PR. Mid-run, it takes its own recommendation without asking when the choice stays inside
+the approved design, budget, and path ceiling and can be undone after the merge. Each such call
+goes in the PR body's `## Decisions` section: the call, the choice, the alternative, and the
+reason. The session stops for Geoff only on spend past the budget, an irreversible or destructive
+act, a secret, a change of scope or design, a product or taste call the design leaves open, a
+stop the plan writes once its standing answer runs out (see "Design"), or a clock stop. In the three days to 2026-10-19, Geoff took the recommended option on 24 of 36 questions, five of
+them mid-run calls inside approved scope. Prompting Claude Opus 5
+(<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
+"Make routine judgment calls yourself, and check in only when different readings of the request
+would lead to materially different work."
+
+A mid-run question to Geoff is a planning miss, even when the session had to ask. Some will
+happen, and each one improves the planning step that missed it. The session that asked records
+the miss in the PR body's `## Planning misses` section: the question, Geoff's answer, and the plan
+item that should have answered it. Under a conductor, the conductor is that session: it adds the
+entry and the fix after the executor reports PR-ready and before its packet. Before the hand-over
+the session lands the fix where planning executes,
+usually a new item in the `plan-reviewer` checklist, else the adapter or this skill. The fix goes
+in the same PR when it is in this repo, and otherwise in a dotfiles PR the packet names. A miss
+the fix cannot generalize stays in the PR body, marked one-off.
+
+A stop has one asker. An executor whose pass has a conductor never asks Geoff itself: it writes
+the stop to STATUS and waits, with no `notify-send`. The conductor asks once, commits the ruling
+to the plan branch, then stops and relaunches the executor per "Conductor", which merges the plan
+branch first (2026-10-19: both sessions asked Geoff B3c's read-cap question).
 
 ## Pairs
 
@@ -190,7 +225,8 @@ At each task start the session writes `pass-task-clock` in the pass worktree's g
 `task=<id>`, `start=<epoch seconds>`, `estimate=<minutes>`. It removes the file at the task's end,
 and after a pair returns once it has checked the pair's overrun. The `claude-clock-stop` hook
 returns a stop line past twice the estimate. The session then writes STATUS, runs
-`notify-send -u normal`, and waits for Geoff (one attended event, not a failure). A resume rewrites
+`notify-send -u normal`, and waits for Geoff (one attended event, not a failure). Under a
+conductor, the executor writes STATUS and waits, and the conductor asks per "Judgment calls". A resume rewrites
 `start=`, or `estimate=` to the figure Geoff names. Pair worktrees hold no clock file, so the stop
 cannot fire while the session waits on a pair.
 
@@ -213,8 +249,8 @@ or priority calls.
 An executor refuses the conductor's cross-session messages, rightly: a peer's message carries no
 approval from Geoff. When an executor stops on a cause the conductor can fix, the conductor fixes
 it at the source (the plan branch, a merge from the default branch), then stops and relaunches the
-executor; otherwise Geoff attaches to it. The conductor never calls `EnterWorktree` while its own
-subagents run, because the isolation applies to them too; it edits a worktree by path instead.
+executor; otherwise Geoff attaches to it. The conductor never calls `EnterWorktree`, because the
+isolation would apply to its subagents too; it edits a worktree by path instead.
 A watch over `claude agents --json --all` reads each field with `.get`, since a row can lack `id`.
 While a planner is out, the conductor merges no STATUS edit to the default branch, because the
 executor's merge of the plan branch then conflicts in STATUS (twice on 2026-10-11); it batches its
@@ -239,7 +275,8 @@ landed at zero fix rounds and paraphrased ones averaged one. An overruled verdic
 reason in the PR body, and a correctness-critical overrule re-runs the review at `xhigh`. The
 adapter's close checklist runs (the auth smoke on `auth-data`), STATUS is updated, and
 the PR body opens with a `## Brief` per `~/.claude/docs/voice/approval-brief.md` and carries,
-below it, what landed, each `auth-data` verdict, and the score. Each "Found, not done" item worth doing is
+below it, what landed, each `auth-data` verdict, the `## Decisions` and `## Planning misses`
+sections (see "Judgment calls"), and the score. Each "Found, not done" item worth doing is
 filed through `log-issue` in its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits,
 and listed in the PR body with its backlog number; an item not worth doing stays in the PR body,
 marked dropped. No follow-up is sent to Geoff as its own item, and an initiative-sized one becomes a
@@ -283,7 +320,8 @@ The PR body carries the spec's price table rows: Gates on the critical path, Wor
 waits on the path, Fix rounds and reds, Close, and Total. Gate and lock time come from
 `cairn-run-gate --records <toplevel> <branch>`; the clock runs from the first execution commit to
 PR-ready. The Work and review row names the plan's path minutes beside the actual, the figure the
-next design's estimate is set from. It lists the attended events (the design, the packet read, one per clock stop) and any escape,
+next design's estimate is set from. It lists the attended events (the design, the packet read, one per clock stop, and one per
+mid-run question, which names the plan item that should have answered it) and any escape,
 a behavioral, security, or contract defect that surfaces through the next pass's close, CI on
 `main`, or Geoff's use; an escape also goes into STATUS with its commit. A miss names its row, or
 the step that should have caught the escape, and only that changes.
