@@ -47,7 +47,8 @@ On a plan, also check these items:
 - The `## Pre-flight` list names every step only Geoff can do (sign-ins, `secret-receive` values,
   dialogs, permission rules, app or physical actions), each with the check that shows it done.
   Read every task for a hidden one, and move a step that waits on the pass's output earlier where
-  it can go (Pass 1, 2026-10-19: a Proton Bridge sign-in surfaced mid-run).
+  it can go, and flag any item the design did not foresee, since it holds the launch for a
+  pre-launch packet (Pass 1, 2026-10-19: a Proton Bridge sign-in surfaced mid-run).
 - No count cap (reads, retries, rounds, reruns) and no list of fixable causes stops the line on
   its own. Each carries the traced-cause standing answer in `pass-core` "Lifecycle" step 1, so only
   a ceiling, an untraced or returning cause, or a design change stops it (B3c, 2026-10-19: a
