@@ -21,13 +21,12 @@ Never read a file's "current state" while a background agent edits it. Detail:
 
 ## One executor per worktree (Geoff, 2026-07-14)
 
-Before launching any executor into a repo or worktree (a Workflow, an agent dispatch, inline
-edits), verify none is already working it: `pgrep -f <worktree path>`, `git status` for warm
-uncommitted changes you did not author, other sessions' workflow journal mtimes, and the status
-docs. When in doubt, ask rather than race. Warm uncommitted code at dispatch time is a
-stop-and-investigate signal, never free progress. Two sessions never both close, merge, or release
-one branch. Mid-flight contention: stop editing contested files, wait for the other's commit,
-verify it, report verified.
+Before launching any executor into a repo or worktree (a Workflow, an agent dispatch, inline edits),
+verify none is already working it: `pgrep -f <worktree path>`, `git status` for warm uncommitted
+changes you did not author, other sessions' workflow journal mtimes, and the status docs. When in
+doubt, ask rather than race. Warm uncommitted code at dispatch time is a stop-and-investigate
+signal, never free progress. Two sessions never both close, merge, or release one branch. Mid-flight
+contention: stop editing contested files, wait for the other's commit, verify it, report verified.
 
 ## Machine Environment
 
@@ -71,6 +70,14 @@ Geoff must act now (`bluefin-admin.md` "Calm desktop").
 tier's manifest, same session** (`bluefin-admin.md`); `check-drift` reconciles. Repo gate:
 `bash scripts/gate.sh` (wraps `scripts/check.sh`). New script: `bin/.local/bin/` + `stow -R bin`.
 
+Tool languages (Geoff, 2026-10-19): a new tool defaults by kind. Bash for glue that runs other
+commands (Python once it parses data or passes ~100 lines); stdlib-only Python for a one-file
+`~/.dotfiles/bin` helper run as `python3 -I` (Go once it needs a package, a build, or a second
+file); Go for a standalone repo tool (a TUI, an installed CLI, concurrency, dependencies);
+TypeScript only where the platform requires it. **Invoke `go-conventions` before any Go code**,
+`elm-conventions` for bubbletea, and `tui-visual-verify` before any TUI claim or gate: only a
+screenshot of the real terminal is evidence.
+
 ## Git Conventions
 
 - Imperative mood: "Add feature" not "Added feature"
@@ -82,12 +89,6 @@ tier's manifest, same session** (`bluefin-admin.md`); `check-drift` reconciles. 
 Every dependency bump in every repo goes through the `dependency-upgrade` skill (a sweep, a bot PR,
 a package taken for a feature, "are we current"). Take every minor and patch by default; always ask
 before a major. A release starts from every dependency's newest production version.
-
-## Go Development
-
-**MANDATORY: invoke `go-conventions` before writing any Go code.** For bubbletea UI, also
-invoke `elm-conventions`; before claiming any TUI screen works, and at every TUI pass gate,
-invoke `tui-visual-verify`: only a screenshot of the real terminal is evidence.
 
 ## Cloudflare and API-first
 
@@ -110,8 +111,8 @@ scheme). Use an API or CLI first for external services; no dashboard unless the 
   into chat. **Claude never calls `pass-cli`**: scripts read the age key through `ws-pass-key`,
   and a value from Geoff's own vaults comes through `secret-receive NAME --pass REF`.
 - **Check the stores before claiming a secret is missing**: `wrangler secret list`,
-  `~/.local/secrets`, the age registry, per-project stores, the estate inventory. Name-only
-  checks, never print values.
+  `~/.local/secrets`, the age registry, per-project stores, the estate inventory. Name-only checks,
+  never print values.
 - Full flows, exceptions, and store order: `bluefin-admin.md` "Secrets".
 
 ## Other workstation services
@@ -119,15 +120,14 @@ scheme). Use an API or CLI first for external services; no dashboard unless the 
 - **Google Docs / Drive / Sheets**: `gws` CLI, never an MCP server. Auth modes and write
   patterns: `bluefin-admin.md` "Google Docs / Drive (gws)".
 - **Email**: poplar (`~/Projects/poplar/`, Fastmail via JMAP; API reference
-  `~/.claude/instructions/fastmail-api.md`). Hylki is the desktop mail client; GNOME Contacts
-  and Calendar hold contacts and calendars.
+  `~/.claude/instructions/fastmail-api.md`). Hylki is the desktop mail client; GNOME Contacts and
+  Calendar hold contacts and calendars.
 
 ## Claude tooling: manifests, scopes, and the DaisyUI-first rule (Geoff, 2026-09-13)
 
 Every skill, agent, MCP server, and plugin has one home and one manifest, reconciled by
-`claude-tooling-sync verify` (run by `check-drift`): layout in
-`~/.claude/docs/claude-tooling.md`, rules in the `claude-infra` skill; read both before adding any.
-Every cairn-family admin is DaisyUI:
+`claude-tooling-sync verify` (run by `check-drift`): layout in `~/.claude/docs/claude-tooling.md`,
+rules in the `claude-infra` skill; read both before adding any. Every cairn-family admin is DaisyUI:
 prefer a stock component over a home-grown one unless the rulings ledger records the defect that
 forced it (the official DaisyUI skill is the reference, the licensed Blueprint server the pre-cut
 audit; the admin design system wins over both on conflict).
@@ -142,10 +142,10 @@ audit; the admin design system wins over both on conflict).
 
 ## Claude Code Agent Usage
 
-No human-scale time estimates in conversation; describe relative complexity ("quick",
-"multi-step") and focus on sequencing, dependencies, and testing. Plan tasks carry clock estimates
-in minutes, per `pass-core`. Every dispatch names a model and an effort, and subagents start with
-zero context: pre-extract what they need.
+No human-scale time estimates in conversation; describe relative complexity ("quick", "multi-step")
+and focus on sequencing, dependencies, and testing. Plan tasks carry clock estimates in minutes, per
+`pass-core`. Every dispatch names a model and an effort, and subagents start with zero context:
+pre-extract what they need.
 
 ## A rule lives where it executes (Geoff, 2026-09-20)
 
@@ -154,8 +154,8 @@ Where a rule lives and how to land it: the `claude-infra` skill.
 ## Compact instructions
 
 Preserve the plan path; the task ledger (done, in flight, next) and the task in flight with its
-clock file; open decisions; the last CI and review verdicts; and the STATUS launch prompt. Drop
-tool output, diffs, and agent transcripts.
+clock file; open decisions; the last CI and review verdicts; and the STATUS launch prompt. Drop tool
+output, diffs, and agent transcripts.
 
 ## Multi-agent workflows: suggest, never launch unprompted
 
