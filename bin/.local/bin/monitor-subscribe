@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# monitor-subscribe: the user service behind the servers' alerts. Every 60 seconds it asks the
+# monitor Worker's /alerts endpoint for the open conditions and turns each into a desktop
+# notification: urgent as critical (it shows through Do Not Disturb), routine as normal. A
+# condition shows once per opening and again every 12 hours while it stays open. Two local notices
+# cover the monitor itself: its last completed tick is more than 15 minutes old, or the endpoint
+# has not answered for 15 minutes.
+#
+# A notice that fails to show ends the run with status 1 before anything is recorded, so systemd
+# restarts the service and the next poll shows it again.
+#
+# The read token comes from MONITOR_READ_TOKEN in the environment or in ~/.local/secrets, and goes
+# to curl on stdin, never on its command line. Test hooks: MONITOR_URL, MONITOR_POLL_EVERY
+# (seconds, default 60), MONITOR_POLLS (stop after this many polls, default 0 for never),
+# MONITOR_STALE_LIMIT and MONITOR_DOWN_LIMIT (seconds, default 900), MONITOR_REPEAT (seconds,
+# default 43200), MONITOR_CLOCK (a file holding the time in seconds), XDG_STATE_HOME.
+
+# systemd user units start with a bare PATH, so the usual directories are appended, not prepended.
+export PATH="$PATH:$HOME/.local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/usr/sbin"
+
+url=${MONITOR_URL:-https://monitor.907.life/alerts}
+poll_every=${MONITOR_POLL_EVERY:-60}
+polls=${MONITOR_POLLS:-0}
+stale_limit=${MONITOR_STALE_LIMIT:-900}
+down_limit=${MONITOR_DOWN_LIMIT:-900}
+repeat=${MONITOR_REPEAT:-43200}
+state=${XDG_STATE_HOME:-$HOME/.local/state}/monitor-subscribe
+mkdir -p "$state"
+
+# Read a name from ~/.local/secrets without sourcing it.
+from_secrets() {
+  sed -n "s/^export $1=//p" "$HOME/.local/secrets" 2>/dev/null | tail -n1
+}
+token=${MONITOR_READ_TOKEN:-$(from_secrets MONITOR_READ_TOKEN)}
+[ -n "$token" ] || {
+  echo "monitor-subscribe: MONITOR_READ_TOKEN is not set" >&2
+  exit 1
+}
+
+now() {
+  if [ -n "${MONITOR_CLOCK:-}" ]; then cat "$MONITOR_CLOCK"; else date +%s; fi
+}
+
+# A time is a positive integer of at most 19 digits with no leading zero (bash reads 08 as octal).
+int='^[1-9][0-9]{0,18}$'
+
+# stored NAME: a state file's value, or 0 when it is missing or not a clean integer.
+stored() {
+  local v
+  v=$(cat "$state/$1" 2>/dev/null || echo 0)
+  [[ $v =~ $int ]] && echo "$v" || echo 0
+}
+
+# write_state NAME VALUE: replace a state file atomically, so a reader never sees it half-written.
+write_state() {
+  printf '%s\n' "$2" >"$state/$1.tmp" && mv "$state/$1.tmp" "$state/$1"
+}
+
+[ "$(stored first_seen)" -gt 0 ] || write_state first_seen "$(now)"
+
+# notice LEVEL TITLE MESSAGE: show one notice, or end the run unrecorded when it cannot be shown.
+notice() {
+  notify-send -u "$1" -- "$2" "$3" 2>/dev/null || exit 1
+}
+
+# fetch: print the /alerts body, or fail when the endpoint cannot be read as JSON.
+fetch() {
+  local body
+  body=$(printf 'url = "%s"\nheader = "Authorization: Bearer %s"\n' "$url" "$token" |
+    curl -sS --fail --max-time 20 -K -) || return 1
+  jq -e 'type == "object" and (.conditions | type == "array")' <<<"$body" >/dev/null 2>&1 || return 1
+  printf '%s' "$body"
+}
+
+# check_down FAILED_NOW: track an outage and raise one notice once it passes the limit.
+check_down() {
+  local t since
+  t=$(now)
+  if [ "$1" = no ]; then
+    rm -f "$state/down_since" "$state/down_notified"
+    return
+  fi
+  since=$(stored down_since)
+  [ "$since" -gt 0 ] || { write_state down_since "$t"; since=$t; }
+  if [ $((t - since)) -ge "$down_limit" ] && [ "$(stored down_notified)" -eq 0 ]; then
+    notice normal "Server monitor unreachable" "The monitor has not answered for $(((t - since) / 60)) minutes. Check monitor.907.life and this machine's network."
+    write_state down_notified "$t"
+  fi
+}
+
+# check_tick TICK_SECONDS: raise one notice while the last completed tick is older than the limit.
+check_tick() {
+  local t tick first baseline
+  t=$(now)
+  first=$(stored first_seen)
+  # A tick time of null (no tick yet) counts from the first poll, so a fresh deploy is not stale.
+  baseline=$first
+  [[ $1 =~ $int ]] && baseline=$1
+  if [ $((t - baseline)) -gt "$stale_limit" ]; then
+    if [ "$(stored stale_notified)" -eq 0 ]; then
+      notice normal "Server monitor stalled" "The monitor's last completed check was $(((t - baseline) / 60)) minutes ago. Check the monitor Worker's cron."
+      write_state stale_notified "$t"
+    fi
+  else
+    rm -f "$state/stale_notified"
+  fi
+}
+
+# show_conditions: one TSV line per condition (id, severity, opened_at seconds, title, message) on
+# stdin. Each is shown once per opening and again after the repeat interval; a condition that is no
+# longer open drops out of the record, so its return shows as a new opening.
+show_conditions() {
+  local id severity opened title message key t last
+  declare -A shown=()
+  local line
+  while IFS=$'\t' read -r key last; do
+    [ -n "$key" ] && [[ $last =~ $int ]] && shown[$key]=$last
+  done < <(cat "$state/shown" 2>/dev/null)
+  declare -A open=()
+  t=$(now)
+  while IFS=$'\t' read -r id severity opened title message; do
+    # The time feeds shell arithmetic later, which would run a command hidden in a subscript.
+    [[ $opened =~ $int ]] || continue
+    [ "$severity" = urgent ] || [ "$severity" = routine ] || continue
+    key="$id|$opened|$severity"
+    open[$key]=1
+    last=${shown[$key]:-0}
+    if [ "$last" -eq 0 ] || [ $((t - last)) -ge "$repeat" ]; then
+      notice "$([ "$severity" = urgent ] && echo critical || echo normal)" "$title" "$message"
+      shown[$key]=$t
+      # Record each notice as it is shown, so a failure on the next one replays only that one.
+      record shown open
+    fi
+  done
+  record shown open
+}
+
+# record SHOWN OPEN: rewrite the shown file with the entries that are still open.
+record() {
+  local -n s=$1 o=$2
+  local k out=""
+  for k in "${!s[@]}"; do
+    [ -n "${o[$k]:-}" ] && out+="$k"$'\t'"${s[$k]}"$'\n'
+  done
+  printf '%s' "$out" >"$state/shown.tmp" && mv "$state/shown.tmp" "$state/shown"
+}
+
+poll() {
+  local body tick
+  if ! body=$(fetch); then
+    check_down yes
+    return
+  fi
+  check_down no
+  tick=$(jq -r 'if (.last_tick_at | type) == "number" and (.last_tick_at == (.last_tick_at | floor))
+    then (.last_tick_at / 1000 | floor | tostring) else "" end' <<<"$body")
+  check_tick "$tick"
+  jq -r '.conditions[] | select(type == "object")
+    | [(.id // "" | tostring), (.severity // ""), ((.opened_at // 0) | if type == "number" and . == floor then (. / 1000 | floor | tostring) else "" end),
+       (.title // "" | tostring), (.message // "" | tostring)] | @tsv' <<<"$body" | show_conditions
+}
+
+n=0
+while :; do
+  poll || exit 1
+  n=$((n + 1))
+  [ "$polls" -gt 0 ] && [ "$n" -ge "$polls" ] && exit 0
+  sleep "$poll_every"
+done

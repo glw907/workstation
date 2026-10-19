@@ -1,0 +1,14 @@
+[Unit]
+Description=Desktop notifications for the servers' alerts
+Documentation=file://%h/Projects/servers/docs/runbook.md
+After=graphical-session.target network-online.target
+PartOf=graphical-session.target
+Wants=network-online.target
+
+[Service]
+ExecStart=%h/.local/bin/monitor-subscribe
+Restart=always
+RestartSec=20
+
+[Install]
+WantedBy=graphical-session.target

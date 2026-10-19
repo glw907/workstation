@@ -302,6 +302,7 @@ the rest unless the step says it is a hard stop.
 9. Turn on the remaining user services:
    ```bash
    systemctl --user enable --now cairn-tripwire.timer
+   systemctl --user enable --now monitor-subscribe.service
    kitty-headless-shot setup
    ```
    The second line builds the `term-headless` distrobox that the
@@ -317,6 +318,7 @@ the rest unless the step says it is a hard stop.
 10. Verify. Run `check-drift` and `claude-tooling-sync verify`, then confirm
     each of these: `gh auth status`, `systemctl --user list-timers` shows
     check-drift, model-review, decision-review, vdirsyncer, and cairn-tripwire,
+    `systemctl --user is-active monitor-subscribe` prints `active`,
     `hostnamectl` shows `pavilion`, a new Claude session opens with
     `## Host: pavilion`, and `ls ~/.claude/projects/*/memory` lists the
     carried memory. Fix any drift that a step above should have
