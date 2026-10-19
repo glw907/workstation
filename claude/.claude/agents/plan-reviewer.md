@@ -44,6 +44,10 @@ On a plan, also check these items:
 - Every value the run needs from Geoff is looked up in the stores and records first, and only a
   value no file holds is asked at design time (Pass 1, 2026-10-19: the recovery address was
   already on file).
+- No count cap (reads, retries, rounds, reruns) and no list of fixable causes stops the line on
+  its own. Each carries the traced-cause standing answer in `pass-core` "Design" step 1, so only
+  a ceiling, an untraced or returning cause, or a design change stops it (B3c, 2026-10-19: a
+  five-read cap, then an escalation traced to a blueprint, a cause the plan's fix list left out).
 
 ## Findings
 
