@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/glw907/workstation/tellgrader/internal/tellscan"
@@ -60,6 +61,8 @@ func scanOptions(reg tellscan.Register, path string) tellscan.Options {
 	}
 }
 
+var planningDirs = []string{"/docs/specs/", "/docs/plans/", "/docs/research/", "/docs/archive/"}
+
 // Run handles one PostToolUse event and returns the advisory JSON for
 // stdout, or "" when there is nothing to say. It never asks to block.
 func Run(raw []byte) string {
@@ -70,7 +73,9 @@ func Run(raw []byte) string {
 	path := in.ToolInput.FilePath
 	// Scratch space and once-off planning docs are not governed prose,
 	// matching vale-hook's exclusions.
-	if strings.HasPrefix(path, "/tmp/") || strings.Contains(path, "/superpowers/") {
+	if strings.HasPrefix(path, "/tmp/") || slices.ContainsFunc(planningDirs, func(d string) bool {
+		return strings.Contains(path, d)
+	}) {
 		return ""
 	}
 	reg, ok := RegisterFor(path)

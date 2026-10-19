@@ -17,6 +17,7 @@ import subprocess
 import sys
 
 CHAR_CAP = 9000  # stay under Claude Code's 10,000-character additionalContext cap
+PLANNING_DIRS = {"specs", "plans", "research", "archive"}  # docs subfolders that hold planning records
 
 
 def new_text(tool_name, tool_input):
@@ -110,12 +111,13 @@ def main():
     path = tool_input.get("file_path", "")
     if os.path.splitext(path)[1] != ".md":
         return 0  # prose hook: Markdown only; code comments are the comment arm's
-    # Once-off planning docs (specs, plans, post-mortems) are internal engineering artifacts,
-    # not the published developer documentation the Google standard governs, so the hook skips
-    # them rather than spend tokens on advisory findings that do not matter for a write-once doc.
-    # A path-segment test: a repo whose own directory happens to be named "superpowers" is not
-    # exempted, only a "superpowers" segment anywhere in the path is.
-    if "superpowers" in path.split(os.sep):
+    # Once-off planning docs (specs, plans, research, archived records) are internal engineering
+    # artifacts, not the published developer documentation the Google standard governs, so the
+    # hook skips them rather than spend tokens on advisory findings that do not matter for a
+    # write-once doc. A path-segment test: only a "docs" segment followed by one of those folders
+    # is exempted, so a repo directory that happens to be named "plans" is still linted.
+    parts = path.split(os.sep)
+    if any(a == "docs" and b in PLANNING_DIRS for a, b in zip(parts, parts[1:])):
         return 0
     try:
         with open(path, encoding="utf-8") as handle:

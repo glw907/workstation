@@ -38,10 +38,17 @@ run "bash -n over tracked shell scripts" check_bash_syntax
 run "tellgrader go check" make -C claude/.claude/skills/writing-voice/evals/tellgrader check
 run "ruff docstring rules (python)" bash scripts/check-py-comments.sh
 check_no_old_names() {
-    # The old app and hook names stay gone from live files. The brackets keep this pattern from
-    # matching its own line. git grep exits 1 when nothing matches.
-    if git grep -n -I -i -E 'review[-_ ]?desk|claude-desk-[r]eminder' -- . ':!docs/superpowers/' ':!docs/HISTORY.md'; then
+    # The old app and hook names, and the old planning folder, stay gone from live files. The
+    # brackets keep this pattern from matching its own line. git grep exits 1 when nothing
+    # matches. The planning folders and the move records cite these names as history.
+    if git grep -n -I -i -E 'review[-_ ]?desk|claude-desk-[r]eminder|docs/[s]uperpowers' -- . \
+        ':!docs/specs/' ':!docs/plans/' ':!docs/research/' ':!docs/HISTORY.md' \
+        ':!scripts/check-moves.sh' ':!tests/check-moves.test.sh' ':!tests/fixtures/ci-green/pr-107-files.txt'; then
         echo "a retired name is back in a live file" >&2
+        return 1
+    fi
+    if [ -n "$(git ls-files 'docs/[s]uperpowers/*')" ]; then
+        echo "a tracked file is back under the retired planning folder" >&2
         return 1
     fi
 }

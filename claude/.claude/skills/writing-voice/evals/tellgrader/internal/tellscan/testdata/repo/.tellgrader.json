@@ -1,5 +1,5 @@
 {
   "profile": "docs-register",
   "include": ["docs/**"],
-  "exclude": ["docs/internal/**", "docs/superpowers/**"]
+  "exclude": ["docs/internal/**", "docs/specs/**", "docs/plans/**", "docs/research/**", "docs/archive/**"]
 }
