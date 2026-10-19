@@ -168,8 +168,8 @@ in the PR. Mid-run, it takes its own recommendation without asking when the choi
 the approved design, budget, and path ceiling and can be undone after the merge. Each such call
 goes in the PR body's `## Decisions` section: the call, the choice, the alternative, and the
 reason. The session stops for Geoff only on spend past the budget, an irreversible or destructive
-act, a secret, a change of scope or design, or a product or taste call the design leaves open.
-In the three days to 2026-10-19, Geoff took the recommended option on 24 of 36 questions, five of
+act, a secret, a change of scope or design, a product or taste call the design leaves open, a
+stop the plan writes once its standing answer runs out (see "Design"), or a clock stop. In the three days to 2026-10-19, Geoff took the recommended option on 24 of 36 questions, five of
 them mid-run calls inside approved scope. Prompting Claude Opus 5
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
 "Make routine judgment calls yourself, and check in only when different readings of the request
@@ -178,14 +178,17 @@ would lead to materially different work."
 A mid-run question to Geoff is a planning miss, even when the session had to ask. Some will
 happen, and each one improves the planning step that missed it. The session that asked records
 the miss in the PR body's `## Planning misses` section: the question, Geoff's answer, and the plan
-item that should have answered it. Before the hand-over it lands the fix where planning executes,
+item that should have answered it. Under a conductor, the conductor is that session: it adds the
+entry and the fix after the executor reports PR-ready and before its packet. Before the hand-over
+the session lands the fix where planning executes,
 usually a new item in the `plan-reviewer` checklist, else the adapter or this skill. The fix goes
 in the same PR when it is in this repo, and otherwise in a dotfiles PR the packet names. A miss
 the fix cannot generalize stays in the PR body, marked one-off.
 
 A stop has one asker. An executor whose pass has a conductor never asks Geoff itself: it writes
-the stop to STATUS and waits. The conductor asks once and commits the ruling to the plan, and the
-executor reads it there (2026-10-19: both sessions asked Geoff B3c's read-cap question).
+the stop to STATUS and waits, with no `notify-send`. The conductor asks once, commits the ruling
+to the plan branch, then stops and relaunches the executor per "Conductor", which merges the plan
+branch first (2026-10-19: both sessions asked Geoff B3c's read-cap question).
 
 ## Pairs
 
@@ -222,7 +225,8 @@ At each task start the session writes `pass-task-clock` in the pass worktree's g
 `task=<id>`, `start=<epoch seconds>`, `estimate=<minutes>`. It removes the file at the task's end,
 and after a pair returns once it has checked the pair's overrun. The `claude-clock-stop` hook
 returns a stop line past twice the estimate. The session then writes STATUS, runs
-`notify-send -u normal`, and waits for Geoff (one attended event, not a failure). A resume rewrites
+`notify-send -u normal`, and waits for Geoff (one attended event, not a failure). Under a
+conductor, the executor writes STATUS and waits, and the conductor asks per "Judgment calls". A resume rewrites
 `start=`, or `estimate=` to the figure Geoff names. Pair worktrees hold no clock file, so the stop
 cannot fire while the session waits on a pair.
 
@@ -245,8 +249,8 @@ or priority calls.
 An executor refuses the conductor's cross-session messages, rightly: a peer's message carries no
 approval from Geoff. When an executor stops on a cause the conductor can fix, the conductor fixes
 it at the source (the plan branch, a merge from the default branch), then stops and relaunches the
-executor; otherwise Geoff attaches to it. The conductor never calls `EnterWorktree` while its own
-subagents run, because the isolation applies to them too; it edits a worktree by path instead.
+executor; otherwise Geoff attaches to it. The conductor never calls `EnterWorktree`, because the
+isolation would apply to its subagents too; it edits a worktree by path instead.
 A watch over `claude agents --json --all` reads each field with `.get`, since a row can lack `id`.
 While a planner is out, the conductor merges no STATUS edit to the default branch, because the
 executor's merge of the plan branch then conflicts in STATUS (twice on 2026-10-11); it batches its

@@ -32,7 +32,8 @@ On a plan, also check these items:
 - Each task carries a clock estimate, and any single-deliverable task is folded into a neighbor.
 - Every stop the plan writes (a cap, a line stop, a ceiling) has a standing answer for its cheap
   case, and each judgment call the run can plausibly meet is named with its answer, so the run
-  asks Geoff only what the plan could not foresee (`pass-core`, "Judgment calls"). Each item
+  asks Geoff only what the plan could not foresee (`pass-core`, "Design" step 1 and "Judgment
+  calls"). Each item
   below this one was added from a past pass's planning miss.
 - A pass that changes workstation config states what each host (`pavilion`, `thinkpad-x1`)
   gets, including a host that lacks a prerequisite (Pass W, 2026-10-19: the thinkpad question).
