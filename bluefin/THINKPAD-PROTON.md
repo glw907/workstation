@@ -39,11 +39,11 @@ takes the password in a dialog. Claude never runs `pass-cli`; the
    enters the token in the hidden dialog. `ws-pass-key --status` must print
    `path=proton`.
 4. Check the keyring after a reboot. `ws-pass-key` reads the token from GNOME
-   Keyring, and thinkpad-x1 logs in automatically (pavilion does not). An
-   automatic login may leave the login keyring locked, so the first read can
-   raise an unlock prompt or fail. Reboot, then run `ws-pass-key --status`
-   before anything else. If it prompts or fails, stop and ask Geoff whether to
-   accept the prompt or turn auto-login off as on pavilion.
+   Keyring, and thinkpad-x1 logs in automatically. An automatic login may
+   leave the login keyring locked, so the first read after a boot can raise an
+   unlock prompt; Geoff unlocks it. Leave the login setup alone: auto-login
+   stays on (Geoff, 2026-10-19). Reboot, then run `ws-pass-key --status`. If
+   it fails even with the keyring unlocked, stop and report it.
 5. Run the key check (self-hosting task W5). Its full text is in
    `~/Projects/initiatives/self-hosting/plans/2026-10-17-self-hosting-plan.md`.
    Clear the cached age key, fetch it through `ws-pass-key` alone, decrypt the
