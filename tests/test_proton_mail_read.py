@@ -45,6 +45,7 @@ MESSAGES = {
     5: make_message("Monitor test alert", "monitor@907.life", "The alert body."),
     9: make_message("Weekly note", "monitor@907.life", "Still watching.", date="Sun, 18 Oct 2026 09:00:00 +0000"),
     7: make_message("Hostile", "x@example.invalid", "before \x1b]52;c;ZXZpbA==\x07 after \u202e reversed"),
+    8: b"From: a@example.invalid\r\nDate: Mon, 19 Oct 2026 09:00:00 +0000\r\nSubject: =?utf-8?b?SGVsbG8KOTk5CWZha2UJeA==?=\r\n\r\nbody\r\n",
     12: make_message("Receipt", "billing@hetzner.example", None, html="<html><body><p>Total <b>12 EUR</b></p><script>x()</script></body></html>"),
 }
 
@@ -321,6 +322,14 @@ def test_overlay_supplies_names_the_main_file_lacks(bridge, tmp_path, monkeypatc
     code, _, _ = run(capsys, "list")
     assert code == 0
     assert any(" LOGIN " in line.upper() and "ovpw" in line for line in bridge.log)
+
+
+def test_encoded_header_cannot_forge_rows(bridge, capsys):
+    code, out, _ = run(capsys, "list")
+    assert code == 0
+    rows = [row for row in out.splitlines() if row.strip()]
+    assert len(rows) == len(MESSAGES)
+    assert all(len(row.split("\t")) == 4 for row in rows)
 
 
 def test_script_has_no_write_path():
