@@ -146,8 +146,11 @@ commit skills and manifest together.
   `tui-visual-verify`), then Charm's agent guide for the Crush UI (pinned in `elm-conventions`),
   then the `tui-design` plugin. `tui-design` (gfargo, MIT) is consulted for layout and
   discoverability patterns; the house skills win on any conflict.
-- **Plugins:** superpowers, code-review, code-simplifier, frontend-design, skill-creator
-  (Anthropic); cloudflare; tui-design.
+- **Superpowers:** two skills vendored (`brainstorming`, `receiving-code-review`, MIT); the
+  plugin stays disabled, since its session-start hook injects a skill-routing prompt into every
+  session and Claude Code has no per-plugin hook switch (2026-10-19).
+- **Plugins:** code-review, code-simplifier, frontend-design, skill-creator (Anthropic);
+  cloudflare; tui-design.
 
 Decided against: a docs-only cairn MCP server (the tarball docs plus a skill reach every
 agent), the GitHub MCP server (the `gh` CLI covers it at a third of the tokens), Tailwind,
