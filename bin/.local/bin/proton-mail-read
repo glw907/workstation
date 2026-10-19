@@ -232,7 +232,10 @@ def message_text(msg):
     body = msg.get_body(preferencelist=("plain", "html"))
     if body is None:
         return "(no text part)"
-    content = body.get_content()
+    try:
+        content = body.get_content()
+    except LookupError:
+        content = body.get_payload(decode=True).decode("utf-8", "replace")
     text = html_to_text(content) if body.get_content_type() == "text/html" else content.strip()
     # Escape sequences and bidi controls in a body would reach the terminal and the agent as-is.
     return UNSAFE.sub(" ", text)
