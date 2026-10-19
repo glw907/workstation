@@ -325,10 +325,10 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 ### HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA
 - **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token
   writes only its own server's row.
-- **Used by**: the monitor Worker (Worker secrets) and, rendered by `secrets/render.sh`, that
-  server's health timer only.
-- **Generated 2026-10-18** on pavilion (32 random bytes, base64url); never regenerated, per the
-  self-hosting plan.
+- **Used by**: the monitor Worker (Worker secrets) and, rendered by the servers repo's planned
+  `secrets/render.sh`, that server's health timer only.
+- **Generated 2026-10-18** on pavilion (32 random bytes, base64url). The self-hosting plan
+  generates each token once and renders it to its server, so a rotation is a deliberate act.
 - **Rotate**: store a new value, redeploy the monitor, and re-render the server's secrets.
 
 ### CF_WS_R2_ARCHIVE_RW_* / CF_WS_R2_BACKUPS_RO_* / CF_MAIL_R2_BACKUP_RW_* / CF_MEDIA_R2_BACKUP_RW_*

@@ -26,6 +26,8 @@ mkdir -p "$root/bin" "$root/home/.local"
 cat >"$root/bin/curl" <<'F'
 #!/usr/bin/env bash
 echo "curl $*" >>"$FAKE_LOG"
+# The URL arrives as a curl config on stdin; log it on its own line so a test can tell it from argv.
+[ -t 0 ] || echo "stdin $(cat)" >>"$FAKE_LOG"
 cat "$FAKE_STREAM"
 sleep "${FAKE_HOLD:-0}"
 exit "${FAKE_CURL_RC:-0}"
@@ -59,11 +61,32 @@ not json at all
 S
 assert_eq "$(run)" 0 "a clean stream exits 0"
 notify=$(cat "$root/notify")
-assert_has "$notify" "notify-send -u critical Mail down healthz failed twice" "urgent maps to critical"
-assert_has "$notify" "notify-send -u normal Disk 85% media /" "routine maps to normal"
+assert_has "$notify" "notify-send -u critical -- Mail down healthz failed twice" "urgent maps to critical"
+assert_has "$notify" "notify-send -u normal -- Disk 85% media /" "routine maps to normal"
 assert_eq "$(wc -l <"$root/notify" | tr -d ' ')" 2 "only the two messages notify"
 assert_has "$(cat "$root/log")" "/json?since=12h" "the first start asks for the last 12 hours"
 assert_has "$(cat "$root/log")" "$URGENT,$ROUTINE" "both topics ride one connection"
+assert_eq "$(/usr/bin/grep -c "$URGENT" <(/usr/bin/grep '^curl' "$root/log"))" 0 "the topic names are never on curl's command line"
+
+# --- A notice that cannot be shown is not recorded, so a restart replays it -------------------------
+mkdir -p "$root/bin2"
+printf '#!/usr/bin/env bash\nexit 1\n' >"$root/bin2/notify-send"
+chmod +x "$root/bin2/notify-send"
+rm -rf "$root/state"
+printf '{"id":"m9","time":3000,"event":"message","topic":"%s","title":"Mail down","message":"x","priority":5}\n' "$URGENT" >"$root/stream"
+assert_eq "$(run PATH="$root/bin2:$root/bin:$PATH")" 0 "a stream with a failing notify-send exits 0"
+assert_eq "$(ls "$root/state/ntfy-subscribe/last_time" 2>/dev/null | wc -l | tr -d ' ')" 0 "a notice that failed to show does not advance last_time"
+assert_eq "$(run)" 0 "the restart exits 0"
+assert_has "$(cat "$root/notify")" "notify-send -u critical -- Mail down x" "the restart shows the notice that failed before"
+rm -rf "$root/state"
+cat >"$root/stream" <<S
+{"id":"o1","time":1000,"event":"open","topic":"$URGENT,$ROUTINE"}
+{"id":"m1","time":1001,"event":"message","topic":"$URGENT","title":"Mail down","message":"healthz failed twice","priority":5}
+not json at all
+{"id":"m2","time":1002,"event":"message","topic":"$ROUTINE","title":"Disk 85%","message":"media /","priority":3}
+{"id":"k1","time":1003,"event":"keepalive","topic":"$URGENT,$ROUTINE"}
+S
+assert_eq "$(run)" 0 "the first stream runs again"
 
 # --- A restart asks for what it missed and skips a replayed message --------------------------------
 assert_eq "$(run)" 0 "the second start exits 0"
@@ -88,6 +111,8 @@ assert_has "$(cat "$root/notify")" "silent" "the stale notice says the monitor w
 assert_eq "$(wc -l <"$root/notify" | tr -d ' ')" 1 "the stale notice repeats no sooner than its interval"
 
 rm -rf "$root/state"
+mkdir -p "$root/state/ntfy-subscribe"
+echo 1000 >"$root/state/ntfy-subscribe/first_seen" # old, so only the all-quiet below resets the clock
 now=$(date +%s)
 printf '{"id":"q2","time":%s,"event":"message","topic":"%s","title":"all-quiet","message":"ok","priority":1}\n' "$now" "$ROUTINE" >"$root/stream"
 assert_eq "$(run NTFY_QUIET_LIMIT=600 NTFY_CHECK_EVERY=1 FAKE_HOLD=3)" 0 "a fresh all-quiet stream exits 0"

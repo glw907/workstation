@@ -46,7 +46,8 @@ Steps, in order:
 
 8. After step 7, in this same session, run the servers monthly review: if
    /var/home/glw907/Projects/servers/docs/monthly-review/prompt.txt exists, read it and follow it.
-   It has its own worktree, branch, and PR; add one line to your hand-over naming its result.
+   It has its own worktree, branch, and PR; name its result on one line in your final report to
+   Geoff, after the model review's own hand-over.
 
 A fetch that fails is a gap in the record, not a quiet month: note it in the hand-over, keep the
 old digest for that page, and do not log a quiet line for a run that could not read its sources.

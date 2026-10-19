@@ -1,7 +1,8 @@
 [Unit]
 Description=Desktop notifications for the servers' ntfy alerts
 Documentation=file://%h/Projects/servers/docs/runbook.md
-After=network-online.target
+After=graphical-session.target network-online.target
+PartOf=graphical-session.target
 Wants=network-online.target
 
 [Service]
@@ -10,4 +11,4 @@ Restart=always
 RestartSec=20
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target

@@ -36,6 +36,11 @@ routine=${NTFY_ROUTINE_TOPIC:-$(from_secrets NTFY_ROUTINE_TOPIC)}
 }
 
 now() { date +%s; }
+
+# write_state NAME VALUE: replace a state file atomically, so a reader never sees it half-written.
+write_state() {
+  printf '%s\n' "$2" >"$state/$1.tmp" && mv "$state/$1.tmp" "$state/$1"
+}
 [ -f "$state/first_seen" ] || now >"$state/first_seen"
 
 # The watchdog: with no all-quiet for the limit, raise one notice per repeat interval.
@@ -47,9 +52,9 @@ watch_quiet() {
     baseline=$((last > first ? last : first))
     notified=$(cat "$state/stale_notified" 2>/dev/null || echo 0)
     if [ $(($(now) - baseline)) -gt "$quiet_limit" ] && [ $(($(now) - notified)) -gt "$stale_repeat" ]; then
-      notify-send -u normal "Server monitor silent" \
-        "No all-quiet message for $(((($(now) - baseline)) / 3600)) hours. Check the monitor Worker, ntfy, and this service." 2>/dev/null || true
-      now >"$state/stale_notified"
+      notify-send -u normal -- "Server monitor silent" \
+        "No all-quiet message for $(((($(now) - baseline)) / 3600)) hours. Check the monitor Worker, ntfy, and this service." 2>/dev/null &&
+        write_state stale_notified "$(now)"
     fi
   done
 }
@@ -63,19 +68,24 @@ since=12h
 # show ID TIME TOPIC TITLE MESSAGE: one message from the stream.
 show() {
   local id=$1 time=$2 topic=$3 title=$4 message=$5 level=normal
-  grep -qxF "$id" "$state/seen" 2>/dev/null && return
+  grep -qxF -- "$id" "$state/seen" 2>/dev/null && return
+  if [ "$title" = "all-quiet" ]; then
+    write_state quiet "$time"
+  else
+    [ "$topic" = "$urgent" ] && level=critical
+    # A notice that could not be shown is left unrecorded, so the next start's since= replays it.
+    notify-send -u "$level" -- "$title" "$message" 2>/dev/null || return 0
+  fi
   echo "$id" >>"$state/seen"
   tail -n 200 "$state/seen" >"$state/seen.tmp" && mv "$state/seen.tmp" "$state/seen"
-  [ "$time" -gt "$(cat "$state/last_time" 2>/dev/null || echo 0)" ] && echo "$time" >"$state/last_time"
-  if [ "$title" = "all-quiet" ]; then
-    echo "$time" >"$state/quiet"
-    return
-  fi
-  [ "$topic" = "$urgent" ] && level=critical
-  notify-send -u "$level" "$title" "$message" 2>/dev/null || true
+  [ "$time" -gt "$(cat "$state/last_time" 2>/dev/null || echo 0)" ] && write_state last_time "$time"
+  return 0
 }
 
-curl -sSN --fail "$base/$urgent,$routine/json?since=$since" |
+# The URL holds both topic names, so it goes to curl on stdin, never on its command line (where
+# ps and systemctl status would print it).
+printf 'url = "%s"\n' "$base/$urgent,$routine/json?since=$since" |
+  curl -sSN --fail -K - |
   jq -R -r --unbuffered 'fromjson? | select(.event == "message")
     | [.id, (.time | tostring), .topic, (.title // ""), (.message // "")] | @tsv' |
   while IFS=$'\t' read -r id time topic title message; do
