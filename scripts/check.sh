@@ -57,6 +57,7 @@ run "gather-dotfiles initiatives leg" bash tests/gather-dotfiles-initiatives.tes
 run "secret-set.sh path overrides" bash tests/secret-set-overrides.test.sh
 run "secret store flags, lock, and drop check" bash tests/secret-store-flags.test.sh
 run "ws-pass-key agent-token read" bash tests/ws-pass-key.test.sh
+run "secret-receive --pass and the sudo dialog" bash tests/secret-receive-pass.test.sh
 run "check-moves draft check" bash tests/check-moves.test.sh
 run "ci-green test" node tests/ci-green.test.mjs
 run "cairn-run-gate vanish handling" bash tests/cairn-run-gate.test.sh

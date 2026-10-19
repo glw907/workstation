@@ -1,26 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Retrieves the sudo password from 1Password and caches it for the Claude
-# session in tmpfs. The cache lives in /dev/shm so it never touches persistent
-# disk and vanishes on reboot; claude-sudo-clear shreds it on session exit.
-#
-# Prerequisites:
-#   - 1Password desktop app running with CLI integration enabled
+# Asks Geoff for the sudo password in a hidden-entry dialog and caches it for the Claude
+# session in tmpfs. The cache lives in /dev/shm so it never touches persistent disk and
+# vanishes on reboot; claude-sudo-clear shreds it on session exit. The password is typed or
+# pasted by a person, never fetched by a script, so root stays behind a human step.
 #
 # Usage: claude-sudo-setup
 
-CACHE="/dev/shm/claude-sudo-$(id -u)"
+CACHE="${CLAUDE_SUDO_CACHE:-/dev/shm/claude-sudo-$(id -u)}"
 
-PASSWORD=$(op read "op://Private/Workstation sudo/password" 2>/dev/null)
+command -v zenity >/dev/null || { echo "Error: zenity not installed." >&2; exit 1; }
+
+# --entry --hide-text instead of --password: the bare password dialog reads as a system login
+# prompt and invites a reflex entry (the secret-receive pattern).
+PASSWORD=$(zenity --entry --hide-text --title "Claude sudo" --ok-label "Cache" \
+    --text "Type or paste the sudo password for $(hostname -s)." --timeout 300 2>/dev/null) || PASSWORD=""
 
 if [ -z "$PASSWORD" ]; then
-    echo "Error: Could not read sudo password from 1Password." >&2
-    echo "Make sure 1Password is unlocked and CLI integration is enabled." >&2
+    echo "Error: no sudo password entered (dialog cancelled or timed out); nothing cached." >&2
     exit 1
 fi
 
 umask 077
 rm -f "$CACHE"  # the umask guarantee holds only for a freshly created file
 printf '%s\n' "$PASSWORD" > "$CACHE"
-echo "Sudo password cached in tmpfs from 1Password."
+echo "Sudo password cached in tmpfs."
