@@ -66,7 +66,7 @@ assert_has "$notify" "notify-send -u normal -- Disk 85% media /" "routine maps t
 assert_eq "$(wc -l <"$root/notify" | tr -d ' ')" 2 "only the two messages notify"
 assert_has "$(cat "$root/log")" "/json?since=12h" "the first start asks for the last 12 hours"
 assert_has "$(cat "$root/log")" "$URGENT,$ROUTINE" "both topics ride one connection"
-assert_eq "$(/usr/bin/grep -c "$URGENT" <(/usr/bin/grep '^curl' "$root/log"))" 0 "the topic names are never on curl's command line"
+assert_eq "$(/usr/bin/grep -c -e "$URGENT" -e "$ROUTINE" <(/usr/bin/grep '^curl' "$root/log"))" 0 "the topic names are never on curl's command line"
 
 # --- A notice that cannot be shown is not recorded, so a restart replays it -------------------------
 mkdir -p "$root/bin2"
@@ -74,8 +74,16 @@ printf '#!/usr/bin/env bash\nexit 1\n' >"$root/bin2/notify-send"
 chmod +x "$root/bin2/notify-send"
 rm -rf "$root/state"
 printf '{"id":"m9","time":3000,"event":"message","topic":"%s","title":"Mail down","message":"x","priority":5}\n' "$URGENT" >"$root/stream"
-assert_eq "$(run PATH="$root/bin2:$root/bin:$PATH")" 0 "a stream with a failing notify-send exits 0"
+assert_eq "$(run PATH="$root/bin2:$root/bin:$PATH")" 1 "a stream with a failing notify-send exits 1"
 assert_eq "$(ls "$root/state/ntfy-subscribe/last_time" 2>/dev/null | wc -l | tr -d ' ')" 0 "a notice that failed to show does not advance last_time"
+# A later all-quiet in the same stream must not move last_time past the failed notice.
+rm -rf "$root/state"
+{
+  printf '{"id":"m9","time":3000,"event":"message","topic":"%s","title":"Mail down","message":"x","priority":5}\n' "$URGENT"
+  printf '{"id":"q9","time":3001,"event":"message","topic":"%s","title":"all-quiet","message":"ok","priority":1}\n' "$ROUTINE"
+} >"$root/stream"
+assert_eq "$(run PATH="$root/bin2:$root/bin:$PATH")" 1 "a failed notice ends the stream with exit 1"
+assert_eq "$(ls "$root/state/ntfy-subscribe/last_time" 2>/dev/null | wc -l | tr -d ' ')" 0 "a later all-quiet does not advance last_time past a failed notice"
 assert_eq "$(run)" 0 "the restart exits 0"
 assert_has "$(cat "$root/notify")" "notify-send -u critical -- Mail down x" "the restart shows the notice that failed before"
 rm -rf "$root/state"
@@ -101,6 +109,13 @@ S
 assert_eq "$(run)" 0 "an all-quiet stream exits 0"
 assert_eq "$(wc -l <"$root/notify" | tr -d ' ')" 0 "the all-quiet raises no notification"
 assert_eq "$(cat "$root/state/ntfy-subscribe/quiet")" 2000 "the all-quiet time is recorded"
+
+# --- A non-integer time is refused and never evaluated -----------------------------------------------
+rm -rf "$root/state" "$root/pwn"
+printf '{"id":"q3","time":"a[$(touch %s)]","event":"message","topic":"%s","title":"all-quiet","message":"ok","priority":1}\n' "$root/pwn" "$ROUTINE" >"$root/stream"
+run NTFY_QUIET_LIMIT=600 NTFY_CHECK_EVERY=1 FAKE_HOLD=3 >/dev/null
+assert_eq "$([ -e "$root/pwn" ] && echo ran || echo clean)" clean "a string time is never evaluated"
+assert_eq "$(ls "$root/state/ntfy-subscribe/quiet" 2>/dev/null | wc -l | tr -d ' ')" 0 "a string time is not recorded"
 
 # --- The stale notice -------------------------------------------------------------------------------
 rm -rf "$root/state"

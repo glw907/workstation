@@ -69,12 +69,15 @@ since=12h
 show() {
   local id=$1 time=$2 topic=$3 title=$4 message=$5 level=normal
   grep -qxF -- "$id" "$state/seen" 2>/dev/null && return
+  # The time feeds shell arithmetic later, which would run a command hidden in a subscript.
+  [[ $time =~ ^[0-9]+$ ]] || return 0
   if [ "$title" = "all-quiet" ]; then
     write_state quiet "$time"
   else
     [ "$topic" = "$urgent" ] && level=critical
-    # A notice that could not be shown is left unrecorded, so the next start's since= replays it.
-    notify-send -u "$level" -- "$title" "$message" 2>/dev/null || return 0
+    # A notice that could not be shown ends the stream unrecorded, so systemd restarts the service
+    # and since= replays it; carrying on would let a later message move last_time past it.
+    notify-send -u "$level" -- "$title" "$message" 2>/dev/null || exit 1
   fi
   echo "$id" >>"$state/seen"
   tail -n 200 "$state/seen" >"$state/seen.tmp" && mv "$state/seen.tmp" "$state/seen"
