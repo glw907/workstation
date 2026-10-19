@@ -39,7 +39,13 @@ skill adds the procedure and never restates the register.
    row. More than three asks is unfinished staff work: settle what the facts settle. A PR's
    `## Decisions` entries (`pass-core`, "Judgment calls") go in that part's row, one line each,
    so Geoff can reverse one in his decision note; an entry that meets one of the seven rules is
-   an ask.
+   an ask. Its `## Planning misses` entries go in the same row, each naming the fix that landed.
+   A packet whose approval launches a pass carries the plan's `## Pre-flight` items as
+   `[you: <label>]` steps in `## If you approve`, in order. Each step gives the exact commands,
+   clicks, or values to enter and the check that shows it done, so Geoff runs the sitting from
+   the packet with nothing to look up (`pass-core`, "Lifecycle" step 4). The design's
+   `## Brief` lists the plan's standing answers in a `### Standing answers` detail section, so
+   approving the design approves what the run will decide without him.
 4. **Research each ask as completed staff work.** Read the files, PRs, review findings, and logs
    the decision turns on, and cite each fact's source (a path, a PR number, a commit). A question
    the facts settle becomes a routine row. An unchecked fact an ask depends on is checked, or the ask is raised as
