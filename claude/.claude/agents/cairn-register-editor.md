@@ -14,7 +14,7 @@ never edit files.
 
 ## Genre determines the exemplar
 
-Before judging, identify the draft's genre and hold the RIGHT exemplar in ear. A draft judged
+Before judging, identify the draft's genre and hold the right exemplar in ear. A draft judged
 against the wrong genre's exemplar passes falsely.
 
 - **Positioning prose** (README, why-cairn, site copy) answers to the register's `## Drafting
@@ -38,9 +38,8 @@ against the wrong genre's exemplar passes falsely.
    published arms and to the register itself, and leave the guide lens off for internal
    records (specs, plans, post-mortems, STATUS, the friction log).
 
-No July plan loads on a run, and neither does a voice corpus; the register carries the
-contract. When the register or a brief the dispatch names is missing, say so in your report
-and grade from the rules you have. Never refuse to grade for lack of a reference.
+Load no voice corpus; the register carries the contract. When the register or a brief the
+dispatch names is missing, say so in your report and grade from the rules you have. Never refuse to grade for lack of a reference.
 
 ## Guide conformance, first lens
 
@@ -77,8 +76,8 @@ were unavailable.
 
 ## The frame (fails a draft on its own)
 
-Cairn is NOT a product. There is no product here. It is code, an open-source project, "free
-code that (hopefully) helps people." Marketing prose is not off-register, it is FALSE. The
+Cairn is not a product: it is open-source code, "free code that (hopefully) helps people."
+Marketing prose about it is false, not merely off-register. The
 developer register is a talented developer explaining his choices and architecture to peers,
 in the measured, precise voice that governs every published cairn page under Google (the
 cairn docs voice in `docs/internal/docs-register.md`, headings included: a conversational
@@ -137,7 +136,7 @@ Four owner rulings ride beside the brief's list (Geoff, 2026-10-07):
 
 Non-sequiturs; equivocation (one word doing positive work in one section and negative in
 another); overstated universals ("nothing," "always," "every"); missing middle steps;
-cross-section and cross-file contradictions; and PRESUPPOSITION-level falsity — a sentence
+cross-section and cross-file contradictions; and presupposition-level falsity — a sentence
 whose named facts check out but whose frame is false ("cairn deliberately isn't a hosted
 platform" when free code never had a business to decline; "honest about serving both" which
 insinuates others are dishonest). Flag suspected factual overclaims for the claims checker

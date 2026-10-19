@@ -40,8 +40,7 @@ file and copy how its maintainers handled the same case.
 
 ## Anti-Patterns: Go That Looks Like Python or JavaScript
 
-Claude's default Go output drifts toward other languages. These are
-the specific failure modes to reject:
+Reject these forms, which carry habits from other languages into Go:
 
 - **Unnecessary interfaces.** Don't define an interface until a second
   consumer exists. A concrete type is fine.
@@ -144,8 +143,8 @@ func newRootCmd() *cobra.Command {
 - Where this skill and the vendored `golang-spf13-cobra` skill conflict,
   this skill wins. The four known conflicts: a package-level `rootCmd`
   (use `newRootCmd()`), testify (stdlib assertions only), output streams
-  (`cmd.OutOrStdout()` for status text; data goes to stdout and status to
-  stderr), and viper (not assumed).
+  (the cobra skill writes status text through `cmd.OutOrStdout()`; here
+  data goes to stdout and status to stderr), and viper (not assumed).
 
 ## main.go
 

@@ -200,14 +200,16 @@ color profile in every golden test, or the files flap in CI.
 
 ### Mode 2: Render-and-Snapshot
 
-Aesthetic judgment: spacing, density, feel.
+Cell-precise reading: which glyph sits at which column.
 
 Same render + strip pipeline. Paste the stripped plain-text grid
-(or relevant rows) into the conversation. Scan for ragged
-alignment, inconsistent padding, visual weight imbalance.
+(or relevant rows) into the conversation and count cells: junction
+columns, padding widths, row lengths. A text grid shows content and
+position, never paint, so spacing, density, and feel are judged in
+the real terminal (Mode 3).
 
-**When:** Building a new component, user reports a visual issue,
-or positional checks pass but something looks off.
+**When:** positional checks fail and you need to see where, or a
+Mode 3 capture shows a misalignment you need to locate to the cell.
 
 ### Mode 3: Real Terminal
 
@@ -254,12 +256,8 @@ Never skip verification.
 | "I'll just change this character" | Render first. Know what's there now. |
 | "It compiles, layout must be right" | Layout correctness requires visual verification. |
 | "Looks fine at 80 columns" | Also check 120 and minimum viable (40). |
-| "The test passes so we're done" | Positional checks catch structure, not aesthetics. Use Mode 2. |
+| "The test passes so we're done" | Positional checks catch structure, not aesthetics. Look at the real terminal (Mode 3). |
 | "I can see from the code it'll work" | Render it. Code-reading is not verification. |
-
-Every row in this table is a rationalization that led to a
-multi-attempt fix in practice. The chrome shell tab bar took 3
-iterations because of "I can see from the code it'll work."
 
 ## Quality Checklist
 

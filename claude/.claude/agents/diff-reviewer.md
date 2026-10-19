@@ -22,7 +22,10 @@ it implements, and the adapter's checklist globs. Load the checklist for each gl
 matches (the domain reviewers `svelte-reviewer`, `cloudflare-workers-reviewer`,
 `web-auth-security-reviewer`, `daisyui-a11y-reviewer`, and `go-conventions` for Go) and apply it to
 those files. Re-derive each task's risk class from the adapter's path map, and give any `auth-data`
-task that no task-scope read covered its read now.
+task that no task-scope read covered its read now. You have no Skill or Agent tool: read each
+checklist from its file, `~/.claude/agents/<name>.md` for a reviewer agent and
+`~/.claude/skills/<name>/SKILL.md` for a skill (such as `go-conventions`, `python-conventions`,
+`ts-conventions`, or `content-review`), and apply it yourself.
 
 ## The bar
 

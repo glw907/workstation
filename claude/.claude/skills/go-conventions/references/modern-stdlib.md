@@ -90,8 +90,8 @@ builtin. Generic `MinInt` / `MaxInt` helpers go away.
 `cmp.Or(a, b, c)` for nil/zero coalescing across a fixed list of
 candidates, not stacked `if a != "" { return a }` chains. The
 absence is a voice-lens flag, not a grep gate: a manual coalescing
-chain that `cmp.Or` would collapse is what `/simplify` Agent 3
-looks for.
+chain that `cmp.Or` would collapse is what poplar's project
+`simplify` skill flags in its efficiency review.
 
 ## Errors
 

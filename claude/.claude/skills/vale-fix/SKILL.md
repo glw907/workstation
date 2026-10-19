@@ -1,6 +1,10 @@
 ---
 name: vale-fix
-description: Run Vale, fix error-level alerts, and open a pull request per file. Use when the user says "run vale", "fix vale errors", "lint the docs", "fix the linter", or "make vale pass". Fixes errors only; leaves warnings and suggestions for a person.
+description: >-
+  Run Vale and fix error-level alerts on the current pass branch. Use when the
+  user says "run vale", "fix vale errors", "lint the docs", "fix the linter", or
+  "make vale pass". Fixes errors only; leaves warnings and suggestions for a
+  person.
 ---
 
 <!-- local-overlay -->
