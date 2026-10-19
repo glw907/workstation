@@ -8,19 +8,22 @@ Nothing here moves, deletes, flags, or sends mail, and any folder but Folders/Se
 import argparse
 import email
 import email.policy
+import hashlib
+import hmac
 import imaplib
 import os
 import re
 import shlex
 import socket
 import ssl
+import stat
 import sys
 from datetime import datetime
 from html.parser import HTMLParser
 from pathlib import Path
 
 FOLDER = "Folders/Services"
-HOST = "127.0.0.1"
+HOST = "127.0.0.1"  # never configurable: the password must not leave loopback
 DEFAULT_PORT = 1143  # Bridge's default IMAP port; `info` in the Bridge CLI shows the real one.
 LIST_FIELDS = "(BODY.PEEK[HEADER.FIELDS (DATE FROM SUBJECT)])"
 MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
@@ -31,19 +34,28 @@ class ReadError(Exception):
 
 
 def read_secret_file(path):
-    """Return the NAME=value pairs of an `export NAME=value` file, or nothing when it is absent."""
+    """Return the NAME=value pairs of an `export NAME=value` file, or nothing when it is unusable.
+
+    A file that is not a regular file owned by the caller, or that group or others can write, is
+    skipped, so a planted overlay cannot supply credentials.
+    """
     pairs = {}
     try:
+        info = os.lstat(path)
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o022:
+            return pairs
         lines = Path(path).read_text().splitlines()
-    except OSError:
+    except (OSError, UnicodeDecodeError):
         return pairs
     for line in lines:
         name, sep, value = line.removeprefix("export ").partition("=")
         if sep and re.fullmatch(r"[A-Z_][A-Z0-9_]*", name):
             try:
-                pairs[name] = shlex.split(value)[0] if value else ""
-            except (ValueError, IndexError):
+                words = shlex.split(value)
+            except ValueError:
                 continue
+            if len(words) == 1:
+                pairs[name] = words[0]
     return pairs
 
 
@@ -68,25 +80,63 @@ def check_folder(name):
         raise ReadError(f"refused: only {FOLDER} may be read, not {name!r}")
 
 
-def connect(user, password):
-    """Return a logged-in connection to Bridge on loopback, using STARTTLS when it offers it."""
-    port = int(os.environ.get("PROTON_MAIL_READ_PORT", DEFAULT_PORT))
+def bridge_port():
+    """Return the Bridge IMAP port, from PROTON_MAIL_READ_PORT when set."""
+    raw = os.environ.get("PROTON_MAIL_READ_PORT", str(DEFAULT_PORT))
+    if not raw.isdigit() or not 1024 <= int(raw) <= 65535:
+        raise ReadError(f"PROTON_MAIL_READ_PORT must be a port from 1024 to 65535, not {raw!r}")
+    return int(raw)
+
+
+def check_pin(conn):
+    """Compare Bridge's certificate with the pinned fingerprint, pinning it on first use.
+
+    Bridge's certificate is self-signed, so the pin is what tells the real Bridge from any other
+    process that took the port while Bridge was down. A mismatch refuses before login.
+    """
+    pin_file = Path(os.environ.get("PROTON_MAIL_READ_PIN", str(Path.home() / ".local/state/proton-mail-read/bridge-cert.sha256")))
+    seen = hashlib.sha256(conn.sock.getpeercert(binary_form=True)).hexdigest()
     try:
-        conn = imaplib.IMAP4(HOST, port)
-    except (ConnectionRefusedError, socket.timeout, OSError):
+        pinned = pin_file.read_text().strip()
+    except OSError:
+        pin_file.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        pin_file.write_text(seen + "\n")
+        return
+    if not hmac.compare_digest(pinned, seen):
+        raise ReadError(f"the certificate on this port is not the one pinned in {pin_file}; "
+                        "if Bridge was reinstalled, delete that file and run again")
+
+
+def connect(user, password):
+    """Return a logged-in, read-only connection to Bridge on loopback.
+
+    STARTTLS is required, because the password must never cross a connection that may not be
+    Bridge.
+    """
+    port = bridge_port()
+    try:
+        conn = imaplib.IMAP4(HOST, port, timeout=15)
+    except OSError:
         raise ReadError(
             f"Proton Bridge is not listening on {HOST}:{port}; "
             "start it with `systemctl --user start proton-bridge.service`"
         ) from None
-    if "STARTTLS" in conn.capability()[1][0].decode().upper():
-        # Bridge presents a self-signed certificate on loopback, so the chain is not checked.
+    try:
+        if "STARTTLS" not in conn.capability()[1][0].decode().upper():
+            raise ReadError(f"the service on {HOST}:{port} offers no STARTTLS, so it is not Bridge")
         context = ssl.create_default_context()
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
         conn.starttls(context)
-    conn.login(user, password)
-    # readonly=True makes imaplib send EXAMINE, which cannot set any flag.
-    conn.select(f'"{FOLDER}"', readonly=True)
+        check_pin(conn)
+        conn.login(user, password)
+        # readonly=True makes imaplib send EXAMINE, which cannot set any flag.
+        status, _ = conn.select(f'"{FOLDER}"', readonly=True)
+        if status != "OK":
+            raise ReadError(f"Bridge would not open {FOLDER}; has the Sieve filter created it?")
+    except BaseException:
+        conn.shutdown()
+        raise
     return conn
 
 
@@ -116,7 +166,7 @@ def search_uids(conn, criteria):
 
 def clean(text):
     """Collapse whitespace and drop control characters so a header prints on one line."""
-    return re.sub(r"[\x00-\x1f\x7f]+", " ", str(text or "")).strip()
+    return UNSAFE.sub(" ", str(text or "")).strip()
 
 
 def summaries(conn, uids):
@@ -131,6 +181,8 @@ def summaries(conn, uids):
         if not isinstance(item, tuple):
             continue
         uid = re.search(rb"UID (\d+)", item[0])
+        if uid is None:
+            continue
         headers = email.message_from_bytes(item[1], policy=email.policy.default)
         rows.append((int(uid.group(1)), clean(headers["Date"]), clean(headers["From"]), clean(headers["Subject"])))
     return sorted(rows)
@@ -153,7 +205,7 @@ class TextExtractor(HTMLParser):
         if tag in ("script", "style"):
             self.skip += 1
         elif tag in ("br", "p", "div", "tr", "li", "h1", "h2", "h3"):
-            self.parts.extend(["\n"])
+            self.parts.append("\n")
 
     def handle_endtag(self, tag):
         if tag in ("script", "style") and self.skip:
@@ -161,7 +213,7 @@ class TextExtractor(HTMLParser):
 
     def handle_data(self, data):
         if not self.skip:
-            self.parts.extend([data])
+            self.parts.append(data)
 
 
 def html_to_text(html):
@@ -171,13 +223,18 @@ def html_to_text(html):
     return re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+", " ", text)).strip()
 
 
+UNSAFE = re.compile("[\x00-\x08\x0b-\x1f\x7f-\x9f\u200b-\u200f\u202a-\u202e\u2066-\u2069]")
+
+
 def message_text(msg):
     """Return the text/plain body, or the HTML body reduced to text when that is all there is."""
     body = msg.get_body(preferencelist=("plain", "html"))
     if body is None:
         return "(no text part)"
     content = body.get_content()
-    return html_to_text(content) if body.get_content_type() == "text/html" else content.strip()
+    text = html_to_text(content) if body.get_content_type() == "text/html" else content.strip()
+    # Escape sequences and bidi controls in a body would reach the terminal and the agent as-is.
+    return UNSAFE.sub(" ", text)
 
 
 def cmd_list(conn, args):
@@ -246,8 +303,11 @@ def main(argv=None):
     except ReadError as err:
         print(f"proton-mail-read: {err}", file=sys.stderr)
         return 2
-    except imaplib.IMAP4.error as err:
-        print(f"proton-mail-read: Bridge refused the request: {err}", file=sys.stderr)
+    except imaplib.IMAP4.error:
+        print("proton-mail-read: Bridge refused the request", file=sys.stderr)
+        return 2
+    except (OSError, ssl.SSLError, ValueError):
+        print("proton-mail-read: the connection to Bridge failed", file=sys.stderr)
         return 2
     return 0
 

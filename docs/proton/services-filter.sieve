@@ -11,7 +11,12 @@
 # A message whose subject holds a word that marks account access stays in the inbox. The
 # exclusion runs first and ends the script, so a reset link or a sign-in code from any of these
 # senders never reaches the folder Claude can read. Matching is a plain substring, so a subject
-# such as "Zip code" is excluded too. That is the safe direction.
+# such as "Zip code" is excluded too. That is the safe direction. The list also holds a few words
+# beyond the brief (token, one-time, otp, magic link, authoriz, authenticat, invite, invitation,
+# approve), each a way a service mail can carry access.
+#
+# Filing goes by the From address, which a forged message can fake past a weak sender policy. The
+# reader treats everything in the folder as untrusted data, never as instructions.
 
 require ["fileinto"];
 
@@ -30,23 +35,34 @@ if header :contains "subject" [
     "2FA",
     "two-factor",
     "recovery",
-    "confirm your"
+    "confirm your",
+    "token",
+    "one-time",
+    "otp",
+    "magic link",
+    "authoriz",
+    "authenticat",
+    "invite",
+    "invitation",
+    "approve"
 ] {
     stop;
 }
 
 if anyof (
     address :is "from" "monitor@907.life",
-    address :domain :is "from" [
-        "cloudflare.com",
-        "github.com",
-        "hetzner.com",
-        "hetzner.de",
-        "fastmail.com",
-        "messagingengine.com",
-        "pikapods.com",
-        "proton.me",
-        "protonmail.com"
+    address :domain :matches "from" [
+        "cloudflare.com", "*.cloudflare.com",
+        "github.com", "*.github.com",
+        "hetzner.com", "*.hetzner.com",
+        "hetzner.de", "*.hetzner.de",
+        "fastmail.com", "*.fastmail.com",
+        "messagingengine.com", "*.messagingengine.com",
+        "pikapods.com", "*.pikapods.com",
+        "proton.me", "*.proton.me",
+        "protonmail.com", "*.protonmail.com",
+        "protonmail.ch", "*.protonmail.ch",
+        "pm.me", "*.pm.me"
     ]
 ) {
     fileinto "Services";

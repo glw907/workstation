@@ -5,6 +5,8 @@ import importlib.util
 import re
 import socket
 import socketserver
+import ssl
+import subprocess
 import threading
 from email.message import EmailMessage
 from pathlib import Path
@@ -42,6 +44,7 @@ def make_message(subject, sender, body, html=None, date="Mon, 19 Oct 2026 09:00:
 MESSAGES = {
     5: make_message("Monitor test alert", "monitor@907.life", "The alert body."),
     9: make_message("Weekly note", "monitor@907.life", "Still watching.", date="Sun, 18 Oct 2026 09:00:00 +0000"),
+    7: make_message("Hostile", "x@example.invalid", "before \x1b]52;c;ZXZpbA==\x07 after \u202e reversed"),
     12: make_message("Receipt", "billing@hetzner.example", None, html="<html><body><p>Total <b>12 EUR</b></p><script>x()</script></body></html>"),
 }
 
@@ -63,8 +66,13 @@ class Handler(socketserver.StreamRequestHandler):
             log.append(text)
             verb = verb.upper()
             if verb == "CAPABILITY":
-                self.send("* CAPABILITY IMAP4rev1")
+                self.send("* CAPABILITY IMAP4rev1" + ("" if self.server.no_tls else " STARTTLS"))
                 self.send(f"{tag} OK done")
+            elif verb == "STARTTLS":
+                self.send(f"{tag} OK begin TLS")
+                self.connection = self.server.tls.wrap_socket(self.connection, server_side=True)
+                self.rfile = self.connection.makefile("rb")
+                self.wfile = self.connection.makefile("wb", 0)
             elif verb == "LOGIN":
                 self.send(f"{tag} OK logged in")
             elif verb == "EXAMINE":
@@ -104,15 +112,30 @@ class FakeServer(socketserver.ThreadingTCPServer):
     daemon_threads = True
 
 
+def make_tls_context(tmp_path):
+    key, crt = tmp_path / "key.pem", tmp_path / "crt.pem"
+    subprocess.run(
+        ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "2", "-subj", "/CN=127.0.0.1", "-keyout", str(key), "-out", str(crt)],
+        check=True, capture_output=True,
+    )
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(crt, key)
+    return context
+
+
 @pytest.fixture
 def bridge(tmp_path, monkeypatch):
     server = FakeServer(("127.0.0.1", 0), Handler)
     server.log = []
+    server.no_tls = False
+    server.tls = make_tls_context(tmp_path)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     secrets = tmp_path / "secrets"
-    secrets.write_text("export PROTON_BRIDGE_USER='tester@example.invalid'\nexport PROTON_BRIDGE_PASSWORD='p@ss word'\n")
+    secrets.write_text("export PROTON_BRIDGE_USER=tester@example.invalid\nexport PROTON_BRIDGE_PASSWORD='p@ss word'\n")
+    secrets.chmod(0o600)
     monkeypatch.setenv("PROTON_MAIL_READ_SECRETS", str(secrets))
     monkeypatch.setenv("PROTON_MAIL_READ_PORT", str(server.server_address[1]))
+    monkeypatch.setenv("PROTON_MAIL_READ_PIN", str(tmp_path / "pin"))
     monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path / "run"))
     yield server
     server.shutdown()
@@ -225,6 +248,7 @@ def test_login_uses_the_stored_credentials(bridge, capsys):
 def test_missing_credentials_fail_clearly(bridge, tmp_path, monkeypatch, capsys):
     empty = tmp_path / "empty"
     empty.write_text("export OTHER=1\n")
+    empty.chmod(0o600)
     monkeypatch.setenv("PROTON_MAIL_READ_SECRETS", str(empty))
     code, _, err = run(capsys, "list")
     assert code != 0
@@ -237,13 +261,66 @@ def test_bridge_not_listening_message(tmp_path, monkeypatch, capsys):
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
     secrets = tmp_path / "secrets"
-    secrets.write_text("export PROTON_BRIDGE_USER='u'\nexport PROTON_BRIDGE_PASSWORD='p'\n")
+    secrets.write_text("export PROTON_BRIDGE_USER=u\nexport PROTON_BRIDGE_PASSWORD=p\n")
+    secrets.chmod(0o600)
     monkeypatch.setenv("PROTON_MAIL_READ_SECRETS", str(secrets))
     monkeypatch.setenv("PROTON_MAIL_READ_PORT", str(port))
+    monkeypatch.setenv("PROTON_MAIL_READ_PIN", str(tmp_path / "pin"))
     code, _, err = run(capsys, "list")
     assert code != 0
     assert "Bridge is not listening" in err
     assert "proton-bridge.service" in err
+
+
+def test_no_starttls_is_refused_before_login(bridge, capsys):
+    bridge.no_tls = True
+    code, _, err = run(capsys, "list")
+    assert code != 0 and "STARTTLS" in err
+    assert not any(" LOGIN " in line.upper() for line in bridge.log)
+
+
+def test_certificate_is_pinned_on_first_use_and_checked_after(bridge, tmp_path, capsys):
+    code, _, _ = run(capsys, "list")
+    assert code == 0
+    pin = tmp_path / "pin"
+    assert re.fullmatch(r"[0-9a-f]{64}", pin.read_text().strip())
+    bridge.log.clear()
+    pin.write_text("0" * 64 + "\n")
+    code, _, err = run(capsys, "list")
+    assert code != 0 and "pinned" in err
+    assert not any(" LOGIN " in line.upper() for line in bridge.log)
+
+
+def test_body_control_and_bidi_characters_are_stripped(bridge, capsys):
+    code, out, _ = run(capsys, "read", "7")
+    assert code == 0
+    assert "\x1b" not in out and "\x07" not in out and "\u202e" not in out
+    assert "before" in out and "after" in out
+
+
+@pytest.mark.parametrize("port", ["abc", "80", "70000"])
+def test_bad_port_is_a_clear_error(bridge, monkeypatch, capsys, port):
+    monkeypatch.setenv("PROTON_MAIL_READ_PORT", port)
+    code, _, err = run(capsys, "list")
+    assert code != 0 and "PROTON_MAIL_READ_PORT" in err
+    assert bridge.log == []
+
+
+def test_group_writable_secrets_file_is_ignored(bridge, tmp_path, capsys):
+    (tmp_path / "secrets").chmod(0o664)
+    code, _, err = run(capsys, "list")
+    assert code != 0 and "PROTON_BRIDGE_USER" in err
+
+
+def test_overlay_supplies_names_the_main_file_lacks(bridge, tmp_path, monkeypatch, capsys):
+    (tmp_path / "secrets").write_text("export OTHER=1\n")
+    overlay = tmp_path / "run/self-hosting"
+    overlay.mkdir(parents=True)
+    (overlay / "secrets-mailread").write_text("export PROTON_BRIDGE_USER=ov\nexport PROTON_BRIDGE_PASSWORD=ovpw\n")
+    (overlay / "secrets-mailread").chmod(0o600)
+    code, _, _ = run(capsys, "list")
+    assert code == 0
+    assert any(" LOGIN " in line.upper() and "ovpw" in line for line in bridge.log)
 
 
 def test_script_has_no_write_path():
@@ -254,7 +331,7 @@ def test_script_has_no_write_path():
 
 
 def parse_sieve(text):
-    """Return (rule count, balanced) for the small Sieve subset the filter uses."""
+    """Return whether braces, parentheses, and quotes balance in the Sieve file."""
     no_comments = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
     return no_comments.count("{") == no_comments.count("}") and no_comments.count("(") == no_comments.count(")") and no_comments.count('"') % 2 == 0
 
@@ -272,3 +349,7 @@ def test_sieve_filter_shape():
         assert f'"{word}"' in text, word
     # The exclusion must come before any fileinto so an access-marking subject stays in the inbox.
     assert text.index("stop") < text.index('fileinto "Services"')
+    # Subdomain senders (notify.cloudflare.com) must match, so each domain is listed as a wildcard too.
+    assert ":matches" in text
+    for domain in ("cloudflare.com", "github.com", "hetzner.com", "fastmail.com", "pikapods.com", "proton.me", "protonmail.ch", "pm.me"):
+        assert f'"*.{domain}"' in text, domain
