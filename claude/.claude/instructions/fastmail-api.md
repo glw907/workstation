@@ -3,8 +3,7 @@
 ## Credentials
 
 - **Token env var**: `FASTMAIL_API_TOKEN` (sourced from `~/.local/secrets`)
-- **1Password path**: `op://Private/Fastmail/Saved on app.fastmail.com/workstation jmap token`
-- **DAV app password**: `op://Private/Fastmail/Saved on app.fastmail.com/workstation access`
+- **DAV app password**: `FASTMAIL_DAV_PASSWORD` (age store, sourced from `~/.local/secrets`)
 - **Account**: geoff@907.life (Fastmail business plan)
 - **Domain**: 907.life
 

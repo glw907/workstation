@@ -11,8 +11,8 @@ set -euo pipefail
 #   bootstrap.sh devmode   # run once, right after first boot; reboot after
 #   bootstrap.sh layer     # run once, after the reboot from `devmode`
 #   bootstrap.sh setup     # run once, right after the reboot from `layer`
-#   bootstrap.sh restore   # run once, after `setup` and the 1Password CLI
-#                          # toggle; restores the pre-migration R2 backup
+#   bootstrap.sh restore   # run once, after `setup` and `ws-pass-key --store`;
+#                          # restores the pre-migration R2 backup
 #
 # Two reboots, and they are not optional. `devmode` rebases the image to
 # bluefin-dx (a staged bootc switch that only takes effect on boot), and
@@ -150,31 +150,6 @@ EOF
 
 phase_layer() {
     require_dx_image
-
-    echo "== layer: 1Password repo =="
-    # No `rpm --import` here: on ostree the rpm database lives under the
-    # read-only /usr, so the import fails. Instead the key goes to /etc
-    # (mutable) and the repo's gpgkey= points at it; rpm-ostree verifies
-    # packages against that file itself at install time.
-    # Fetch the signing key and assert its fingerprint before installing it;
-    # a repo file with gpgcheck=1 is only as good as the key it points at.
-    # Expected fingerprint verified against the key that has validated every
-    # 1Password install on thinkpad-x1 since the 2026-08 migration.
-    local key_tmp expected_fpr actual_fpr
-    expected_fpr="3FEF9748469ADBE15DA7CA80AC2D62742012EA22"
-    key_tmp=$(mktemp)
-    curl -fsSL https://downloads.1password.com/linux/keys/1password.asc -o "$key_tmp"
-    actual_fpr=$(gpg --show-keys --with-colons "$key_tmp" 2>/dev/null \
-        | awk -F: '/^fpr:/{print $10; exit}')
-    if [[ "$actual_fpr" != "$expected_fpr" ]]; then
-        echo "1Password key fingerprint mismatch: got '${actual_fpr}'" >&2
-        rm -f "$key_tmp"
-        return 1
-    fi
-    sudo install -m 0644 "$key_tmp" /etc/pki/rpm-gpg/RPM-GPG-KEY-1password
-    rm -f "$key_tmp"
-    sudo install -m 0644 "$BLUEFIN_DIR/etc/yum.repos.d/1password.repo" \
-        /etc/yum.repos.d/1password.repo
 
     echo "== layer: rpm-ostree install =="
     local list="$BLUEFIN_DIR/layered-packages.txt"
@@ -481,12 +456,10 @@ print_checklist() {
 
 == Post-setup verification checklist ==
 
-1Password (brief: known GID mismatch gotcha on ostree):
-  - Open 1Password desktop, confirm it unlocks.
-  - Confirm `op whoami` works from a terminal.
-  - If `op` or the desktop app cannot connect: this is the documented
-    helper-tool GID mismatch on ostree. Fix script:
-    gist b-/ed2cdc182ae5a92bdcd6b73308832a70.
+Proton Pass (the age key's only scripted path):
+  - `pass-cli --version` works (Brewfile).
+  - `ws-pass-key --status` prints path=proton once the host's agent token is
+    stored (`ws-pass-key --store`); see bluefin-admin.md "Secrets".
 
 SELinux (brief: skipping this is a documented cause of broken logins):
   - After restoring anything into /var/home, run:
@@ -497,10 +470,10 @@ Browsers:
     search and homepage, no Google telemetry, built-in password manager off).
   - Geoff's own Chromium profile carries the Proton Pass extension
     (ghmbeldphafepmbegfdlkpapadhbakde) and never Claude's; Claude's `Default`
-    profile carries only Claude's extension. No Chromium profile carries a
-    1Password extension. Install each by hand: policy is browser-wide and
+    profile carries only Claude's extension. Install each by hand: policy is
+    browser-wide and
     cannot split them.
-  - `flatpak list | grep -iE 'firefox|onepassword'` returns nothing: the
+  - `flatpak list | grep -i firefox` returns nothing: the
     preinstalled Flatpak builds are gone and the layered Chromium is what runs.
   - `xdg-settings get default-web-browser` prints chromium-browser.desktop,
     the layered RPM's desktop file under /usr/share/applications.
@@ -545,13 +518,13 @@ Claude Code, syncthing:
   - syncthing web UI reachable at http://127.0.0.1:8384
 
 Image:
-  - `rpm-ostree status` shows a bluefin-dx image, and lists 1password,
-    1password-cli, and chromium as layered packages.
+  - `rpm-ostree status` shows a bluefin-dx image, and lists chromium as its
+    layered package.
   - `docker --version` works (DX ships it; its absence means the devmode
     rebase never landed).
 
-Next: in 1Password, sign in and enable Settings -> Developer -> "Integrate
-with 1Password CLI" (GUI-only toggle).
+Next: create this host's Proton Pass agent token (viewer on the Workstation
+vault) and store it with `ws-pass-key --store`.
 
 FIRST WORKSTATION ONLY (the 2026-08 Mint migration): open a NEW terminal --
 the shell that ran setup never sourced the just-stowed .bashrc, so mise/npx
@@ -587,7 +560,7 @@ restore_preflight() {
     echo "== restore: preflight =="
     local missing=()
     local cmd
-    for cmd in npx op age stow rsync git; do
+    for cmd in npx pass-cli age stow rsync git; do
         command -v "$cmd" > /dev/null 2>&1 || missing+=("$cmd")
     done
     if [[ ${#missing[@]} -gt 0 ]]; then
@@ -596,17 +569,12 @@ restore_preflight() {
     fi
 }
 
-# Runbook 4.1: one op call, cached in tmpfs. sync.sh reads the same cache, so
-# the secrets step below makes no additional op call.
+# Runbook 4.1: one ws-pass-key read, cached in tmpfs. sync.sh reads the same
+# cache, so the secrets step below makes no second read.
 restore_fetch_key() {
-    echo "== restore: age identity from 1Password =="
-    if [[ -s "$AGE_KEY_CACHE" ]]; then
-        echo "key already cached, skipping op call"
-    else
-        op item get "Workstation age encryption key" --fields notesPlain --reveal \
-            | sed 's/^"//;s/"$//' > "$AGE_KEY_CACHE"
-        chmod 600 "$AGE_KEY_CACHE"
-    fi
+    echo "== restore: age identity from Proton Pass =="
+    WS_PASS_CALLER=bootstrap.sh CACHE="$AGE_KEY_CACHE" \
+        "$DOTFILES_DIR/bin/.local/bin/ws-pass-key"
     local pubkey
     pubkey="$(age-keygen -y "$AGE_KEY_CACHE")"
     if [[ "$pubkey" != "$AGE_PUBKEY" ]]; then
@@ -712,7 +680,7 @@ restore_place_home() {
     stow_clear_conflicts
     (cd "$DOTFILES_DIR" && stow -R "${STOW_PACKAGES[@]}")
     # settings.json is a generated file, not a stow link; without apply a
-    # restore leaves the guard hooks (secret, tierguard, block-op) unloaded.
+    # restore leaves the guard hooks (secret, tierguard, block-pass) unloaded.
     "$DOTFILES_DIR/bin/.local/bin/claude-tooling-sync" apply
 
     # Direct restores: plain directories/files, no stow overlap.
@@ -742,7 +710,7 @@ restore_place_home() {
     # vale is deliberately absent: ~/.config/vale is a stow fold on a fresh
     # machine, an rsync into it would write backup bytes inside the repo,
     # and the styles it held are regenerated by `vale sync` anyway.
-    for item in chromium gcloud gh op 1Password poplar khard google-workspace systemd; do
+    for item in chromium gcloud gh poplar khard google-workspace systemd; do
         if [[ -e "$home_src/.config/$item" ]]; then
             rsync -a --ignore-existing "$home_src/.config/$item" "$HOME/.config/"
         fi

@@ -65,8 +65,8 @@ check_proton() {
         return 0
     fi
     case "$status" in
-        path=op*)
-            warn "age key path: 1Password (op); no agent token in the keyring yet" ;;
+        path=none*)
+            bad "age key path: no agent token in the keyring (ws-pass-key --store)" ;;
         path=proton*)
             ok "age key path: Proton Pass agent token"
             days=$(sed -n 's/.* days=\(-\{0,1\}[0-9]*\).*/\1/p' <<< "$status")
@@ -188,7 +188,6 @@ for f in "$BLUEFIN"/etc/chromium-policies/*.json; do
     etc_pair "$f" "/etc/chromium/policies/managed/$(basename "$f")"
 done
 etc_pair "$BLUEFIN/etc/udev/51-android.rules" /etc/udev/rules.d/51-android.rules
-etc_pair "$BLUEFIN/etc/yum.repos.d/1password.repo" /etc/yum.repos.d/1password.repo
 # Pavilion unlocks its disk through the TPM, so it keeps auto-login off.
 if [[ "$(hostname)" == pavilion ]]; then
     etc_pair "$BLUEFIN/etc/gdm/custom.conf.pavilion" /etc/gdm/custom.conf

@@ -1,6 +1,4 @@
 # Kept deliberately minimal. Before adding a package here, record the
 # reason in docs/MIGRATION-BRIEF.md; that file is the source this list is
 # curated from, not the other way around.
-1password
-1password-cli
 chromium

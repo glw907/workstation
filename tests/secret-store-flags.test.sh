@@ -36,8 +36,8 @@ cp "$root/key.txt" "$root/cache"
 chmod 600 "$root/cache"
 main_sum=$(sha256sum "$home/.dotfiles/secrets/values.age" | cut -d' ' -f1)
 
-# An op stub that fails and leaves a marker, so a run that reaches 1Password is caught.
-printf '#!/usr/bin/env bash\ntouch "%s/op-called"\nexit 1\n' "$root" > "$root/bin/op"
+# A ws-pass-key stub that fails and leaves a marker, so a run that fetches the key is caught.
+printf '#!/usr/bin/env bash\ntouch "%s/key-fetched"\nexit 1\n' "$root" > "$root/bin/ws-pass-key"
 # An age wrapper: AGE_SLOW sleeps before an encrypt, and AGE_DROP_FIRST drops the plaintext's first
 # line before encrypting, the way a buggy writer would lose a name.
 cat > "$root/bin/age" <<EOF
@@ -53,9 +53,10 @@ exec "$real_age" "\$@"
 EOF
 # A zenity stub that answers the dialog with a fixed value.
 printf '#!/usr/bin/env bash\necho "dialog-value"\n' > "$root/bin/zenity"
-chmod +x "$root/bin/op" "$root/bin/age" "$root/bin/zenity"
+chmod +x "$root/bin/ws-pass-key" "$root/bin/age" "$root/bin/zenity"
+export WS_PASS_KEY="$root/bin/ws-pass-key"
 
-fresh_store() { cp "$home/.dotfiles/secrets/values.age" "$root/wt/values.age"; rm -f "$root/local-secrets" "$root/op-called"; }
+fresh_store() { cp "$home/.dotfiles/secrets/values.age" "$root/wt/values.age"; rm -f "$root/local-secrets" "$root/key-fetched"; }
 names() { age --decrypt -i "$root/key.txt" "$1" | cut -d= -f1 | sort | tr '\n' ' '; }
 run_set() {  # run_set <env assignments...> -- <args...>
   local envs=()
@@ -73,7 +74,7 @@ assert_eq "$(names "$root/wt/values.age")" "KEEP_ONE KEEP_TWO NEW_ONE " "flagged
 assert_eq "$(sha256sum "$home/.dotfiles/secrets/values.age" | cut -d' ' -f1)" "$main_sum" "main store is byte-identical"
 assert_eq "$(grep -c '^export ' "$root/local-secrets" 2>/dev/null)" "3" "flagged local secrets written"
 [ ! -e "$home/.local/secrets" ] || { echo "FAIL: the default local secrets path was written"; fail=1; }
-[ ! -e "$root/op-called" ] || { echo "FAIL: the run reached 1Password"; fail=1; }
+[ ! -e "$root/key-fetched" ] || { echo "FAIL: the run fetched the age key"; fail=1; }
 
 # 2. Two concurrent stores both survive, though each encrypt is slow enough to overlap.
 fresh_store

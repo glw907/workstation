@@ -17,7 +17,7 @@ sudo systemctl reboot
 ~/.dotfiles/bluefin/bootstrap.sh layer
 sudo systemctl reboot
 ~/.dotfiles/bluefin/bootstrap.sh setup
-# 1Password app: sign in, then Settings -> Developer -> "Integrate with 1Password CLI"
+# Geoff creates the host's Proton agent token, then: ws-pass-key --store
 # FIRST WORKSTATION ONLY, and in a NEW terminal (setup's shell never sourced
 # the just-stowed .bashrc, so mise/npx are missing from its PATH):
 ~/.dotfiles/bluefin/bootstrap.sh restore
@@ -45,7 +45,7 @@ to `restore`.
 | `flatpaks.txt` | Flatpak app IDs to install |
 | `Brewfile` | CLI tool formulae for `brew bundle` |
 | `stow-packages.txt` | The Stow packages this repo manages, single source of truth |
-| `etc/` | Captured `/etc` drops: chromium policies, android udev rule, 1Password repo |
+| `etc/` | Captured `/etc` drops: chromium policies, android udev rule |
 | `devenv-research.md` | Dev-environment tiering research (devcontainers, distrobox); kept here because site-repo backlogs point at this path |
 
 ## Order of operations, fresh install
@@ -71,7 +71,7 @@ to `restore`.
    JetBrains Mono and Symbols Nerd Font Mono, which is all `kitty.conf` asks
    for, and Ptyxis uses the system monospace.
 5. Reboot into the DX image.
-6. Layer packages and add the 1Password repo:
+6. Layer packages:
    ```
    ~/.dotfiles/bluefin/bootstrap.sh layer
    ```
