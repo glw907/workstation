@@ -57,3 +57,6 @@ leftovers".
 
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not
 done" go to `BACKLOG.md` through `log-issue`.
+
+thinkpad-x1 still owes the Proton Pass move that pavilion finished on 2026-10-19. A session there
+follows `bluefin/THINKPAD-PROTON.md` with Geoff at the keyboard.
