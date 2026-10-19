@@ -173,8 +173,8 @@ when an initiative lands, and prefer dispatching reads. Cross-repo initiatives a
 
 Interaction is batched and front-loaded (Geoff, 2026-09-04). Before approval, probe requirements
 and design until the plan carries no open readings, one question at a time with a recommendation.
-After approval, execution runs to completion with no per-task check-ins; batch judgment calls into
-one question and stop early only for a genuine blocker or scope change.
+After approval, execution runs to completion: judgment calls go in the PR's `## Decisions` section,
+and a mid-run question to Geoff is a planning miss to learn from (`pass-core` "Judgment calls").
 
 Method, idiom, and architecture calls are Claude's (Geoff, 2026-09-24 and 2026-09-26): decide them
 from published evidence, the framework's documented convention, or architectural best practice,

@@ -36,7 +36,10 @@ skill adds the procedure and never restates the register.
    `escalate`, needs a `gate-failed` ask naming it; a PR whose body has `## Before merge` needs an
    ask naming it, with the choices "The session runs it, then merges" `[approve]` and "I'll run it
    myself" `[hold]`. A PR Geoff held before returns as a `contradicts-ruling` ask, never a routine
-   row. More than three asks is unfinished staff work: settle what the facts settle.
+   row. More than three asks is unfinished staff work: settle what the facts settle. A PR's
+   `## Decisions` entries (`pass-core`, "Judgment calls") go in that part's row, one line each,
+   so Geoff can reverse one in his decision note; an entry that meets one of the seven rules is
+   an ask.
 4. **Research each ask as completed staff work.** Read the files, PRs, review findings, and logs
    the decision turns on, and cite each fact's source (a path, a PR number, a commit). A question
    the facts settle becomes a routine row. An unchecked fact an ask depends on is checked, or the ask is raised as
