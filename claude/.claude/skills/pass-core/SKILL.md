@@ -84,8 +84,9 @@ A change that meets "Direct changes" skips this lifecycle.
 
    The plan opens with a `## Pre-flight` list: every step only Geoff can do, such as a sign-in, a
    value through `secret-receive`, a dialog, a permission rule, a browser or app action, or a
-   physical touch. The planner runs the whole list with Geoff in one sitting right after he
-   approves, and the executor launches only once each item is done and checked (a sign-in that
+   physical touch. The design's packet carries the list as its `[you: ...]` steps
+   (`approval-packet`), and the planner runs it with Geoff in one sitting right after he
+   approves. The executor launches only once each item is done and checked (a sign-in that
    answers, a store name present, a rule in `settings.json`). A step that needs the pass's own
    output is moved earlier or given a path without Geoff where it can be. Whatever remains goes
    into one named sitting at a set point in the plan, and the design approval says when. A run
