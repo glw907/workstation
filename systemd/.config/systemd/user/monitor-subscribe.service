@@ -1,12 +1,12 @@
 [Unit]
-Description=Desktop notifications for the servers' ntfy alerts
+Description=Desktop notifications for the servers' alerts
 Documentation=file://%h/Projects/servers/docs/runbook.md
 After=graphical-session.target network-online.target
 PartOf=graphical-session.target
 Wants=network-online.target
 
 [Service]
-ExecStart=%h/.local/bin/ntfy-subscribe
+ExecStart=%h/.local/bin/monitor-subscribe
 Restart=always
 RestartSec=20
 

@@ -368,10 +368,10 @@ setup_upkeep_timer() {
     # Lingering keeps the user manager up with no login session, so user
     # timers fire after a logout or a reboot (Geoff, 2026-10-14).
     loginctl enable-linger "$USER" || sudo -A loginctl enable-linger "$USER"
-    # The ntfy subscriber needs the two topic names, which reach ~/.local/secrets only after a
-    # secrets sync, so it stays off until then (ntfy-subscribe exits 1 without them).
-    if grep -q '^export NTFY_URGENT_TOPIC=' "$HOME/.local/secrets" 2>/dev/null; then
-        systemctl --user enable --now ntfy-subscribe.service
+    # The alerts subscriber needs the monitor read token, which reaches ~/.local/secrets only after
+    # a secrets sync, so it stays off until then (monitor-subscribe exits 1 without it).
+    if grep -q '^export MONITOR_READ_TOKEN=' "$HOME/.local/secrets" 2>/dev/null; then
+        systemctl --user enable --now monitor-subscribe.service
     fi
 }
 

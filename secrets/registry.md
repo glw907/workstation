@@ -141,7 +141,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | CF_MAIL_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | CF_MEDIA_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
-| NTFY_URGENT_TOPIC / NTFY_ROUTINE_TOPIC | ✓ | — | — | — | — |
+| MONITOR_READ_TOKEN | ✓ | — | — | — | — |
 | HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
@@ -312,15 +312,16 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 - **Rotate**: the scheme's temporary token procedure (rule 6), then the servers runbook's
   "Rotating a Cloudflare token".
 
-### NTFY_URGENT_TOPIC / NTFY_ROUTINE_TOPIC
-- **Grants**: nothing by itself. Each is an unguessable ntfy.sh topic name (random, 128 bits);
-  anyone who knows a name can read and post to that topic, so the names are secrets.
-- **Used by**: the servers repo's monitor Worker (Worker secrets, put by `cloudflare/deploy.sh
-  monitor`) and the workstation's `ntfy-subscribe` user service, which reads them from
+### MONITOR_READ_TOKEN
+- **Grants**: read access to the monitor Worker's `/alerts` endpoint: the open conditions, their
+  severity, and the time of the last completed check. It writes nothing and posts no heartbeat.
+- **Used by**: the servers repo's monitor Worker (a Worker secret, put by `cloudflare/deploy.sh
+  monitor`) and the workstation's `monitor-subscribe` user service, which reads it from
   `~/.local/secrets`.
-- **Generated 2026-10-18** on pavilion; the values never appeared in a transcript.
-- **Rotate**: generate two new names, store them, redeploy the monitor, and restart
-  `ntfy-subscribe` on each workstation and the second operator's phone subscription.
+- **Generated** on the workstation (32 random bytes, base64url), distinct from both heartbeat
+  tokens; the value never appears in a transcript.
+- **Rotate**: generate a new value, store it, redeploy the monitor, and restart
+  `monitor-subscribe` on each workstation.
 
 ### HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA
 - **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token
