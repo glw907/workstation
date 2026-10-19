@@ -11,32 +11,29 @@ description: >
 
 Born from two production visual misses (2026-07-05: 907.life typography, ecxc.ski structure)
 whose mechanical gates were all green. The failure class: verbal specs lose the design,
-and the builder's own context grades its work "close" (Anthropic's Fable 5 prompting guide:
+and the builder's own context grades its work "close" (Anthropic's prompting guidance:
 fresh-context verifiers outperform self-critique). This skill is the countermeasure stack,
 each step traced to evidence in docs/internal/pre-beta-harvest.md (cairn-cms) and the
 2026-07-05 research report.
 
 ## The method, in order
 
-1. **THE ORIGINAL MANIFEST — the backbone (Geoff, 2026-07-06: "much more aggressive about
-   reviewing the original and matching ALL features and content").** The original is the
-   specification, exhaustively. Before any plan: capture every page (full-page, family
-   widths) AND enumerate the original into a checklist artifact — every page; every
-   section per page; every image WITH its identity — the manifest records which asset, its crop and
-   focal treatment, and where it appears (the original's image selections and croppings
-   are the club's content decisions, not free variables: a substituted hero or a bad
-   re-crop is the same defect as a missing section); every data element (lists, tables,
-   counts); every interactive behavior (forms, filters, notifications, embeds); every
-   feed, redirect, and error page. The manifest is a committed file. The build is not
-   done until EVERY line is checked MATCHED / IMPROVED / DEFERRED-WITH-SANCTION (named in
-   the spec) — with the STANDING SANCTION (Geoff, 2026-07-06): the original's
-   DEFECTS are always fixed and graded IMPROVED without per-item approval — typos, broken
-   behaviors, responsive failures, a11y violations, and implementation quality (our CSS
-   is better and cleaner than the original's, always). Defects are not design; the line
-   records what was fixed so the grade is auditable, but fidelity never preserves a bug — and verifiers verify against the MANIFEST, never against the plan (the
-   plan is a lossy compression of the original; three builds under-matched because their
-   reviews checked the compression). No design plan is authored from a verbal inventory
-   alone.
+1. **The original manifest is the backbone** (Geoff, 2026-07-06: "much more aggressive about
+   reviewing the original and matching ALL features and content"). The original is the
+   specification. Before any plan, capture every page (full-page, at the family widths) and
+   enumerate the original into a committed checklist: every page and section; every image
+   with its identity (which asset, its crop and focal treatment, and where it appears),
+   because the original's image choices are the club's content decisions, so a substituted
+   hero or a bad re-crop is the same defect as a missing section; every data element; every
+   interactive behavior; every feed, redirect, and error page. No design plan is authored
+   from a verbal inventory alone.
+
+   The build is done when every line is graded MATCHED, IMPROVED, or DEFERRED-WITH-SANCTION
+   (named in the spec). Standing sanction (Geoff, 2026-07-06): fix the original's defects
+   (typos, broken behaviors, responsive failures, a11y violations, weaker CSS) and grade
+   them IMPROVED without per-item approval, recording what was fixed. Verifiers grade
+   against the manifest, not the plan, because the plan is a lossy compression of the
+   original and three builds under-matched by checking the compression.
 2. **Device catalogue.** An agent (vision-capable, Opus+) READS the references plus the
    source CSS and produces the structural + typographic device catalogue: chrome anatomy,
    composition per page template, card/band recipes, every typographic device (wordmark,

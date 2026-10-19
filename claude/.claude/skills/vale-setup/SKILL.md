@@ -4,7 +4,7 @@ description: Install Vale, write a .vale.ini, sync styles, and get a first run. 
 ---
 
 <!-- local-overlay -->
-A repo here commits its Vale styles and pins Vale in CI, so do not run `vale sync` against a committed `styles/` directory or edit the CI pin; a fix lands on a pass branch, never a branch per file.
+A repo here commits its Vale styles and pins Vale in CI: commit the StylesPath directory instead of gitignoring it, run vale sync only to populate it before that commit, and never edit the CI pin; a fix lands on a pass branch, never a branch per file.
 <!-- /local-overlay -->
 
 # Set up Vale in this repository

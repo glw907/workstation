@@ -43,7 +43,7 @@ brief names two entries, judge against whichever is closer in genre to the draft
 in the report. When no manifest exists, grade from the register alone and say so in the report.
 Never refuse to grade for lack of a corpus entry.
 
-Then read the artifact and flag two things only:
+Then read the artifact and flag these:
 
 - Register violations: a sentence that breaks the named register's persona or traits, named against
   the exemplar it should have resembled.
