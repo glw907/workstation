@@ -49,8 +49,8 @@ check_initiatives() {
 }
 
 # Proton Pass wiring (self-hosting Pass W): the pass-cli version brew holds (never by running
-# pass-cli), and which path this host reads the age key on. A host on the op path warns until
-# its agent token is stored; a token within 30 days of expiry warns and an expired one fails.
+# pass-cli), and which path this host reads the age key on. A host with no agent token
+# (path=none) fails; a token within 30 days of expiry warns and an expired one fails.
 check_proton() {
     local brew_bin="${BREW:-brew}" key_bin="${WS_PASS_KEY:-ws-pass-key}" ver status days
     echo "Proton Pass (pass-cli, agent token):"

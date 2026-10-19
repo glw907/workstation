@@ -77,6 +77,8 @@ reset
 out=$(recv bash "$RECEIVE" OP_ONE --op op://a/b/c --values "$root/values.age" --local "$root/local")
 rc=$?
 [ "$rc" -ne 0 ] || { echo "FAIL: --op exited 0"; fail=1; }
+case "$out" in *"unknown option: --op"*) ;; *) echo "FAIL: --op was not refused as unknown: $out"; fail=1 ;; esac
+[ ! -s "$root/local" ] || ! grep -q OP_ONE "$root/local" || { echo "FAIL: --op stored a value"; fail=1; }
 
 # 5. claude-sudo-setup caches the dialog's password, mode 600.
 printf 'hunter2-sudo' > "$root/dialog"

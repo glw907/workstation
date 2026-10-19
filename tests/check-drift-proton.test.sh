@@ -46,7 +46,7 @@ assert_has "$out" "rc=1" "an expired token fails"
 out=$(drift "path=proton host=h expires=unknown")
 assert_has "$out" "expiry unknown" "unknown expiry warning"
 
-out=$(drift "path=op host=h" STUB_NO_BREW=1)
+out=$(drift "path=proton host=h expires=2999-01-01 days=900" STUB_NO_BREW=1)
 assert_has "$out" "proton-pass-cli is not installed" "missing package line"
 assert_has "$out" "rc=1" "a missing package fails"
 
