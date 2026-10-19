@@ -81,6 +81,16 @@ A change that meets "Direct changes" skips this lifecycle.
    path minutes, set from the actual-against-planned path in recent passes' scores, never from a
    share of a spec's figure. Skip `writing-plans`' code
    steps and execution-method question. Test-first applies to `auth-data` tasks.
+
+   The plan opens with a `## Pre-flight` list: every step only Geoff can do, such as a sign-in, a
+   value through `secret-receive`, a dialog, a permission rule, a browser or app action, or a
+   physical touch. The planner runs the whole list with Geoff in one sitting right after he
+   approves, and the executor launches only once each item is done and checked (a sign-in that
+   answers, a store name present, a rule in `settings.json`). A step that needs the pass's own
+   output is moved earlier or given a path without Geoff where it can be. Whatever remains goes
+   into one named sitting at a set point in the plan, and the design approval says when. A run
+   that waits on Geoff for a step the list left out is a planning miss (2026-10-19: Pass 1's mail
+   reader waited 40 minutes on a Proton Bridge sign-in that needed nothing the pass built).
 5. **Execute.** See "Execute".
 6. **Close.** See "Close". Geoff decides the packet in Design & PR Approvals, except that a pass whose highest
    class is `ordinary` merges its own PR (see "Close").
@@ -148,7 +158,8 @@ whose main checkout launches the executor. The planner commits `<plan>-conductor
    (<https://code.claude.com/docs/en/cross-session-messaging>): a message is "Delivered", "Held", or
    "Refused", and a held one can expire unread.
 
-Before the launch, run `git -C <repo> fetch origin` and check that the main checkout is on its
+Before the launch, every `## Pre-flight` item is done and checked (see "Lifecycle" step 4). Run
+`git -C <repo> fetch origin` and check that the main checkout is on its
 default branch and `git -C <repo> rev-list --count HEAD..origin/<default>` prints 0, since
 `worktree.baseRef: "head"` branches from local `HEAD`. Where `git -C <repo> check-ignore -q
 .claude/worktrees/x` fails, append `.claude/worktrees/` to the file `git -C <repo> rev-parse
@@ -173,7 +184,7 @@ the approved design, budget, and path ceiling and can be undone after the merge.
 goes in the PR body's `## Decisions` section: the call, the choice, the alternative, and the
 reason. The session stops for Geoff only on spend past the budget, an irreversible or destructive
 act, a secret, a change of scope or design, a product or taste call the design leaves open, a
-stop the plan writes once its standing answer runs out (see "Design"), or a clock stop. In the three days to 2026-10-19, Geoff took the recommended option on 24 of 36 questions, five of
+stop the plan writes once its standing answer runs out (see "Lifecycle" step 1), or a clock stop. In the three days to 2026-10-19, Geoff took the recommended option on 24 of 36 questions, five of
 them mid-run calls inside approved scope. Prompting Claude Opus 5
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
 "Make routine judgment calls yourself, and check in only when different readings of the request
