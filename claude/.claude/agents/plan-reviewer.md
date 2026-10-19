@@ -51,8 +51,10 @@ On a plan, also check these items:
   pre-launch packet (Pass 1, 2026-10-19: a Proton Bridge sign-in surfaced mid-run).
 - No count cap (reads, retries, rounds, reruns) and no list of fixable causes stops the line on
   its own. Each carries the traced-cause standing answer in `pass-core` "Lifecycle" step 1, so only
-  a ceiling, an untraced or returning cause, or a design change stops it (B3c, 2026-10-19: a
-  five-read cap, then an escalation traced to a blueprint, a cause the plan's fix list left out).
+  a ceiling, an untraced cause, or an escalation the plan doesn't allow stops it. The plan names
+  which items the run may escalate without breaking its outcome, for a cause that returns after
+  its structural fix (B3c, 2026-10-19: a five-read cap, an escalation traced to a blueprint, then
+  a rollback handler that kept looping after its patch).
 
 ## Findings
 

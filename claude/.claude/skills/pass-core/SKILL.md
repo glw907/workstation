@@ -61,10 +61,14 @@ A change that meets "Direct changes" skips this lifecycle.
    plan writes (a cap, a line stop, a ceiling) carries a standing answer. A count cap on reads,
    retries, rounds, or reruns is a loop guard, never a stop for Geoff. Past it, the run goes on
    while each retry fixes a cause the session has traced and spend stays inside the ceiling, and
-   each fix is a reversible change listed in the PR's `## Decisions`. The run stops only on the
-   spend or path ceiling, a cause it cannot trace, the same cause returning after its fix, or a
-   change to the design (2026-10-19: B3c stopped at its read cap, then at its escalation rule, each
-   time with an in-budget fix to a traced cause as the recommendation, and Geoff took it).
+   each fix is a reversible change listed in the PR's `## Decisions`. A cause that returns after
+   its fix gets one structural fix: the session replaces the unit the patches kept missing instead
+   of patching it again. If the cause returns after that, the session escalates the item in the PR
+   and goes on with the rest. The plan names which items it can escalate without breaking its
+   outcome. The run stops only on the spend or path ceiling, a cause it cannot trace, or an
+   escalation the plan doesn't allow, which would change the design (2026-10-19: B3c stopped at its
+   read cap, then at its escalation rule, then on a returning cause, each time with an in-budget
+   fix as the recommendation, and Geoff took it).
 2. **Spec.** An agent writes the approved design at the length precision needs, only if
    `spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
    probed.
