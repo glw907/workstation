@@ -144,6 +144,8 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | MONITOR_READ_TOKEN | ✓ | — | — | — | — |
 | PROTON_BRIDGE_USER / _PASSWORD | ✓ | — | — | — | — |
 | HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA | ✓ | — | — | — | — |
+| IMMICH_DB_PASSWORD | ✓ | — | — | — | — |
+| RESTIC_PASSWORD_MEDIA | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
@@ -333,6 +335,18 @@ tmpfs cache; no password manager holds it for scripts.
   private address, so it appears only in the store.
 - **Rotate**: in the Bridge CLI (`distrobox enter proton-bridge -- protonmail-bridge --cli`)
   signing the account out and in generates a new Bridge password; receive both names again.
+
+### IMMICH_DB_PASSWORD
+- **Grants**: the password of the media server's Immich Postgres role. Immich cannot start without it, and the restored database expects the role to exist with it.
+- **Used by**: the servers repo's `roles/immich` compose file, rendered to `/etc/immich/immich.env` on the media server only.
+- **Generated 2026-10-19** on pavilion (40 random alphanumeric characters), in Pass 2 (M3).
+- **Rotate**: store a new value, re-render the media server's secrets, and change the role's password inside Postgres.
+
+### RESTIC_PASSWORD_MEDIA
+- **Grants**: the right to open the media restic repository in `servers-backup-media`. Losing it makes every media backup unreadable.
+- **Used by**: the servers repo's `roles/backup` (rendered to `/etc/servers/restic-password` on the media server) and the restore drill, which renders it to the throwaway server.
+- **Generated 2026-10-19** on pavilion (56 random alphanumeric characters), in Pass 2 (M6), stored and pushed before `restic init`. The bucket's lock rules land only after this commit is on `origin/main`.
+- **Rotate**: changing a restic password removes the old key file, which the `keys/` lock rule refuses, so a rotation needs Geoff to lift the rule.
 
 ### HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA
 - **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token
