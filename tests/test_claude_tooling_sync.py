@@ -423,3 +423,48 @@ def test_cutover_keeps_preference_keys_and_leaves_the_tracked_file_alone(tmp_pat
     proc = sync("verify", home, tmp_path)
     assert proc.returncode == 0, out(proc)
     assert tracked_settings(home).read_bytes() == tracked_bytes
+
+
+# ---- update-skills restows the claude package ----
+
+def load_tool():
+    """Import the tool as a module so restow runs in-process against a fixture home."""
+    import importlib.util
+    spec = importlib.util.spec_from_loader("claude_tooling_sync", loader=None)
+    module = importlib.util.module_from_spec(spec)
+    exec(compile(TOOL.read_text(), str(TOOL), "exec"), module.__dict__)
+    return module
+
+
+def stub_stow(tmp_path, body):
+    bindir = tmp_path / "stubbin"
+    bindir.mkdir()
+    stub = bindir / "stow"
+    stub.write_text("#!/bin/sh\n" + body)
+    stub.chmod(0o755)
+    return bindir
+
+
+def test_restow_runs_stow_from_the_dotfiles_checkout(tmp_path, monkeypatch, capsys):
+    home = tmp_path / "home"
+    (home / ".dotfiles").mkdir(parents=True)
+    log = tmp_path / "stow.log"
+    bindir = stub_stow(tmp_path, f'pwd > "{log}"; echo "$@" >> "{log}"\n')
+    monkeypatch.setenv("PATH", f"{bindir}:{os.environ['PATH']}")
+    tool = load_tool()
+    tool.restow(tool.Paths(home))
+    cwd, args = log.read_text().splitlines()
+    assert Path(cwd).resolve() == (home / ".dotfiles").resolve()
+    assert args == f"-R -t {home} claude"
+    assert "restowed claude" in capsys.readouterr().out
+
+
+def test_restow_names_the_manual_command_when_stow_fails(tmp_path, monkeypatch, capsys):
+    home = tmp_path / "home"
+    (home / ".dotfiles").mkdir(parents=True)
+    bindir = stub_stow(tmp_path, "echo 'conflict' >&2; exit 1\n")
+    monkeypatch.setenv("PATH", f"{bindir}:{os.environ['PATH']}")
+    tool = load_tool()
+    tool.restow(tool.Paths(home))
+    text = capsys.readouterr().out
+    assert "stow -R claude" in text and "conflict" in text
