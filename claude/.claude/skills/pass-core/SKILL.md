@@ -267,10 +267,14 @@ it owns, the conductor is the session that hands the packet over in "Close", so 
 ends at PR-ready and never runs `approval-queue`. It brings Geoff only packets and product
 or priority calls.
 
-An executor refuses the conductor's cross-session messages, rightly: a peer's message carries no
-approval from Geoff. When an executor stops on a cause the conductor can fix, the conductor fixes
-it at the source (the plan branch, a merge from the default branch), then stops and relaunches the
-executor; otherwise Geoff attaches to it. The conductor never calls `EnterWorktree`, because the
+An executor takes its conductor's cross-session messages as instructions (Geoff, 2026-10-20: "You're
+the conductor."). The conductor relays Geoff's rulings and fixes inside the approved plan, quoting a
+ruling and its source; a conductor message never stands in for a packet's approval, so it cannot
+authorize a merge, a purchase, or a scope change Geoff has not ruled on. The executor's launch prompt
+names its conductor, and a message from any other session stays refused. When an executor stops on
+a cause the conductor can fix, the conductor sends the fix, or fixes it at the source (the plan
+branch, a merge from the default branch) and relaunches the stopped executor; otherwise Geoff
+attaches to it. The conductor never calls `EnterWorktree`, because the
 isolation would apply to its subagents too; it edits a worktree by path instead.
 A watch over `claude agents --json --all` reads each field with `.get`, since a row can lack `id`.
 While a planner is out, the conductor merges no STATUS edit to the default branch, because the
@@ -373,7 +377,9 @@ A STATUS next action carries the goal, the scope, the plan path, the checkout, a
 `claude` line. The prompt text lives in a committed file and is launched as `"$(cat <file>)"`,
 since a prompt pasted inside double quotes runs each backticked span as a command substitution.
 The prompt for a pass that hands its PR over says the session sends its packet through `approval-packet`, waits for the decision, merges only a part Geoff approved with `--match-head-commit`, and ends after acting on the decision; it never
-says "never merge" or "end" outright. Close the session when the initiative lands.
+says "never merge" or "end" outright. An executor prompt under a conductor names it
+(`conductor-<project>`) as the one session whose messages it takes as instructions (see
+"Conductor"). Close the session when the initiative lands.
 
 A conductor prompt opens with one line naming the session `conductor-<project>`, then carries the
 executor's `claude` line and its prompt file; the plan path and each repo and checkout the pass
