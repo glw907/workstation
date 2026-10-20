@@ -143,10 +143,14 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | CF_MAIL_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | CF_MEDIA_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| CF_ORPHEUS_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| CF_WARD_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | MONITOR_READ_TOKEN | ✓ | — | — | — | — |
 | HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA | ✓ | — | — | — | — |
+| HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD | ✓ | — | — | — | — |
 | IMMICH_DB_PASSWORD | ✓ | — | — | — | — |
 | RESTIC_PASSWORD_MEDIA | ✓ | — | — | — | — |
+| RESTIC_PASSWORD_ORPHEUS | ✓ | — | — | — | — |
 | TUNNEL_TOKEN_MEDIA | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
@@ -355,6 +359,24 @@ tmpfs cache; no password manager holds it for scripts.
 - **Generated 2026-10-18** on pavilion (32 random bytes, base64url). The self-hosting plan
   generates each token once and renders it to its server, so a rotation is a deliberate act.
 - **Rotate**: store a new value, redeploy the monitor, and re-render the server's secrets.
+
+### RESTIC_PASSWORD_ORPHEUS
+- **Grants**: the right to open the orpheus restic repository in `servers-backup-orpheus`. Losing it makes every orpheus backup unreadable. It replaces `RESTIC_PASSWORD_MEDIA` (retired in the rename pass).
+- **Used by**: the servers repo's `roles/backup` (rendered to `/etc/servers/restic-password` on orpheus) and the restore drill.
+- **Generated 2026-10-20** on pavilion (32 random bytes, base64url), in the rename pass (R3), stored and pushed before `restic init`. The bucket's lock rules land only after this commit is on `origin/main`.
+- **Rotate**: as for `RESTIC_PASSWORD_MEDIA`.
+
+### HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD
+- **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token writes only its own server's row. They replace `HEARTBEAT_TOKEN_MEDIA` and `HEARTBEAT_TOKEN_MAIL`.
+- **Used by**: the monitor Worker (Worker secrets) and, rendered by the servers repo's `secrets/render.sh` as `HEARTBEAT_TOKEN`, that server's health timer only. Ward's waits for Pass 5.
+- **Generated 2026-10-20** on pavilion (32 random bytes, base64url), in the rename pass (R3).
+- **Rotate**: store a new value, redeploy the monitor, and re-render the server's secrets.
+
+### CF_ORPHEUS_R2_BACKUP_RW_* / CF_WARD_R2_BACKUP_RW_*
+- **Grants**: two account-owned R2 tokens, `orpheus-r2-backup-rw` and `ward-r2-backup-rw`, each stored as `_TOKEN` plus its S3 pair (`_KEY_ID` is the token id, `_SECRET` the SHA-256 of the value). Each reads and writes its own backup bucket, `servers-backup-orpheus` or `servers-backup-ward`, and nothing else. They replace the media and mail tokens.
+- **Used by**: orpheus's restic (ward's waits for Pass 5) and `scripts/dry-run.sh`. Readers per name: the servers repo's `secrets/registry.md`.
+- **Minted 2026-10-20** in the rename pass (R3) through a temporary token-management token, with the old tokens' policies and the bucket swapped. `ws-r2-backups-ro` was re-scoped in place to add both new buckets; its value did not change.
+- **Rotate**: as for `CF_WS_SERVERS_TOKEN`; a server's token also rotates when that server is rebuilt or compromised.
 
 ### CF_WS_R2_ARCHIVE_RW_* / CF_WS_R2_BACKUPS_RO_* / CF_MAIL_R2_BACKUP_RW_* / CF_MEDIA_R2_BACKUP_RW_*
 - **Grants**: four account-owned R2 tokens, each stored as `_TOKEN` plus its S3 pair
