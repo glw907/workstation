@@ -147,7 +147,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD | ✓ | — | — | — | — |
 | IMMICH_DB_PASSWORD | ✓ | — | — | — | — |
 | RESTIC_PASSWORD_ORPHEUS | ✓ | — | — | — | — |
-| TUNNEL_TOKEN_MEDIA | ✓ | — | — | — | — |
 | TUNNEL_TOKEN_ORPHEUS | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
@@ -336,15 +335,8 @@ tmpfs cache; no password manager holds it for scripts.
 - **Generated 2026-10-19** on pavilion (40 random alphanumeric characters), in Pass 2 (M3).
 - **Rotate**: store a new value, re-render orpheus's secrets, and change the role's password inside Postgres.
 
-### TUNNEL_TOKEN_MEDIA
-- **Retired**: the rename pass deletes this name once Geoff's sign-in through the `servers-orpheus` tunnel is proven and the old `servers-media` tunnel is gone.
-- **Grants**: the right to run the `servers-media` Cloudflare Tunnel connector, which carries the media server's Access browser terminal. Anyone holding it can attach a connector to that tunnel.
-- **Used by**: the servers repo's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on the media server only.
-- **Generated 2026-10-19** by `cloudflare/access.sh --token media` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in Pass 2 (M4).
-- **Rotate**: rotate the tunnel's token in Cloudflare (or recreate the tunnel with `access.sh`), store the new value, and re-render the media server's secrets.
-
 ### TUNNEL_TOKEN_ORPHEUS
-- **Grants**: the right to run the `servers-orpheus` Cloudflare Tunnel connector, which carries orpheus's Access browser terminal at `ssh-orpheus.907.life`. Anyone holding it can attach a connector to that tunnel. It replaces `TUNNEL_TOKEN_MEDIA`.
+- **Grants**: the right to run the `servers-orpheus` Cloudflare Tunnel connector, which carries orpheus's Access browser terminal at `ssh-orpheus.907.life`. Anyone holding it can attach a connector to that tunnel. It replaced the media tunnel's token, which the rename pass retired.
 - **Used by**: the servers repo's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on orpheus only.
 - **Generated 2026-10-20** by `cloudflare/access.sh --token orpheus` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in the rename pass (R6).
 - **Rotate**: rotate the tunnel's token in Cloudflare (or recreate the tunnel with `access.sh`), store the new value, and re-render orpheus's secrets.
