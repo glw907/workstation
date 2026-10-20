@@ -141,13 +141,13 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CF_WS_SERVERS_TOKEN | ✓     | —        | —    | —        | —          |
 | CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
-| CF_MAIL_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
-| CF_MEDIA_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| CF_ORPHEUS_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
+| CF_WARD_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | MONITOR_READ_TOKEN | ✓ | — | — | — | — |
-| HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA | ✓ | — | — | — | — |
+| HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD | ✓ | — | — | — | — |
 | IMMICH_DB_PASSWORD | ✓ | — | — | — | — |
-| RESTIC_PASSWORD_MEDIA | ✓ | — | — | — | — |
-| TUNNEL_TOKEN_MEDIA | ✓ | — | — | — | — |
+| RESTIC_PASSWORD_ORPHEUS | ✓ | — | — | — | — |
+| TUNNEL_TOKEN_ORPHEUS | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
@@ -330,41 +330,42 @@ tmpfs cache; no password manager holds it for scripts.
   `monitor-subscribe` on each workstation.
 
 ### IMMICH_DB_PASSWORD
-- **Grants**: the password of the media server's Immich Postgres role. Immich cannot start without it, and the restored database expects the role to exist with it.
-- **Used by**: the servers repo's `roles/immich` compose file, rendered to `/etc/immich/immich.env` on the media server only.
+- **Grants**: the password of orpheus's Immich Postgres role. Immich cannot start without it, and the restored database expects the role to exist with it.
+- **Used by**: the servers repo's `roles/immich` compose file, rendered to `/etc/immich/immich.env` on orpheus only.
 - **Generated 2026-10-19** on pavilion (40 random alphanumeric characters), in Pass 2 (M3).
-- **Rotate**: store a new value, re-render the media server's secrets, and change the role's password inside Postgres.
+- **Rotate**: store a new value, re-render orpheus's secrets, and change the role's password inside Postgres.
 
-### TUNNEL_TOKEN_MEDIA
-- **Grants**: the right to run the `servers-media` Cloudflare Tunnel connector, which carries the media server's Access browser terminal. Anyone holding it can attach a connector to that tunnel.
-- **Used by**: the servers repo's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on the media server only.
-- **Generated 2026-10-19** by `cloudflare/access.sh --token media` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in Pass 2 (M4).
-- **Rotate**: rotate the tunnel's token in Cloudflare (or recreate the tunnel with `access.sh`), store the new value, and re-render the media server's secrets.
+### TUNNEL_TOKEN_ORPHEUS
+- **Grants**: the right to run the `servers-orpheus` Cloudflare Tunnel connector, which carries orpheus's Access browser terminal at `ssh-orpheus.907.life`. Anyone holding it can attach a connector to that tunnel. It replaced the media tunnel's token, which the rename pass retired.
+- **Used by**: the servers repo's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on orpheus only.
+- **Generated 2026-10-20** by `cloudflare/access.sh --token orpheus` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in the rename pass (R6).
+- **Rotate**: rotate the tunnel's token in Cloudflare (or recreate the tunnel with `access.sh`), store the new value, and re-render orpheus's secrets.
 
-### RESTIC_PASSWORD_MEDIA
-- **Grants**: the right to open the media restic repository in `servers-backup-media`. Losing it makes every media backup unreadable.
-- **Used by**: the servers repo's `roles/backup` (rendered to `/etc/servers/restic-password` on the media server) and the restore drill, which renders it to the throwaway server.
-- **Generated 2026-10-19** on pavilion (56 random alphanumeric characters), in Pass 2 (M6), stored and pushed before `restic init`. The bucket's lock rules land only after this commit is on `origin/main`.
+### RESTIC_PASSWORD_ORPHEUS
+- **Grants**: the right to open the orpheus restic repository in `servers-backup-orpheus`. Losing it makes every orpheus backup unreadable. It replaced the media server's restic password, which the rename pass retired.
+- **Used by**: the servers repo's `roles/backup` (rendered to `/etc/servers/restic-password` on orpheus) and the restore drill.
+- **Generated 2026-10-20** on pavilion (32 random bytes, base64url), in the rename pass (R3), stored and pushed before `restic init`. The bucket's lock rules land only after this commit is on `origin/main`.
 - **Rotate**: changing a restic password removes the old key file, which the `keys/` lock rule refuses, so a rotation needs Geoff to lift the rule.
 
-### HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA
-- **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token
-  writes only its own server's row.
-- **Used by**: the monitor Worker (Worker secrets) and, rendered by the servers repo's planned
-  `secrets/render.sh`, that server's health timer only.
-- **Generated 2026-10-18** on pavilion (32 random bytes, base64url). The self-hosting plan
-  generates each token once and renders it to its server, so a rotation is a deliberate act.
+### HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD
+- **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token writes only its own server's row. They replaced the media and mail keys, which the rename pass retired.
+- **Used by**: the monitor Worker (Worker secrets) and, rendered by the servers repo's `secrets/render.sh` as `HEARTBEAT_TOKEN`, that server's health timer only. Ward's waits for Pass 5.
+- **Generated 2026-10-20** on pavilion (32 random bytes, base64url), in the rename pass (R3).
 - **Rotate**: store a new value, redeploy the monitor, and re-render the server's secrets.
 
-### CF_WS_R2_ARCHIVE_RW_* / CF_WS_R2_BACKUPS_RO_* / CF_MAIL_R2_BACKUP_RW_* / CF_MEDIA_R2_BACKUP_RW_*
-- **Grants**: four account-owned R2 tokens, each stored as `_TOKEN` plus its S3 pair
+### CF_ORPHEUS_R2_BACKUP_RW_* / CF_WARD_R2_BACKUP_RW_*
+- **Grants**: two account-owned R2 tokens, `orpheus-r2-backup-rw` and `ward-r2-backup-rw`, each stored as `_TOKEN` plus its S3 pair (`_KEY_ID` is the token id, `_SECRET` the SHA-256 of the value). Each reads and writes its own backup bucket, `servers-backup-orpheus` or `servers-backup-ward`, and nothing else. They replace the media and mail tokens.
+- **Used by**: orpheus's restic (ward's waits for Pass 5) and `scripts/dry-run.sh`. Readers per name: the servers repo's `secrets/registry.md`.
+- **Minted 2026-10-20** in the rename pass (R3) through a temporary token-management token, with the old tokens' policies and the bucket swapped. `ws-r2-backups-ro` was re-scoped in place to add both new buckets; its value did not change.
+- **Rotate**: as for `CF_WS_SERVERS_TOKEN`; a server's token also rotates when that server is rebuilt or compromised.
+
+### CF_WS_R2_ARCHIVE_RW_* / CF_WS_R2_BACKUPS_RO_*
+- **Grants**: two account-owned R2 tokens, each stored as `_TOKEN` plus its S3 pair
   (`_KEY_ID` is the token id, `_SECRET` the SHA-256 of the value, per
   https://developers.cloudflare.com/r2/api/tokens/). `ws-r2-archive-rw` (`9ab3b968...`): object
   read and write on `servers-archive`. `ws-r2-backups-ro` (`d76af5a1...`): object read on
-  `servers-backup-mail` and `servers-backup-media`. `mail-r2-backup-rw` (`da9e36ef...`) and
-  `media-r2-backup-rw` (`9caa9891...`): object read and write on their own backup bucket.
-- **Used by**: workstation archive copies; restores, drills, and the restore kit; the mail
-  server's and the media server's restic. Readers per name: the servers repo's
+  `servers-backup-orpheus` and `servers-backup-ward` (the rename pass re-scoped it from the two old buckets).
+- **Used by**: workstation archive copies; restores, drills, and the restore kit. Readers per name: the servers repo's
   `secrets/registry.md`.
 - **Minted 2026-10-18** as above. Smoke-tested over S3: each lists its own bucket (200) and is
   refused another (403); the read-only token lists both backup buckets.

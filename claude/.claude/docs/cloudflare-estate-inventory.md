@@ -33,7 +33,7 @@ The rules come from three published sources:
 The scheme:
 
 1. **One token per holder and job.** The holder is where the value lives: `ws` (this
-   workstation), `ci` (GitHub Actions and Workers Builds), or a server (`mail`, `media`). Two
+   workstation), `ci` (GitHub Actions and Workers Builds), or a server (`ward`, `orpheus`). Two
    jobs on the same holder share a token unless a script's bug in one would otherwise reach the
    other's resources.
 2. **Ownership.** A new token that a script, a server, or CI depends on is account-owned, so it
@@ -68,9 +68,9 @@ The scheme:
 | `ws-r2-music-ro` | user | R2 object read, `music-library` | `MUSIC_R2_RO_ACCESS_KEY_ID` / `MUSIC_R2_RO_SECRET_ACCESS_KEY` (`music-pull` reads them) | `music-pull` |
 | `ws-servers` | account | 907.life DNS, Single Redirect, and Workers Routes edit; Workers Admin (its scripts create and delete Workers), D1, Email Sending; Access apps and policies, Tunnel, Access audit logs read | `CF_WS_SERVERS_TOKEN` | The servers repo's scripts |
 | `ws-r2-archive-rw` | account | R2 object read and write, `servers-archive` | `CF_WS_R2_ARCHIVE_RW_TOKEN` + pair | Workstation archive copies |
-| `ws-r2-backups-ro` | account | R2 object read, `servers-backup-mail` and `servers-backup-media` | `CF_WS_R2_BACKUPS_RO_TOKEN` + pair | Restores and drills |
-| `mail-r2-backup-rw` | account | R2 object read and write, `servers-backup-mail` | `CF_MAIL_R2_BACKUP_RW_TOKEN` + pair | The mail server's restic |
-| `media-r2-backup-rw` | account | R2 object read and write, `servers-backup-media` | `CF_MEDIA_R2_BACKUP_RW_TOKEN` + pair | The media server's restic |
+| `ws-r2-backups-ro` | account | R2 object read, `servers-backup-orpheus` and `servers-backup-ward` | `CF_WS_R2_BACKUPS_RO_TOKEN` + pair | Restores and drills |
+| `orpheus-r2-backup-rw` | account | R2 object read and write, `servers-backup-orpheus` | `CF_ORPHEUS_R2_BACKUP_RW_TOKEN` + pair | Orpheus's restic |
+| `ward-r2-backup-rw` | account | R2 object read and write, `servers-backup-ward` | `CF_WARD_R2_BACKUP_RW_TOKEN` + pair | Ward's restic |
 | `ci-deploy` | account | Workers Editor across all Workers | Each repo's `CLOUDFLARE_API_TOKEN` Actions secret; origin `CF_CI_DEPLOY_TOKEN` | Every site deploy and Workers Builds |
 
 `ci-deploy` is planned, not live. Until it lands, five repos' Actions secrets and the Workers
