@@ -394,7 +394,7 @@ JMAP, `$FASTMAIL_API_TOKEN` in `~/.local/secrets`. API reference:
 `~/.claude/instructions/fastmail-api.md`.
 
 Until poplar is ready, Hylki (Flatpak `co.hyprlab.Hylki`) is the desktop mail client
-(Geoff, 2026-10-18; Thunderbird is retired, its mail filters backed up under
-`~/.local/state/browser-mail-retire-2026-10-18/`). Contacts and calendars are GNOME
+(Geoff, 2026-10-18; Thunderbird is retired, its mail filters backed up on pavilion under
+`~/.local/state/browser-mail-retire-2026-10-18/`). Contacts and calendars are GNOME <!-- host-ok -->
 Contacts and GNOME Calendar, fed by a CalDAV/CardDAV account in GNOME Online Accounts;
 Hylki reads the Evolution Data Server address books and adds invitations to the calendar.
