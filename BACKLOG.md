@@ -4,6 +4,9 @@
 
 ## Medium
 
+- [ ] **#26** Get API access to the house router once its local admin password exists `#improvement` `#workstation` *(2026-10-20)*
+  The TP-Link Archer C4000 v3.0 at 192.168.1.1 is bound to a TP-Link ID, and its local admin password is unknown; TP-Link's forum says a bound router can't change or reset it short of a factory reset. The `tplinkrouterc6u` client (auto-detects its C1200-family driver on this firmware; test script in the 2026-10-20 session) needs the local password and rejects TP-Link ID login. `TPLINK_ROUTER_PASSWORD` in the age store currently holds the TP-Link ID password by mistake, registry marked pending. To finish: factory-reset and re-set-up the router, record the local password in Proton Pass, `secret-receive TPLINK_ROUTER_PASSWORD --pass <ref>`, run a read-only status call, flip the registry checkmark. Until then, router changes go through the browser in the Claude Chromium profile with a TP-Link ID sign-in. Side note: the router's login page carries TP-Link's leftover weinre debug script tag pointing at 192.168.1.101:1070; nothing answered there on 2026-10-20. `secrets/registry.md`
+
 - [ ] **#25** pass-core's design step says what a session does after a pass misses its bar `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-19)*
   Read the pass's final artifacts, not the record's table; compare by word count, since live pages are hard-wrapped; dispatch one fact-check agent per artifact against the code with a file:line evidence bar; trace each wrong claim to its source (draft, fact, blueprint, live page, code comment) before designing the next pass. This turned B3c's 0 of 8 into a diagnosis of the acceptance machinery: `~/Projects/initiatives/docs-system/research/2026-10-19-drafter-b3c-draft-review.md`. `claude/.claude/skills/pass-core/SKILL.md`
 
