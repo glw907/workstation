@@ -82,15 +82,19 @@ assert_eq "$(sessions_left)" "0" "a bad token leaves no session directory"
 
 # 4b. A command that fails after a good login keeps its exit code, and cleanup still runs.
 reset; echo "$TOKEN" > "$root/token"
-out=$(helper item edit pass://Workstation/thing/note </dev/null)
+out=$(helper item update pass://Workstation/thing/note </dev/null)
 assert_eq "$?" "2" "a failing command's exit code is preserved ($out)"
 grep -q 'logout' "$root/pass.log" || { echo "FAIL: a failing command skipped the logout"; fail=1; }
 assert_eq "$(sessions_left)" "0" "a failing command leaves no session directory"
 
 # 4c. A subcommand off the allowlist is refused before the token is read: no lookup, no call.
-for sub in run login agent ssh-agent share; do
+# Second-level checks: item and vault refuse sharing, transfer, membership, and deletion.
+for sub in run login agent ssh-agent share invite \
+    "vault share" "vault transfer" "vault member" "vault delete" "vault create" \
+    "item share" "item member" "item delete"; do
   reset; echo "$TOKEN" > "$root/token"
-  out=$(helper "$sub" -- true </dev/null)
+  read -ra words <<< "$sub"
+  out=$(helper "${words[@]}" -- true </dev/null)
   assert_eq "$?" "1" "'$sub' is refused with exit 1"
   case "$out" in *"subcommand '$sub' is not allowed"*) ;; *) echo "FAIL: '$sub' refusal did not say so: $out"; fail=1 ;; esac
   [ -s "$root/secret-tool.log" ] && { echo "FAIL: '$sub' read the keyring"; fail=1; }
