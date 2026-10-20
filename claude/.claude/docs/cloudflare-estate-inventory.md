@@ -33,7 +33,7 @@ The rules come from three published sources:
 The scheme:
 
 1. **One token per holder and job.** The holder is where the value lives: `ws` (this
-   workstation), `ci` (GitHub Actions and Workers Builds), or a server (`mail`, `media`). Two
+   workstation), `ci` (GitHub Actions and Workers Builds), or a server (`ward`, `orpheus`). Two
    jobs on the same holder share a token unless a script's bug in one would otherwise reach the
    other's resources.
 2. **Ownership.** A new token that a script, a server, or CI depends on is account-owned, so it

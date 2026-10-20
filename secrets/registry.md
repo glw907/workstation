@@ -331,12 +331,13 @@ tmpfs cache; no password manager holds it for scripts.
   `monitor-subscribe` on each workstation.
 
 ### IMMICH_DB_PASSWORD
-- **Grants**: the password of the media server's Immich Postgres role. Immich cannot start without it, and the restored database expects the role to exist with it.
-- **Used by**: the servers repo's `roles/immich` compose file, rendered to `/etc/immich/immich.env` on the media server only.
+- **Grants**: the password of orpheus's Immich Postgres role. Immich cannot start without it, and the restored database expects the role to exist with it.
+- **Used by**: the servers repo's `roles/immich` compose file, rendered to `/etc/immich/immich.env` on orpheus only.
 - **Generated 2026-10-19** on pavilion (40 random alphanumeric characters), in Pass 2 (M3).
-- **Rotate**: store a new value, re-render the media server's secrets, and change the role's password inside Postgres.
+- **Rotate**: store a new value, re-render orpheus's secrets, and change the role's password inside Postgres.
 
 ### TUNNEL_TOKEN_MEDIA
+- **Retired**: the rename pass deletes this name once Geoff's sign-in through the `servers-orpheus` tunnel is proven and the old `servers-media` tunnel is gone.
 - **Grants**: the right to run the `servers-media` Cloudflare Tunnel connector, which carries the media server's Access browser terminal. Anyone holding it can attach a connector to that tunnel.
 - **Used by**: the servers repo's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on the media server only.
 - **Generated 2026-10-19** by `cloudflare/access.sh --token media` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in Pass 2 (M4).
@@ -372,8 +373,7 @@ tmpfs cache; no password manager holds it for scripts.
   https://developers.cloudflare.com/r2/api/tokens/). `ws-r2-archive-rw` (`9ab3b968...`): object
   read and write on `servers-archive`. `ws-r2-backups-ro` (`d76af5a1...`): object read on
   `servers-backup-orpheus` and `servers-backup-ward` (the rename pass re-scoped it from the two old buckets).
-- **Used by**: workstation archive copies; restores, drills, and the restore kit; the ward
-  server's and orpheus's restic. Readers per name: the servers repo's
+- **Used by**: workstation archive copies; restores, drills, and the restore kit. Readers per name: the servers repo's
   `secrets/registry.md`.
 - **Minted 2026-10-18** as above. Smoke-tested over S3: each lists its own bucket (200) and is
   refused another (403); the read-only token lists both backup buckets.
