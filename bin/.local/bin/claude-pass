@@ -17,10 +17,10 @@
 # "claude-pass on <host>: <first two args>", 1 to 300 characters); WS_HOST overrides
 # `hostname -s`.
 #
-# Only these first arguments run: item, vault, folder, password, totp, share, info, user.
-# Anything else (run, login, agent, ssh-agent, session, settings, update, ...) is refused
-# before the token is read, since it could spawn a command, start a daemon, or act on Geoff's
-# own login instead of the agent's.
+# Only these first arguments run: item, vault, folder, password, totp, info, user.
+# Anything else (run, login, agent, ssh-agent, share, session, settings, update, ...) is refused
+# before the token is read, since it could spawn a command, start a daemon, share a vault with
+# another account, or act on Geoff's own login instead of the agent's.
 set -euo pipefail
 umask 077
 sess=""
@@ -36,8 +36,8 @@ case "${1:-}" in
         if [[ -n "$(lookup_token)" ]]; then echo "path=proton host=$HOST"; else echo "path=none host=$HOST"; fi
         exit 0 ;;
     -h|--help|"") awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"; exit 0 ;;
-    item|vault|folder|password|totp|share|info|user) ;;
-    *) die "subcommand '$1' is not allowed (allowed: item vault folder password totp share info user)" ;;
+    item|vault|folder|password|totp|info|user) ;;
+    *) die "subcommand '$1' is not allowed (allowed: item vault folder password totp info user)" ;;
 esac
 
 reason="${CLAUDE_PASS_REASON:-claude-pass on $HOST: ${1:-} ${2:-}}"

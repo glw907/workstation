@@ -16,7 +16,7 @@ own login and reach every vault:
 
 claude-pass itself passes, because its command text names neither pass-cli nor a session
 directory, and it runs only its allowlisted subcommands (item, vault, folder, password, totp,
-share, info, user). This hook also treats `claude-pass run` as a wrapper, so a pass-cli placed
+info, user). This hook also treats `claude-pass run` as a wrapper, so a pass-cli placed
 after it is still denied.
 
 There is no allowance: the agent token pops up no prompt, so a rate

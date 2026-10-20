@@ -88,7 +88,7 @@ grep -q 'logout' "$root/pass.log" || { echo "FAIL: a failing command skipped the
 assert_eq "$(sessions_left)" "0" "a failing command leaves no session directory"
 
 # 4c. A subcommand off the allowlist is refused before the token is read: no lookup, no call.
-for sub in run login agent ssh-agent; do
+for sub in run login agent ssh-agent share; do
   reset; echo "$TOKEN" > "$root/token"
   out=$(helper "$sub" -- true </dev/null)
   assert_eq "$?" "1" "'$sub' is refused with exit 1"
