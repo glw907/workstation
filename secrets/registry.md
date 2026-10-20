@@ -128,6 +128,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CAIRN_GH_READ_TOKEN | ✓     | —        | —    | —        | —          |
 | CAIRN_DOCS_READER_OAUTH_TOKEN | ✓ | — | — | — | — |
 | CF_ZT_TOKEN         | ✓     | —        | —    | —        | —          |
+| ACCESS_GITHUB_CLIENT_ID / _SECRET | ✓ | — | — | — | — |
 | CF_ACCESS_CLIENT_SECRET | ✓ | —        | —    | —        | —          |
 | ANTHROPIC_API_KEY   | ✓     | —        | ✓    | ✓        | —          |
 | CMS_BOT_PAT         | ✓     | —        | —    | —        | —          |
@@ -142,7 +143,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CF_MAIL_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | CF_MEDIA_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | MONITOR_READ_TOKEN | ✓ | — | — | — | — |
-| PROTON_BRIDGE_USER / _PASSWORD | ✓ | — | — | — | — |
 | HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA | ✓ | — | — | — | — |
 | IMMICH_DB_PASSWORD | ✓ | — | — | — | — |
 | RESTIC_PASSWORD_MEDIA | ✓ | — | — | — | — |
@@ -328,16 +328,6 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotate**: generate a new value, store it, redeploy the monitor, and restart
   `monitor-subscribe` on each workstation.
 
-### PROTON_BRIDGE_USER / PROTON_BRIDGE_PASSWORD
-- **Grants**: the IMAP login Proton Mail Bridge generates for the mailbox. Bridge serves the whole
-  mailbox on loopback, so the credential could read all of it; `proton-mail-read` limits itself to
-  `Folders/Services`, and the Sieve filter keeps account-access mail out of that folder.
-- **Used by**: `proton-mail-read`, which reads both from `~/.local/secrets`.
-- **Received** through `secret-receive` from the Bridge CLI's `info` output. The username is a
-  private address, so it appears only in the store.
-- **Rotate**: in the Bridge CLI (`distrobox enter proton-bridge -- protonmail-bridge --cli`)
-  signing the account out and in generates a new Bridge password; receive both names again.
-
 ### IMMICH_DB_PASSWORD
 - **Grants**: the password of the media server's Immich Postgres role. Immich cannot start without it, and the restored database expects the role to exist with it.
 - **Used by**: the servers repo's `roles/immich` compose file, rendered to `/etc/immich/immich.env` on the media server only.
@@ -389,6 +379,19 @@ tmpfs cache; no password manager holds it for scripts.
   the command line.
 - **Received 2026-10-18**: the password through a desktop dialog; verified with an SFTP listing.
 - **Rotate at**: PikaPods > the pod > Settings > SFTP. Dies with the pod when PikaPods is retired.
+
+### ACCESS_GITHUB_CLIENT_ID / ACCESS_GITHUB_CLIENT_SECRET
+- **Issuer**: the GitHub OAuth app "Wright Family Access" on Geoff's GitHub account, callback
+  `https://907wrights.cloudflareaccess.com/cdn-cgi/access/callback`.
+- **Grants**: signing in to Cloudflare Access as a GitHub user. The secret lets Access exchange a
+  sign-in code for the user's identity; it grants nothing in GitHub itself.
+- **Used by**: the Access GitHub identity provider (id `916192d5-ba81-48ae-be48-002abf1be8ef`),
+  set with `CF_ZT_TOKEN` on 2026-10-19. No script reads them at run time; they are kept for a
+  rotation or a rebuild of the provider.
+- **Received** through `secret-receive` (the Client ID re-stored with `secret-set.sh --value`; it
+  is not secret).
+- **Rotate**: generate a new client secret on the OAuth app, store it, `PUT` the provider's config
+  with `CF_ZT_TOKEN`, run the provider's Test in Zero Trust, then delete the old secret on GitHub.
 
 ### CF_ZT_TOKEN
 - **Issuer-side token name**: "Zero Trust Edit" (user-owned). Also the aksailingclub-legacy
