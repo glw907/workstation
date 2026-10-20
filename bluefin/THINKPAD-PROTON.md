@@ -11,8 +11,9 @@ ws-pass-key --store", and `check-drift` reports `path=none`. Pulling first is
 safe because nothing else depends on them, but run the steps in one sitting.
 
 Use `sudo -A` throughout. If it fails, run `claude-sudo-setup`, which now
-takes the password in a dialog. Claude never runs `pass-cli`; the
-`claude-block-pass` hook denies it.
+takes the password in a dialog. Claude never runs bare `pass-cli`; the
+`claude-block-pass` hook denies it. Claude reaches Proton Pass only through
+`claude-pass`, once step 3 gives this host Claude's own agent.
 
 1. Bring the checkout and tools current:
    ```bash
@@ -38,6 +39,15 @@ takes the password in a dialog. Claude never runs `pass-cli`; the
    (viewer role on that vault only). He then runs `ws-pass-key --store` and
    enters the token in the hidden dialog. `ws-pass-key --status` must print
    `path=proton`.
+
+   In the same session Geoff creates Claude's agent with the vaults
+   pavilion's has (Geoff, 2026-10-20). He runs
+   `pass-cli agent create thinkpad-claude --expiration 3m`, then
+   `pass-cli agent access grant thinkpad-claude --vault-name V --role editor`
+   for `Servers emergency` and for `Workstation`. He stores its token with
+   `secret-tool store --label "Proton Pass claude agent" service
+   proton-pass-agent-claude host "$(hostname -s)"`, which prompts for the
+   value. `claude-pass --status` must print `path=proton`.
 4. Check the keyring after a reboot. `ws-pass-key` reads the token from GNOME
    Keyring, and thinkpad-x1 logs in automatically. An automatic login may
    leave the login keyring locked, so the first read after a boot can raise an

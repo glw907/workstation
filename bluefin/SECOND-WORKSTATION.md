@@ -163,7 +163,14 @@ mismatch is a hard stop: never decrypt an unverified blob.
 4. Create the host's Proton agent token. In a throwaway `pass-cli` session, Geoff
    runs `pass-cli agent create pavilion-scripts --expiration 3m --vault
    Workstation` (viewer role on that vault only), then runs
-   `ws-pass-key --store` and enters the token in the hidden dialog.
+   `ws-pass-key --store` and enters the token in the hidden dialog. In the
+   same session he creates Claude's own agent with `pass-cli agent create
+   pavilion-claude --expiration 3m` and grants it each vault Claude may edit
+   with `pass-cli agent access grant pavilion-claude --vault-name V --role
+   editor` (`Servers emergency` and `Workstation` to start). He stores its
+   token with `secret-tool store --label "Proton Pass claude agent" service
+   proton-pass-agent-claude host pavilion`. Claude then reaches Proton Pass
+   only through `claude-pass` (Geoff, 2026-10-20).
 5. Open a NEW terminal, so the stowed `.bashrc` is loaded, and run:
    ```bash
    claude-sudo-setup

@@ -82,6 +82,12 @@ DENIED = [
     "cat /run/user/1000/pass-c*/x",
     "cat /run/user/1000/pass-w?.abc/x",
     "cat /run/user/1000/pass-[w]s.a/x",
+    # claude-pass's own session directory: Claude goes through claude-pass, never into its dir.
+    "ls $XDG_RUNTIME_DIR/pass-agent.Xy12Ab",
+    "cat /run/user/1000/pass-agent.Xy12Ab/session",
+    "cat /run/user/1000/pass-a*/session",
+    # Bare pass-cli stays denied next to the claude-pass route.
+    "claude-pass --status && pass-cli item list",
 ]
 
 ALLOWED = [
@@ -99,6 +105,14 @@ ALLOWED = [
     "ls ~/Projects/pass-client",
     "bash tests/ws-pass-key.test.sh",
     "ssh-add -l",
+    # claude-pass is Claude's route into Proton Pass (Geoff, 2026-10-20).
+    "claude-pass --status",
+    'claude-pass item list --vault-name "Servers emergency"',
+    'claude-pass item create login --vault-name "Servers emergency" --from-template - < /tmp/x.json',
+    "printf '%s' \"$tmpl\" | claude-pass item create login --vault-name Workstation --from-template -",
+    "CLAUDE_PASS_REASON='rotate a key' claude-pass item view pass://Workstation/x/password > /tmp/out",
+    "bash tests/claude-pass.test.sh",
+    "micro bin/.local/bin/claude-pass",
 ]
 
 
@@ -123,6 +137,7 @@ def test_denied(cmd):
     decision = json.loads(result.stdout)["hookSpecificOutput"]
     assert decision["permissionDecision"] == "deny"
     assert "ws-pass-key" in decision["permissionDecisionReason"]
+    assert "claude-pass" in decision["permissionDecisionReason"]
 
 
 @pytest.mark.parametrize("cmd", ALLOWED)

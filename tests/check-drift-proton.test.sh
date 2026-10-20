@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # check-drift-proton.test.sh: prove `check-drift --proton-only` reports the pass-cli version brew
-# holds and the host's age-key path and agent-token expiry, from stub brew and ws-pass-key
-# commands. No real brew, keyring, or pass-cli is touched.
+# holds, the host's age-key path and agent-token expiry, and whether Claude's own agent is there,
+# from stub brew, ws-pass-key, and claude-pass commands. No real brew, keyring, or pass-cli is
+# touched.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 DRIFT="$(pwd)/bin/.local/bin/check-drift"
@@ -15,12 +16,13 @@ assert_has() {  # assert_has <output> <fragment> <label>
 
 printf '#!/usr/bin/env bash\n[ -n "${STUB_NO_BREW:-}" ] && exit 1\necho "proton-pass-cli 2.4.2"\n' > "$root/brew"
 printf '#!/usr/bin/env bash\necho "$STUB_STATUS"\n' > "$root/ws-pass-key"
-chmod +x "$root/brew" "$root/ws-pass-key"
+printf '#!/usr/bin/env bash\necho "${STUB_CLAUDE:-path=proton host=h}"\n' > "$root/claude-pass"
+chmod +x "$root/brew" "$root/ws-pass-key" "$root/claude-pass"
 
 drift() {  # drift <STUB_STATUS> [env...]; prints output, then "rc=N"
   local status="$1"; shift
   local out rc
-  out=$(env BREW="$root/brew" WS_PASS_KEY="$root/ws-pass-key" STUB_STATUS="$status" "$@" bash "$DRIFT" --proton-only 2>&1)
+  out=$(env BREW="$root/brew" WS_PASS_KEY="$root/ws-pass-key" CLAUDE_PASS="$root/claude-pass" STUB_STATUS="$status" "$@" bash "$DRIFT" --proton-only 2>&1)
   rc=$?
   printf '%s\nrc=%s' "$out" "$rc"
 }
@@ -29,11 +31,17 @@ out=$(drift "path=proton host=h expires=2999-01-01 days=900")
 assert_has "$out" "pass-cli: 2.4.2" "version line"
 assert_has "$out" "age key path: Proton Pass agent token" "proton path line"
 assert_has "$out" "agent token expires in 900 days" "expiry line"
+assert_has "$out" "Claude's agent: token in the keyring" "claude agent line"
 assert_has "$out" "rc=0" "healthy host exits 0"
+
+out=$(drift "path=proton host=h expires=2999-01-01 days=900" STUB_CLAUDE="path=none host=h")
+assert_has "$out" "Claude's agent: none on this host yet" "no claude agent line"
+assert_has "$out" "rc=0" "a host with no claude agent is reported, not failed"
 
 out=$(drift "path=none host=h")
 assert_has "$out" "no agent token in the keyring" "no-token line"
 assert_has "$out" "rc=1" "a host with no agent token fails"
+assert_has "$out" "Claude's agent:" "the claude line still prints when the age-key path fails"
 
 out=$(drift "path=proton host=h expires=2026-11-01 days=14")
 assert_has "$out" "expires in 14 days (renew it)" "near-expiry warning"

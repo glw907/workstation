@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# claude-pass: run one pass-cli command as Claude's own Proton Pass agent (<host>-claude).
+#
+# Geoff ruled on 2026-10-20 that Claude works in Proton Pass as it did in 1Password, creating
+# and editing items, through an agent scoped to named vaults (editor on Servers emergency and
+# Workstation to start). The agent's token sits in GNOME Keyring (service
+# proton-pass-agent-claude, host <host>). Each run logs in to a fresh session directory under
+# $XDG_RUNTIME_DIR, runs the command with an audit reason, then logs out and removes the
+# directory, so no standing session is left and Geoff's own login is never used.
+#
+# Usage:
+#   claude-pass <pass-cli args...>   # e.g. claude-pass item list --vault-name "Servers emergency"
+#   claude-pass --status             # print "path=proton|none host=H"; runs nothing
+#
+# Stdin passes through, so a value goes in as `item create login --from-template -` and never
+# on the command line. Environment: CLAUDE_PASS_REASON sets the audit reason (default
+# "claude-pass on <host>: <first two args>"); WS_HOST overrides `hostname -s`.
+set -euo pipefail
+umask 077
+sess=""
+
+HOST="${WS_HOST:-$(hostname -s)}"
+
+die() { echo "claude-pass: $*" >&2; exit 1; }
+
+lookup_token() { secret-tool lookup service proton-pass-agent-claude host "$HOST" 2>/dev/null || true; }
+
+case "${1:-}" in
+    --status)
+        if [[ -n "$(lookup_token)" ]]; then echo "path=proton host=$HOST"; else echo "path=none host=$HOST"; fi
+        exit 0 ;;
+    -h|--help|"") sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
+
+[[ -n "${XDG_RUNTIME_DIR:-}" ]] || die "XDG_RUNTIME_DIR is not set; no tmpfs for a session"
+token="$(lookup_token)"
+[[ -n "$token" ]] || die "no agent token for $HOST in the keyring (service proton-pass-agent-claude)"
+
+sess="$(mktemp -d "$XDG_RUNTIME_DIR/pass-agent.XXXXXX")"
+export PROTON_PASS_SESSION_DIR="$sess"
+export PROTON_PASS_DISABLE_TELEMETRY=1
+trap 'pass-cli logout >/dev/null 2>&1 || true; rm -rf "$sess"' EXIT
+
+PROTON_PASS_PERSONAL_ACCESS_TOKEN="$token" pass-cli login >/dev/null 2>&1 </dev/null ||
+    die "agent login failed for $HOST (token expired or revoked?)"
+unset token
+
+PROTON_PASS_AGENT_REASON="${CLAUDE_PASS_REASON:-claude-pass on $HOST: ${1:-} ${2:-}}" pass-cli "$@"

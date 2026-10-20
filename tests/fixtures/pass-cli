@@ -5,7 +5,7 @@
 # a bad token fails the login. It touches no network and no real Proton session.
 #
 # Environment (all set by the test):
-#   FAKE_PASS_LOG        file; one line per call: "<args> | session=<dir> reason=<text> token=<set|none>"
+#   FAKE_PASS_LOG        file (an item create's stdin goes to $FAKE_PASS_LOG.stdin); one line per call: "<args> | session=<dir> reason=<text> token=<set|none>"
 #   FAKE_PASS_FIXTURE    directory; pass://V/I/F is served from the file $FAKE_PASS_FIXTURE/V/I/F
 #   FAKE_PASS_GOOD_TOKEN the one token a login accepts (default pst_fake::KEY)
 #   FAKE_PASS_WEB_FAIL   non-empty: a web login (no token) fails
@@ -53,6 +53,11 @@ case "$cmd" in
             while [[ $# -gt 0 ]]; do [[ "$1" == --share-id ]] && share="${2:-}"; shift; done
             cat "${FAKE_PASS_FIXTURE:?FAKE_PASS_FIXTURE is not set}/_items-$share.json"
             exit $?
+        fi
+        if [[ "${1:-}" == create ]]; then
+            [[ -f "$sess/session" && -n "${PROTON_PASS_AGENT_REASON:-}" ]] || { echo "fake pass-cli: create needs a session and a reason" >&2; exit 1; }
+            cat > "$log.stdin"
+            exit 0
         fi
         [[ "${1:-}" == view ]] || { echo "fake pass-cli: unsupported: item ${1:-}" >&2; exit 2; }
         shift

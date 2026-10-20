@@ -24,6 +24,7 @@ secrets/values.age (encrypted, safe to commit)
 ```
 
 - **Proton Pass** holds the age encryption key, in the `Workstation` vault (one item); a paper copy exists too
+- **claude-pass** is Claude's own route into Proton Pass (Geoff, 2026-10-20): the `<host>-claude` agent, editor on `Servers emergency` and `Workstation`, creates and edits items there. It plays no part in the age-key path above
 - **values.age** is the encrypted bundle committed to this repo and holds all secret values
 - **sync.sh** decrypts with the age key from `ws-pass-key` (the host's Proton agent token; a host with no token fails and is told to run `ws-pass-key --store`) and pushes to targets
 - **~/.local/secrets** is chmod 600, gitignored, sourced by `.bashrc`

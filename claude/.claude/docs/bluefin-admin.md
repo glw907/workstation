@@ -295,9 +295,29 @@ the R2 backup, for example).
 Moved from the global CLAUDE.md "Secrets" section (2026-09-27); CLAUDE.md keeps the
 never-commit rules and a pointer here.
 
-- **Proton Pass (Pass W, 2026-10-18): Claude never calls `pass-cli`.** `claude-block-pass`
-  denies `pass-cli`, `secret-tool lookup`, `keyctl print|pipe|read`, and any
-  `pass-ws.*`, `pass-recv.*`, or default pass-cli session-directory path. The age key
+- **Claude's own Proton Pass agent (Geoff, 2026-10-20): Claude works in Proton Pass as it
+  did in 1Password, creating and editing items, but only through `claude-pass`.** Each
+  host gets an agent named `<host>-claude` with role editor on named vaults: `Servers
+  emergency` and `Workstation` to start, more as Geoff grants them. His Private and family
+  vaults stay out of reach. `claude-pass <pass-cli args>` reads the agent's token from GNOME
+  Keyring (service `proton-pass-agent-claude`, host `<host>`), logs in to a fresh
+  `$XDG_RUNTIME_DIR/pass-agent.*` session, runs the one command with an audit reason
+  (`CLAUDE_PASS_REASON`, or a default naming the host and subcommand), then logs out and
+  removes the directory. A value goes in on stdin (`claude-pass item create login
+  --vault-name "Servers emergency" --from-template -`), never on the command line. A secret
+  read with `item view` goes to a file or a pipe, never the transcript. `claude-pass
+  --status` prints `path=proton|none`, and `check-drift` reports it without failing.
+  To grant another vault, Geoff runs `pass-cli agent access grant <host>-claude
+  --vault-name V --role editor` in a throwaway session. The agent expires three months
+  after creation (`pass-cli agent create <host>-claude --expiration 3m`; pavilion's was
+  created 2026-10-20). To renew it, Geoff creates a fresh token and stores it with
+  `secret-tool store --label "Proton Pass claude agent" service proton-pass-agent-claude
+  host <host>`. No expiry is recorded, so `check-drift` cannot warn ahead of it.
+  thinkpad-x1 still owes its `thinkpad-claude` agent (`bluefin/THINKPAD-PROTON.md`).
+- **Proton Pass (Pass W, 2026-10-18): Claude never calls bare `pass-cli`**, which would act
+  as Geoff's own login and reach every vault. `claude-block-pass` denies `pass-cli`,
+  `secret-tool lookup`, `keyctl print|pipe|read`, and any `pass-ws.*`, `pass-recv.*`,
+  `pass-agent.*`, or default pass-cli session-directory path. The age key
   reaches `secret-set.sh` and `sync.sh` through `ws-pass-key`: the host's agent token
   (GNOME Keyring, `ws-pass-key --store` keeps a new one), a per-run tmpfs session, a
   read with a reason, then logout. A host with no token fails with a message to run
