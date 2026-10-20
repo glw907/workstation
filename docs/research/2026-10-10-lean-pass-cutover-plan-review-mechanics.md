@@ -1,6 +1,6 @@
 # Lean pass cutover plan review: mechanics and feasibility
 
-Lens: mechanics and feasibility. Target: `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md` at
+Lens: mechanics and feasibility. Target: `docs/plans/2026-10-10-lean-pass-cutover.md` at
 `ec14c1e`. Reviewer: Opus 5.5, 2026-10-10. Every claim below cites a doc page fetched today, the
 Claude Code 2.1.296 binary (`strings` of
 `/var/home/linuxbrew/.linuxbrew/Caskroom/claude-code@latest/2.1.296/claude`), or a probe run today.

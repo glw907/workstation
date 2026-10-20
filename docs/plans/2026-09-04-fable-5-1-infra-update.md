@@ -12,7 +12,7 @@ recording the 5.1 economics, auditing the prompts for dated patterns,
 de-prescribing one pass skill as a measured experiment, and putting the
 whole review on a monthly timer.
 
-**Spec:** `~/.dotfiles/docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md`.
+**Spec:** `~/.dotfiles/docs/specs/2026-09-04-fable-5-1-infra-update-design.md`.
 The plan argues from the spec; executors read both. Parent design:
 `2026-08-21-fable-conductor-design.md` (the conductor shape is unchanged).
 
@@ -91,11 +91,11 @@ one re-dispatch by Agent tool with the blocking findings, then stop.
 
   ```bash
   cd ~/.dotfiles
-  git add docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md \
-          docs/superpowers/plans/2026-09-04-fable-5-1-infra-update.md
+  git add docs/specs/2026-09-04-fable-5-1-infra-update-design.md \
+          docs/plans/2026-09-04-fable-5-1-infra-update.md
   git commit -m "Add the Fable 5.1 infra update plan and spec" -- \
-          docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md \
-          docs/superpowers/plans/2026-09-04-fable-5-1-infra-update.md
+          docs/specs/2026-09-04-fable-5-1-infra-update-design.md \
+          docs/plans/2026-09-04-fable-5-1-infra-update.md
   ```
 
 ---
@@ -427,7 +427,7 @@ prints nothing.
   over unchanged; the bundled `claude-api` skill's long-running-agent notes
   say prior-model prompts and skills are often too prescriptive and reduce
   output quality. The prompt-audit report at
-  `~/.dotfiles/docs/superpowers/plans/2026-09-04-prompt-audit-report.md`
+  `~/.dotfiles/docs/plans/2026-09-04-prompt-audit-report.md`
   and the site-pass experiment (HISTORY 2026-09-04) test which reading holds
   here.
 
@@ -472,7 +472,7 @@ after this task, or after task 7 if task 3 is blocked.
 ### Task 4: Prompt audit report (independent; dispatch to Opus)
 
 **Files:**
-- Create: `~/.dotfiles/docs/superpowers/plans/2026-09-04-prompt-audit-report.md`
+- Create: `~/.dotfiles/docs/plans/2026-09-04-prompt-audit-report.md`
 
 The implementer is `general-purpose` with `model: "claude-opus-5"`: the
 audit is judgment over prose written for earlier models. Read-only against
@@ -500,7 +500,7 @@ the config; the only write is the report.
   > (`claude-fable-5-1`), the session model on this workstation. Produce the
   > audit report only; do not edit any scoped file and do not produce a
   > diff. Write the report to
-  > `~/.dotfiles/docs/superpowers/plans/2026-09-04-prompt-audit-report.md`.
+  > `~/.dotfiles/docs/plans/2026-09-04-prompt-audit-report.md`.
   > Format each finding as one list item that begins with `- ` and contains
   > the location in backticks as `path:line`, then the pattern, why it is
   > dated for Fable 5.1, and a confidence, and ends with the literal tag
@@ -516,7 +516,7 @@ the config; the only write is the report.
 
   ```bash
   S=/tmp/claude-1000/-var-home-glw907/430691a1-0af3-4b53-946c-5645057adb27/scratchpad
-  f=~/.dotfiles/docs/superpowers/plans/2026-09-04-prompt-audit-report.md
+  f=~/.dotfiles/docs/plans/2026-09-04-prompt-audit-report.md
   k=$(grep -c '\[keep\]$' "$f"); t=$(grep -c '\[trim\]$' "$f")
   n=$(grep -cE '^- .*`[^`]+:[0-9]+`' "$f")
   echo "keep=$k trim=$t findings=$n"; [ $((k+t)) -eq "$n" ] && [ "$n" -ge 1 ] && echo SHAPE-OK
@@ -530,7 +530,7 @@ the config; the only write is the report.
 
   ```bash
   bash ~/.dotfiles/scripts/check.sh
-  cd ~/.dotfiles && git add docs/superpowers/plans/2026-09-04-prompt-audit-report.md
+  cd ~/.dotfiles && git add docs/plans/2026-09-04-prompt-audit-report.md
   ```
 
 **Acceptance:** step 3's three expected outputs; the reviewer spot-checks
@@ -574,7 +574,7 @@ not abut it.
   - You hold the pass number and starter prompt (from `docs/STATUS.md`) and
     the pass plan. If no plan exists and the starter prompt lists open
     questions, brainstorm first (`superpowers:brainstorming`), then write the
-    plan at `docs/superpowers/plans/YYYY-MM-DD-<topic>.md` from
+    plan at `docs/plans/YYYY-MM-DD-<topic>.md` from
     `plan-template.md`.
   - The plan header carries a token ceiling, a checkpoint interval (default
     four tasks), and exactly one of a consultation-brief link or the line
@@ -691,8 +691,8 @@ HISTORY entry says so).
 
   Fable 5.1 (shipped 2026-09-01; same $10/$50, cache reads $0.25/MTok) became
   the session model on 2026-09-04. This pass tuned the configuration around
-  it (plan `docs/superpowers/plans/2026-09-04-fable-5-1-infra-update.md`,
-  spec `docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md`,
+  it (plan `docs/plans/2026-09-04-fable-5-1-infra-update.md`,
+  spec `docs/specs/2026-09-04-fable-5-1-infra-update-design.md`,
   revised after a three-lens adversarial review of 49 findings).
   `CLAUDE_CODE_SUBAGENT_MODEL` moved from a `.bashrc` export of `inherit` to
   a settings `env` entry of `sonnet`, so dispatches without a model
@@ -703,7 +703,7 @@ HISTORY entry says so).
   [N] tokens under its 6,000 budget. `model-economy.md` carries the 5.1
   prices with primary sources, both per-task cost measurements, and the
   pool-metering question recorded as unmeasurable from this machine. An
-  Opus prompt audit wrote `docs/superpowers/plans/2026-09-04-prompt-audit-report.md`
+  Opus prompt audit wrote `docs/plans/2026-09-04-prompt-audit-report.md`
   (nothing applied). `site-pass`'s start and discipline sections were
   restated as outcomes and constraints with every rule kept and the
   pass-end ritual byte-identical, as a measured experiment. A monthly
@@ -742,7 +742,7 @@ HISTORY entry says so).
   site-pass experiment's verdict in `docs/HISTORY.md` when the next
   ecxc-ski or 907-life pass closes. Run the first monthly model review on
   2026-10-01 from the checklist in
-  `docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md`
+  `docs/specs/2026-09-04-fable-5-1-infra-update-design.md`
   (`model-review.timer` reminds). Otherwise steady state: routine
   `workstation-update` runs; `check-drift` reconciles every manifest
   against the live machine (weekly `check-drift.timer` notifies on drift;
@@ -839,7 +839,7 @@ check, this notification always fires: it is a reminder, not an alarm.
 
   export PATH="$HOME/.local/bin:/usr/bin:$PATH"
 
-  spec="$HOME/.dotfiles/docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md"
+  spec="$HOME/.dotfiles/docs/specs/2026-09-04-fable-5-1-infra-update-design.md"
   echo "monthly model review due; template $spec"
   notify-send --urgency=normal "Monthly Claude model review due" \
       "Open Claude Code and say: run the monthly model review. Checklist: ROADMAP.md, Active." \
@@ -887,12 +887,12 @@ check, this notification always fires: it is a reminder, not an alarm.
   - **Monthly model, effort, and skill review** (Geoff, 2026-09-04): on the
     first of each month `model-review.timer` raises a reminder and a small
     pass runs the "Monthly review checklist" in
-    `docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md`:
+    `docs/specs/2026-09-04-fable-5-1-infra-update-design.md`:
     model releases against the pins, prices and the plan-usage page, effort
     defaults and saved levels, the usage glance, the open skill experiments,
     and a fresh prompt audit when the target model changed. Standing inputs:
     `claude/.claude/docs/model-economy.md` and
-    `docs/superpowers/plans/2026-09-04-prompt-audit-report.md`. Each review
+    `docs/plans/2026-09-04-prompt-audit-report.md`. Each review
     records its verdicts in `docs/HISTORY.md` and its tokens and interaction
     points per the pass scoring rule. First review due 2026-10-01.
   ```

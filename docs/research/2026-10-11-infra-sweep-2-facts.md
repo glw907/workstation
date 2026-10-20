@@ -91,7 +91,7 @@ section 5, and several of its line numbers have moved; the lines below are curre
   BACKLOG by doctrine; no repo sets a `backlog` flag yet.
 - **PS-21.** `skills/dependency-upgrade/SKILL.md:60-61` names `docs/internal/record/` family-wide;
   only cairn-cms has it.
-- **PS-09 residual.** `skills/site-pass/SKILL.md:14-15` and :64-65 hardcode `docs/superpowers/`;
+- **PS-09 residual.** `skills/site-pass/SKILL.md:14-15` and :64-65 hardcode `docs/`;
   aksailingclub-org uses `docs/plans/`, cairn-pub has neither. :62 also hardcodes
   `docs/architecture.md` (aksailingclub-org has none).
 - **PS-11 residual.** `skills/log-project/SKILL.md:98-103`, a `## Done` block in the example
@@ -135,7 +135,7 @@ section 5, and several of its line numbers have moved; the lines below are curre
 
 ## E and H. Chaining and the dubplate facts
 
-- The conductor prompt is `docs/superpowers/plans/2026-10-11-conductor-prompt.txt`. No `pass-watch`
+- The conductor prompt is `docs/plans/2026-10-11-conductor-prompt.txt`. No `pass-watch`
   script exists in the tree, so dropping it is a no-op.
 - **H(a).** `skills/go-ship/SKILL.md:28-34`, step 2 "Simplify", dispatches
   `code-simplifier:code-simplifier` with no serial or single-commit instruction.
@@ -147,10 +147,10 @@ section 5, and several of its line numbers have moved; the lines below are curre
   `model-review.service`, whose `ExecStart=%h/.local/bin/model-review-notify` only calls
   `notify-send`.
 - The checklist is "Monthly review checklist" in
-  `docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md:124-154`; ROADMAP "Active"
+  `docs/specs/2026-09-04-fable-5-1-infra-update-design.md:124-154`; ROADMAP "Active"
   carries the release-trigger line (`ROADMAP.md:10-24`). The pages to re-fetch are those the
   "Anthropic practice" section cites
-  (`docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md:608-678`).
+  (`docs/specs/2026-09-28-claude-infra-sweep-design.md:608-678`).
 - The memory page (<https://code.claude.com/docs/en/memory>): "run `/doctor prompt-audit` in a
   session ... You get a report of findings with proposed edits, and nothing in your files changes
   until you ask Claude to apply them." "By default, the audit covers your CLAUDE.md ... plus the

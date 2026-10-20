@@ -2,7 +2,7 @@
 
 Target: `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md` at `38ffcb2`, against its
 pre-fold text at `a0fa4b6`, the fold record
-`docs/superpowers/research/2026-10-10-lean-pass-process-fold.md`, and the three lens reviews beside
+`docs/research/2026-10-10-lean-pass-process-fold.md`, and the three lens reviews beside
 it. Probes ran in `/tmp/claude-1000/fold-verify/` on 2026-10-10. Only gaps that affect correctness or
 a stated requirement are listed.
 

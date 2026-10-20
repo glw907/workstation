@@ -1,6 +1,6 @@
 # Infra sweep 1 plan review: mechanics and feasibility lens (2026-10-11)
 
-Target: `docs/superpowers/plans/2026-10-11-infra-sweep-1-guard.md` (cited "plan") and
+Target: `docs/plans/2026-10-11-infra-sweep-1-guard.md` (cited "plan") and
 `docs/superpowers/plans/2026-10-11-infra-sweep-1-guard-prompt.txt` (cited "prompt"), at `e223c7e`.
 Probes ran with `python3 -I` from scratch scripts under `~/.claude/jobs/c747c352/tmp/`, plus
 read-only `gh api` calls against the four vendored-skill upstreams.

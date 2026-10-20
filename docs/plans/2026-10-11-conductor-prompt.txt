@@ -44,7 +44,7 @@ The queue, in order:
    plan. The branch `worktree-review-desk-plan` holds the superseded full-size plan; remove it once
    the lean plan exists.
 3. The cairn-cms alignment pass, which Geoff approved to run before docs stage 2b. Evidence and his
-   rulings: `~/Projects/cairn-cms/docs/superpowers/research/2026-10-11-cairn-cms-alignment-audit.md` in `~/.dotfiles`.
+   rulings: `~/Projects/cairn-cms/docs/research/2026-10-11-cairn-cms-alignment-audit.md` in `~/.dotfiles`.
    Write its one-page design in cairn-cms with those rulings, and bring it to Geoff.
 4. Infra sweep 2. Its design waits for Geoff on branch `worktree-infra-sweep-2-design`. PR #8
    already landed some of it (the plan-review depth and the scope rules), so re-check every item

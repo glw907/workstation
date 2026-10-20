@@ -1,7 +1,7 @@
 # Infrastructure skill and proportionality rules (design)
 
 **Status:** awaiting Geoff's approval, brought 2026-10-11 by the conducting session (`c747c352`).
-Evidence: `docs/superpowers/research/2026-10-11-anthropic-guidance-proportionality.md` (quotes and
+Evidence: `docs/research/2026-10-11-anthropic-guidance-proportionality.md` (quotes and
 verdicts, all fetched that day). Cause: the review desk design was over-engineered (about 12 hours
 planned for a one-page local app), and three changes landed the same day without a guidance check.
 

@@ -1,6 +1,6 @@
 # Lean pass process spec: fold record
 
-Target: `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`, revised in place from
+Target: `docs/specs/2026-10-10-lean-pass-process-design.md`, revised in place from
 `a02ba89`. Reviews: `2026-10-10-lean-pass-process-review-{contract,mechanics,risk}.md` beside this
 file. IDs: `C-` contract, `X-` mechanics, `R-` risk. 35 findings in 22 roots. Owner rulings 11 to 14
 (Geoff, 2026-10-10) are recorded in the spec's Rulings list.
@@ -106,7 +106,7 @@ None. Rulings 11 to 14 settle every fork the reviews raised; the remaining calls
 
 ## Second fold
 
-Input: `docs/superpowers/research/2026-10-10-lean-pass-process-fold-verification.md` (3 major, 5
+Input: `docs/research/2026-10-10-lean-pass-process-fold-verification.md` (3 major, 5
 minor). Each fix touches only the cited location.
 
 | Finding | Disposition |

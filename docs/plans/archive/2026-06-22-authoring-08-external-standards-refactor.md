@@ -66,7 +66,7 @@ cd ~/.dotfiles
 python3 -m pytest tests/test_vale_hook.py -q
 ( cd vale/tests && bash run-fixtures.sh )
 bash scripts/check-py-comments.sh
-grep -rl 'glw907' . | grep -v '\.git/' | grep -vE 'docs/superpowers/(plans|specs)/' || echo "glw907 gone from the active surface (history excepted)"
+grep -rl 'glw907' . | grep -v '\.git/' | grep -vE 'docs/(plans|specs)/' || echo "glw907 gone from the active surface (history excepted)"
 ```
 
 Expected: pytest passes; `fixtures: OK`; `check:py-comments OK`; the remaining glw907 references are only in the historical plans and specs and the prose docs that later tasks rewrite. Commit the deletions and edits.
@@ -109,7 +109,7 @@ Rewrite each conventions skill to "follow [the external standard]; the linter en
 **Files:**
 - Modify: `docs/new-machine.md`, `README.md`, `git/.gitconfig`, `secrets/registry.md` (remove the glw907 vendor and house-overlay setup steps; the Vale setup is now `vale sync` of the Google and Microsoft packages per repo)
 
-- [ ] **Step 1: Update the setup references, commit.** Confirm `grep -rl glw907 . | grep -v '\.git/' | grep -vE 'docs/superpowers/(plans|specs)/'` returns nothing (only history retains glw907).
+- [ ] **Step 1: Update the setup references, commit.** Confirm `grep -rl glw907 . | grep -v '\.git/' | grep -vE 'docs/(plans|specs)/'` returns nothing (only history retains glw907).
 
 ---
 

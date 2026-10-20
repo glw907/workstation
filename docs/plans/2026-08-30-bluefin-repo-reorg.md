@@ -43,7 +43,7 @@ Delete: `bluefin/MIGRATION-RUNBOOK.md`, `bluefin/CLAUDE-md-draft.md`,
 `docs/new-machine.md` (superseded by `bluefin/README.md` + bootstrap),
 `themes/`, `wallpapers/`, `android/` (whole dir; its only value, SDK setup +
 udev, moves to bluefin/README in T8),
-`docs/superpowers/plans/2026-04-05-nvim-mail-upgrade.md` + its paired spec,
+`docs/plans/2026-04-05-nvim-mail-upgrade.md` + its paired spec,
 `bin/.local/bin/{hx-journal,write,journal}`, `scripts/install-vale.sh`.
 Then `stow -R bin` so dead `~/.local/bin` symlinks drop.
 Accept: files gone, `git status` shows only deletions, no broken symlinks in

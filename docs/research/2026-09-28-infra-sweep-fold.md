@@ -1,6 +1,6 @@
 # Infra sweep spec: fold record
 
-Target: `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, revised in place from
+Target: `docs/specs/2026-09-28-claude-infra-sweep-design.md`, revised in place from
 dotfiles `9c0f2d0`. Reviews: `2026-09-28-infra-sweep-review-{anthropic,contract,mechanics,consistency}.md`
 in this directory. One fold agent (`claude-opus-5-5`, high). Each finding was checked against the
 files before its disposition. Owner rulings of 2026-09-28 (S4 to S7 in the spec) settled the

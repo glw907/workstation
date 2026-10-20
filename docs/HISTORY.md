@@ -7,8 +7,8 @@ strategic initiatives spanning passes live in `ROADMAP.md`.
 
 ## 2026-09-28 -- Claude infra sweep, pass B
 
-Plan `docs/superpowers/plans/2026-09-28-infra-sweep-a-core-b.md`, spec
-`docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`. Four tasks plus a close
+Plan `docs/plans/2026-09-28-infra-sweep-a-core-b.md`, spec
+`docs/specs/2026-09-28-claude-infra-sweep-design.md`. Four tasks plus a close
 simplifier round landed on branch `infra-sweep-b`, merged into `main`. B1 (`f680528`, fix
 rounds `ca744d0` and `bfa0775`) fixed the pass runners: the no-class reduced round had fallen
 back to the full gate instead of reducing, `pass-execute.js` still probed for a classifier on
@@ -65,8 +65,8 @@ no one read them as reverts.
 
 ## 2026-09-28 -- Claude infra sweep, pass A-core
 
-Plan `docs/superpowers/plans/2026-09-28-infra-sweep-a-core-b.md`, spec
-`docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, audit
+Plan `docs/plans/2026-09-28-infra-sweep-a-core-b.md`, spec
+`docs/specs/2026-09-28-claude-infra-sweep-design.md`, audit
 `claude/.claude/docs/record/2026-09-28-claude-infra-audit.md`. Three tasks landed the guard's
 core on branch `infra-sweep-a`. AC1 (`97cdbe7`, Opus) added the shared ratchet module, the
 append-only checks registry, and the per-commit baseline step in `scripts/githooks/pre-commit`
@@ -92,7 +92,7 @@ command, since a shell line that also names the worktree path matches itself.
 
 ## 2026-09-12 -- Claude infra round
 
-Plan `docs/superpowers/plans/2026-09-12-claude-infra-round.md` (revision 2, ratified at
+Plan `docs/plans/2026-09-12-claude-infra-round.md` (revision 2, ratified at
 `1ec5c0a`). Ten dispatched tasks corrected and hoisted Claude-facing infrastructure across the
 workstation and its consumer repos. Task 1 fixed the exit-75 reattach protocol in the two
 implementers that call `cairn-run-gate` without it (dotfiles `95c65a7`, dubplate `a30d32e`).
@@ -141,7 +141,7 @@ question, task 9's deferral).
 ## 2026-09-08 -- docs-standard Claude infrastructure pass (plan one of three)
 
 Plan `~/Projects/initiatives/cairn-docs-standard/plans/2026-09-08-docs-standard-claude-infra.md`, spec
-`~/Projects/cairn-cms/docs/superpowers/specs/2026-09-08-docs-standard-design.md`. Seven
+`~/Projects/cairn-cms/docs/specs/2026-09-08-docs-standard-design.md`. Seven
 dispatched tasks landed the workstation half of the cairn documentation standard: task 1a
 gave tellgrader a `docs-register` profile and `.tellgrader.json` opt-in discovery (c523f0b);
 task 1b added the two cadence measures and `MEASURES.md` (fc143ec, then two fix rounds
@@ -200,8 +200,8 @@ checkpoint's one combined question.
 
 Fable 5.1 (shipped 2026-09-01; same $10/$50, cache reads $0.25/MTok) became
 the session model on 2026-09-04. This pass tuned the configuration around
-it (plan `docs/superpowers/plans/2026-09-04-fable-5-1-infra-update.md`,
-spec `docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md`,
+it (plan `docs/plans/2026-09-04-fable-5-1-infra-update.md`,
+spec `docs/specs/2026-09-04-fable-5-1-infra-update-design.md`,
 revised after a three-lens adversarial review of 49 findings).
 `CLAUDE_CODE_SUBAGENT_MODEL` moved from a `.bashrc` export of `inherit` to
 a settings `env` entry of `sonnet`, so dispatches without a model
@@ -213,7 +213,7 @@ one adjudication; revised to medium the same day on the outside evidence)
 and landed at 5,986 tokens under its 6,000 budget. The model-economy doc update (plan
 task 3) waits on another session's uncommitted edit to the same file and
 is carried in STATUS. An Opus prompt audit wrote
-`docs/superpowers/plans/2026-09-04-prompt-audit-report.md` (nothing
+`docs/plans/2026-09-04-prompt-audit-report.md` (nothing
 applied). `site-pass`'s start and discipline sections were restated as
 outcomes and constraints with every rule kept and the pass-end ritual
 byte-identical, as a measured experiment. A monthly `model-review.timer`
@@ -252,7 +252,7 @@ request, and the Workflow and monthly-cadence grants. One question (a
 nothing; the review round removed it. That question is the pass's one
 interaction defect.
 
-Same day, on the outside evidence (`docs/superpowers/plans/2026-09-04-fable-5-1-outside-evidence.md`),
+Same day, on the outside evidence (`docs/plans/2026-09-04-fable-5-1-outside-evidence.md`),
 Geoff moved the committed Fable effort default from `high` to `medium`, with
 `high` raised deliberately for plan authorship, adjudication, and research
 turns. The evidence: the system card's peak FrontierCode score at `medium`,
@@ -263,7 +263,7 @@ of about 2x output tokens per turn against Fable 5.
 
 The adversarial three-lens review at the reorg close (correctness,
 organization, secrets/idiom; findings in the session record, plan at
-`docs/superpowers/plans/2026-08-30-post-review-fix-pass.md`) drove a same-day
+`docs/plans/2026-08-30-post-review-fix-pass.md`) drove a same-day
 fix pass. Security: the sudo cache moved to tmpfs, session context now
 redacts export values, the auto-mode trust block scoped to the machine, and
 three write-time guards landed (claude-secret-guard PreToolUse hook, gitleaks

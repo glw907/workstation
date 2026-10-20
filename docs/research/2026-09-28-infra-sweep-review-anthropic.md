@@ -1,7 +1,7 @@
 # Infra sweep spec review: current Anthropic practice
 
 Reviewer lens: current Anthropic guidance, fetched live on 2026-09-28. Target:
-`/var/home/glw907/.dotfiles/docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`
+`/var/home/glw907/.dotfiles/docs/specs/2026-09-28-claude-infra-sweep-design.md`
 (dotfiles `3f41deb`). Evidence read: the audit record, the global CLAUDE.md, every agent's
 frontmatter, every authored skill's frontmatter and length, `settings.json` hooks, and the repo
 CLAUDE.md sizes. Local Claude Code: v2.1.284.
@@ -334,7 +334,7 @@ Replace the stub at `spec:441-445` with the following.
 > ## Anthropic practice
 >
 > Fetched 2026-09-28 against Claude Code v2.1.284. Full quotes and grading:
-> `docs/superpowers/research/2026-09-28-infra-sweep-review-anthropic.md`. Items marked
+> `docs/research/2026-09-28-infra-sweep-review-anthropic.md`. Items marked
 > **scope** widen a pass; none adds a pass.
 >
 > **Confirmed.**

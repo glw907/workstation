@@ -59,7 +59,7 @@ Yes, with two closures that introduced a new defect (M1 and M2 below).
 - **Defect:** the order is "explicit `reducedGate`, else the named gate, else the class default."
   A gate is always named: `pass-execute.js:305-306` throws without `args.gate`, and every prompt
   renders `t.gate || a.gate`. The third step can never run. Every plan that sets no
-  `reducedGate` (all of them: `grep -rl reducedGate ~/Projects/*/docs/superpowers/plans` returns
+  `reducedGate` (all of them: `grep -rl reducedGate ~/Projects/*/docs/plans` returns
   0) now runs its full gate on every comment-only or test-only fix round. That repeals the
   ratified 2026-09-09 ruling ("Comment-only fix rounds run a reduced gate",
   `pass-gate-economy.md:12`) and the 2026-09-27 class ruling (":19-21"). Those rulings exist

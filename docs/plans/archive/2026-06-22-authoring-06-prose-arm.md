@@ -46,7 +46,7 @@ The prose system has six layers in the spec (`2026-06-22-ai-drafting-prose-syste
 - The built-in `Vale` spelling style and its accept/reject `Vocab`, and the Readability grade floor. Plan 01 routed these here, but a spelling check floods the advisory channel with every technical noun until the `Vocab` is curated against a real corpus, and the dotfiles repo has none. They land with the first real editor-doc application (cairn), where there is prose to tune against.
 - The cairn application and the site applications (ECXC migrate, 907 define-then-wire), which run in their own repo sessions after the cutover.
 
-The source specs are `~/.dotfiles/docs/superpowers/specs/2026-06-22-ai-drafting-prose-system-design.md` (prose) and `2026-06-22-code-comment-standards-design.md` (comments). The umbrella is `~/.claude/docs/authoring-charter.md`.
+The source specs are `~/.dotfiles/docs/specs/2026-06-22-ai-drafting-prose-system-design.md` (prose) and `2026-06-22-code-comment-standards-design.md` (comments). The umbrella is `~/.claude/docs/authoring-charter.md`.
 
 ## Pilot findings carried into this plan
 

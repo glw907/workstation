@@ -16,7 +16,7 @@ Geoff's approval. Not yet executed.
 so that every repo that consumes a shared implementer, guard doc, workflow runner, agent, or
 site asset reads one correct copy instead of two stale ones.
 
-**Spec:** `docs/superpowers/research/2026-09-12-claude-infra-round-survey.md`, sections "The
+**Spec:** `docs/research/2026-09-12-claude-infra-round-survey.md`, sections "The
 ruling", "Out of scope, recorded for the repo that owns each", and "Constraints on execution".
 The ruling is fixed. This plan splits and merges its items into tasks and re-litigates none of
 them. One bullet of that spec is superseded: its "Constraints on execution" stow bullet says a
@@ -37,11 +37,11 @@ previous infra plan in this repo, whose executor precedent this plan inherits.
 
 Revision 2 folds three adversarial reviews of revision 1, recorded at `506772e`:
 
-- `docs/superpowers/research/2026-09-12-claude-infra-round-review-contract.md`, the contract
+- `docs/research/2026-09-12-claude-infra-round-review-contract.md`, the contract
   and criteria lens: 3 blockers, 6 majors, 7 minors.
-- `docs/superpowers/research/2026-09-12-claude-infra-round-review-mechanics.md`, the mechanics
+- `docs/research/2026-09-12-claude-infra-round-review-mechanics.md`, the mechanics
   and feasibility lens: 3 blockers, 7 majors, 9 minors.
-- `docs/superpowers/research/2026-09-12-claude-infra-round-review-domain.md`, the domain risk
+- `docs/research/2026-09-12-claude-infra-round-review-domain.md`, the domain risk
   lens: 5 blockers, 14 majors, 9 minors.
 
 **Conductor rulings applied as ruled, not re-opened.** Six rulings were handed down with the
@@ -340,7 +340,7 @@ another session's warm file (contract MAJOR 6). The Independent column in the ta
 disjoint Files, never concurrent execution.
 
 `criteria` names the plan file's absolute path
-(`/var/home/glw907/.dotfiles/docs/superpowers/plans/2026-09-12-claude-infra-round.md`) and the
+(`/var/home/glw907/.dotfiles/docs/plans/2026-09-12-claude-infra-round.md`) and the
 task's heading, so a zero-context implementer can read its own section and no other.
 
 Task 0's recorded baseline gate line is repeated in every task's `notes`, so the reviewer has
@@ -868,13 +868,13 @@ STATUS at `7c7626c`:**
    `ecxc-ski` or `907-life` pass closes. Not a workstation edit available now; the input is
    another repo's pass numbers. Recorded below.
 3. **The first monthly model review, due 2026-10-01**, from the checklist in
-   `docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md`, with
+   `docs/specs/2026-09-04-fable-5-1-infra-update-design.md`, with
    `model-review.timer` raising the reminder. Date-gated and already an Active ROADMAP entry.
    Recorded below.
 
 **Constraints.**
 
-- The wording source is `docs/superpowers/plans/2026-09-04-fable-5-1-infra-update.md`, task 3,
+- The wording source is `docs/plans/2026-09-04-fable-5-1-infra-update.md`, task 3,
   steps 1 onward, which carries the replacement clause, the section body, the price and
   benchmark table, the decisions-taken subsection, and the behavior-deltas subsection. Follow
   it as written.
@@ -1189,7 +1189,7 @@ invocation shape that actually works.
 
 **Files:**
 
-- Create: `docs/superpowers/plans/2026-09-12-claude-infra-round-handoff.md`
+- Create: `docs/plans/2026-09-12-claude-infra-round-handoff.md`
 - Modify: `docs/STATUS.md`
 - Modify: `docs/HISTORY.md`
 - Modify: `ROADMAP.md`

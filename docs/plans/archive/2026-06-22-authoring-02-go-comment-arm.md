@@ -31,7 +31,7 @@ This is plan 02 of the authoring-system build. Each plan is written just-in-time
 6. **Prose arm:** the Google and Microsoft baselines applied to docs and content per glob, the prose registers leading on exemplars, the PostToolUse prose Vale hook scoped to changed lines. poplar's docs gain their `docs/**/*.md` to Google mapping here.
 7. **Cutover:** wire the Vale hook in `settings.json`, prove the loop, retire `prose-guard`, rewrite the active output style and the CLAUDE.md writing-voice section, repoint the `prose-voice.md` router.
 
-The source specs are `~/.dotfiles/docs/superpowers/specs/2026-06-22-ai-drafting-prose-system-design.md` (prose arm) and `~/.dotfiles/docs/superpowers/specs/2026-06-22-code-comment-standards-design.md` (comment arm). The umbrella is `~/.claude/docs/authoring-charter.md`.
+The source specs are `~/.dotfiles/docs/specs/2026-06-22-ai-drafting-prose-system-design.md` (prose arm) and `~/.dotfiles/docs/specs/2026-06-22-code-comment-standards-design.md` (comment arm). The umbrella is `~/.claude/docs/authoring-charter.md`.
 
 ---
 

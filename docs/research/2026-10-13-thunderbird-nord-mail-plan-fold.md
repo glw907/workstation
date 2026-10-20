@@ -1,7 +1,7 @@
 # Thunderbird Nord mail layer: plan review fold
 
 This record folds `2026-10-13-thunderbird-nord-mail-review-mechanics.md` (25 findings) into
-`docs/superpowers/plans/2026-10-13-thunderbird-nord-mail.md` and its launch prompt, 2026-10-13.
+`docs/plans/2026-10-13-thunderbird-nord-mail.md` and its launch prompt, 2026-10-13.
 Each finding was checked against source before it was acted on. The approved design was not
 edited. Task letters below are the revised plan's. The contrast check, which was old task C, is
 now part of A. A and B own different files, D runs alone, and E pairs with F (finding 8).
@@ -109,7 +109,7 @@ moves to 780 task-minutes, twice 390.
 ## Design errata owed
 
 These are wording points to record against
-`docs/superpowers/specs/2026-10-13-thunderbird-nord-mail-design.md` at close. They are not
+`docs/specs/2026-10-13-thunderbird-nord-mail-design.md` at close. They are not
 changes of meaning, and the design file was not edited.
 
 1. **"Dark" in "The reader" means the dark reader's dark body.** That is a dark system with

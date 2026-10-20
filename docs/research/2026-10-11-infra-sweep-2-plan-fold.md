@@ -1,6 +1,6 @@
 # Infra sweep 2 plan review: fold record (2026-10-11)
 
-Target: `docs/superpowers/plans/2026-10-11-infra-sweep-2.md` ("plan") and its launch prompt
+Target: `docs/plans/2026-10-11-infra-sweep-2.md` ("plan") and its launch prompt
 `docs/superpowers/plans/2026-10-11-infra-sweep-2-prompt.txt` ("prompt"), reviewed at `cd0b5e4` by
 the mechanics lens (`2026-10-11-infra-sweep-2-review-mechanics.md` beside this file, 19 findings),
 folded on `2502196`. Each finding was checked against the code or the docs before it was taken.

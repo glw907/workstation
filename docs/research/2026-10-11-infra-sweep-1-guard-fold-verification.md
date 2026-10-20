@@ -1,6 +1,6 @@
 # Infra sweep 1 plan review: fold verification (2026-10-11)
 
-Target: the plan `docs/superpowers/plans/2026-10-11-infra-sweep-1-guard.md` ("plan") and its
+Target: the plan `docs/plans/2026-10-11-infra-sweep-1-guard.md` ("plan") and its
 prompt ("prompt") at `236f9d7`, read against the three lens reviews and the fold record
 `2026-10-11-infra-sweep-1-guard-plan-fold.md`. The reader took no part in the review or the fold.
 Probes ran from `~/.claude/jobs/c747c352/tmp/verify/` with `python3 -I` (system Python, PyYAML

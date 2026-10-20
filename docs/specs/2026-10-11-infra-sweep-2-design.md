@@ -4,14 +4,14 @@
 that day (H trimmed, I added); approved by Geoff, 2026-10-11, for unattended planning. First brought that day by the conducting session
 (`c747c352`). E implements Geoff's choices of that day, F is his request ("please add the monthly
 review"), H is his "now" ruling on dubplate PR #2's found-not-done list, and I is his ruling on
-Charm's model. Parent spec: `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md` "Lean re-plan
-(2026-10-11)". Evidence: `docs/superpowers/research/2026-10-11-infra-sweep-survivor-ledger.md`.
+Charm's model. Parent spec: `docs/specs/2026-09-28-claude-infra-sweep-design.md` "Lean re-plan
+(2026-10-11)". Evidence: `docs/research/2026-10-11-infra-sweep-survivor-ledger.md`.
 
 **Already landed, so dropped here.** PR #8 (`01a562b`) landed the review depth by design size and
 the scope rules (`spec-plan-review/SKILL.md:36-42`, `pass-core/SKILL.md:26-47,187-191`), including
 E1's rule that only a design-changing finding stops for Geoff (`pass-core/SKILL.md:51-53`). PR #7
 (`ea7aeb3`) landed the pull after a merge (`pass-core/SKILL.md:155-160`). PR #9 (`42ef0f4`) put the
-conductor role in a launch prompt (`docs/superpowers/plans/2026-10-11-conductor-prompt.txt`), and
+conductor role in a launch prompt (`docs/plans/2026-10-11-conductor-prompt.txt`), and
 PR #10 (`81af5cc`) lets a hand-over merge itself (`pass-core/SKILL.md:180-185`).
 
 ## Outcome
@@ -54,7 +54,7 @@ All are `runner` class and land in dotfiles. Minutes are rough.
   unattended). On a change in models or Claude Code version since the last run, it re-fetches the
   pages the parent spec's "Anthropic practice" section cites and the release notes, and grades the
   workstation's rules against them. It folds in the "Monthly review checklist"
-  (`docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md`) and the ROADMAP's
+  (`docs/specs/2026-09-04-fable-5-1-infra-update-design.md`) and the ROADMAP's
   release-trigger line. A gap goes to Geoff as a design. A quiet month adds one line to a review
   log. A committed state file holds each run's model ids, version, and page digests. About 120.
 - **G. `/effort` no longer dirties the repo.** `~/.claude/settings.json` is still a stow link into

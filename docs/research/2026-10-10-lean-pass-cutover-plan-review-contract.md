@@ -1,7 +1,7 @@
 # Lean pass cutover plan: contract, criteria, and proportionality review
 
 Target: `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md` at `ec14c1e`. Spec:
-`docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`. Fold dispositions read and left
+`docs/specs/2026-10-10-lean-pass-process-design.md`. Fold dispositions read and left
 standing. Every finding below was checked against files or command output on 2026-10-10. I flag
 only gaps that affect correctness, a stated requirement, or a co-equal budget (tokens, attended
 time, clock).

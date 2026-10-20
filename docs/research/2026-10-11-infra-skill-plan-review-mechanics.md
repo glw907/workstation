@@ -191,11 +191,11 @@ its research record. Every probe ran from scratch files under
 ### 10. minor, optional: the launch reads a prompt file that is not on the branch yet
 
 - **Location:** plan:74 and plan:82-92.
-- **Defect:** `docs/superpowers/plans/2026-10-11-infra-skill-prompt.txt` does not exist at
+- **Defect:** `docs/plans/2026-10-11-infra-skill-prompt.txt` does not exist at
   `4c3816e`. Only `...-planning-prompt.txt` does. If it is missing at launch, `$(git show ...)`
   prints an error and launches `claude --bg` with an empty prompt.
 - **Proposed fold:** add a launch check, `git -C ~/.dotfiles cat-file -e
-  worktree-infra-skill-plan:docs/superpowers/plans/2026-10-11-infra-skill-prompt.txt` (must exit
+  worktree-infra-skill-plan:docs/plans/2026-10-11-infra-skill-prompt.txt` (must exit
   0).
 
 ### 11. minor, optional: the close's `claude-tooling-sync verify` proves nothing about the branch

@@ -11,11 +11,11 @@
 style-guide-sync run would hit, so that plan runs on corrected infra (Geoff, 2026-09-28: "let's
 actually run that first, and then implement this plan using the improved and correct infra").
 
-**Spec:** `~/.dotfiles/docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md` (rulings
+**Spec:** `~/.dotfiles/docs/specs/2026-09-28-claude-infra-sweep-design.md` (rulings
 S1 to S7; sections "The ratchet baseline", "Pass A-core", "Pass B"). Task ids AC1 to AC3 and B1
 to B4 are the spec's; each task's outcomes are that section's, in full. Evidence: the audit at
 `~/.dotfiles/claude/.claude/docs/record/2026-09-28-claude-infra-audit.md`; reviews and folds under
-`~/.dotfiles/docs/superpowers/research/2026-09-28-infra-*`.
+`~/.dotfiles/docs/research/2026-09-28-infra-*`.
 
 **Pass class:** `engine-logic` for AC1, AC2, AC3, B1, B2 (test-first with fixtures); `sweep` for
 B3 and B4 (grep post-conditions, existing tests stay green, no register chain). Two cells are

@@ -1,7 +1,7 @@
 # Lean pass cutover plan: final verification read (second fold)
 
 Target: the second fold, `git diff bd7525d d3ffc29 -- docs/superpowers/plans/`: the plan
-`docs/superpowers/plans/2026-10-10-lean-pass-cutover.md` (cited as `plan:N`) and the five files in
+`docs/plans/2026-10-10-lean-pass-cutover.md` (cited as `plan:N`) and the five files in
 `2026-10-10-lean-pass-cutover-prompts/`. Context: the "Second fold" section of the fold record and
 the fold verification read. Reader: Opus 5.5, 2026-10-10, with no part in either fold. Unchanged
 text was not re-reviewed. Probes ran in `/tmp/claude-1000/final-verify/`. No repo file other than

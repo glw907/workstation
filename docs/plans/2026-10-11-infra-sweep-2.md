@@ -1,14 +1,14 @@
 # Infra sweep 2, the content: implementation plan
 
-**Design:** `docs/superpowers/specs/2026-10-11-infra-sweep-2-design.md` (approved by Geoff,
+**Design:** `docs/specs/2026-10-11-infra-sweep-2-design.md` (approved by Geoff,
 2026-10-11, with unattended planning). It is one page, so no separate spec was written
 (`spec-plan-review` "Depth scales with risk"). **Evidence:** the probed facts,
-`docs/superpowers/research/2026-10-11-infra-sweep-2-facts.md` (cited below as "facts"), which gives
+`docs/research/2026-10-11-infra-sweep-2-facts.md` (cited below as "facts"), which gives
 each finding's current lines and quotes; the survivor ledger,
-`docs/superpowers/research/2026-10-11-infra-sweep-survivor-ledger.md`; the audit,
+`docs/research/2026-10-11-infra-sweep-survivor-ledger.md`; the audit,
 `claude/.claude/docs/record/2026-09-28-claude-infra-audit.md` section 5. **Review:** the mechanics
 lens and the fold record,
-`docs/superpowers/research/2026-10-11-infra-sweep-2-{review-mechanics,plan-fold}.md`.
+`docs/research/2026-10-11-infra-sweep-2-{review-mechanics,plan-fold}.md`.
 
 **Outcome.** Every surviving content finding is fixed, and the ratchet baseline holds no entries.
 `pass-core` carries pre-approved planning, the conductor role, self-merge for `ordinary` passes, and
@@ -66,7 +66,7 @@ change no item's content:
 
 ## Launch
 
-Prompt file: `docs/superpowers/plans/2026-10-11-infra-sweep-2-prompt.txt`. The plan lives on
+Prompt file: `docs/plans/2026-10-11-infra-sweep-2-prompt.txt`. The plan lives on
 branch `worktree-infra-sweep-2` (planning commits). The executor continues that branch: its first
 act after `EnterWorktree` (name `infra-sweep-2-build`) is `git merge --no-edit
 worktree-infra-sweep-2` (pass-core "Execute"). Launch from the main checkout, after every check
@@ -81,7 +81,7 @@ git -C ~/.dotfiles status --porcelain                   # must print nothing
 git -C ~/.dotfiles rev-parse worktree-infra-sweep-2 origin/worktree-infra-sweep-2   # two equal lines
 claude agents --json                                    # no live session with cwd in ~/.dotfiles/.claude/worktrees/infra-sweep-2-build
 cd ~/.dotfiles && claude --bg --model sonnet --effort medium --name infra-sweep-2-build \
-  "$(git -C ~/.dotfiles show worktree-infra-sweep-2:docs/superpowers/plans/2026-10-11-infra-sweep-2-prompt.txt)"
+  "$(git -C ~/.dotfiles show worktree-infra-sweep-2:docs/plans/2026-10-11-infra-sweep-2-prompt.txt)"
 ```
 
 The prompt is read with `git show` because the plan is not on `main` until this pass's PR merges.
@@ -115,7 +115,7 @@ If the local branch `worktree-infra-sweep-2` is absent (the planning worktree wa
   --output-format stream-json --verbose "<prompt>" > <scratch>/<run>.jsonl`, with no pipe, heredoc,
   or inline script. A separate step reads each file with `grep -c
   '"name":"Skill","input":{"skill":"<skill>"'`. This is sweep 1's probed method
-  (`docs/superpowers/plans/2026-10-11-infra-sweep-1-guard.md` T2). After the change, every
+  (`docs/plans/2026-10-11-infra-sweep-1-guard.md` T2). After the change, every
   should-trigger prompt triggers and no should-not prompt does. One reword of the description is
   allowed; a second miss is a stop, returned with the table. The before and after rows go in the
   task's commit body, and the session copies them into the PR body.
@@ -331,7 +331,7 @@ If the local branch `worktree-infra-sweep-2` is absent (the planning worktree wa
   - PS-21: `dependency-upgrade` names cairn-cms's `docs/internal/record/`, and otherwise the
     records directory the repo's CLAUDE.md or STATUS names.
   - PS-09 residual: `site-pass` reads the plan, spec, archive, and architecture-doc paths from the
-    site's CLAUDE.md or STATUS, giving `docs/superpowers/` and `docs/architecture.md` as the usual
+    site's CLAUDE.md or STATUS, giving `docs/` and `docs/architecture.md` as the usual
     case, never the only one.
   - PS-11 residual: the `## Done` block leaves `log-project`'s example roadmap.
 - **Files.** `claude/.claude/skills/{content-draft,log-issue,dependency-upgrade,site-pass,log-project}/SKILL.md`.
@@ -418,11 +418,11 @@ If the local branch `worktree-infra-sweep-2` is absent (the planning worktree wa
   - The prompt, in order: read the audit report; read `docs/model-review/state.json` (model ids, Claude Code version, and a
     digest per page) and compare it with the current `claude --version` and model ids; on a change,
     or with no state file, re-fetch the release notes and the pages the parent spec's "Anthropic
-    practice" section cites (`docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md:608-678`)
+    practice" section cites (`docs/specs/2026-09-28-claude-infra-sweep-design.md:608-678`)
     and grade the workstation's rules against them; run the "Monthly review checklist" items
-    (`docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md:124-154`) that still apply
+    (`docs/specs/2026-09-04-fable-5-1-infra-update-design.md:124-154`) that still apply
     (items naming retired files are skipped with a reason in the hand-over). A gap becomes a
-    one-page design in `docs/superpowers/specs/` on the branch, with the audit findings it takes,
+    one-page design in `docs/specs/` on the branch, with the audit findings it takes,
     pushed to `glw907/workstation` with `notify-send -u normal`, for Geoff's approval. A quiet month appends one line to
     `docs/model-review/log.md`. Either way the run rewrites `state.json` and commits on its branch.
     A quiet month's commit is a hand-over and merges itself (pass-core "Ledgers").
@@ -560,8 +560,8 @@ Per pass-core "Close" and dotfiles-pass "Close checklist", in order:
 3. `claude-tooling-sync verify` (the stowed `main` copy, a machine-state check) passes, and one
    `gitleaks git` branch-history scan is clean.
 4. The next step's prompt, committed as
-   `~/Projects/poplar/docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt` in the shape of
-   `docs/superpowers/plans/2026-10-11-infra-sweep-2-planning-prompt.txt`: an attended planning
+   `~/Projects/poplar/docs/plans/2026-10-11-poplar-adapter-planning-prompt.txt` in the shape of
+   `docs/plans/2026-10-11-infra-sweep-2-planning-prompt.txt`: an attended planning
    session in `~/Projects/poplar` that designs, with Geoff, poplar's `pass-core` adapter (ROADMAP
    "Planned", "Poplar adopts `pass-core`", including its CLAUDE.md "Conducting a pass" section and
    the agent repins), and logs poplar's refactor to Charm's Bubble Tea model (`elm-conventions` as
@@ -570,7 +570,7 @@ Per pass-core "Close" and dotfiles-pass "Close checklist", in order:
 5. `docs/STATUS.md`: the infra sweep line moves to "merged" on Geoff's merge. The next action
    starts with G's two pre-merge cutover commands (step 6), to run before the merge. It then names
    that prompt with the exact line `cd ~/Projects/poplar && claude --model opus --effort high --name
-   poplar-adapter-plan "$(git -C ~/.dotfiles show main:~/Projects/poplar/docs/superpowers/plans/2026-10-11-poplar-adapter-planning-prompt.txt)"`.
+   poplar-adapter-plan "$(git -C ~/.dotfiles show main:~/Projects/poplar/docs/plans/2026-10-11-poplar-adapter-planning-prompt.txt)"`.
 6. Push `glw907/workstation`, open the PR (draft until the close is done), and write its body. Its
    first line tells the merger to run G's two pre-merge commands before merging, because whoever
    merges pulls at once (pass-core "Close"), and a pull while `~/.claude/settings.json` is still a

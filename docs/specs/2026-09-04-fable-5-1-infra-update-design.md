@@ -1,7 +1,7 @@
 # Fable 5.1 model, effort, and skill update
 
 Design basis for the plan at
-`docs/superpowers/plans/2026-09-04-fable-5-1-infra-update.md`. This spec
+`docs/plans/2026-09-04-fable-5-1-infra-update.md`. This spec
 extends the 2026-08-21 conductor design
 (`2026-08-21-fable-conductor-design.md`); the conductor shape is unchanged.
 The trigger is the Fable 5.1 release (2026-09-01) and Geoff's move of all

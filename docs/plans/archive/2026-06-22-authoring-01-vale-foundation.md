@@ -31,7 +31,7 @@ This is plan 01 of the authoring-system build. Each later plan is written just-i
 6. **Prose arm:** the Google and Microsoft baselines applied to docs and content per glob, the prose registers leading on exemplars, the PostToolUse prose Vale hook scoped to changed lines.
 7. **Cutover:** wire the Vale hook in `settings.json`, prove the loop, retire `prose-guard`, rewrite the active output style and the CLAUDE.md writing-voice section, repoint the `prose-voice.md` router.
 
-The two source specs are `~/.dotfiles/docs/superpowers/specs/2026-06-22-ai-drafting-prose-system-design.md` (prose arm) and `~/.dotfiles/docs/superpowers/specs/2026-06-22-code-comment-standards-design.md` (comment arm). The umbrella is `~/.claude/docs/authoring-charter.md`.
+The two source specs are `~/.dotfiles/docs/specs/2026-06-22-ai-drafting-prose-system-design.md` (prose arm) and `~/.dotfiles/docs/specs/2026-06-22-code-comment-standards-design.md` (comment arm). The umbrella is `~/.claude/docs/authoring-charter.md`.
 
 ---
 
@@ -327,7 +327,7 @@ Expected: the resolved `StylesPath` ends in `vale/.config/vale/styles` and print
 - [ ] **Step 3: Lint a real planning doc through the Google baseline**
 
 ```bash
-cd ~/.dotfiles && vale docs/superpowers/specs/2026-06-22-code-comment-standards-design.md | tail -5
+cd ~/.dotfiles && vale docs/specs/2026-06-22-code-comment-standards-design.md | tail -5
 ```
 
 Expected: Vale runs against the combined `Vale, Google, glw907` style and reports a count. Findings are advisory at `suggestion` level; the point is a clean run, not zero findings.

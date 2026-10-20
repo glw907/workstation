@@ -76,7 +76,7 @@ Each of these needs a ruling from Geoff, loosens a prohibition, or is low confid
 - **Engine passes and releases.** `cairn-pass:89` says engine passes "never release", and `engine-consult:123-125` invokes `cairn-release` after the engine merge.
 - **`approval-packet:33-39`.** "At most three asks" can't hold when four PRs carry forced asks.
 - **The gate form under the worktree guard.** `pass-core:221-222`, `cairn-pass`, and `site-pass` say `cairn-run-gate '<string>'`, which `dotfiles-pass` says the guard refuses. Whether the guard applies in cairn and site worktrees is not settled by the repo.
-- **`spec-plan-review:55`.** Review records go to `docs/superpowers/research/`, and `pass-core:31` sends cross-repo research to `initiatives/<id>/`.
+- **`spec-plan-review:55`.** Review records go to `docs/research/`, and `pass-core:31` sends cross-repo research to `initiatives/<id>/`.
 - **`plan-reviewer.md:33-54`.** The checklist states the stop rule twice and grows one incident item per miss. A consolidated three-item form is in reader A's notes; it was held back because it rewrites lessons landed today.
 - **Incident narratives** past the house "(Geoff, date)" tag, in `pass-core` (eleven places), `plan-reviewer`, `cairn-release`, `visual-fidelity`, `design-refinement`, `visual-verifier`, `cairn-docs-drafter`, `cairn-register-editor`, and `cairn-figure`. The guide's history-narratives row is in tension with the house convention. The strongest cut is `pass-core:188-189`, a rolling statistic.
 - **Opus 5 citations** in `pass-core`, `claude-infra`, and `spec-plan-review`. The Opus 5.5 migration notes name Opus 5's scope and verification prompts as re-test candidates.

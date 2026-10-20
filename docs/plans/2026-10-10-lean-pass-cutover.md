@@ -1,7 +1,7 @@
 # Lean pass cutover: implementation plan
 
-**Spec:** `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md` (authoritative; cited below as
-"spec"). **Fold record:** `docs/superpowers/research/2026-10-10-lean-pass-process-fold.md` (its
+**Spec:** `docs/specs/2026-10-10-lean-pass-process-design.md` (authoritative; cited below as
+"spec"). **Fold record:** `docs/research/2026-10-10-lean-pass-process-fold.md` (its
 dispositions stand; no task undoes one).
 
 **Pass class:** `runner`, with the `live-account` flag (every step pushes branches, opens PRs, and
@@ -9,7 +9,7 @@ step 1 merges on GitHub). **Scope:** the spec's Rollout steps 1 to 4. Step 5 is 
 named on the last line.
 
 **Plan review:** three lenses (contract, mechanics, risk) at `a0cdfd5`, folded per
-`docs/superpowers/research/2026-10-10-lean-pass-cutover-plan-fold.md`. The verification read runs
+`docs/research/2026-10-10-lean-pass-cutover-plan-fold.md`. The verification read runs
 next, before step 1 launches (spec Lifecycle step 4).
 
 **Clock estimate:** 1,990 task-minutes in all (step 1: 680, step 2: 510, step 3: 590, step 4: 210).
@@ -210,7 +210,7 @@ name. S1-T5, S1-T8, and S1-T10 carry it out. After S1-T10, `model-economy.md` an
 | ME-14 | The conductor self-check and its origin incident | Deleted (spec, Retired) |
 | ME-15 | Pass sizing: a grant is not headroom; accretion by adjacency; split counting; deliverable counts; route discovered work; never add scope to a task in flight | `pass-core` "Scope": a grant authorizes a mechanism or a boundary, never more work; discovered work goes to the PR body or ROADMAP, never into a task in flight unless the task would otherwise build on something known wrong (say so). Deleted: the split-count ladder and the deliverable count (task clock estimates and the clock stop replace them, spec Execution item 6). |
 | ME-16 | The dated History entries | Deleted (ruling 8: git holds history). Each surviving fact already executes elsewhere: subagent default (ME-9 home), Opus docs drafter (`docs-page-chain.js` `drafterModel`), reviewer Opus pins (frontmatter), front-loaded interaction (`CLAUDE.md` "Process proportionality"). |
-| ME-17 | Research basis links | Deleted; `docs/superpowers/research/2026-10-10-anthropic-agentic-guidance.md` is the record |
+| ME-17 | Research basis links | Deleted; `docs/research/2026-10-10-anthropic-agentic-guidance.md` is the record |
 
 **`pass-gate-economy.md`**
 
@@ -318,7 +318,7 @@ repo, the merge is live, and both probes pass.
 
    ```bash
    cd ~/Projects/.worktrees/dotfiles-lean-cutover &&
-   claude --model sonnet --effort medium --name lean-step1a "$(cat ~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover-prompts/1a.txt)"
+   claude --model sonnet --effort medium --name lean-step1a "$(cat ~/.dotfiles/docs/plans/2026-10-10-lean-pass-cutover-prompts/1a.txt)"
    ```
 
 **Launch prompt (1a):** `2026-10-10-lean-pass-cutover-prompts/1a.txt`.
@@ -352,8 +352,8 @@ repo, the merge is live, and both probes pass.
 
 - **Outcome.** dubplate's `docs/STATUS.md` "Next action" and its lane-registry row for lane 1 say:
   rung 14a is held (ruling 12, lean pass process spec at
-  `~/.dotfiles/docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`); its plan
-  `docs/superpowers/plans/2026-10-10-rung-14a-admin-api.md` is re-planned as a lean task list in a
+  `~/.dotfiles/docs/specs/2026-10-10-lean-pass-process-design.md`); its plan
+  `docs/plans/2026-10-10-rung-14a-admin-api.md` is re-planned as a lean task list in a
   fresh dubplate session after rollout steps 1 to 3 merge; the old plan stays as evidence.
   dubplate's `ROADMAP.md` gains one Planned item: add PR test CI that runs `bash scripts/check.sh` on
   `pull_request`; until it lands, the full-suite home is the local close gate (ruling 11).
@@ -495,7 +495,7 @@ repo, the merge is live, and both probes pass.
 
   ```bash
   grep -n -i -E '(user|Geoff|you) (handles?|makes?|does|runs?) (the |all |every )?(git|commit|push)|(commit|push)(es|s)? (only )?(when|if) (the user|Geoff|asked)|only when (the user|Geoff) asks|leave (git|commit|push)[a-z]* to|never (commit|push) (unless|without)|(user|Geoff) (commits|pushes|owns git)|(do not|don.t|never) (commit|push)[a-z]* (unless|until|without)|let (the user|Geoff) (commit|push)' \
-    claude/.claude/skills/pass-core/SKILL.md docs/superpowers/plans/2026-10-10-lean-pass-cutover-prompts/*.txt
+    claude/.claude/skills/pass-core/SKILL.md docs/plans/2026-10-10-lean-pass-cutover-prompts/*.txt
   ```
 
   The dotfiles gate is green.
@@ -795,7 +795,7 @@ git -C ~/.dotfiles fetch origin &&
 [ "$(git -C ~/.dotfiles status -sb)" = "## main...origin/main" ] &&
 gh pr merge lean-cutover -R glw907/workstation --merge --match-head-commit <HEAD_SHA> &&
 cd ~/.dotfiles && git pull --ff-only && stow -R bin && command -v claude-clock-stop &&
-claude --model sonnet --effort medium --name lean-step1b "$(cat ~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover-prompts/1b.txt)"
+claude --model sonnet --effort medium --name lean-step1b "$(cat ~/.dotfiles/docs/plans/2026-10-10-lean-pass-cutover-prompts/1b.txt)"
 ```
 
 Geoff replaces `<HEAD_SHA>` with the PR body's `Head:` sha. Every line is chained with `&&`, so a
@@ -1002,7 +1002,7 @@ claude agents --json | jq -e 'any(.[]; .name == "lean-step2")' >/dev/null || {
 git -C ~/Projects/cairn-cms fetch origin &&
 [ "$(git -C ~/Projects/cairn-cms rev-parse HEAD)" = "$(git -C ~/Projects/cairn-cms rev-parse origin/main)" ] &&
 cd ~/Projects/cairn-cms &&
-claude --bg --model sonnet --effort medium --name lean-step2 "$(cat ~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover-prompts/2.txt)"; }
+claude --bg --model sonnet --effort medium --name lean-step2 "$(cat ~/.dotfiles/docs/plans/2026-10-10-lean-pass-cutover-prompts/2.txt)"; }
 ```
 
 The session enters its worktree, then runs the setup there (M2, M14).
@@ -1181,7 +1181,7 @@ for r in ecxc-ski 907-life aksailingclub-org xcathletes-org cairn-pub; do
   git -C ~/Projects/dubplate fetch origin &&
   git -C ~/Projects/dubplate worktree add ~/Projects/.worktrees/dubplate-lean-cutover -b lean-cutover origin/master
 ) && cd ~/Projects &&
-claude --model sonnet --effort medium --name lean-step3 "$(cat ~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover-prompts/3.txt)"
+claude --model sonnet --effort medium --name lean-step3 "$(cat ~/.dotfiles/docs/plans/2026-10-10-lean-pass-cutover-prompts/3.txt)"
 ```
 
 dubplate has no adapter until S3-T7, so its setup is discovered in S3-T1. Its step 3 changes are
@@ -1368,7 +1368,7 @@ claude agents --json | jq -e 'any(.[]; .name == "lean-step4")' >/dev/null || {
 git -C ~/.dotfiles fetch origin &&
 [ "$(git -C ~/.dotfiles rev-parse HEAD)" = "$(git -C ~/.dotfiles rev-parse origin/main)" ] &&
 cd ~/.dotfiles &&
-claude --bg --model sonnet --effort medium --name lean-step4 "$(cat ~/.dotfiles/docs/superpowers/plans/2026-10-10-lean-pass-cutover-prompts/4.txt)"; }
+claude --bg --model sonnet --effort medium --name lean-step4 "$(cat ~/.dotfiles/docs/plans/2026-10-10-lean-pass-cutover-prompts/4.txt)"; }
 ```
 
 **Launch prompt (4):** `2026-10-10-lean-pass-cutover-prompts/4.txt`.
@@ -1394,10 +1394,10 @@ claude --bg --model sonnet --effort medium --name lean-step4 "$(cat ~/.dotfiles/
 - **Outcome.** For each model-judged seat, the recorded runs are read: stage 2a's workflow journals
   (`~/.claude/projects/-var-home-glw907-Projects-cairn-cms*/*/subagents/workflows/wf_*/journal.jsonl`
   whose agents carry the chain's labels, `structure:`, `editor:`, `facts:`, `figure:`, `reader:`) and
-  the plan ledgers (cairn-cms `docs/superpowers/plans/2026-09-30-draft-docs-stage-2a.md`,
+  the plan ledgers (cairn-cms `docs/plans/2026-09-30-draft-docs-stage-2a.md`,
   `2026-10-07-2a-unattended-finish.md`, `2026-10-07-2a-close-finish.md`, and
   `2026-09-28-style-guide-sync.md` J2), with the catch ledger
-  (`docs/superpowers/research/2026-10-10-pass-catch-ledger.md`) for severity mapping. A seat keeps its
+  (`docs/research/2026-10-10-pass-catch-ledger.md`) for severity mapping. A seat keeps its
   place when the record shows at least one unique catch at REAL or above that the deterministic gates
   passed on the same round; a register catch on a published docs page counts (ruling 14). A seat with
   no record is cut (spec step 4). Each verdict cites the ledger line or journal entry.

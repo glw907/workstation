@@ -1,6 +1,6 @@
 # Infra sweep A-core and B plan: fold record
 
-Target: `docs/superpowers/plans/2026-09-28-infra-sweep-a-core-b.md`, revised in place from
+Target: `docs/plans/2026-09-28-infra-sweep-a-core-b.md`, revised in place from
 dotfiles `7ce3297`. Narrow spec edit: `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`,
 amendment 1 and "Pass B acceptance" only. Reviews:
 `2026-09-28-infra-a-core-b-plan-review-{contract,mechanics,domain}.md` in this directory. One fold

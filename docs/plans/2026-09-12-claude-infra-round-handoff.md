@@ -52,7 +52,7 @@ artifacts. github.com/glw907/workstation.
   hoisted with repo-specific supplements; the model-economy doc carries the
   three 2026-09-04 carries; `claude/.claude/CLAUDE.md` displaced to 23,947
   bytes and picked up the docs standard's four lines. Handoff:
-  `docs/superpowers/plans/2026-09-12-claude-infra-round-handoff.md`.
+  `docs/plans/2026-09-12-claude-infra-round-handoff.md`.
 - **Docs standard, plan one closed**: the tellgrader `docs-register` profile and opt-in
   discovery, `MEASURES.md` as the canonical measure definition, the output-style and voice-file
   updates, the path-grading Vale hook, the four review agents (including `figure-verifier`),
@@ -86,7 +86,7 @@ Per-pass ledger: `docs/HISTORY.md`.
 
 ### 2026-09-12 -- Claude infra round
 
-Plan `docs/superpowers/plans/2026-09-12-claude-infra-round.md` (revision 2, ratified at
+Plan `docs/plans/2026-09-12-claude-infra-round.md` (revision 2, ratified at
 `1ec5c0a`). Ten dispatched tasks corrected and hoisted Claude-facing infrastructure across the
 workstation and its consumer repos. Task 1 fixed the exit-75 reattach protocol in the two
 implementers that call `cairn-run-gate` without it (dotfiles `95c65a7`, dubplate `a30d32e`).

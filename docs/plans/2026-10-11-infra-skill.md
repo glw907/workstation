@@ -1,11 +1,11 @@
 # Infrastructure skill and proportionality rules: implementation plan
 
-**Design:** `docs/superpowers/specs/2026-10-11-infra-skill-and-proportionality-design.md`, approved
+**Design:** `docs/specs/2026-10-11-infra-skill-and-proportionality-design.md`, approved
 by Geoff 2026-10-11 (under a page, so no separate spec), with Geoff's amendment item 3a (the
 `plan-reviewer` agent, `fe26a9b`), which T2 builds. **Evidence:**
-`docs/superpowers/research/2026-10-11-anthropic-guidance-proportionality.md` (cited below as
+`docs/research/2026-10-11-anthropic-guidance-proportionality.md` (cited below as
 "research"). **Review:** the mechanics lens and its fold record,
-`docs/superpowers/research/2026-10-11-infra-skill-plan-{review-mechanics,fold}.md`.
+`docs/research/2026-10-11-infra-skill-plan-{review-mechanics,fold}.md`.
 
 **Outcome.** A session that changes local Claude Code infrastructure loads a `claude-infra` skill
 that sends it to Anthropic's guidance first and to the strongest home for each rule. `pass-core`
@@ -74,7 +74,7 @@ tripwire of 360. The two pairs run in turn, so the path is about 70 + 55 + 50 = 
 
 ## Launch
 
-Prompt file: `docs/superpowers/plans/2026-10-11-infra-skill-prompt.txt`. The plan lives on branch
+Prompt file: `docs/plans/2026-10-11-infra-skill-prompt.txt`. The plan lives on branch
 `worktree-infra-skill-plan`, which already carries the design branch `worktree-infra-skill`. The
 executing session continues it: its first act after `EnterWorktree` is `git merge --no-edit
 worktree-infra-skill-plan`, so its PR carries the design, the plan, and the build. Its worktree
@@ -92,7 +92,7 @@ git -C ~/.dotfiles/.claude/worktrees/infra-skill-plan status --porcelain   # mus
 git -C ~/.dotfiles rev-parse worktree-infra-skill-plan origin/worktree-infra-skill-plan   # two equal lines
 claude agents --json                                    # no live session with cwd in ~/.dotfiles/.claude/worktrees/infra-skill-build
 cd ~/.dotfiles && claude --bg --model sonnet --effort medium --name infra-skill-build \
-  "$(git -C ~/.dotfiles show worktree-infra-skill-plan:docs/superpowers/plans/2026-10-11-infra-skill-prompt.txt)"
+  "$(git -C ~/.dotfiles show worktree-infra-skill-plan:docs/plans/2026-10-11-infra-skill-prompt.txt)"
 ```
 
 The prompt is read with `git show` because the plan is not on `main` until this pass's PR merges.
@@ -245,7 +245,7 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
     `https://code.claude.com/docs/en/features-overview`), copied from the design.
   - `spec-plan-review` dispatches `plan-reviewer` for the mechanics lens in place of the retyped
     lens prompt, and the dispatching session saves its reply as
-    `docs/superpowers/research/<date>-<target>-review-mechanics.md`. The skill keeps the procedure;
+    `docs/research/<date>-<target>-review-mechanics.md`. The skill keeps the procedure;
     the lens prompt lives in the agent alone. The agent adds no review (design item 3a).
 - **Files.** `claude/.claude/skills/pass-core/SKILL.md`,
   `claude/.claude/skills/spec-plan-review/SKILL.md`, `claude/.claude/agents/plan-reviewer.md` (new).
@@ -269,7 +269,7 @@ The ahead check matters because `worktree.baseRef: "head"` branches from local `
     `NotebookEdit`), and `spec-plan-review` names `plan-reviewer` where it dispatches the mechanics
     lens.
   - One live dispatch: from T2's worktree, an Agent-tool call with `subagent_type:
-    "plan-reviewer"` on this plan (`docs/superpowers/plans/2026-10-11-infra-skill.md`) returns
+    "plan-reviewer"` on this plan (`docs/plans/2026-10-11-infra-skill.md`) returns
     findings, each tagged `correctness` or `optional`, and leaves `git status --porcelain` empty.
     The agent file loads live through the folded `~/.claude/agents` link only after the merge, so
     this dispatch passes the agent's body as a `general-purpose` prompt with `model: opus`, effort

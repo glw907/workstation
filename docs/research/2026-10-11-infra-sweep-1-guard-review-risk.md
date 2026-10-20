@@ -1,7 +1,7 @@
 # Infra sweep 1 plan review: data integrity and failure risk
 
 Lens: crash, concurrency, partial write, upgrade, restore, live-machine breakage. Target:
-`docs/superpowers/plans/2026-10-11-infra-sweep-1-guard.md` (cited as "plan") and its prompt
+`docs/plans/2026-10-11-infra-sweep-1-guard.md` (cited as "plan") and its prompt
 (cited as "prompt"), at `e223c7e`. All probes read-only; the one scratch script is
 `/var/home/glw907/.claude/jobs/c747c352/tmp/desc.py`, run with `python3 -I`.
 

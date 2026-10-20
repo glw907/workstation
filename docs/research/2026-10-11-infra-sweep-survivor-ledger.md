@@ -1,7 +1,7 @@
 # Infra sweep survivor ledger (2026-10-11)
 
 Re-derivation of the 2026-09-28 infra sweep against the tree after the lean pass cutover. Inputs:
-the sweep spec (`docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`), the audit
+the sweep spec (`docs/specs/2026-09-28-claude-infra-sweep-design.md`), the audit
 (`claude/.claude/docs/record/2026-09-28-claude-infra-audit.md`), and dotfiles `main` at `4231a67`.
 Rule from STATUS (2026-10-10): an item is superseded when the cutover rewrote or deleted the file
 it targets. Evidence came from `git diff --stat 998859b^1 998859b` (step 1), `998859b..4231a67`
@@ -29,7 +29,7 @@ at `4231a67`: PS-05 (C), CS-4 (D), GA-03 x2 (A-rest), GA-04 and GA-05 (C).
 | AW-07 | done | deleted in B4 |
 | PS-04 | done | `e9aebc2` points `engine-consult` at `check:close` |
 | DC-09 (inventory side) | done | `3a58ba6` (PR #3) |
-| PS-11, DC-06, PS-09 | superseded, with residuals | `log-project:98-104` example still shows `## Done`; `fable-post-cutoff-system.md:45`; `site-pass:15,64` hardcode `docs/superpowers/` |
+| PS-11, DC-06, PS-09 | superseded, with residuals | `log-project:98-104` example still shows `## Done`; `fable-post-cutoff-system.md:45`; `site-pass:15,64` hardcode `docs/` |
 | GA-01, GA-02 | done | `cc118a5`, `4461c1f` |
 | F rows for cairn-cms and the sites | superseded | cairn-cms #112; step-3 PRs merged |
 | DC-14 quoted-version check | dropped | its only instance was fixed by S3-T3 |

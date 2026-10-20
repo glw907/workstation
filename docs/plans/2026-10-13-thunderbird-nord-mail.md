@@ -1,17 +1,17 @@
 # Thunderbird Nord mail layer: implementation plan
 
-**Design:** `docs/superpowers/specs/2026-10-13-thunderbird-nord-mail-design.md` (approved by Geoff,
+**Design:** `docs/specs/2026-10-13-thunderbird-nord-mail-design.md` (approved by Geoff,
 2026-10-13; the "Who merges the PR" decision came back unanswered, so the recommended choice
 holds: Geoff reads the screenshots before merge). It runs about a page, and the mechanisms live in
 the evidence below, so no separate spec was written (`spec-plan-review` "Depth scales with risk").
 **Evidence:** the research report,
-`docs/superpowers/research/2026-10-13-mail-colour-evidence/reports/Mail colour readability evidence.md`
+`docs/research/2026-10-13-mail-colour-evidence/reports/Mail colour readability evidence.md`
 (cited as "report"); its notes in the sibling `research_notes/` folder, including
 `nord_palette_measured.md` and its script `nord_measure.py` (cited as "measure"); and the styling
-map of Thunderbird 158, `docs/superpowers/research/2026-10-13-mail-colour-evidence/thunderbird-css-map.md`
+map of Thunderbird 158, `docs/research/2026-10-13-mail-colour-evidence/thunderbird-css-map.md`
 (cited as "map"; its line numbers for the theme's `mail.css` and for `messageQuotes.css` are stale,
 so this plan cites lines read from the installed files). **Review:** the mechanics lens and the fold
-record, `docs/superpowers/research/2026-10-13-thunderbird-nord-mail-{review-mechanics,plan-fold}.md`.
+record, `docs/research/2026-10-13-thunderbird-nord-mail-{review-mechanics,plan-fold}.md`.
 The fold re-cut the waves by file ownership: the contrast check joined task A, D runs alone, and
 the fold record lists every source it read.
 
@@ -25,7 +25,7 @@ messages, never on real mail.
 
 **Pass class:** `ordinary`. Every path is `thunderbird/**`, `bin/.local/bin/thunderbird-theme-sync`
 (not in the adapter's runner or auth-data lists), `bluefin/SECOND-WORKSTATION.md`, or
-`docs/superpowers/**`. No `live-account` flag: nothing calls a Cloudflare, GitHub (beyond the PR),
+`docs/**`. No `live-account` flag: nothing calls a Cloudflare, GitHub (beyond the PR),
 or npm account, and the harness runs Thunderbird offline against a scratch profile.
 
 **Out of scope:** the design's list (the sender's HTML design, Outlook and Yahoo quote bars, the
@@ -56,7 +56,7 @@ record, "Estimate").
 
 ## Launch
 
-Prompt file: `docs/superpowers/plans/2026-10-13-thunderbird-nord-mail-prompt.txt`. The plan lives
+Prompt file: `docs/plans/2026-10-13-thunderbird-nord-mail-prompt.txt`. The plan lives
 on branch `worktree-thunderbird-nord-mail` (planning commits). The executor continues that branch:
 its first act after `EnterWorktree` (name `thunderbird-nord-mail-build`) is `git reset --hard
 origin/main`, then `git merge --no-edit worktree-thunderbird-nord-mail`. The reset matters because
@@ -76,7 +76,7 @@ git -C ~/.dotfiles rev-parse worktree-thunderbird-nord-mail origin/worktree-thun
 ss -ltn | grep -c ':28282 '                             # must print 0: no Thunderbird holds the harness port
 claude agents --json                                    # no live session named dotfiles-thunderbird-nord-mail
 cd ~/.dotfiles && claude --bg --model sonnet --effort medium --name dotfiles-thunderbird-nord-mail \
-  "$(git -C ~/.dotfiles show worktree-thunderbird-nord-mail:docs/superpowers/plans/2026-10-13-thunderbird-nord-mail-prompt.txt)"
+  "$(git -C ~/.dotfiles show worktree-thunderbird-nord-mail:docs/plans/2026-10-13-thunderbird-nord-mail-prompt.txt)"
 ```
 
 ## Conventions every task follows
@@ -575,7 +575,7 @@ and pushes.
    only the working tree).
 5. Screenshots for the PR:
    - Downscale the reader and list shots to 1200 px wide.
-   - Commit them under `docs/superpowers/research/2026-10-13-mail-colour-evidence/shots/`; only test
+   - Commit them under `docs/research/2026-10-13-mail-colour-evidence/shots/`; only test
      messages appear in them.
    - Embed them in the PR body by their `raw.githubusercontent.com` URLs on the branch.
 6. PR body: `## Brief` per `~/.claude/docs/voice/approval-brief.md`. Under it go what landed, the

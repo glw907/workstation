@@ -3,9 +3,9 @@
 Approved in chat by Geoff, 2026-10-10, section by section. This spec replaces the pass machinery in
 every repo on the workstation (cairn-cms, the five sites, dubplate; poplar keeps its own skills).
 It supersedes the parked clock-time design
-(`~/Projects/cairn-cms/docs/superpowers/specs/2026-10-10-pass-clock-time-design.md`), which stays as
+(`~/Projects/cairn-cms/docs/specs/2026-10-10-pass-clock-time-design.md`), which stays as
 evidence of the ratchet. Revised after three lens reviews and Geoff's rulings 11 to 14; the fold
-record is `docs/superpowers/research/2026-10-10-lean-pass-process-fold.md`.
+record is `docs/research/2026-10-10-lean-pass-process-fold.md`.
 
 ## Goal
 
@@ -17,14 +17,14 @@ have, at a clock and token price worth paying.
 ## Evidence
 
 - Anthropic guidance, quotes verified against the pages on 2026-10-10:
-  `docs/superpowers/research/2026-10-10-anthropic-agentic-guidance.md`.
+  `docs/research/2026-10-10-anthropic-agentic-guidance.md`.
 - Catch ledger over gate economy, engine pass A, stage 2a, pass 1b, and theme identity:
-  `docs/superpowers/research/2026-10-10-pass-catch-ledger.md`.
+  `docs/research/2026-10-10-pass-catch-ledger.md`.
 - Clock evidence from pass B's stopped S1 run, and Fable's critique of the parked design:
-  `~/Projects/cairn-cms/docs/superpowers/research/2026-10-10-pass-clock-time-evidence.md`,
-  `~/Projects/cairn-cms/docs/superpowers/research/2026-10-10-pass-clock-time-review-fable.md`.
+  `~/Projects/cairn-cms/docs/research/2026-10-10-pass-clock-time-evidence.md`,
+  `~/Projects/cairn-cms/docs/research/2026-10-10-pass-clock-time-review-fable.md`.
 - Prior art for gates and shared capacity:
-  `~/Projects/cairn-cms/docs/superpowers/research/2026-10-10-pass-clock-time-prior-art.md`.
+  `~/Projects/cairn-cms/docs/research/2026-10-10-pass-clock-time-prior-art.md`.
 
 ## Rulings (Geoff, 2026-10-10)
 

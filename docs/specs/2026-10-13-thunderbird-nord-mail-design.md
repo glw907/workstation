@@ -36,7 +36,7 @@ Turning off Thunderbird's junk filter doesn't clear the junk marks it already se
 
 ### The evidence
 
-The design follows a research report rather than taste alone. The report lives at `docs/superpowers/research/2026-10-13-mail-colour-evidence/reports/Mail colour readability evidence.md`, with four sets of researcher notes and a styling map of Thunderbird 158 beside it. Its conclusion: let Nord decorate while shape signals. Every meaning gets a cue that survives without colour (a dot, a glyph, weight, position, or an underline), and Nord colour adds speed on top. Where the report found no direct study, as for unread styling and quote colouring, the design rests on general vision science, WCAG 2.2, and what shipping clients do, and says so.
+The design follows a research report rather than taste alone. The report lives at `docs/research/2026-10-13-mail-colour-evidence/reports/Mail colour readability evidence.md`, with four sets of researcher notes and a styling map of Thunderbird 158 beside it. Its conclusion: let Nord decorate while shape signals. Every meaning gets a cue that survives without colour (a dot, a glyph, weight, position, or an underline), and Nord colour adds speed on top. Where the report found no direct study, as for unread styling and quote colouring, the design rests on general vision science, WCAG 2.2, and what shipping clients do, and says so.
 
 ### The role map
 

@@ -1,7 +1,7 @@
 # Plan review: infra sweep A-core and B, contract and criteria lens
 
 Plan: `docs/superpowers/plans/2026-09-28-infra-sweep-a-core-b.md` at `62c5e6d`. Spec:
-`docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`. Rules: `pass-core` SKILL.md.
+`docs/specs/2026-09-28-claude-infra-sweep-design.md`. Rules: `pass-core` SKILL.md.
 Lens: does each spec outcome map to a task with checkable acceptance, can any acceptance pass
 vacuously, and do classes, gates, upshifts, and owner time fit the risk.
 

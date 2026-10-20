@@ -26,7 +26,7 @@ no part in the reviews or the fold. Owner rulings R-A, R-B, and R-C are taken as
   `glw907/workstation: No such file or directory`. The 1b sample ran its inner command and dropped the
   path.
 - **Fix:** commit each launch prompt as a file beside the plan, such as
-  `docs/superpowers/plans/2026-10-10-lean-pass-cutover.launch/1a.txt`. Each launch line then reads
+  `docs/plans/2026-10-10-lean-pass-cutover.launch/1a.txt`. Each launch line then reads
   `claude --model sonnet --effort medium --name lean-step1a "$(cat <path>)"`. S1-T5's "Launch prompt"
   section prescribes the same file form for every later pass's STATUS line.
 

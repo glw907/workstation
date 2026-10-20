@@ -1,6 +1,6 @@
 # Infra sweep 1 plan review: fold record (2026-10-11)
 
-Target: `docs/superpowers/plans/2026-10-11-infra-sweep-1-guard.md` and its prompt, reviewed at
+Target: `docs/plans/2026-10-11-infra-sweep-1-guard.md` and its prompt, reviewed at
 `e223c7e` by the contract, mechanics, and risk lenses (`2026-10-11-infra-sweep-1-guard-review-*.md`
 beside this file), folded on `217fe4e`. Each finding was checked against the code before it was
 taken. Convergent findings fold once, at the root, and the other lens's rows point there. Probes

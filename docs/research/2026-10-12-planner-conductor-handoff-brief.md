@@ -67,5 +67,5 @@ executes"), as its own small dotfiles change, separate from any feature pass.
 ## First instance
 
 The drafter Pass 0 hand-off (2026-10-12) is the first time this pattern is used, before any rule
-exists. Its conductor prompt, committed beside the plan in `docs/superpowers/plans/`, is a working
+exists. Its conductor prompt, committed beside the plan in `docs/plans/`, is a working
 example for question 3.

@@ -1,6 +1,6 @@
 # Adversarial plan review: CONTRACT AND CRITERIA lens
 
-Plan: `docs/superpowers/plans/2026-09-12-claude-infra-round.md`, revision 1.
+Plan: `docs/plans/2026-09-12-claude-infra-round.md`, revision 1.
 Reviewed 2026-09-12 against `~/.dotfiles` at `9034fd3`, the commit the plan names.
 Lens: outcomes, constraints, and falsifiable acceptance criteria; Files completeness;
 deliverable counts; the close task's draft-versus-fold contract; citation accuracy.

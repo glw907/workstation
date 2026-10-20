@@ -32,7 +32,7 @@ This is plan 04 of the authoring-system build. Plans 01 (Vale foundation), 02 (G
 6. **Prose arm:** the Google and Microsoft baselines on docs and content per glob, the prose registers, the PostToolUse prose Vale hook.
 7. **Cutover:** wire the Vale hook, retire `prose-guard`, rewrite the output style and the CLAUDE.md writing-voice section, repoint the router. Sequence step 5 (wire `/simplify` to name TS, S, and T-P tells by number) lands here.
 
-The source specs are `~/.dotfiles/docs/superpowers/specs/2026-06-22-ai-drafting-prose-system-design.md` (prose) and `~/.dotfiles/docs/superpowers/specs/2026-06-22-code-comment-standards-design.md` (comments). The umbrella is `~/.claude/docs/authoring-charter.md`.
+The source specs are `~/.dotfiles/docs/specs/2026-06-22-ai-drafting-prose-system-design.md` (prose) and `~/.dotfiles/docs/specs/2026-06-22-code-comment-standards-design.md` (comments). The umbrella is `~/.claude/docs/authoring-charter.md`.
 
 ---
 

@@ -25,7 +25,7 @@ In the other six repos, "CI green" is unsatisfiable, or it passes vacuously beca
 checks reads green. With the local full gate retired, e2e and the whole unit suite then run nowhere
 before merge, which breaks ruling 3. In three of those repos the merge itself deploys to production.
 The parked design handled this ("a repo with no CI keeps every leg local",
-`cairn-cms/docs/superpowers/specs/2026-10-10-pass-clock-time-design.md:85-87`). The lean spec
+`cairn-cms/docs/specs/2026-10-10-pass-clock-time-design.md:85-87`). The lean spec
 dropped it.
 
 Fold: each adapter names its repo's full-suite home. That is PR CI where it exists (cairn-cms,
@@ -61,7 +61,7 @@ Defect: the spec gives three sources for a class and no precedence between them:
 - The adapter "maps paths to classes".
 
 Pass B shows the clash. Tasks 2, 5, and 8 are `auth-data` inside an `engine-logic` pass
-(`cairn-cms/docs/superpowers/plans/2026-10-08-engine-pass-pre-2b-b.md:628, :795, :920`). One class
+(`cairn-cms/docs/plans/2026-10-08-engine-pass-pre-2b-b.md:628, :795, :920`). One class
 per pass means either every task gets the Opus per-task read or none does.
 
 `unattended` describes an execution mode, not a risk, so it can't sit on the same axis as
@@ -297,7 +297,7 @@ Location: spec `:158-159`, `:13-14`.
 Defect: "at a clock and token price worth paying" is a judgment two people would make differently.
 The catch ledger holds no per-seat data for `docs-page-chain`. Its only docs-seat evidence is the 2a
 finish register read, where 13 blockers passed `tellgrader`
-(`cairn-cms/docs/superpowers/plans/2026-10-07-2a-close-finish.md:110-150`). Those catches are
+(`cairn-cms/docs/plans/2026-10-07-2a-close-finish.md:110-150`). Those catches are
 wording, and ruling 3 lets wording defects land on `main` to be fixed forward.
 
 Settled part:
@@ -356,7 +356,7 @@ Defect: `defer` is undefined in this spec. Its definition is in the superseded p
 5 item 4: `RUN_GATE_IF_BUSY=defer` exits 76. "Fast-lane mode" has two homes, `cairn-run-gate` and the
 adapter (`:94`). The default wait is already 540 s (`cairn-run-gate:5-8`). The 600-second fix is
 testable only as "wait plus lock wait stays under 600 s", since three full-gate calls hit the cap
-through lock wait (`cairn-cms/docs/superpowers/research/2026-10-10-pass-clock-time-evidence.md:257-258`).
+through lock wait (`cairn-cms/docs/research/2026-10-10-pass-clock-time-evidence.md:257-258`).
 
 Fold: restate the `defer` contract and the caller's action, with no defer in a repo with no CI. Give
 the fast lane one home, the adapter's classifier, with `cairn-run-gate` only running it. State the

@@ -1,7 +1,7 @@
 # Infra sweep 1 plan review: contract and criteria lens (2026-10-11)
 
-Target: `docs/superpowers/plans/2026-10-11-infra-sweep-1-guard.md` (cited as "plan") and
-`docs/superpowers/plans/2026-10-11-infra-sweep-1-guard-prompt.txt` (cited as "prompt"), at
+Target: `docs/plans/2026-10-11-infra-sweep-1-guard.md` (cited as "plan") and
+`docs/plans/2026-10-11-infra-sweep-1-guard-prompt.txt` (cited as "prompt"), at
 `e223c7e`. Every mechanism below was read from source or probed against the tree with `python3 -I`
 (scratch scripts under `~/.claude/jobs/c747c352/tmp/`), never recalled.
 

@@ -1,7 +1,7 @@
 # Claude infra round, revision 1: adversarial review, DOMAIN RISK lens
 
 Reviewer: fresh-context domain-risk lens, 2026-09-12. Read-only; nothing edited outside this
-file. Plan under review: `docs/superpowers/plans/2026-09-12-claude-infra-round.md` at revision
+file. Plan under review: `docs/plans/2026-09-12-claude-infra-round.md` at revision
 1. Line numbers below are that file's.
 
 Scope of this lens: what the round can break for a consumer the plan did not consider, and

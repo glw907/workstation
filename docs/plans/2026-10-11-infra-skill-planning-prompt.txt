@@ -5,8 +5,8 @@ then run `git merge --no-edit worktree-infra-skill`, which brings in the design,
 this prompt; a conflict is a stop.
 
 Load `dotfiles-pass` (it loads `pass-core`). Read in full the approved design
-`docs/superpowers/specs/2026-10-11-infra-skill-and-proportionality-design.md` and its evidence
-`docs/superpowers/research/2026-10-11-anthropic-guidance-proportionality.md`. Arm the API-drop
+`docs/specs/2026-10-11-infra-skill-and-proportionality-design.md` and its evidence
+`docs/research/2026-10-11-anthropic-guidance-proportionality.md`. Arm the API-drop
 wake-up per `~/.claude/docs/unattended-work-guards.md`.
 
 Scope, in Anthropic's own words (the design adopts them; apply them to this plan): "Avoid
@@ -23,8 +23,8 @@ sentence and continue with the task as asked rather than quietly narrowing, wide
 transforming it." Anything beyond the design goes in the plan's "Later" list, never into a task.
 
 The design is under a page, so there is no separate spec. Write the plan
-`docs/superpowers/plans/2026-10-11-infra-skill.md` in the lean format (see
-`docs/superpowers/plans/2026-10-11-infra-sweep-1-guard.md` for the shape: Conventions, tasks with
+`docs/plans/2026-10-11-infra-skill.md` in the lean format (see
+`docs/plans/2026-10-11-infra-sweep-1-guard.md` for the shape: Conventions, tasks with
 outcome, files, risk class, acceptance, test, clock estimate, pairs, Close). Every gate is
 `bash scripts/gate.sh`. The Close carries the design's "Conductor restart" as the conducting
 session's post-merge steps, listed in the PR body; the executor does not perform them.
@@ -40,7 +40,7 @@ run `notify-send -u normal "infra skill: plan over budget"`, and wait. A finding
 approved design is the same kind of stop.
 
 Write the executor's launch prompt as a committed file beside the plan, in the shape of
-`docs/superpowers/plans/2026-10-11-infra-sweep-1-guard-prompt.txt`, continuing your branch, with the
+`docs/plans/2026-10-11-infra-sweep-1-guard-prompt.txt`, continuing your branch, with the
 push target `glw907/workstation`.
 
 Commit each stage on your branch (specific files, never `git add -A`) and push it. Never push

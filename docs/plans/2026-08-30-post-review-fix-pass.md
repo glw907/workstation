@@ -63,11 +63,11 @@ D. Organization and docs
 - vale/tests -> tests/vale; drop the ^/tests ignore line.
 - MIGRATION-BRIEF.md -> docs/ after moving the layered-packages change-control
   rule into layered-packages.txt's header; devenv-research.md ->
-  docs/superpowers/specs/; reference edits (bluefin/README, STATUS, HISTORY,
+  docs/specs/; reference edits (bluefin/README, STATUS, HISTORY,
   CLAUDE.md, bluefin-admin.md).
 - docs/secrets.md merges into secrets/registry.md (doctrine's absolute path
   wins); README links follow.
-- docs/superpowers/plans/archive/ for the completed 2026-06-22 set and
+- docs/plans/archive/ for the completed 2026-06-22 set and
   2026-04-05-era leftovers.
 - ROADMAP.md at root: devcontainers, kitty-harness replacement, custom uBlue
   image, bootstrap restore split, history purge decision; STATUS open-items

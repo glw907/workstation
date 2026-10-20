@@ -64,7 +64,7 @@ Ranked by consequence. Over-ceremony findings are marked and ranked by their cos
   exec access." A runner cannot see whether `package.json` exists, so "a checkout with no
   `package.json` ... is rejected at launch" needs a probe agent at launch. The literal fallback,
   requiring `reducedGate` whenever a class is set, breaks today's idiom: 71 plans under
-  `~/Projects/*/docs/superpowers/plans` cite the runner, and none sets `reducedGate`.
+  `~/Projects/*/docs/plans` cite the runner, and none sets `reducedGate`.
 - **Fold.** AW-01 is one line. `pass-execute-chains.js:164` hardcodes cairn's npm scripts, and
   `pass-execute.js:246` already holds a repo-neutral default ("the repo's type check plus only
   the test files this fix round touched"). Chains adopts that constant. The hardcoded npm
@@ -111,7 +111,7 @@ Ranked by consequence. Over-ceremony findings are marked and ranked by their cos
   backticked paths, 71 of them distinct. Of those, 19 resolve in several repos by design
   (`docs/STATUS.md` in 4, `src/content/`, `.claude/project-tracking.json`, `cmd/`,
   `internal/`), and 8 are placeholders (`docs/internal/facts/<arm>.md`,
-  `docs/superpowers/plans/YYYY-MM-DD-<topic>.md`). These are generic conventions in `pass-core`
+  `docs/plans/YYYY-MM-DD-<topic>.md`). These are generic conventions in `pass-core`
   and `site-pass` with no absolute form. They can never leave the baseline, which breaks "the
   baseline equals the remaining work" and E's success test. Of the rest, 32 resolve in exactly
   one repo (the real AW-14 and AW-15 class), and 12 resolve nowhere (real dead refs, plus prose

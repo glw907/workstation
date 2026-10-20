@@ -5,12 +5,12 @@ D, E, and F. Evidence: the read-only audit at
 `/var/home/glw907/.dotfiles/claude/.claude/docs/record/2026-09-28-claude-infra-audit.md`
 (87 findings, root causes RC1 to RC8, the guard proposal, pass triage A to F, and the section 6
 amendments to the style-guide-sync plan). Finding ids below are the audit's. The downstream plan
-is `/var/home/glw907/Projects/cairn-cms/.claude/worktrees/style-guide-sync/docs/superpowers/plans/2026-09-28-style-guide-sync.md`.
+is `/var/home/glw907/Projects/cairn-cms/.claude/worktrees/style-guide-sync/docs/plans/2026-09-28-style-guide-sync.md`.
 
 **Status:** revised after the four-lens review (anthropic, contract, mechanics, consistency under
-`docs/superpowers/research/2026-09-28-infra-sweep-review-*.md`), then a second, narrow fold
-after the fold verification (`docs/superpowers/research/2026-09-28-infra-sweep-fold-verification.md`).
-Fold record, both folds: `docs/superpowers/research/2026-09-28-infra-sweep-fold.md`. Ready for
+`docs/research/2026-09-28-infra-sweep-review-*.md`), then a second, narrow fold
+after the fold verification (`docs/research/2026-09-28-infra-sweep-fold-verification.md`).
+Fold record, both folds: `docs/research/2026-09-28-infra-sweep-fold.md`. Ready for
 Geoff's read.
 
 ## Goals
@@ -608,7 +608,7 @@ skill's reviewer `high` has no recorded reason. The fold agent is an authoring s
 ## Anthropic practice
 
 Fetched 2026-09-28 against Claude Code v2.1.284. Full quotes and grading:
-`docs/superpowers/research/2026-09-28-infra-sweep-review-anthropic.md`. Items marked **scope**
+`docs/research/2026-09-28-infra-sweep-review-anthropic.md`. Items marked **scope**
 widen a pass; none adds a pass.
 
 **Confirmed.**
@@ -718,9 +718,9 @@ widen a pass; none adds a pass.
 
 ## Lean re-plan (2026-10-11)
 
-The lean pass cutover (`docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`) rewrote or
+The lean pass cutover (`docs/specs/2026-10-10-lean-pass-process-design.md`) rewrote or
 deleted many of this spec's targets. The survivor ledger
-(`docs/superpowers/research/2026-10-11-infra-sweep-survivor-ledger.md`) re-derives every item
+(`docs/research/2026-10-11-infra-sweep-survivor-ledger.md`) re-derives every item
 against the tree at `4231a67`. It supersedes the pass split above (A-rest, C, D, E, F) for
 everything not yet built. A-core, B, and the style-guide-sync plan are merged.
 
@@ -743,7 +743,7 @@ dropped, since none has a live instance. Each trimmed description gets trigger c
 should-trigger and two should-not prompts in fresh `claude -p` sessions, before and after), per
 "Anthropic practice" item 7.
 
-**Sweep-1, the guard** (plan: `docs/superpowers/plans/2026-10-11-infra-sweep-1-guard.md`):
+**Sweep-1, the guard** (plan: `docs/plans/2026-10-11-infra-sweep-1-guard.md`):
 GA-03, the relative-link check, the CLAUDE.md 200-line cap, the vendored-skill overlay (CS-6,
 CS-8, CS-10, CS-17), and the description-cap and fork-skill checks, which seed their live
 violations for sweep-2.

@@ -18,7 +18,7 @@ Counts: 2 blocker, 6 major, 2 minor. Owner forks: 2 (B1, M1).
   In those six repos no step runs the whole suite before merge. In three of them the merge itself
   deploys to production. Ruling 3 (behavioral, security, contract caught before merge) fails there.
 - **Evidence:** dubplate's rung 14a plan says it outright: "dubplate has no CI (`.github/workflows` is
-  absent)" (`~/Projects/dubplate/docs/superpowers/plans/2026-10-10-rung-14a-admin-api.md:79`). That
+  absent)" (`~/Projects/dubplate/docs/plans/2026-10-10-rung-14a-admin-api.md:79`). That
   pass is `auth-data` (`:25`). The dotfiles gate is local only (`scripts/check.sh`, STATUS "Gate").
 - **Compounding:** The success test (spec:165-167) scores only cairn pass B, the one repo where the
   CI swap is sound. The riskiest first runs go unmeasured.
@@ -97,7 +97,7 @@ Counts: 2 blocker, 6 major, 2 minor. Owner forks: 2 (B1, M1).
   flag (`~/Projects/cairn-cms/scripts/checks/gate-tier.mjs:132-133`, `:498`), and its `protected`
   list covers only the gate's own files (`scripts/checks/gate-table.json:288-294`).
 - **Live case:** Pass B is classed `engine-logic`, with a Task 2 override to `auth-data`: "it edits
-  D1 provisioning beside `AUTH_DB`" (`.claude/worktrees/engine-pre-2b-b/docs/superpowers/plans/2026-10-08-engine-pass-pre-2b-b.md:27`, `:628`).
+  D1 provisioning beside `AUTH_DB`" (`.claude/worktrees/engine-pre-2b-b/docs/plans/2026-10-08-engine-pass-pre-2b-b.md:27`, `:628`).
   Under one class per pass, that override disappears, and the spec re-gates the unreviewed Task 2 WIP
   with no read at all (spec:160-161). The close's auth checklist loads "by the paths the diff touched"
   (spec:80-81). The touched paths, such as `packages/create-cairn-site/src/cloudflare/config.mjs`, are

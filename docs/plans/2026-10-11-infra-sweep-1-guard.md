@@ -1,11 +1,11 @@
 # Infra sweep 1, the guard: implementation plan
 
-**Spec:** `docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md`, section "Lean re-plan
+**Spec:** `docs/specs/2026-09-28-claude-infra-sweep-design.md`, section "Lean re-plan
 (2026-10-11)" (rulings R1 to R4) and, for each check's definition, "Pass A-rest". **Evidence:**
-`docs/superpowers/research/2026-10-11-infra-sweep-survivor-ledger.md` (cited below as "ledger").
+`docs/research/2026-10-11-infra-sweep-survivor-ledger.md` (cited below as "ledger").
 **Audit:** `claude/.claude/docs/record/2026-09-28-claude-infra-audit.md` section 7 (the check
 definitions) and section 5 (the findings by id). **Review:** the three lenses and the fold record,
-`docs/superpowers/research/2026-10-11-infra-sweep-1-guard-{review-contract,review-mechanics,review-risk,plan-fold}.md`.
+`docs/research/2026-10-11-infra-sweep-1-guard-{review-contract,review-mechanics,review-risk,plan-fold}.md`.
 
 **Outcome.** The dotfiles guard catches the defect classes that still have live instances. GA-03
 is fixed. The relative-link, description-cap, and fork-skill checks exist and seed their live
@@ -38,7 +38,7 @@ the path is about 130 + 100 + 70 = 300 minutes.
 
 ## Launch
 
-Prompt file: `docs/superpowers/plans/2026-10-11-infra-sweep-1-guard-prompt.txt`. The plan lives on
+Prompt file: `docs/plans/2026-10-11-infra-sweep-1-guard-prompt.txt`. The plan lives on
 branch `worktree-infra-sweep-plan` (planning commits). The session continues that branch: its first
 act after `EnterWorktree` is `git merge --no-edit worktree-infra-sweep-plan`, so its PR carries the
 plan and the build together (pass-core "Execute": a pass that continues an existing branch merges
@@ -54,7 +54,7 @@ git -C ~/.dotfiles/.claude/worktrees/infra-sweep-plan status --porcelain   # mus
 git -C ~/.dotfiles rev-parse worktree-infra-sweep-plan origin/worktree-infra-sweep-plan   # two equal lines
 claude agents --json                                    # no live session with cwd in ~/.dotfiles/.claude/worktrees/infra-sweep-1
 cd ~/.dotfiles && claude --bg --model sonnet --effort medium --name infra-sweep-1 \
-  "$(git -C ~/.dotfiles show worktree-infra-sweep-plan:docs/superpowers/plans/2026-10-11-infra-sweep-1-guard-prompt.txt)"
+  "$(git -C ~/.dotfiles show worktree-infra-sweep-plan:docs/plans/2026-10-11-infra-sweep-1-guard-prompt.txt)"
 ```
 
 The prompt is read with `git show` because the plan is not on `main` until this pass's PR merges.
@@ -329,7 +329,7 @@ Per pass-core "Close" and dotfiles-pass "Close checklist", in order:
    `retired-phrase` 2, `relative-link` 2, `description-cap` 5, `fork-skill` 4). Its next action is
    the sweep-2 planning session, an attended session with Geoff, launched after this PR merges
    with the exact line `cd ~/.dotfiles && claude --model opus --effort high --name
-   infra-sweep-2-plan "$(cat docs/superpowers/plans/2026-10-11-infra-sweep-2-planning-prompt.txt)"`.
+   infra-sweep-2-plan "$(cat docs/plans/2026-10-11-infra-sweep-2-planning-prompt.txt)"`.
    The prompt file is already committed (planning commits). If the close changed the sweep-2
    scope, it updates that file in the same commit.
 5. Push `glw907/workstation`, open the PR (draft until the close is done), and write its body:
