@@ -152,6 +152,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | RESTIC_PASSWORD_MEDIA | ✓ | — | — | — | — |
 | RESTIC_PASSWORD_ORPHEUS | ✓ | — | — | — | — |
 | TUNNEL_TOKEN_MEDIA | ✓ | — | — | — | — |
+| TUNNEL_TOKEN_ORPHEUS | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
@@ -359,6 +360,12 @@ tmpfs cache; no password manager holds it for scripts.
 - **Generated 2026-10-18** on pavilion (32 random bytes, base64url). The self-hosting plan
   generates each token once and renders it to its server, so a rotation is a deliberate act.
 - **Rotate**: store a new value, redeploy the monitor, and re-render the server's secrets.
+
+### TUNNEL_TOKEN_ORPHEUS
+- **Grants**: the right to run the `servers-orpheus` Cloudflare Tunnel connector, which carries orpheus's Access browser terminal at `ssh-orpheus.907.life`. Anyone holding it can attach a connector to that tunnel. It replaces `TUNNEL_TOKEN_MEDIA`.
+- **Used by**: the servers repo's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on orpheus only.
+- **Generated 2026-10-20** by `cloudflare/access.sh --token orpheus` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in the rename pass (R6).
+- **Rotate**: rotate the tunnel's token in Cloudflare (or recreate the tunnel with `access.sh`), store the new value, and re-render orpheus's secrets.
 
 ### RESTIC_PASSWORD_ORPHEUS
 - **Grants**: the right to open the orpheus restic repository in `servers-backup-orpheus`. Losing it makes every orpheus backup unreadable. It replaces `RESTIC_PASSWORD_MEDIA` (retired in the rename pass).
