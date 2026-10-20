@@ -21,3 +21,4 @@ org.jeffvli.feishin
 com.valvesoftware.Steam
 co.hyprlab.Hylki
 io.github.pwr_solaar.solaar
+com.github.Matoking.protontricks
