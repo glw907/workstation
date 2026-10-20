@@ -207,6 +207,14 @@ stays the record of what's actually on disk. Current captured files:
   reconnects quickly after its idle sleep. The main.conf is a whole copy of the stock file;
   diff it against `/usr/etc/bluetooth/main.conf` after a BlueZ upgrade. After a change:
   `sudo -A btmgmt fast-conn on` applies the first live, the second takes effect at boot <!-- host-ok -->
+- `bluefin/etc/modprobe.d/rtw88-no-lps-deep.conf` → `/etc/modprobe.d/` and
+  `bluefin/etc/NetworkManager/conf.d/wifi-powersave-off.conf` → `/etc/NetworkManager/conf.d/`
+  (pavilion only, Geoff 2026-10-20): the RTL8821CE (rtw88_8821ce) wedges its firmware in deep
+  power save, filling the kernel log with `rtw_power_mode_change` warnings and turning every
+  ping to the router into seconds. The modprobe line keeps it out of deep LPS at boot; the
+  NetworkManager line keeps 802.11 power save off on every connection. Live fix without a
+  reboot: `sudo -A iw dev wlp4s0 set power_save off`. Symptom check: `journalctl -k -b | grep -c
+  rtw88/ps.c` <!-- host-ok -->
 
 `/etc` is writable on Bluefin and persists across image updates (unlike `/usr`), so
 there's no technical reason to skip the dotfiles round-trip — treat any direct edit as
