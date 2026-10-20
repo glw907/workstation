@@ -50,7 +50,8 @@ check_initiatives() {
 
 # Proton Pass wiring (self-hosting Pass W): the pass-cli version brew holds (never by running
 # pass-cli), and which path this host reads the age key on. A host with no agent token
-# (path=none) fails; a token within 30 days of expiry warns and an expired one fails.
+# (path=none) fails; a token within 30 days of expiry warns and an expired one fails. Claude's
+# own agent gets an informational line after.
 check_proton() {
     local brew_bin="${BREW:-brew}" key_bin="${WS_PASS_KEY:-ws-pass-key}" ver status days
     echo "Proton Pass (pass-cli, agent token):"
@@ -62,25 +63,41 @@ check_proton() {
     fi
     if ! status=$("$key_bin" --status 2>/dev/null); then
         bad "ws-pass-key --status failed (stow bin)"
+    else
+        case "$status" in
+            path=none*)
+                bad "age key path: no agent token in the keyring (ws-pass-key --store)" ;;
+            path=proton*)
+                ok "age key path: Proton Pass agent token"
+                days=$(sed -n 's/.* days=\(-\{0,1\}[0-9]*\).*/\1/p' <<< "$status")
+                if [[ -z "$days" ]]; then
+                    warn "agent token expiry unknown (ws-pass-key --store records it)"
+                elif (( days < 0 )); then
+                    bad "agent token expired $(( -days )) days ago (renew it, then ws-pass-key --store)"
+                elif (( days <= 30 )); then
+                    warn "agent token expires in $days days (renew it)"
+                else
+                    ok "agent token expires in $days days"
+                fi ;;
+            *)
+                bad "unexpected ws-pass-key --status output" ;;
+        esac
+    fi
+    check_claude_agent
+}
+
+# Claude's own Proton Pass agent (<host>-claude, reached through claude-pass). Informational:
+# a host where Geoff has not created one yet is reported and never fails the run.
+check_claude_agent() {
+    local claude_bin="${CLAUDE_PASS:-claude-pass}" status
+    if ! status=$("$claude_bin" --status 2>/dev/null); then
+        warn "claude-pass --status failed (stow bin)"
         return 0
     fi
     case "$status" in
-        path=none*)
-            bad "age key path: no agent token in the keyring (ws-pass-key --store)" ;;
-        path=proton*)
-            ok "age key path: Proton Pass agent token"
-            days=$(sed -n 's/.* days=\(-\{0,1\}[0-9]*\).*/\1/p' <<< "$status")
-            if [[ -z "$days" ]]; then
-                warn "agent token expiry unknown (ws-pass-key --store records it)"
-            elif (( days < 0 )); then
-                bad "agent token expired $(( -days )) days ago (renew it, then ws-pass-key --store)"
-            elif (( days <= 30 )); then
-                warn "agent token expires in $days days (renew it)"
-            else
-                ok "agent token expires in $days days"
-            fi ;;
-        *)
-            bad "unexpected ws-pass-key --status output" ;;
+        path=proton*) ok "Claude's agent: token in the keyring (claude-pass)" ;;
+        path=none*) warn "Claude's agent: none on this host yet (Geoff creates <host>-claude; bluefin/THINKPAD-PROTON.md)" ;;
+        *) warn "unexpected claude-pass --status output" ;;
     esac
 }
 

@@ -177,9 +177,11 @@ cannot add or change one; that edit goes through `ws-admin`.
   the pattern: any repo with a `secrets/` dir + sync script is its own origin store — check it
   before declaring a credential unmanaged.
 - **Proton Pass** (Geoff's vaults): the home for a value in no scripted store, such as a
-  dashboard login or a rarely needed credential. Claude never calls `pass-cli`; a value Claude
-  needs arrives through `secret-receive NAME --pass REF`, which runs Geoff's own login in a
-  throwaway session. See the global CLAUDE.md Secrets rule.
+  dashboard login or a rarely needed credential. Claude reaches the vaults Geoff granted its
+  own agent (`Servers emergency` and `Workstation` to start) through `claude-pass`, and can
+  create and edit items there; it never calls bare `pass-cli`. A value from any other vault
+  arrives through `secret-receive NAME --pass REF`, which runs Geoff's own login in a
+  throwaway session. See the global CLAUDE.md Secrets rule and `bluefin-admin.md` "Secrets".
 
 ## What's installed (snapshot 2026-07-07; verify live before acting)
 

@@ -2,14 +2,22 @@
 """PreToolUse hook keeping Claude's Bash away from Proton Pass and the paths that hold its keys.
 
 Claude runs as Geoff's UID, so anything a logged-in pass-cli session can read, Claude's Bash
-tool could read silently. The reviewed scripts (ws-pass-key, secret-receive --pass) own every
-legitimate read. This hook denies the direct routes to the same material:
+tool could read silently. Claude reaches Proton Pass only through claude-pass, which runs one
+command as Claude's own <host>-claude agent, an editor on the vaults Geoff has granted it (his
+ruling of 2026-10-20). The other reviewed scripts (ws-pass-key, secret-receive --pass) own the
+age key and Geoff's own reads. This hook denies the direct routes, which would act as Geoff's
+own login and reach every vault:
 
 - pass-cli in command position, since a user session can mint tokens and read any vault;
-- secret-tool lookup and search, which print the agent token held in GNOME Keyring;
+- secret-tool lookup and search, which print the agent tokens held in GNOME Keyring;
 - keyctl print, pipe, and read, which dump the kernel keyring pass-cli keeps its key in;
-- any mention of a pass-cli session directory (pass-ws.*, pass-recv.*, pass-count.*, the
-  default ~/.local/share/proton-pass-cli).
+- any mention of a pass-cli session directory (pass-ws.*, pass-recv.*, pass-count.*,
+  claude-pass's pass-agent.*, the default ~/.local/share/proton-pass-cli).
+
+claude-pass itself passes, because its command text names neither pass-cli nor a session
+directory, and it runs only its allowlisted subcommands (item, vault, folder, password, totp,
+info, user). This hook also treats `claude-pass run` as a wrapper, so a pass-cli placed
+after it is still denied.
 
 There is no allowance: the agent token pops up no prompt, so a rate
 limit would protect nothing. A mention inside a quoted argument (a commit message, an echo)
@@ -26,10 +34,13 @@ import re
 import sys
 
 DENY_REASON = (
-    "Proton Pass access denied: Claude never calls pass-cli, reads the agent token "
-    "(secret-tool lookup), dumps the kernel keyring (keyctl print/pipe/read), or opens a "
-    "pass-cli session directory. Use the reviewed scripts: ws-pass-key for the age key, "
-    "secret-set.sh and sync.sh for the store, or ask Geoff to run secret-receive --pass."
+    "Proton Pass access denied: Claude reaches Proton Pass only through claude-pass, its own "
+    "agent (claude-pass item list --vault-name Workstation; a value goes in on stdin with "
+    "claude-pass item create login --from-template -). Claude never calls pass-cli directly, "
+    "reads an agent token (secret-tool lookup), dumps the kernel keyring (keyctl "
+    "print/pipe/read), or opens a pass-cli session directory. Use ws-pass-key for the age key, "
+    "secret-set.sh and sync.sh for the store, or ask Geoff to run secret-receive --pass for a "
+    "vault the claude agent cannot reach."
 )
 
 # A command starts at the line start or after a shell separator or keyword, behind variable
@@ -40,7 +51,7 @@ ASSIGN = r"(?:\w+=\S*\s+)*"
 OPTS = r"(?:-\S+\s+(?:[^-\s]\S*\s+)?)*"
 WRAP = (
     r"(?:(?:sudo|doas|env|nohup|time|exec|command|nice|ionice|timeout|xargs|eval|watch|stdbuf|setsid|flock"
-    r"|strace|unbuffer|(?:busybox\s+)?(?:ba|z|da|k)?sh\s+(?:-\S+\s+)*?-\w*c)\s+" + OPTS + r"(?:\d+\S*\s+)?" + ASSIGN + r")*"
+    r"|strace|unbuffer|claude-pass\s+run|(?:busybox\s+)?(?:ba|z|da|k)?sh\s+(?:-\S+\s+)*?-\w*c)\s+" + OPTS + r"(?:\d+\S*\s+)?" + ASSIGN + r")*"
 )
 BIN = r"(?:\$\([^)]*\)[^\s;&|]*/|[^\s;&|]*/)?"
 START = SEP + ASSIGN + WRAP + BIN
@@ -49,7 +60,7 @@ PATTERNS = [
     re.compile(START + r"secret-tool\s+" + OPTS + r"(?:lookup|search)\b"),
     re.compile(START + r"keyctl\s+" + OPTS + r"(?:print|pipe|read)\b"),
     re.compile(
-        r"(?<![\w-])pass-(?:w[s*](?:[./*]|\s|$)|recv\.|count\.|[*?\[]|[wrc][*?\[])"
+        r"(?<![\w-])pass-(?:w[s*](?:[./*]|\s|$)|recv\.|count\.|agent\.|[*?\[]|[wrca][*?\[])"
         r"|\.local/share/proton-pass|share/proton-pass-[*?c]"
     ),
 ]

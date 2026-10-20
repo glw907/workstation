@@ -65,6 +65,7 @@ run "gather-dotfiles initiatives leg" bash tests/gather-dotfiles-initiatives.tes
 run "secret-set.sh path overrides" bash tests/secret-set-overrides.test.sh
 run "secret store flags, lock, and drop check" bash tests/secret-store-flags.test.sh
 run "ws-pass-key agent-token read" bash tests/ws-pass-key.test.sh
+run "claude-pass agent run" bash tests/claude-pass.test.sh
 run "secret-receive --pass and the sudo dialog" bash tests/secret-receive-pass.test.sh
 run "pass-count counts and hashes" bash tests/pass-count.test.sh
 run "check-drift Proton Pass leg" bash tests/check-drift-proton.test.sh

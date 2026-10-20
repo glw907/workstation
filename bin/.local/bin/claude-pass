@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# claude-pass: run one pass-cli command as Claude's own Proton Pass agent (<host>-claude).
+#
+# Geoff ruled on 2026-10-20 that Claude works in Proton Pass as it did in 1Password, creating
+# and editing items, through an agent scoped to named vaults (editor on Servers emergency and
+# Workstation to start). The agent's token sits in GNOME Keyring (service
+# proton-pass-agent-claude, host <host>). Each run logs in to a fresh session directory under
+# $XDG_RUNTIME_DIR, runs the command with an audit reason, then logs out and removes the
+# directory, so no standing session is left and Geoff's own login is never used.
+#
+# Usage:
+#   claude-pass <pass-cli args...>   # e.g. claude-pass item list --vault-name "Servers emergency"
+#   claude-pass --status             # print "path=proton|none host=H"; runs nothing
+#
+# Stdin passes through, so a value goes in as `item create login --from-template -` and never
+# on the command line. Environment: CLAUDE_PASS_REASON sets the audit reason (default
+# "claude-pass on <host>: <first two args>", 1 to 300 characters); WS_HOST overrides
+# `hostname -s`.
+#
+# Only these first arguments run: item, vault, folder, password, totp, info, user. Under item,
+# only list, view, create, update, trash, untrash, and move run (item share, member, delete,
+# and the rest are refused); under vault, only list runs (vault share, transfer, member,
+# create, update, and delete are refused). Anything else (run, login, agent, ssh-agent, share,
+# invite, session, settings, update, ...) is refused before the token is read, since it could
+# spawn a command, start a daemon, share a vault or item with another account, hand over a
+# vault, or act on Geoff's own login instead of the agent's. The folder, password, totp, and
+# user commands of pass-cli 2.4.2 carry no share, invite, transfer, or member subcommand.
+set -euo pipefail
+umask 077
+sess=""
+
+HOST="${WS_HOST:-$(hostname -s)}"
+
+die() { echo "claude-pass: $*" >&2; exit 1; }
+
+lookup_token() { secret-tool lookup service proton-pass-agent-claude host "$HOST" 2>/dev/null || true; }
+
+case "${1:-}" in
+    --status)
+        if [[ -n "$(lookup_token)" ]]; then echo "path=proton host=$HOST"; else echo "path=none host=$HOST"; fi
+        exit 0 ;;
+    -h|--help|"") awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"; exit 0 ;;
+    item|vault|folder|password|totp|info|user) ;;
+    *) die "subcommand '$1' is not allowed (allowed: item vault folder password totp info user)" ;;
+esac
+case "$1 ${2:-}" in
+    "item list"|"item view"|"item create"|"item update"|"item trash"|"item untrash"|"item move") ;;
+    item\ *) die "subcommand '$1 ${2:-}' is not allowed (item allows: list view create update trash untrash move)" ;;
+    "vault list") ;;
+    vault\ *) die "subcommand '$1 ${2:-}' is not allowed (vault allows: list)" ;;
+esac
+
+reason="${CLAUDE_PASS_REASON:-claude-pass on $HOST: ${1:-} ${2:-}}"
+(( ${#reason} >= 1 && ${#reason} <= 300 )) || die "the audit reason must be 1 to 300 characters (CLAUDE_PASS_REASON)"
+
+[[ -n "${XDG_RUNTIME_DIR:-}" ]] || die "XDG_RUNTIME_DIR is not set; no tmpfs for a session"
+token="$(lookup_token)"
+[[ -n "$token" ]] || die "no agent token for $HOST in the keyring (service proton-pass-agent-claude)"
+
+sess="$(mktemp -d "$XDG_RUNTIME_DIR/pass-agent.XXXXXX")"
+export PROTON_PASS_SESSION_DIR="$sess"
+export PROTON_PASS_DISABLE_TELEMETRY=1
+trap 'pass-cli logout >/dev/null 2>&1 || true; rm -rf "$sess"' EXIT
+
+PROTON_PASS_PERSONAL_ACCESS_TOKEN="$token" pass-cli login >/dev/null 2>&1 </dev/null ||
+    die "agent login failed for $HOST (token expired or revoked?)"
+unset token
+
+PROTON_PASS_AGENT_REASON="$reason" pass-cli "$@"

@@ -60,3 +60,6 @@ done" go to `BACKLOG.md` through `log-issue`.
 
 thinkpad-x1 still owes the Proton Pass move that pavilion finished on 2026-10-19. A session there
 follows `bluefin/THINKPAD-PROTON.md` with Geoff at the keyboard.
+Its step 3 now includes Claude's own agent, `thinkpad-claude`. Pavilion's `pavilion-claude` agent
+(created 2026-10-20, three-month expiry) has no expiry entry, so `check-drift` will not warn
+before it lapses around 2027-01-20.
