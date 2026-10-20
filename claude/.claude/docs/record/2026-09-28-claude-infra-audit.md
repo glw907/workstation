@@ -7,7 +7,7 @@ confirms the cross-area restatements by grep, groups root causes, proposes a mec
 and triages every finding into passes. Nothing was changed.
 
 The owner's instruction for this run: audit first, then execute the style-guide-sync plan
-(`~/Projects/cairn-cms/.claude/worktrees/style-guide-sync/docs/superpowers/plans/2026-09-28-style-guide-sync.md`)
+(`~/Projects/cairn-cms/.claude/worktrees/style-guide-sync/docs/plans/2026-09-28-style-guide-sync.md`)
 on corrected infra. The triage therefore splits the work into what must land before that plan and
 what waits until it closes.
 
@@ -64,7 +64,7 @@ DC-30, PS-04, PS-05, PS-11, PS-14, PS-15, PS-18, CS-5, AW-07, AW-17. No ruling s
 of the phrases it retires.
 
 **RC4. cairn-cms shape assumed by workstation-wide infra.** Runners, agents, and skills assume
-npm scripts, `docs/superpowers/`, `docs/internal/`, a gate classifier, and a content guide that
+npm scripts, `docs/`, `docs/internal/`, a gate classifier, and a content guide that
 only cairn-cms (or only ecxc-ski) has. AW-01, AW-06, AW-13, AW-14, AW-15, AW-19, PS-08, PS-09,
 PS-10, PS-21, DC-19, DC-23. AW-01 breaks the style-guide-sync plan's chain W directly.
 
@@ -163,7 +163,7 @@ evidence lines are in the area reader outputs.
 | 18 | PS-05 | `cairn-figure/SKILL.md:120` | "gates do not exist yet"; `check:visuals` exists; restated alt rules omit mermaid `accTitle:`/`accDescr:` | commit 7b20aedd; check-visuals.mjs header | fix; rules become a pointer to docs-register.md Visuals | C |
 | 19 | PS-06 | `register-check/SKILL.md:4` | `context: fork` skill relies on "the file under discussion", delegation, and session tells | skills docs on fork | fix: explicit args; caller binds tells (after style-guide-sync W4 edits this file) | C |
 | 20 | PS-08 | `content-draft/SKILL.md:12`, `content-review/SKILL.md:13` | require `docs/content-guide.md`, which only ecxc-ski has | ls across sites | fix: absent-guide branch | C |
-| 21 | PS-09 | `site-pass/SKILL.md:17`, `:55` | hardcodes `docs/superpowers/` plans and archive and `docs/architecture.md`; ASC and cairn-pub differ | ls results | fix: read paths from the site's CLAUDE.md or STATUS | C |
+| 21 | PS-09 | `site-pass/SKILL.md:17`, `:55` | hardcodes `docs/` plans and archive and `docs/architecture.md`; ASC and cairn-pub differ | ls results | fix: read paths from the site's CLAUDE.md or STATUS | C |
 | 22 | PS-10 | `log-issue/SKILL.md:39`, `:168` | creates BACKLOG.md in repos whose doctrine forbids one; hardcodes `git add BACKLOG.md` | ASC project-tracking note; cairn CLAUDE.md:113 | fix: honor a `backlog: false` field; use `backlog_path` | C |
 | 23 | CS-1 | `go-conventions/SKILL.md:221` | cobra root template lacks `SilenceErrors: true`; every error prints twice | cobra command.go:1159; cairn root.go:195 | fix | D |
 | 24 | CS-2 | `golang-spf13-cobra/SKILL.md:132`; `tooling/vendored-skills.json` | vendored cobra skill contradicts go-conventions on four points with no precedence; elm-conventions wrongly mandated for the cairn tool | quotes from both skills; tool/go.mod | fix: precedence line in go-conventions; drop elm from the `_why` | D |

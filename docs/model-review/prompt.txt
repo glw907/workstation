@@ -19,16 +19,16 @@ Steps, in order:
 
 3. If anything changed, or state.json does not exist, re-fetch the Claude Code release notes and
    the pages the "Anthropic practice" section of
-   docs/superpowers/specs/2026-09-28-claude-infra-sweep-design.md cites (lines 608-678), and grade
+   docs/specs/2026-09-28-claude-infra-sweep-design.md cites (lines 608-678), and grade
    the workstation's rules against what they say now. If nothing changed, skip this step.
 
 4. Run the "Monthly review checklist" in
-   docs/superpowers/specs/2026-09-04-fable-5-1-infra-update-design.md (lines 124-154), each item
+   docs/specs/2026-09-04-fable-5-1-infra-update-design.md (lines 124-154), each item
    that still applies. An item that names a retired file or a step that no longer exists is
    skipped; name the item and the reason in your hand-over. The usage glance (item 4) needs an
    interactive session, so skip it with that reason.
 
-5. A gap becomes a one-page design in docs/superpowers/specs/ named
+5. A gap becomes a one-page design in docs/specs/ named
    <YYYY-MM-DD>-model-review-<slug>-design.md: the gap, the evidence with its source URL, the
    proposed change, and the audit findings it takes. One design per gap.
 

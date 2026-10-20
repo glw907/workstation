@@ -78,6 +78,9 @@ func writeDoc(t *testing.T, name, body string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if err := os.MkdirAll(filepath.Dir(abs), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.WriteFile(abs, []byte(body), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -108,6 +111,16 @@ func TestRunSkipsUngovernedPaths(t *testing.T) {
 	path := writeDoc(t, "notes.txt", body)
 	if out := Run(event(t, "Write", path, "", body)); out != "" {
 		t.Errorf("Run() on .txt = %q, want silence", out)
+	}
+	for _, dir := range []string{"specs", "plans", "research", "archive"} {
+		path := writeDoc(t, "docs/"+dir+"/x.md", body)
+		if out := Run(event(t, "Write", path, "", body)); out != "" {
+			t.Errorf("Run() on docs/%s = %q, want silence", dir, out)
+		}
+	}
+	path = writeDoc(t, "docs/extend/x.md", body)
+	if out := Run(event(t, "Write", path, "", body)); out == "" {
+		t.Error("Run() on docs/extend = silence, want an advisory outside the planning folders")
 	}
 }
 
