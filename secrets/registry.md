@@ -128,6 +128,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CAIRN_GH_READ_TOKEN | ✓     | —        | —    | —        | —          |
 | CAIRN_DOCS_READER_OAUTH_TOKEN | ✓ | — | — | — | — |
 | CF_ZT_TOKEN         | ✓     | —        | —    | —        | —          |
+| ACCESS_GITHUB_CLIENT_ID / _SECRET | ✓ | — | — | — | — |
 | CF_ACCESS_CLIENT_SECRET | ✓ | —        | —    | —        | —          |
 | ANTHROPIC_API_KEY   | ✓     | —        | ✓    | ✓        | —          |
 | CMS_BOT_PAT         | ✓     | —        | —    | —        | —          |
@@ -143,6 +144,9 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CF_MEDIA_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
 | MONITOR_READ_TOKEN | ✓ | — | — | — | — |
 | HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA | ✓ | — | — | — | — |
+| IMMICH_DB_PASSWORD | ✓ | — | — | — | — |
+| RESTIC_PASSWORD_MEDIA | ✓ | — | — | — | — |
+| TUNNEL_TOKEN_MEDIA | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
@@ -324,6 +328,24 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotate**: generate a new value, store it, redeploy the monitor, and restart
   `monitor-subscribe` on each workstation.
 
+### IMMICH_DB_PASSWORD
+- **Grants**: the password of the media server's Immich Postgres role. Immich cannot start without it, and the restored database expects the role to exist with it.
+- **Used by**: the servers repo's `roles/immich` compose file, rendered to `/etc/immich/immich.env` on the media server only.
+- **Generated 2026-10-19** on pavilion (40 random alphanumeric characters), in Pass 2 (M3).
+- **Rotate**: store a new value, re-render the media server's secrets, and change the role's password inside Postgres.
+
+### TUNNEL_TOKEN_MEDIA
+- **Grants**: the right to run the `servers-media` Cloudflare Tunnel connector, which carries the media server's Access browser terminal. Anyone holding it can attach a connector to that tunnel.
+- **Used by**: the servers repo's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on the media server only.
+- **Generated 2026-10-19** by `cloudflare/access.sh --token media` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in Pass 2 (M4).
+- **Rotate**: rotate the tunnel's token in Cloudflare (or recreate the tunnel with `access.sh`), store the new value, and re-render the media server's secrets.
+
+### RESTIC_PASSWORD_MEDIA
+- **Grants**: the right to open the media restic repository in `servers-backup-media`. Losing it makes every media backup unreadable.
+- **Used by**: the servers repo's `roles/backup` (rendered to `/etc/servers/restic-password` on the media server) and the restore drill, which renders it to the throwaway server.
+- **Generated 2026-10-19** on pavilion (56 random alphanumeric characters), in Pass 2 (M6), stored and pushed before `restic init`. The bucket's lock rules land only after this commit is on `origin/main`.
+- **Rotate**: changing a restic password removes the old key file, which the `keys/` lock rule refuses, so a rotation needs Geoff to lift the rule.
+
 ### HEARTBEAT_TOKEN_MAIL / HEARTBEAT_TOKEN_MEDIA
 - **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token
   writes only its own server's row.
@@ -357,6 +379,19 @@ tmpfs cache; no password manager holds it for scripts.
   the command line.
 - **Received 2026-10-18**: the password through a desktop dialog; verified with an SFTP listing.
 - **Rotate at**: PikaPods > the pod > Settings > SFTP. Dies with the pod when PikaPods is retired.
+
+### ACCESS_GITHUB_CLIENT_ID / ACCESS_GITHUB_CLIENT_SECRET
+- **Issuer**: the GitHub OAuth app "Wright Family Access" on Geoff's GitHub account, callback
+  `https://907wrights.cloudflareaccess.com/cdn-cgi/access/callback`.
+- **Grants**: signing in to Cloudflare Access as a GitHub user. The secret lets Access exchange a
+  sign-in code for the user's identity; it grants nothing in GitHub itself.
+- **Used by**: the Access GitHub identity provider (id `916192d5-ba81-48ae-be48-002abf1be8ef`),
+  set with `CF_ZT_TOKEN` on 2026-10-19. No script reads them at run time; they are kept for a
+  rotation or a rebuild of the provider.
+- **Received** through `secret-receive` (the Client ID re-stored with `secret-set.sh --value`; it
+  is not secret).
+- **Rotate**: generate a new client secret on the OAuth app, store it, `PUT` the provider's config
+  with `CF_ZT_TOKEN`, run the provider's Test in Zero Trust, then delete the old secret on GitHub.
 
 ### CF_ZT_TOKEN
 - **Issuer-side token name**: "Zero Trust Edit" (user-owned). Also the aksailingclub-legacy
