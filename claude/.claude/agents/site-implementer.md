@@ -67,7 +67,7 @@ When `svelte-check` complains, fix the cause. A targeted, explained cast is fine
 
 Follow the cairn-cms admin and extend pages as written, and fix or file every divergence between a
 page and reality under the "Edits after the chain" rule in cairn-cms
-`docs/superpowers/specs/2026-09-26-draft-docs-approach-design.md`: a changed or new claim cites a
+`docs/specs/2026-09-26-draft-docs-approach-design.md`: a changed or new claim cites a
 citable fact, a new fact is filed `[candidate]`, the page's brief is updated in the same change,
 and `npm run check:provenance` is the tripwire. Before opening a cairn-cms worktree, run the
 one-executor check: `pgrep -f` the worktree path, and `git status` for warm changes you did not

@@ -10,7 +10,7 @@ description: >
 
 # Pass core
 
-Spec: `~/.dotfiles/docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`. The repo adapter
+Spec: `~/.dotfiles/docs/specs/2026-10-10-lean-pass-process-design.md`. The repo adapter
 supplies the gate, fast lane, full-suite home, worktree setup, CI watch, risk-class path map,
 checklist globs, and close checklist, and wins where it disagrees with this skill.
 

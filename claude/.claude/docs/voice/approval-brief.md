@@ -512,7 +512,7 @@ The headline is the one call that needs Geoff now, the lede counts the rest, and
 ### Before and after: a real PR body
 
 The source is the dotfiles PR for the drafter Pass 0 plan
-(`docs/superpowers/plans/2026-10-12-drafter-pass0-plan.md`, "Close"). The "before" opens as most
+(`docs/plans/2026-10-12-drafter-pass0-plan.md`, "Close"). The "before" opens as most
 PR bodies open today: a record of the work, in the author's order, for a reader who already
 knows the plan. Geoff has to dig for what approving does.
 

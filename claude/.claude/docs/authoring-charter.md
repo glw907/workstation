@@ -75,7 +75,7 @@ and code comments.
 ## Pointers
 
 - The full design is in
-  `~/.dotfiles/docs/superpowers/specs/2026-06-22-authoring-standards-design.md`. It supersedes the
+  `~/.dotfiles/docs/specs/2026-06-22-authoring-standards-design.md`. It supersedes the
   earlier prose-system and code-comment specs, which described a personal-voice design.
 - Register routing for prose lives in the `writing-voice` skill, and the registers in
   `~/.claude/docs/voice/`.

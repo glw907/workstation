@@ -1,0 +1,49 @@
+You are the unattended planning session for the infrastructure skill and proportionality rules, in
+the workstation repo `~/.dotfiles`. Geoff approved the design as written on 2026-10-11; do not ask
+him to approve it again. Before any other act, call EnterWorktree with the name `infra-skill-plan`,
+then run `git merge --no-edit worktree-infra-skill`, which brings in the design, its evidence, and
+this prompt; a conflict is a stop.
+
+Load `dotfiles-pass` (it loads `pass-core`). Read in full the approved design
+`docs/specs/2026-10-11-infra-skill-and-proportionality-design.md` and its evidence
+`docs/research/2026-10-11-anthropic-guidance-proportionality.md`. Arm the API-drop
+wake-up per `~/.claude/docs/unattended-work-guards.md`.
+
+Scope, in Anthropic's own words (the design adopts them; apply them to this plan): "Avoid
+over-engineering. Only make changes that are directly requested or clearly necessary. Keep solutions
+simple and focused: - Scope: Don't add features, refactor code, or make "improvements" beyond what
+was asked. A bug fix doesn't need surrounding code cleaned up. A simple feature doesn't need extra
+configurability. - Defensive coding: Don't add error handling, fallbacks, or validation for
+scenarios that can't happen. Trust internal code and framework guarantees. Only validate at system
+boundaries (user input, external APIs). - Abstractions: Don't create helpers, utilities, or
+abstractions for one-time operations. Don't design for hypothetical future requirements. The right
+amount of complexity is the minimum needed for the current task." And: "Deliver what was asked, at
+the scope intended. ... If the request seems mistaken or a better approach exists, say so in a
+sentence and continue with the task as asked rather than quietly narrowing, widening, or
+transforming it." Anything beyond the design goes in the plan's "Later" list, never into a task.
+
+The design is under a page, so there is no separate spec. Write the plan
+`docs/plans/2026-10-11-infra-skill.md` in the lean format (see
+`docs/plans/2026-10-11-infra-sweep-1-guard.md` for the shape: Conventions, tasks with
+outcome, files, risk class, acceptance, test, clock estimate, pairs, Close). Every gate is
+`bash scripts/gate.sh`. The Close carries the design's "Conductor restart" as the conducting
+session's post-merge steps, listed in the PR body; the executor does not perform them.
+
+Review, per the approved design: run `spec-plan-review` with the mechanics lens only, then fold. No
+other lenses and no verification read. The lens reports everything, tagging each finding as affecting
+correctness or a stated requirement, or as optional; the fold applies the first kind and drops the
+optional ones.
+
+Estimate tripwire: the design says about 3 hours of tasks. If the plan's task-minutes exceed 360,
+stop: write the reason into `docs/STATUS.md` on your branch as one question with a recommendation,
+run `notify-send -u normal "infra skill: plan over budget"`, and wait. A finding that changes the
+approved design is the same kind of stop.
+
+Write the executor's launch prompt as a committed file beside the plan, in the shape of
+`docs/plans/2026-10-11-infra-sweep-1-guard-prompt.txt`, continuing your branch, with the
+push target `glw907/workstation`.
+
+Commit each stage on your branch (specific files, never `git add -A`) and push it. Never push
+`main`, never merge, never open a PR, and never write any repo other than `~/.dotfiles`. When the
+plan and its launch prompt are committed and pushed, run `notify-send -u normal "infra skill: plan
+ready to launch"` and end.
