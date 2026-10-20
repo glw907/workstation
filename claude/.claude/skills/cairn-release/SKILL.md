@@ -90,7 +90,7 @@ re-verify existing facts whose cited files changed.
   left unswept, and carry them into the next window's record. Never extend the cap to finish.
 - **Staleness report.** A verifier that meets an existing fact the changed code contradicts reports it.
   Record the report in the yield record: it is the trigger for the deferred fact-staleness
-  mechanism (`docs/superpowers/specs/2026-09-30-docs-code-sync-design.md`, "Deferred, with triggers").
+  mechanism (`docs/specs/2026-09-30-docs-code-sync-design.md`, "Deferred, with triggers").
 - **Yield record.** Put a "Doc-code sweep" paragraph in the release commit body per run, so git and the commit carry the yield (ruling 8): the tag the window started from, the verified
   gaps found beside the modules swept (so window size does not confound the measure), how each gap was
   filed, the unswept modules, and the tokens spent. The next sweep's window starts at this cut's tag.

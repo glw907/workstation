@@ -12,7 +12,7 @@ description: >
 
 Load `pass-core` first; it holds the lifecycle and the rules this adapter fills in. Paths are
 relative to the site repo. The resume prompt is in `docs/STATUS.md`. The plan, spec, archive, and
-architecture-doc paths come from the site's `CLAUDE.md` or STATUS; `docs/superpowers/{plans,specs}/`
+architecture-doc paths come from the site's `CLAUDE.md` or STATUS; `docs/{plans,specs}/`
 and `docs/architecture.md` are the usual case, not the only one. The plan header
 carries exactly one of a consultation-brief link or the line "no engine asks", plus a "Facts
 consulted" line, from `engine-consult`; a committed plan with neither gets the enumeration run before
@@ -64,7 +64,7 @@ rendered pages.
 - Add the pass's design decisions to the site's architecture doc (decisions, not narration) and keep the
   README and config comments current.
 - Archive the plan with `git mv` from the site's plans directory to its archive (usually
-  `docs/superpowers/plans/<this-pass>.md` to `docs/superpowers/archive/plans/`), and the spec the
+  `docs/plans/<this-pass>.md` to `docs/archive/plans/`), and the spec the
   same way.
 - List cairn friction the pass met under "Cairn friction" in the PR body, verified against cairn-cms.
   A cairn session files it in cairn-cms's `docs/internal/docs-friction-log.md`. A UI mechanic that
@@ -76,7 +76,7 @@ rendered pages.
 Where a cairn-cms docs arm is empty, a divergence between the docs and reality goes into the cairn-cms
 facts container (`docs/internal/facts/`), never onto a page. Where a rebuilt arm page exists, follow
 it, and fix a divergence on the page under the spec's "Edits after the chain" rule (cairn-cms
-`docs/superpowers/specs/2026-09-26-draft-docs-approach-design.md`): update the page's brief in the
+`docs/specs/2026-09-26-draft-docs-approach-design.md`): update the page's brief in the
 same change and file the fact bullet alongside. An arm whose stage is in flight files the divergence
 and never fixes it. Edit on a `site-docs/<site>-<pass>` branch off cairn-cms `main`, merged by PR
 under the docs gate before the site pass closes; never edit cairn-cms `main` directly. Changed

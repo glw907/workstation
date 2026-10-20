@@ -20,8 +20,8 @@ holds the fresh-machine provisioning artifacts. github.com/glw907/workstation.
 - **Gate**: `scripts/check.sh`, run as `bash scripts/gate.sh`.
 - **The lean pass process is fully in place.** Rollout steps 1 to 5 merged; step 5, engine pass B
   (cairn-cms #113), took 6.1 hours of clock against the 9-hour test. Plan and spec:
-  `docs/superpowers/plans/2026-10-10-lean-pass-cutover.md`,
-  `docs/superpowers/specs/2026-10-10-lean-pass-process-design.md`.
+  `docs/plans/2026-10-10-lean-pass-cutover.md`,
+  `docs/specs/2026-10-10-lean-pass-process-design.md`.
 
 ## Conductor
 

@@ -30,7 +30,7 @@ job. Read the second file when an item turns on that boundary.
 
 ## The standard
 
-<!-- Quoted verbatim from cairn-cms/docs/superpowers/specs/2026-08-26-engine-consultation-design.md,
+<!-- Quoted verbatim from cairn-cms/docs/specs/2026-08-26-engine-consultation-design.md,
 "The standard (codified; extends the 2026-08-26 triage test)". Section references ("the audit,
 below", "section 4") are the spec's own. -->
 

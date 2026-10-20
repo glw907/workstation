@@ -12,7 +12,8 @@ and ``.js``; ``.json`` and other data files never carry prose citations or retir
 ``dead-reference``: every single-backtick span in a scanned ``.md`` file that looks like a path
 (it starts with ``~`` or ``/``) must resolve. This is self mode: a ``~/.claude/<dir>/...`` span
 rewrites to ``<root>/claude/.claude/<dir>/...`` only when ``<dir>`` is a stowed entry (the
-scanned dirs, ``tooling``, or the bare ``CLAUDE.md``); an unstowed ``~/.claude`` subpath (for
+scanned dirs, ``tooling``, or the bare ``CLAUDE.md``), and a ``~/.dotfiles/...`` span rewrites to
+``<root>/...``; an unstowed ``~/.claude`` subpath (for
 example ``~/.claude/projects/...``, Claude Code's own session state) is out of self-mode reach
 and is never checked. A ``~/.local/bin/<x>`` span is judged against the tree
 (``<root>/bin/.local/bin/<x>``) when that file exists there, or when the realpath of
@@ -160,7 +161,8 @@ def resolve_self_mode(raw, root, home):
     entries (``STOWED_CLAUDE_ENTRIES``: the scanned dirs, ``tooling``, and the bare
     ``CLAUDE.md``); a span into an unstowed ``~/.claude`` subpath (``~/.claude/projects/...``,
     Claude Code's own session state) is out of self-mode reach and returns None, never resolved
-    against the real filesystem. ``~/.local/bin/<x>`` resolves under ``root`` when the tree holds it
+    against the real filesystem. ``~/.dotfiles/...`` is this repo, so it resolves under ``root``
+    and a branch that moves a file is judged by its own tree. ``~/.local/bin/<x>`` resolves under ``root`` when the tree holds it
     or home's copy is a stow link into a ``bin/.local/bin`` directory, and against ``home``
     otherwise. A span into
     ``~/Projects`` (tilde or the home's literal absolute form) and a bare repo-relative span
@@ -177,6 +179,8 @@ def resolve_self_mode(raw, root, home):
         if top not in STOWED_CLAUDE_ENTRIES:
             return None
         return root / "claude" / ".claude" / rest
+    if raw.startswith("~/.dotfiles/"):
+        return root / raw[len("~/.dotfiles/"):]
     if raw.startswith("~/.local/bin/"):
         name = raw[len("~/.local/bin/"):]
         in_tree = root / "bin" / ".local" / "bin" / name
