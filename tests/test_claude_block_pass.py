@@ -88,6 +88,10 @@ DENIED = [
     "cat /run/user/1000/pass-a*/session",
     # Bare pass-cli stays denied next to the claude-pass route.
     "claude-pass --status && pass-cli item list",
+    # claude-pass run is a wrapper, so a pass-cli after it is still a command.
+    "claude-pass run -- env -u PROTON_PASS_SESSION_DIR pass-cli item list",
+    "claude-pass run -- bash -c 'pass-cli vault list'",
+    "claude-pass run pass-cli info",
 ]
 
 ALLOWED = [

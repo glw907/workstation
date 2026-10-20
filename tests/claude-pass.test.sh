@@ -80,6 +80,32 @@ case "$out" in *"login failed"*) ;; *) echo "FAIL: a bad token did not say the l
 grep -q '^item list' "$root/pass.log" && { echo "FAIL: the command ran after a failed login"; fail=1; }
 assert_eq "$(sessions_left)" "0" "a bad token leaves no session directory"
 
+# 4b. A command that fails after a good login keeps its exit code, and cleanup still runs.
+reset; echo "$TOKEN" > "$root/token"
+out=$(helper item edit pass://Workstation/thing/note </dev/null)
+assert_eq "$?" "2" "a failing command's exit code is preserved ($out)"
+grep -q 'logout' "$root/pass.log" || { echo "FAIL: a failing command skipped the logout"; fail=1; }
+assert_eq "$(sessions_left)" "0" "a failing command leaves no session directory"
+
+# 4c. A subcommand off the allowlist is refused before the token is read: no lookup, no call.
+for sub in run login agent ssh-agent; do
+  reset; echo "$TOKEN" > "$root/token"
+  out=$(helper "$sub" -- true </dev/null)
+  assert_eq "$?" "1" "'$sub' is refused with exit 1"
+  case "$out" in *"subcommand '$sub' is not allowed"*) ;; *) echo "FAIL: '$sub' refusal did not say so: $out"; fail=1 ;; esac
+  [ -s "$root/secret-tool.log" ] && { echo "FAIL: '$sub' read the keyring"; fail=1; }
+  assert_eq "$(pass_calls)" "0" "'$sub' makes no pass-cli call"
+done
+
+# 4d. A reason over 300 characters is refused before the token is read.
+reset; echo "$TOKEN" > "$root/token"
+long=$(printf 'x%.0s' $(seq 301))
+out=$(env CLAUDE_PASS_REASON="$long" HOME="$root/home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" \
+  WS_HOST=testhost FAKE_PASS_LOG="$root/pass.log" bash "$HELPER" item list 2>&1 </dev/null)
+assert_eq "$?" "1" "an over-long reason exits 1"
+case "$out" in *"1 to 300 characters"*) ;; *) echo "FAIL: an over-long reason did not say so: $out"; fail=1 ;; esac
+assert_eq "$(pass_calls)" "0" "an over-long reason makes no pass-cli call"
+
 # 5. --status names the path without printing the token or calling pass-cli.
 reset; echo "$TOKEN" > "$root/token"
 out=$(helper --status)

@@ -299,7 +299,11 @@ never-commit rules and a pointer here.
   did in 1Password, creating and editing items, but only through `claude-pass`.** Each
   host gets an agent named `<host>-claude` with role editor on named vaults: `Servers
   emergency` and `Workstation` to start, more as Geoff grants them. His Private and family
-  vaults stay out of reach. `claude-pass <pass-cli args>` reads the agent's token from GNOME
+  vaults stay out of reach. `Workstation` holds the age-key item, so as its editor Claude can
+  read or change that item too; that follows from the ruling. `claude-pass` runs only the
+  subcommands item, vault, folder, password, totp, share, info, and user, and refuses the
+  rest (run, login, agent, ssh-agent, ...) before it reads the token. The reason must be 1 to
+  300 characters. `claude-pass <pass-cli args>` reads the agent's token from GNOME
   Keyring (service `proton-pass-agent-claude`, host `<host>`), logs in to a fresh
   `$XDG_RUNTIME_DIR/pass-agent.*` session, runs the one command with an audit reason
   (`CLAUDE_PASS_REASON`, or a default naming the host and subcommand), then logs out and

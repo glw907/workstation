@@ -14,7 +14,13 @@
 #
 # Stdin passes through, so a value goes in as `item create login --from-template -` and never
 # on the command line. Environment: CLAUDE_PASS_REASON sets the audit reason (default
-# "claude-pass on <host>: <first two args>"); WS_HOST overrides `hostname -s`.
+# "claude-pass on <host>: <first two args>", 1 to 300 characters); WS_HOST overrides
+# `hostname -s`.
+#
+# Only these first arguments run: item, vault, folder, password, totp, share, info, user.
+# Anything else (run, login, agent, ssh-agent, session, settings, update, ...) is refused
+# before the token is read, since it could spawn a command, start a daemon, or act on Geoff's
+# own login instead of the agent's.
 set -euo pipefail
 umask 077
 sess=""
@@ -29,8 +35,13 @@ case "${1:-}" in
     --status)
         if [[ -n "$(lookup_token)" ]]; then echo "path=proton host=$HOST"; else echo "path=none host=$HOST"; fi
         exit 0 ;;
-    -h|--help|"") sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help|"") awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"; exit 0 ;;
+    item|vault|folder|password|totp|share|info|user) ;;
+    *) die "subcommand '$1' is not allowed (allowed: item vault folder password totp share info user)" ;;
 esac
+
+reason="${CLAUDE_PASS_REASON:-claude-pass on $HOST: ${1:-} ${2:-}}"
+(( ${#reason} >= 1 && ${#reason} <= 300 )) || die "the audit reason must be 1 to 300 characters (CLAUDE_PASS_REASON)"
 
 [[ -n "${XDG_RUNTIME_DIR:-}" ]] || die "XDG_RUNTIME_DIR is not set; no tmpfs for a session"
 token="$(lookup_token)"
@@ -45,4 +56,4 @@ PROTON_PASS_PERSONAL_ACCESS_TOKEN="$token" pass-cli login >/dev/null 2>&1 </dev/
     die "agent login failed for $HOST (token expired or revoked?)"
 unset token
 
-PROTON_PASS_AGENT_REASON="${CLAUDE_PASS_REASON:-claude-pass on $HOST: ${1:-} ${2:-}}" pass-cli "$@"
+PROTON_PASS_AGENT_REASON="$reason" pass-cli "$@"

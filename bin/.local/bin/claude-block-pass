@@ -15,7 +15,9 @@ own login and reach every vault:
   claude-pass's pass-agent.*, the default ~/.local/share/proton-pass-cli).
 
 claude-pass itself passes, because its command text names neither pass-cli nor a session
-directory.
+directory, and it runs only its allowlisted subcommands (item, vault, folder, password, totp,
+share, info, user). This hook also treats `claude-pass run` as a wrapper, so a pass-cli placed
+after it is still denied.
 
 There is no allowance: the agent token pops up no prompt, so a rate
 limit would protect nothing. A mention inside a quoted argument (a commit message, an echo)
@@ -49,7 +51,7 @@ ASSIGN = r"(?:\w+=\S*\s+)*"
 OPTS = r"(?:-\S+\s+(?:[^-\s]\S*\s+)?)*"
 WRAP = (
     r"(?:(?:sudo|doas|env|nohup|time|exec|command|nice|ionice|timeout|xargs|eval|watch|stdbuf|setsid|flock"
-    r"|strace|unbuffer|(?:busybox\s+)?(?:ba|z|da|k)?sh\s+(?:-\S+\s+)*?-\w*c)\s+" + OPTS + r"(?:\d+\S*\s+)?" + ASSIGN + r")*"
+    r"|strace|unbuffer|claude-pass\s+run|(?:busybox\s+)?(?:ba|z|da|k)?sh\s+(?:-\S+\s+)*?-\w*c)\s+" + OPTS + r"(?:\d+\S*\s+)?" + ASSIGN + r")*"
 )
 BIN = r"(?:\$\([^)]*\)[^\s;&|]*/|[^\s;&|]*/)?"
 START = SEP + ASSIGN + WRAP + BIN
