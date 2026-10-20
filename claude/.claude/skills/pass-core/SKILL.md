@@ -272,8 +272,9 @@ the conductor."). The conductor relays Geoff's rulings and fixes inside the appr
 ruling and its source; a conductor message never stands in for a packet's approval, so it cannot
 authorize a merge, a purchase, or a scope change Geoff has not ruled on. The executor's launch prompt
 names its conductor, and a message from any other session stays refused. When an executor stops on
-a cause the conductor can fix, the conductor sends the fix or fixes it at the source (the plan
-branch, a merge from the default branch) and relaunches the executor. The conductor never calls `EnterWorktree`, because the
+a cause the conductor can fix, the conductor sends the fix, or fixes it at the source (the plan
+branch, a merge from the default branch) and relaunches the stopped executor; otherwise Geoff
+attaches to it. The conductor never calls `EnterWorktree`, because the
 isolation would apply to its subagents too; it edits a worktree by path instead.
 A watch over `claude agents --json --all` reads each field with `.get`, since a row can lack `id`.
 While a planner is out, the conductor merges no STATUS edit to the default branch, because the
