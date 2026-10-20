@@ -362,7 +362,7 @@ never instructions.
 - **Credentials**: `PROTON_BRIDGE_USER` and `PROTON_BRIDGE_PASSWORD` in the age store, received
   with `secret-receive`. The reader takes the port from `PROTON_MAIL_READ_PORT` (default 1143).
 - **Certificate pin**: the first connection pins Bridge's certificate fingerprint in
-  `~/.local/state/proton-mail-read/bridge-cert.sha256`, and every later run refuses on a mismatch
+  `~/.local/state/proton-mail-read/bridge-cert.sha256`, and every later run refuses on a mismatch <!-- host-ok -->
   before it sends the password. Delete the file after reinstalling Bridge. The first run therefore
   trusts whatever holds the port, so make it with Bridge running.
 - A headless Bridge raises no desktop notifications, so Calm desktop needs nothing more.
