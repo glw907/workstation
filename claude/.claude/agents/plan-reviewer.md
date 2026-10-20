@@ -55,6 +55,16 @@ On a plan, also check these items:
   which items the run may escalate without breaking its outcome, for a cause that returns after
   its structural fix (B3c, 2026-10-19: a five-read cap, an escalation traced to a blueprint, then
   a rollback handler that kept looping after its patch).
+- Every live command the run repeats is written out in full, flags included, at each step that
+  runs it, so a repeat cannot drop a flag the first use carried (B3c, 2026-10-19: rotate's sixth
+  read ran without `--since` after an accepted read and read the whole blueprint).
+- The plan has a standing answer for the run's success bar becoming unreachable mid-run: which
+  remaining items still run, and that the run then closes and reports the bar unmet (B3c,
+  2026-10-19: wave 2 left two pages able to reach the three-page bar). Once the bar is out of
+  reach, a remaining item runs only when its result is evidence the next design lacks; a rerun
+  whose cause is already traced and recorded is skipped, not spent on (acceptance, 2026-10-20:
+  standing answer 6 kept the cap and fault reruns after six of seven pages escalated, and Geoff
+  ruled them skipped mid-run).
 
 ## Findings
 

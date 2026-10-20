@@ -62,7 +62,7 @@ def test_non_markdown_is_skipped(tmp_path, monkeypatch):
 
 
 class _PastSkip(Exception):
-    """Marks that main() ran past the extension and superpowers-segment gates."""
+    """Marks that main() ran past the extension and planning-folder gates."""
 
 
 def _raise_past_skip(_start_dir):
@@ -76,18 +76,18 @@ def _feed(monkeypatch, file_path, content):
     monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(payload)))
 
 
-def test_superpowers_skip_is_a_path_segment(tmp_path, monkeypatch):
-    """A "superpowers" path segment is skipped; "mysuperpowers" is an unrelated name."""
+def test_planning_skip_is_a_path_segment(tmp_path, monkeypatch):
+    """A docs planning folder is skipped; a "plans" directory outside docs is linted."""
     monkeypatch.setattr(vh, "config_root", _raise_past_skip)
 
-    linted = tmp_path / "mysuperpowers" / "docs" / "a.md"
-    _feed(monkeypatch, linted, "prose\n")
-    with pytest.raises(_PastSkip):
-        vh.main()
+    for linted in (tmp_path / "plans" / "docs" / "a.md", tmp_path / "mydocs" / "plans" / "a.md"):
+        _feed(monkeypatch, linted, "prose\n")
+        with pytest.raises(_PastSkip):
+            vh.main()
 
-    skipped = tmp_path / "docs" / "superpowers" / "a.md"
-    _feed(monkeypatch, skipped, "prose\n")
-    assert vh.main() == 0
+    for folder in ("specs", "plans", "research", "archive"):
+        _feed(monkeypatch, tmp_path / "docs" / folder / "a.md", "prose\n")
+        assert vh.main() == 0
 
 
 def test_md_gate_uses_splitext_on_basename(tmp_path, monkeypatch):

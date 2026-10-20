@@ -178,6 +178,19 @@ def test_f1_doc_deleted_only_in_the_fixture_tree_is_a_dead_path(fx):
     assert "~/.claude/docs/gone.md" in out(proc)
 
 
+def test_a_dotfiles_span_resolves_against_the_tree_not_the_home_checkout(fx):
+    # A branch that moves a doc cites its new path while the home checkout still holds the old.
+    fx.write("claude/.claude/docs/a.md",
+             "Spec: `~/.dotfiles/docs/specs/new.md`.\nOld: `~/.dotfiles/docs/old/gone.md`.\n")
+    fx.write("docs/specs/new.md", "moved here\n")
+    fx.write_in_home(".dotfiles/docs/old/gone.md", "still in the home checkout\n")
+    fx.baseline([])
+    proc = fx.check()
+    assert proc.returncode == 1
+    assert "~/.dotfiles/docs/old/gone.md" in out(proc)
+    assert "~/.dotfiles/docs/specs/new.md" not in out(proc)
+
+
 def test_a_host_only_span_on_a_host_ok_line_passes_and_its_twin_fails(fx):
     fx.write("claude/.claude/docs/a.md",
              "Laptop only: `/etc/nothing-here.d/` <!-- host-ok -->\n"

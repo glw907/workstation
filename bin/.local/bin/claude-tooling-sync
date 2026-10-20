@@ -16,7 +16,8 @@ Commands:
                    skill whose name shadows a project skill; exit 1 on drift
   update-skills [NAME ...]
                    re-fetch vendored skills from their source repos at the default
-                   branch and rewrite the pinned commit in the manifest
+                   branch, rewrite the pinned commit in the manifest, and restow the
+                   claude package so a new skill directory is live the same session
   apply-overlays --root TREE
                    apply each vendored-skills.json entry's `description` and `note`
                    overlays, and the sibling-name rewrite, to the skills installed under
@@ -42,6 +43,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import textwrap
@@ -434,8 +436,24 @@ def update_skills(paths, names):
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
         f.write("\n")
+    restow(paths)
     print("Review the diff, then commit claude/.claude/skills and claude/.claude/tooling together.")
     return 0
+
+
+def restow(paths):
+    """Restow the claude package so a skill directory a fetch added is linked under ~/.claude."""
+    dotfiles = paths.home / ".dotfiles"
+    manual = f"run `cd {dotfiles} && stow -R claude` to make the skills live"
+    if shutil.which("stow") is None:
+        print(f"  ! stow not on PATH; {manual}")
+        return
+    proc = subprocess.run(["stow", "-R", "-t", str(paths.home), "claude"], cwd=dotfiles,
+                          capture_output=True, text=True)
+    if proc.returncode:
+        print(f"  ! stow -R claude failed; {manual}\n{proc.stderr.rstrip()}")
+        return
+    print("  + restowed claude: every skill directory is linked under ~/.claude/skills")
 
 
 def lint(root):

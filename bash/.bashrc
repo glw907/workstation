@@ -157,6 +157,21 @@ claude() {
             ;;
     esac
 
+    # Title the tab with the project name instead of Claude Code's topic
+    # summary; Ptyxis appends the command line itself.
+    # A worktree resolves to its main repo's name; outside a repo the tab
+    # keeps its shell title. The next prompt restores that title on exit.
+    case "$1" in
+        mcp|config|plugin|update|doctor|install|setup-token|migrate-installer|-p|--print) ;;
+        *)
+            local common
+            if common=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); then
+                printf '\e]0;%s\a' "$(basename "$(dirname "$common")")"
+                local -x CLAUDE_CODE_DISABLE_TERMINAL_TITLE=1
+            fi
+            ;;
+    esac
+
     # ~/.local/secrets exports ANTHROPIC_API_KEY for scripts that call the API
     # directly. Claude Code would bill that key ahead of the claude.ai login and
     # turn off the claude.ai connectors, so it starts without the key.

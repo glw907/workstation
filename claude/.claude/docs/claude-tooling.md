@@ -89,7 +89,8 @@ changed), copy the committed file into the session scratchpad, `cmp` it, and rel
 claude-tooling-sync apply                 # add manifest servers missing at user scope
 claude-tooling-sync verify                # drift report; exit 1 on drift (check-drift runs it)
 claude-tooling-sync verify --home <dir> --projects-root <dir>  # point verify at an injected tree
-claude-tooling-sync update-skills [name]  # re-fetch vendored skills, rewrite the pinned commit
+claude-tooling-sync update-skills [name]  # re-fetch vendored skills, rewrite the pinned commit,
+                                           # restow claude so the skills are live
 claude-tooling-sync lint --root <tree>    # tree-only manifest and unmanifested-skill checks;
                                            # check.sh runs `lint --root .` from a worktree's own
                                            # checkout, never through ~/.claude
@@ -106,8 +107,8 @@ Adding a user-scope server: write its entry in `mcp-servers.json` (with a `_why`
 for a fact that applies every turn, commit. Removing one: delete the entry, `claude mcp remove -s user <name>`, verify.
 
 Adding a vendored skill: read it at the source, add its entry to `vendored-skills.json`, run
-`update-skills <name>`, review the diff, point the agents that need it at the skill file,
-commit skills and manifest together.
+`update-skills <name>` (it restows the claude package, so the skill is live at once), review
+the diff, point the agents that need it at the skill file, commit skills and manifest together.
 
 ## Inventory of third-party pieces (2026-09-13)
 
