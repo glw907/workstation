@@ -22,6 +22,7 @@ org.gnome.shell.extensions.dash-to-dock show-icons-emblems false
 org.gnome.shell.extensions.dash-to-dock show-icons-notifications-counter false
 org.gnome.shell.extensions.dash-to-dock dance-urgent-applications false
 
-# The dock, left to right (Geoff, 2026-10-13, from thinkpad-x1). Trash sits
+# The dock, left to right (Geoff, 2026-10-13, from thinkpad-x1; Calendar and
+# Contacts added 2026-10-21). Trash sits
 # after these through dash-to-dock's stock show-trash.
-org.gnome.shell favorite-apps ['org.gnome.Nautilus.desktop', 'org.gnome.Ptyxis.desktop', 'chromium-browser.desktop', 'co.hyprlab.Hylki.desktop', 'com.discordapp.Discord.desktop', 'io.github.janbar.noson.desktop', 'io.github.screwys.Rufin.desktop', 'com.valvesoftware.Steam.desktop', 'com.belmoussaoui.Authenticator.desktop']
+org.gnome.shell favorite-apps ['org.gnome.Nautilus.desktop', 'org.gnome.Ptyxis.desktop', 'chromium-browser.desktop', 'co.hyprlab.Hylki.desktop', 'org.gnome.Calendar.desktop', 'org.gnome.Contacts.desktop', 'com.discordapp.Discord.desktop', 'io.github.janbar.noson.desktop', 'io.github.screwys.Rufin.desktop', 'com.valvesoftware.Steam.desktop', 'com.belmoussaoui.Authenticator.desktop']
