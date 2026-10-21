@@ -35,7 +35,7 @@ Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; the 
 `docs-page-chain.js` (source repo `~/Projects/drafter`, linked into the live
 workflows directory by `make install`) names `claude-opus-5-5` explicitly (`diff-reviewer`, the four domain
 reviewers, `engine-triage`, `go-architecture-reader`, `figure-verifier`, `visual-verifier`,
-`prose-voice-reviewer`, `cairn-register-editor`, `plan-reviewer`). `cairn-docs-drafter` (the docs page chain's
+`prose-voice-reviewer`, `cairn-register-editor`, `plan-reviewer`, `fact-checker`). `cairn-docs-drafter` (the docs page chain's
 default drafter, `effort: high`) also pins `claude-opus-5-5` explicitly and carries no `skills:`
 line; the page-inputs step's output (job, page type, exemplar excerpts, fact ids, claim inventory)
 arrives in the dispatch prompt, never a separate profile arg or file. No agent pins Fable 5.1; it

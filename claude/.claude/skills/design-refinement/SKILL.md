@@ -82,6 +82,12 @@ settle, where the full gate, CI-canonical baseline regeneration, and deploy run 
 once. The ASC register round is the proven exemplar: probe page rendered, verdict in
 minutes, one landing commit.
 
+Before a probe page or prototype goes to the owner, `prose-voice-reviewer` reads its fixed UI
+copy (headlines, ledes, button and empty-state text) against the register of the content the
+screen presents (a docs review screen reads against the docs register), and its
+findings go to him beside the layout. A sitting about layout does not read the words, which is
+how approval-queue#4's blueprint headline reached Geoff in marketing voice (2026-10-21).
+
 ## The exploratory arc
 
 The shape this mode replaces failed its cold trial: live probes translated to axes and
