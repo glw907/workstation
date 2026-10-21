@@ -86,7 +86,8 @@
       "Bash(vandelay * --prune)",
       "Bash(vandelay * --prune *)",
       "Bash(imapsync)",
-      "Bash(imapsync *)"
+      "Bash(imapsync *)",
+      "Bash(scripts/dry-run.sh)"
     ],
     "defaultMode": "auto"
   },
