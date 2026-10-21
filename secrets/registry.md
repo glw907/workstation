@@ -515,9 +515,10 @@ tmpfs cache; no password manager holds it for scripts.
   withholds app passwords from new accounts, so no IMAP or SMTP use
 - **Rotate at**: Yahoo > Account security > Change password, then the Workstation vault item
   `login.yahoo.com`, then store it again from the vault
-- **History**: stored 2026-10-21. A fragment reached that session's transcript through a
-  conductor's check; Geoff kept the password, since the account is a throwaway behind
-  two-step verification
+- **History**: stored 2026-10-21. A fragment of the first password reached that session's
+  transcript, because `~/.local/secrets` is written unquoted and the value held shell
+  separators. Geoff changed it the same day to letters and digits only, which keep the file
+  loadable until the writer quotes values
 
 ### DRAFTER_API_KEY
 - **Grants**: Anthropic API access in the Console workspace created for drafter, under that
