@@ -153,6 +153,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
 | FASTMAIL_OPERATOR2_PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_OPERATOR2_API_TOKEN | ✓ | — | — | — | — |
+| FASTMAIL_MEMBER_A_PASSWORD | ✓ | — | — | — | — |
 | GITHUB_APP_ID       | ✓     | ✓        | —    | —        | —          |
 | GITHUB_APP_INSTALLATION_ID | ✓ | ✓     | —    | —        | —          |
 | GITHUB_APP_PRIVATE_KEY_B64 | ✓ | ✓     | ✓    | —        | ✓          |
@@ -485,6 +486,15 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotate at**: created by Geoff as the account's admin, in the member's own Fastmail
   settings (Privacy & Security). Revoke it once the Fastmail account closes after cutover
 - **History**: received on pavilion 2026-10-20; its JMAP session is his account
+
+### FASTMAIL_MEMBER_A_PASSWORD
+- **Grants**: household member A's Fastmail app password "Migration", with IMAP and DAV
+  access to their mailbox, contacts, and calendars
+- **Used by**: the self-hosting mail migration (Pass 5's rehearsal import, Pass 6's sweeps)
+- **Rotate at**: created by Geoff as the account's admin, in the member's own Fastmail
+  settings (Privacy & Security). Revoke it once the Fastmail account closes after cutover
+- **History**: received on pavilion 2026-10-20; IMAP, CardDAV, and the CalDAV calendar home
+  pass
 
 ### DRAFTER_API_KEY
 - **Grants**: Anthropic API access in the Console workspace created for drafter, under that
