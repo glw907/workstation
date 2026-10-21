@@ -68,14 +68,16 @@ skill adds the procedure and never restates the register.
 
 ## Blueprints and pages
 
-A docs blueprint and a drafted page are never packet parts. Each is its own queue item:
-`approval-queue blueprint <worktree> <title> <file> --notes <notes.json>` before the draft, and
-`approval-queue page <worktree> <title> <file> --pr <owner/repo#n> --notes <notes.json>` after it.
-Geoff reads and edits the document itself there, with the fact-check notes under the lines they
-concern. A code PR whose blueprint and page edits ride in it gets one `approval-queue change
-<owner/repo#n> <title>` review instead, unless the change adds or removes a section or changes the
-reader's path; then the blueprint change is approved first, as for a new page. The order of the
-steps, and when each fact check runs, is in the `blueprint` skill.
+A docs blueprint and a drafted page are never packet parts, because Geoff reads and edits the
+document itself, with the fact-check notes under the lines they concern. Each is its own queue
+item: `approval-queue blueprint <worktree> <title> <file> --notes <notes.json>` before the draft,
+and `approval-queue page <worktree> <title> <file> --pr <owner/repo#n> --notes <notes.json>` after
+it.
+
+When a code PR carries its own blueprint and page edits, queue one `approval-queue change
+<owner/repo#n> <title>` review for the whole PR. One exception: an edit that adds or removes a
+section, or changes the reader's path, gets its blueprint approved first, as a new page does. The
+order of the steps, and when each fact check runs, is in the `blueprint` skill.
 
 ## Follow-ups
 
