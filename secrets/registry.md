@@ -151,6 +151,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
+| FASTMAIL_OPERATOR2_PASSWORD | ✓ | — | — | — | — |
 | GITHUB_APP_ID       | ✓     | ✓        | —    | —        | —          |
 | GITHUB_APP_INSTALLATION_ID | ✓ | ✓     | —    | —        | —          |
 | GITHUB_APP_PRIVATE_KEY_B64 | ✓ | ✓     | ✓    | —        | ✓          |
@@ -466,6 +467,14 @@ tmpfs cache; no password manager holds it for scripts.
   `~/.config/fastmail/fastmail-dav-token.age` the helper read before. Revoke the old app
   password and delete that loose file once thinkpad-x1 pulls this and runs
   `sync.sh --local`.
+
+### FASTMAIL_OPERATOR2_PASSWORD
+- **Grants**: the second operator's Fastmail app password "Migration", with IMAP and DAV
+  access to his mailbox, contacts, and calendars
+- **Used by**: the self-hosting mail migration (Pass 5's rehearsal import, Pass 6's sweeps)
+- **Rotate at**: created by Geoff as the account's admin, in the member's own Fastmail
+  settings (Privacy & Security). Revoke it once the Fastmail account closes after cutover
+- **History**: received on pavilion 2026-10-20; IMAP, CalDAV, and CardDAV logins pass
 
 ### DRAFTER_API_KEY
 - **Grants**: Anthropic API access in the Console workspace created for drafter, under that
