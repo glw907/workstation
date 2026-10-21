@@ -75,7 +75,7 @@ and `approval-queue page <worktree> <title> <file> --pr <owner/repo#n> --notes <
 it.
 
 When a code PR carries its own blueprint and page edits, queue one `approval-queue change
-<owner/repo#n> <title>` review for the whole PR. One exception: an edit that adds or removes a
+<owner/repo#n> <title> --notes <notes.json>` review for the whole PR. One exception: an edit that adds or removes a
 section, or changes the reader's path, gets its blueprint approved first, as a new page does. The
 order of the steps, and when each fact check runs, is in the `blueprint` skill.
 

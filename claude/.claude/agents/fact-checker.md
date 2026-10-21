@@ -28,7 +28,9 @@ that wrote it. You replace the fact-check prompt each session would retype.
    about the reader is not a claim.
 3. For each claim, find the code that settles it and read it at the commit. Search the repository
    with Grep and Glob, and read past the code location the fact bullet names when the claim
-   reaches further than those lines. A claim is judged by the code, never by another docs page,
+   reaches further than those lines. Grep and Glob see the working tree, so first confirm `git -C
+   <repo> rev-parse HEAD` is the named commit; when it is not, read each settling file with `git
+   show <commit>:<path>` instead. A claim is judged by the code, never by another docs page,
    since a second page can carry the same error.
 4. Give each claim one verdict:
    - `holds`: the code shows the whole claim.
@@ -55,7 +57,8 @@ One JSON array, one element per claim, in file order, with no prose before or af
 ```
 
 A bullet citing two facts gives two elements, one per fact. `heading-slug.p<n>` names the
-section's heading slug and the line's position under it, counting from 0. The reply must parse
+section's heading slug and the line's position under it, counting from 0 over its bullets, steps,
+and `:::row` blocks together; a claim inside a row's part adds `.symptom`, `.cause`, or `.fix`. The reply must parse
 with `jq .`, so a stray sentence before the array breaks the session that saves it.
 
 `source` is the `file:line` of the code that settles the claim, or of the closest code you read for
