@@ -225,7 +225,9 @@ sudo -A udevadm trigger`.
 - **Extensions are installed by hand, per profile.** Chromium policy is browser-wide
   with no per-profile scope, so no policy force-installs an extension. Geoff's
   profile carries the Proton Pass extension (Chrome Web Store id
-  `ghmbeldphafepmbegfdlkpapadhbakde`) and never Claude's; the `Default` profile
+  `ghmbeldphafepmbegfdlkpapadhbakde`) and Floccus, the bookmark sync to his share on
+  orpheus (id `fnaicdffflnofjppbagibeoednhnbjhg`, set up per the servers runbook's
+  "Bookmark sync"; on pavilion since 2026-10-21), and never Claude's; the `Default` profile
   carries only the Claude extension. No Chromium profile carries a 1Password
   extension (no workstation runs 1Password since 2026-10-19).
 - **Flatpak builds of a browser: never.** Claude's native-messaging hosts need to
