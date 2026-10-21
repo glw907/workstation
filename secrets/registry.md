@@ -151,6 +151,11 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
+| FASTMAIL_OPERATOR2_PASSWORD | ✓ | — | — | — | — |
+| FASTMAIL_OPERATOR2_API_TOKEN | ✓ | — | — | — | — |
+| SPAMHAUS_DQS_KEY | ✓ | — | — | — | — |
+| TEST_YAHOO_ADDRESS | ✓ | — | — | — | — |
+| TEST_YAHOO_PASSWORD | ✓ | — | — | — | — |
 | GITHUB_APP_ID       | ✓     | ✓        | —    | —        | —          |
 | GITHUB_APP_INSTALLATION_ID | ✓ | ✓     | —    | —        | —          |
 | GITHUB_APP_PRIVATE_KEY_B64 | ✓ | ✓     | ✓    | —        | ✓          |
@@ -466,6 +471,53 @@ tmpfs cache; no password manager holds it for scripts.
   `~/.config/fastmail/fastmail-dav-token.age` the helper read before. Revoke the old app
   password and delete that loose file once thinkpad-x1 pulls this and runs
   `sync.sh --local`.
+
+### FASTMAIL_OPERATOR2_PASSWORD
+- **Grants**: the second operator's Fastmail app password "Migration", with IMAP and DAV
+  access to his mailbox, contacts, and calendars
+- **Used by**: the self-hosting mail migration (Pass 5's rehearsal import, Pass 6's sweeps)
+- **Rotate at**: created by Geoff as the account's admin, in the member's own Fastmail
+  settings (Privacy & Security). Revoke it once the Fastmail account closes after cutover
+- **History**: received on pavilion 2026-10-20; IMAP, CalDAV, and CardDAV logins pass
+
+### FASTMAIL_OPERATOR2_API_TOKEN
+- **Grants**: the second operator's Fastmail API token "Migration": JMAP read and write on
+  his mail, contacts, and masked email, plus sending (`submission`); not read-only
+- **Used by**: the self-hosting mail migration (Pass 5's size and mask counts) and, later,
+  his masked-address work
+- **Rotate at**: created by Geoff as the account's admin, in the member's own Fastmail
+  settings (Privacy & Security). Revoke it once the Fastmail account closes after cutover
+- **History**: received on pavilion 2026-10-20; its JMAP session is his account
+
+### SPAMHAUS_DQS_KEY
+- **Grants**: queries to Spamhaus's free Data Query Service (the `zen` and `dbl` blocklists
+  through `<key>.<zone>.dq.spamhaus.net`), for non-commercial use, renewing yearly
+- **Used by**: the self-hosting mail server ward (Stalwart's blocklist checks, a `File`
+  secret on the host) and the servers dry run's `spamhaus-dqs` row
+- **Rotate at**: the Spamhaus Customer Portal (login in Geoff's Proton Pass), Products >
+  Blocklists via DNS Query > Generate a new Query key; then `secret-receive SPAMHAUS_DQS_KEY`.
+  A new key takes several minutes to answer
+- **History**: received on pavilion 2026-10-21 in the Pass 5 sitting, rotated twice the same
+  day after a copy reached chat; the dry run's test point answers `127.0.0.4`
+
+### TEST_YAHOO_ADDRESS
+- **Grants**: nothing on its own; the address of the throwaway Yahoo Mail test account
+- **Used by**: the self-hosting Pass 5 rehearsal's delivery tests, which send to it and read
+  it through Yahoo webmail in Claude's Chromium profile
+- **Rotate at**: not rotated; the account's login is in the Workstation vault
+- **History**: stored from the Workstation vault 2026-10-21; it replaces the plan's Gmail test
+  account on Geoff's ruling (Google's sign-up needs a smartphone)
+
+### TEST_YAHOO_PASSWORD
+- **Grants**: the Yahoo test account's sign-in password; two-step verification texts Geoff's
+  phone, so a new browser sign-in needs him
+- **Used by**: the Pass 5 rehearsal's webmail sign-in in Claude's Chromium profile. Yahoo
+  withholds app passwords from new accounts, so no IMAP or SMTP use
+- **Rotate at**: Yahoo > Account security > Change password, then the Workstation vault item
+  `login.yahoo.com`, then store it again from the vault
+- **History**: stored 2026-10-21. A fragment reached that session's transcript through a
+  conductor's check; Geoff kept the password, since the account is a throwaway behind
+  two-step verification
 
 ### DRAFTER_API_KEY
 - **Grants**: Anthropic API access in the Console workspace created for drafter, under that
