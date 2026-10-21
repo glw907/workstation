@@ -58,7 +58,17 @@
       "Bash(ssh geoff@orpheus.907.life *)",
       "Bash(ssh -o BatchMode=yes geoff@orpheus.907.life *)",
       "Bash(/var/home/glw907/.dotfiles/scripts/secrets/secret-set.sh * --values /var/home/glw907/.dotfiles/.claude/worktrees/self-hosting-* --local /run/user/1000/self-hosting/*)",
-      "Bash(secret-receive * --values /var/home/glw907/.dotfiles/.claude/worktrees/self-hosting-* --local /run/user/1000/self-hosting/*)"
+      "Bash(secret-receive * --values /var/home/glw907/.dotfiles/.claude/worktrees/self-hosting-* --local /run/user/1000/self-hosting/*)",
+      "Bash(scripts/dry-run.sh *)",
+      "Bash(cloudflare/access.sh --token ward)",
+      "Bash(scripts/archive.sh *)",
+      "Bash(scripts/imap-sweep.sh rehearse *)",
+      "Bash(scripts/imap-sweep.sh rehearse-clean)",
+      "Bash(scripts/vandelay-run.sh *)",
+      "Bash(scripts/rcpt-check.sh *)",
+      "Bash(brew install stalwartlabs/tap/vandelay)",
+      "Bash(curl --url smtps://ward.907.life:465 *)",
+      "Bash(curl --url smtp://ward.907.life:25 *)"
     ],
     "deny": [
       "Bash(hcloud * delete)",
@@ -72,7 +82,11 @@
       "Bash(wrangler r2 bucket delete *)",
       "Bash(npx wrangler r2 bucket lock remove *)",
       "Bash(npx wrangler r2 bucket lock set *)",
-      "Bash(npx wrangler r2 bucket delete *)"
+      "Bash(npx wrangler r2 bucket delete *)",
+      "Bash(vandelay * --prune)",
+      "Bash(vandelay * --prune *)",
+      "Bash(imapsync)",
+      "Bash(imapsync *)"
     ],
     "defaultMode": "auto"
   },
