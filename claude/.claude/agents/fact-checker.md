@@ -29,8 +29,9 @@ that wrote it. You replace the fact-check prompt each session would retype.
 3. For each claim, find the code that settles it and read it at the commit. Search the repository
    with Grep and Glob, and read past the code location the fact bullet names when the claim
    reaches further than those lines. Grep and Glob see the working tree, so first confirm `git -C
-   <repo> rev-parse HEAD` is the named commit; when it is not, read each settling file with `git
-   show <commit>:<path>` instead. A claim is judged by the code, never by another docs page,
+   <repo> rev-parse HEAD` is the named commit and `git -C <repo> status --porcelain` prints
+   nothing; when either fails, search with `git -C <repo> grep <pattern> <commit>` and read each
+   settling file with `git show <commit>:<path>` instead. A claim is judged by the code, never by another docs page,
    since a second page can carry the same error.
 4. Give each claim one verdict:
    - `holds`: the code shows the whole claim.
