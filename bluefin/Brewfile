@@ -32,6 +32,10 @@ brew "hcloud"
 brew "shfmt"
 brew "yamllint"
 brew "imapsync"
+# Vandelay copies a Fastmail mailbox into an archive and into Stalwart (the mail server pass, L5).
+# pavilion-only: thinkpad-x1 picks up this file at its next pull and skips vandelay.
+tap "stalwartlabs/tap"
+brew "vandelay"
 # Held with `brew pin proton-pass-cli`; the Pass 0 plan pins it so a
 # routine `ujust update` cannot change the CLI under the key scripts.
 brew "proton-pass-cli"
