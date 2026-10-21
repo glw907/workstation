@@ -67,10 +67,10 @@
       "Bash(scripts/vandelay-run.sh *)",
       "Bash(scripts/rcpt-check.sh *)",
       "Bash(brew install stalwartlabs/tap/vandelay)",
-      "Bash(curl --url smtps://smtp.gmail.com:465 *)",
+      "Bash(curl --url smtps://smtp.mail.yahoo.com:465 *)",
       "Bash(curl --url smtps://ward.907.life:465 *)",
       "Bash(curl --url smtp://ward.907.life:25 *)",
-      "Bash(curl --url imaps://imap.gmail.com:993 *)"
+      "Bash(curl --url imaps://imap.mail.yahoo.com:993 *)"
     ],
     "deny": [
       "Bash(hcloud * delete)",
