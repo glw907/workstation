@@ -24,7 +24,7 @@
       "repo": "glw907/survey",
       "path": "skills/survey",
       "branch": "v1.1.0",
-      "commit": "80dcc76b78b2",
+      "commit": "0576b29d598a",
       "license": "none",
       "installed": "2026-10-22",
       "_why": "The house style skill. Its writing/ directory is the source of the writing-voice output style, the voice registers, and the authoring charter, which link into it; edit them in the Survey repo only."

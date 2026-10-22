@@ -36,8 +36,8 @@ The house writing register lives in `skills/survey/writing/`. Every audience sta
 | `agent-facing.md` | Prompts, skills, agent definitions, and other text a model reads |
 | `approval-brief.md` | The brief that opens a design, plan, or PR for approval |
 | `commit-and-pr.md` | Commit messages and pull request bodies |
-| `editor.md` | Copy an editor reads in an admin |
-| `technical-doc-go.md` | Developer docs and comments for Go code |
+| `editor.md` | End-user and editor docs for a non-technical reader |
+| `technical-doc-go.md` | Developer docs for Go repos (Go comments take the go-conventions skill) |
 | `technical-doc-web.md` | Developer docs for web code |
 
-The workstation's `writing-voice` skill stays the router that picks a file for an audience. The go, ts, svelte, and python conventions skills stay where they are. Edit the writing files in the Survey repo only. A workstation edit to a vendored copy is overwritten by the next update.
+The workstation's `writing-voice` skill picks a file for an audience. Code comments take the go-conventions, ts-conventions, svelte-conventions, or python-conventions skill, which stay workstation skills. Edit the writing files in the Survey repo only. A workstation edit to a vendored copy is overwritten by the next update.
