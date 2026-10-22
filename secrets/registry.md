@@ -148,6 +148,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | IMMICH_DB_PASSWORD | ✓ | — | — | — | — |
 | RESTIC_PASSWORD_ORPHEUS | ✓ | — | — | — | — |
 | TUNNEL_TOKEN_ORPHEUS | ✓ | — | — | — | — |
+| WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERA / _MEMBERB / _MEMBERC | ✓ | — | — | — | — |
 | RESTIC_PASSWORD_WARD | ✓ | — | — | — | — |
 | TUNNEL_TOKEN_WARD | ✓ | — | — | — | — |
 | STALWART_ADMIN_PASSWORD | ✓ | — | — | — | — |
@@ -349,6 +350,12 @@ tmpfs cache; no password manager holds it for scripts.
 - **Used by**: the servers repo's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on orpheus only.
 - **Generated 2026-10-20** by `cloudflare/access.sh --token orpheus` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in the rename pass (R6).
 - **Rotate**: rotate the tunnel's token in Cloudflare (or recreate the tunnel with `access.sh`), store the new value, and re-render orpheus's secrets.
+
+### WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERA / _MEMBERB / _MEMBERC
+- **Grants**: one household member's login to their own Floccus bookmark share at `https://dav.907.life/<name>/`, and nothing else. Each member's bookmarks file is also encrypted with a passphrase that member keeps, so the login alone doesn't reveal it.
+- **Used by**: the servers repo's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in the `Servers emergency` Proton Pass vault as "Bookmarks WebDAV: <name>", for Geoff to share with that member.
+- **Generated 2026-10-21** on pavilion (32 random bytes, base64url), in the bookmarks pass.
+- **Rotate**: store a new value, update the Proton Pass item, re-render orpheus's `/etc/webdav/<name>.env`, restart `webdav@<name>`, and paste the new value into the member's Floccus on each device (servers `docs/runbook.md`, "Bookmark sync").
 
 ### RESTIC_PASSWORD_ORPHEUS
 - **Grants**: the right to open the orpheus restic repository in `servers-backup-orpheus`. Losing it makes every orpheus backup unreadable. It replaced the media server's restic password, which the rename pass retired.
