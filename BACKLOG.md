@@ -92,3 +92,6 @@
 
 - [ ] **#21** secret-set.sh writes values unquoted `#bug` `#workstation` `#initiative:self-hosting` *(2026-10-19)*
   **secret-set.sh writes `export NAME=value` unquoted**, so a value holding a space, quote, `$(...)`, or backtick breaks or runs when a shell sources `~/.local/secrets`. Emit `printf "export %s=%q\n"` and have readers expect one shell word. Found by the proton-mail-read credential review; Bridge passwords are alphanumeric, so nothing is exposed today.
+
+- [ ] **#29** tellgrader posthook tests fail in a worktree under /tmp `#bug` `#workstation` *(2026-10-22)*
+  **Three `internal/posthook` tests fail when the dotfiles checkout sits under `/tmp`** (`TestRunFlagsChangedLineOnly`, `TestRunSkipsUngovernedPaths`, `TestWholeDocFindingsOnlyOnWrite` return no advisory), so the gate goes red in a scratchpad worktree while the same tests pass in `~/.dotfiles` and in `.claude/worktrees/`. The hook likely treats a `/tmp` path as ungoverned. Make the tests use a path independent of where the checkout lives.
