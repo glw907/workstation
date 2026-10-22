@@ -49,6 +49,10 @@ On a plan, also check these items:
   Read every task for a hidden one, and move a step that waits on the pass's output earlier where
   it can go, and flag any item the design did not foresee, since it holds the launch for a
   pre-launch packet (Pass 1, 2026-10-19: a Proton Bridge sign-in surfaced mid-run).
+- A pass that launches `claude --bg` in a directory no session has opened (a new repo or
+  checkout) lists the workspace trust prompt as a pre-flight item: Geoff runs `claude` there once
+  and accepts it, checked by a launch that no longer prints "Workspace not trusted" (Survey Pass
+  1, 2026-10-22: the launch refused until Geoff accepted it).
 - No count cap (reads, retries, rounds, reruns) and no list of fixable causes stops the line on
   its own. Each carries the traced-cause standing answer in `pass-core` "Lifecycle" step 1, so only
   a ceiling, an untraced cause, or an escalation the plan doesn't allow stops it. The plan names
