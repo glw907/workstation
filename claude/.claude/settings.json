@@ -94,6 +94,7 @@
       "Bash(scripts/archive.sh *)",
       "Bash(scripts/imap-sweep.sh rehearse *)",
       "Bash(scripts/imap-sweep.sh rehearse-clean)",
+      "Bash(scripts/imap-sweep.sh sweep *)",
       "Bash(scripts/vandelay-run.sh *)",
       "Bash(scripts/rcpt-check.sh *)",
       "Bash(brew install stalwartlabs/tap/vandelay)",
