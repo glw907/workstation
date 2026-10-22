@@ -150,8 +150,10 @@ else
     bad "Brewfile entries missing (brew bundle check failed):"
     brew bundle check --verbose --file="$BLUEFIN/Brewfile" 2>&1 | sed 's/^/      /'
 fi
+# brew leaves names a tapped formula with its tap (stalwartlabs/tap/vandelay) and the Brewfile
+# by its bare name, so both sides drop the tap before comparing.
 extra_brews=$(comm -23 \
-    <(brew leaves 2>/dev/null | sort) \
+    <(brew leaves 2>/dev/null | sed 's|.*/||' | sort) \
     <(grep -oP '^brew "\K[^"]+' "$BLUEFIN/Brewfile" | sed 's|.*/||' | sort))
 if [[ -n "$extra_brews" ]]; then
     bad "installed leaves not in the Brewfile (adopt or uninstall):"

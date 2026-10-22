@@ -145,7 +145,7 @@ audit; the admin design system wins over both on conflict).
 No human-scale time estimates in conversation; describe relative complexity ("quick", "multi-step")
 and focus on sequencing, dependencies, and testing. Plan tasks carry clock estimates in minutes, per
 `pass-core`. Every dispatch names a model and an effort, and subagents start with zero context:
-pre-extract what they need.
+pre-extract what they need. Run gates and CI watches bare, never piped into `tail` or `head`.
 
 ## A rule lives where it executes (Geoff, 2026-09-20)
 

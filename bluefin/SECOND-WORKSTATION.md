@@ -86,9 +86,8 @@ A future bundle carries them too:
 - `~/.local/share/drafter/`: drafter's spike evidence and interim notes (28 MB).
 - `~/.local/share/cairn/`: cairn's 69 exemplar captures (90 MB). cairn's
   outline helper fails without them, so the docs page chain can't draft.
-- `~/.config/fastmail/fastmail-dav-token.age`: the token
-  `fastmail-dav-password` decrypts. Without it the vdirsyncer timer fails
-  every hour and `~/.contacts/` never appears.
+- `~/.config/fastmail/fastmail-dav-token.age`: a token since retired; contacts
+  now come from ward through GNOME Online Accounts.
 
 On pavilion they came across on 2026-10-13 with `rsync` from thinkpad-x1
 over a temporary SSH opening: a Remote Control session on the laptop
@@ -200,21 +199,14 @@ the rest unless the step says it is a hard stop.
    ```bash
    sudo -A hostnamectl set-hostname pavilion
    ```
-3. Write the local secrets, run the one-time contacts discovery, and enable
-   the timer. `fastmail-dav-password` reads `FASTMAIL_DAV_PASSWORD` from
-   `~/.local/secrets`, and a sync fails until `discover` has created the
-   local collections.
+3. Write the local secrets, then add ward as a GNOME Online Accounts account for contacts and
+   calendars: Settings, Online Accounts, Calendar, Contacts and Files, server
+   `https://mail.907.life`, user `geoff@907.life`, the password from `907.life mail: geoff` in
+   the Workstation vault, then turn Files off. Leave only Personal (contacts and calendar) and
+   Global Address Book enabled.
    ```bash
    ~/.dotfiles/scripts/secrets/sync.sh --local
-   source ~/.local/secrets
-   mkdir -p ~/.contacts && yes | vdirsyncer discover fastmail_contacts
-   systemctl --user enable --now vdirsyncer.timer
    ```
-   A new machine's first contacts sync needs the collections discovered
-   once, after the DAV token is in place (see "The handoff bundle"):
-   `PATH=~/.local/bin:/home/linuxbrew/.linuxbrew/bin:$PATH vdirsyncer discover`,
-   answering yes to each collection, then `vdirsyncer sync`. The timer
-   handles every sync after that.
 4. Install the staged `/etc` drops that `setup` leaves out. Skip the lid
    file.
    ```bash
@@ -324,7 +316,7 @@ the rest unless the step says it is a hard stop.
    ```
 10. Verify. Run `check-drift` and `claude-tooling-sync verify`, then confirm
     each of these: `gh auth status`, `systemctl --user list-timers` shows
-    check-drift, model-review, decision-review, vdirsyncer, and cairn-tripwire,
+    check-drift, model-review, decision-review, and cairn-tripwire,
     `systemctl --user is-active monitor-subscribe` prints `active`,
     `hostnamectl` shows `pavilion`, a new Claude session opens with
     `## Host: pavilion`, and `ls ~/.claude/projects/*/memory` lists the

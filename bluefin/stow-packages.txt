@@ -5,7 +5,6 @@ bash
 beets
 bin
 claude
-contacts
 git
 # icons: Hylki's app icon replaced with GNOME Geary's Adwaita-style icon (LGPL-2.1-or-later,
 # GNOME/geary commit 54a67486aca1), installed under Hylki's icon name so it wins the lookup.

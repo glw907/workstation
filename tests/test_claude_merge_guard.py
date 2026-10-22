@@ -136,3 +136,61 @@ def test_malformed_input_exits_zero(env):
             [sys.executable, str(SCRIPT)], input=stdin, capture_output=True, text=True, check=False, env=env
         )
         assert (result.returncode, result.stdout, result.stderr) == (0, "", "")
+
+
+def run_hook_raw(env, command):
+    """Run the hook without writing a stub body first."""
+    return subprocess.run(
+        [sys.executable, str(SCRIPT)],
+        input=json.dumps({"tool_input": {"command": command}}),
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+
+
+# False positives from real sessions (2026-10-19 to 2026-10-21): a PR created and merged in one
+# command, a redirect read as the PR number, and merge text inside a heredoc.
+def test_pr_created_in_same_command_uses_its_body(env):
+    Path(env["STUB_BODY"]).unlink(missing_ok=True)  # the PR does not exist yet, so view fails
+    command = 'gh pr create --title "t" --body "Ledger update." && gh pr merge upload-quota --merge'
+    result = run_hook_raw(env, command)
+    assert (result.returncode, result.stdout) == (0, "")
+
+
+def test_pr_created_in_same_command_with_section_is_denied(env):
+    Path(env["STUB_BODY"]).unlink(missing_ok=True)
+    command = f"gh pr create --title t --body '{WITH_SECTION}' && gh pr merge b --merge"
+    out = decision(run_hook_raw(env, command))
+    assert STEPS in out["permissionDecisionReason"]
+
+
+def test_pr_created_from_body_file(env, tmp_path):
+    Path(env["STUB_BODY"]).unlink(missing_ok=True)
+    body = tmp_path / "pr.md"
+    body.write_text(WITHOUT_SECTION)
+    result = run_hook_raw(env, f"gh pr create -t t -F {body}; gh pr merge b --merge")
+    assert (result.returncode, result.stdout) == (0, "")
+
+
+def test_unreadable_pr_without_create_is_still_denied(env):
+    Path(env["STUB_BODY"]).unlink(missing_ok=True)
+    assert decision(run_hook_raw(env, "gh pr merge b --merge"))["permissionDecision"] == "deny"
+
+
+def test_redirect_is_not_the_pr_number(env):
+    run_hook(env, "gh pr merge --merge --delete-branch=false 2>&1 | tail -2", body=WITHOUT_SECTION)
+    assert "pr view --json" in Path(env["STUB_LOG"]).read_text()
+
+
+def test_attached_redirect_is_not_the_pr_number(env):
+    run_hook(env, "gh pr merge 2>/dev/null --merge", body=WITHOUT_SECTION)
+    assert "pr view --json" in Path(env["STUB_LOG"]).read_text()
+
+
+def test_merge_text_in_heredoc_is_not_checked(env):
+    command = "python3 -I - <<'EOF'\nnote = 'gh pr merge 5 later'\ngh pr merge 7\nEOF\ngit status"
+    result = run_hook(env, command)
+    assert (result.returncode, result.stdout) == (0, "")
+    assert not Path(env["STUB_LOG"]).exists()

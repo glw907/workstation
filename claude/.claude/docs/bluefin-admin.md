@@ -22,7 +22,7 @@ default.
 
 1. **mise** — Node and other language runtimes it manages. Replaces nvm.
 2. **uv** — Python tools and environments (`uv tool install <name>` for CLI tools like
-   khard, vdirsyncer, yt-dlp).
+   yt-dlp).
 3. **Homebrew** — CLI tools generally, and Go (`brew install go`). Also the fallback
    for a CLI tool with no mise/uv path.
 4. **Flatpak** — GUI applications.
@@ -389,5 +389,6 @@ JMAP, `$FASTMAIL_API_TOKEN` in `~/.local/secrets`. API reference:
 Until poplar is ready, Hylki (Flatpak `co.hyprlab.Hylki`) is the desktop mail client
 (Geoff, 2026-10-18; Thunderbird is retired, its mail filters backed up under
 `~/.local/state/browser-mail-retire-2026-10-18/`). Contacts and calendars are GNOME
-Contacts and GNOME Calendar, fed by a CalDAV/CardDAV account in GNOME Online Accounts;
+Contacts and GNOME Calendar, fed by a CalDAV/CardDAV account for ward (`https://mail.907.life`, user
+`geoff@907.life`) in GNOME Online Accounts, since 2026-10-22; vdirsyncer and khard are retired;
 Hylki reads the Evolution Data Server address books and adds invitations to the calendar.

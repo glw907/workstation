@@ -34,7 +34,7 @@ gate launches no browser and its measured peak is 105 MB.
 `bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-clock-stop,claude-context-budget,claude-tooling-sync}`,
 `scripts/**`, `tests/**`. `auth-data`: `secrets/**`, `scripts/secrets/**`, `bash/.bashrc` (it sources the
 secrets), and `bin/.local/bin/{claude-block-pass,claude-pass,ws-pass-key,pass-count,claude-secret-guard,claude-tierguard,claude-askpass,
-claude-sudo-setup,claude-sudo-clear,secret-receive,fastmail-password,fastmail-dav-password}`.
+claude-sudo-setup,claude-sudo-clear,secret-receive,fastmail-password}`.
 `ordinary`: everything else. A path in both classes takes the higher (`scripts/secrets/**` is
 `auth-data`). A wording-only edit to a `runner` path can land as a direct change (`pass-core`,
 "Direct changes"). The gate and `claude-tooling-sync verify` still run, and the main checkout's

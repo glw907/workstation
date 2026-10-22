@@ -149,6 +149,10 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | RESTIC_PASSWORD_ORPHEUS | ✓ | — | — | — | — |
 | TUNNEL_TOKEN_ORPHEUS | ✓ | — | — | — | — |
 | WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERA / _MEMBERB / _MEMBERC | ✓ | — | — | — | — |
+| RESTIC_PASSWORD_WARD | ✓ | — | — | — | — |
+| TUNNEL_TOKEN_WARD | ✓ | — | — | — | — |
+| STALWART_ADMIN_PASSWORD | ✓ | — | — | — | — |
+| STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2 | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
@@ -359,9 +363,33 @@ tmpfs cache; no password manager holds it for scripts.
 - **Generated 2026-10-20** on pavilion (32 random bytes, base64url), in the rename pass (R3), stored and pushed before `restic init`. The bucket's lock rules land only after this commit is on `origin/main`.
 - **Rotate**: changing a restic password removes the old key file, which the `keys/` lock rule refuses, so a rotation needs Geoff to lift the rule.
 
+### RESTIC_PASSWORD_WARD
+- **Grants**: the right to open the ward restic repository in `servers-backup-ward`. Losing it makes every ward backup unreadable, and a regenerated value orphans the repository.
+- **Used by**: the servers repo's `roles/backup` (rendered to `/etc/servers/restic-password` on ward) and the restore drill.
+- **Generated 2026-10-21** on pavilion (40 random alphanumerics), in the mail server pass (L3), stored and pushed before `restic init`. The bucket's lock rules land only after this commit is on `origin/main`.
+- **Rotate**: changing a restic password removes the old key file, which the `keys/` lock rule refuses, so a rotation needs Geoff to lift the rule.
+
+### TUNNEL_TOKEN_WARD
+- **Grants**: the right to run the `servers-ward` Cloudflare Tunnel connector, which carries ward's Access browser terminal and the Stalwart admin page. Anyone holding it can attach a connector to that tunnel.
+- **Used by**: the servers repo's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on ward only.
+- **Generated 2026-10-21** by `cloudflare/access.sh --token ward` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in the mail server pass (L3).
+- **Rotate**: rotate the tunnel's token in Cloudflare (or recreate the tunnel with `access.sh`), store the new value, and re-render ward's secrets.
+
+### STALWART_ADMIN_PASSWORD
+- **Grants**: the password of Stalwart's administrator account on ward. It manages every account, domain, and setting.
+- **Used by**: the servers repo's `roles/stalwart` (the plan application and the bootstrap) and `roles/health` (queue and mailbox counts), rendered to root-only files on ward.
+- **Generated 2026-10-21** on pavilion (40 random alphanumerics), in the mail server pass (L3).
+- **Rotate**: store a new value and apply the Stalwart role again, which sets the account's password from the store.
+
+### STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2
+- **Grants**: the passwords of four Stalwart accounts on ward: Geoff's and the second operator's mailboxes, and the two rehearsal test accounts. The mailbox passwords let their holders read that mail.
+- **Used by**: the servers repo's `roles/stalwart` (the plan sets each account's password from the store) and the rehearsal scripts (`vandelay-run.sh`, L6's sends). The second operator's also goes into `Servers emergency` for him.
+- **Generated 2026-10-21** on pavilion (40 random alphanumerics), in the mail server pass (L3). Each is shared with its owner in Pass 6; until then only the rehearsal uses them.
+- **Rotate**: store a new value and apply the Stalwart role again.
+
 ### HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD
 - **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token writes only its own server's row. They replaced the media and mail keys, which the rename pass retired.
-- **Used by**: the monitor Worker (Worker secrets) and, rendered by the servers repo's `secrets/render.sh` as `HEARTBEAT_TOKEN`, that server's health timer only. Ward's waits for Pass 5.
+- **Used by**: the monitor Worker (Worker secrets) and, rendered by the servers repo's `secrets/render.sh` as `HEARTBEAT_TOKEN`, that server's health timer only. Ward's health timer reads it from L3 of the mail server pass.
 - **Generated 2026-10-20** on pavilion (32 random bytes, base64url), in the rename pass (R3).
 - **Rotate**: store a new value, redeploy the monitor, and re-render the server's secrets.
 
@@ -472,7 +500,9 @@ tmpfs cache; no password manager holds it for scripts.
 ### FASTMAIL_DAV_PASSWORD
 - **Grants**: Fastmail app password with mail, calendar, and contacts access (IMAP, SMTP,
   CalDAV, CardDAV)
-- **Used by**: vdirsyncer's CardDAV sync, through `fastmail-dav-password`
+- **Used by**: the servers repo's Fastmail reads (`scripts/vandelay-run.sh`, `scripts/imap-sweep.sh`,
+  `scripts/dry-run.sh`) until Fastmail closes; vdirsyncer and its `fastmail-dav-password` helper are
+  retired (2026-10-22)
 - **Rotate at**: Fastmail > Settings > Privacy & Security > App Passwords
 - **History**: minted 2026-10-13 and received on pavilion, replacing the loose
   `~/.config/fastmail/fastmail-dav-token.age` the helper read before. Revoke the old app
