@@ -127,10 +127,10 @@ scheme). Use an API or CLI first for external services; no dashboard unless the 
 
 Every skill, agent, MCP server, and plugin has one home and one manifest, reconciled by
 `claude-tooling-sync verify` (run by `check-drift`): layout in `~/.claude/docs/claude-tooling.md`,
-rules in the `claude-infra` skill; read both before adding any. Every cairn-family admin is DaisyUI:
-prefer a stock component over a home-grown one unless the rulings ledger records the defect that
-forced it (the official DaisyUI skill is the reference, the licensed Blueprint server the pre-cut
-audit; the admin design system wins over both on conflict).
+rules in the `claude-infra` skill; read both before adding any. Every cairn-family admin is DaisyUI,
+stock components first unless the rulings ledger records a defect (the DaisyUI skill the reference,
+Blueprint the pre-cut audit, the admin design system the winner on conflict). Every house tool's UI
+takes Survey, the house style (Geoff, 2026-10-21; workstation BACKLOG #28 defines it).
 
 ## cairn-family work
 
