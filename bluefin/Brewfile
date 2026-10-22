@@ -1,7 +1,7 @@
 # Homebrew formulae for the Bluefin DX CLI estate.
 # Curated from the CLI estate list in docs/MIGRATION-BRIEF.md.
 #
-# khard, vdirsyncer, and yt-dlp are Python tools: installed via `uv tool
+# yt-dlp and the other Python tools are: installed via `uv tool
 # install` in bootstrap.sh setup instead of Homebrew.
 #
 # npm globals decision: browser-sync, markdownlint-cli, prettier stay

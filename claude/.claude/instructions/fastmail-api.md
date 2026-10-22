@@ -19,7 +19,7 @@ All JMAP requests use Bearer token auth:
 Authorization: Bearer $FASTMAIL_API_TOKEN
 ```
 
-CardDAV/CalDAV uses Basic auth with the DAV app password (fetched via `fastmail-dav-password` helper script).
+CardDAV/CalDAV uses Basic auth with the DAV app password (`$FASTMAIL_DAV_PASSWORD` in `~/.local/secrets`).
 
 ## Available Capabilities
 
@@ -59,6 +59,5 @@ curl -s -X POST \
 
 - **poplar** terminal mail client (`~/Projects/poplar/`, installed at `~/.local/bin/poplar`)
   talks JMAP with `$FASTMAIL_API_TOKEN`
-- **vdirsyncer** syncs contacts via CardDAV to `~/.contacts/` (config stowed from the
-  `contacts` package)
-- **khard** terminal address book over the synced contacts
+- Contacts and calendars moved to ward on 2026-10-22; vdirsyncer and khard are retired, and
+  `~/.contacts/` is a frozen Fastmail-era snapshot

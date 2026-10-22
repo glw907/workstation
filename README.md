@@ -78,7 +78,7 @@ because they own their own install or update path:
 - **Standalone binaries** -- `harper-ls`, `marksman`, `perfspike`,
   `samfusdl`, `odin4`. Each ships as a single binary with no package manager
   of its own; they live in `~/.local/bin` without a tracked source.
-- **uv-tool shims** -- Python CLIs (`khard`, `vdirsyncer`, `yt-dlp`, `ruff`,
+- **uv-tool shims** -- Python CLIs (`yt-dlp`, `ruff`,
   `jrnl`, `beets`) installed via `uv tool install` land in `~/.local/bin` as shims.
   `bluefin/bootstrap.sh` installs the set; nothing in this repo tracks the
   shims themselves.

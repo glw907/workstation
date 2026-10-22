@@ -493,7 +493,9 @@ tmpfs cache; no password manager holds it for scripts.
 ### FASTMAIL_DAV_PASSWORD
 - **Grants**: Fastmail app password with mail, calendar, and contacts access (IMAP, SMTP,
   CalDAV, CardDAV)
-- **Used by**: vdirsyncer's CardDAV sync, through `fastmail-dav-password`
+- **Used by**: the servers repo's Fastmail reads (`scripts/vandelay-run.sh`, `scripts/imap-sweep.sh`,
+  `scripts/dry-run.sh`) until Fastmail closes; vdirsyncer and its `fastmail-dav-password` helper are
+  retired (2026-10-22)
 - **Rotate at**: Fastmail > Settings > Privacy & Security > App Passwords
 - **History**: minted 2026-10-13 and received on pavilion, replacing the loose
   `~/.config/fastmail/fastmail-dav-token.age` the helper read before. Revoke the old app
