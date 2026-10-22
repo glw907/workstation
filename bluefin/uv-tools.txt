@@ -3,8 +3,6 @@
 # check-drift reconciles `uv tool list` against it. A bracketed extras
 # suffix is part of the install spec; the tool name is the part before it.
 # Anything after the spec is passed to `uv tool install` as extra arguments.
-khard
-vdirsyncer
 yt-dlp
 ruff
 jrnl

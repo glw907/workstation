@@ -106,8 +106,6 @@
       "Bash(ssh -o BatchMode=yes geoff@ward.907.life sudo stalwart-jmap *)",
       "Bash(scripts/mail-test-ids.sh *)",
       "Bash(scripts/import-window.sh *)",
-      "Bash(systemctl --user stop vdirsyncer.timer)",
-      "Bash(systemctl --user disable vdirsyncer.timer)",
       "Bash(sqlite3 /var/home/glw907/.local/state/self-hosting/vandelay/geoff.sqlite \".backup /var/home/glw907/.local/state/self-hosting/archive-stage/geoff.sqlite\")",
       "Bash(sqlite3 /var/home/glw907/.local/state/self-hosting/archive-stage/geoff.sqlite \"PRAGMA integrity_check\")",
       "Bash(sqlite3 /var/home/glw907/.local/state/self-hosting/vandelay/operator2.sqlite \".backup /var/home/glw907/.local/state/self-hosting/archive-stage/operator2.sqlite\")",

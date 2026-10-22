@@ -4,8 +4,6 @@
 
 ## Medium
 
-- [ ] **#30** Retire vdirsyncer and khard now that contacts sync to ward `#improvement` `#workstation` `#initiative:self-hosting` *(2026-10-22)*
-  GNOME Contacts and Calendar read ward over a GOA WebDAV account since 2026-10-22, and `vdirsyncer.timer` is stopped and disabled. Remove the `contacts` stow package and its `stow-packages.txt` line; drop khard and vdirsyncer from `uv-tools.txt` and uninstall them; remove `bootstrap.sh`'s timer setup and its `.contacts`, `.vdirsyncer`, and khard paths; have `SECOND-WORKSTATION.md` add the ward GOA account instead; retire `fastmail-dav-password` and the `FASTMAIL_DAV_PASSWORD` registry entry once nothing else reads it (check poplar); drop the two `vdirsyncer.timer` allow rules in `settings.json`; update `bluefin-admin.md`, `fastmail-api.md`, the README, and the Brewfile comment. Keep `~/.contacts/` as the Fastmail-era snapshot. One short `ordinary` pass.
 
 - [ ] **#28** Create the Survey house style `#feature` `#workstation` *(2026-10-21)*
   Geoff ruled on 2026-10-21 that Survey is the house style for every house tool, beyond its role as a cairn theme, and that it is implemented differently by context: a cairn site, a SvelteKit and DaisyUI tool such as the approval queue or the phonebook, and a third-party app that takes only tokens and marks, such as Bulwark webmail (servers BACKLOG #13). Describe it once across those contexts. Its spec today (`cairn-themes/docs/specs/2026-10-07-survey-design.md`) covers only 907.life and the phonebook. Survey's core has never been committed to `cairn-themes`: the only copy is `approval-queue/src/lib/survey/`, whose header cites a commit, `dea9839`, that no branch holds. Pull the approval queue's reusable styling back into Survey first, as `cairn-themes` BACKLOG #1 (motion tokens) and #2 (focus ring, fields, key hints, toast, float shadow, frame, scrollbars) set out. Bulwark's theming waits for this. The rule's line is in `claude/.claude/CLAUDE.md`, under the DaisyUI-first rule.
@@ -98,3 +96,8 @@
 
 - [ ] **#29** tellgrader posthook tests fail in a worktree under /tmp `#bug` `#workstation` *(2026-10-22)*
   **Three `internal/posthook` tests fail when the dotfiles checkout sits under `/tmp`** (`TestRunFlagsChangedLineOnly`, `TestRunSkipsUngovernedPaths`, `TestWholeDocFindingsOnlyOnWrite` return no advisory), so the gate goes red in a scratchpad worktree while the same tests pass in `~/.dotfiles` and in `.claude/worktrees/`. The hook likely treats a `/tmp` path as ungoverned. Make the tests use a path independent of where the checkout lives.
+
+## Done
+
+- [x] **#30** Retire vdirsyncer and khard now that contacts sync to ward `#improvement` `#workstation` `#initiative:self-hosting` *(2026-10-22 → 2026-10-22)*
+  GNOME Contacts and Calendar read ward over a GOA WebDAV account since 2026-10-22, and `vdirsyncer.timer` is stopped and disabled. Remove the `contacts` stow package and its `stow-packages.txt` line; drop khard and vdirsyncer from `uv-tools.txt` and uninstall them; remove `bootstrap.sh`'s timer setup and its `.contacts`, `.vdirsyncer`, and khard paths; have `SECOND-WORKSTATION.md` add the ward GOA account instead; retire `fastmail-dav-password` and the `FASTMAIL_DAV_PASSWORD` registry entry once nothing else reads it (check poplar); drop the two `vdirsyncer.timer` allow rules in `settings.json`; update `bluefin-admin.md`, `fastmail-api.md`, the README, and the Brewfile comment. Keep `~/.contacts/` as the Fastmail-era snapshot. One short `ordinary` pass.
