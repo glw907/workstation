@@ -45,7 +45,10 @@ skill adds the procedure and never restates the register.
    clicks, or values to enter and the check that shows it done, so Geoff runs the sitting from
    the packet with nothing to look up (`pass-core`, "Lifecycle" step 4). The design's
    `## Brief` lists the plan's standing answers in a `### Standing answers` detail section, so
-   approving the design approves what the run will decide without him.
+   approving the design approves what the run will decide without him. Merging an approved PR
+   is always a `[session]` step, including a PR that changes permission rules, hooks, or
+   autoMode: the approve is the authorization, and a `[you]` step never sends Geoff to GitHub to
+   merge (Geoff, 2026-10-22).
 4. **Research each ask as completed staff work.** Read the files, PRs, review findings, and logs
    the decision turns on, and cite each fact's source (a path, a PR number, a commit). A question
    the facts settle becomes a routine row. An unchecked fact an ask depends on is checked, or the ask is raised as

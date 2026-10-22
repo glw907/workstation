@@ -1,11 +1,26 @@
 #!/usr/bin/env bash
 # PreToolUse guard: rpm-ostree install is allowed only for packages listed in
 # ~/.dotfiles/bluefin/layered-packages.txt. No-op on machines without rpm-ostree.
+# Only an rpm-ostree in command position counts: heredoc bodies that do not feed a shell are
+# dropped first, so prose about layering in a file being written never trips the guard.
 set -euo pipefail
 
 cmd=$(jq -r '.tool_input.command // empty' 2>/dev/null) || exit 0
 [[ "$cmd" == *rpm-ostree*install* ]] || exit 0
 command -v rpm-ostree >/dev/null 2>&1 || exit 0
+
+# Drop each heredoc body unless the line that opens it runs a shell (bash, sh, eval, source, ssh).
+cmd=$(awk '
+  delim != "" { if ($0 ~ "^[[:space:]]*" delim "[[:space:]]*$") delim = ""; next }
+  { print }
+  match($0, /(^|[^<])<<-?[[:space:]]*["'\'']?[A-Za-z_][A-Za-z0-9_]*/) {
+    opener = substr($0, 1, RSTART)
+    word = substr($0, RSTART, RLENGTH)
+    sub(/^[^<]?<<-?[[:space:]]*["'\'']?/, "", word)
+    if (opener !~ /(^|[[:space:];&|(])((ba|z|da|k)?sh|eval|source|ssh)([[:space:]]|$)/) delim = word
+  }
+' <<< "$cmd")
+grep -qE '(^|[;&|({!`]|\$\()[[:space:]]*(sudo([[:space:]]+-[^[:space:]]+)*[[:space:]]+)?rpm-ostree[[:space:]]' <<< "$cmd" || exit 0
 
 list="$HOME/.dotfiles/bluefin/layered-packages.txt"
 
@@ -31,12 +46,19 @@ allowed=$(grep -vE '^[[:space:]]*(#|$)' "$list" || true)
 # character in the command from expanding against the cwd. A chain separator
 # ends the install command's own arguments, so scanning stops there instead
 # of denying on the next command's words.
+seen_ostree=0
 seen_install=0
 unlisted=()
 set -f
 for word in $cmd; do
+  if [[ $seen_ostree -eq 0 ]]; then
+    [[ "$word" == "rpm-ostree" ]] && seen_ostree=1
+    continue
+  fi
   if [[ $seen_install -eq 0 ]]; then
-    [[ "$word" == "install" ]] && seen_install=1
+    # The install verb is rpm-ostree's first non-flag word; any other verb ends this match.
+    [[ "$word" == -* ]] && continue
+    if [[ "$word" == "install" ]]; then seen_install=1; else seen_ostree=0; fi
     continue
   fi
   case "$word" in
