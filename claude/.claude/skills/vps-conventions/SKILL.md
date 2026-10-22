@@ -1,6 +1,6 @@
 ---
 name: vps-conventions
-description: Use when writing or modifying systemd units (services, timers, path units), cloud-init user-data, provisioning or deploy scripts, or anything that places files, locks, or directories on a Linux VPS (AlmaLinux/RHEL-family). Also use when choosing where a lock file, temp file, or state file lives, or when a unit fails with mount-namespacing or missing-directory errors.
+description: Use when writing or modifying systemd units (services, timers, path units), cloud-init user-data, provisioning or deploy scripts, or anything that places files, locks, or directories on a Linux VPS (AlmaLinux/RHEL-family). Also use when choosing where a lock file, temp file, or state file lives, or when a unit fails with mount-namespacing or missing-directory errors. Also use when auto mode denies an ssh step to a server, or before adding an ssh allow rule.
 ---
 
 # VPS conventions
@@ -73,6 +73,22 @@ still listed in a manifest array aborts the whole deploy — manifest edits
 land in the same commit as the deletion. Stage remote files via `mktemp`,
 never fixed `/tmp` names. Pin and checksum anything piped to a root shell.
 
+## Risky remote steps under auto mode
+
+Auto mode ignores ssh allow rules, narrow prefixes included, so the classifier judges every
+`ssh` command on its own terms. The servers cutover's stub proof on 2026-10-22 showed it: with
+both `Bash(ssh -o BatchMode=yes geoff@ward.907.life *)` and a narrower `... sudo stalwart-jmap *`
+rule in place, `stalwart-jmap destroy` over ssh was still denied as Unverifiable Deletion Scope.
+Exact rules for repo scripts did run.
+
+A remote step the classifier won't clear, such as a deletion or a DNS change, goes in a
+reviewed script in the repo. The script takes its targets as arguments and prints them before
+it acts, so the transcript shows exactly what changes. It refuses anything ambiguous, such as a
+leading-dash id, a folder, or a pattern, and does one thing. Give it an exact
+`permissions.allow` rule per invocation shape, and land the script and its rule through review
+together. The servers repo's `scripts/ward-mail-delete.sh` and `scripts/mx-switch.sh` are the
+models.
+
 ## Gate
 
 `systemd-analyze verify` on every unit in the repo gate. A unit that cannot
@@ -89,3 +105,4 @@ its write targets — "argued statically" is acceptable, "assumed" is not.
 | "Add the package to cloud-init and the box has it" | Only the next box. Live boxes need remediation, same commit as the gate update. |
 | "`compose up -d` after an ipam change converges the stack" | It recreates the network but reattaches live containers WITHOUT their service aliases, so container-name DNS (`navidrome`) silently dies while static `extra_hosts` routes keep working. Follow any compose network change with `up -d --force-recreate`. (Born 2026-09-01: dubplate subnet pin 502'd Navidrome.) |
 | "It's a helper/template unit, hardening is for the main services" | Helpers run with the same privileges. Harden every unit. |
+| "An allow rule for `ssh host *` lets the session run that step unattended" | Auto mode ignores ssh allow rules, so the classifier still judges it. Wrap the step in a reviewed script with an exact rule. |
