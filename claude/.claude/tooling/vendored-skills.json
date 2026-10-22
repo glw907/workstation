@@ -20,11 +20,65 @@
       "installed": "2026-09-13",
       "_why": "Cobra command-tree conventions for the planned cairn Go tool; go-conventions stays mandatory beside it."
     },
-    "vale-ci": { "repo": "vale-cli/agent-tools", "path": "skills/ci", "rename": "vale-ci", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13", "note": "A repo here commits its Vale styles and pins Vale in CI, so do not run `vale sync` against a committed `styles/` directory or edit the CI pin; a fix lands on a pass branch, never a branch per file.", "_why": "Vale's official skills, vendored instead of the plugin because the plugin's edit hook duplicates the workstation vale-hook." },
-    "vale-fix": { "repo": "vale-cli/agent-tools", "path": "skills/fix", "rename": "vale-fix", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13", "description": "Run Vale and fix error-level alerts on the current pass branch. Use when the user says \"run vale\", \"fix vale errors\", \"lint the docs\", \"fix the linter\", or \"make vale pass\". Fixes errors only; leaves warnings and suggestions for a person.", "note": "A repo here commits its Vale styles and pins Vale in CI, so do not run `vale sync` against a committed `styles/` directory or edit the CI pin; a fix lands on a pass branch, never a branch per file." },
-    "vale-setup": { "repo": "vale-cli/agent-tools", "path": "skills/setup", "rename": "vale-setup", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13", "note": "A repo here commits its Vale styles and pins Vale in CI: commit the StylesPath directory instead of gitignoring it, run vale sync only to populate it before that commit, and never edit the CI pin; a fix lands on a pass branch, never a branch per file." },
-    "vale-triage": { "repo": "vale-cli/agent-tools", "path": "skills/triage", "rename": "vale-triage", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13" },
-    "vale-vocab": { "repo": "vale-cli/agent-tools", "path": "skills/vocab", "rename": "vale-vocab", "branch": "main", "commit": "5e8704f5c07a", "license": "MIT", "installed": "2026-09-13" },
+    "survey": {
+      "repo": "glw907/survey",
+      "path": "skills/survey",
+      "branch": "v1.1.0",
+      "commit": "80dcc76b78b2",
+      "license": "none",
+      "installed": "2026-10-22",
+      "_why": "The house style skill. Its writing/ directory is the source of the writing-voice output style, the voice registers, and the authoring charter, which link into it; edit them in the Survey repo only."
+    },
+    "vale-ci": {
+      "repo": "vale-cli/agent-tools",
+      "path": "skills/ci",
+      "rename": "vale-ci",
+      "branch": "main",
+      "commit": "5e8704f5c07a",
+      "license": "MIT",
+      "installed": "2026-09-13",
+      "note": "A repo here commits its Vale styles and pins Vale in CI, so do not run `vale sync` against a committed `styles/` directory or edit the CI pin; a fix lands on a pass branch, never a branch per file.",
+      "_why": "Vale's official skills, vendored instead of the plugin because the plugin's edit hook duplicates the workstation vale-hook."
+    },
+    "vale-fix": {
+      "repo": "vale-cli/agent-tools",
+      "path": "skills/fix",
+      "rename": "vale-fix",
+      "branch": "main",
+      "commit": "5e8704f5c07a",
+      "license": "MIT",
+      "installed": "2026-09-13",
+      "description": "Run Vale and fix error-level alerts on the current pass branch. Use when the user says \"run vale\", \"fix vale errors\", \"lint the docs\", \"fix the linter\", or \"make vale pass\". Fixes errors only; leaves warnings and suggestions for a person.",
+      "note": "A repo here commits its Vale styles and pins Vale in CI, so do not run `vale sync` against a committed `styles/` directory or edit the CI pin; a fix lands on a pass branch, never a branch per file."
+    },
+    "vale-setup": {
+      "repo": "vale-cli/agent-tools",
+      "path": "skills/setup",
+      "rename": "vale-setup",
+      "branch": "main",
+      "commit": "5e8704f5c07a",
+      "license": "MIT",
+      "installed": "2026-09-13",
+      "note": "A repo here commits its Vale styles and pins Vale in CI: commit the StylesPath directory instead of gitignoring it, run vale sync only to populate it before that commit, and never edit the CI pin; a fix lands on a pass branch, never a branch per file."
+    },
+    "vale-triage": {
+      "repo": "vale-cli/agent-tools",
+      "path": "skills/triage",
+      "rename": "vale-triage",
+      "branch": "main",
+      "commit": "5e8704f5c07a",
+      "license": "MIT",
+      "installed": "2026-09-13"
+    },
+    "vale-vocab": {
+      "repo": "vale-cli/agent-tools",
+      "path": "skills/vocab",
+      "rename": "vale-vocab",
+      "branch": "main",
+      "commit": "5e8704f5c07a",
+      "license": "MIT",
+      "installed": "2026-09-13"
+    },
     "vhs-cli-demos": {
       "repo": "gfargo/skills",
       "path": "plugins/terminal/skills/vhs-cli-demos",
@@ -36,7 +90,25 @@
       "note": "vhs is not installed on this workstation (bluefin/Brewfile has no vhs); install it through the dependency-upgrade skill before running any tape.",
       "_why": "Deterministic VHS tape authoring and gifsicle optimization for TUI screenshots and demo GIFs; vendored since the parent terminal plugin duplicates the already-installed tui-design skill."
     },
-    "brainstorming": { "repo": "obra/superpowers", "branch": "main", "commit": "bb92a7774141", "license": "MIT", "installed": "2026-10-19", "path": "skills/brainstorming", "_why": "Geoff's design-in-chat routine (10 runs in the 30 days to 2026-10-19), vendored so the superpowers plugin and its session-start hook can stay off.", "note": "On this workstation the design that brainstorming produces enters the pass process: Geoff approves it in chat or as a design part through approval-packet, and pass-core \"Lifecycle\" sets everything after it. Write the spec and plan where the repo's pass adapter (cairn-pass, site-pass, dotfiles-pass) or pass-core puts them, never under a path this skill names, and author the plan per pass-core \"Lifecycle\" step 4. The writing-plans skill is not installed; never invoke it.", "description": "Explore a design with Geoff before building it: one question at a time, two or three approaches with a recommendation, then the design for one approval. Use when new work's design is not settled yet (the design step of pass-core), or when Geoff asks to brainstorm or think something through." },
-    "receiving-code-review": { "repo": "obra/superpowers", "branch": "main", "commit": "bb92a7774141", "license": "MIT", "installed": "2026-10-19", "path": "skills/receiving-code-review", "_why": "How to weigh review findings before acting on them (38 runs in the 30 days to 2026-10-19), vendored so the superpowers plugin can stay off." }
+    "brainstorming": {
+      "repo": "obra/superpowers",
+      "branch": "main",
+      "commit": "bb92a7774141",
+      "license": "MIT",
+      "installed": "2026-10-19",
+      "path": "skills/brainstorming",
+      "_why": "Geoff's design-in-chat routine (10 runs in the 30 days to 2026-10-19), vendored so the superpowers plugin and its session-start hook can stay off.",
+      "note": "On this workstation the design that brainstorming produces enters the pass process: Geoff approves it in chat or as a design part through approval-packet, and pass-core \"Lifecycle\" sets everything after it. Write the spec and plan where the repo's pass adapter (cairn-pass, site-pass, dotfiles-pass) or pass-core puts them, never under a path this skill names, and author the plan per pass-core \"Lifecycle\" step 4. The writing-plans skill is not installed; never invoke it.",
+      "description": "Explore a design with Geoff before building it: one question at a time, two or three approaches with a recommendation, then the design for one approval. Use when new work's design is not settled yet (the design step of pass-core), or when Geoff asks to brainstorm or think something through."
+    },
+    "receiving-code-review": {
+      "repo": "obra/superpowers",
+      "branch": "main",
+      "commit": "bb92a7774141",
+      "license": "MIT",
+      "installed": "2026-10-19",
+      "path": "skills/receiving-code-review",
+      "_why": "How to weigh review findings before acting on them (38 runs in the 30 days to 2026-10-19), vendored so the superpowers plugin can stay off."
+    }
   }
 }
