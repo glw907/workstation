@@ -20,11 +20,12 @@
 # Only these first arguments run: item, vault, folder, password, totp, info, user. Under item,
 # only list, view, create, update, trash, untrash, and move run (item share, member, delete,
 # and the rest are refused); under vault, only list runs (vault share, transfer, member,
-# create, update, and delete are refused). Anything else (run, login, agent, ssh-agent, share,
-# invite, session, settings, update, ...) is refused before the token is read, since it could
+# create, update, and delete are refused); under folder, only list, create, update, and move
+# run (folder delete is refused). Anything else (run, login, agent, ssh-agent, share, invite,
+# export, session, settings, update, ...) is refused before the token is read, since it could
 # spawn a command, start a daemon, share a vault or item with another account, hand over a
 # vault, or act on Geoff's own login instead of the agent's. The folder, password, totp, and
-# user commands of pass-cli 2.4.2 carry no share, invite, transfer, or member subcommand.
+# user commands of pass-cli 2.5.1 carry no share, invite, transfer, or member subcommand.
 set -euo pipefail
 umask 077
 sess=""
@@ -48,6 +49,8 @@ case "$1 ${2:-}" in
     item\ *) die "subcommand '$1 ${2:-}' is not allowed (item allows: list view create update trash untrash move)" ;;
     "vault list") ;;
     vault\ *) die "subcommand '$1 ${2:-}' is not allowed (vault allows: list)" ;;
+    "folder list"|"folder create"|"folder update"|"folder move") ;;
+    folder\ *) die "subcommand '$1 ${2:-}' is not allowed (folder allows: list create update move)" ;;
 esac
 
 reason="${CLAUDE_PASS_REASON:-claude-pass on $HOST: ${1:-} ${2:-}}"

@@ -92,6 +92,12 @@ DENIED = [
     "claude-pass run -- env -u PROTON_PASS_SESSION_DIR pass-cli item list",
     "claude-pass run -- bash -c 'pass-cli vault list'",
     "claude-pass run pass-cli info",
+    # A heredoc that feeds a shell still runs its body.
+    "bash <<'EOF'\npass-cli info\nEOF",
+    "ssh geoff@ward.907.life <<EOF\npass-cli info\nEOF",
+    "cat > /tmp/x <<'EOF'\nnotes\nEOF\npass-cli info",
+    # An unescaped pipe is still a pipe.
+    "echo x | pass-cli info",
 ]
 
 ALLOWED = [
@@ -117,6 +123,12 @@ ALLOWED = [
     "CLAUDE_PASS_REASON='rotate a key' claude-pass item view pass://Workstation/x/password > /tmp/out",
     "bash tests/claude-pass.test.sh",
     "micro bin/.local/bin/claude-pass",
+    # False positives from real sessions (2026-10-19 to 2026-10-21).
+    "command -v pass-cli pass-count ws-pass-key secret-receive; ",
+    "grep -n -i 'never calls\\|pass-cli' ~/.claude/docs/bluefin-admin.md | head -8",
+    "grep -rn -i 'proton-pass-cli\\|pass-cli' ~/.dotfiles/bluefin/Brewfile* 2>/dev/null | head -3",
+    "cat > bin/.local/bin/claude-pass <<'EOF'\n#!/usr/bin/env bash\npass-cli \"$@\"\nEOF",
+    "python3 -I - <<'EOF'\nold='''Claude never runs `pass-cli`; the hook denies it.'''\n- pass-cli in command position\nEOF",
 ]
 
 

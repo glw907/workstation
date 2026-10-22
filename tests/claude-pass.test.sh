@@ -88,10 +88,11 @@ grep -q 'logout' "$root/pass.log" || { echo "FAIL: a failing command skipped the
 assert_eq "$(sessions_left)" "0" "a failing command leaves no session directory"
 
 # 4c. A subcommand off the allowlist is refused before the token is read: no lookup, no call.
-# Second-level checks: item and vault refuse sharing, transfer, membership, and deletion.
-for sub in run login agent ssh-agent share invite \
+# Second-level checks: item and vault refuse sharing, transfer, membership, and deletion, and
+# folder refuses deletion.
+for sub in run login agent ssh-agent share invite export \
     "vault share" "vault transfer" "vault member" "vault delete" "vault create" \
-    "item share" "item member" "item delete"; do
+    "item share" "item member" "item delete" "folder delete"; do
   reset; echo "$TOKEN" > "$root/token"
   read -ra words <<< "$sub"
   out=$(helper "${words[@]}" -- true </dev/null)

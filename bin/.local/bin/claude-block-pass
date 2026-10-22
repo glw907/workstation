@@ -24,9 +24,12 @@ limit would protect nothing. A mention inside a quoted argument (a commit messag
 is not a command and passes.
 
 This is a guardrail, not a boundary: Claude runs as the same UID, so an indirect call
-(PC=pass-cli; $PC info) or another interpreter gets past any regex. Known false positives:
-a line that starts with pass-cli inside a heredoc or multi-line message, and a plain grep for
-the session-directory names.
+(PC=pass-cli; $PC info) or another interpreter gets past any regex. A heredoc body is
+dropped unless the heredoc feeds a shell (bash, sh, eval, source, ssh), so a script written with
+`cat > file <<EOF` or a `python3 - <<EOF` edit may mention pass-cli. `command -v pass-cli` only
+looks the name up, and a backslash-escaped bar in a grep pattern is not a pipe. Known false positives: a
+line that starts with pass-cli inside a multi-line quoted message, and a plain grep for the
+session-directory names.
 """
 
 import json
@@ -46,7 +49,7 @@ DENY_REASON = (
 # A command starts at the line start or after a shell separator or keyword, behind variable
 # assignments and the wrappers that pass a command through (each with options that may take a
 # value, and timeout's duration). An absolute or $(...)-built path to the binary counts.
-SEP = r"(?:^|[;&|(`{!\n]|\$\()\s*(?:(?:if|then|else|elif|do|while|until)\s+)*"
+SEP = r"(?:^|(?<!\\)[;&|(`{!\n]|\$\()\s*(?:(?:if|then|else|elif|do|while|until)\s+)*"
 ASSIGN = r"(?:\w+=\S*\s+)*"
 OPTS = r"(?:-\S+\s+(?:[^-\s]\S*\s+)?)*"
 WRAP = (
@@ -64,6 +67,27 @@ PATTERNS = [
         r"|\.local/share/proton-pass|share/proton-pass-[*?c]"
     ),
 ]
+
+
+HEREDOC = re.compile(r"(?<!<)<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
+SHELL_FEED = re.compile(r"(?:^|[\s;&|(])(?:(?:ba|z|da|k)?sh|eval|source|ssh)(?:\s|$)")
+LOOKUP = re.compile(r"\bcommand\s+-[vV]\b")
+
+
+def strip_heredocs(cmd):
+    """Drop the body of each heredoc that does not feed a shell, so file text is not a command."""
+    kept = []
+    delimiter = None
+    for line in cmd.split("\n"):
+        if delimiter is not None:
+            if line.strip() == delimiter:
+                delimiter = None
+            continue
+        kept.append(line)
+        found = HEREDOC.search(line)
+        if found and not SHELL_FEED.search(line[: found.start()]):
+            delimiter = found.group(2)
+    return "\n".join(kept)
 
 
 def normalize(cmd):
@@ -88,7 +112,7 @@ def main():
     if data.get("tool_name") != "Bash":
         return 0
     cmd = (data.get("tool_input") or {}).get("command", "")
-    cmd = normalize(cmd)
+    cmd = normalize(LOOKUP.sub("type", strip_heredocs(cmd)))
     if not any(p.search(cmd) for p in PATTERNS):
         return 0
     print(json.dumps({
