@@ -82,3 +82,7 @@ a tool's NOTE before the next dispatch.
   commit the dotfiles.
 - A restart loads new servers; skills and agents load live. Restart at a session
   boundary, never mid-run (a Workflow run dies with its session).
+- An ssh allow rule helps only a don't-ask session. Auto mode ignores ssh rules, narrow
+  prefixes included, so an interactive session's ssh call still goes to the classifier
+  (stub proof, 2026-10-22). For a remote step it won't clear, follow `vps-conventions` "Risky
+  remote steps under auto mode": a reviewed repo script with an exact allow rule.
