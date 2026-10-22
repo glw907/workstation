@@ -50,7 +50,10 @@ skill adds the procedure and never restates the register.
    the decision turns on, and cite each fact's source (a path, a PR number, a commit). A question
    the facts settle becomes a routine row. An unchecked fact an ask depends on is checked, or the ask is raised as
    `low-confidence`; the register's third rule says why.
-5. **Write the layers, summary first.** Draft each closed state's sentence before its detail, per
+5. **Write the title and description, then the layers.** Once the asks are researched, write the
+   description that opens the file: a background paragraph, then one or two summary paragraphs
+   that let Geoff decide without opening anything below, per the register's fourth rule. The
+   title only names the thing. Then draft each closed state's sentence before its detail, per
    the register. The file grammar is in the design's "The packet file" and the register's `packet`
    exemplars; imitate an exemplar, and let step 6 validate the shape.
 6. **Check before sending.** Run `approval-queue packet --check <initiative> <file>`. It runs the

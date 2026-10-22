@@ -15,8 +15,10 @@ Group** supplies the page-level rules: writing for the web
 (<https://www.nngroup.com/articles/how-users-read-on-the-web/>,
 <https://www.nngroup.com/articles/concise-scannable-and-objective-how-to-write-for-the-web/>)
 and progressive disclosure
-(<https://www.nngroup.com/articles/progressive-disclosure/>). This register is the
-approval-brief arm of the authoring charter (`~/.claude/docs/authoring-charter.md`).
+(<https://www.nngroup.com/articles/progressive-disclosure/>). A packet's title follows the
+**Google developer documentation style guide** for headings
+(<https://developers.google.com/style/headings>): sentence case and no closing punctuation. This
+register is the approval-brief arm of the authoring charter (`~/.claude/docs/authoring-charter.md`).
 
 The `tellgrader` cadence measures are report-only and defined in
 `~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`.
@@ -36,18 +38,46 @@ one that only reports.
 3. **Not checked never hides a deciding fact.** When an ask turns on an unchecked fact, check it,
    or raise the ask as `low-confidence` and say why the fact is out of reach. `## Not checked`
    holds only what no ask depends on.
-4. **Background for every packet.** Two to four sentences place the packet in its initiative and
-   define any term a reader would not know. The first sentence stands alone as the closed row.
+4. **The description decides.** The title names the packet, and the description under it is
+   what Geoff decides from, about nine times in ten, without opening anything below it. It opens
+   with a background paragraph, then one or two summary paragraphs that say what is proposed,
+   what approving does, and how the work gets built or carried out. A summary of a sentence or
+   two is for a change that really is that simple.
 
-Aim for about 250 words from the headline through `## Not checked`, counted as whitespace-separated
+Aim for about 400 words from the title through `## Not checked`, counted as whitespace-separated
 tokens outside code fences. The command does not enforce it; the monthly review reports packets
 over it.
 
+### House departure: background before the summary
+
+The inverted pyramid puts the conclusion first. A packet's description puts its background
+paragraph first and the summary after it (Geoff, 2026-10-21). He reads the context first, so the
+summary lands, and the background is one short paragraph, so the decision still comes early. The
+departure covers the description only: every block below it keeps its summary first.
+
+### The title and the description
+
+The title is a Google-style heading: sentence case, no closing punctuation, and at most 80
+characters. It names the thing being decided, usually as a noun phrase ("Proton Pass
+folder-deletion fix"). It never narrates the packet ("This packet merges...") or says what
+approving causes; the summary carries both.
+
+The background paragraph places the packet in its initiative, says what came before and why it is
+in front of Geoff now, and gives a plain meaning for any term he would not know.
+
+The summary carries the decision. It says what each part changes, in words he would use, and
+what approving does, including anything that cannot be undone and anything he runs himself. It
+gives the shape of the plan, enough to judge whether the work is sensible without reading it.
+When an ask is open, it names the question and the session's recommendation. When the work
+has a known weak spot, such as a check that failed or a test that ran on samples only, it says
+so here.
+
 ## What the standards ask for
 
-- Lead with the conclusion. The headline says what the item does and what approving it causes,
-  in one sentence. The lede says why it matters now. Everything below is detail for a reader
-  who wants it (inverted pyramid).
+- Lead with the conclusion. In a packet, the description holds the conclusion, after the one
+  background paragraph the house departure above allows. On the older kinds, the headline says
+  what the item does and what approving it causes, in one sentence, and the lede says why it
+  matters now. Everything below is detail for a reader who wants it (inverted pyramid).
 - Write for the reader who will act. Use "you" for Geoff and the session's own name for
   itself. Say what happens to him or his machine, not what the code does (plain language:
   "address the reader directly", "write for your audience").
@@ -58,14 +88,14 @@ over it.
   A reader skims, so the first sentence of each detail has to stand alone (NN/g: concise,
   scannable text).
 - Disclose in layers. The brief shows the decision and its consequences. Reasoning, evidence,
-  commands, and identifiers sit one click down in a detail section, never in the headline
-  or the lede (NN/g: progressive disclosure).
+  commands, and identifiers sit one click down in a detail section, never in a title, a
+  headline, or a lede (NN/g: progressive disclosure).
 - Name a decision as a decision. A choice only Geoff can make goes in a `### Decide:` block
   with its options, not buried in a sentence. Mark the session's pick `(recommended)`.
 - Claim only what the diff and the session evidence. A check you did not run, or a motive the
   change does not show, misleads the one reader who trusts the brief.
-- Keep identifiers, paths, and flags in backticks and out of the headline and lede. They
-  belong in details.
+- Keep identifiers, paths, and flags in backticks and out of the title, headline, and lede. They
+  belong in details. A packet's summary may name a PR by number.
 
 ## The naming rule
 
@@ -79,11 +109,13 @@ The command `approval-queue packet <initiative> <file>` refuses a packet that br
 exits 2, and names the defect with this register's path. The parser is
 `~/Projects/approval-queue/approval-queue/src/lib/packet.ts`. The skeleton below shows every part.
 
-- `# <headline>` is one sentence: what the packet does and what approving causes. A lede paragraph
-  of one to three sentences follows.
-- The sections come in this order: `## Background`, `## If you approve`, `## Not checked`, then
-  zero to three `## Ask: <question>`, then an optional `## Routine`. No other `##` heading is
-  allowed outside a code fence.
+- `# <title>` is a heading of at most 80 characters with no closing punctuation. The
+  description follows it: a background paragraph, then one or two summary paragraphs, so two or
+  three paragraphs in all.
+- The sections come in this order: `## If you approve`, `## Not checked`, then zero to three
+  `## Ask: <question>`, then an optional `## Routine`. No other `##` heading is allowed outside a
+  code fence. A packet has no `## Background` section; its background is the description's first
+  paragraph.
 - A plan step is `N. [session] <text>` (the session runs it and can revert it),
   `[irreversible]` (it cannot be undone), or `[you: <label>]` (Geoff runs it; the label is the
   "You'll need to" line on the page).
@@ -113,13 +145,15 @@ fence below.
 The angle-bracket text is a slot.
 
 ````markdown
-# <One sentence: what this packet does and what approving causes.>
+# <A title that names what is being decided>
 
-<Why it matters now, in one to three sentences.>
+<The background: the initiative, where this packet sits, what came before, why it is here now,
+and a plain meaning for any term a reader would not know.>
 
-## Background
-<Two to four sentences: the initiative, where this packet sits, what came before, and a plain
-meaning for any term a reader would not know.>
+<The summary: what is proposed, what each part changes, what approving does, and the shape of the
+plan, with any open question and its recommendation.>
+
+<An optional second summary paragraph, when the first runs long.>
 
 ## If you approve
 1. [session] <A step the session runs that can be reverted.>
@@ -271,16 +305,19 @@ Source: <where the question came from>
 
 ### A packet with two asks (drafter link checker)
 
-The headline names the outcome, the first ask is bound to a PR and tagged, and the second is a
-call with no part. Each ask's `Summary:` carries the deciding fact, so the closed card decides.
+The title names the thing, and the two summary paragraphs carry the decision: what ships, what
+cannot be undone, the weak spot, and both open questions with the recommendation. The first ask
+is bound to a PR and tagged, and the second is a call with no part. Each ask's `Summary:` carries
+the deciding fact, so the closed card decides.
 
 ````packet
-# This packet ships the drafter link checker and publishes version 0.3.0, and approving merges both PRs.
+# Drafter link checker and version 0.3.0
 
-The publish cannot be undone, and one default is yours to set before it goes out.
+The drafter initiative gives the docs writer a tool that checks a page before a person reads it. This packet carries the link checker, the third of four stages. A package registry keeps every published version for good, so a release can be replaced but never removed.
 
-## Background
-The drafter initiative gives the docs writer a tool that checks a page before a person reads it. This packet carries the link checker, the third of four stages. A release tag is the label on a published version, and a package registry keeps every published version for good.
+The link checker reads every link on a docs page and reports each one that no longer resolves. It ships in two PRs: PR 51 adds the checker and publishes version 0.3.0, and PR 52 adds its changelog entry. Every check passes and the review verdict is accept. The checker has run only on the sample pages, where it found eleven broken links.
+
+Approving merges both PRs in order, and the merge of PR 51 publishes 0.3.0, which cannot be undone. Before it goes out, you choose whether a broken link warns or fails the build. The session recommends a warning first, so authors can clear the old links.
 
 ## If you approve
 1. [session] Merge glw907/drafter#51, then glw907/drafter#52.
@@ -333,16 +370,15 @@ Choices:
 
 ### A routine-only packet (drafter docs fixes)
 
-When the facts settle every part, the packet has no ask. The reader approves from the headline,
-the lede, and the table.
+When the facts settle every part, the packet has no ask. The change is simple, so one short
+summary paragraph is enough, and the reader approves from the description and the table.
 
 ````packet
-# This packet merges two drafter documentation fixes, and approving changes no behavior.
+# Drafter guide corrections
 
-Both PRs correct text only, and every check passes.
-
-## Background
 The drafter initiative keeps its own guide current as the tool grows. This packet carries small corrections found while the link checker was built. A changelog is the list of changes a release made.
+
+PR 53 fixes a three-word typo in the guide, and PR 54 adds a missing changelog line for the last release. Both change text only and every check passes. Approving merges them, and nothing about how drafter runs changes.
 
 ## If you approve
 1. [session] Merge glw907/drafter#53, then glw907/drafter#54.
@@ -364,12 +400,13 @@ A failing check is always an ask, and it names the PR. The evidence excerpt show
 itself, so the reader need not open the log.
 
 ````packet
-# This packet merges a drafter note template change that failed one check, and approving waives that check.
+# Drafter note template
 
-The failing check is a style rule on a generated file, and the choice is yours.
+The drafter initiative replaces hand-written release notes with generated ones. This packet carries the template the notes are built from. A gate is the set of checks and the review a PR must pass.
 
-## Background
-The drafter initiative replaces hand-written release notes with generated ones. This packet carries the template for the notes. A gate is the set of checks and the review a PR must pass.
+PR 61 adds the template and the notes file it generates, and PR 62 adds the template's tests. PR 62 passes its gate. PR 61 fails one lint check, on a long line in the generated file. The repo's style policy exempts generated files, but the check's config predates the policy.
+
+Approving merges both PRs in order. Merging PR 61 with the check red is your call, and the session recommends it because the failure sits only in the exempt file. A revert PR undoes either merge.
 
 ## If you approve
 1. [session] Merge glw907/drafter#61, then glw907/drafter#62.
@@ -575,6 +612,16 @@ The trailing `## What landed` stands for the technical notes that follow the bri
 stops at it.
 
 ## Off-voice contrast
+
+A packet title that carries the whole decision, over a description that only says why now.
+The title narrates the packet and what approving causes, and the summary that should hold both is
+missing.
+
+```markdown
+# This packet merges a fix that stops Claude deleting Proton Pass folders, and approving re-pins the upgraded Proton Pass CLI.
+
+The CLI on pavilion moved to 2.5.1 today. That version added folders, and Claude's wrapper let folder deletion through until this fix.
+```
 
 A headline and lede written the way the work felt to the author, not the way the decision
 looks to the reader: process narration, identifiers up front, and no consequence.
