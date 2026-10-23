@@ -58,6 +58,11 @@ leftovers".
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not
 done" go to `BACKLOG.md` through `log-issue`.
 
+thinkpad-x1 also owes Survey 1.2.0 (workstation #138, merged 2026-10-22): on its next session,
+pull `~/.dotfiles`, then run `stow -R claude`, `stow -R bin`, and `claude-tooling-sync apply`. The
+first wording correction there clones `glw907/survey-notes`; the monthly writing review runs on
+pavilion only.
+
 thinkpad-x1 still owes the Proton Pass move that pavilion finished on 2026-10-19. A session there
 follows `bluefin/THINKPAD-PROTON.md` with Geoff at the keyboard.
 Its step 3 now includes Claude's own agent, `thinkpad-claude`. Pavilion's `pavilion-claude` agent
