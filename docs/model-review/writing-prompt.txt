@@ -41,7 +41,8 @@ Steps, in order:
    review: last month's PRs still open" "<the PR URLs>"`, and end.
 
 2. Draft each sample into /var/home/glw907/Projects/survey-notes/monthly/<YYYY-MM>/<nn>-<kind>.md
-   (the run month; the file names are the sample names above). Run
+   (the run month; the file names are the sample names above). Store each draft unfenced, since
+   tellgrader skips fenced blocks and counts a fenced draft as 0 words. Run
    `vale --config /var/home/glw907/Projects/survey-notes/.vale.ini` and the sample's
    `tellgrader` on each. A sample that trips Vale or tellgrader's gate is a finding for the
    report, never a failure of the run.
