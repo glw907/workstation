@@ -28,7 +28,7 @@ A change that meets "Direct changes" skips this lifecycle.
    outcome, files and interfaces touched, what is out of scope, one end-to-end check, the risk
    class, and every pre-flight item it can foresee (step 4). A design brought for approval goes to Geoff as a design part in a packet, per `approval-packet`.
    An owner fork in the design is a `### Decide:` block in its brief. A design doc opens with `## Brief` after its title, per
-   `~/.claude/docs/voice/approval-brief.md`. The design names its initiative (a record in `~/Projects/initiatives`) or says none applies; cross-repo specs, plans, and research go in `initiatives/<id>/`, and the plan header carries an `Initiative: <id>` line. If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
+   `~/.claude/docs/voice/approval-brief.md`. The design names its initiative (a record in `~/Projects/initiatives`) or says none applies; cross-repo specs, plans, and research go in `initiatives/<id>/`, and the plan header carries an `Initiative: <id>` line. A design that adds a project, a service, or running infrastructure names where it runs and why, after weighing Cloudflare (Workers, D1, R2) against the Hetzner servers orpheus and ward: what fails together, what the host already carries, cost, and how backup and restore cover it. It never defaults to the host at hand (Geoff, 2026-10-22). If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
    carries
    these two samples, and extras go in "Later", never built:
    > "Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
