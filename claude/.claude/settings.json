@@ -12,6 +12,8 @@
       "Bash(chromium-shot:*)",
       "Bash(tellgrader:*)",
       "Bash(gh pr merge * --match-head-commit *)",
+      "Bash(git -C /var/home/glw907/Projects/survey-notes push)",
+      "Bash(git -C /var/home/glw907/Projects/survey-notes pull --rebase)",
       "WebSearch",
       "WebFetch",
       "Bash(git status *)",

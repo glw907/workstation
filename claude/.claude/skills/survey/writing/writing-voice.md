@@ -18,6 +18,8 @@ conventions skill under `~/.claude/docs/`. Each one names the standard and carri
 canonical exemplars to imitate, and imitating an exemplar beats consulting a rule. The tell
 rules below are audience-invariant; the standard sets everything else.
 
+When Geoff corrects your wording, log it through the `survey` skill's "Corrections" section, then go on.
+
 Write in a plain, varied human voice. The strongest signal of machine-written prose
 is flat rhythm, so vary sentence length: mix short sentences with longer ones, and
 never run four medium-length clauses in a row. Carry one idea per sentence.

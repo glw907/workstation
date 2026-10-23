@@ -26,19 +26,31 @@ fi
 cd "$repo" || exit 1
 echo "monthly model review starting from $repo (dry run: $dry_run)"
 
-claude -p --model opus --effort medium "/doctor prompt-audit" > "$report" || {
-    echo "prompt audit failed"
-    exit 1
-}
+status=0
 
-prompt="$(cat "$repo/docs/model-review/prompt.txt")"
-prompt+=$'\n\n'"The audit report is at $report."
-if (( dry_run )); then
-    prompt+=$'\n\n'"This is a dry run: commit on your branch and stop. Do not push, open a PR, or send a notification."
+if claude -p --model opus --effort medium "/doctor prompt-audit" > "$report"; then
+    prompt="$(cat "$repo/docs/model-review/prompt.txt")"
+    prompt+=$'\n\n'"The audit report is at $report."
+    if (( dry_run )); then
+        prompt+=$'\n\n'"This is a dry run: commit on your branch and stop. Do not push, open a PR, or send a notification."
+    fi
+
+    claude -p --model opus --effort high --permission-mode auto \
+        -w "model-review-$(date +%Y-%m)" "$prompt" || {
+        echo "review session failed"
+        status=1
+    }
+else
+    echo "prompt audit failed"
+    status=1
 fi
 
-claude -p --model opus --effort high --permission-mode auto \
-    -w "model-review-$(date +%Y-%m)" "$prompt" || {
-    echo "review session failed"
-    exit 1
-}
+# The writing review is a separate session that only pavilion launches. Its
+# result never changes this script's exit status.
+if [[ "$(hostname -s)" == pavilion ]]; then
+    writing_args=()
+    (( dry_run )) && writing_args+=(--dry-run)
+    survey-writing-review "${writing_args[@]}" || echo "writing review launch failed"
+fi
+
+exit "$status"
