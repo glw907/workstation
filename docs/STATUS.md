@@ -25,22 +25,9 @@ holds the fresh-machine provisioning artifacts. github.com/glw907/workstation.
 
 ## Conductor
 
-Conductor session `4bea6e68` closed the 2026-10-11 infrastructure initiative. Landed: dubplate
-alignment (#2, triage #3); cairn-cms alignment (#114, workstation #12, triage #115 and #14); the
-found-item triage rule (#11); the approval queue (#13, its UI pass #22 and triage #23, with Geoff's
-`autoMode.allow` rule in #15); infra sweep 2 (#16, triage #17, ecxc-ski #2, aksailingclub-org #13);
-the merge guard (#18, #20); the conductor lessons in `pass-core` (#21); and poplar's `pass-core`
-adapter (poplar #1). The rebuilt app serves #22's UI.
-
-Outside this initiative, each for its own session: `admin-api-1` runs on in dubplate (executor
-`6baa2add`, no merge pre-approval; then `claude rm 18bbe825`, a stopped launch sharing its
-worktree); poplar's development work in its ROADMAP (2c's re-plan, the Bubble Tea refactor, the gate
-and toolchain repairs); the cairn-cms ROADMAP restructure after docs stage 2b. The next conductor
-starts from the repos' ROADMAPs.
-
-Escape (conductor, 2026-10-11): merged #16 before its pre-merge settings cutover, so a pull
-dropped Geoff's live `model`, `effortLevel`, and `modelSettings`; restored by hand. The merge guard
-(#18) now blocks a merge whose PR has a `## Before merge` section until it is acknowledged.
+Conductor `4bea6e68` closed the 2026-10-11 infrastructure initiative; its PRs (#11 to #23) carry
+the record. Each later initiative runs its own `conductor-<project>`, and the next one starts from
+the repos' ROADMAPs and the initiative records.
 
 ## Drafter
 
