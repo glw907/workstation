@@ -111,7 +111,7 @@ write_local() {
         echo ""
         while IFS='=' read -r k v; do
             [[ -z "$k" || "$k" =~ ^# ]] && continue
-            echo "export ${k}=${v}"
+            printf 'export %s=%q\n' "$k" "$v"  # %q: one shell word, byte-exact on source
         done < "$dec"
     } > "$out"
     cp "$out" "$LOCAL_SECRETS"

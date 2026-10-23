@@ -238,7 +238,7 @@ push_local() {
         if [[ "$DRY_RUN" == true ]]; then
             echo "[dry-run]   $key=***"
         else
-            echo "export ${key}=${value}" >> "$out_file"
+            printf 'export %s=%q\n' "$key" "$value" >> "$out_file"  # %q: one shell word, byte-exact on source
         fi
         count=$((count + 1))
     done < "$DECRYPTED_FILE"
