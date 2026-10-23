@@ -63,6 +63,7 @@ run "vale style fixtures" bash tests/vale/run-fixtures.sh
 run "check-drift initiatives leg" bash tests/check-drift-initiatives.test.sh
 run "gather-dotfiles initiatives leg" bash tests/gather-dotfiles-initiatives.test.sh
 run "secret-set.sh path overrides" bash tests/secret-set-overrides.test.sh
+run "secret-set.sh value quoting" bash tests/secret-set-quoting.test.sh
 run "secret store flags, lock, and drop check" bash tests/secret-store-flags.test.sh
 run "ws-pass-key agent-token read" bash tests/ws-pass-key.test.sh
 run "claude-pass agent run" bash tests/claude-pass.test.sh

@@ -29,9 +29,10 @@ repeat=${MONITOR_REPEAT:-43200}
 state=${XDG_STATE_HOME:-$HOME/.local/state}/monitor-subscribe
 mkdir -p "$state"
 
-# Read a name from ~/.local/secrets without sourcing it.
+# Read a name from ~/.local/secrets. The file holds %q-quoted values, so a subshell sources it and
+# prints the one name, leaving the rest out of this shell.
 from_secrets() {
-  sed -n "s/^export $1=//p" "$HOME/.local/secrets" 2>/dev/null | tail -n1
+  (. "$HOME/.local/secrets" >/dev/null 2>&1 && printf '%s' "${!1:-}")
 }
 token=${MONITOR_READ_TOKEN:-$(from_secrets MONITOR_READ_TOKEN)}
 [ -n "$token" ] || {
