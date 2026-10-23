@@ -151,6 +151,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERA / _MEMBERB / _MEMBERC | ✓ | — | — | — | — |
 | RESTIC_PASSWORD_WARD | ✓ | — | — | — | — |
 | TUNNEL_TOKEN_WARD | ✓ | — | — | — | — |
+| BULWARK_SESSION_SECRET | ✓ | — | — | — | — |
 | STALWART_ADMIN_PASSWORD | ✓ | — | — | — | — |
 | STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2 | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
@@ -356,6 +357,12 @@ tmpfs cache; no password manager holds it for scripts.
 - **Used by**: the servers repo's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in the `Servers emergency` Proton Pass vault as "Bookmarks WebDAV: <name>", for Geoff to share with that member.
 - **Generated 2026-10-21** on pavilion (32 random bytes, base64url), in the bookmarks pass.
 - **Rotate**: store a new value, update the Proton Pass item, re-render orpheus's `/etc/webdav/<name>.env`, restart `webdav@<name>`, and paste the new value into the member's Floccus on each device (servers `docs/runbook.md`, "Bookmark sync").
+
+### BULWARK_SESSION_SECRET
+- **Grants**: the key that seals Bulwark's session cookies, including the encrypted mailbox password a remembered sign-in carries. It opens no account by itself, and a leak lets the holder forge or read a webmail session cookie.
+- **Used by**: the servers repo's `roles/bulwark`, rendered to `/etc/bulwark/session-secret` on orpheus (0400, uid 1001) and read through `SESSION_SECRET_FILE`.
+- **Generated 2026-10-22** on pavilion (48 random bytes, base64url), in the Bulwark pass (T1).
+- **Rotate**: store a new value, re-render orpheus's secrets, and restart `bulwark.service`. Every member signs in again. It needs no emergency copy.
 
 ### RESTIC_PASSWORD_ORPHEUS
 - **Grants**: the right to open the orpheus restic repository in `servers-backup-orpheus`. Losing it makes every orpheus backup unreadable. It replaced the media server's restic password, which the rename pass retired.
