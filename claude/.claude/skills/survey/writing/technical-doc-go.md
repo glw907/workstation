@@ -7,7 +7,7 @@ go-conventions skill (Go Doc Comments); this register covers prose at the docume
 
 The standard is the **Google Developer Documentation Style Guide**
 (https://developers.google.com/style). No Go repo selects the Vale Google package today: poplar
-and dubplate lint Go comments with the vendored `glw907` overlay (their `.vale.ini` scopes only
+and dubplate lint Go comments with the vendored `Survey` style (their `.vale.ini` scopes only
 `*.go`), and displaywidth carries no `.vale.ini`. Prose at the document level takes the Google
 guide by reading, and a repo that adds a `docs/**/*.md` glob selects the Google package there.
 The exemplar corpus is **Google's own developer documentation**.

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# survey-writing-review: launcher for the monthly Survey writing review. Starts
+# one unattended session from docs/model-review/writing-prompt.txt in its own
+# systemd scope, so it outlives the oneshot unit that called it.
+# --dry-run skips the pulls and tells the session to commit in survey-notes and stop.
+
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/home/linuxbrew/.linuxbrew/bin:/usr/bin:$PATH"
+
+dry_run=0
+[[ "${1:-}" == "--dry-run" ]] && dry_run=1
+
+repo=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../../.." && pwd)
+survey=$HOME/Projects/survey
+notes=$HOME/Projects/survey-notes
+
+if (( ! dry_run )); then
+    git -C "$survey" pull --ff-only || echo "survey pull refused; reviewing from local HEAD"
+    { git -C "$notes" pull --rebase && git -C "$notes" push; } || echo "survey-notes sync refused; going on"
+fi
+
+prompt="$(cat "$repo/docs/model-review/writing-prompt.txt")"
+if (( dry_run )); then
+    prompt+=$'\n\n'"Dry run: commit in survey-notes and stop. Do not push, open a PR, or send a packet."
+fi
+
+month=$(date +%Y-%m)
+cd "$survey" || exit 1
+systemd-run --user --scope --collect --unit="survey-writing-$month" \
+    claude --bg --model claude-opus-5-5 --effort medium \
+    --name "survey-writing-$month" "$prompt" || {
+    echo "survey writing review failed to launch"
+    exit 1
+}
