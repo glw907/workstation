@@ -26,6 +26,10 @@ skill adds the procedure and never restates the register.
    per executor PR. A design brought for approval is a design part in a packet. An executor whose
    conductor hands over sends nothing. An `ordinary` pass merges itself and sends nothing, and
    so does a direct change (`pass-core`, "Close" and "Direct changes").
+   Anything that needs Geoff's approval goes to the queue, never as a question in chat ("say merge
+   it", "OK to land?"). Chat approval counts only when Geoff gave it before being asked ("merge it",
+   "go ahead and land this"); a rule that calls his chat word enough means that case, never a
+   reason to ask in chat (Geoff, 2026-10-22).
 2. **Gather the parts and give each its canonical ref.** PR `<owner>/<repo>#<n>`, design
    `<owner>/<repo>:<path>`, plan step `step:<n>` of "If you approve". Each PR and design appears
    exactly once. The initiative is a record id in `~/Projects/initiatives`, or `none`.
