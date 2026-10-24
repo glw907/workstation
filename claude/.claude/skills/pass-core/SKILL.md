@@ -98,7 +98,7 @@ A change that meets "Direct changes" skips this lifecycle.
    that waits on Geoff for a step the list left out is a planning miss (2026-10-19: Pass 1's mail
    reader waited 40 minutes on a Proton Bridge sign-in that needed nothing the pass built).
 5. **Execute.** See "Execute".
-6. **Close.** See "Close". Geoff decides the packet in Design & PR Approvals, except that a pass whose highest
+6. **Close.** See "Close". Geoff decides the packet in the Approval Queue, except that a pass whose highest
    class is `ordinary` merges its own PR (see "Close").
 
 ## Direct changes
@@ -384,7 +384,7 @@ says "never merge" or "end" outright. An executor prompt under a conductor names
 A conductor prompt opens with one line naming the session `conductor-<project>`, then carries the
 executor's `claude` line and its prompt file; the plan path and each repo and checkout the pass
 touches; the merge order across its PRs, with any `## Before merge` steps known at plan time; the
-standing answers from the design; the `## Pre-flight` checks it runs before each launch; and what goes in its packet to Design & PR Approvals. It restates nothing this skill
+standing answers from the design; the `## Pre-flight` checks it runs before each launch; and what goes in its packet to the Approval Queue. It restates nothing this skill
 already says. Prompting Claude Opus 5
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
 the model "performs best when given the complete task specification up front and left to run".

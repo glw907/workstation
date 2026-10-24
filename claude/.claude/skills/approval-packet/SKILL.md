@@ -10,8 +10,8 @@ description: >
 
 # Approval packet
 
-A packet is one Markdown file that `approval-queue packet <initiative> <file>` queues in Design &
-PR Approvals. Design: `~/Projects/initiatives/approval-packets/specs/2026-10-14-approval-packets-design.md`
+A packet is one Markdown file that `approval-queue packet <initiative> <file>` queues in the
+Approval Queue. Design: `~/Projects/initiatives/approval-packets/specs/2026-10-14-approval-packets-design.md`
 ("Who decides what", "Parts", "The packet file", "The command"). Geoff rules on trade-offs; the
 gates rule on correctness, so a session certifies its work and cites the evidence for every claim.
 

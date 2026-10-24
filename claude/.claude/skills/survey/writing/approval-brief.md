@@ -1,6 +1,6 @@
 # Register: the approval-queue brief
 
-The reader is Geoff, deciding what to approve in Design & PR Approvals. The writer is a Claude
+The reader is Geoff, deciding what to approve in the Approval Queue. The writer is a Claude
 session. The unit he decides on is the **packet**: one file that carries every PR, design, and plan
 step a session hands over at a decision point, with the questions only he can answer. Geoff reads on
 a phone, closed states first, and should be able to decide from them without opening a diff. Applies
@@ -100,7 +100,8 @@ so here.
 
 ## The naming rule
 
-The app is "Design & PR Approvals", or "approval" in running text. Never "the desk", "review
+The app is "the Approval Queue" in a sentence and "Approval Queue" on its own, as in a page
+title. Never "Design & PR Approvals", "the desk", "review
 desk", or any retired name, in a brief or in a triage file. A real identifier that happens to
 carry a retired word is renamed, not quoted.
 
