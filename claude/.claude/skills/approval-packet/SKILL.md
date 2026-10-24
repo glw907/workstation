@@ -84,12 +84,16 @@ skill adds the procedure and never restates the register.
    takes no `## What changed`. When he set no part to send back, every part counts, so
    `## What changed` answers his note. The command refuses a revision without the section and
    the section on a packet that revises nothing. A single PR, design, or triage send-back has no
-   `calls` yet. A decision of `defer` means Geoff will decide later: the command prints
-   `{"decision":"defer","id":"<id>"}` and exits 0. Record the item id in your STATUS and end;
-   a later session runs `approval-queue collect <id>` and acts on what it prints. The same
-   `collect` picks up a decision on an item whose waiting session died (the board marks it "No
-   session is waiting for this."). A second `collect` prints the decision again and logs
-   nothing. Then pull the checkout as `pass-core` "Close" says.
+   `calls` yet. After an approve or a reject, pull the checkout as `pass-core` "Close" says.
+
+   A decision of `defer` means Geoff will decide later: the command prints
+   `{"decision":"defer","id":"<id>"}` and exits 0. Record the item id in your STATUS and end,
+   with no merge and no pull. A later session runs `approval-queue collect <id>` and acts on what
+   it prints. Run it under `setsid -f` and watch its output file, since `collect` waits while
+   the item is undecided, and a deferral does not end that wait. The same `collect` picks up a
+   decision on an item whose waiting session died (the board marks it "No session is waiting for
+   this."). A second `collect` prints the decision again and logs nothing. A deferred item still
+   counts as waiting, so a packet that resends its PRs is refused until you withdraw the item.
 
 ## Blueprints and pages
 
