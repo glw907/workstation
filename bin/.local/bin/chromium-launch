@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Start Chromium, forcing X11 on an NVIDIA GPU
+# Usage: chromium-launch [chromium args...]
+#
+# On Wayland with the NVIDIA driver, Chromium 151 and later draw Widevine
+# video (Netflix's encrypted AV1) as solid black while the pipeline reports
+# it playing. Running through XWayland avoids it. Chromium issues 551668260
+# and 548711898 track the regression; drop this wrapper once they close.
+#
+# The chromium-browser.desktop override (applications package) launches
+# through here. On a host without NVIDIA this adds nothing.
+
+# An X11 session already runs Chromium on X11, so only the GPU is checked.
+if [[ -e /proc/driver/nvidia/version ]]; then
+    exec /usr/bin/chromium-browser --ozone-platform=x11 "$@"
+fi
+exec /usr/bin/chromium-browser "$@"
