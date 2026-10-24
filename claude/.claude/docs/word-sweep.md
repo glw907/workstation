@@ -45,6 +45,6 @@ row by hand; the reading that fits the sentence decides the fix.
 
 ## Why both
 
-The sources slice of the second "own" sweep emptied `scripts/checks/gate-tier.mjs` (cairn-cms #55).
+The sources slice of the second "own" sweep emptied `scripts/checks/gate-tier.mjs` (cairn-cms backlog #55).
 The line-count check shows that at once. The same sweep left 14 dangling possessives, repaired after
 the merge in cairn-cms `3960d4913`. The possessive scan finds each one.
