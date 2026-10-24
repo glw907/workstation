@@ -126,17 +126,19 @@
       "Bash(hcloud * rebuild *)",
       "Bash(wrangler r2 bucket lock remove *)",
       "Bash(wrangler r2 bucket lock set *)",
-      "Bash(wrangler r2 bucket delete *)",
       "Bash(npx wrangler r2 bucket lock remove *)",
       "Bash(npx wrangler r2 bucket lock set *)",
-      "Bash(npx wrangler r2 bucket delete *)",
       "Bash(vandelay * --prune)",
       "Bash(vandelay * --prune *)",
       "Bash(imapsync)",
       "Bash(imapsync *)",
       "Bash(scripts/dry-run.sh)"
     ],
-    "defaultMode": "auto"
+    "defaultMode": "auto",
+    "ask": [
+      "Bash(wrangler r2 bucket delete *)",
+      "Bash(npx wrangler r2 bucket delete *)"
+    ]
   },
   "hooks": {
     "PreToolUse": [
