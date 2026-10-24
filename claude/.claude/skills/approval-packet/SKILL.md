@@ -66,7 +66,9 @@ skill adds the procedure and never restates the register.
 6. **Check before sending.** Run `approval-queue packet --check <initiative> <file>`. It runs the
    command's parser and refusals without queuing. Fix each defect it names, then rerun until it
    passes. Send with `approval-queue packet <initiative> <file>` as a background Bash command and
-   stay open until it exits with the decision as JSON.
+   stay open until it exits with the decision as JSON. To take back an item you queued, run
+   `approval-queue withdraw <id>` (the id is in the `queued` line), never kill the command. To
+   resend a deferred item, withdraw it first.
 7. **Act on the decision.** An approve is Geoff's merge authorization for the parts whose verdict
    is `approve`. Run "If you approve" in order. Merge each approved PR with `gh pr merge <n> -R
    <owner>/<repo> --merge --match-head-commit <head>`, taking `<head>` from the decision, and
@@ -76,10 +78,22 @@ skill adds the procedure and never restates the register.
    and send what remains as a new packet. A reject carries his note and `calls`: the verdict he
    left on each part and the choice he picked on each ask, as the screen held them when he sent it
    back. Fix forward from both, then resend a packet with `## What changed` that answers each
-   verdict he set to send back, each ask he answered, and each point of the note. The command marks a packet that resends a part he
-   sent back as a revision, and refuses it without the section (and refuses the section on a
-   packet that revises nothing). A single PR, design, or triage send-back has no `calls` yet.
-   Then pull the checkout as `pass-core` "Close" says.
+   verdict he set to send back, each ask he answered, and each point of the note. Only the parts
+   he set to send back make a resend a revision. A part he marked approve inside a rejected
+   packet comes back as a plain row, and a resend of only such parts is a fresh packet that
+   takes no `## What changed`. When he set no part to send back, every part counts, so
+   `## What changed` answers his note. The command refuses a revision without the section and
+   the section on a packet that revises nothing. A single PR, design, or triage send-back has no
+   `calls` yet. After an approve or a reject, pull the checkout as `pass-core` "Close" says.
+
+   A decision of `defer` means Geoff will decide later: the command prints
+   `{"decision":"defer","id":"<id>"}` and exits 0. Record the item id in your STATUS and end,
+   with no merge and no pull. A later session runs `approval-queue collect <id>` and acts on what
+   it prints. Run it under `setsid -f` and watch its output file, since `collect` waits while
+   the item is undecided, and a deferral does not end that wait. The same `collect` picks up a
+   decision on an item whose waiting session died (the board marks it "No session is waiting for
+   this."). A second `collect` prints the decision again and logs nothing. A deferred item still
+   counts as waiting, so a packet that resends its PRs is refused until you withdraw the item.
 
 ## Blueprints and pages
 
@@ -91,8 +105,12 @@ item: `approval-queue blueprint <worktree> <title> <file> --description <descrip
 two or three paragraphs, a background paragraph and then one or two on what the blueprint or page
 proposes, per the register's fourth rule. The title follows the packet title rule (sentence
 case, no closing punctuation, at most 80 characters), and the command refuses a missing
-`--description`. A resent blueprint or page shows "Revision N" on its own. Every queue prints its
-link on stderr as `approval-queue: queued <id> at <url>`.
+`--description`. A resent blueprint or page shows "Revision N" on its own. A blueprint or page
+queued again after Geoff approved it opens as an amend review: the screen shows the diff since
+the approved text, and the decision carries `amends: <blob>`. Its description says what changed
+since the approval. Every queue prints its link on stderr as `approval-queue: queued <id> at
+<url>`. A session's browser never opens the queue's `/claim`, which marks Geoff's browser as the
+one the queue opens new items in.
 
 When a code PR carries its own blueprint and page edits, queue one `approval-queue change
 <owner/repo#n> <title> --notes <notes.json>` review for the whole PR. One exception: an edit that adds or removes a
