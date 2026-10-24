@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Keep Chromium's Widevine module current
+# Usage: update-widevine [--force]
+#
+# Fedora's chromium package (layered) is built with Widevine support but
+# ships without Google's proprietary module, so DRM sites fail even with
+# "protected content" allowed. This script copies WidevineCdm out of
+# Google Chrome's stable RPM into the Chromium profile and writes the hint
+# file Chromium reads at startup to find it. A running Chromium picks up a
+# new version on its next launch.
+#
+# The weekly widevine-update.timer (the upkeep package) runs it. The RPM's
+# ETag is cached, so a run with no new Chrome release downloads nothing;
+# --force ignores the cache.
+
+RPM_URL="https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm"
+CDM_DIR="$HOME/.config/chromium/WidevineCdm"
+HINT="$CDM_DIR/latest-component-updated-widevine-cdm"
+STATE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/update-widevine"
+ETAG_FILE="$STATE_DIR/etag"
+
+force=false
+[[ "${1:-}" == "--force" ]] && force=true
+
+mkdir -p "$STATE_DIR" "$CDM_DIR"
+
+etag=$(curl -fsSI "$RPM_URL" | tr -d '\r' | awk 'tolower($1) == "etag:" {print $2}')
+if ! $force && [[ -n "$etag" && -f "$ETAG_FILE" && "$(cat "$ETAG_FILE")" == "$etag" && -f "$HINT" ]]; then
+    echo "Widevine: Chrome RPM unchanged ($etag), nothing to do"
+    exit 0
+fi
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+echo "Widevine: downloading Chrome stable RPM..."
+curl -fsSL -o "$work/chrome.rpm" "$RPM_URL"
+mkdir "$work/x"
+(cd "$work/x" && rpm2cpio "$work/chrome.rpm" | cpio -idm --quiet './opt/google/chrome/WidevineCdm/*')
+
+src="$work/x/opt/google/chrome/WidevineCdm"
+new=$(python3 -I -c 'import json, sys; print(json.load(open(sys.argv[1]))["version"])' "$src/manifest.json")
+[[ -f "$src/_platform_specific/linux_x64/libwidevinecdm.so" ]] || { echo "Widevine: libwidevinecdm.so missing from the RPM" >&2; exit 1; }
+
+current=""
+[[ -f "$HINT" ]] && current=$(basename "$(python3 -I -c 'import json, sys; print(json.load(open(sys.argv[1]))["Path"])' "$HINT")")
+
+if [[ -n "$current" && -d "$CDM_DIR/$current" ]] \
+    && [[ "$(printf '%s\n%s\n' "$current" "$new" | sort -V | tail -1)" == "$current" ]]; then
+    echo "Widevine: $current already installed (Chrome ships $new)"
+else
+    rm -rf "${CDM_DIR:?}/$new"
+    cp -a "$src" "$CDM_DIR/$new"
+    printf '{"Path":"%s"}\n' "$CDM_DIR/$new" > "$HINT.tmp"
+    mv "$HINT.tmp" "$HINT"
+    echo "Widevine: installed $new${current:+ (was $current)}; restart Chromium to load it"
+    current=$new
+fi
+
+# Prune versions other than the one the hint names.
+for d in "$CDM_DIR"/*/; do
+    [[ "$(basename "$d")" == "$current" ]] || rm -rf "$d"
+done
+
+if [[ -n "$etag" ]]; then
+    printf '%s\n' "$etag" > "$ETAG_FILE"
+fi
