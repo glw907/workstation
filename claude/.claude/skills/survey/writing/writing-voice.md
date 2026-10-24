@@ -63,6 +63,9 @@ Avoid these structural habits:
   approach", "the mechanism") where the concrete name was already available. Name the
   function, the file, or the flag instead. This is reported-only, from the 2026-09
   benchmark; no external standard is cited for this one.
+- The empty "own": a possessive plus "own" that adds nothing ("the plugin's own settings
+  page" says no more than "the plugin's settings page"). Cut it. Keep it where it marks a
+  real contrast, as in the role-names example under "Before / after".
 
 The marketing, slop, and filler words are tells everywhere, and the external standards
 all rule them out. Vale, with the Google package on developer docs and the Microsoft

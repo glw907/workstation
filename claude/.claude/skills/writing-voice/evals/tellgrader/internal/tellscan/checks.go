@@ -133,3 +133,22 @@ var checks = []check{
 		violates: func(Register) bool { return false },
 	},
 }
+
+// warningChecks flag constructions the scan cannot grade with certainty.
+// A hit lands in Report.Warnings, never in Counts or Findings, so it
+// moves neither the exit code nor the tell rate.
+var warningChecks = []check{
+	{
+		// A contrast keeps "own" legal ("declares its own roles, or uses
+		// the default"), and a pattern cannot tell, so this stays a warning.
+		name:     "empty-own",
+		patterns: res(`(?i)\b(?:'s|’s|its|their|our|your|his|her) own\b`),
+	},
+	{
+		// RE2 has no lookahead, so the pattern spells out the trailing
+		// character. Exactly one whitespace rejects a code span Scan has
+		// blanked, and the trailing character rejects "its in-flight".
+		name:     "dangling-possessive",
+		patterns: res(`(?i)\b(?:its|their)(?:[.,;:!?)]|\s(?:the|a|an|and|or|to|in|is|are|when|but)[ \t\n,.;:])`),
+	},
+}

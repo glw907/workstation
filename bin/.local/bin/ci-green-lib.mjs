@@ -6,7 +6,7 @@ import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, basename } from "node:path";
 
-export const EXIT = { green: 0, red: 1, missing: 2, unavailable: 3, pending: 75 };
+export const EXIT = { green: 0, red: 1, missing: 2, unavailable: 3, held: 4, pending: 75 };
 
 const MINUTE = 60_000;
 const MISSING_AFTER = 5 * MINUTE;
@@ -89,9 +89,10 @@ export function clockStart(pushedAtMs, runs) {
 
 /**
  * Classifies a SHA's workflow runs. Only run conclusions count, never raw check runs, so a job
- * skipped by its own `if:` inside a successful run is not red. Red wins, then a missing workflow
- * past 5 minutes, then pending (unavailable past 60 minutes), then a missing workflow inside the
- * 5 minutes, then green. Zero runs is never green.
+ * skipped by its own `if:` inside a successful run is not red. A run GitHub holds for approval
+ * (`action_required`) is held, and no rerun clears it. Red wins, then held, since waiting
+ * never releases it, then a missing workflow past 5 minutes, then pending (unavailable past 60
+ * minutes), then a missing workflow inside the 5 minutes, then green. Zero runs is never green.
  *
  * @param {object} input - The classifier input.
  * @param {Array<object>} input.runs - Workflow-run objects from the runs API.
@@ -100,23 +101,25 @@ export function clockStart(pushedAtMs, runs) {
  * @param {number} input.nowMs - The current time.
  * @param {number} input.clockStartMs - When the clocks started, see {@link clockStart}.
  * @param {string | null} [input.apiError] - Why the runs could not be read, if they could not.
- * @returns {{ state: string, exit: number, red: object[], pending: object[], missing: string[],
+ * @returns {{ state: string, exit: number, red: object[], held: object[], pending: object[], missing: string[],
  *   noRuns: boolean, rerunRuns: object[], reason: string | null }} The verdict.
  */
 export function classify({ runs, config, files, nowMs, clockStartMs, apiError = null }) {
   const noRuns = runs.length === 0;
   const verdict = (state, extra = {}) => ({
-    state, exit: EXIT[state], red: [], pending: [], missing: [], noRuns, rerunRuns: [], reason: null, ...extra,
+    state, exit: EXIT[state], red: [], held: [], pending: [], missing: [], noRuns, rerunRuns: [], reason: null, ...extra,
   });
   if (apiError) return verdict("unavailable", { reason: apiError });
   const elapsed = nowMs - clockStartMs;
   const done = runs.filter((r) => r.status === "completed");
-  const red = done.filter((r) => r.conclusion !== "success");
+  const held = done.filter((r) => r.conclusion === "action_required");
+  const red = done.filter((r) => r.conclusion !== "success" && r.conclusion !== "action_required");
   const pending = runs.filter((r) => r.status !== "completed");
   const present = new Set(runs.map((r) => r.path));
   const missing = requiredWorkflows(config, files).filter((p) => !present.has(p));
   const rerunRuns = runs.filter((r) => r.run_attempt > 1);
-  if (red.length) return verdict("red", { red, pending, missing, rerunRuns });
+  if (red.length) return verdict("red", { red, held, pending, missing, rerunRuns });
+  if (held.length) return verdict("held", { held, pending, missing, rerunRuns });
   if ((missing.length || noRuns) && elapsed >= MISSING_AFTER) return verdict("missing", { pending, missing, rerunRuns });
   if (pending.length) {
     if (elapsed >= UNAVAILABLE_AFTER) {
@@ -126,6 +129,19 @@ export function classify({ runs, config, files, nowMs, clockStartMs, apiError = 
   }
   if (missing.length || noRuns) return verdict("pending", { missing, rerunRuns });
   return verdict("green", { rerunRuns });
+}
+
+/**
+ * The lines that name each held run, its triggering actor, and the call that releases it.
+ *
+ * @param {Array<{ id: number, path: string, repository: { full_name: string }, triggering_actor: { login: string } }>} heldRuns - The held runs.
+ * @returns {string[]} Two lines per run.
+ */
+export function heldLines(heldRuns) {
+  return heldRuns.flatMap((run) => [
+    `held: ${basename(run.path)} waits for approval (run ${run.id}, triggered by ${run.triggering_actor.login})`,
+    `  release: gh api -X POST repos/${run.repository.full_name}/actions/runs/${run.id}/approve`,
+  ]);
 }
 
 /**
@@ -535,9 +551,13 @@ export function main(args, deps = realDeps()) {
           }, "unreadable");
           out(`  main's latest ${basename(run.path)} run: ${mainLatest}`);
         }
+        for (const line of heldLines(verdict.held)) out(line);
         if (plan.length && !wait) out(`ci-green: an infrastructure red; --wait would rerun once: ${plan.map((c) => c.join(" ")).join("; ")}`);
         return finish("red", `red ${short}`);
       }
+      case "held":
+        for (const line of heldLines(verdict.held)) out(line);
+        return finish("held", `held ${short}`);
       case "missing": {
         const note = missingNote(apiOr(`repos/{owner}/{repo}/pulls/${pr}`, null));
         out(verdict.noRuns && !verdict.missing.length ? "missing: no workflow run exists on the SHA" : `missing: no run for ${names(verdict.missing)}`);

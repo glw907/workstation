@@ -38,7 +38,9 @@ worktree's showcase off the main checkout's engine, and the sync writes the `$ap
 `check:public-skill` needs (`docs/internal/durable-gotchas.md`).
 
 **CI watch**: `ci-green <sha> --pr <n> --wait` as a background Bash task, re-issued on 75; exit 0
-is green, 1 red, 2 missing, 3 unavailable. The first push opens a draft PR, since cairn CI fires
+is green, 1 red, 2 missing, 3 unavailable, 4 held for approval: when the held run's triggering
+actor is the repo's own `github-actions[bot]`, run the approve command it prints and re-issue the
+watch; any other actor's held run stops the line for Geoff. The first push opens a draft PR, since cairn CI fires
 on `pull_request` and on push only to `main` and `rebuild`. No task waits for CI before the next; a
 red stops the line. Run it from the pass worktree so its CI line lands under the pass branch for
 `--records`. List every retried test from its output in the PR body: a retry that passed is flake
