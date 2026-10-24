@@ -90,7 +90,7 @@ export function clockStart(pushedAtMs, runs) {
 /**
  * Classifies a SHA's workflow runs. Only run conclusions count, never raw check runs, so a job
  * skipped by its own `if:` inside a successful run is not red. A run GitHub holds for approval
- * (`action_required`) is held, not red, and no rerun clears it. Red wins, then held, since waiting
+ * (`action_required`) is held, and no rerun clears it. Red wins, then held, since waiting
  * never releases it, then a missing workflow past 5 minutes, then pending (unavailable past 60
  * minutes), then a missing workflow inside the 5 minutes, then green. Zero runs is never green.
  *

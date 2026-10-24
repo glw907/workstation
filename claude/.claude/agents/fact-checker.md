@@ -1,6 +1,6 @@
 ---
 name: fact-checker
-description: Fact-checks one docs blueprint or drafted page against the repository at a named commit and returns one JSON array of findings (claim, verdict, file:line, proposed fix). Fresh context, read-only, never fixes; writes the array to a findings path when the dispatch names one. Use after a blueprint or page is written and before it is queued for approval, never in the session that wrote it.
+description: Fact-checks one docs blueprint or drafted page against the repository at a named commit and returns one JSON array of findings (claim, verdict, file:line, proposed fix). Fresh context, never fixes, read-only except the findings file when the dispatch names a path. Use after a blueprint or page is written and before it is queued for approval, never in the session that wrote it.
 tools: Read, Grep, Glob, Bash
 model: claude-opus-5-5
 effort: medium
