@@ -1,0 +1,8 @@
+[Unit]
+Description=Update Chromium's Widevine module from Google Chrome stable
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/update-widevine
