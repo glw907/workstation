@@ -146,6 +146,28 @@ check("the clock restarts at a rerun's start", () => {
   assert.equal(lib.clockStart(Date.parse("2026-10-09T21:00:00Z"), runsOf("runs-green-8483ca5b.json")), Date.parse("2026-10-09T21:00:00Z"));
 });
 
+// ---- held runs ----
+
+// A run waiting on approval, as GitHub reports it: completed, with the conclusion action_required.
+const heldRun = () => json("run-held-40079746768.json");
+const APPROVE = "gh api -X POST repos/glw907/cairn-cms/actions/runs/40079746768/approve";
+
+check("held: a run concluded action_required is held, not red, and plans no rerun", () => {
+  const run = heldRun();
+  const v = verdict({ runs: [run] });
+  assert.equal(v.exit, 4);
+  assert.equal(v.state, "held");
+  assert.deepEqual(v.red, []);
+  assert.deepEqual(lib.planReruns(v.red, {}), []);
+});
+
+check("held beside a red is red; beside pending or a missing workflow it is held", () => {
+  const runs = runsOf("runs-red-92325c02.json");
+  assert.equal(verdict({ runs: [heldRun(), ...runs] }).exit, 1);
+  assert.equal(verdict({ runs: [heldRun(), ...runsOf("runs-pending-148ff15a.json")] }).exit, 4);
+  assert.equal(verdict({ runs: [heldRun()], nowMs: T0 + 6 * MIN }).exit, 4);
+});
+
 // ---- the config at the SHA ----
 
 check("an absent or malformed ci-green.json is not ok", () => {
@@ -440,6 +462,44 @@ check("main prints an unrerunnable red's failing job, step, test, log tail and m
   assert.match(printed, /edit-save-failure\.spec\.ts:256:1/);
   assert.match(printed, /main's latest test\.yml run: success/);
 });
+
+const heldRoutes = (...extra) => ({
+  "actions/runs?head_sha": { total_count: 1 + extra.length, workflow_runs: [heldRun(), ...extra] },
+  "run view": "",
+  "workflows/test.yml/runs": json("runs-main-test.json"),
+  "/jobs": { jobs: [] },
+});
+
+check("main exits 4 on a held run, naming it, its actor, and the approve command", () => {
+  const h = harness({ configText: text("ci-green.json"), routes: heldRoutes(), args: ["5f402480", "--pr", "110"] });
+  assert.equal(h.run(), 4);
+  const printed = h.out.join("\n");
+  assert.match(printed, /held: tool-conditions\.yml .*github-actions\[bot\]/);
+  assert.ok(printed.includes(APPROVE), printed);
+});
+
+check("main prints the held lines beside a red and exits 1", () => {
+  const red = runsOf("runs-red-92325c02.json").find((r) => r.id === 37898484811);
+  const routes = { ...heldRoutes(red), [`actions/runs/${red.id}/jobs`]: json("jobs-red-test-37898484811.json") };
+  const h = harness({ configText: text("ci-green.json"), routes, args: ["92325c02", "--pr", "110"] });
+  assert.equal(h.run(), 1);
+  const printed = h.out.join("\n");
+  assert.match(printed, /red: test\.yml/);
+  assert.ok(printed.includes(APPROVE), printed);
+});
+
+check("main under --wait returns at once on a held run, never sleeps, and records held", () =>
+  withDir((dir) => {
+    const pendingRuns = runsOf("runs-pending-148ff15a.json");
+    const h = harness({ configText: text("ci-green.json"), routes: heldRoutes(pendingRuns[0]), args: ["5f402480", "--pr", "110", "--wait"] });
+    h.deps.env.CAIRN_GATE_RECORDS_DIR = dir;
+    assert.equal(h.run(), 4);
+    assert.deepEqual(h.sleeps, []);
+    const rec = JSON.parse(readFileSync(join(dir, "runs.jsonl"), "utf8").trim());
+    assert.equal(rec.kind, "ci");
+    assert.equal(rec.outcome, "held");
+  }),
+);
 
 check("main exits 3 when the API stays down", () => {
   const h = harness({ configText: text("ci-green.json"), routes: { "actions/runs?head_sha": new Error("HTTP 502") }, args: ["abc123", "--pr", "110"] });
