@@ -482,6 +482,19 @@ next setup.
 | Auto-mode trust and allow rules in the live `~/.claude/settings.json` (found 2026-10-17) | The classifier blocked cross-repo pushes, a worktree rebase onto main, and a merge Geoff had directed, and each fix needed his approval mid-task | The rules now ship in the tracked `settings.json` (workstation fbf3919 and #89). Run `claude-tooling-sync apply` after every pull, then check `claude auto-mode config` as Part 2 step 10 says |
 | A Playwright browser for cairn-cms (found 2026-10-14, drafter pass 5) | Two of cairn's fast-lane suites skipped locally; CI still ran them | Run `npx playwright install chromium` in `~/Projects/cairn-cms` after `npm ci` |
 
+## Changes to carry to thinkpad-x1
+
+Pavilion picked up these changes after setup. Each needs a step on thinkpad-x1, because a pull alone does not install, enable, or restart anything.
+
+On 2026-10-24, Netflix in Chromium needed two fixes. Fedora's `chromium` ships without Google's Widevine module, so `update-widevine` installs it from the Chrome stable RPM and a weekly timer keeps it current (workstation #144). On pavilion, Widevine video then played black under Wayland on the NVIDIA card, a Chromium 151+ regression. `chromium-launch` adds `--ozone-platform=x11` on NVIDIA only, so thinkpad-x1's Intel graphics stays on Wayland.
+
+1. Pull `~/.dotfiles`, then run `stow -R bin upkeep applications` and `claude-tooling-sync apply`.
+2. Run `rpm -q chromium` and confirm Fedora's package is installed. `update-widevine` assumes it.
+3. Run `update-widevine`, then `systemctl --user daemon-reload` and `systemctl --user enable --now widevine-update.timer`.
+4. Quit every Chromium window and start Chromium from the dock. `chrome://components` should list "Widevine Content Decryption Module" with a version.
+5. Play a Netflix title. If the picture is black with no sound, `chromium-launch`'s NVIDIA check is too narrow for this laptop: start a session with the `chrome://media-internals` log for the watch-page player.
+6. Run `check-drift` and expect it clean.
+
 ## After pavilion is up
 
 Delete the handoff bundle from R2. It holds a copy of the ASC age key.
