@@ -339,6 +339,8 @@ setup_upkeep_timer() {
     systemctl --user enable --now check-drift.timer
     systemctl --user enable --now model-review.timer
     systemctl --user enable --now decision-review.timer
+    # Fedora's chromium ships without Widevine; the weekly updater installs and refreshes it.
+    systemctl --user enable --now widevine-update.timer
     # Lingering keeps the user manager up with no login session, so user
     # timers fire after a logout or a reboot (Geoff, 2026-10-14).
     loginctl enable-linger "$USER" || sudo -A loginctl enable-linger "$USER"

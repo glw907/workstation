@@ -55,12 +55,14 @@
 
 ## Low
 
-- [ ] **#32** Have `ci-green` report `action_required` as held, not red `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-24)*
+- [x] **#32** Have `ci-green` report `action_required` as held, not red `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-24)*
   A run triggered by a bot-pushed commit (cairn-cms's baseline regen pushes as `github-actions[bot]`) sits in `action_required`, and `ci-green` reports it as red. Name it held and print the release command, `gh api -X POST repos/<owner>/<repo>/actions/runs/<id>/approve`. Moved from cairn-cms #52. Record B3-11.
-- [ ] **#31** Hold the fact-checker agent to its JSON array, or give it a notes field `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-22)*
+  Done: PR #146.
+- [x] **#31** Hold the fact-checker agent to its JSON array, or give it a notes field `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-22)*
   One of eight runs appended prose after the array, which broke a verbatim save of the findings. `claude/.claude/agents/fact-checker.md` (record 23).
   Record: `~/Projects/initiatives/docs-system/research/2026-10-22-extend-blueprints-pilot-friction.md`
   Batch 2: the agent hands back through `SubagentHandback`, so saving its array verbatim needs a transcript parser. Give the save a sanctioned path, or have the agent write its array to a named file (record 18).
+  Done: PR #146 (the agent writes its array to the path the dispatch names).
 - [ ] **#10** Two gate-tool cleanups `#improvement` `#workstation` *(2026-10-14)*
   **Two gate-tool cleanups**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11): simplify `cairn-docs-outline`'s lock and fix `gateMatches`' stale doc comment; and give `cairn-run-gate` per-leg timing in its run records.
 

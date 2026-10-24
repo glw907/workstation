@@ -59,6 +59,8 @@ Workers by `scripts/secrets/sync.sh`. Architecture, inventory, and rotation:
 | `scripts/check.sh` | The repo gate: shell syntax, ruff docstring rules, the test suite, vale fixtures, gitleaks |
 | `check-drift.timer` | Weekly systemd user timer (the `upkeep` package) running check-drift; desktop notification only when drift exists |
 | `decision-review.timer` | Monthly systemd user timer (the `upkeep` package) running `decision-review-notify`, which only raises a notification to start the approval-packet decision review |
+| `update-widevine` | Copy Google's Widevine module out of the Chrome stable RPM into Chromium's profile so DRM sites play; `widevine-update.timer` (the `upkeep` package) runs it weekly and skips the download when the RPM is unchanged |
+| `chromium-launch` | Start Chromium, adding `--ozone-platform=x11` on an NVIDIA GPU under Wayland so Netflix's DRM video isn't black (Chromium issues 551668260, 548711898). The `applications` package's `chromium-browser.desktop` launches through it |
 
 ## Repo status and history
 

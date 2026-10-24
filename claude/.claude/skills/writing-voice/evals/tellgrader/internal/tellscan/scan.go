@@ -94,6 +94,11 @@ type Report struct {
 	Findings          []Finding      `json:"findings"`
 	TellsPer1000Words float64        `json:"tells_per_1000_words"`
 
+	// Warnings holds constructions that may be tells but that the scan
+	// cannot grade with certainty. They stay out of Counts, Findings, the
+	// rate, and the exit code.
+	Warnings []Finding `json:"warnings"`
+
 	// Profile and Measures are present only when the docs-register
 	// profile applies to this scan; both are absent as a unit otherwise,
 	// which keeps a legitimate zero share from reading as omitted.
@@ -132,6 +137,7 @@ func Scan(input string, opts Options) *Report {
 		Register: opts.Register.String(),
 		Counts:   map[string]int{},
 		Findings: []Finding{},
+		Warnings: []Finding{},
 	}
 
 	for _, c := range checks {
@@ -145,6 +151,16 @@ func Scan(input string, opts Options) *Report {
 		}
 		for _, m := range matches {
 			r.Findings = append(r.Findings, Finding{
+				Check:   c.name,
+				Line:    lineOf(prose, m),
+				Excerpt: excerpt(prose, m),
+			})
+		}
+	}
+
+	for _, c := range warningChecks {
+		for _, m := range c.find(prose) {
+			r.Warnings = append(r.Warnings, Finding{
 				Check:   c.name,
 				Line:    lineOf(prose, m),
 				Excerpt: excerpt(prose, m),

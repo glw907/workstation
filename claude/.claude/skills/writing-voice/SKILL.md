@@ -104,4 +104,5 @@ commit message, and the site's own voice in site content. Overuse is a tell in a
   rules) and runs on save via its `--hook` mode alongside `vale-hook`. The `prose-voice-reviewer`
   agent runs it as the deterministic floor before spending judgment.
 - The `writing-voice` output style: the always-on audience-invariant core.
+- `~/.claude/docs/word-sweep.md`: the method and the two pre-gate checks for a scripted word sweep.
 - This skill: the router and the shape rules.

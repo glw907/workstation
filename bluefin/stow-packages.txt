@@ -1,6 +1,9 @@
 # Stow packages this repo manages, one per line. Single source of truth for
 # bootstrap.sh's STOW_PACKAGES array and check-drift's package probe; both
 # read this file instead of carrying their own hardcoded list.
+# applications: user .desktop overrides; chromium-browser.desktop routes launches through
+# chromium-launch (bin), which forces X11 on NVIDIA for Widevine video.
+applications
 bash
 beets
 bin
