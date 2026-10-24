@@ -112,10 +112,17 @@ exits 2, and names the defect with this register's path. The parser is
 - `# <title>` is a heading of at most 80 characters with no closing punctuation. The
   description follows it: a background paragraph, then one or two summary paragraphs, so two or
   three paragraphs in all.
-- The sections come in this order: `## If you approve`, `## Not checked`, then zero to three
-  `## Ask: <question>`, then an optional `## Routine`. No other `##` heading is allowed outside a
-  code fence. A packet has no `## Background` section; its background is the description's first
-  paragraph.
+- The sections come in this order: `## What changed` (a revision only), `## If you approve`,
+  `## Not checked`, then zero to three `## Ask: <question>`, then an optional `## Routine`. No
+  other `##` heading is allowed outside a code fence. A packet has no `## Background` section; its
+  background is the description's first paragraph.
+- A packet is a revision when it resends a PR or design that Geoff sent back. The command reads the
+  decision log, marks the packet as "Revision N", and refuses it without `## What changed`. It
+  refuses the section on a packet that revises nothing. The section is a bulleted list of at least
+  one bullet and nothing else. Each bullet answers one call Geoff made on the earlier packet (a
+  verdict he set to send back, or an ask he answered) or one point of his note, and says what
+  the session did about it. The page shows his earlier note above the bullets, so a bullet does
+  not repeat it.
 - A plan step is `N. [session] <text>` (the session runs it and can revert it),
   `[irreversible]` (it cannot be undone), or `[you: <label>]` (Geoff runs it; the label is the
   "You'll need to" line on the page).
@@ -154,6 +161,9 @@ and a plain meaning for any term a reader would not know.>
 plan, with any open question and its recommendation.>
 
 <An optional second summary paragraph, when the first runs long.>
+
+## What changed
+- <A revision only: what the session did about one call or point of the note.>
 
 ## If you approve
 1. [session] <A step the session runs that can be reverted.>
@@ -254,8 +264,8 @@ Each exemplar is a fenced block. A block whose info string is `brief` is a Markd
 whose info string is `brief-triage` is a triage file, and a block whose info string is `packet` is
 a packet in a four-backtick fence; the approval-queue tests extract all three, close each at a
 fence of the opening width, and run the parser over them, so each one must satisfy its contract
-exactly. The three packet exemplars show a packet with two asks, a routine-only packet, and a
-packet with a `gate-failed` ask. A block
+exactly. The four packet exemplars show a packet with two asks, a routine-only packet, a
+packet with a `gate-failed` ask, and a revision. A block
 tagged plain `markdown` is a counter-example or a skeleton and is never parsed.
 
 ### The brief skeleton
@@ -441,6 +451,37 @@ notes.generated.ts:12:1  error  line too long (max-len)
 | Part | Verdict | Fact | Why |
 |---|---|---|---|
 | glw907/drafter#62 | approve | All checks pass and the review verdict is accept. | Nothing in it needs a call. |
+| step:1 | session | A merge can be reverted. | The order is fixed by the plan. |
+````
+
+### A revision (drafter note template, resent)
+
+A packet that resends a part Geoff sent back carries `## What changed`. Each bullet answers one
+call or one point of his note, in the order he made them. The page puts his note above the
+bullets, so the bullets say what the session did and never quote him.
+
+````packet
+# Drafter note template, revised
+
+The drafter initiative replaces hand-written release notes with generated ones. You sent the first packet back on PR 61, which adds the note template. You held it because the lint check still scanned the generated file, and you asked for the check's config to change instead of merging past the red.
+
+The session fixed the check, so PR 61 now passes its gate and the revised packet has no ask. PR 62, which adds the template's tests, is unchanged and still passes. Approving merges both PRs in order, and a revert PR undoes either merge.
+
+## What changed
+- You set PR 61 to send back: the lint config now skips generated files, so the check passes.
+- You asked for a test of the skip: PR 62 gains a case that lints a generated file and expects no error.
+
+## If you approve
+1. [session] Merge glw907/drafter#61, then glw907/drafter#62.
+
+## Not checked
+The generated notes were not read on the live project page.
+
+## Routine
+| Part | Verdict | Fact | Why |
+|---|---|---|---|
+| glw907/drafter#61 | approve | The lint check passes after the config change. | The failure you sent it back for is gone. |
+| glw907/drafter#62 | approve | All checks pass and the new test covers the skip. | Nothing in it needs a call. |
 | step:1 | session | A merge can be reverted. | The order is fixed by the plan. |
 ````
 

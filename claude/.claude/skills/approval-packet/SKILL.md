@@ -73,16 +73,26 @@ skill adds the procedure and never restates the register.
    prefix the command `PREMERGE_DONE=<n>` after running that PR's `## Before merge` steps. Skip a
    step whose part is not approved and a step set to `you` or `skip`. Stop at the first failure and
    run nothing after it, including any `[irreversible]` step. Report what you did with each part
-   and send what remains as a new packet. A reject carries a note: fix forward from it. Then pull
-   the checkout as `pass-core` "Close" says.
+   and send what remains as a new packet. A reject carries his note and `calls`: the verdict he
+   left on each part and the choice he picked on each ask, as the screen held them when he sent it
+   back. Fix forward from both, then resend a packet with `## What changed` that answers each
+   call he changed and each point of the note. The command marks a packet that resends a part he
+   sent back as a revision, and refuses it without the section (and refuses the section on a
+   packet that revises nothing). A single PR, design, or triage send-back has no `calls` yet.
+   Then pull the checkout as `pass-core` "Close" says.
 
 ## Blueprints and pages
 
 A docs blueprint and a drafted page are never packet parts, because Geoff reads and edits the
 document itself, with the fact-check notes under the lines they concern. Each is its own queue
-item: `approval-queue blueprint <worktree> <title> <file> --notes <notes.json>` before the draft,
-and `approval-queue page <worktree> <title> <file> --pr <owner/repo#n> --notes <notes.json>` after
-it.
+item: `approval-queue blueprint <worktree> <title> <file> --description <description.md> --notes
+<notes.json>` before the draft, and `approval-queue page <worktree> <title> <file> --description
+<description.md> --pr <owner/repo#n> --notes <notes.json>` after it. The description file holds
+two or three paragraphs, a background paragraph and then one or two on what the blueprint or page
+proposes, per the register's fourth rule. The title follows the packet title rule (sentence
+case, no closing punctuation, at most 80 characters), and the command refuses a missing
+`--description`. A resent blueprint or page shows "Revision N" on its own. Every queue prints its
+link on stderr as `approval-queue: queued <id> at <url>`.
 
 When a code PR carries its own blueprint and page edits, queue one `approval-queue change
 <owner/repo#n> <title> --notes <notes.json>` review for the whole PR. One exception: an edit that adds or removes a
