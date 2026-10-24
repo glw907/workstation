@@ -34,7 +34,8 @@ one that only reports.
 2. **Completed staff work.** An ask arrives researched. Read the files, PRs, review findings, and
    logs the decision turns on, and cite each fact's source. A question the facts settle is a
    routine part, not an ask. A PR Geoff held before comes back as an ask under
-   `contradicts-ruling`, never as a routine row.
+   `contradicts-ruling`, never as a routine row. A PR he sent back and the session fixed
+   returns as a revision, which may be a routine row.
 3. **Not checked never hides a deciding fact.** When an ask turns on an unchecked fact, check it,
    or raise the ask as `low-confidence` and say why the fact is out of reach. `## Not checked`
    holds only what no ask depends on.
@@ -463,9 +464,9 @@ bullets, so the bullets say what the session did and never quote him.
 ````packet
 # Drafter note template, revised
 
-The drafter initiative replaces hand-written release notes with generated ones. You sent the first packet back on PR 61, which adds the note template. You held it because the lint check still scanned the generated file, and you asked for the check's config to change instead of merging past the red.
+The drafter initiative replaces hand-written release notes with generated ones. You sent the first packet back on PR 61, which adds the note template. You sent it back because the lint check still scanned the generated file, and you asked for the check's config to change instead of merging past the red.
 
-The session fixed the check, so PR 61 now passes its gate and the revised packet has no ask. PR 62, which adds the template's tests, is unchanged and still passes. Approving merges both PRs in order, and a revert PR undoes either merge.
+The session fixed the check, so PR 61 now passes its gate and the revised packet has no ask. PR 62, which adds the template's tests, gains a test of the skip and passes. Approving merges both PRs in order, and a revert PR undoes either merge.
 
 ## What changed
 - You set PR 61 to send back: the lint config now skips generated files, so the check passes.

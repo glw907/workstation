@@ -76,7 +76,7 @@ skill adds the procedure and never restates the register.
    and send what remains as a new packet. A reject carries his note and `calls`: the verdict he
    left on each part and the choice he picked on each ask, as the screen held them when he sent it
    back. Fix forward from both, then resend a packet with `## What changed` that answers each
-   call he changed and each point of the note. The command marks a packet that resends a part he
+   verdict he set to send back, each ask he answered, and each point of the note. The command marks a packet that resends a part he
    sent back as a revision, and refuses it without the section (and refuses the section on a
    packet that revises nothing). A single PR, design, or triage send-back has no `calls` yet.
    Then pull the checkout as `pass-core` "Close" says.
