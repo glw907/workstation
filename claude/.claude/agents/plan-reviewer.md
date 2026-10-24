@@ -69,6 +69,14 @@ On a plan, also check these items:
   whose cause is already traced and recorded is skipped, not spent on (acceptance, 2026-10-20:
   standing answer 6 kept the cap and fault reruns after six of seven pages escalated, and Geoff
   ruled them skipped mid-run).
+- Every gate leg that reads state outside the worktree (a live log, a shared lock, a server
+  another session uses) names what other sessions can change there mid-run and the rerun rule
+  for that one failure (send-back revisions, 2026-10-24: `tests/packet.test.sh` failed three times
+  on the live `decisions.jsonl` growing during the gate).
+- Every browser step names how long it waits for its action to take effect, including a client
+  that holds the action for an Undo window before posting it (send-back revisions, 2026-10-24: a
+  send-back posts about 20 seconds after the click, so a script that closes at once records
+  nothing).
 
 ## Findings
 
