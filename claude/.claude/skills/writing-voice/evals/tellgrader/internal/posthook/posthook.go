@@ -88,8 +88,8 @@ func Run(raw []byte) string {
 	}
 	text := string(saved)
 	report := tellscan.Scan(text, scanOptions(reg, path))
-	findings := keptFindings(report, text, &in)
-	if len(findings) == 0 {
+	findings, warnings := keptFindings(report, text, &in)
+	if len(findings) == 0 && len(warnings) == 0 {
 		return ""
 	}
 	var b strings.Builder
@@ -97,6 +97,12 @@ func Run(raw []byte) string {
 		reg, len(findings), path)
 	for _, f := range findings {
 		fmt.Fprintf(&b, "line %d [%s]: %s\n", f.Line, f.Check, f.Excerpt)
+	}
+	if len(warnings) > 0 {
+		fmt.Fprintf(&b, "%d warning(s), constructions that may be tells:\n", len(warnings))
+	}
+	for _, f := range warnings {
+		fmt.Fprintf(&b, "line %d [warning %s]: %s\n", f.Line, f.Check, f.Excerpt)
 	}
 	out, err := json.Marshal(map[string]any{"hookSpecificOutput": map[string]any{
 		"hookEventName":     "PostToolUse",
@@ -115,10 +121,10 @@ var wholeDocChecks = map[string]bool{"flat-cadence": true, "bold-lead-bullets": 
 // keptFindings scopes the report to the lines the tool call changed, so
 // an edit does not resurface every historical finding in a large file.
 // Whole-document findings (cadence, bullet shape) survive only on a
-// Write, where the model authored the full file.
-func keptFindings(r *tellscan.Report, saved string, in *hookInput) []tellscan.Finding {
+// Write, where the model authored the full file. Warnings are scoped to
+// the changed lines the same way.
+func keptFindings(r *tellscan.Report, saved string, in *hookInput) (kept, warnings []tellscan.Finding) {
 	changed := changedLines(saved, newText(in))
-	var kept []tellscan.Finding
 	for _, f := range r.Findings {
 		if wholeDocChecks[f.Check] {
 			if in.ToolName == "Write" {
@@ -130,7 +136,12 @@ func keptFindings(r *tellscan.Report, saved string, in *hookInput) []tellscan.Fi
 			kept = append(kept, f)
 		}
 	}
-	return kept
+	for _, f := range r.Warnings {
+		if changed == nil || changed[f.Line] {
+			warnings = append(warnings, f)
+		}
+	}
+	return kept, warnings
 }
 
 func newText(in *hookInput) string {

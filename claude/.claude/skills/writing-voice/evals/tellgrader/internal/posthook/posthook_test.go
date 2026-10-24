@@ -143,3 +143,19 @@ func TestWholeDocFindingsOnlyOnWrite(t *testing.T) {
 		t.Errorf("Edit advisory = %q, want whole-doc finding suppressed on Edit", out)
 	}
 }
+
+func TestRunWarnsOnChangedLineOnly(t *testing.T) {
+	body := "The chip has no minimum of its, so tables budget.\n\nThe site sets its own roles.\n"
+	path := writeDoc(t, "warn.md", body)
+	out := Run(event(t, "Edit", path, "The site sets its own roles.", ""))
+	if !strings.Contains(out, "warning empty-own") {
+		t.Errorf("Run() = %q, want an empty-own warning on the edited line", out)
+	}
+	if strings.Contains(out, "dangling-possessive") {
+		t.Errorf("Run() = %q, want no warning for the unchanged dangling line", out)
+	}
+	out = Run(event(t, "Edit", path, "The chip has no minimum of its, so tables budget.", ""))
+	if !strings.Contains(out, "warning dangling-possessive") || strings.Contains(out, "empty-own") {
+		t.Errorf("Run() = %q, want only the dangling-possessive warning", out)
+	}
+}
