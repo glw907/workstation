@@ -58,6 +58,7 @@
 - [ ] **#31** Hold the fact-checker agent to its JSON array, or give it a notes field `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-22)*
   One of eight runs appended prose after the array, which broke a verbatim save of the findings. `claude/.claude/agents/fact-checker.md` (record 23).
   Record: `~/Projects/initiatives/docs-system/research/2026-10-22-extend-blueprints-pilot-friction.md`
+  Batch 2: the agent hands back through `SubagentHandback`, so saving its array verbatim needs a transcript parser. Give the save a sanctioned path, or have the agent write its array to a named file (record 18).
 - [ ] **#10** Two gate-tool cleanups `#improvement` `#workstation` *(2026-10-14)*
   **Two gate-tool cleanups**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11): simplify `cairn-docs-outline`'s lock and fix `gateMatches`' stale doc comment; and give `cairn-run-gate` per-leg timing in its run records.
 
