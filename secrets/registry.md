@@ -354,7 +354,7 @@ tmpfs cache; no password manager holds it for scripts.
 
 ### WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERA / _MEMBERB / _MEMBERC
 - **Grants**: one household member's login to their own Floccus bookmark share at `https://dav.907.life/<name>/`, and nothing else. Each member's bookmarks file is also encrypted with a passphrase that member keeps, so the login alone doesn't reveal it.
-- **Used by**: the servers repo's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in the `Servers emergency` Proton Pass vault as "Bookmarks WebDAV: <name>", for Geoff to share with that member.
+- **Used by**: the servers repo's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in Proton Pass as "Bookmarks WebDAV: <name>": Geoff's own in the `Workstation` vault with his other personal tool logins, and each other member's in `Servers emergency`, for Geoff to share with that member (Geoff, 2026-10-24).
 - **Generated 2026-10-21** on pavilion (32 random bytes, base64url), in the bookmarks pass.
 - **Rotate**: store a new value, update the Proton Pass item, re-render orpheus's `/etc/webdav/<name>.env`, restart `webdav@<name>`, and paste the new value into the member's Floccus on each device (servers `docs/runbook.md`, "Bookmark sync").
 
