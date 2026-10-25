@@ -322,6 +322,9 @@ never-commit rules and a pointer here.
   created 2026-10-20). To renew it, Geoff creates a fresh token and stores it with
   `secret-tool store --label "Proton Pass claude agent" service proton-pass-agent-claude
   host <host>`. No expiry is recorded, so `check-drift` cannot warn ahead of it.
+  Proton throttles the agent's logins after about four quick calls, and `claude-pass` then
+  reports "agent login failed (token expired or revoked?)" for 5 to 25 minutes while the token
+  is fine, so a batch spaces its calls about 150 seconds apart (2026-10-25).
   thinkpad-x1 still owes its `thinkpad-claude` agent (`bluefin/THINKPAD-PROTON.md`).
 - **Proton Pass (Pass W, 2026-10-18): Claude never calls bare `pass-cli`**, which would act
   as Geoff's own login and reach every vault. `claude-block-pass` denies `pass-cli`,
