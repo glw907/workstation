@@ -2,6 +2,12 @@
 
 > Project issue tracker. Managed by `/log-issue`.
 
+## High
+
+- [ ] **#39** Forbid pattern signals in the read-only review agents `#bug` `#workstation` `#initiative:docs-system` *(2026-10-25)*
+  On 2026-10-25 a `plan-reviewer` probing a `pgrep` pattern cleaned up its fake processes with `pkill -f 'drafter page'` and killed batch 5's live drafting run, which resumed. Add a line to each read-only agent body (`plan-reviewer`, `diff-reviewer`, `fact-checker`, and the rest): a probe kills only PIDs it started, never by pattern. `claude/.claude/agents/`.
+  Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
+
 ## Medium
 
 - [ ] **#38** Catch an edit made only in a vendored skill's copy `#bug` `#workstation` *(2026-10-25)*
