@@ -204,6 +204,8 @@ retiring dashboard), asc-handbook, asc-uptime, 907-life, ecxc, cairn-pub, eudaim
 staging), the Ops Schema API (public, consumed cross-origin by the handbook — do not lock it),
 and `phonebook` (+ `phonebook-prov`) on phonebook.907.life. The ASC CMS Admin app on
 dev.aksailingclub.org/admin is gone.
+phonebook.907.life itself is a proxied `AAAA 100::` placeholder until the phonebook Worker
+deploys; the `phonebook-probe` Worker, its route, and its D1 were deleted 2026-10-25.
 
 **asc-site worker secrets (names):** GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID,
 GITHUB_APP_PRIVATE_KEY_B64, STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET (Stripe SANDBOX test keys,
