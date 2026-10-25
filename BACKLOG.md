@@ -10,6 +10,8 @@
 
 ## Medium
 
+- [ ] **#40** Let a pass executor run its gate through cairn-run-gate from an isolated worktree `#bug` `#workstation` `#initiative:docs-system` *(2026-10-25)*
+  The approval-queue batch 4 executor (glw907/approval-queue#10) was refused `cairn-run-gate '<cmd>'` and inline env-prefixed command lines in its `EnterWorktree` session, so it ran `bash scripts/gate.sh` bare and wrapped the plan's env-prefixed lines in scripts. pass-core "Gates" says every gate runs through `cairn-run-gate`. Either allow it from a pass worktree, or have `plan-reviewer` check that a plan's gate and env-prefix lines pass the isolated session's guard.
 - [ ] **#38** Catch an edit made only in a vendored skill's copy `#bug` `#workstation` *(2026-10-25)*
   Three commits (`b01f85f`, `8a629f6`, `5296043`) edited `claude/.claude/skills/survey/writing/approval-brief.md` in place, so the next vendor from Survey would have reverted them; the Survey v1.5.0 release found it by hand and took the text back into Survey (glw907/survey#6). `claude-tooling-sync lint` checks manifest shape, licenses, and overlays, never content. Add a check that each vendored skill matches its source at the manifest's `commit`, overlays applied, and fails with the files that drifted. `bin/.local/bin/claude-tooling-sync` (`lint`).
 
