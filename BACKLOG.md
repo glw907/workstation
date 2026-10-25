@@ -4,6 +4,9 @@
 
 ## Medium
 
+- [ ] **#38** Catch an edit made only in a vendored skill's copy `#bug` `#workstation` *(2026-10-25)*
+  Three commits (`b01f85f`, `8a629f6`, `5296043`) edited `claude/.claude/skills/survey/writing/approval-brief.md` in place, so the next vendor from Survey would have reverted them; the Survey v1.5.0 release found it by hand and took the text back into Survey (glw907/survey#6). `claude-tooling-sync lint` checks manifest shape, licenses, and overlays, never content. Add a check that each vendored skill matches its source at the manifest's `commit`, overlays applied, and fails with the files that drifted. `bin/.local/bin/claude-tooling-sync` (`lint`).
+
 - [ ] **#37** Name the framework version in the register editor's and fact-checker's briefs `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-25)*
   Both agents raised `#lib` imports as defects. They are SvelteKit 3's subpath-import convention, which the migration notes record. The agents' briefs should name the framework version. `claude/.claude/agents/cairn-register-editor.md`, `claude/.claude/agents/fact-checker.md`.
   Record: ~/Projects/initiatives/docs-system/research/2026-10-24-extend-blueprints-batch-4/friction.md (P9)
