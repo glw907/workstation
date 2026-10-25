@@ -694,7 +694,9 @@ tmpfs cache; no password manager holds it for scripts.
 - **Grants**: web UI admin login on both Yealink T54Ws, kitchen (192.168.1.181) and office
   (192.168.1.118), which share one password (Geoff, 2026-10-07). Received through
   `secret-receive`; the name predates learning the office phone shares it. Used by the phonebook project's conductor to drive
-  the phone's web UI (exports, provisioning URL) without a password in the transcript.
+  the phone's web UI (exports, provisioning URL) without a password in the transcript, and by
+  `~/Projects/phonebook/scripts/yealink/yealink.sh`, which hands it to curl on stdin for the
+  Action URI reboot, reprovision, and status commands.
 - **Scope**: local only. Phase 2 of `~/Projects/phonebook` may also serve a phone admin password
   as a Worker secret; that will be its own entry.
 - **Rotation**: change it in the phone's web UI (Security), then `secret-receive` the new value.
