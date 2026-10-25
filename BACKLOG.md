@@ -4,6 +4,18 @@
 
 ## Medium
 
+- [ ] **#36** Exclude the facts store from the tellgrader PostToolUse hook `#bug` `#workstation` `#initiative:docs-system` *(2026-10-24)*
+  The hook flagged "empty-own" on fact bullets ("Svelte's own mount()"), which aren't page prose.
+  Record: ~/Projects/initiatives/docs-system/research/2026-10-24-extend-blueprints-batch-4-friction.md (workstation 3)
+
+- [ ] **#35** Have the register editor quote its target text, and avoid the `exhaustive` words `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-24)*
+  Its line numbers drifted from the file at the named commit; the author matched on text. It should also avoid the words drafter's `exhaustive` lint flags, or say a count is fact-backed. `claude/.claude/agents/cairn-register-editor.md`.
+  Record: ~/Projects/initiatives/docs-system/research/2026-10-24-extend-blueprints-batch-4-friction.md (workstation 2)
+
+- [ ] **#34** Cap a fact-checker proposal at the register's sentence length `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-24)*
+  Proposed fixes ran past 26 words or stacked ", which" and ", so" tails, so none could be pasted, and one proposal was itself wrong (`toggleTheme` where the scaffold calls `toggleThemeWithTransition`). `claude/.claude/agents/fact-checker.md`.
+  Record: ~/Projects/initiatives/docs-system/research/2026-10-24-extend-blueprints-batch-4-friction.md (workstation 1)
+
 - [ ] **#33** Keep the workstation secrets out of apps a Claude session launches `#bug` `#security` `#initiative:self-hosting` *(2026-10-24)*
   On thinkpad-x1 the running Hylki Flatpak carried every `~/.local/secrets` value in its environment, along with `CLAUDE_CODE_SESSION_ID=82707928-…`, so a Claude session launched it and it inherited that session's exported secrets. Any process listing shows them: a `pgrep -af claude` on 2026-10-24 matched Hylki's web process and printed them all into a session transcript. A GUI app started from a session should get a clean environment (`env -i` with the display variables, or `systemd-run --user`/`gio launch`), and Hylki should be restarted from the desktop. Source: servers session of 2026-10-24.
 
