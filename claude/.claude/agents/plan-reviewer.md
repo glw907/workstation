@@ -77,6 +77,11 @@ On a plan, also check these items:
   that holds the action for an Undo window before posting it (send-back revisions, 2026-10-24: a
   send-back posts about 20 seconds after the click, so a script that closes at once records
   nothing).
+- Every owner-time test (a sitting, a device probe, a step that holds Geoff at hardware) names
+  the community search run first on that question (vendor forums, issue trackers, open-source
+  tools for the device) and what it found, so Geoff's time goes only to behavior nobody has
+  documented (phonebook Pass 2, 2026-10-25: the sitting found `voice.ring_vol` does nothing,
+  which a 3CX forum thread on the same firmware line already reported).
 
 ## Findings
 
