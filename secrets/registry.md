@@ -148,7 +148,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | IMMICH_DB_PASSWORD | ✓ | — | — | — | — |
 | RESTIC_PASSWORD_ORPHEUS | ✓ | — | — | — | — |
 | TUNNEL_TOKEN_ORPHEUS | ✓ | — | — | — | — |
-| WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERA / _MEMBERB / _MEMBERC | ✓ | — | — | — | — |
+| WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERC | ✓ | — | — | — | — |
 | RESTIC_PASSWORD_WARD | ✓ | — | — | — | — |
 | TUNNEL_TOKEN_WARD | ✓ | — | — | — | — |
 | BULWARK_SESSION_SECRET | ✓ | — | — | — | — |
@@ -352,10 +352,11 @@ tmpfs cache; no password manager holds it for scripts.
 - **Generated 2026-10-20** by `cloudflare/access.sh --token orpheus` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in the rename pass (R6).
 - **Rotate**: rotate the tunnel's token in Cloudflare (or recreate the tunnel with `access.sh`), store the new value, and re-render orpheus's secrets.
 
-### WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERA / _MEMBERB / _MEMBERC
+### WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERC
 - **Grants**: one household member's login to their own Floccus bookmark share at `https://dav.907.life/<name>/`, and nothing else. Each member's bookmarks file is also encrypted with a passphrase that member keeps, so the login alone doesn't reveal it.
 - **Used by**: the servers repo's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in Proton Pass as "Bookmarks WebDAV: <name>": Geoff's own in the `Workstation` vault with his other personal tool logins, and each other member's in `Servers emergency`, for Geoff to share with that member (Geoff, 2026-10-24).
 - **Generated 2026-10-21** on pavilion (32 random bytes, base64url), in the bookmarks pass.
+- **Deleted 2026-10-24**: `_MEMBERA` and `_MEMBERB`, with their shares, after Geoff ruled that household members A and B were never people, only two unused Fastmail logins (servers#21).
 - **Rotate**: store a new value, update the Proton Pass item, re-render orpheus's `/etc/webdav/<name>.env`, restart `webdav@<name>`, and paste the new value into the member's Floccus on each device (servers `docs/runbook.md`, "Bookmark sync").
 
 ### BULWARK_SESSION_SECRET
