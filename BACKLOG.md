@@ -4,6 +4,10 @@
 
 ## Medium
 
+- [ ] **#37** Name the framework version in the register editor's and fact-checker's briefs `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-25)*
+  Both agents raised `#lib` imports as defects. They are SvelteKit 3's subpath-import convention, which the migration notes record. The agents' briefs should name the framework version. `claude/.claude/agents/cairn-register-editor.md`, `claude/.claude/agents/fact-checker.md`.
+  Record: ~/Projects/initiatives/docs-system/research/2026-10-24-extend-blueprints-batch-4/friction.md (P9)
+
 - [ ] **#36** Exclude the facts store from the tellgrader PostToolUse hook `#bug` `#workstation` `#initiative:docs-system` *(2026-10-24)*
   The hook flagged "empty-own" on fact bullets ("Svelte's own mount()"), which aren't page prose.
   Record: ~/Projects/initiatives/docs-system/research/2026-10-24-extend-blueprints-batch-4-friction.md (workstation 3)
