@@ -45,12 +45,13 @@ else
     status=1
 fi
 
-# The writing review is a separate session that only pavilion launches. Its
-# result never changes this script's exit status.
+# The writing review and the cairn docs cycle are separate sessions that only
+# pavilion launches. Their results never change this script's exit status.
 if [[ "$(hostname -s)" == pavilion ]]; then
-    writing_args=()
-    (( dry_run )) && writing_args+=(--dry-run)
-    survey-writing-review "${writing_args[@]}" || echo "writing review launch failed"
+    review_args=()
+    (( dry_run )) && review_args+=(--dry-run)
+    survey-writing-review "${review_args[@]}" || echo "writing review launch failed"
+    cairn-docs-cycle "${review_args[@]}" || echo "cairn docs cycle launch failed"
 fi
 
 exit "$status"
