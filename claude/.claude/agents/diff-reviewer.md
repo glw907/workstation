@@ -50,9 +50,7 @@ Be skeptical. A confident description is not evidence; the diff is.
   --register docs <file>`. A finding with `"gate": true` (a trailing-hinge run or an appositive
   stack) blocks. A tell count alone never supports a `fix` verdict.
 - When the diff touches `docs/internal/option-map.json`, block an `exclude` row whose reason fits an
-  option a developer sets, a new fact-id row whose fact does not name the member in backticks with
-  a `Source:` citing the declaring type's file, and a `pendingCount` rise not paired with a retag of
-  a mapped fact.
+  option a developer sets, and a row that maps an option to a page anchor that does not exist.
 
 ## Verdicts
 
