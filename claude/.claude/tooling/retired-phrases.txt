@@ -69,11 +69,6 @@ which reattaches and waits again, and repeat until it prints
 # Fixed in pass B3.
 reports **0 errors and 0 warnings**
 
-# AW-23: the dated compatibility note about the fact id rule is stale; the rule applies
-# unconditionally now. Witnesses: claude/.claude/agents/cairn-implementer.md:11,
-# claude/.claude/agents/site-implementer.md:11. Fixed in pass B3.
-Compatibility note (2026-09-24, docs reset pass 1 close)
-
 # DC-01 (small-task line): the 2026-09-27 ruling runs code-simplifier once per pass or branch at
 # its close, so a small task goes straight through the gates alone; 0a2e391 restored the
 # per-task simplifier clause. Witness: claude/.claude/CLAUDE.md:261. Fixed in pass B4.

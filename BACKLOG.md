@@ -10,6 +10,9 @@
 
 ## Medium
 
+- [ ] **#41** Clear drafter from thinkpad-x1 after its next pull `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-25)*
+  thinkpad-x1 may carry `~/.local/bin/drafter`, `~/.config/drafter/`, `~/.local/state/drafter/`, `~/.local/share/drafter/`, and links into a drafter clone. Nothing run on pavilion reaches it. After its next `~/.dotfiles` pull, `check-drift` there lists `drafter` as an unlisted bin: remove those paths, the clone, and the `drafter-page-hook` and `docs-page-chain.js` links.
+
 - [ ] **#40** Let a pass executor run its gate through cairn-run-gate from an isolated worktree `#bug` `#workstation` `#initiative:docs-system` *(2026-10-25)*
   The approval-queue batch 4 executor (glw907/approval-queue#10) was refused `cairn-run-gate '<cmd>'` and inline env-prefixed command lines in its `EnterWorktree` session, so it ran `bash scripts/gate.sh` bare and wrapped the plan's env-prefixed lines in scripts. pass-core "Gates" says every gate runs through `cairn-run-gate`. Either allow it from a pass worktree, or have `plan-reviewer` check that a plan's gate and env-prefix lines pass the isolated session's guard.
 - [ ] **#38** Catch an edit made only in a vendored skill's copy `#bug` `#workstation` *(2026-10-25)*
