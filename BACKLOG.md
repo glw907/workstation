@@ -10,6 +10,9 @@
 
 ## Medium
 
+- [ ] **#42** Add two executor-permission checks to the plan-reviewer checklist `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-26)*
+  From the docs-as-code cutover's planning misses. A deletion target that is a symlink resolving outside the executor's `--add-dir` set raises an unanswerable prompt overnight, so the plan makes it a morning step. A STATUS or clock file under `.git/worktrees/` is written by a lone Bash command: Write and Edit are refused there in a worktree-isolated session, and a heredoc chained to another command raised a sensitive-file prompt. Record: `~/Projects/initiatives/docs-system/README.md` (2026-10-26 line).
+
 - [ ] **#41** Clear drafter from thinkpad-x1 after its next pull `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-25)*
   thinkpad-x1 may carry `~/.local/bin/drafter`, `~/.config/drafter/`, `~/.local/state/drafter/`, `~/.local/share/drafter/`, and links into a drafter clone. Nothing run on pavilion reaches it. After its next `~/.dotfiles` pull, `check-drift` there lists `drafter` as an unlisted bin: remove those paths, the clone, and the `drafter-page-hook` and `docs-page-chain.js` links.
 
