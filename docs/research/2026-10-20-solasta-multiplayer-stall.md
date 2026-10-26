@@ -17,9 +17,9 @@ can resume without the session transcript.
 | Steam overlay | Off for this game (`OverlayAppEnable 0` in `userdata/364362109/config/localconfig.vdf`) |
 | UMM settings | `Solasta_Data/Managed/UnityModManager/Params.xml` has `CheckUpdates` 0. Keep it 0 after any reinstall |
 | Video settings | 2560 x 1440, fullscreen window, Medium quality, half-resolution textures, TAA, FSR off. The High and full-texture set is held back until the RAM arrives |
-| Network | Pavilion on the 5 GHz SSID `Warwick 4070 5G` (profile priority 20, band `a`). RTL8821CE power-save workaround persisted in `bluefin/etc/modprobe.d/rtw88-no-lps-deep.conf` and `bluefin/etc/NetworkManager/conf.d/wifi-powersave-off.conf` |
+| Network | Pavilion on the 5 GHz SSID `Warwick 4070 5G` (profile priority 20, band `a`). RTL8821CE power-save workaround persisted in `bluefin/etc/modprobe.d/rtw88-no-lps-deep.conf` (retired 2026-10-25) and `bluefin/etc/NetworkManager/conf.d/wifi-powersave-off.conf` (kept) |
 | RAM | 15 GiB usable (2 x 8 GB DDR4-3200). 2 x 16 GB kit on order |
-| Wi-Fi card | Realtek RTL8821CE (rtw88). Intel AX210 on order, replaces it in the M.2 E-key slot |
+| Wi-Fi card | Realtek RTL8821CE (rtw88). Replaced by the Intel AX210 (iwlwifi) on 2026-10-25 |
 
 The game's own files live in the Proton prefix:
 `.../steamapps/compatdata/1096530/pfx/drive_c/users/steamuser/AppData/LocalLow/Tactical Adventures/Solasta/`.
@@ -34,6 +34,10 @@ crowded 2.4 GHz channel could trigger it. Fixed by the two drop-ins above and th
 Symptom check: `journalctl -k -b | grep -c rtw88/ps.c` should stay at 0. Live fix if it ever
 returns: `sudo -A iw dev wlp4s0 set power_save off`, then reload with
 `sudo -A modprobe -r rtw88_8821ce && sudo -A modprobe rtw88_8821ce`.
+
+Retired 2026-10-25: the Intel AX210 replaced the RTL8821CE, so the rtw88 modprobe drop-in was
+removed. The NetworkManager power-save drop-in stays. The case has one antenna cable, so the
+AX210 runs on one antenna; its empty second port is expected.
 
 **"Steam is Not Responding" after quitting the game.** The game took 85 seconds to exit because
 UMM's update check waited out a network timeout, and Steam blocks while a game process is alive.

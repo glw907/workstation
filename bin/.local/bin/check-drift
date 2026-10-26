@@ -219,9 +219,8 @@ if [[ "$(hostname)" == pavilion ]]; then
     etc_pair "$BLUEFIN/etc/bluetooth/main.conf" /etc/bluetooth/main.conf
     etc_pair "$BLUEFIN/etc/modprobe.d/btusb-no-autosuspend.conf" /etc/modprobe.d/btusb-no-autosuspend.conf
 fi
-# The RTL8821CE's deep power save turns Wi-Fi into multi-second latency, pavilion only.
+# Wi-Fi power save adds per-packet latency on a desktop, pavilion only.
 if [[ "$(hostname)" == pavilion ]]; then
-    etc_pair "$BLUEFIN/etc/modprobe.d/rtw88-no-lps-deep.conf" /etc/modprobe.d/rtw88-no-lps-deep.conf
     etc_pair "$BLUEFIN/etc/NetworkManager/conf.d/wifi-powersave-off.conf" /etc/NetworkManager/conf.d/wifi-powersave-off.conf
 fi
 
