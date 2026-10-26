@@ -182,6 +182,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | PHONEBOOK_PHONE_ADMIN_KITCHEN | ✓ | — | — | — | — |
 | VOIPMS_API_USERNAME | ✓ | — | — | — | — |
 | VOIPMS_API_PASSWORD | ✓ | — | — | — | — |
+| PHONEBOOK_SIP_OFFICE | ✓ | — | — | — | — |
 | IMMICH_PIKAPODS_API_KEY | ✓ | — | — | — | — |
 | TPLINK_ROUTER_PASSWORD | ✓ | — | — | — | — |
 
@@ -707,6 +708,15 @@ tmpfs cache; no password manager holds it for scripts.
   curl through `-K -` on stdin. `getSubAccounts` returns SIP passwords, so never print its output.
 - **Rotation**: type a new API Password, click Save API Password, then `secret-receive
   VOIPMS_API_PASSWORD`.
+
+### PHONEBOOK_SIP_OFFICE
+- **Grants**: SIP registration for the voip.ms sub-account `543625_office` (id 857310), the office
+  T54W's line. Generated 2026-10-26 (24 random alphanumerics) by `conductor-phonebook` and set on
+  the sub-account through `createSubAccount`; international calls are locked on it.
+- **Constraints**: not yet on any phone or Worker. Pass 4 serves it from the Worker, substituted
+  when the office phone's config is served; until then it lives only here.
+- **Rotation**: generate a new value with `secret-set.sh PHONEBOOK_SIP_OFFICE`, set it with the
+  voip.ms API's `setSubAccount`, then redeploy the Worker secret and reboot the phone.
 
 ### TPLINK_ROUTER_PASSWORD
 - **Grants**: the local admin password of the house router (TP-Link Archer C4000 v3.0 at
