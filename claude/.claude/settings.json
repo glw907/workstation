@@ -185,11 +185,6 @@
             "type": "command",
             "command": "claude-memory-write-check",
             "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "command -v drafter-page-hook >/dev/null && drafter-page-hook || true",
-            "timeout": 10
           }
         ]
       },
@@ -348,7 +343,7 @@
       "**Organization**: Personal workstation of one developer, Geoff (GitHub user glw907). No company org; every repo, account, and domain below is his.",
       "**Source control**: github.com/glw907 and every repository under it, public and private. Pushing branches, opening PRs, reading PR state, and merging PRs in these repositories is routine work.",
       "**Trusted repo**: every git repository and worktree under /var/home/glw907/Projects/ and /var/home/glw907/.dotfiles (including their .claude/worktrees/), with their github.com/glw907 remotes. Sessions routinely read, edit, commit, and push across these sibling repositories, so a session's working directory is not the trust boundary.",
-      "**Repository visibility** (confirmed with gh on 2026-10-17): public: workstation (~/.dotfiles), initiatives, drafter, cairn-cms, poplar, dubplate, approval-queue, 907-life, aksailingclub-org, ecxc-ski. Private: servers, phonebook, cairn-themes, cairn-pub, xcathletes-org, fishwright, aksailingclub-legacy. A public repository's history is world-readable: never commit secrets, tokens, personal data, or browser or state dumps to one.",
+      "**Repository visibility** (confirmed with gh on 2026-10-17): public: workstation (~/.dotfiles), initiatives, cairn-cms, poplar, dubplate, approval-queue, 907-life, aksailingclub-org, ecxc-ski. Private: servers, phonebook, cairn-themes, cairn-pub, xcathletes-org, fishwright, aksailingclub-legacy. A public repository's history is world-readable: never commit secrets, tokens, personal data, or browser or state dumps to one.",
       "**Trusted internal domains**: 907.life, ecxc.ski, aksailingclub.org, xcathletes.org, cairn.pub, and their subdomains (Geoff's own sites on Cloudflare); localhost and 127.0.0.1, including the approval queue on 127.0.0.1:7907.",
       "**Key internal services**: GitHub (glw907), the Cloudflare account 120c269ad6d3dfbe6d63a0bb53758ca0, the npm package @glw907/cairn-cms, and Geoff's own Fastmail account over JMAP.",
       "**Sensitive data locations & audiences**: ~/.local/secrets, ~/.dotfiles/secrets/ (age-encrypted), the age key, Proton Pass, Geoff's mail (Fastmail) and Google Drive, and session transcripts under ~/.claude/projects/. Their audience is Geoff only. Public documentation, vendor docs, and pricing pages are not sensitive data.",

@@ -29,10 +29,9 @@ Conductor `4bea6e68` closed the 2026-10-11 infrastructure initiative; its PRs (#
 the record. Each later initiative runs its own `conductor-<project>`, and the next one starts from
 the repos' ROADMAPs and the initiative records.
 
-## Drafter
+## Docs system
 
-Drafter work is tracked in the docs-system record (`~/Projects/initiatives/docs-system/README.md`), which holds the current status and the next launch prompt.
-Last landed 2026-10-17: pass B1, the blueprint format (drafter#46, cairn-cms#128), with its first milestone missed. Next: B2's planning session.
+Docs are code: cairn-cms pages change with the code, and a `docs` review in the Approval Queue puts them before Geoff. The initiative record (`~/Projects/initiatives/docs-system`) holds the current status and the next launch prompt.
 
 ## Approval queue
 

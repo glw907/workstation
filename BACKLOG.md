@@ -15,13 +15,14 @@
 - [ ] **#38** Catch an edit made only in a vendored skill's copy `#bug` `#workstation` *(2026-10-25)*
   Three commits (`b01f85f`, `8a629f6`, `5296043`) edited `claude/.claude/skills/survey/writing/approval-brief.md` in place, so the next vendor from Survey would have reverted them; the Survey v1.5.0 release found it by hand and took the text back into Survey (glw907/survey#6). `claude-tooling-sync lint` checks manifest shape, licenses, and overlays, never content. Add a check that each vendored skill matches its source at the manifest's `commit`, overlays applied, and fails with the files that drifted. `bin/.local/bin/claude-tooling-sync` (`lint`).
 
-- [ ] **#37** Name the framework version in the register editor's and fact-checker's briefs `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-25)*
-  Both agents raised `#lib` imports as defects. They are SvelteKit 3's subpath-import convention, which the migration notes record. The agents' briefs should name the framework version. `claude/.claude/agents/cairn-register-editor.md`, `claude/.claude/agents/fact-checker.md`.
+- [ ] **#37** Name the framework version in the register editor's and docs fact-checker's briefs `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-25)*
+  Both agents raised `#lib` imports as defects. They are SvelteKit 3's subpath-import convention, which the migration notes record. The agents' briefs should name the framework version. `claude/.claude/agents/cairn-register-editor.md`, and `docs-fact-checker` in cairn-cms (`.claude/agents/docs-fact-checker.md`).
   Record: ~/Projects/initiatives/docs-system/research/2026-10-24-extend-blueprints-batch-4/friction.md (P9)
 
-- [ ] **#36** Exclude the facts store from the tellgrader PostToolUse hook `#bug` `#workstation` `#initiative:docs-system` *(2026-10-24)*
+- [x] **#36** Exclude the facts store from the tellgrader PostToolUse hook `#bug` `#workstation` `#initiative:docs-system` *(2026-10-24)*
   The hook flagged "empty-own" on fact bullets ("Svelte's own mount()"), which aren't page prose.
   Record: ~/Projects/initiatives/docs-system/research/2026-10-24-extend-blueprints-batch-4-friction.md (workstation 3)
+  Dropped: the docs-as-code cutover retired the system it served.
 
 - [ ] **#35** Have the register editor quote its target text, and avoid the `exhaustive` words `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-24)*
   Its line numbers drifted from the file at the named commit; the author matched on text. It should also avoid the words drafter's `exhaustive` lint flags, or say a count is fact-backed. `claude/.claude/agents/cairn-register-editor.md`.
@@ -67,14 +68,17 @@
 - [ ] **#4** Poplar adopts pass-core `#improvement` `#workstation` `#initiative:poplar-refounding` *(2026-10-14)*
   **Poplar adopts `pass-core`** (Geoff, 2026-10-11, ruling R4 of the infra sweep re-plan). After infra sweep 2, a poplar PR gives poplar a small adapter like dubplate's and replaces `poplar/CLAUDE.md`'s "Conducting a pass" section, which defers to a deleted global rule. It also repins `poplar-reviewer` (`claude-opus-5` at `high`) and `poplar-implementer` (no effort), and drops the missing `glw907-vendor.sh` re-sync line (DC-11, DC-12).
 
-- [ ] **#5** Document the brief's local field in cairn-docs-drafter.md `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-14)*
+- [x] **#5** Document the brief's local field in cairn-docs-drafter.md `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-14)*
   **Document the brief's `local` field in `cairn-docs-drafter.md`** (PR #25, triage 2026-10-12). The chain's `draftPrompt` tells the drafter about the brief's top-level `"local"` array, but the agent definition does not, so a drafter dispatched outside the chain never sees it. PR #25 left the definition untouched because definitions load from the stowed main checkout. With #25 merged, add the field and its one-writer sentence to `claude/.claude/agents/cairn-docs-drafter.md`.
+  Dropped: the docs-as-code cutover retired the system it served.
 
-- [ ] **#6** Docs page chain follow-ups from drafter Pass 0 `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-14)*
+- [x] **#6** Docs page chain follow-ups from drafter Pass 0 `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-14)*
   **Docs page chain follow-ups from drafter Pass 0** (deferred in Geoff's triage of glw907/workstation#36, 2026-10-12). Remove the `planFormat: "markdown"` escape hatch once no markdown plans remain. Add goldens for the markdown `replan:` and rework prompts if either is edited. Make the nonzero-`checkPlan` replan test assert `status === "escalate"` beside `reason` (`tests/docs-page-chain-outline.test.mjs:1452`). Truncate the validator output in the escalation reason, or move it to its own field (`docs-page-chain.js:2018`).
+  Dropped: the docs-as-code cutover retired the system it served.
 
-- [ ] **#7** The plan read checks code before it asserts behavior `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-14)*
+- [x] **#7** The plan read checks code before it asserts behavior `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-14)*
   **The plan read checks code before it asserts behavior** (cairn's 11-plan test, 2026-10-12). On debug-your-site, the plan-mode structural read said refusals log no event, but `section-action.ts:216` logs `auth.access.refused`. Tell the plan-mode `structurePrompt` in `docs-page-chain.js` to check the code before stating a behavior, and to mark such a finding as a lead. The same test suggests a cross-plan anchor check for the drafter pipeline's consistency read: a link's anchor against the target page's plan headings.
+  Dropped: the docs-as-code cutover retired the system it served.
 
 - [ ] **#8** PR test CI for dotfiles `#improvement` `#workstation` *(2026-10-14)*
   **PR test CI for dotfiles.** Add a workflow that runs `bash scripts/check.sh` on `pull_request`. Until it lands, the full-suite home is the local close gate (ruling 11 of the lean pass process spec).
