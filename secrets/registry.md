@@ -154,6 +154,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | BULWARK_SESSION_SECRET | ✓ | — | — | — | — |
 | STALWART_ADMIN_PASSWORD | ✓ | — | — | — | — |
 | STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2 | ✓ | — | — | — | — |
+| STALWART_PASSWORD_PHONEBOOK | ✓ | — | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
@@ -394,6 +395,12 @@ tmpfs cache; no password manager holds it for scripts.
 - **Used by**: the servers repo's `roles/stalwart` (the plan sets each account's password from the store) and the rehearsal scripts (`vandelay-run.sh`, L6's sends). The second operator's also goes into `Servers emergency` for him.
 - **Generated 2026-10-21** on pavilion (40 random alphanumerics), in the mail server pass (L3). Each is shared with its owner in Pass 6; until then only the rehearsal uses them.
 - **Rotate**: store a new value and apply the Stalwart role again.
+
+### STALWART_PASSWORD_PHONEBOOK
+- **Grants**: sign-in to the `phonebook` account on ward, which owns the household's Global Address Book and shares it read-only with each member. The account has no mail access: its permissions disable sending, receiving, IMAP, POP3, ManageSieve, and JMAP mail, so the password reads and writes contacts only.
+- **Used by**: the servers repo's `roles/stalwart` (the plan sets the account's password, and `stalwart-apply` signs in with it to name the book and set its grants) and, as `WARD_PASSWORD`, the phonebook Worker, which writes the book's cards.
+- **Generated 2026-10-25** on pavilion (40 random alphanumerics), in the ward address book pass (T3).
+- **Rotate**: ward first (store a new value, re-render ward's secrets, and apply the Stalwart role), then the phonebook Worker's `WARD_PASSWORD`, which also clears the Worker's sign-in stop.
 
 ### HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD
 - **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token writes only its own server's row. They replaced the media and mail keys, which the rename pass retired.
