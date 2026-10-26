@@ -14,7 +14,7 @@ Load `pass-core` first; it holds the lifecycle and the rules this adapter fills 
 relative to the site repo. The resume prompt is in `docs/STATUS.md`. The plan, spec, archive, and
 architecture-doc paths come from the site's `CLAUDE.md` or STATUS; `docs/{plans,specs}/`
 and `docs/architecture.md` are the usual case, not the only one. The plan header
-carries exactly one of a consultation-brief link or the line "no engine asks", plus a "Facts
+carries exactly one of a consultation-brief link or the line "no engine asks", plus a "Pages
 consulted" line, from `engine-consult`; a committed plan with neither gets the enumeration run before
 the first task. Read the plan and spec paths from the site's `CLAUDE.md` or STATUS.
 
@@ -73,14 +73,9 @@ rendered pages.
 
 ## Following cairn-cms docs during the round
 
-Where a cairn-cms docs arm is empty, a divergence between the docs and reality goes into the cairn-cms
-facts container (`docs/internal/facts/`), never onto a page. Where a rebuilt arm page exists, follow
-it, and fix a divergence on the page under the spec's "Edits after the chain" rule (cairn-cms
-`docs/specs/2026-09-26-draft-docs-approach-design.md`): update the page's brief in the
-same change and file the fact bullet alongside. An arm whose stage is in flight files the divergence
-and never fixes it. Edit on a `site-docs/<site>-<pass>` branch off cairn-cms `main`, merged by PR
-under the docs gate before the site pass closes; never edit cairn-cms `main` directly. Changed
-sentences get both chain reviews, except a pure term or link substitution.
+A divergence between a cairn-cms docs page and reality is fixed on the page in the same change, per
+cairn's fix rule in its `CLAUDE.md`: edit on a `site-docs/<site>-<pass>` branch off cairn-cms `main`,
+merged by PR under the docs gate before the site pass closes. Never edit cairn-cms `main` directly.
 
 ## When not to use
 

@@ -67,15 +67,11 @@ and theme config; `go-conventions` for `tool/**`.
   inserting a D1 row, then the magic-link round trip in headless Chromium, reading the link from
   wrangler's local `send_email` output; follow `docs/internal/admin-smoke-test.md`.
 - Documentation is a pass dimension: fix every doc the change touched, inbound references included.
-  A public-behavior change files its bullet in `docs/internal/facts/<arm>.md` and updates the
-  reference page if it is public API. An arm with no rebuilt page files divergences into the facts
-  container instead of fixing a page. A fix on a published page is written to the track's drafting
-  brief with no register review, and Vale's error tier still runs; an edit to a page with a brief
-  updates the brief in the same change (the spec's "Edits after the chain").
+  A change to documented behavior fixes its page in the same commit, per the `cairn-docs` skill.
 - A behavior change updates `CHANGELOG.md` under `## Unreleased` and the per-version record
   (`docs/extend/migration-notes.md`, with `docs/extend/upgrade-cairn.md`); a breaking change carries
   one `Consumers must:` line per consumer action. Moving a per-version record updates this skill,
-  `CLAUDE.md`, and the facts README. A removed or renamed symbol is grepped across
+  and `CLAUDE.md`. A removed or renamed symbol is grepped across
   `docs/` and `README.md` and every hit repointed. An intended public-surface change runs `npm run
   check:surface -- --update` and commits `docs/internal/api-surface.md`. A ruling on a consultation
   item updates `docs/internal/engine-rulings.md`.

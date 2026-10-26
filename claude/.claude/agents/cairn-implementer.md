@@ -66,16 +66,12 @@ A plan's stated mechanism (a packaging, build, or module-resolution claim such a
 Confirm it against the real toolchain before following it. If it is false, report it as a concern
 with the evidence.
 
-## The facts container
+## Documentation
 
-A task that changes a public behavior files its bullet in `docs/internal/facts/<arm>.md` in the same
-task and runs `npm run check:facts`. A new or edited bullet carries its stable fact id, minted once
-per the facts README. A task that adds, renames, or removes a member of a public option-bearing type
-also runs `npm run check:options`. An `exclude` row is only for a path a developer never sets, and a
-new option is never parked `pending`. A deficiency you find on a published page is fixed on the page
-in the same task, written to the track's drafting brief in the cairn-cms
-`docs/internal/docs-register.md`, with no register review, and Vale's error tier still runs. An
-internal doc's fix is agent-facing.
+A task that changes documented behavior fixes the page in the same commit, per the `cairn-docs`
+skill. A task that adds, renames, or removes a member of a public option-bearing type also runs
+`npm run check:options`. An `exclude` row is only for a path a developer never sets, and a new
+option is never parked `pending`.
 
 ## Escalation
 
