@@ -95,27 +95,29 @@ skill adds the procedure and never restates the register.
    this."). A second `collect` prints the decision again and logs nothing. A deferred item still
    counts as waiting, so a packet that resends its PRs is refused until you withdraw the item.
 
-## Blueprints and pages
+## Docs reviews
 
-A docs blueprint and a drafted page are never packet parts, because Geoff reads and edits the
-document itself, with the fact-check notes under the lines they concern. Each is its own queue
-item: `approval-queue blueprint <worktree> <title> <file> --description <description.md> --notes
-<notes.json>` before the draft, and `approval-queue page <worktree> <title> <file> --description
-<description.md> --pr <owner/repo#n> --notes <notes.json>` after it. The description file holds
-two or three paragraphs, a background paragraph and then one or two on what the blueprint or page
-proposes, per the register's fourth rule. The title follows the packet title rule (sentence
-case, no closing punctuation, at most 80 characters), and the command refuses a missing
-`--description`. A resent blueprint or page shows "Revision N" on its own. A blueprint or page
-queued again after Geoff approved it opens as an amend review: the screen shows the diff since
-the approved text, and the decision carries `amends: <blob>`. Its description says what changed
-since the approval. Every queue prints its link on stderr as `approval-queue: queued <id> at
-<url>`. A session's browser never opens the queue's `/claim`, which marks Geoff's browser as the
-one the queue opens new items in.
+A docs PR is never a packet part, because Geoff reads and edits the pages themselves, with the
+fact-check notes beside the lines they concern. It is its own queue item, queued from a worktree
+checked out at the PR's head, clean and pushed: `approval-queue docs <worktree> <owner/repo#n>
+<title> --description <file> [--notes <notes.json>] [--replies <replies.json>]`. Run it as a
+background command, like a packet. The title follows the packet title rule. The description file
+holds a background paragraph and then one or two on what the pages change, per the register's
+fourth rule; the command refuses a missing or misshapen one. The notes come from the repo's
+fact-check (cairn: the `cairn-docs` skill's `references/review.md`); check them with
+`approval-queue notes --check <worktree> <notes.json>` before queuing. One PR is one waiting item,
+so a docs PR cannot also sit in a packet. The interface is fixed in the Approval Queue README's
+"The docs kind", and the cutover contract (`~/Projects/initiatives/docs-system/plans/2026-10-25-cutover-contract.md`)
+holds the rest.
 
-When a code PR carries its own blueprint and page edits, queue one `approval-queue change
-<owner/repo#n> <title> --notes <notes.json>` review for the whole PR. One exception: an edit that adds or removes a
-section, or changes the reader's path, gets its blueprint approved first, as a new page does. The
-order of the steps, and when each fact check runs, is in the `blueprint` skill.
+The decision prints one JSON line carrying `pr`, `head`, `commit`, `calls`, `comments`, and
+`threads`. On an approve: push Geoff's edits if `commit` is not `head`, wait for the repo's CI on
+`commit`, then `gh pr merge <n> -R <owner/repo> --merge --match-head-commit <commit>`, pull the
+checkout, and answer each comment in the PR thread (a change a comment asks for lands after the
+merge: a one-sentence fix as a direct change, anything larger as a follow-up docs PR queued the
+same way). On a send-back: push his edits, fix forward from the note, each call, and each comment,
+then queue the same PR again with `--replies` answering every comment. A refused approve means the
+PR moved: pull its new head and queue again.
 
 ## Follow-ups
 

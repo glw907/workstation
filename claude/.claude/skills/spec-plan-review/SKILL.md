@@ -5,7 +5,8 @@ description: >
   it, in any repo on this workstation (dubplate, cairn-cms, the sites, dotfiles). Triggers include
   "review this spec", "plan review", "adversarial review of the plan", "fan out reviewers on the
   draft", and a plan-approval gate that has no review record yet. Do not use for a code diff
-  (that is diff-reviewer) or for published docs pages (that is the docs page chain).
+  (that is diff-reviewer) or for published docs pages (that is the docs review: `cairn-docs` and
+  `docs-fact-checker` in cairn).
 ---
 
 # Spec and plan review
