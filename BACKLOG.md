@@ -5,7 +5,7 @@
 ## High
 
 - [ ] **#39** Forbid pattern signals in the read-only review agents `#bug` `#workstation` `#initiative:docs-system` *(2026-10-25)*
-  On 2026-10-25 a `plan-reviewer` probing a `pgrep` pattern cleaned up its fake processes with `pkill -f 'drafter page'` and killed batch 5's live drafting run, which resumed. Add a line to each read-only agent body (`plan-reviewer`, `diff-reviewer`, `fact-checker`, and the rest): a probe kills only PIDs it started, never by pattern. `claude/.claude/agents/`.
+  On 2026-10-25 a `plan-reviewer` probing a `pgrep` pattern cleaned up its fake processes with `pkill -f 'drafter page'` and killed batch 5's live drafting run, which resumed. Add a line to each read-only agent body (`plan-reviewer`, `diff-reviewer`, and the rest): a probe kills only PIDs it started, never by pattern. `claude/.claude/agents/`.
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
@@ -24,12 +24,12 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-24-extend-blueprints-batch-4-friction.md (workstation 3)
   Dropped: the docs-as-code cutover retired the system it served.
 
-- [ ] **#35** Have the register editor quote its target text, and avoid the `exhaustive` words `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-24)*
-  Its line numbers drifted from the file at the named commit; the author matched on text. It should also avoid the words drafter's `exhaustive` lint flags, or say a count is fact-backed. `claude/.claude/agents/cairn-register-editor.md`.
+- [ ] **#35** Have the register editor quote its target text `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-24)*
+  Its line numbers drifted from the file at the named commit; the author matched on text. `claude/.claude/agents/cairn-register-editor.md`.
   Record: ~/Projects/initiatives/docs-system/research/2026-10-24-extend-blueprints-batch-4-friction.md (workstation 2)
 
 - [ ] **#34** Cap a fact-checker proposal at the register's sentence length `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-24)*
-  Proposed fixes ran past 26 words or stacked ", which" and ", so" tails, so none could be pasted, and one proposal was itself wrong (`toggleTheme` where the scaffold calls `toggleThemeWithTransition`). `claude/.claude/agents/fact-checker.md`.
+  Proposed fixes ran past 26 words or stacked ", which" and ", so" tails, so none could be pasted, and one proposal was itself wrong (`toggleTheme` where the scaffold calls `toggleThemeWithTransition`). The cutover replaced the workstation agent with `docs-fact-checker` in cairn-cms (`.claude/agents/docs-fact-checker.md`), which now carries the item.
   Record: ~/Projects/initiatives/docs-system/research/2026-10-24-extend-blueprints-batch-4-friction.md (workstation 1)
 
 - [ ] **#33** Keep the workstation secrets out of apps a Claude session launches `#bug` `#security` `#initiative:self-hosting` *(2026-10-24)*
@@ -97,7 +97,7 @@
   Batch 2: the agent hands back through `SubagentHandback`, so saving its array verbatim needs a transcript parser. Give the save a sanctioned path, or have the agent write its array to a named file (record 18).
   Done: PR #146 (the agent writes its array to the path the dispatch names).
 - [ ] **#10** Two gate-tool cleanups `#improvement` `#workstation` *(2026-10-14)*
-  **Two gate-tool cleanups**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11): simplify `cairn-docs-outline`'s lock and fix `gateMatches`' stale doc comment; and give `cairn-run-gate` per-leg timing in its run records.
+  **Two gate-tool cleanups**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11): fix `gateMatches`' stale doc comment; and give `cairn-run-gate` per-leg timing in its run records. The `cairn-docs-outline` lock cleanup is dropped: the docs-as-code cutover retired that tool.
 
 - [ ] **#11** Approval queue hardening `#improvement` `#workstation` `#initiative:approval-queue` *(2026-10-14)*
   **Approval queue hardening**, deferred by Geoff's triage of workstation PR #13 (2026-10-11). A running app keeps serving its old build after a merge changes `~/Projects/approval-queue/approval-queue/`. Nothing prunes decided items from the state directory. A SIGKILL or power loss leaves the item on the index. The CSP limits only `script-src`, so a remote image in a PR body loads at view time (`img-src 'self' data:` closes it). `~/Projects/approval-queue/tests/approval-queue.test.sh` never runs the 10-second "did not answer" exit or the lock release. The approval-packets pass delivered the rest: the board skips an unreadable `item.json` or `decision.json` and names it, and the shell tests exercise the start-the-app branch.
