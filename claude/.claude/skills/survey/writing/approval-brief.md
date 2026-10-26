@@ -315,7 +315,7 @@ Source: <where the question came from>
 <The agent-facing sections: what landed, the review, the score.>
 ```
 
-### A packet with two asks (drafter link checker)
+### A packet with two asks (scribe link checker)
 
 The title names the thing, and the two summary paragraphs carry the decision: what ships, what
 cannot be undone, the weak spot, and both open questions with the recommendation. The first ask
@@ -323,16 +323,16 @@ is bound to a PR and tagged, and the second is a call with no part. Each ask's `
 the deciding fact, so the closed card decides.
 
 ````packet
-# Drafter link checker and version 0.3.0
+# Scribe link checker and version 0.3.0
 
-The drafter initiative gives the docs writer a tool that checks a page before a person reads it. This packet carries the link checker, the third of four stages. A package registry keeps every published version for good, so a release can be replaced but never removed.
+The scribe initiative gives the docs writer a tool that checks a page before a person reads it. This packet carries the link checker, the third of four stages. A package registry keeps every published version for good, so a release can be replaced but never removed.
 
 The link checker reads every link on a docs page and reports each one that no longer resolves. It ships in two PRs: PR 51 adds the checker and publishes version 0.3.0, and PR 52 adds its changelog entry. Every check passes and the review verdict is accept. The checker has run only on the sample pages, where it found eleven broken links.
 
 Approving merges both PRs in order, and the merge of PR 51 publishes 0.3.0, which cannot be undone. Before it goes out, you choose whether a broken link warns or fails the build. The session recommends a warning first, so authors can clear the old links.
 
 ## If you approve
-1. [session] Merge glw907/drafter#51, then glw907/drafter#52.
+1. [session] Merge glw907/scribe#51, then glw907/scribe#52.
 2. [irreversible] Publishing version 0.3.0 to the package registry runs when #51 merges.
 3. [you: confirm the registry login] Check the version page once the publish ends.
 
@@ -341,7 +341,7 @@ The checker was run on the sample pages only, not on the full docs set.
 
 ## Ask: Publish version 0.3.0 with the link checker on?
 Rule: irreversible
-Part: glw907/drafter#51
+Part: glw907/scribe#51
 Recommended: 1
 Reason: All checks pass and the review verdict is accept, and the package version is new.
 Summary: PR 51 publishes 0.3.0 to the registry, and a published version cannot be taken back. Every check passes.
@@ -350,7 +350,7 @@ Background: The registry refuses a second upload of the same version number. A m
 
 Facts: The version number is unused and the checks are green.
 - Version 0.3.0 is not in the registry list (`docs/releases.md`)
-- All four checks pass (`glw907/drafter#51`)
+- All four checks pass (`glw907/scribe#51`)
 
 Choices:
 - Publish: merges the PR and publishes 0.3.0; a later release can replace it but never remove it [approve]
@@ -376,24 +376,24 @@ Choices:
 ## Routine
 | Part | Verdict | Fact | Why |
 |---|---|---|---|
-| glw907/drafter#52 | approve | The change is a changelog entry and the checks pass. | Nothing in it needs a call. |
+| glw907/scribe#52 | approve | The change is a changelog entry and the checks pass. | Nothing in it needs a call. |
 | step:1 | session | A merge can be reverted. | The order is fixed by the plan. |
 ````
 
-### A routine-only packet (drafter docs fixes)
+### A routine-only packet (scribe docs fixes)
 
 When the facts settle every part, the packet has no ask. The change is simple, so one short
 summary paragraph is enough, and the reader approves from the description and the table.
 
 ````packet
-# Drafter guide corrections
+# Scribe guide corrections
 
-The drafter initiative keeps its own guide current as the tool grows. This packet carries small corrections found while the link checker was built. A changelog is the list of changes a release made.
+The scribe initiative keeps its guide current as the tool grows. This packet carries small corrections found while the link checker was built. A changelog is the list of changes a release made.
 
-PR 53 fixes a three-word typo in the guide, and PR 54 adds a missing changelog line for the last release. Both change text only and every check passes. Approving merges them, and nothing about how drafter runs changes.
+PR 53 fixes a three-word typo in the guide, and PR 54 adds a missing changelog line for the last release. Both change text only and every check passes. Approving merges them, and nothing about how scribe runs changes.
 
 ## If you approve
-1. [session] Merge glw907/drafter#53, then glw907/drafter#54.
+1. [session] Merge glw907/scribe#53, then glw907/scribe#54.
 
 ## Not checked
 The guide was not rebuilt on the live site; the build runs after the merge.
@@ -401,34 +401,34 @@ The guide was not rebuilt on the live site; the build runs after the merge.
 ## Routine
 | Part | Verdict | Fact | Why |
 |---|---|---|---|
-| glw907/drafter#53 | approve | The diff changes three words in the guide and the checks pass. | A typo fix. |
-| glw907/drafter#54 | approve | The diff adds one changelog line and the checks pass. | The line matches the merged release. |
+| glw907/scribe#53 | approve | The diff changes three words in the guide and the checks pass. | A typo fix. |
+| glw907/scribe#54 | approve | The diff adds one changelog line and the checks pass. | The line matches the merged release. |
 | step:1 | session | A merge can be reverted. | The order does not matter. |
 ````
 
-### A packet with a gate-failed ask (drafter note template)
+### A packet with a gate-failed ask (scribe note template)
 
 A failing check is always an ask, and it names the PR. The evidence excerpt shows the failure
 itself, so the reader need not open the log.
 
 ````packet
-# Drafter note template
+# Scribe note template
 
-The drafter initiative replaces hand-written release notes with generated ones. This packet carries the template the notes are built from. A gate is the set of checks and the review a PR must pass.
+The scribe initiative replaces hand-written release notes with generated ones. This packet carries the template the notes are built from. A gate is the set of checks and the review a PR must pass.
 
 PR 61 adds the template and the notes file it generates, and PR 62 adds the template's tests. PR 62 passes its gate. PR 61 fails one lint check, on a long line in the generated file. The repo's style policy exempts generated files, but the check's config predates the policy.
 
 Approving merges both PRs in order. Merging PR 61 with the check red is your call, and the session recommends it because the failure sits only in the exempt file. A revert PR undoes either merge.
 
 ## If you approve
-1. [session] Merge glw907/drafter#61, then glw907/drafter#62.
+1. [session] Merge glw907/scribe#61, then glw907/scribe#62.
 
 ## Not checked
 The generated notes were not read on the live project page.
 
 ## Ask: Merge the note template with its lint check red?
 Rule: gate-failed
-Part: glw907/drafter#61
+Part: glw907/scribe#61
 Recommended: 1
 Reason: The only failure is in a generated file that the repo exempts from the style rule.
 Summary: PR 61 fails one lint check, and the failure is in a generated file. The repo waives that rule for generated files.
@@ -436,7 +436,7 @@ Summary: PR 61 fails one lint check, and the failure is in a generated file. The
 Background: A lint check scans files for style rules. The repo's policy exempts generated files, but the check's config predates the policy and still scans them.
 
 Facts: The one error is in a generated file.
-- The lint check reports one error, in `notes.generated.ts` (`glw907/drafter#61`)
+- The lint check reports one error, in `notes.generated.ts` (`glw907/scribe#61`)
 - The style policy exempts generated files (`docs/style.md`)
 
 Choices:
@@ -452,20 +452,20 @@ notes.generated.ts:12:1  error  line too long (max-len)
 ## Routine
 | Part | Verdict | Fact | Why |
 |---|---|---|---|
-| glw907/drafter#62 | approve | All checks pass and the review verdict is accept. | Nothing in it needs a call. |
+| glw907/scribe#62 | approve | All checks pass and the review verdict is accept. | Nothing in it needs a call. |
 | step:1 | session | A merge can be reverted. | The order is fixed by the plan. |
 ````
 
-### A revision (drafter note template, resent)
+### A revision (scribe note template, resent)
 
 A packet that resends a part Geoff sent back carries `## What changed`. Each bullet answers one
 call or one point of his note, in the order he made them. The page puts his note above the
 bullets, so the bullets say what the session did and never quote him.
 
 ````packet
-# Drafter note template, revised
+# Scribe note template, revised
 
-The drafter initiative replaces hand-written release notes with generated ones. You sent the first packet back on PR 61, which adds the note template. You sent it back because the lint check still scanned the generated file, and you asked for the check's config to change instead of merging past the red.
+The scribe initiative replaces hand-written release notes with generated ones. You sent the first packet back on PR 61, which adds the note template. You sent it back because the lint check still scanned the generated file, and you asked for the check's config to change instead of merging past the red.
 
 The session fixed the check, so PR 61 now passes its gate and the revised packet has no ask. PR 62, which adds the template's tests, gains a test of the skip and passes. Approving merges both PRs in order, and a revert PR undoes either merge.
 
@@ -474,7 +474,7 @@ The session fixed the check, so PR 61 now passes its gate and the revised packet
 - You asked for a test of the skip: PR 62 gains a case that lints a generated file and expects no error.
 
 ## If you approve
-1. [session] Merge glw907/drafter#61, then glw907/drafter#62.
+1. [session] Merge glw907/scribe#61, then glw907/scribe#62.
 
 ## Not checked
 The generated notes were not read on the live project page.
@@ -482,8 +482,8 @@ The generated notes were not read on the live project page.
 ## Routine
 | Part | Verdict | Fact | Why |
 |---|---|---|---|
-| glw907/drafter#61 | approve | The lint check passes after the config change. | The failure you sent it back for is gone. |
-| glw907/drafter#62 | approve | All checks pass and the new test covers the skip. | Nothing in it needs a call. |
+| glw907/scribe#61 | approve | The lint check passes after the config change. | The failure you sent it back for is gone. |
+| glw907/scribe#62 | approve | All checks pass and the new test covers the skip. | Nothing in it needs a call. |
 | step:1 | session | A merge can be reverted. | The order is fixed by the plan. |
 ````
 
@@ -527,7 +527,7 @@ Only the exact commit you approved can merge. A permission rule allows `gh pr me
 A new test covers the reminder; the full check passed. Five cases: a PR opened, one opened inside a longer command, a different `gh` command, a failed open, and unreadable input.
 ```
 
-### A triage list (drafter Pass 0)
+### A triage list (scribe config pass)
 
 The headline is the one call that needs Geoff now, the lede counts the rest, and each row's
 `why` is a plain reason in a sentence. Technical references go in `detail`.
@@ -535,54 +535,54 @@ The headline is the one call that needs Geoff now, the lede counts the rest, and
 ```brief-triage
 {
   "headline": "One follow-up needs doing before the next docs run.",
-  "lede": "Pass 0’s review found eight small gaps. The session proposes doing one now, four later, and skipping three. Change any call you disagree with.",
+  "lede": "The config pass’s review found eight small gaps. The session proposes doing one now, four later, and skipping three. Change any call you disagree with.",
   "rows": [
     {
-      "action": "Teach cairn’s docs review page to read the new plan format.",
-      "why": "Plans now save as YAML; until this lands the review page shows no plan for a new page, and the next docs run depends on it.",
-      "detail": "From workstation#36: `scripts/docs-review/embed.mjs` `planPathFor` reads only `<slug>.plan.md`, so it can't show a `.plan.yaml`. Your ruling, 2026-10-12: land before the next YAML chain run.",
+      "action": "Teach the review page to read the new settings format.",
+      "why": "Settings now save as YAML; until this lands the review page shows no settings for a new report, and the next run depends on it.",
+      "detail": "From scribe#2: `scripts/review/embed.mjs` `settingsPathFor` reads only `<slug>.settings.md`, so it can't show a `.settings.yaml`. Your ruling, 2026-10-12: land before the next YAML run.",
       "proposed": "now"
     },
     {
-      "action": "Make the plan checker catch a note written after a title or heading.",
-      "why": "A note there silently cuts the title short, with the page link built from it. Not seen in a real plan yet.",
-      "detail": "From drafter#1: `title` and `heading` are not prose fields, so `title: X # note` is cut at the comment with no finding.",
+      "action": "Make the settings checker catch a note written after a title or heading.",
+      "why": "A note there silently cuts the title short, with the report link built from it. Not seen in real settings yet.",
+      "detail": "From scribe#1: `title` and `heading` are not prose fields, so `title: X # note` is cut at the comment with no finding.",
       "proposed": "defer"
     },
     {
       "action": "Flag a link that points only at “#”.",
       "why": "It passes silently today, and it’s rare.",
-      "detail": "From drafter#1: a bare `#` link target passes silently.",
+      "detail": "From scribe#1: a bare `#` link target passes silently.",
       "proposed": "defer"
     },
     {
-      "action": "Check that each plan’s page path points inside the repo.",
+      "action": "Check that each report’s output path points inside the repo.",
       "why": "A path outside the repo sends the link warnings to the wrong place.",
-      "detail": "From drafter#1: `page.path` is not validated as repo-relative.",
+      "detail": "From scribe#1: `report.path` is not validated as repo-relative.",
       "proposed": "defer"
     },
     {
       "action": "Replace a needless pattern match with a plain text search.",
       "why": "Tidier code, no change in behavior.",
-      "detail": "From drafter#1: `bracketRe` is a regexp for a literal `[`.",
+      "detail": "From scribe#1: `bracketRe` is a regexp for a literal `[`.",
       "proposed": "defer"
     },
     {
-      "action": "Skip the no-facts warning when a facts list is empty.",
+      "action": "Skip the no-sources warning when a sources list is empty.",
       "why": "Harmless as it is; an empty list is rare.",
-      "detail": "From drafter#1: a `sentence` with `facts: []` still gets the warning.",
+      "detail": "From scribe#1: a `section` with `sources: []` still gets the warning.",
       "proposed": "drop"
     },
     {
-      "action": "Read the facts folder once per run, not once per plan.",
-      "why": "Only a speed-up, and runs have few plans.",
-      "detail": "From drafter#1: `LoadFacts` re-reads the facts directory for each plan.",
+      "action": "Read the sources folder once per run, not once per report.",
+      "why": "Only a speed-up, and runs have few reports.",
+      "detail": "From scribe#1: `LoadSources` re-reads the sources directory for each report.",
       "proposed": "drop"
     },
     {
       "action": "Move the end-to-end test’s program path out of a shared variable.",
       "why": "It’s the standard Go test setup; nothing to gain.",
-      "detail": "From drafter#1: `e2e` keeps the built binary path in a package global.",
+      "detail": "From scribe#1: `e2e` keeps the built binary path in a package global.",
       "proposed": "drop"
     }
   ]
@@ -591,8 +591,8 @@ The headline is the one call that needs Geoff now, the lede counts the rest, and
 
 ### Before and after: a real PR body
 
-The source is the dotfiles PR for the drafter Pass 0 plan
-(`docs/plans/2026-10-12-drafter-pass0-plan.md`, "Close"). The "before" opens as most
+The source is the dotfiles PR for the scribe config pass
+(`docs/plans/2026-10-12-scribe-config-plan.md`, "Close"). The "before" opens as most
 PR bodies open today: a record of the work, in the author's order, for a reader who already
 knows the plan. Geoff has to dig for what approving does.
 
@@ -600,8 +600,8 @@ knows the plan. Geoff has to dig for what approving does.
 ## What landed
 
 - T1 through T7 and the close, per the plan.
-- Chain change in T6, end-to-end run on one cairn page in T7.
-- `drafter check-plan` added in glw907/drafter; see that PR.
+- Runner change in T6, end-to-end run on one report in T7.
+- `scribe check-config` added in glw907/scribe; see that PR.
 
 ## Review
 
@@ -609,8 +609,8 @@ Whole-branch `diff-reviewer` run on the branch.
 
 ## Found, not done
 
-- cairn review-page follow-up (now).
-- `planFormat: "markdown"` escape hatch for in-flight runs.
+- Review-page follow-up (now).
+- `settingsFormat: "markdown"` escape hatch for in-flight runs.
 ```
 
 The "after" opens with the decision and its consequences. The record of the work moves below
@@ -619,32 +619,32 @@ the brief, into the technical notes, where it was already.
 ```brief
 ## Brief
 
-Planners can now write a docs page’s plan as YAML and check it with `drafter check-plan`, and the docs page chain’s plan step now writes YAML plans and runs that check until it passes.
+Authors can now write a report’s settings as YAML and check them with `scribe check-config`, and the runner’s setup step now writes YAML settings and runs that check until it passes.
 
-Cairn’s docs review page reads only Markdown plans, so a YAML plan shows nothing there until a follow-up lands. That follow-up has to land before the next chain run that uses YAML plans.
+The review page reads only Markdown settings, so YAML settings show nothing there until a follow-up lands. That follow-up has to land before the next run that uses YAML settings.
 
 ### What changes
 
-- A planner writes `<page>.plan.yaml` and runs `drafter check-plan`. Every finding prints as `file:line` with the fix.
-- The chain’s plan step writes YAML plans and reruns the check until it exits 0. The back half of the chain drafts from a YAML plan unchanged.
+- An author writes `<report>.settings.yaml` and runs `scribe check-config`. Every finding prints as `file:line` with the fix.
+- The runner’s setup step writes YAML settings and reruns the check until it exits 0. The rest of the runner reads YAML settings unchanged.
 
 ### If you approve
 
-1. The drafter PR in `glw907/drafter` merges first, and the drafter installs from its `main`.
+1. The scribe PR in `glw907/scribe` merges first, and scribe installs from its `main`.
 2. This PR merges and the checkout pulls.
 3. The session runs `check-drift` and tells the cairn docs sessions the merge time and the escape hatch.
 
 ### Worth knowing
 
-The cairn review-page follow-up is the one item proposed for now, on your ruling of 2026-10-12.
+The review-page follow-up is the one item proposed for now, on your ruling of 2026-10-12.
 
 ### The escape hatch
 
-The `planFormat: "markdown"` setting keeps in-flight runs on Markdown plans. A run already under way can finish on the old format.
+The `settingsFormat: "markdown"` setting keeps in-flight runs on Markdown settings. A run already under way can finish on the old format.
 
 ### The two PRs
 
-Two PRs carry this pass. The drafter PR holds the tool and this one holds the chain change; each body names the other.
+Two PRs carry this pass. The scribe PR holds the tool and this one holds the runner change; each body names the other.
 
 ## What landed
 
