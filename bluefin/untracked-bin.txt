@@ -4,7 +4,6 @@
 # listed here, so a new stray surfaces instead of silently accumulating.
 # Symlinks (stow, uv shims, kitty) are never flagged.
 NumberLink.AppImage
-drafter
 harper-ls
 marksman
 odin4

@@ -80,12 +80,10 @@ ASC age key, and `Documents`, `Pictures`, and `corpus`. A `manifest.txt` at
 the root lists every path. The repos and folders it once carried besides
 these are retired, and the 2026-10-14 repo organization pass archived them.
 
-The 2026-10-12 bundle missed three things, found on pavilion the next day.
+The 2026-10-12 bundle missed two things, found on pavilion the next day.
 A future bundle carries them too:
 
-- `~/.local/share/drafter/`: drafter's spike evidence and interim notes (28 MB).
-- `~/.local/share/cairn/`: cairn's 69 exemplar captures (90 MB). cairn's
-  outline helper fails without them, so the docs page chain can't draft.
+- `~/.local/share/cairn/`: cairn's 69 exemplar captures (90 MB).
 - `~/.config/fastmail/fastmail-dav-token.age`: a token since retired; contacts
   now come from ward through GNOME Online Accounts.
 
@@ -264,7 +262,7 @@ the rest unless the step says it is a hard stop.
    ```bash
    cd ~/Projects
    for r in 907-life aksailingclub-legacy aksailingclub-org cairn-cms cairn-pub \
-            cairn-themes drafter dubplate ecxc-ski phonebook poplar \
+            cairn-themes dubplate ecxc-ski phonebook poplar \
             xcathletes-org; do
        [ -d "$r" ] || git clone "https://github.com/glw907/$r.git"
    done
@@ -289,7 +287,6 @@ the rest unless the step says it is a hard stop.
 8. Build the local binaries the laptop carries outside the stow tree:
    ```bash
    make -C ~/Projects/poplar install
-   make -C ~/Projects/drafter install
    make -C ~/.dotfiles/claude/.claude/skills/writing-voice/evals/tellgrader install
    ```
    `tellgrader` matters more than it looks: the writing-voice hook runs it on

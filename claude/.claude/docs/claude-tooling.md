@@ -11,7 +11,7 @@ machine.** The manifests record intent; the script reports what happened.
 | --- | --- | --- | --- |
 | Skills (authored here) | `~/.dotfiles/claude/.claude/skills/<name>/` (stowed) | the directory itself | stow |
 | Skills (vendored, third party) | same directory | `~/.claude/tooling/vendored-skills.json` (stowed) | `claude-tooling-sync update-skills` |
-| Skills (authored in a project repo) | `claude/.claude/skills/<name>/` in `~/Projects/drafter` (the `blueprint` skill), linked into `~/.claude/skills/` by its `make install` | the directory | `make install` in that repo |
+| Skills and agents (authored in a project repo) | project scope: `.claude/skills/cairn-docs` and `.claude/agents/docs-fact-checker.md` in `~/Projects/cairn-cms`, owned by that repo | the directory | Claude Code, in a session started in that repo |
 | Agents | `~/.dotfiles/claude/.claude/agents/<name>.md` (stowed) | the directory itself | stow |
 | Docs (this file and its siblings) | `~/.dotfiles/claude/.claude/docs/` (stowed) | the directory itself | stow |
 | Instructions (cross-repo reference docs, linked from consumer CLAUDE.md files) | `~/.dotfiles/claude/.claude/instructions/` (stowed) | the directory itself | stow |
@@ -22,7 +22,6 @@ machine.** The manifests record intent; the script reports what happened.
 | MCP servers, project scope | a repo's `.mcp.json` | that repo | the repo's own CLAUDE.md names it |
 | Secrets a server needs | the age store, `~/.local/secrets` | `~/.dotfiles/secrets/registry.md` | `secret-receive`, `sync.sh` |
 | Memory | `~/.claude/projects/<repo>/memory/` | `MEMORY.md` index per repo | the session |
-| Workflows | `claude/.claude/workflows/` in `~/Projects/drafter`, installed by its `make install` (invoked by name; see "Workflows" below) | the directory | the Workflow tool |
 
 ## Rules
 
@@ -31,19 +30,14 @@ The rules for adding or changing any piece live in the `claude-infra` skill.
 ## Model pins
 
 Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; the seats are in
-`pass-core` "Models"): every reviewer agent under `agents/` and the workflow script
-`docs-page-chain.js` (source repo `~/Projects/drafter`, linked into the live
-workflows directory by `make install`) names `claude-opus-5-5` explicitly (`diff-reviewer`, the four domain
-reviewers, `engine-triage`, `go-architecture-reader`, `figure-verifier`, `visual-verifier`,
-`prose-voice-reviewer`, `cairn-register-editor`, `plan-reviewer`, `fact-checker`). `cairn-docs-drafter` (the docs page chain's
-default drafter, `effort: high`) also pins `claude-opus-5-5` explicitly and carries no `skills:`
-line; the page-inputs step's output (job, page type, exemplar excerpts, fact ids, claim inventory)
-arrives in the dispatch prompt, never a separate profile arg or file. No agent pins Fable 5.1; it
-is reached only by a per-dispatch escalation. Implementers stay on `sonnet` at effort `medium`; the
-docs page chain drafts published pages on `claude-opus-5-5` (its `drafterModel` default, Geoff
-2026-09-22). A frontmatter pin is read at session start, so a repin reaches a running session only
-through a per-dispatch `model`; verify a repin from a fresh headless session by grepping the
-subagent transcript's `"model"` field, never from the agent's own answer.
+`pass-core` "Models"): every reviewer agent under `agents/` names `claude-opus-5-5` explicitly
+(`diff-reviewer`, the four domain reviewers, `engine-triage`, `go-architecture-reader`,
+`figure-verifier`, `visual-verifier`, `prose-voice-reviewer`, `cairn-register-editor`,
+`plan-reviewer`). No agent pins Fable 5.1; it is reached only by a per-dispatch escalation.
+Implementers stay on `sonnet` at effort `medium`. A frontmatter pin is read at session start, so a
+repin reaches a running session only through a per-dispatch `model`; verify a
+repin from a fresh headless session by grepping the subagent transcript's `"model"` field,
+never from the agent's own answer.
 
 `worktree.baseRef: "head"` in the tracked `settings.json` applies in every repo, so subagent and
 `--worktree` branches start from the local `HEAD`, not the remote default (code.claude.com/docs/en/
@@ -69,11 +63,7 @@ tracked file reaches the live one only through `apply`.
 
 ## Workflows
 
-`docs-page-chain.js` and its `cairn-docs-outline` helper live in `~/Projects/drafter`
-(`claude/.claude/workflows/`, `bin/.local/bin/`), and `make -C ~/Projects/drafter install` links them
-into the live workflows directory and `~/.local/bin/`. This repo keeps no workflow script. A
-machine that still has the old stow links restows (`stow -R bin claude`) before running the install,
-which refuses to write through a symlink.
+This repo keeps no workflow script, and no project repo installs one.
 
 Invoke a workflow by name, never from a scratchpad copy, so every run executes the
 committed script. By-name resolution can serve a stale copy after the script changed in the same

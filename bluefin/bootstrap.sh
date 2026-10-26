@@ -297,19 +297,15 @@ setup_stow() {
 }
 
 setup_projects_repos() {
-    echo "== setup: initiatives, drafter, and approval-queue clones =="
+    echo "== setup: initiatives and approval-queue clones =="
     local repo
-    for repo in initiatives drafter approval-queue; do
+    for repo in initiatives approval-queue; do
         if [[ ! -d "$HOME/Projects/$repo/.git" ]]; then
             mkdir -p "$HOME/Projects" || return 1
             gh repo clone "glw907/$repo" "$HOME/Projects/$repo" || return 1
         fi
     done
     # Each repo owns its install step; one that has not landed yet is skipped.
-    if [[ -f "$HOME/Projects/drafter/Makefile" ]] \
-        && grep -q '^install:' "$HOME/Projects/drafter/Makefile"; then
-        make -C "$HOME/Projects/drafter" install || return 1
-    fi
     if [[ -f "$HOME/Projects/approval-queue/scripts/install.sh" ]]; then
         bash "$HOME/Projects/approval-queue/scripts/install.sh" || return 1
     fi

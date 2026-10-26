@@ -68,7 +68,7 @@ proceeds to step 4.
 
 The sweep catches the docs-code drift that option coverage (`check:options`) cannot see: scaffold
 behavior and changelog-described behavior outside option-bearing types. It finds new gaps; it does not
-re-verify existing facts whose cited files changed.
+re-check existing pages whose code changed.
 
 - **Window.** From the last engine tag whose release commit body carries a "Doc-code sweep" record, to `main`. Find the tags
   with `git tag --list 'v[0-9]*' --sort=-v:refname | grep -v -e '-'`: the `v[0-9]*` glob skips the
@@ -80,17 +80,12 @@ re-verify existing facts whose cited files changed.
   lines. One module or one surface per agent context, never a per-file window (the `v0.97.0..v0.98.0`
   window alone spanned about 192 files). Independent verifiers confirm, correct, or refute each finding
   against source at `main`; a finder never verifies its own finding.
-- **Filing.** Before an arm merges, place a verified gap on its outline page (`docs/internal/outlines/`).
-  After an arm merges, file it as a fact naming the rebuilt page it affects; the page fix follows in a
-  later pass under "Edits after the chain", and the cut never waits on it. A gap with no page home
-  becomes a friction entry in `docs/internal/docs-friction-log.md`, never a new page. A code defect is
-  a friction entry, never a fact. Commit the filings as docs commits on `main` ahead of the version
-  commit, with `npm run check:facts` green.
+- **Filing.** Fix a verified gap on the page it affects, through the `cairn-docs` skill, in a docs PR
+  reviewed as a `docs` review; the cut never waits on it. A gap with no page home becomes a friction
+  entry in `docs/internal/docs-friction-log.md`, never a new page. A code defect is a friction entry,
+  never a page fix.
 - **Cap.** 1M tokens per cut, counted across every sweep subagent. At the cap, stop, report the modules
   left unswept, and carry them into the next window's record. Never extend the cap to finish.
-- **Staleness report.** A verifier that meets an existing fact the changed code contradicts reports it.
-  Record the report in the yield record: it is the trigger for the deferred fact-staleness
-  mechanism (`docs/specs/2026-09-30-docs-code-sync-design.md`, "Deferred, with triggers").
 - **Yield record.** Put a "Doc-code sweep" paragraph in the release commit body per run, so git and the commit carry the yield (ruling 8): the tag the window started from, the verified
   gaps found beside the modules swept (so window size does not confound the measure), how each gap was
   filed, the unswept modules, and the tokens spent. The next sweep's window starts at this cut's tag.

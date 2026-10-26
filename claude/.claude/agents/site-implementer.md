@@ -63,22 +63,13 @@ green lane, report BLOCKED with the exact failing output instead of committing a
 When `svelte-check` complains, fix the cause. A targeted, explained cast is fine. A blanket
 `as never` or `as any` that hides a real type problem is not; stop and report it as a concern.
 
-## The facts container
+## Documentation
 
-Follow the cairn-cms admin and extend pages as written, and fix or file every divergence between a
-page and reality under the "Edits after the chain" rule in cairn-cms
-`docs/specs/2026-09-26-draft-docs-approach-design.md`: a changed or new claim cites a
-citable fact, a new fact is filed `[candidate]`, the page's brief is updated in the same change,
-and `npm run check:provenance` is the tripwire. Before opening a cairn-cms worktree, run the
-one-executor check: `pgrep -f` the worktree path, and `git status` for warm changes you did not
-author. Edit on a branch `site-docs/<site>-<pass>` off cairn-cms `main`, fix the pages, file the
-container bullets, run `npm run check:docs && npm run check:vale && npm run check:facts`, plus
-`npm run check:docs-gate -- --page <page>` for each page you touch, and merge by PR under the docs
-gate before the site pass closes. A divergence on an arm whose stage is still in flight is filed,
-never fixed, under a fixed report heading `Engine docs fixes` (the page path, what is missing or
-wrong, the source and engine version). Any bullet you file or edit in the cairn-cms facts container
-carries its stable fact id per that repo's facts README, enforced by its `check:facts`; this never
-applies to a site's own docs.
+A task that changes documented behavior fixes the page in the same commit. For a cairn-cms page,
+follow cairn's fix rule in its `CLAUDE.md`: edit on a branch `site-docs/<site>-<pass>` off cairn-cms
+`main`, and merge by PR under the docs gate before the site pass closes. Before opening a cairn-cms
+worktree, run the one-executor check: `pgrep -f` the worktree path, and `git status` for warm
+changes you did not author.
 
 ## Escalation and memory
 

@@ -21,19 +21,19 @@ contract, auth, any seam). Exactly two outcomes: a consultation brief, or a reco
 one-line "no engine asks" in the plan header. The null outcome is deliberately cheap.
 
 The plan header carries exactly one of the two engine-consultation lines, plus the
-facts-consulted line, so the backstop can match on it:
+pages-consulted line, so the backstop can match on it:
 
 ```markdown
 **Engine consultation:** no engine asks.
 **Engine consultation:** [<brief filename>](<link to the filed brief>)
-**Facts consulted:** <arm files read, or "none">
+**Pages consulted:** <reference pages read, or "none">
 ```
 
-Before the plan is written, the author's pre-plan read names the container arms the pass
-builds on, at `~/Projects/cairn-cms/docs/internal/facts/`, and the open entries in
+Before the plan is written, the author's pre-plan read names the reference pages the pass
+builds on (`~/Projects/cairn-cms/docs/reference/`, with the code at the commit), and the open entries in
 `~/Projects/cairn-cms/docs/internal/docs-friction-log.md`, so a hole the last site could not
-close reaches this plan. The plan header's `**Facts consulted:**` line records that read: the arm files it covered and the
-open friction entries it found (or "none" for either).
+close reaches this plan. The plan header's `**Pages consulted:**` line records that read: the
+pages it covered and the open friction entries it found (or "none" for either).
 
 **Pass-start backstop, for the resumed path.** After reading the plan and before the first
 implementer dispatch: if the plan header carries neither a consultation-brief link nor the
@@ -63,8 +63,8 @@ fields:
 ```
 
 Field 4 prices the decline for the triage, and on a decline it becomes the sanctioned end
-state. When an item disputes a documented fact, the brief cites the container bullet it
-disputes (`docs/internal/facts/<arm>.md`, the bullet text or line).
+state. When an item disputes a documented fact, the brief cites the page or the `file:line` it
+disputes.
 
 ## The standard
 
