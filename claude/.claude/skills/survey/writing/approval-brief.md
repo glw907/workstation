@@ -534,7 +534,7 @@ The headline is the one call that needs Geoff now, the lede counts the rest, and
 
 ```brief-triage
 {
-  "headline": "One follow-up needs doing before the next docs run.",
+  "headline": "One follow-up needs doing before the next run.",
   "lede": "The config pass’s review found eight small gaps. The session proposes doing one now, four later, and skipping three. Change any call you disagree with.",
   "rows": [
     {
@@ -589,10 +589,9 @@ The headline is the one call that needs Geoff now, the lede counts the rest, and
 }
 ```
 
-### Before and after: a real PR body
+### Before and after: a PR body
 
-The source is the dotfiles PR for the scribe config pass
-(`docs/plans/2026-10-12-scribe-config-plan.md`, "Close"). The "before" opens as most
+The example is a PR for the scribe config pass. The "before" opens as most
 PR bodies open today: a record of the work, in the author's order, for a reader who already
 knows the plan. Geoff has to dig for what approving does.
 
@@ -632,7 +631,7 @@ The review page reads only Markdown settings, so YAML settings show nothing ther
 
 1. The scribe PR in `glw907/scribe` merges first, and scribe installs from its `main`.
 2. This PR merges and the checkout pulls.
-3. The session runs `check-drift` and tells the cairn docs sessions the merge time and the escape hatch.
+3. The session runs `check-drift` and tells the sessions that use scribe the merge time and the escape hatch.
 
 ### Worth knowing
 
