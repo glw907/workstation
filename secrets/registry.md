@@ -177,7 +177,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | DUBPLATE_SMTP_PASSWORD | ✓  | —        | —    | —        | —          |
 | MUSIC_R2_RO_ACCESS_KEY_ID | ✓ | —      | —    | —        | —          |
 | MUSIC_R2_RO_SECRET_ACCESS_KEY | ✓ | — | —    | —        | —          |
-| DRAFTER_API_KEY   | ✓       | —      | —    | —        | —          |
 | DUBPLATE_MAGIC_LINK_SECRET | ✓ | —   | —    | —        | —          |
 | DUBPLATE_SESSION_SECRET | ✓ | —      | —    | —        | —          |
 | PHONEBOOK_PHONE_ADMIN_KITCHEN | ✓ | — | — | — | — |
@@ -571,17 +570,6 @@ tmpfs cache; no password manager holds it for scripts.
   transcript, because `~/.local/secrets` is written unquoted and the value held shell
   separators. Geoff changed it the same day to letters and digits only, which keep the file
   loadable until the writer quotes values
-
-### DRAFTER_API_KEY
-- **Grants**: Anthropic API access in the Console workspace created for drafter, under that
-  workspace's spend limit
-- **Used by**: `drafter`, which reads it through its `key_env` setting (default
-  `DRAFTER_API_KEY`) for batched drafting and review of docs pages
-- **Rotate at**: the Anthropic Console, in the drafter workspace's API keys; then
-  `secret-receive DRAFTER_API_KEY`
-- **History**: received on pavilion 2026-10-13 with `secret-receive`, per the drafter
-  completion design's setup step; this entry and the store commit landed 2026-10-14.
-  thinkpad-x1 picks it up on its next pull and `sync.sh --local`.
 
 ### IMMICH_PIKAPODS_API_KEY
 - **Grants**: an Immich API key on the PikaPods instance at photos.907.life, minted from
