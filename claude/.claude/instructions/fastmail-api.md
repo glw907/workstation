@@ -1,5 +1,9 @@
 # Fastmail API Access
 
+> **Retired.** The household moved its mail from Fastmail to Stalwart on ward (`mail.907.life`)
+> in October 2026. This page describes the old service only; use it to read a Fastmail-era record,
+> never to send or file mail. Current mail facts: `~/.claude/docs/bluefin-admin.md` "Email".
+
 ## Credentials
 
 - **Token env var**: `FASTMAIL_API_TOKEN` (sourced from `~/.local/secrets`)

@@ -119,9 +119,9 @@ scheme). Use an API or CLI first for external services; no dashboard unless the 
 
 - **Google Docs / Drive / Sheets**: `gws` CLI, never an MCP server. Auth modes and write
   patterns: `bluefin-admin.md` "Google Docs / Drive (gws)".
-- **Email**: poplar (`~/Projects/poplar/`, Fastmail via JMAP; API reference
-  `~/.claude/instructions/fastmail-api.md`). Hylki is the desktop mail client; GNOME Contacts and
-  Calendar hold contacts and calendars.
+- **Email**: self-hosted Stalwart on ward (`mail.907.life`, JMAP, IMAP, DAV); Fastmail is retired.
+  Hylki is the desktop mail client, webmail is `webmail.907.life`, and GNOME Contacts and Calendar
+  read ward. Server facts and scripts: `~/Projects/servers` (`docs/decisions.md`).
 
 ## Claude tooling: manifests, scopes, and the DaisyUI-first rule (Geoff, 2026-09-13)
 

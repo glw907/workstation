@@ -382,14 +382,19 @@ Desktop OAuth client pair lives in the age store as `GOOGLE_WORKSPACE_CLI_CLIENT
 personal login. Formatting edits go through `docs documents batchUpdate` after a `get` for
 indexes; `--dry-run` first on any write. Patterns: the `google-docs-formatting` memory.
 
-## Email (poplar)
+## Email
 
-Moved from the global CLAUDE.md (2026-09-27). poplar is a bubbletea terminal email client
-built from `~/Projects/poplar/`; binary `~/.local/bin/poplar` (`make install`). Fastmail via
-JMAP, `$FASTMAIL_API_TOKEN` in `~/.local/secrets`. API reference:
-`~/.claude/instructions/fastmail-api.md`.
+The household's mail runs on Stalwart on ward, a server built and run from `~/Projects/servers`.
+Clients reach it at `mail.907.life` over JMAP, IMAP, and DAV, and webmail (Bulwark on orpheus) is
+`webmail.907.life`. Fastmail is retired: the mailboxes moved in October 2026, and
+`~/.claude/instructions/fastmail-api.md` describes the old service only. Ward's JMAP quirks, its
+sending setup, and its sign-in ban limits are in the servers repo's `docs/decisions.md`; the
+`mail-tend` skill covers mail filing.
 
-Until poplar is ready, Hylki (Flatpak `co.hyprlab.Hylki`) is the desktop mail client
+poplar, a bubbletea terminal email client in `~/Projects/poplar/`, is in development and not in
+daily use.
+
+Hylki (Flatpak `co.hyprlab.Hylki`) is the desktop mail client
 (Geoff, 2026-10-18; Thunderbird is retired, its mail filters backed up under
 `~/.local/state/browser-mail-retire-2026-10-18/`). Contacts and calendars are GNOME
 Contacts and GNOME Calendar, fed by a CalDAV/CardDAV account for ward (`https://mail.907.life`, user
