@@ -105,19 +105,19 @@ background command, like a packet. The title follows the packet title rule. The 
 holds a background paragraph and then one or two on what the pages change, per the register's
 fourth rule; the command refuses a missing or misshapen one. The notes come from the repo's
 fact-check (cairn: the `cairn-docs` skill's `references/review.md`); check them with
-`approval-queue notes --check <worktree> <notes.json>` before queuing. One PR is one waiting item,
-so a docs PR cannot also sit in a packet. The interface is fixed in the Approval Queue README's
+`approval-queue notes --check <worktree> <notes.json>` before queuing. The interface is fixed in the Approval Queue README's
 "The docs kind", and the cutover contract (`~/Projects/initiatives/docs-system/plans/2026-10-25-cutover-contract.md`)
 holds the rest.
 
 The decision prints one JSON line carrying `pr`, `head`, `commit`, `calls`, `comments`, and
 `threads`. On an approve: push Geoff's edits if `commit` is not `head`, wait for the repo's CI on
-`commit`, then `gh pr merge <n> -R <owner/repo> --merge --match-head-commit <commit>`, pull the
+`commit` (a red is fixed forward and queued again; the approve does not cover the fix), then `gh pr merge <n> -R <owner/repo> --merge --match-head-commit <commit>`, pull the
 checkout, and answer each comment in the PR thread (a change a comment asks for lands after the
 merge: a one-sentence fix as a direct change, anything larger as a follow-up docs PR queued the
 same way). On a send-back: push his edits, fix forward from the note, each call, and each comment,
-then queue the same PR again with `--replies` answering every comment. A refused approve means the
-PR moved: pull its new head and queue again.
+then queue the same PR again with `--replies` answering every comment and a description that
+says what changed. A refused approve means the
+PR moved: pull its new head, check what moved, and queue again.
 
 ## Follow-ups
 

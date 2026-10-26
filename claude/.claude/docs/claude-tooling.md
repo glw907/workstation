@@ -35,9 +35,9 @@ Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; the 
 `figure-verifier`, `visual-verifier`, `prose-voice-reviewer`, `cairn-register-editor`,
 `plan-reviewer`). No agent pins Fable 5.1; it is reached only by a per-dispatch escalation.
 Implementers stay on `sonnet` at effort `medium`. A frontmatter pin is read at session start, so a
-repin reaches a running session only
-through a per-dispatch `model`; verify a repin from a fresh headless session by grepping the
-subagent transcript's `"model"` field, never from the agent's own answer.
+repin reaches a running session only through a per-dispatch `model`; verify a
+repin from a fresh headless session by grepping the subagent transcript's `"model"` field,
+never from the agent's own answer.
 
 `worktree.baseRef: "head"` in the tracked `settings.json` applies in every repo, so subagent and
 `--worktree` branches start from the local `HEAD`, not the remote default (code.claude.com/docs/en/

@@ -68,7 +68,7 @@ proceeds to step 4.
 
 The sweep catches the docs-code drift that option coverage (`check:options`) cannot see: scaffold
 behavior and changelog-described behavior outside option-bearing types. It finds new gaps; it does not
-re-check pages the window's code did not touch.
+re-check existing pages whose code changed.
 
 - **Window.** From the last engine tag whose release commit body carries a "Doc-code sweep" record, to `main`. Find the tags
   with `git tag --list 'v[0-9]*' --sort=-v:refname | grep -v -e '-'`: the `v[0-9]*` glob skips the

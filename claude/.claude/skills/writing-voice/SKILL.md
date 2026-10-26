@@ -72,10 +72,9 @@ meet it by saying more about those facts: what the reader sees when a command ru
 step matters, what a value controls. Never meet it by inventing new facts, and never treat
 brevity as permission to deliver less than the brief asked for.
 
-A page for an outside reader needs a brief file before it needs an outline: what the page
-must carry, who reads it, and what its type does not already cover. The outline is reviewed
-against that brief before any sentence is drafted or reviewed, because prose work on a page
-whose shape is wrong is wasted, and a page with no brief has no outline to check against.
+Before drafting a page for an outside reader, settle what the page must carry, who reads it,
+and what its type does not already cover, because prose work on a page whose shape is wrong
+is wasted. For a cairn page, the `cairn-docs` skill holds the steps.
 
 Draft one section per read for the cairn front door only (`why-cairn.md`, `docs/README.md`, the
 arm READMEs); a front-door page is never drafted end to end in an autonomous run: stop after each
