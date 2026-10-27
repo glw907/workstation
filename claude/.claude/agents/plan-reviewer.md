@@ -82,6 +82,16 @@ On a plan, also check these items:
   tools for the device) and what it found, so Geoff's time goes only to behavior nobody has
   documented (phonebook Pass 2, 2026-10-25: the sitting found `voice.ring_vol` does nothing,
   which a 3CX forum thread on the same firmware line already reported).
+- An acceptance check that a control or ablation makes a suite drop names a case in that suite
+  that depends on the removed part, and says what the plan's standing answers (a case moved out of
+  the suite) do to it (docs improvement loop, 2026-10-26: three seeds moved to the capability suite,
+  and the strong control then scored the same as `main`).
+- A pass that runs headless `claude -p` sessions states, from a probe of one real session, how the
+  harness classifies a denied compound command, whether a subagent may run in the background
+  (anthropics/claude-code#73453 ends the run), and one session's measured length, and sets the
+  suite's estimate from sessions times that length over the parallelism (docs improvement loop,
+  2026-10-26: the fault rule needed five restarts of a 48-session suite, and T5 was estimated at 60
+  minutes and took about four and a half hours).
 
 ## Findings
 
