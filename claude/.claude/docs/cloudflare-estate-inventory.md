@@ -209,7 +209,10 @@ and `phonebook` (+ `phonebook-prov`) on phonebook.907.life. The ASC CMS Admin ap
 dev.aksailingclub.org/admin is gone.
 The `phonebook` Worker serves phonebook.907.life (live 2026-10-26, version `ea6005d4`), with
 `workers_dev` and `preview_urls` off. Its D1 is `phonebook` (`3d877e5b...`). Its secrets (names):
-`WARD_USER`, `WARD_BOOK_URL`, `WARD_PASSWORD`. Phonebook's `scripts/cloudflare/deploy.sh` and
+`WARD_USER`, `WARD_BOOK_URL`, `WARD_PASSWORD`, `SIP_PASSWORD_OFFICE`. The `phonebook` Access app
+also admits the service token `phonebook-automation` (id `0ecd00bf-…`, 8760h, expires
+2027-10-27) through a Service Auth policy that includes it alone; the Worker logs it as the actor
+`automation` (registry entry `PHONEBOOK_ACCESS_CLIENT_ID`). Phonebook's `scripts/cloudflare/deploy.sh` and
 `scripts/cloudflare/provision.sh` read `CF_ZT_TOKEN` for the Access values, so `ci-deploy` must
 repoint them before it deletes that token. The `phonebook-probe` Worker, its route, and its D1
 were deleted 2026-10-25.

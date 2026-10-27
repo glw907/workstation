@@ -183,6 +183,9 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | VOIPMS_API_USERNAME | ✓ | — | — | — | — |
 | VOIPMS_API_PASSWORD | ✓ | — | — | — | — |
 | PHONEBOOK_SIP_OFFICE | ✓ | — | — | — | — |
+| PHONEBOOK_SIP_TESTLINE | ✓ | — | — | — | — |
+| PHONEBOOK_ACCESS_CLIENT_ID | ✓ | — | — | — | — |
+| PHONEBOOK_ACCESS_CLIENT_SECRET | ✓ | — | — | — | — |
 | IMMICH_PIKAPODS_API_KEY | ✓ | — | — | — | — |
 | TPLINK_ROUTER_PASSWORD | ✓ | — | — | — | — |
 
@@ -713,10 +716,33 @@ tmpfs cache; no password manager holds it for scripts.
 - **Grants**: SIP registration for the voip.ms sub-account `543625_office` (id 857310), the office
   T54W's line. Generated 2026-10-26 (24 random alphanumerics) by `conductor-phonebook` and set on
   the sub-account through `createSubAccount`; international calls are locked on it.
-- **Constraints**: not yet on any phone or Worker. Pass 4 serves it from the Worker, substituted
-  when the office phone's config is served; until then it lives only here.
+- **Constraints**: the `phonebook` Worker holds it as the secret `SIP_PASSWORD_OFFICE` (put
+  2026-10-26 in the automation pass's sitting) and substitutes it into the office phone's cfg only
+  when serving it; it never reaches D1, a stored hash, or a log.
 - **Rotation**: generate a new value with `secret-set.sh PHONEBOOK_SIP_OFFICE`, set it with the
   voip.ms API's `setSubAccount`, then redeploy the Worker secret and reboot the phone.
+
+### PHONEBOOK_SIP_TESTLINE
+- **Grants**: SIP registration for the voip.ms sub-account `543625_testline`, internal extension
+  109, internal caller ID name `CID-TESTLINE`, international locked, no DID. Created 2026-10-26 by
+  `~/Projects/phonebook/scripts/voipms/subaccount.sh testline` (24 random alphanumerics).
+- **Constraints**: only the phonebook `testline` wrapper reads it, rendering it into a 0600 file
+  under `$XDG_RUNTIME_DIR/phonebook/testline/` for one test and removing it after. Registers to
+  `seattle1.voip.ms`, the office line's server.
+- **Rotation**: generate a new value with `secret-set.sh PHONEBOOK_SIP_TESTLINE`, then set it with
+  the voip.ms API's `setSubAccount`.
+
+### PHONEBOOK_ACCESS_CLIENT_ID / PHONEBOOK_ACCESS_CLIENT_SECRET
+- **Grants**: the Access service token `phonebook-automation` (id `0ecd00bf-f3cb-44af-ac2f-4cf37e72ecce`,
+  8760h, expires 2027-10-27), sent as `CF-Access-Client-Id` and `CF-Access-Client-Secret`. Its
+  only policy is a Service Auth (`non_identity`) policy on the `phonebook` Access app that includes
+  this token alone. The Worker pins the client ID in `ACCESS_AUTOMATION_CLIENT_ID` (passed by
+  `scripts/cloudflare/deploy.sh`) and records the actor as `automation`, with full web-app write
+  access. Created 2026-10-26 by `~/Projects/phonebook/scripts/cloudflare/service-token.sh`.
+- **Constraints**: read by name by the phonebook nightly and gate runs and `phone-check`; never by
+  a unit that sources the secrets file.
+- **Rotation**: delete the token in Access, run `service-token.sh` again (it creates the token and
+  policy and stores both halves), then redeploy with `deploy.sh` so the Worker pins the new ID.
 
 ### TPLINK_ROUTER_PASSWORD
 - **Grants**: the local admin password of the house router (TP-Link Archer C4000 v3.0 at
