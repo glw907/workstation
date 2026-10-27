@@ -12,7 +12,8 @@
 //   --wait            block up to 540 seconds (CI_GREEN_WAIT_SECONDS) while runs are pending, and
 //                     rerun an infrastructure red once. Without it the command reads once.
 //   --pushed-at <iso> when the SHA reached GitHub; the 5-minute missing clock and the 60-minute
-//                     unavailable clock start here, falling back to the commit's committer date.
+//                     unavailable clock start here. Without it they start at the SHA's earliest
+//                     workflow run, or at this invocation before any run exists.
 //   --task <id>       a label copied into the wait record.
 //
 // Exit codes:

@@ -146,6 +146,11 @@ check("the clock restarts at a rerun's start", () => {
   assert.equal(lib.clockStart(Date.parse("2026-10-09T21:00:00Z"), runsOf("runs-green-8483ca5b.json")), Date.parse("2026-10-09T21:00:00Z"));
 });
 
+check("the push estimate is the earliest run's creation, or the fallback before any run", () => {
+  assert.equal(lib.estimatePushedAt(runsOf("runs-pending-148ff15a.json"), T0), Date.parse("2026-10-10T15:40:59Z"));
+  assert.equal(lib.estimatePushedAt([], T0), T0);
+});
+
 // ---- held runs ----
 
 // A run waiting on approval, as GitHub reports it: completed, with the conclusion action_required.
@@ -517,6 +522,27 @@ check("main exits 75 past the wait budget while runs are pending", () => {
   assert.ok(h.sleeps.reduce((a, b) => a + b, 0) <= 540_000 + 20_000);
 });
 
+check("without --pushed-at, an hours-old commit pushed minutes ago reads as pending, not unavailable", () => {
+  const h = harness({
+    configText: text("ci-green.json"),
+    routes: { "actions/runs?head_sha": json("runs-pending-148ff15a.json") },
+    args: ["148ff15a", "--pr", "110"],
+    committerDate: "2026-10-10T12:00:00Z",
+  });
+  h.deps.now = () => Date.parse("2026-10-10T15:51:00Z");
+  assert.equal(h.run(), 75);
+});
+
+check("an explicit --pushed-at still starts the clocks, so an old push reads as unavailable", () => {
+  const h = harness({
+    configText: text("ci-green.json"),
+    routes: { "actions/runs?head_sha": json("runs-pending-148ff15a.json") },
+    args: ["148ff15a", "--pr", "110", "--pushed-at", "2026-10-10T12:00:00Z"],
+  });
+  h.deps.now = () => Date.parse("2026-10-10T15:51:00Z");
+  assert.equal(h.run(), 3);
+});
+
 check("main exits 3 when the run list is truncated by the page size", () => {
   const runs = json("runs-green-8483ca5b.json");
   const h = harness({
@@ -548,19 +574,31 @@ check("a short SHA is resolved to the full SHA before the runs query and the con
     args: ["8483ca5b", "--pr", "110"],
   });
   assert.equal(h.run(), 0);
-  const used = h.calls.filter(([, c]) => /head_sha=|show .*ci-green\.json|show -s|diff --name-only/.test(c)).map(([, c]) => c);
-  assert.ok(used.length >= 4 && used.every((c) => c.includes(FULL_SHA) && !/[^0-9a-f]8483ca5b[^0-9a-f6]/.test(c)), used.join("\n"));
+  const used = h.calls.filter(([, c]) => /head_sha=|show .*ci-green\.json|diff --name-only/.test(c)).map(([, c]) => c);
+  assert.ok(used.length >= 3 && used.every((c) => c.includes(FULL_SHA) && !/[^0-9a-f]8483ca5b[^0-9a-f6]/.test(c)), used.join("\n"));
 });
 
-check("a -0800 committer date is read as its UTC instant: one minute after is pending, six is missing", () => {
+check("a -0800 --pushed-at is read as its UTC instant: one minute after is pending, six is missing", () => {
   const stamp = "2026-10-10T08:40:11-08:00";
   const at = (ms) => {
-    const h = harness({ configText: text("ci-green.json"), routes: { "actions/runs?head_sha": { total_count: 0, workflow_runs: [] } }, args: ["8483ca5b", "--pr", "110"], committerDate: stamp });
+    const h = harness({ configText: text("ci-green.json"), routes: { "actions/runs?head_sha": { total_count: 0, workflow_runs: [] } }, args: ["8483ca5b", "--pr", "110", "--pushed-at", stamp] });
     h.deps.now = () => Date.parse("2026-10-10T16:40:11Z") + ms;
     return h.run();
   };
   assert.equal(at(MIN), 75);
   assert.equal(at(6 * MIN), 2);
+});
+
+check("without --pushed-at, a SHA with no runs reads as missing after five minutes of waiting", () => {
+  const h = harness({
+    configText: text("ci-green.json"),
+    routes: { "actions/runs?head_sha": { total_count: 0, workflow_runs: [] } },
+    args: ["8483ca5b", "--pr", "110", "--wait"],
+    committerDate: "2026-10-01T00:00:00Z",
+  });
+  assert.equal(h.run(), 2);
+  const waited = h.sleeps.reduce((a, b) => a + b, 0);
+  assert.ok(waited >= 5 * MIN && waited < 6 * MIN, `waited ${waited}`);
 });
 
 check("main rejects a missing --pr", () => {
