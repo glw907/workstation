@@ -10,6 +10,9 @@
 
 ## Medium
 
+- [ ] **#43** Make `cairn-docs-cycle` refuse an unknown argument `#bug` `#workstation` `#initiative:docs-system` *(2026-10-26)*
+  Any argument other than `--dry-run` is ignored, so a stray `--help` started a real cycle on 2026-10-26 at 18:51. Print a usage line and exit 2 instead. `bin/.local/bin/cairn-docs-cycle`
+
 - [ ] **#42** Add two executor-permission checks to the plan-reviewer checklist `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-26)*
   From the docs-as-code cutover's planning misses. A deletion target that is a symlink resolving outside the executor's `--add-dir` set raises an unanswerable prompt overnight, so the plan makes it a morning step. A STATUS or clock file under `.git/worktrees/` is written by a lone Bash command: Write and Edit are refused there in a worktree-isolated session, and a heredoc chained to another command raised a sensitive-file prompt. Record: `~/Projects/initiatives/docs-system/README.md` (2026-10-26 line).
 
