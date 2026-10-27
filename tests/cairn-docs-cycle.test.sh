@@ -3,7 +3,7 @@
 # this worktree's copy of the script against a nonexistent checkout, so a broken guard exits 1 at
 # "no checkout" and starts nothing.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 SCRIPT="$(pwd)/bin/.local/bin/cairn-docs-cycle"
 fail=0
 
