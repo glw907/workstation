@@ -40,13 +40,15 @@ for t in nightly gate; do
     s="$units/phonebook-$t.service"
     want "$s" '^ConditionHost=pavilion$' "$t service is gated to pavilion"
     lacks "$s" '^User=' "$t service has no User="
+    want "$s" '^After=network-online\.target$' "$t service starts after the network is online"
+    want "$s" '^Wants=network-online\.target$' "$t service wants the network online"
     want "$s" '^Environment=XDG_RUNTIME_DIR=/run/user/1000$' "$t service sets XDG_RUNTIME_DIR"
     want "$s" '^Environment=HOME=/var/home/glw907$' "$t service sets HOME"
-    want "$s" '^ExecStart=/usr/bin/systemd-inhibit --what=sleep .* /usr/bin/setpriv --reuid=glw907 --regid=glw907 --init-groups --inh-caps=-all /var/home/glw907/Projects/phonebook/scripts/check/nightly\.sh' "$t service ExecStart chain"
+    want "$s" '^ExecStart=/usr/bin/systemd-inhibit --what=sleep .* /usr/bin/setpriv --reuid=glw907 --regid=glw907 --init-groups --inh-caps=-all --no-new-privs /var/home/glw907/Projects/phonebook/scripts/check/nightly\.sh' "$t service ExecStart chain"
     lacks "$s" '^Environment=.*(CLOUDFLARE|FASTMAIL|VOIPMS|TOKEN|PASSWORD|SECRET)' "$t service carries no credential"
     d="$units/phonebook-$t.service.d/10-pass-worktree.conf"
     want "$d" '^ExecStart=$' "$t drop-in clears ExecStart"
-    want "$d" '^ExecStart=/usr/bin/systemd-inhibit --what=sleep .* /usr/bin/setpriv --reuid=glw907 --regid=glw907 --init-groups --inh-caps=-all /var/home/glw907/Projects/phonebook/\.claude/worktrees/automation/scripts/check/nightly\.sh' "$t drop-in points at the executor worktree"
+    want "$d" '^ExecStart=/usr/bin/systemd-inhibit --what=sleep .* /usr/bin/setpriv --reuid=glw907 --regid=glw907 --init-groups --inh-caps=-all --no-new-privs /var/home/glw907/Projects/phonebook/\.claude/worktrees/automation/scripts/check/nightly\.sh' "$t drop-in points at the executor worktree"
 done
 want "$units/phonebook-gate.service" 'nightly\.sh --gate$' 'gate service passes --gate'
 want "$units/phonebook-gate.service.d/10-pass-worktree.conf" 'nightly\.sh --gate$' 'gate drop-in passes --gate'

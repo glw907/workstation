@@ -1,10 +1,12 @@
 [Unit]
 Description=Phonebook nightly run
 ConditionHost=pavilion
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Type=oneshot
 Environment=XDG_RUNTIME_DIR=/run/user/1000
 Environment=HOME=/var/home/glw907
 TimeoutStartSec=3h
-ExecStart=/usr/bin/systemd-inhibit --what=sleep --who=phonebook --why="phonebook automation run" /usr/bin/setpriv --reuid=glw907 --regid=glw907 --init-groups --inh-caps=-all /var/home/glw907/Projects/phonebook/scripts/check/nightly.sh
+ExecStart=/usr/bin/systemd-inhibit --what=sleep --who=phonebook --why="phonebook automation run" /usr/bin/setpriv --reuid=glw907 --regid=glw907 --init-groups --inh-caps=-all --no-new-privs /var/home/glw907/Projects/phonebook/scripts/check/nightly.sh
