@@ -9,6 +9,8 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
+- [ ] **#44** Make a conductor's session name match the name its executor trusts `#bug` `#workstation` `#initiative:docs-system` *(2026-10-27)*
+  The docs eval trust conductor prompt opens "You are conductor-cairn-cms", but nothing set that name: the session ran as `initiatives-b1`. The executor takes cross-session messages only from `conductor-cairn-cms`, so it refused Geoff's relayed pause on 2026-10-27, and the pause took a hard `claude stop` instead (glw907/cairn-cms#154, Planning misses). Fix in `pass-core` "Launch prompt": a conductor hand-over carries the exact `claude --name <conductor>` line, and the conductor prompt's first step checks its own row in `claude agents --json` and stops on a mismatch.
 
 
 - [ ] **#42** Add two executor-permission checks to the plan-reviewer checklist `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-26)*
