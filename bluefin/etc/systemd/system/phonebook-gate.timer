@@ -1,0 +1,10 @@
+[Unit]
+Description=Phonebook gate run, 10:00 AM Anchorage
+
+[Timer]
+OnCalendar=*-*-* 10:00:00 America/Anchorage
+WakeSystem=true
+Persistent=true
+
+[Install]
+WantedBy=timers.target

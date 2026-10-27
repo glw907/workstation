@@ -207,6 +207,15 @@ stays the record of what's actually on disk. Current captured files:
   reconnects quickly after its idle sleep. The main.conf is a whole copy of the stock file;
   diff it against `/usr/etc/bluetooth/main.conf` after a BlueZ upgrade. After a change:
   `sudo -A btmgmt fast-conn on` applies the first live, the second takes effect at boot <!-- host-ok -->
+- `bluefin/etc/systemd/system/phonebook-nightly.{timer,service}` and
+  `phonebook-gate.{timer,service}` → `/etc/systemd/system/` (pavilion only, phonebook automation
+  pass, 2026-10-26): system timers at 04:00 (checks, firmware rollout, kitchen cleanup) and 10:00
+  (the staged rollout's gate) `America/Anchorage`, with `WakeSystem=true` so a suspended pavilion
+  wakes. Each service carries `ConditionHost=pavilion`, so the files may sit in the dotfiles on both
+  hosts. The `phonebook-*.service.d/10-pass-worktree.conf` drop-ins point `ExecStart=` at the pass
+  worktree; delete them and run `sudo -A systemctl daemon-reload` when the pass merges. After
+  installing: `sudo -A systemctl daemon-reload && sudo -A systemctl enable --now
+  phonebook-nightly.timer phonebook-gate.timer` <!-- host-ok -->
 
 `/etc` is writable on Bluefin and persists across image updates (unlike `/usr`), so
 there's no technical reason to skip the dotfiles round-trip — treat any direct edit as

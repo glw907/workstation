@@ -1,0 +1,10 @@
+[Unit]
+Description=Phonebook nightly run, 4:00 AM Anchorage
+
+[Timer]
+OnCalendar=*-*-* 04:00:00 America/Anchorage
+WakeSystem=true
+Persistent=true
+
+[Install]
+WantedBy=timers.target

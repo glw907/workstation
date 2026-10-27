@@ -75,6 +75,7 @@ run "ci-green test" node tests/ci-green.test.mjs
 run "cairn-run-gate vanish handling" bash tests/cairn-run-gate.test.sh
 run "claude-clock-stop hook" bash tests/claude-clock-stop.test.sh
 run "monitor-subscribe service" bash tests/monitor-subscribe.test.sh
+run "phonebook units verify" bash tests/phonebook-units.test.sh
 run "guidance citation (warning only)" bash scripts/check-guidance-cite.sh
 run "guidance citation test" bash tests/check-guidance-cite.test.sh
 run "claude-context-budget line cap" bash tests/claude-context-budget.test.sh
