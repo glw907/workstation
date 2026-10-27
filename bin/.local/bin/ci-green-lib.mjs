@@ -75,6 +75,21 @@ export function requiredWorkflows(config, files) {
 // ---- the classifier ----
 
 /**
+ * Estimates when the SHA reached GitHub when the caller passed no push time. GitHub creates a
+ * push's workflow runs within seconds of it, so the earliest run's creation stands in for the push.
+ * Before any run exists, the fallback (the invocation's start) stands in, so a commit pushed hours
+ * after it was made still gets the full 5 and 60 minutes.
+ *
+ * @param {Array<{ created_at: string }>} runs - The SHA's workflow runs.
+ * @param {number} fallbackMs - The time to use when the SHA has no runs yet.
+ * @returns {number} Epoch milliseconds.
+ */
+export function estimatePushedAt(runs, fallbackMs) {
+  if (!runs.length) return fallbackMs;
+  return Math.min(...runs.map((r) => Date.parse(r.created_at)));
+}
+
+/**
  * Moves the missing and unavailable clocks to the latest rerun's start, since a rerun gives the
  * workflow a fresh attempt to finish in.
  *
@@ -452,8 +467,11 @@ export function main(args, deps = realDeps()) {
   } catch (e) {
     return unavailable(`cannot diff ${short} against origin/main: ${message(e)}`);
   }
-  pushedAtMs = Date.parse(opts.pushedAt ?? quiet(() => git(["show", "-s", "--format=%cI", sha])));
-  if (Number.isNaN(pushedAtMs)) return unavailable("cannot read the push time; pass --pushed-at <iso>");
+  // Without --pushed-at the push time is estimated from the runs on each poll, never from the
+  // committer date, which predates the push by however long the branch sat unpushed.
+  const givenPushedAtMs = opts.pushedAt === null ? null : Date.parse(opts.pushedAt);
+  if (Number.isNaN(givenPushedAtMs)) return unavailable(`cannot parse --pushed-at ${opts.pushedAt}`);
+  pushedAtMs = givenPushedAtMs ?? startMs;
   clockStartMs = pushedAtMs;
 
   const api = (path) => JSON.parse(gh(["api", path]));
@@ -490,6 +508,7 @@ export function main(args, deps = realDeps()) {
     } catch (e) {
       apiError = message(e);
     }
+    if (givenPushedAtMs === null) pushedAtMs = estimatePushedAt(runs, startMs);
     clockStartMs = clockStart(pushedAtMs, runs);
     let verdict = classify({ runs, config: config.config, files, nowMs: now(), clockStartMs, apiError });
     let jobsByRun = {};
