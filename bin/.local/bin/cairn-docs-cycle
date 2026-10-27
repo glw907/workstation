@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# cairn-docs-cycle: launcher for the monthly cairn docs improvement cycle. Starts one unattended
+# session from cairn-cms's .claude/skills/cairn-docs/evals/cycle-prompt.txt in its own systemd
+# scope, so it outlives the oneshot unit that called it. The session samples real cairn sessions,
+# runs the docs evals on main, queues one triage item, and waits for Geoff's ruling.
+# --dry-run skips the pull and the suite run, and tells the session to write the triage file and
+# stop without queuing it. CAIRN_DOCS_CYCLE_REPO overrides the cairn checkout.
+
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/home/linuxbrew/.linuxbrew/bin:/usr/bin:$PATH"
+
+dry_run=0
+[[ "${1:-}" == "--dry-run" ]] && dry_run=1
+
+repo=${CAIRN_DOCS_CYCLE_REPO:-$HOME/Projects/cairn-cms}
+prompt_file=$repo/.claude/skills/cairn-docs/evals/cycle-prompt.txt
+
+if [[ ! -d "$repo" ]]; then
+    echo "cairn docs cycle: no checkout at $repo; nothing to launch"
+    exit 1
+fi
+
+# The pull comes first: a checkout nobody has pulled since the prompt merged has no prompt yet.
+if (( ! dry_run )); then
+    git -C "$repo" pull --ff-only || echo "cairn pull refused; running from local HEAD"
+fi
+
+if [[ ! -f "$prompt_file" ]]; then
+    echo "cairn docs cycle: no prompt at $prompt_file; nothing to launch"
+    exit 1
+fi
+
+# ~/.local/secrets exports the API key, and a session that sees it bills the API.
+unset ANTHROPIC_API_KEY
+
+prompt="$(cat "$prompt_file")"
+prompt+=$'\n\n'"The cairn-cms checkout is $repo; use it wherever these steps name /var/home/glw907/Projects/cairn-cms."
+name="cairn-docs-cycle-$(date +%Y-%m)"
+if (( dry_run )); then
+    name+="-dry"
+    prompt+=$'\n\n'"Dry run: skip steps 0 and 4. Write the triage file and stop. Do not collect a waiting ruling, queue the item, run notify-send, commit, push, or open a PR."
+fi
+
+mkdir -p "$HOME/.local/state/cairn-docs-cycle"
+cd "$repo" || exit 1
+systemd-run --user --scope --collect --unit="$name" \
+    claude --bg --model claude-opus-5-5 --effort medium \
+    --name "$name" "$prompt" || {
+    echo "cairn docs cycle failed to launch"
+    exit 1
+}
