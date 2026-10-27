@@ -90,8 +90,8 @@ On a plan, also check these items:
   harness classifies a denied compound command, whether a subagent may run in the background
   (anthropics/claude-code#73453 ends the run), and one session's measured length, and sets the
   suite's estimate from sessions times that length over the parallelism (docs improvement loop,
-  2026-10-26: the fault rule needed five restarts of a 48-session suite, and T5 was estimated at 60
-  minutes and took about four and a half hours).
+  2026-10-26: four stopped attempts of a 48-session suite preceded a clean one, and T5 was
+  estimated at 60 minutes and took about four and a half hours).
 
 ## Findings
 
