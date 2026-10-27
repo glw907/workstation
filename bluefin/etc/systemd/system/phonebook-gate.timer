@@ -1,4 +1,5 @@
 [Unit]
+ConditionHost=pavilion
 Description=Phonebook gate run, 10:00 AM Anchorage
 
 [Timer]

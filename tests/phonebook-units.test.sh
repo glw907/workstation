@@ -35,6 +35,7 @@ want "$units/phonebook-gate.timer" '^OnCalendar=\*-\*-\* 10:00:00 America/Anchor
 for t in nightly gate; do
     want "$units/phonebook-$t.timer" '^WakeSystem=true$' "$t timer wakes the system"
     want "$units/phonebook-$t.timer" '^Persistent=true$' "$t timer is persistent"
+    want "$units/phonebook-$t.timer" '^ConditionHost=pavilion$' "$t timer is gated to pavilion"
     want "$units/phonebook-$t.timer" '^WantedBy=timers.target$' "$t timer is installable"
     s="$units/phonebook-$t.service"
     want "$s" '^ConditionHost=pavilion$' "$t service is gated to pavilion"

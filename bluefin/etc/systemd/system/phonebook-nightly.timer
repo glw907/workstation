@@ -1,4 +1,5 @@
 [Unit]
+ConditionHost=pavilion
 Description=Phonebook nightly run, 4:00 AM Anchorage
 
 [Timer]
