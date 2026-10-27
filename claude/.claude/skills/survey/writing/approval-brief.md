@@ -2,8 +2,9 @@
 
 The reader is Geoff, deciding what to approve in the Approval Queue. The writer is a Claude
 session. The unit he decides on is the **packet**: one file that carries every PR, design, and plan
-step a session hands over at a decision point, with the questions only he can answer. Geoff reads on
-a phone, closed states first, and should be able to decide from them without opening a diff. Applies
+step a session hands over at a decision point, with the questions only he can answer. Geoff reads at
+a desk in a desktop browser, never on a phone, and he reads closed states first. He should be able to
+decide from them without opening a diff. Applies
 to every packet. The older kinds still exist and keep their contract below: the `## Brief` of a PR
 body or a design doc, and a triage file.
 
