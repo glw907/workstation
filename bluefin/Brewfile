@@ -71,6 +71,7 @@ cask "claude-code@latest" # switched from stable cask 2026-09-04: Fable 5.1 need
 brew "gitleaks"     # staged-secret scan in the pre-commit hook and scripts/check.sh
 brew "shellcheck"   # bash lint; adopted 2026-08-30 after check-drift flagged it installed-unmanifested
 brew "bats-core"    # bash test framework; musicbox scripts run their bats suites on this machine
+brew "baresip"      # SIP softphone for the phonebook test line (`testline`): answers the office phone's test calls
 brew "libarchive"   # for bsdtar: safe archive extraction in the musicbox inbox scripts
 brew "libxml2"      # xmllint for dubplate's XML contract tier; pinned (`brew pin libxml2`) so the tier's version holds.
                     # Pinning holds its dependents too (chafa, ffmpeg, gdk-pixbuf, imagemagick, librsvg,
