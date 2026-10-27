@@ -3,7 +3,7 @@
 # and hold the shape the phonebook automation plan sets (Decision 1): timers at 04:00 and 10:00
 # America/Anchorage with WakeSystem and Persistent, services with ConditionHost=pavilion, no User=,
 # the lingering user's XDG_RUNTIME_DIR and HOME, and an ExecStart of absolute paths through
-# systemd-inhibit and setpriv, with a pass drop-in that points ExecStart= at the executor's worktree.
+# systemd-inhibit and setpriv to the main checkout, with no drop-in left from the pass.
 # The phonebook script paths are rewritten to a stub in a temp copy, since verify wants the file to
 # exist and the repo checkout is not on every host. Skips cleanly when systemd-analyze is absent.
 set -uo pipefail
@@ -24,9 +24,11 @@ lacks() { # file pattern name
     ! grep -qE -- "$2" "$1" 2>/dev/null || { echo "FAIL: $3: '$2' is in ${1#"$repo"/}"; fail=1; }
 }
 
-for u in phonebook-nightly.timer phonebook-nightly.service phonebook-gate.timer phonebook-gate.service \
-         phonebook-nightly.service.d/10-pass-worktree.conf phonebook-gate.service.d/10-pass-worktree.conf; do
+for u in phonebook-nightly.timer phonebook-nightly.service phonebook-gate.timer phonebook-gate.service; do
     [ -f "$units/$u" ] || { echo "FAIL: $u is missing"; fail=1; }
+done
+for t in nightly gate; do
+    [ ! -e "$units/phonebook-$t.service.d" ] || { echo "FAIL: phonebook-$t.service.d is still in the dotfiles"; fail=1; }
 done
 [ "$fail" = 0 ] || exit 1
 
@@ -46,26 +48,20 @@ for t in nightly gate; do
     want "$s" '^Environment=HOME=/var/home/glw907$' "$t service sets HOME"
     want "$s" '^ExecStart=/usr/bin/systemd-inhibit --what=sleep .* /usr/bin/setpriv --reuid=glw907 --regid=glw907 --init-groups --inh-caps=-all --no-new-privs /var/home/glw907/Projects/phonebook/scripts/check/nightly\.sh' "$t service ExecStart chain"
     lacks "$s" '^Environment=.*(CLOUDFLARE|FASTMAIL|VOIPMS|TOKEN|PASSWORD|SECRET)' "$t service carries no credential"
-    d="$units/phonebook-$t.service.d/10-pass-worktree.conf"
-    want "$d" '^ExecStart=$' "$t drop-in clears ExecStart"
-    want "$d" '^ExecStart=/usr/bin/systemd-inhibit --what=sleep .* /usr/bin/setpriv --reuid=glw907 --regid=glw907 --init-groups --inh-caps=-all --no-new-privs /var/home/glw907/Projects/phonebook/\.claude/worktrees/automation/scripts/check/nightly\.sh' "$t drop-in points at the executor worktree"
 done
 want "$units/phonebook-gate.service" 'nightly\.sh --gate$' 'gate service passes --gate'
-want "$units/phonebook-gate.service.d/10-pass-worktree.conf" 'nightly\.sh --gate$' 'gate drop-in passes --gate'
 lacks "$units/phonebook-nightly.service" '--gate' 'nightly service does not pass --gate'
-lacks "$units/phonebook-nightly.service.d/10-pass-worktree.conf" '--gate' 'nightly drop-in does not pass --gate'
 
-# Verify a temp copy whose script path is a stub, the base units alone and then with the drop-ins.
+# Verify a temp copy whose script path is a stub.
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/stub"
 printf '#!/bin/sh\nexit 0\n' >"$tmp/stub/nightly.sh"
 chmod 755 "$tmp/stub/nightly.sh"
-for pass in base dropin; do
+for pass in base; do
     dir="$tmp/$pass"
     mkdir -p "$dir"
     cp -r "$units"/phonebook-* "$dir/"
-    [ "$pass" = base ] && rm -rf "$dir"/phonebook-*.service.d
     find "$dir" -type f -exec sed -i -E "s#/var/home/glw907/Projects/phonebook/[^ ]*nightly\.sh#$tmp/stub/nightly.sh#" {} +
     out="$(systemd-analyze verify "$dir"/phonebook-nightly.timer "$dir"/phonebook-nightly.service \
         "$dir"/phonebook-gate.timer "$dir"/phonebook-gate.service 2>&1)"
