@@ -110,9 +110,9 @@ scheme). Use an API or CLI first for external services; no dashboard unless the 
   `secret-receive NAME`**, which Claude launches itself (its dialog takes the value), never pasted
   into chat. **Claude uses Proton Pass only via `claude-pass`** (its own agent, editor on granted
   vaults; values on stdin), never bare `pass-cli`; other vaults via `secret-receive --pass`.
-- **Check the stores before claiming a secret is missing**: `wrangler secret list`,
-  `~/.local/secrets`, the age registry, per-project stores, the estate inventory. Name-only checks,
-  never print values.
+- **Proton Pass is the authoritative record of every credential** (Geoff, 2026-10-27). Before
+  claiming one is missing, or asking Geoff when one is rejected, check its item (`claude-pass`) and
+  the stores (`~/.local/secrets`, the registry, `wrangler secret list`), by name, never a value.
 - Full flows, exceptions, and store order: `bluefin-admin.md` "Secrets".
 
 ## Other workstation services
