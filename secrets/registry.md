@@ -185,6 +185,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | VOIPMS_API_USERNAME | ✓ | — | — | — | — |
 | VOIPMS_API_PASSWORD | ✓ | — | — | — | — |
 | PHONEBOOK_SIP_OFFICE | ✓ | — | — | — | — |
+| PHONEBOOK_SIP_PHONE2 | ✓ | — | — | — | — |
 | PHONEBOOK_SIP_TESTLINE | ✓ | — | — | — | — |
 | PHONEBOOK_ACCESS_CLIENT_ID | ✓ | — | — | — | — |
 | PHONEBOOK_ACCESS_CLIENT_SECRET | ✓ | — | — | — | — |
@@ -746,6 +747,17 @@ tmpfs cache; no password manager holds it for scripts.
   when serving it; it never reaches D1, a stored hash, or a log.
 - **Rotation**: generate a new value with `secret-set.sh PHONEBOOK_SIP_OFFICE`, set it with the
   voip.ms API's `setSubAccount`, then redeploy the Worker secret and reboot the phone.
+
+### PHONEBOOK_SIP_PHONE2
+- **Grants**: SIP registration for the voip.ms sub-account `543625_phone2`, internal extension
+  102, internal caller ID name `Kitchen`, mailbox 1001, international locked. Created 2026-10-28
+  by `~/Projects/phonebook/scripts/voipms/subaccount.sh create phone2` (Pass 4), for the kitchen
+  T54W.
+- **Constraints**: the `phonebook` Worker holds it as the secret `SIP_PASSWORD_PHONE2` (put by
+  the same script) and substitutes it into the assigned phone's cfg only when serving it; it never
+  reaches D1, a stored hash, or a log.
+- **Rotation**: `subaccount.sh rotate phone2` sets a new value on voip.ms and the Worker; then
+  reprovision the phone that holds it.
 
 ### PHONEBOOK_SIP_TESTLINE
 - **Grants**: SIP registration for the voip.ms sub-account `543625_testline`, internal extension
