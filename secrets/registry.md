@@ -180,6 +180,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | DUBPLATE_MAGIC_LINK_SECRET | ✓ | —   | —    | —        | —          |
 | DUBPLATE_SESSION_SECRET | ✓ | —      | —    | —        | —          |
 | PHONEBOOK_PHONE_ADMIN_KITCHEN | ✓ | — | — | — | — |
+| PHONEBOOK_VOICEMAIL_PIN | ✓ | — | — | — | — |
 | PHONEBOOK_PHONE_USER | ✓ | — | — | — | — |
 | VOIPMS_API_USERNAME | ✓ | — | — | — | — |
 | VOIPMS_API_PASSWORD | ✓ | — | — | — | — |
@@ -726,6 +727,13 @@ tmpfs cache; no password manager holds it for scripts.
   Proton Pass (`claude-pass`) before touching the portal. On 2026-10-27 the stored username was
   the retired fastmail.com login; the login is now `voip@m.907.life`, and the API password was
   re-set the same day.
+
+### PHONEBOOK_VOICEMAIL_PIN
+- **Grants**: the PIN of the household voip.ms voicemail mailbox `1001` (`Household`), for
+  `~/Projects/phonebook` Pass 4 (`scripts/voipms/mailbox.sh create`, which generates it).
+- **State, 2026-10-27**: not yet in use. voip.ms answered `invalid_password` to `createVoicemail`
+  twice, so no mailbox exists and the stored value is the last attempt's.
+- **Rotation**: `setVoicemail` with a new value, after storing it here first.
 
 ### PHONEBOOK_SIP_OFFICE
 - **Grants**: SIP registration for the voip.ms sub-account `543625_office` (id 857310), the office
