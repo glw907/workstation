@@ -8,7 +8,7 @@ description: >-
 ---
 
 <!-- local-overlay -->
-On this workstation the design that brainstorming produces enters the pass process: Geoff approves it in chat or as a design part through approval-packet, and pass-core "Lifecycle" sets everything after it. Write the spec and plan where the repo's pass adapter (cairn-pass, site-pass, dotfiles-pass) or pass-core puts them, never under a path this skill names, and author the plan per pass-core "Lifecycle" step 4. The writing-plans skill is not installed; never invoke it.
+On this workstation the design that brainstorming produces enters the pass process: Geoff approves it as a design part in an approval-queue packet (approval-packet), never through a question in chat: the queue shows the design in a browser and takes his feedback (Geoff, 2026-10-28), and pass-core "Lifecycle" sets everything after it. Write the spec and plan where the repo's pass adapter (cairn-pass, site-pass, dotfiles-pass) or pass-core puts them, never under a path this skill names, and author the plan per pass-core "Lifecycle" step 4. The writing-plans skill is not installed; never invoke it.
 <!-- /local-overlay -->
 
 # Brainstorming
