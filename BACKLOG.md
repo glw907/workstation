@@ -9,6 +9,8 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
+- [ ] **#45** Move the Proton Pass procedure into a workstation skill `#improvement` `#workstation` *(2026-10-28)*
+  The procedure in `bluefin-admin.md` "Secrets" (which vault a new item goes in, the subcommands `claude-pass` allows, the login throttle, `secret-receive`) reaches a session only if it opens that doc. On 2026-10-28 the google-sheets session put the helper account's login in Geoff's own vault before Geoff ruled `Workstation`, and found late that `pass-cli` cannot create an alias. A skill that triggers on credential work would carry both; the doc keeps the facts and a pointer.
 - [ ] **#44** Make a conductor's session name match the name its executor trusts `#bug` `#workstation` `#initiative:docs-system` *(2026-10-27)*
   The docs eval trust conductor prompt opens "You are conductor-cairn-cms", but nothing set that name: the session ran as `initiatives-b1`. The executor takes cross-session messages only from `conductor-cairn-cms`, so it refused Geoff's relayed pause on 2026-10-27, and the pause took a hard `claude stop` instead (glw907/cairn-cms#154, Planning misses). Fix in `pass-core` "Launch prompt": a conductor hand-over carries the exact `claude --name <conductor>` line, and the conductor prompt's first step checks its own row in `claude agents --json` and stops on a mismatch.
 
