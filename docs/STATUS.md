@@ -39,6 +39,16 @@ Merged 2026-10-12 as workstation #43 (`fefe984`): briefs, the rebuilt pages, and
 `approval-queue` (no alias); the After merge steps ran. Deferrals: ROADMAP "Approval queue brief
 leftovers".
 
+## Next action: Google Sheets and Apps Script tooling
+
+Make Google Sheets and Apps Script work from any project: the Sheets API through `gws`, Apps
+Script through `clasp`, and browser checks through a helper Google account in Claude's Chromium
+profile (Geoff, 2026-10-28). The session starts at the design step. Its prompt carries the
+rulings, the current OAuth state, the prior art, and the ECXC gear sheet as the first test case.
+Checkout: `~/.dotfiles`. Launch from `~/.dotfiles`:
+
+    claude -n dotfiles-google-sheets "$(cat docs/plans/2026-10-28-google-sheets-tooling-prompt.txt)"
+
 ## Open items
 
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not
