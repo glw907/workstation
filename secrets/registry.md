@@ -180,6 +180,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | DUBPLATE_MAGIC_LINK_SECRET | ✓ | —   | —    | —        | —          |
 | DUBPLATE_SESSION_SECRET | ✓ | —      | —    | —        | —          |
 | PHONEBOOK_PHONE_ADMIN_KITCHEN | ✓ | — | — | — | — |
+| PHONEBOOK_PHONE_USER | ✓ | — | — | — | — |
 | VOIPMS_API_USERNAME | ✓ | — | — | — | — |
 | VOIPMS_API_PASSWORD | ✓ | — | — | — | — |
 | PHONEBOOK_SIP_OFFICE | ✓ | — | — | — | — |
@@ -699,6 +700,16 @@ tmpfs cache; no password manager holds it for scripts.
 - **Scope**: local only. Phase 2 of `~/Projects/phonebook` may also serve a phone admin password
   as a Worker secret; that will be its own entry.
 - **Rotation**: change it in the phone's web UI (Security), then `secret-receive` the new value.
+
+### PHONEBOOK_PHONE_USER
+- **Grants**: web UI login as the `user` account on the household Yealink T54Ws. Generated
+  2026-10-27 (24 random alphanumerics) in Pass 4's pre-flight; it replaces the factory `user`
+  password whose warning triangle shows on both phones.
+- **Constraints**: the `phonebook` Worker holds it as the secret `PHONE_USER_PASSWORD` (put
+  2026-10-27) and substitutes it into the household profile `y000000000096.cfg` only when serving
+  it; it never reaches D1, git, or a log.
+- **Rotation**: generate a new value with `secret-set.sh PHONEBOOK_PHONE_USER --stdin`, put it as
+  `PHONE_USER_PASSWORD`, then reprovision both phones.
 
 ### VOIPMS_API_USERNAME / VOIPMS_API_PASSWORD
 - **Grants**: the voip.ms REST/JSON API (`https://voip.ms/api/v1/rest.php`) for Geoff's account,
