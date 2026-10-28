@@ -731,8 +731,10 @@ tmpfs cache; no password manager holds it for scripts.
 ### PHONEBOOK_VOICEMAIL_PIN
 - **Grants**: the PIN of the household voip.ms voicemail mailbox `1001` (`Household`), for
   `~/Projects/phonebook` Pass 4 (`scripts/voipms/mailbox.sh create`, which generates it).
-- **State, 2026-10-27**: not yet in use. voip.ms answered `invalid_password` to `createVoicemail`
-  twice, so no mailbox exists and the stored value is the last attempt's.
+- **Constraints**: four digits, the length the portal's voicemail form states ("Password (4
+  digits)"); a six-digit value gets `invalid_password`. `skip_password` is on, so a household
+  phone dialing `*97` skips it; a call through the DID still asks for it. Mailbox created
+  2026-10-27.
 - **Rotation**: `setVoicemail` with a new value, after storing it here first.
 
 ### PHONEBOOK_SIP_OFFICE
