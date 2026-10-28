@@ -186,6 +186,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | VOIPMS_API_PASSWORD | ✓ | — | — | — | — |
 | PHONEBOOK_SIP_OFFICE | ✓ | — | — | — | — |
 | PHONEBOOK_SIP_PHONE2 | ✓ | — | — | — | — |
+| PHONEBOOK_SIP_PHONE3 | ✓ | — | — | — | — |
 | PHONEBOOK_SIP_TESTLINE | ✓ | — | — | — | — |
 | PHONEBOOK_ACCESS_CLIENT_ID | ✓ | — | — | — | — |
 | PHONEBOOK_ACCESS_CLIENT_SECRET | ✓ | — | — | — | — |
@@ -758,6 +759,17 @@ tmpfs cache; no password manager holds it for scripts.
   reaches D1, a stored hash, or a log.
 - **Rotation**: `subaccount.sh rotate phone2` sets a new value on voip.ms and the Worker; then
   reprovision the phone that holds it.
+
+### PHONEBOOK_SIP_PHONE3
+- **Grants**: SIP registration for the voip.ms sub-account `543625_phone3` (id 857838), the
+  household's first spare: no extension, mailbox 1001, international locked. Created 2026-10-28
+  by `~/Projects/phonebook/scripts/voipms/spare.sh create phone3` (Pass 4).
+- **Constraints**: the `phonebook` Worker holds it as the secret `SIP_PASSWORD_PHONE3` and
+  substitutes it into a phone's cfg only once "Add a phone" assigns the spare; it never reaches
+  D1, a stored hash, or a log. voip.ms keeps a hidden caller ID name on it (`Kitchen`,
+  `enable_internal_cnam` 0).
+- **Rotation**: `spare.sh` rotates a spare's password when a phone gives it back; or
+  `subaccount.sh rotate phone3`, then reprovision the phone that holds it.
 
 ### PHONEBOOK_SIP_TESTLINE
 - **Grants**: SIP registration for the voip.ms sub-account `543625_testline`, internal extension
