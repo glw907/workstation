@@ -722,6 +722,10 @@ tmpfs cache; no password manager holds it for scripts.
   curl through `-K -` on stdin. `getSubAccounts` returns SIP passwords, so never print its output.
 - **Rotation**: type a new API Password, click Save API Password, then `secret-receive
   VOIPMS_API_PASSWORD`.
+- **When the API answers `invalid_credentials`**: compare both values with Geoff's voip.ms item in
+  Proton Pass (`claude-pass`) before touching the portal. On 2026-10-27 the stored username was
+  the retired fastmail.com login; the login is now `voip@m.907.life`, and the API password was
+  re-set the same day.
 
 ### PHONEBOOK_SIP_OFFICE
 - **Grants**: SIP registration for the voip.ms sub-account `543625_office` (id 857310), the office
