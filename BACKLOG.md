@@ -9,9 +9,9 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
+- [ ] **#44** Make a conductor's session name match the name its executor trusts `#bug` `#workstation` `#initiative:docs-system` *(2026-10-27)*
+  The docs eval trust conductor prompt opens "You are conductor-cairn-cms", but nothing set that name: the session ran as `initiatives-b1`. The executor takes cross-session messages only from `conductor-cairn-cms`, so it refused Geoff's relayed pause on 2026-10-27, and the pause took a hard `claude stop` instead (glw907/cairn-cms#154, Planning misses). Fix in `pass-core` "Launch prompt": a conductor hand-over carries the exact `claude --name <conductor>` line, and the conductor prompt's first step checks its own row in `claude agents --json` and stops on a mismatch.
 
-- [ ] **#43** Make `cairn-docs-cycle` refuse an unknown argument `#bug` `#workstation` `#initiative:docs-system` *(2026-10-26)*
-  Any argument other than `--dry-run` is ignored, so a stray `--help` started a real cycle on 2026-10-26 at 18:51. Print a usage line and exit 2 instead. `bin/.local/bin/cairn-docs-cycle`
 
 - [ ] **#42** Add two executor-permission checks to the plan-reviewer checklist `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-26)*
   From the docs-as-code cutover's planning misses. A deletion target that is a symlink resolving outside the executor's `--add-dir` set raises an unanswerable prompt overnight, so the plan makes it a morning step. A STATUS or clock file under `.git/worktrees/` is written by a lone Bash command: Write and Edit are refused there in a worktree-isolated session, and a heredoc chained to another command raised a sensitive-file prompt. Record: `~/Projects/initiatives/docs-system/README.md` (2026-10-26 line).
@@ -142,6 +142,8 @@
   **Three `internal/posthook` tests fail when the dotfiles checkout sits under `/tmp`** (`TestRunFlagsChangedLineOnly`, `TestRunSkipsUngovernedPaths`, `TestWholeDocFindingsOnlyOnWrite` return no advisory), so the gate goes red in a scratchpad worktree while the same tests pass in `~/.dotfiles` and in `.claude/worktrees/`. The hook likely treats a `/tmp` path as ungoverned. Make the tests use a path independent of where the checkout lives.
 
 ## Done
+- [x] **#43** Make `cairn-docs-cycle` refuse an unknown argument `#bug` `#workstation` `#initiative:docs-system` *(2026-10-26 → 2026-10-27)*
+  Any argument other than `--dry-run` is ignored, so a stray `--help` started a real cycle on 2026-10-26 at 18:51. Print a usage line and exit 2 instead. `bin/.local/bin/cairn-docs-cycle`
 
 - [x] **#21** secret-set.sh writes values unquoted `#bug` `#workstation` `#initiative:self-hosting` *(2026-10-19 → 2026-10-23)*
   `secret-set.sh` and `sync.sh` now write each line as `export NAME=<value quoted with printf %q>`, so sourcing `~/.local/secrets` returns every value byte-exact; `monitor-subscribe` reads the token through a subshell source instead of a raw `sed`. `tests/secret-set-quoting.test.sh` round-trips a value with spaces, `$`, backticks, quotes, a backslash, and a trailing `=`. Existing files regenerate on the next `secret-set.sh --sync`.

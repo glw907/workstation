@@ -10,6 +10,12 @@ set -uo pipefail
 
 export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/home/linuxbrew/.linuxbrew/bin:/usr/bin:$PATH"
 
+# Any argument but a lone --dry-run is refused before the pull or a launch, so a stray flag never
+# starts a real cycle.
+if [[ $# -gt 1 || ( $# -eq 1 && "$1" != "--dry-run" ) ]]; then
+    echo "usage: cairn-docs-cycle [--dry-run]" >&2
+    exit 2
+fi
 dry_run=0
 [[ "${1:-}" == "--dry-run" ]] && dry_run=1
 
