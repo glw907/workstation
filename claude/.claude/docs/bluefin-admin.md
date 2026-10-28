@@ -390,6 +390,16 @@ Desktop OAuth client pair lives in the age store as `GOOGLE_WORKSPACE_CLI_CLIENT
 personal login. Formatting edits go through `docs documents batchUpdate` after a `get` for
 indexes; `--dry-run` first on any write. Patterns: the `google-docs-formatting` memory.
 
+Apps Script is reachable too (Geoff, 2026-10-28). The Apps Script API is on in Geoff's
+account settings and enabled in the OAuth client's Cloud project (754967083271), and the login
+carries `script.projects`. Re-auth with explicit scopes, since `-s ...,script` didn't take:
+`gws auth login --scopes https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/script.projects`.
+Run it in the background and hand Geoff the sign-in URL with `&amp;` fixed to `&`. A
+container-bound script is `gws script projects create` with `parentId` set to the file ID, then
+`updateContent` with every file, the `appsscript` manifest included. Running a function from
+the API (`scripts run`) needs an API-executable deployment and more scopes, so prefer simple
+triggers (`onOpen`, `onEdit`), which a person's open or edit fires.
+
 ## Email
 
 The household's mail runs on Stalwart on ward, a server built and run from `~/Projects/servers`.
