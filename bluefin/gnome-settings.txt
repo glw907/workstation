@@ -26,3 +26,11 @@ org.gnome.shell.extensions.dash-to-dock dance-urgent-applications false
 # Contacts added 2026-10-21). Trash sits
 # after these through dash-to-dock's stock show-trash.
 org.gnome.shell favorite-apps ['org.gnome.Nautilus.desktop', 'org.gnome.Ptyxis.desktop', 'chromium-browser.desktop', 'co.hyprlab.Hylki.desktop', 'org.gnome.Calendar.desktop', 'org.gnome.Contacts.desktop', 'com.discordapp.Discord.desktop', 'io.github.janbar.noson.desktop', 'io.github.screwys.Rufin.desktop', 'com.valvesoftware.Steam.desktop', 'com.belmoussaoui.Authenticator.desktop']
+
+# Super+Shift+P opens phone-check, which answers a site's phone check through
+# the voip.ms number (Geoff has no mobile phone; 2026-10-29). The list keeps
+# Bluefin's six stock shortcuts, custom0 to custom6, and adds custom7 at the end.
+org.gnome.settings-daemon.plugins.media-keys custom-keybindings ['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/']
+org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/ name 'Phone check'
+org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/ command 'ptyxis --new-window -- bash -lc "phone-check --pause"'
+org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/ binding '<Super><Shift>p'
