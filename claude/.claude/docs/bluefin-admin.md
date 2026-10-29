@@ -379,6 +379,17 @@ never-commit rules and a pointer here.
   transcript, a log, or a report. A body that does is a printed secret: treat the tunnel as
   compromised, then delete and recreate it.
 
+## Phone checks without a phone (Geoff, 2026-10-29)
+
+Geoff has no mobile phone. His voip.ms number, 907-277-9397, stands in for one: `voipms-sms`
+(`~/.local/bin`, stdlib Python) sends a text from it and reads the texts it receives, and
+`zbarimg` (Homebrew `zbar`) reads a QR code from a screenshot. A site's "scan this code and send a
+text" check runs as screenshot, `zbarimg`, open the link it prints, then `voipms-sms send`. Geoff
+runs the send himself: a phone check exists to confirm a person is acting, so a Claude session
+never completes one. Claude may run `voipms-sms status` and `inbox`; `send` asks every time. SMS
+must be on for the number (voip.ms portal, DID Numbers, Manage DIDs). Google refuses some VoIP
+numbers in these checks, so a check can still fail.
+
 ## Google Docs / Drive (gws)
 
 Moved from the global CLAUDE.md (2026-09-27). `gws` (Google Workspace CLI, Homebrew

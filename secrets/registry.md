@@ -720,6 +720,9 @@ tmpfs cache; no password manager holds it for scripts.
   account login email. The password is the typed **API Password** on the portal's SOAP and
   REST/JSON API page, not the login password and not the page's **Bearer Token**; `rest.php`
   ignores a bearer header (`missing_credentials`). Verified with `getIP`, 2026-10-07.
+- **Used by**: the phonebook scripts (`scripts/voipms/`) and the workstation's `voipms-sms`, which
+  sends and reads texts on 907-277-9397 (2026-10-29). Both read the pair from `~/.local/secrets`
+  as data.
 - **Constraints**: the API answers only whitelisted IPs (the home IP, 206.162.90.105 on
   2026-10-07; a DHCP change breaks it). Credentials travel as GET query parameters; pass them to
   curl through `-K -` on stdin. `getSubAccounts` returns SIP passwords, so never print its output.

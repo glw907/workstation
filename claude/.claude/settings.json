@@ -132,12 +132,16 @@
       "Bash(vandelay * --prune *)",
       "Bash(imapsync)",
       "Bash(imapsync *)",
-      "Bash(scripts/dry-run.sh)"
+      "Bash(scripts/dry-run.sh)",
+      "Bash(clasp delete-script)",
+      "Bash(clasp delete-script *)"
     ],
     "defaultMode": "auto",
     "ask": [
       "Bash(wrangler r2 bucket delete *)",
-      "Bash(npx wrangler r2 bucket delete *)"
+      "Bash(npx wrangler r2 bucket delete *)",
+      "Bash(voipms-sms send *)",
+      "Bash(voipms-sms --did * send *)"
     ]
   },
   "hooks": {
