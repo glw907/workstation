@@ -111,6 +111,11 @@ of these hold (Geoff, 2026-10-17):
 - In a `runner` path it changes wording only: the skill or agent tells a session the same thing,
   and no step, rule, trigger, or tool list changes.
 
+A skill edit lands the same way at any size, new steps included, unless the skill runs the process
+itself (`pass-core`, a pass adapter, `approval-packet`) or the edit changes permissions, hooks, or
+settings; those keep the PR and the packet (Geoff, 2026-10-28: a `mail-tend` update went out as a
+PR and a packet it never needed).
+
 The session runs the adapter's gate, commits the named files, pushes to the default branch, and
 names the commit in its reply. When another session is live in the main checkout, it commits in a
 worktree cut from `origin/<default>`, pushes with `git push origin HEAD:<default>`, and brings the

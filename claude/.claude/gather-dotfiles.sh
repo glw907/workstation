@@ -56,6 +56,53 @@ initiatives() {
 }
 initiatives || true
 
+# Fast-forward the checkouts this workstation runs its skills, tools, and secrets from, since the
+# other workstation pushes to them (Geoff, 2026-10-28: thinkpad-x1 ran 113, 98, and 34 commits
+# behind). A checkout is pulled only on its default branch with no other live session in it, and
+# --ff-only refuses a dirty or diverged one; each that stays behind is named. FRESH_CHECKOUTS
+# replaces the list and CLAUDE_AGENTS_CMD the session listing, for tests. Never fails the hook.
+fresh_checkouts() {
+    local self=$1 live repo name def old behind out=""
+    local list=${FRESH_CHECKOUTS-"$HOME/.dotfiles $HOME/Projects/approval-queue $HOME/Projects/servers $HOME/Projects/initiatives"}
+    [[ -n $list ]] || return 0
+    local -a agents
+    read -ra agents <<<"${CLAUDE_AGENTS_CMD:-claude agents --json}"
+    live=$(timeout 10 "${agents[@]}" 2>/dev/null |
+        jq -r --arg self "$self" '.[] | select(.sessionId != $self) | .cwd // empty' 2>/dev/null)
+    for repo in $list; do
+        [[ -d $repo/.git ]] || continue
+        name=${repo##*/}
+        if ! timeout 8 git -C "$repo" fetch -q origin 2>/dev/null; then
+            out+="- $name: the fetch failed, so it may be behind"$'\n'
+            continue
+        fi
+        def=$(git -C "$repo" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)
+        def=${def#origin/}
+        def=${def:-main}
+        behind=$(git -C "$repo" rev-list --count "HEAD..origin/$def" 2>/dev/null) || continue
+        [[ $behind -gt 0 ]] || continue
+        old=$(git -C "$repo" rev-parse HEAD)
+        if [[ $(git -C "$repo" branch --show-current) != "$def" ]]; then
+            out+="- $name: $behind behind origin/$def, not pulled: the checkout is on another branch"$'\n'
+        elif grep -qxF -- "$repo" <<<"$live"; then
+            out+="- $name: $behind behind origin/$def, not pulled: another session is live in it"$'\n'
+        elif git -C "$repo" merge -q --ff-only "origin/$def" >/dev/null 2>&1; then
+            if [[ $behind -eq 1 ]]; then out+="- $name: pulled 1 commit"$'\n'; else out+="- $name: pulled $behind commits"$'\n'; fi
+            if git -C "$repo" diff --name-only "$old" HEAD | grep -qx 'secrets/values.age'; then
+                out+="- $name: the secret store changed; run scripts/secrets/secret-set.sh --sync"$'\n'
+            fi
+        else
+            out+="- $name: $behind behind origin/$def, not pulled: the fast-forward was refused"$'\n'
+        fi
+    done
+    [[ -n $out ]] || return 0
+    echo "## Checkouts"
+    printf '%s\n' "$out"
+}
+session_id=""
+[[ -t 0 ]] || session_id=$(timeout 2 jq -r '.session_id // empty' 2>/dev/null)
+fresh_checkouts "$session_id" || true
+
 echo "## Shell Environment (drift check; canonical inventory is CLAUDE.md)"
 echo ""
 
