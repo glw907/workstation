@@ -37,7 +37,9 @@ secrets), and `bin/.local/bin/{claude-block-pass,claude-pass,ws-pass-key,pass-co
 claude-sudo-setup,claude-sudo-clear,secret-receive,fastmail-password}`.
 `ordinary`: everything else. A path in both classes takes the higher (`scripts/secrets/**` is
 `auth-data`). A wording-only edit to a `runner` path can land as a direct change (`pass-core`,
-"Direct changes"). The gate and `claude-tooling-sync verify` still run, and the main checkout's
+"Direct changes"), and so can any edit to a skill under `claude/.claude/skills/` that is not a
+process skill (`pass-core`, an adapter, `approval-packet`) and changes no permission, hook, or
+setting. The gate and `claude-tooling-sync verify` still run, and the main checkout's
 pull is what makes it live.
 
 **Checklist globs**: The close review loads `python-conventions` for `*.py`, `go-conventions` for
