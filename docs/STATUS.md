@@ -42,8 +42,10 @@ leftovers".
 ## Next action: Google Sheets and Apps Script tooling
 
 Make Google Sheets and Apps Script work from any project: the Sheets API through `gws`, Apps
-Script through `clasp`, and browser checks through a helper Google account in Claude's Chromium
-profile (Geoff, 2026-10-28). The session starts at the design step. Its prompt carries the
+Script through `clasp`, with trigger tests run through `clasp` (Geoff, 2026-10-28). The helper
+Google account and its browser layer were dropped on 2026-10-29, because creating any Google
+account needs a phone QR check; the design in `docs/specs/2026-10-28-google-sheets-tooling-design.md`
+carries the revision. The session starts at the design step. Its prompt carries the
 rulings, the current OAuth state, the prior art, and the ECXC gear sheet as the first test case.
 Checkout: `~/.dotfiles`. Launch from `~/.dotfiles`:
 
