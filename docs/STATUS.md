@@ -39,17 +39,14 @@ Merged 2026-10-12 as workstation #43 (`fefe984`): briefs, the rebuilt pages, and
 `approval-queue` (no alias); the After merge steps ran. Deferrals: ROADMAP "Approval queue brief
 leftovers".
 
-## Next action: Google Sheets and Apps Script tooling
+## Google Sheets tooling
 
-Make Google Sheets and Apps Script work from any project: the Sheets API through `gws`, Apps
-Script through `clasp`, with trigger tests run through `clasp` (Geoff, 2026-10-28). The helper
-Google account and its browser layer were dropped on 2026-10-29, because creating any Google
-account needs a phone QR check; the design in `docs/specs/2026-10-28-google-sheets-tooling-design.md`
-carries the revision. The session starts at the design step. Its prompt carries the
-rulings, the current OAuth state, the prior art, and the ECXC gear sheet as the first test case.
-Checkout: `~/.dotfiles`. Launch from `~/.dotfiles`:
-
-    claude -n dotfiles-google-sheets "$(cat docs/plans/2026-10-28-google-sheets-tooling-prompt.txt)"
+Built 2026-10-29 on `google-sheets-tooling` (plan `docs/plans/2026-10-29-google-sheets-tooling-plan.md`):
+the `google-sheets` skill, `clasp` through `mise`, and trigger tests; the gear sheet passed end
+to end (ecxc-ski `f8488b8`). On 2026-11-05, check that `gws drive files list` still answers
+without a new sign-in; if it asks, move the `gws-personal` consent screen back to Testing.
+thinkpad-x1 owes: pull, `stow -R claude`, `mise install`, `claude-tooling-sync apply`, then the
+`gws` and `clasp` sign-ins in `bluefin-admin.md` "Google Workspace (gws, clasp)".
 
 ## Open items
 

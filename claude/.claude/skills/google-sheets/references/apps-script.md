@@ -9,8 +9,8 @@
 | --- | --- |
 | Who is signed in | `clasp show-authorized-user` |
 | Local and remote files differ? | `clasp show-file-status` |
-| Upload the directory | `clasp push` (replaces every remote file; a file missing locally is deleted remotely) |
-| Download | `clasp pull` |
+| Upload the directory | `clasp push` (replaces every remote file; a file missing locally is deleted remotely). After a manifest change it asks before overwriting, and with no terminal to answer it prints "Skipping push." and exits 0; use `clasp push --force` then |
+| Download | `clasp pull` (a `.gs` file comes back as `.js`, so diff by content) |
 | Start from an existing script | `clasp clone-script <script id>` |
 | New bound script | `clasp create-script --type sheets --parentId <spreadsheet id>` |
 | Make it API executable | `clasp create-deployment` (after the manifest declares `executionApi`) |
@@ -29,7 +29,7 @@
   "runtimeVersion": "V8",
   "exceptionLogging": "STACKDRIVER",
   "executionApi": { "access": "MYSELF" },
-  "oauthScopes": ["https://www.googleapis.com/auth/spreadsheets.currentonly"]
+  "oauthScopes": ["https://www.googleapis.com/auth/spreadsheets"]
 }
 ```
 
@@ -41,8 +41,8 @@ which is Geoff's grant.
 
 ## Why a run fails
 
-- A permission error naming a Cloud project: the script is still on its default project. Geoff
-  switches it (SKILL.md, step 3).
+- `Unable to run script function. Please make sure you have permission`: the script is still on
+  its default Cloud project. Geoff switches it (SKILL.md, step 3).
 - `Script function not found`: the name ends in `_` (private, not callable through the API), or
   the code wasn't pushed.
 - `The caller does not have permission`: the token lacks a scope the script declares, or Geoff
