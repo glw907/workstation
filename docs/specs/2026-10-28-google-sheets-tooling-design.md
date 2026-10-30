@@ -109,7 +109,8 @@ Each script lives in its repo as one directory: `.clasp.json` (script ID, `rootD
 `projectId`), `appsscript.json`, the code files, and `tests.gs`. The directory is the source of
 truth.
 
-1. A new bound script: `clasp create-script --type sheets --parentId <sheet>` (Claude). An existing
+1. A new bound script: `clasp create-script --parentId <sheet>`, with no `--type`, which would make
+   a new sheet instead (Claude; corrected 2026-10-29 from clasp 3.4.1's source). An existing
    one: `clasp clone-script <id>` into the directory, then reconcile with the repo copy (Claude).
 2. The manifest declares `oauthScopes`, `exceptionLogging: STACKDRIVER`, and
    `executionApi.access: MYSELF` (Claude).

@@ -71,7 +71,7 @@ def sms_did(creds: dict[str, str], chosen: str | None) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="voipms-sms")
+    parser = argparse.ArgumentParser(prog="voipms-sms", allow_abbrev=False)
     parser.add_argument("--did", help="the voip.ms number to use, digits only")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("status")

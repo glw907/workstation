@@ -74,7 +74,8 @@ def parse_sms(text: str) -> tuple[str, str] | None:
         number, sep, query = text[4:].partition("?")
         if not sep:
             number, _, query = number.partition(";")
-        body = urllib.parse.parse_qs(query).get("body", [""])[0]
+        # RFC 5724 percent-encodes the body, so a literal + is a plus, not a space.
+        body = urllib.parse.parse_qs(query.replace("+", "%2B")).get("body", [""])[0]
     else:
         return None
     return dial_digits(urllib.parse.unquote(number)), body
@@ -135,6 +136,9 @@ def act_on(payload: str) -> None:
     if sms:
         number, body = sms
         print(f"\nThe code asks you to text {number}:\n  {body}")
+        # Only a person at a terminal may send; a Claude session's shell has none.
+        if not sys.stdin.isatty():
+            sys.exit("phone-check: sending needs a person at a terminal; run it from Super+Shift+P")
         input("Press Enter to send it from the voip.ms number, or Ctrl-C to stop. ")
         if subprocess.run(["voipms-sms", "send", number, body]).returncode != 0:
             sys.exit("phone-check: the text did not send")

@@ -29,8 +29,9 @@ without saying which and why.
 Every script lives in its repo as one directory, the source of truth: `.clasp.json`,
 `appsscript.json`, the code files, and `tests.gs`. Set it up once per script:
 
-1. A new bound script: `clasp create-script --type sheets --parentId <spreadsheet id>`. An existing
-   one: `clasp clone-script <script id>` into the directory, then reconcile with any repo copy.
+1. A new bound script: `clasp create-script --parentId <spreadsheet id>`, with no `--type`; clasp's
+   `--type sheets` creates a new spreadsheet and ignores `--parentId`. An existing one:
+   `clasp clone-script <script id>` into the directory, then reconcile with any repo copy.
 2. In `appsscript.json`, declare `oauthScopes`, `"exceptionLogging": "STACKDRIVER"`, and
    `"executionApi": {"access": "MYSELF"}`.
 3. Ask Geoff to switch the script's Cloud project to 754967083271: in the script editor, Project

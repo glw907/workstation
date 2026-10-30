@@ -17,9 +17,10 @@ function onEdit(e) {
 ```
 
 UI calls (`SpreadsheetApp.getUi()`, menus, dialogs) stay in the handler, because they throw when
-the script runs through the Execution API. `Spreadsheet.toast` doesn't throw there, but no one
-sees it, so a test checks the cells, never a toast. If a handler can't shed its UI calls, test the
-work function alone and say so in the PR.
+the script runs through the Execution API. No one sees a `Spreadsheet.toast` from an API run, so
+a test checks the cells, never a toast. Whether `toast` throws there is unverified: if a handler
+toasts on success, run its test once and read the result before relying on it. If a handler can't
+shed its UI calls, test the work function alone and say so in the PR.
 
 ## `tests.gs`
 
