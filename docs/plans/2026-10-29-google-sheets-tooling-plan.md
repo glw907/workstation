@@ -48,8 +48,8 @@ appears in the session's skill list after `apply`.
 `docs/coach-tools/gear-checkout-sort/` through `clasp clone-script`, reconcile with the repo copy,
 add the manifest keys and `tests.gs` (an `onEdit` case on a Roster first name; a Race skis picker
 case), then `setup-logs`, `push`, `create-deployment`. Undo the sort with an API write, run the
-cases, and read Roster and Race skis back with `gws`. Accept: Rissie lands between Randall and
-Sadie, and each Race skis picker offers only A Team athletes not yet on the tab. Update
+cases, and read Roster and Race skis back with `gws`. Accept: the moved row lands back in
+first-name order, and each Race skis picker offers only A Team athletes not yet on the tab. Update
 `gear-checkout.md` and the `gear-checkout` skill to use the new skill; commit to ecxc-ski `main`.
 
 **T4. Close (20 min).** STATUS: the thinkpad-x1 item (pull, `stow -R claude`, `mise install`,

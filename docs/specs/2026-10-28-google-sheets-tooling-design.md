@@ -150,7 +150,7 @@ over the CLI reaches every agent, and the global rule keeps Google off MCP.
 ## End-to-end check
 
 On the gear sheet, after an API write that undoes the sort, a `tests.gs` case calls `onEdit` with
-a built edit to a Roster first name. A `gws` read then shows Rissie between Randall and Sadie. A
+a built edit to a Roster first name. A `gws` read then shows the out-of-order row back in first-name order. A
 second case checks that a Race skis dropdown, read through `gws`, offers only A Team athletes not
 yet on the tab. If the sort still fails, the fix lands in ecxc-ski and the check runs again.
 Geoff's browser check opens the sheet and retypes one first name (the same value, so no data
