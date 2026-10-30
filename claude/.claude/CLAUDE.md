@@ -117,8 +117,9 @@ scheme). Use an API or CLI first for external services; no dashboard unless the 
 
 ## Other workstation services
 
-- **Google Docs / Drive / Sheets**: `gws` CLI, never an MCP server. Auth modes and write
-  patterns: `bluefin-admin.md` "Google Docs / Drive (gws)".
+- **Google Docs / Drive / Sheets / Apps Script**: `gws` and `clasp` CLIs, never an MCP server.
+  Sheets and Apps Script work follows the `google-sheets` skill; sign-ins and tokens:
+  `bluefin-admin.md` "Google Workspace (gws, clasp)".
 - **Email**: self-hosted Stalwart on ward (`mail.907.life`, JMAP, IMAP, DAV); Fastmail is retired.
   Hylki is the desktop mail client, webmail is `webmail.907.life`, and GNOME Contacts and Calendar
   read ward. Server facts and scripts: `~/Projects/servers` (`docs/decisions.md`).
