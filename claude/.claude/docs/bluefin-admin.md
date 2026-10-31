@@ -446,7 +446,7 @@ daily use.
 
 Hylki (Flatpak `co.hyprlab.Hylki`) is the desktop mail client
 (Geoff, 2026-10-18; Thunderbird is retired, its mail filters backed up under
-`~/.local/state/browser-mail-retire-2026-10-18/`). Contacts and calendars are GNOME
+`~/.local/state/browser-mail-retire-2026-10-18/`). Contacts and calendars are GNOME <!-- host-ok -->
 Contacts and GNOME Calendar, fed by a CalDAV/CardDAV account for ward (`https://mail.907.life`, user
 `geoff@907.life`) in GNOME Online Accounts, since 2026-10-22; vdirsyncer and khard are retired;
 Hylki reads the Evolution Data Server address books and adds invitations to the calendar.

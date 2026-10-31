@@ -18,9 +18,6 @@
 - [ ] **#42** Add two executor-permission checks to the plan-reviewer checklist `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-26)*
   From the docs-as-code cutover's planning misses. A deletion target that is a symlink resolving outside the executor's `--add-dir` set raises an unanswerable prompt overnight, so the plan makes it a morning step. A STATUS or clock file under `.git/worktrees/` is written by a lone Bash command: Write and Edit are refused there in a worktree-isolated session, and a heredoc chained to another command raised a sensitive-file prompt. Record: `~/Projects/initiatives/docs-system/README.md` (2026-10-26 line).
 
-- [ ] **#41** Clear drafter from thinkpad-x1 after its next pull `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-25)*
-  thinkpad-x1 may carry `~/.local/bin/drafter`, `~/.config/drafter/`, `~/.local/state/drafter/`, `~/.local/share/drafter/`, and links into a drafter clone. Nothing run on pavilion reaches it. After its next `~/.dotfiles` pull, `check-drift` there lists `drafter` as an unlisted bin: remove those paths, the clone, and the `drafter-page-hook` and `docs-page-chain.js` links.
-
 - [ ] **#40** Let a pass executor run its gate through cairn-run-gate from an isolated worktree `#bug` `#workstation` `#initiative:docs-system` *(2026-10-25)*
   The approval-queue batch 4 executor (glw907/approval-queue#10) was refused `cairn-run-gate '<cmd>'` and inline env-prefixed command lines in its `EnterWorktree` session, so it ran `bash scripts/gate.sh` bare and wrapped the plan's env-prefixed lines in scripts. pass-core "Gates" says every gate runs through `cairn-run-gate`. Either allow it from a pass worktree, or have `plan-reviewer` check that a plan's gate and env-prefix lines pass the isolated session's guard.
 - [ ] **#38** Catch an edit made only in a vendored skill's copy `#bug` `#workstation` *(2026-10-25)*
@@ -144,6 +141,9 @@
   **Three `internal/posthook` tests fail when the dotfiles checkout sits under `/tmp`** (`TestRunFlagsChangedLineOnly`, `TestRunSkipsUngovernedPaths`, `TestWholeDocFindingsOnlyOnWrite` return no advisory), so the gate goes red in a scratchpad worktree while the same tests pass in `~/.dotfiles` and in `.claude/worktrees/`. The hook likely treats a `/tmp` path as ungoverned. Make the tests use a path independent of where the checkout lives.
 
 ## Done
+- [x] **#41** Clear drafter from thinkpad-x1 after its next pull `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-25 → 2026-10-31)*
+  thinkpad-x1 may carry `~/.local/bin/drafter`, `~/.config/drafter/`, `~/.local/state/drafter/`, `~/.local/share/drafter/`, and links into a drafter clone. Nothing run on pavilion reaches it. After its next `~/.dotfiles` pull, `check-drift` there lists `drafter` as an unlisted bin: remove those paths, the clone, and the `drafter-page-hook` and `docs-page-chain.js` links.
+
 - [x] **#43** Make `cairn-docs-cycle` refuse an unknown argument `#bug` `#workstation` `#initiative:docs-system` *(2026-10-26 → 2026-10-27)*
   Any argument other than `--dry-run` is ignored, so a stray `--help` started a real cycle on 2026-10-26 at 18:51. Print a usage line and exit 2 instead. `bin/.local/bin/cairn-docs-cycle`
 

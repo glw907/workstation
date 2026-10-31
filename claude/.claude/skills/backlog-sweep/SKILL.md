@@ -38,7 +38,8 @@ for `git log` and `git show`). Best practices for Claude Code
 (<https://code.claude.com/docs/en/best-practices>): "A fresh reviewer does help". The prompt
 carries the backlog path (`backlog_path` in `.claude/project-tracking.json`, else `BACKLOG.md`),
 the commit it reads, the sweep's scope, and for a scoped sweep the design's path and the files the
-pass changes. It reads only list items under the open sections, never a roadmap or plan section.
+pass changes. It reads only list items under the open sections, never `## Won't do`, a roadmap, or a plan
+section, and it proposes no item that restates a `## Won't do` entry.
 
 For each item it returns the mechanism as it stands at file:line, one verdict, a one-sentence
 reason, and for a fold the fix shape and a size in minutes.
@@ -63,8 +64,13 @@ The session that ran the sweep edits the backlog in one commit:
 - `keep` gains ` *(swept YYYY-MM-DD)*` on its line, replacing an older stamp, so later sweeps go
   to unswept items first.
 - `reword` replaces the item's text and gains the stamp.
-- `done`, `duplicate`, and `drop` move to `## Done` as `done: <proof>`, `duplicate of <item>`, or
-  `dropped: <reason>`, never deleted, so Geoff can reopen one by moving it back.
+- `done` and `duplicate` move to `## Done` as `done: <proof>` or `duplicate of <item>`.
+- `drop` moves to `## Won't do` as `<item>: <reason> (Geoff, YYYY-MM-DD)`, once Geoff has approved
+  it. The section sits between the open items and `## Done`. It is a standing ruling, never a
+  queue: a sweep skips it, nothing restating an entry is filed, and only Geoff reopens one, by
+  moving it back (Geoff, 2026-10-31). Drupal's triage docs define the same state: "Closed (won't
+  fix)" is a maintainer's decision not to fix an issue, and it may stand even though the issue is valid
+  (<https://www.drupal.org/community-initiatives/bug-smash-initiative/issue-queue-triage-intro-and-comment-templates>).
 - `fold` stays open until the pass closes it.
 
 Inside a pass the commit rides the pass branch. Outside one it is a `pass-core` "Direct change"
