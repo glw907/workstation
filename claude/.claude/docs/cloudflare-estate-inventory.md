@@ -74,6 +74,7 @@ The scheme:
 | `ws-r2-backups-ro` | account | R2 object read, `servers-backup-orpheus` and `servers-backup-ward` | `CF_WS_R2_BACKUPS_RO_TOKEN` + pair | Restores and drills |
 | `orpheus-r2-backup-rw` | account | R2 object read and write, `servers-backup-orpheus` | `CF_ORPHEUS_R2_BACKUP_RW_TOKEN` + pair | Orpheus's restic |
 | `ward-r2-backup-rw` | account | R2 object read and write, `servers-backup-ward` | `CF_WARD_R2_BACKUP_RW_TOKEN` + pair | Ward's restic |
+| `ci-phonebook` | account | Individual Workers Editor on `phonebook`; D1 Write | `glw907/phonebook`'s `CLOUDFLARE_API_TOKEN` Actions secret; origin `CF_CI_PHONEBOOK_TOKEN` | The phonebook's CI deploys |
 | `ci-deploy` | account | Workers Editor across all Workers | Each repo's `CLOUDFLARE_API_TOKEN` Actions secret; origin `CF_CI_DEPLOY_TOKEN` | Every site deploy and Workers Builds |
 
 `ci-deploy` is planned, not live. Until it lands, five repos' Actions secrets and the Workers

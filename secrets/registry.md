@@ -793,6 +793,17 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotation**: delete the token in Access, run `service-token.sh` again (it creates the token and
   policy and stores both halves), then redeploy with `deploy.sh` so the Worker pins the new ID.
 
+### CF_CI_PHONEBOOK_TOKEN
+- **Grants**: Cloudflare account-owned token `ci-phonebook` (id `6401c13e...`). Individual Workers
+  Editor on the `phonebook` script only, and D1 Write across the account, because D1 Write has no
+  per-database scope. A request to another Worker answers 403. No expiry and no IP filter.
+- **Used by**: the `CLOUDFLARE_API_TOKEN` Actions secret on `glw907/phonebook`, for
+  `.github/workflows/ci.yml`'s deploy job.
+- **Minted 2026-10-31** through the API, value unseen. The Worker resource key isn't documented:
+  it nests `com.cloudflare.edge.worker.script.<script tag>` under the account resource.
+- **Rotation**: inventory rule 6, then `read_secret CF_CI_PHONEBOOK_TOKEN | gh secret set
+  CLOUDFLARE_API_TOKEN -R glw907/phonebook`.
+
 ### TPLINK_ROUTER_PASSWORD
 - **Grants**: the local admin password of the house router (TP-Link Archer C4000 v3.0 at
   192.168.1.1). **Pending (BACKLOG #26)**: the value stored 2026-10-20 is the TP-Link ID
