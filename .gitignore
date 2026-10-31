@@ -53,3 +53,6 @@ claude/.claude/skills/synced/
 
 # Pair-subagent and pass worktrees under the main checkout
 .claude/worktrees/
+
+# Chromium writes web-app icons here through the folded stow tree
+icons/.local/share/icons/hicolor/*/apps/chrome-*
