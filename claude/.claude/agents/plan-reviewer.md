@@ -35,6 +35,12 @@ On a plan, also check these items:
   asks Geoff only what the plan could not foresee (`pass-core`, "Lifecycle" step 1 and "Judgment
   calls"). Each item
   below this one was added from a past pass's planning miss.
+- A `[you]` pre-flight item still open when an unattended launch is armed is checked at arm time,
+  and the launch's standing answer says what a proof step does after the run has moved live state.
+  A token proof that deploys `origin/main` can't run once a phone depends on the pass's version
+  (Pass 5, 2026-10-31: the armed timer fired with `tmp-account-tokens` never made).
+- An executor's prompt makes each accepted-task report name the CI verdict on that head (Pass 5,
+  2026-10-31: CI stayed red across three heads while each report named only the local gate).
 - A pass that changes workstation config states what each host (`pavilion`, `thinkpad-x1`)
   gets, including a host that lacks a prerequisite (Pass W, 2026-10-19: the thinkpad question).
 - A migration's inventory is checked against the live stores before approval, so no item turns
