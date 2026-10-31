@@ -1,0 +1,117 @@
+#!/usr/bin/env -S python3 -I
+"""Send and read text messages on Geoff's voip.ms number, for when no phone is at hand.
+
+Geoff runs it himself to answer a phone check, such as Google's sign-up verification; a Claude
+session never uses it to complete one. The voip.ms API credentials come from `~/.local/secrets`, read as data and never
+sourced. They travel as GET query parameters because the REST endpoint answers a POST with SOAP,
+and the API answers only whitelisted IPs (see `~/.dotfiles/secrets/registry.md`).
+
+Usage:
+  voipms-sms status                  each number and whether SMS is on
+  voipms-sms inbox [--days N]        texts received in the last N days (default 1), newest first
+                  [--json]           the same texts as the API's JSON list, for phone-check
+  voipms-sms send TO MESSAGE         text MESSAGE (160 characters at most) to TO
+  Every command takes --did NUMBER; without it the one SMS-enabled number is used.
+"""
+
+import argparse
+import datetime
+import json
+from pathlib import Path
+import shlex
+import sys
+import urllib.parse
+import urllib.request
+
+API = "https://voip.ms/api/v1/rest.php"
+SECRETS = Path.home() / ".local" / "secrets"
+CREDENTIALS = ("VOIPMS_API_USERNAME", "VOIPMS_API_PASSWORD")
+
+
+def read_credentials() -> dict[str, str]:
+    found = {}
+    for line in SECRETS.read_text().splitlines():
+        words = shlex.split(line, comments=True)
+        if len(words) == 2 and words[0] == "export":
+            name, _, value = words[1].partition("=")
+            if name in CREDENTIALS:
+                found[name] = value
+    missing = [name for name in CREDENTIALS if not found.get(name)]
+    if missing:
+        sys.exit(f"voipms-sms: {', '.join(missing)} missing from {SECRETS}")
+    return found
+
+
+def api(creds: dict[str, str], method: str, **params: str) -> dict:
+    """Call one API method and return its reply; exit on any status but success."""
+    query = urllib.parse.urlencode(
+        {
+            "api_username": creds["VOIPMS_API_USERNAME"],
+            "api_password": creds["VOIPMS_API_PASSWORD"],
+            "method": method,
+            **params,
+        }
+    )
+    # The endpoint refuses urllib's default User-Agent with a 403.
+    request = urllib.request.Request(f"{API}?{query}", headers={"User-Agent": "voipms-sms"})
+    with urllib.request.urlopen(request, timeout=30) as response:
+        reply = json.load(response)
+    if reply.get("status") not in ("success", "no_sms"):
+        sys.exit(f"voipms-sms: {method} answered {reply.get('status', 'no status')}")
+    return reply
+
+
+def sms_did(creds: dict[str, str], chosen: str | None) -> str:
+    if chosen:
+        return chosen
+    enabled = [d["did"] for d in api(creds, "getDIDsInfo")["dids"] if d.get("sms_enabled") == "1"]
+    if len(enabled) != 1:
+        sys.exit(f"voipms-sms: {len(enabled)} numbers have SMS on; name one with --did")
+    return enabled[0]
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(prog="voipms-sms", allow_abbrev=False)
+    parser.add_argument("--did", help="the voip.ms number to use, digits only")
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("status")
+    inbox = commands.add_parser("inbox")
+    inbox.add_argument("--days", type=int, default=1)
+    inbox.add_argument("--json", action="store_true")
+    send = commands.add_parser("send")
+    send.add_argument("to")
+    send.add_argument("message")
+    args = parser.parse_args()
+    creds = read_credentials()
+
+    if args.command == "status":
+        for d in api(creds, "getDIDsInfo")["dids"]:
+            state = "on" if d.get("sms_enabled") == "1" else "off"
+            print(f"{d['did']}  SMS {state}  {d.get('description', '')}")
+    elif args.command == "inbox":
+        today = datetime.date.today()
+        reply = api(
+            creds,
+            "getSMS",
+            did=sms_did(creds, args.did),
+            type="1",
+            # The API dates texts in the account's timezone, which can run a day ahead of ours.
+            to=(today + datetime.timedelta(days=1)).isoformat(),
+            **{"from": (today - datetime.timedelta(days=args.days)).isoformat()},
+        )
+        if args.json:
+            print(json.dumps(reply.get("sms", [])))
+            return
+        for m in reply.get("sms", []):
+            print(f"{m['date']}  from {m['contact']}\n  {m['message']}")
+    else:
+        if len(args.message) > 160:
+            sys.exit("voipms-sms: a message is 160 characters at most")
+        reply = api(
+            creds, "sendSMS", did=sms_did(creds, args.did), dst=args.to, message=args.message
+        )
+        print(f"sent, id {reply.get('sms')}")
+
+
+if __name__ == "__main__":
+    main()

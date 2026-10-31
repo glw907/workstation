@@ -1,2 +1,3 @@
 [tools]
 node = "lts"
+"npm:@google/clasp" = "3"

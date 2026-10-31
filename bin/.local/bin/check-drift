@@ -224,10 +224,8 @@ if [[ "$(hostname)" == pavilion ]]; then
     etc_pair "$BLUEFIN/etc/NetworkManager/conf.d/wifi-powersave-off.conf" /etc/NetworkManager/conf.d/wifi-powersave-off.conf
 fi
 # The phonebook nightly and gate runs, pavilion only (their services carry ConditionHost=pavilion).
-# The 10-pass-worktree.conf drop-ins point at a pass worktree; delete them with the pass.
 if [[ "$(hostname)" == pavilion ]]; then
-    for unit in phonebook-nightly.timer phonebook-nightly.service phonebook-gate.timer phonebook-gate.service \
-                phonebook-nightly.service.d/10-pass-worktree.conf phonebook-gate.service.d/10-pass-worktree.conf; do
+    for unit in phonebook-nightly.timer phonebook-nightly.service phonebook-gate.timer phonebook-gate.service; do
         etc_pair "$BLUEFIN/etc/systemd/system/$unit" "/etc/systemd/system/$unit"
     done
 fi

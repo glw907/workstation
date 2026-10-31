@@ -1,0 +1,178 @@
+#!/usr/bin/env -S python3 -I
+"""Answer a site's phone check from the desktop, through the voip.ms number.
+
+Geoff runs it, usually from the Super+Shift+P shortcut. A Claude session never runs it, because
+it sends a text that tells a site a person is acting.
+
+Usage:
+  phone-check            wait for a Print Screen of a QR code, then act on it, then watch for
+                         a reply code
+  phone-check IMAGE      act on the QR code in IMAGE
+  phone-check --code     only watch for an incoming code (a site that texts one to you)
+
+An sms: or SMSTO: code is sent from the voip.ms number after one Enter. A web link opens in the
+browser. A code that arrives is printed and copied to the clipboard.
+"""
+
+import argparse
+import concurrent.futures
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+import time
+import urllib.parse
+
+SCREENSHOT_WAIT = 180
+CODE_WAIT = 300
+POLL = 5
+
+
+def screenshot_dir() -> Path:
+    try:
+        pictures = subprocess.run(
+            ["xdg-user-dir", "PICTURES"], capture_output=True, text=True, check=True
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        pictures = str(Path.home() / "Pictures")
+    return Path(pictures) / "Screenshots"
+
+
+def wait_for_screenshot(folder: Path) -> Path:
+    """Return the first image GNOME saves into folder after this call starts."""
+    seen = set(folder.glob("*.png")) if folder.is_dir() else set()
+    print("Press Print Screen and drag a box around the QR code.")
+    deadline = time.monotonic() + SCREENSHOT_WAIT
+    while time.monotonic() < deadline:
+        time.sleep(0.5)
+        fresh = set(folder.glob("*.png")) - seen if folder.is_dir() else set()
+        if fresh:
+            image = max(fresh, key=lambda p: p.stat().st_mtime)
+            # GNOME creates the file before it finishes writing it.
+            time.sleep(0.5)
+            return image
+    sys.exit("phone-check: no screenshot arrived")
+
+
+def decode(image: Path) -> str:
+    result = subprocess.run(
+        ["zbarimg", "--quiet", "--raw", str(image)], capture_output=True, text=True
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        sys.exit(f"phone-check: no QR code found in {image.name}; take a tighter screenshot")
+    return result.stdout.strip().splitlines()[0]
+
+
+def parse_sms(text: str) -> tuple[str, str] | None:
+    """Return the number and body of an sms:, smsto:, or SMSTO: payload, or None for any other."""
+    lowered = text.lower()
+    if lowered.startswith("smsto:"):
+        number, _, body = text[6:].partition(":")
+    elif lowered.startswith("sms:"):
+        # RFC 5724 puts the body in ?body=; some generators use ;body= instead.
+        number, sep, query = text[4:].partition("?")
+        if not sep:
+            number, _, query = number.partition(";")
+        # RFC 5724 percent-encodes the body, so a literal + is a plus, not a space.
+        body = urllib.parse.parse_qs(query.replace("+", "%2B")).get("body", [""])[0]
+    else:
+        return None
+    return dial_digits(urllib.parse.unquote(number)), body
+
+
+def dial_digits(number: str) -> str:
+    """Reduce a number to the digits voip.ms dials: ten for North America, else as given."""
+    digits = re.sub(r"\D", "", number)
+    if len(digits) == 11 and digits.startswith("1"):
+        return digits[1:]
+    return digits
+
+
+def find_code(message: str) -> str | None:
+    """Return the verification code in a text, such as 123456 from "G-123456 is your code"."""
+    match = re.search(r"(?<![\d-])(?:G-)?(\d{4,8})(?!\d)", message)
+    return match.group(1) if match else None
+
+
+def inbox() -> list[dict]:
+    result = subprocess.run(
+        ["voipms-sms", "inbox", "--json"], capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        sys.exit(result.stderr.strip() or "phone-check: voipms-sms inbox failed")
+    return json.loads(result.stdout)
+
+
+def copy(text: str) -> bool:
+    try:
+        subprocess.run(["wl-copy", text], check=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return True
+
+
+def watch_for_code(seen: set[str]) -> None:
+    """Print each new text until one carries a code, which goes to the clipboard."""
+    print("Watching for a text on the voip.ms number (Ctrl-C to stop).")
+    deadline = time.monotonic() + CODE_WAIT
+    while time.monotonic() < deadline:
+        for m in reversed(inbox()):
+            if m["id"] in seen:
+                continue
+            seen.add(m["id"])
+            print(f"\n{m['date']}  from {m['contact']}\n  {m['message']}")
+            code = find_code(m["message"])
+            if code:
+                where = "copied to the clipboard" if copy(code) else "copy it by hand"
+                print(f"\nCode {code}, {where}.")
+                return
+        time.sleep(POLL)
+    print("No code arrived.")
+
+
+def act_on(payload: str) -> None:
+    sms = parse_sms(payload)
+    if sms:
+        number, body = sms
+        print(f"\nThe code asks you to text {number}:\n  {body}")
+        # Only a person at a terminal may send; a Claude session's shell has none.
+        if not sys.stdin.isatty():
+            sys.exit("phone-check: sending needs a person at a terminal; run it from Super+Shift+P")
+        input("Press Enter to send it from the voip.ms number, or Ctrl-C to stop. ")
+        if subprocess.run(["voipms-sms", "send", number, body]).returncode != 0:
+            sys.exit("phone-check: the text did not send")
+        print("If the page has moved on, Ctrl-C stops the watch below.")
+    elif re.match(r"https?://", payload):
+        print(f"\nOpening {payload}")
+        subprocess.run(["xdg-open", payload], check=False)
+    else:
+        where = "copied to the clipboard" if copy(payload) else "not copied"
+        print(f"\nThe code holds this text ({where}):\n  {payload}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(prog="phone-check")
+    parser.add_argument("image", nargs="?", type=Path)
+    parser.add_argument("--code", action="store_true", help="only watch for an incoming code")
+    parser.add_argument("--pause", action="store_true", help="wait for Enter before exiting")
+    args = parser.parse_args()
+    # The API can take seconds to answer, so read the texts already there while Geoff screenshots.
+    pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+    before = pool.submit(inbox)
+    try:
+        if not args.code:
+            act_on(decode(args.image or wait_for_screenshot(screenshot_dir())))
+        watch_for_code({m["id"] for m in before.result()})
+    except (KeyboardInterrupt, EOFError):
+        print()
+    finally:
+        if args.pause:
+            try:
+                input("\nPress Enter to close. ")
+            except (KeyboardInterrupt, EOFError):
+                pass
+
+
+if __name__ == "__main__":
+    main()

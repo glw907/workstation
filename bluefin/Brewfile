@@ -76,3 +76,7 @@ brew "libarchive"   # for bsdtar: safe archive extraction in the musicbox inbox 
 brew "libxml2"      # xmllint for dubplate's XML contract tier; pinned (`brew pin libxml2`) so the tier's version holds.
                     # Pinning holds its dependents too (chafa, ffmpeg, gdk-pixbuf, imagemagick, librsvg,
                     # libxkbcommon, shared-mime-info, xdotool): a bump unpins, upgrades libxml2, then `brew upgrade` them.
+
+# Reads a QR code from a screenshot, for a phone check done without a phone (2026-10-29):
+# Geoff reads the code with zbarimg and answers with voipms-sms.
+brew "zbar"
