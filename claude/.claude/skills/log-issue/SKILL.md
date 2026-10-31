@@ -97,7 +97,8 @@ Extract what you can from the user's message and current context. You need:
 
 A session filing without asking (a pass follow-up, a review finding) files only an item that names
 its mechanism (a file:line or a reproducible symptom) and what goes wrong if it is left alone, and
-only after checking the backlog for an item that already covers it. It adds the pass or PR that
+only after checking the backlog for an item that already covers it, and never restates a
+`## Won't do` entry: those are Geoff's rulings (`backlog-sweep`, "Landing the verdicts"). It adds the pass or PR that
 found it to the description. An item that clears none of these goes in the PR body instead, so
 the `backlog-sweep` skill is not left to drop it later (Geoff, 2026-10-27).
 
@@ -160,7 +161,7 @@ Priority sections are created as needed when issues are added.
 
 ### Format rules
 
-- **Priority sections**: `## High`, `## Medium`, `## Low`, `## Done`
+- **Priority sections**: `## High`, `## Medium`, `## Low`, `## Won't do`, `## Done`
 - **Issue line**: `- [ ] **#N** Title text \`#type\` \`#domain\` *(YYYY-MM-DD)*`
 - **Initiative tag** (optional): append `\`#initiative:<id>\`` to link the issue to an initiative record
 - **Optional detail**: indented line(s) below the issue for description and related files
