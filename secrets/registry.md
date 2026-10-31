@@ -184,6 +184,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | PHONEBOOK_PHONE_USER | ✓ | — | — | — | — |
 | VOIPMS_API_USERNAME | ✓ | — | — | — | — |
 | VOIPMS_API_PASSWORD | ✓ | — | — | — | — |
+| VOIPMS_RELAY_KEY | ✓ | — | — | — | — |
 | PHONEBOOK_SIP_OFFICE | ✓ | — | — | — | — |
 | PHONEBOOK_SIP_PHONE2 | ✓ | — | — | — | — |
 | PHONEBOOK_SIP_PHONE3 | ✓ | — | — | — | — |
@@ -720,18 +721,36 @@ tmpfs cache; no password manager holds it for scripts.
   account login email. The password is the typed **API Password** on the portal's SOAP and
   REST/JSON API page, not the login password and not the page's **Bearer Token**; `rest.php`
   ignores a bearer header (`missing_credentials`). Verified with `getIP`, 2026-10-07.
-- **Used by**: the phonebook scripts (`~/Projects/phonebook/scripts/voipms/`) and the workstation's `voipms-sms`, which
-  sends and reads texts on 907-277-9397 (2026-10-29). Both read the pair from `~/.local/secrets`
-  as data.
-- **Constraints**: the API answers only whitelisted IPs (the home IP, 206.162.90.105 on
-  2026-10-07; a DHCP change breaks it). Credentials travel as GET query parameters; pass them to
-  curl through `-K -` on stdin. `getSubAccounts` returns SIP passwords, so never print its output.
+- **Used by**: the phonebook scripts (`~/Projects/phonebook/scripts/voipms/`), the `phonebook`
+  Worker (the secrets `VOIPMS_API_USERNAME` and `VOIPMS_API_PASSWORD`, 2026-10-31), and the
+  workstation's `voipms-sms`, which sends and reads texts on 907-277-9397 (2026-10-29). The scripts
+  read the pair from `~/.local/secrets` as data.
+- **Constraints**: the API answers only allow-listed IPs: orpheus (2.31.61.237) and, while Geoff
+  keeps it, the home address. The Worker and the phonebook scripts send a multipart POST through
+  the `voipms.907.life` relay on orpheus, so credentials stay out of URLs and logs; pass them to
+  curl through `-K -` on stdin. `voipms-sms` stays direct and stops working if the home address
+  leaves the allow list. `getSubAccounts` returns SIP passwords, so never print its output.
 - **Rotation**: type a new API Password, click Save API Password, then `secret-receive
   VOIPMS_API_PASSWORD`.
 - **When the API answers `invalid_credentials`**: compare both values with Geoff's voip.ms item in
   Proton Pass (`claude-pass`) before touching the portal. On 2026-10-27 the stored username was
   the retired fastmail.com login; the login is now `voip@m.907.life`, and the API password was
   re-set the same day.
+
+### VOIPMS_RELAY_KEY
+- **Grants**: the `voipms.907.life` relay on orpheus (`~/Projects/servers`, `roles/caddy`), which
+  forwards a `POST` to `/api/v1/rest.php` carrying this key as a `Bearer` token to voip.ms from
+  orpheus's fixed address. Every other request gets a 404. Generated 2026-10-31 as 32 random hex
+  bytes by the voicemail and rings pass.
+- **Used by**: the `phonebook` Worker (the secret `VOIPMS_RELAY_KEY`), the phonebook scripts
+  through `scripts/voipms/lib.sh`, and `secrets/render.sh orpheus`, which writes
+  `/etc/servers/voipms-relay.env`.
+- **Constraints**: exactly 64 lowercase hex characters; `render.sh` and both Caddy install scripts
+  refuse anything else. Copy in Proton Pass: the `VOIPMS_RELAY_KEY` item in `Household IT`.
+- **Rotation**: `openssl rand -hex 32 | secret-set.sh VOIPMS_RELAY_KEY --stdin`, keeping the
+  trailing newline. Update the Pass item, run `scripts/apply.sh orpheus --apply` (Caddy reads the
+  key only at start, so the install restarts it), then put the Worker secret. A host other than
+  the one that set it runs `secret-set.sh --sync` first.
 
 ### PHONEBOOK_VOICEMAIL_PIN
 - **Grants**: the PIN of the household voip.ms voicemail mailbox `1001` (`Household`), for
