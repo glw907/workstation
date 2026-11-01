@@ -49,7 +49,7 @@ set -euo pipefail
 # into the wrong grid.
 #
 # Design note (2026-09-21): an earlier on-desktop harness (a per-repo copy of
-# a tui-visual-verify template, since retired) drove kitty through xdotool
+# a `standards:tui-visual-verify` template, since retired) drove kitty through xdotool
 # and ImageMagick's `import -window`, both X11 tools, against the owner's
 # real Wayland session forced onto XWayland. That works but puts a kitty
 # window on the owner's live desktop and steals focus for the duration.
@@ -72,7 +72,7 @@ set -euo pipefail
 # Input goes through kitty's remote control straight into the pty, exactly
 # as the on-desktop harness does, never through X: a click is the SGR 1006
 # report bytes a real pointer produces, so the app cannot tell the
-# difference. See tui-visual-verify's SKILL.md for the fuller reasoning
+# difference. See `standards:tui-visual-verify`'s SKILL.md for the fuller reasoning
 # (it applies unchanged here; only the display underneath moved).
 
 box=term-headless

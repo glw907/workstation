@@ -22,21 +22,22 @@ repeated here.
 
 ## Lifecycle
 
-Each task takes a risk class from the adapter's path map (`running-passes` defines the three).
-`runner` covers skills, agents, workflows, the gate tools, `.github/workflows`, and
-`scripts/checks`.
-Only Geoff's ruling raises a class, stated in the design in one sentence. A pass takes its highest
-task's class. A `live-account` flag marks a run that can touch a real Cloudflare, GitHub, or npm
-account.
-A change that meets "Direct changes" skips this lifecycle.
+Risk classes are `running-passes` "Risk classes". Here `runner` covers skills, agents, workflows,
+the gate tools, `.github/workflows`, and `scripts/checks`, and Geoff's ruling that raises a class
+is stated in the design in one sentence. A change that meets "Direct changes" skips this lifecycle,
+and "Direct changes" replaces the `running-passes` skip for a one-sentence diff.
 
-1. **Design.** Opus at `high` brainstorms in chat. Geoff approves a design of a page or less: the
-   outcome, files and interfaces touched, what is out of scope, one end-to-end check, the risk
-   class, and every pre-flight item it can foresee (step 4). A design brought for approval goes to Geoff as a design part in a packet, per `approval-packet`.
+A design that `standards:brainstorming` produces enters this lifecycle. Geoff approves it as a
+design part in an approval-queue packet (`approval-packet`), never through a question in chat: the
+queue shows the design in a browser and takes his feedback (Geoff, 2026-10-28). The spec and plan go
+where the repo's adapter or this skill puts them, the plan is authored per step 4, and
+`superpowers:writing-plans` is never invoked.
+
+1. **Design.** Opus at `high` brainstorms in chat. The design is the page or less
+   `running-passes` "Design" sets out, plus every pre-flight item it can foresee (step 4). A design brought for approval goes to Geoff as a design part in a packet, per `approval-packet`.
    An owner fork in the design is a `### Decide:` block in its brief. A design doc opens with `## Brief` after its title, per
    `~/.claude/docs/voice/approval-brief.md`. The design names its initiative (a record in `~/Projects/initiatives`) or says none applies; cross-repo specs, plans, and research go in `initiatives/<id>/`, and the plan header carries an `Initiative: <id>` line. A design that adds a project, a service, or running infrastructure names where it runs and why, after weighing Cloudflare (Workers, D1, R2) against the Hetzner servers orpheus and ward: what fails together, what the host already carries, cost, and how backup and restore cover it. It never defaults to the host at hand (Geoff, 2026-10-22). Every design runs the `standards:backlog-sweep` skill's scoped sweep before approval, and its full sweep when one is due; the design lists the verdicts, and approving it approves the backlog edits (Geoff, 2026-10-27). A design that clears filed backlog items, such as a friction round, takes its scope from the sweep's verdicts and lists each dropped item with its reason (Geoff, 2026-10-25). Best practices for Claude Code (<https://code.claude.com/docs/en/best-practices>): "Separate research and planning from implementation to avoid solving the wrong problem." If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
-   carries
-   these two samples, and extras go in "Later", never built:
+   carries these two samples:
    > "Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
    > Keep solutions simple and focused: - Scope: Don't add features, refactor code, or make
    > "improvements" beyond what was asked. A bug fix doesn't need surrounding code cleaned up. A
@@ -63,9 +64,8 @@ A change that meets "Direct changes" skips this lifecycle.
    run can foresee, an estimate overrun up to a named ceiling among them, and the design records
    each answer as a standing approval the planner applies in place of stopping. A stop with no
    standing answer still stops (Geoff, 2026-10-12: the intake-1 overnight run stopped at 01:17 on
-   a 995-minute plan against a 780-minute line, and nothing ran until morning). So every stop the
-   plan writes (a cap, a line stop, a ceiling) carries a standing answer. A count cap on reads,
-   retries, rounds, or reruns is a loop guard, never a stop for Geoff. Past it, the run goes on
+   a 995-minute plan against a 780-minute line, and nothing ran until morning). Past a count cap
+   (`running-passes` "Plan"), the run goes on
    while each retry fixes a cause the session has traced and spend stays inside the ceiling, and
    each fix is a reversible change listed in the PR's `## Decisions`. A cause that returns after
    its fix gets one structural fix: the session replaces the unit the patches kept missing instead
@@ -81,15 +81,12 @@ A change that meets "Direct changes" skips this lifecycle.
 3. **Spec review.** `standards:spec-plan-review` sets spec and plan review depth. A finding that changes
    the approved design returns to Geoff as one batched question; every other finding is folded
    without him.
-4. **Plan.** A task list. Each task carries its outcome, files, risk class, acceptance check, test,
-   and a clock estimate in minutes, and never implementation code. Independent tasks are marked as
-   pairs. Fold a single-deliverable task into a neighbor. A plan whose path minutes exceed twice its
-   design's estimate goes back to Geoff with the reason before launch. The path is the longest chain
-   of tasks that run in sequence, a pair counting once at its larger estimate; the sum over every
-   task counts the pairs twice and never sets the stop (Geoff, 2026-10-12: intake-1 stopped on a
-   995-minute task sum whose path was 725, under its 780 line). The design states its estimate in
-   path minutes, set from the actual-against-planned path in recent passes' scores, never from a
-   share of a spec's figure. Test-first applies to `auth-data` tasks.
+4. **Plan.** The task list is `running-passes` "Plan". A plan whose path minutes exceed twice its
+   design's estimate goes back to Geoff with the reason before launch. The sum over every task
+   counts pairs twice and never sets the stop (Geoff, 2026-10-12: intake-1 stopped on a 995-minute
+   task sum whose path was 725, under its 780 line). The design states its estimate in path minutes,
+   set from the actual-against-planned path in recent passes' scores, never from a share of a spec's
+   figure.
 
    The plan opens with a `## Pre-flight` list: every step only Geoff can do, such as a sign-in, a
    value through `secret-receive`, a dialog, a permission rule, a browser or app action, or a
@@ -190,13 +187,9 @@ wake-up (`/loop` with no interval) and, if the lid may close, the lid-switch hol
 
 ## Judgment calls
 
-The plan answers the calls its run can foresee, and the session answers the rest and records them
-in the PR. Mid-run, it takes its own recommendation without asking when the choice stays inside
-the approved design, budget, and path ceiling and can be undone after the merge. Each such call
-goes in the PR body's `## Decisions` section: the call, the choice, the alternative, and the
-reason. The session stops for Geoff only on spend past the budget, an irreversible or destructive
-act, a secret, a change of scope or design, a product or taste call the design leaves open, a
-stop the plan writes once its standing answer runs out (see "Lifecycle" step 1), or a clock stop. In the three days to 2026-10-19, Geoff took the recommended option on 24 of 36 questions, five of
+The calls and the `## Decisions` format are `running-passes` "Execute". Here the session also stops
+for a stop the plan writes once its standing answer runs out (see "Lifecycle" step 1), and for a
+clock stop. In the three days to 2026-10-19, Geoff took the recommended option on 24 of 36 questions, five of
 them mid-run calls inside approved scope. Prompting Claude Opus 5
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
 "Make routine judgment calls yourself, and check in only when different readings of the request

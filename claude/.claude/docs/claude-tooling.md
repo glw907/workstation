@@ -32,7 +32,7 @@ The rules for adding or changing any piece live in the `claude-infra` skill.
 
 Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; the seats are in
 `pass-core` "Models"): every reviewer agent under `agents/` names `claude-opus-5-5` explicitly
-(`standards:diff-reviewer`, the four domain reviewers, `engine-triage`, `standards:go-architecture-reader`,
+(`standards:diff-reviewer`, the four domain reviewers, `standards:go-architecture-reader`,
 `standards:figure-verifier`, `standards:visual-verifier`, `prose-voice-reviewer`, `cairn-register-editor`,
 `standards:plan-reviewer`). No agent pins Fable 5.1; it is reached only by a per-dispatch escalation.
 Implementers stay on `sonnet` at effort `medium`. A frontmatter pin is read at session start, so a
@@ -111,7 +111,7 @@ the diff, point the agents that need it at the skill file, commit skills and man
   The license pair lives in the age store (registry entry in `~/.dotfiles/secrets/registry.md`),
   never in a committed `.mcp.json`. Rule of use: the `standards:daisyui` skill (one
   guide per component) is what reaches implementer and reviewer subagents, which run without
-  MCP, so `cairn-implementer` and `standards:daisyui-a11y-reviewer` point at it; for any DaisyUI markup,
+  MCP, so the cairn-cms repo's `cairn-implementer` and `standards:daisyui-a11y-reviewer` point at it; for any DaisyUI markup,
   read the component guide first and ask Blueprint from the main loop when the guide is thin.
   The DaisyUI-first rule itself is the workstation CLAUDE.md section "Claude tooling:
   manifests, scopes, and the DaisyUI-first rule". Standing uses (Geoff, 2026-09-13; audit record
@@ -131,7 +131,13 @@ the diff, point the agents that need it at the skill file, commit skills and man
   dispatches the `standards:plan-reviewer` agent. `pass-core` points at it.
 - **Svelte:** the official server (user scope, remote).
 - **Playwright:** Microsoft's server (user scope, stdio).
-- **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook.
+- **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook. A repo here
+  commits its Vale styles and pins Vale in CI: never run `vale sync` against a committed `styles/`
+  directory (setup commits the StylesPath instead of ignoring it, and runs `vale sync` only to
+  populate it before that commit), never edit the CI pin, and land a fix on a pass branch, never a
+  branch per file.
+- **VHS:** `vhs` is not installed on this workstation (`bluefin/Brewfile` has no `vhs`); install it
+  through the `dependency-upgrade` skill before running any tape.
 - **Cobra:** one community skill (vendored, MIT) for the cairn Go tool; `standards:go-conventions`
   and `standards:elm-conventions` stay mandatory.
 - **TUI work:** the order of use is the house skills (`standards:elm-conventions`, `standards:bubbletea-design`,
