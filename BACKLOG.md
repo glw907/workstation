@@ -9,6 +9,8 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
+- [ ] **#46** Add Email Sending to `retire-project`'s teardown `#improvement` `#workstation` *(2026-11-01)*
+  Found retiring xcathletes-org. Step 4 names Email Routing, but a domain onboarded to Email Sending keeps locked `cf-bounce` records that answer "managed by Email Routing" even with routing off. Disabling the domain under Email Sending removed them. Both are dashboard steps, so the inventory and the packet should name them up front.
 - [ ] **#45** Move the Proton Pass procedure into a workstation skill `#improvement` `#workstation` *(2026-10-28)*
   The procedure in `bluefin-admin.md` "Secrets" (which vault a new item goes in, the subcommands `claude-pass` allows, the login throttle, `secret-receive`) reaches a session only if it opens that doc. On 2026-10-28 the google-sheets session put the helper account's login in Geoff's own vault before Geoff ruled `Workstation`, and found late that `pass-cli` cannot create an alias. Geoff's Proton aliases live at `m.907.life` (Geoff, 2026-10-28), though `~/Projects/servers/docs/decisions.md` names `me.907.life` as his masked-address domain; the skill should state the right one. A skill that triggers on credential work would carry all of this; the doc keeps the facts and a pointer.
 - [ ] **#44** Make a conductor's session name match the name its executor trusts `#bug` `#workstation` `#initiative:docs-system` *(2026-10-27)*
