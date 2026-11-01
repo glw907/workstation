@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Writes the agent-first containers' env file from the secrets store and prints nothing.
+# Writes the agent-first containers' env files from the secrets store and prints nothing.
+# gh.env is separate so only the Contribute check receives the GitHub token.
 # Task 4.13 of the agent-first plan removes this script with the token.
 set -eo pipefail
 source "$HOME/.local/secrets"
@@ -8,3 +9,6 @@ umask 077
 dir="$HOME/.local/state/cairn-agent-first/e2e"
 mkdir -p "$dir"
 printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$CAIRN_E2E_OAUTH_TOKEN" > "$dir/oauth.env"
+if [ -n "$CAIRN_E2E_GH_TOKEN" ]; then
+  printf 'CAIRN_E2E_GH_TOKEN=%s\n' "$CAIRN_E2E_GH_TOKEN" > "$dir/gh.env"
+fi
