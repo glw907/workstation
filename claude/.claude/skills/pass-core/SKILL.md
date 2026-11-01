@@ -368,6 +368,13 @@ agent's prompt; each was added from a past pass's planning miss.
   it can go, and flag any item the design did not foresee, since it holds the launch for a
   pre-launch packet (Pass 1, 2026-10-19: a Proton Bridge sign-in surfaced mid-run).
   Read every task's writes against auto mode too: a write to Claude's settings, a credential file, or new public surface can be refused however the allow rules read, so each gets a `[you]` item or a path a probe proved (agent-first pass 1, 2026-10-31: `.claude/settings.json` and a container's `oauth.env`).
+- A step a run or its merges will need refused by auto mode is settled before launch: Geoff grants
+  the narrow permission in the design's sitting, or runs what can already run. A `[you]` item never
+  sits between a pass's merges when a permission asked up front would let the session run it. Only
+  a step that truly needs Geoff at that moment, such as a sign-in or a reader's sitting, keeps a
+  set point. A conductor reads each pass for these before launching it and brings them as one list
+  (Geoff, 2026-10-31: agent-first pass 1's plugin install held five merges for over an hour:
+  "You should have asked for the necessary permission up front.").
 - A pass that launches `claude --bg` in a directory no session has opened (a new repo or
   checkout) lists the workspace trust prompt as a pre-flight item: Geoff runs `claude` there once
   and accepts it, checked by a launch that no longer prints "Workspace not trusted" (Survey Pass
