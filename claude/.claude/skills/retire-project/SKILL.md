@@ -54,9 +54,8 @@ Rerun the inventory for each id before deleting it, and stop if it's no longer s
 
 ## 5. Close
 
-Clear the references from step 1, close the initiative, and add a row to
-`~/Documents/retired-projects/README.md` with the date, sha256, and what went. Rerun the Cloudflare
-inventory and show it empty.
+Clear the references from step 1, close the initiative, and add a row to the `README.md` beside the
+archives with the date, sha256, and what went. Rerun the Cloudflare inventory and show it empty.
 
 ## Why this order
 
