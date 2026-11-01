@@ -349,7 +349,7 @@ setup_upkeep_timer() {
 
 # kitty is not the daily terminal on Bluefin -- Ptyxis is, and it ships with
 # the image. kitty is installed only as the gate platform for the
-# tui-visual-verify skill, whose kitty-shot harness drives a real kitty
+# `standards:tui-visual-verify` skill, whose kitty-shot harness drives a real kitty
 # window through kitty's remote control and photographs it. Ptyxis has no
 # remote-control equivalent, so nothing else can stand in.
 setup_kitty() {
@@ -485,7 +485,7 @@ Dotfiles:
 Terminal:
   - Ptyxis is the daily terminal and needs no setup; it ships with the image.
 
-TUI verification gate (tui-visual-verify / kitty-shot):
+TUI verification gate (standards:tui-visual-verify / kitty-shot):
   - `kitty --version` and `xdotool --version` both work.
   - Launch kitty, then confirm `xdotool search --name kitty` finds it. If it
     finds nothing, the `linux_display_server x11` line in kitty.conf did not

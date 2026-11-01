@@ -69,13 +69,14 @@ disputes.
 ## The standard
 
 The codified standard lives once, in the `engine-triage` agent definition
-(`~/.claude/agents/engine-triage.md`, "The standard" section). Read it before filing a brief, so
+(`.claude/agents/engine-triage.md` in the cairn-cms checkout, "The standard" section). Read it before filing a brief, so
 each item is written against the gate it will meet.
 
 ## Triage mechanics
 
-Dispatch the `engine-triage` agent (read-only, fresh-context, pinned `claude-opus-5-5`)
-with the absolute paths to the brief, the rulings ledger
+Dispatch a fresh read-only subagent pinned to `claude-opus-5-5` whose instructions are the body of
+`~/Projects/cairn-cms/.claude/agents/engine-triage.md` (a session in a site repo does not load that
+repo agent by name), with the absolute paths to the brief, the rulings ledger
 (`~/Projects/cairn-cms/docs/internal/engine-rulings.md`), and the site plan. It reads the
 ledger first, so a settled ruling is cited rather than re-argued, then argues each item
 against the standard. The planning session adjudicates its verdicts, records them in the brief
@@ -120,8 +121,8 @@ A site-launched session does not auto-load cairn's context. In order:
 5. **Run the full gate list by name**: cairn-cms's `npm run check:close` runs it, including
    `check:comments`, `check:reference:signatures`, `check:surface`, `check:snippets`,
    `check:transcripts`, and `check:symbols`, which the local ritual once skipped.
-6. **The ordered close:** engine merge to `main`, then invoke the **`cairn-release`**
-   skill (the change must be on the registry; a site branch cannot merge on a `file:`
+6. **The ordered close:** engine merge to `main`, then read and follow
+   `~/Projects/cairn-cms/.claude/skills/cairn-releasing/SKILL.md` (the change must be on the registry; a site branch cannot merge on a `file:`
    pin), then `npm run link:consumer -- <site-dir> --restore` from the cairn checkout,
    then the site merge. During development the site consumes via
    `npm run link:consumer -- <site-dir>`.

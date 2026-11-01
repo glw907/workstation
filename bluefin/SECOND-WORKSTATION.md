@@ -302,11 +302,13 @@ the rest unless the step says it is a hard stop.
    kitty-headless-shot setup
    ```
    The second line builds the `term-headless` distrobox that the
-   `tui-visual-verify` gate uses. Then install the Claude Code plugins that
-   `settings.json` enables, adding the two third-party marketplaces first:
+   `standards:tui-visual-verify` gate uses. Clone the standards repository, so `claude-tooling-sync update-skills` has a place to
+   write: `git clone https://github.com/glw907/standards ~/Projects/standards`. Then install the
+   Claude Code plugins that `settings.json` enables, adding the two third-party marketplaces first:
    ```bash
    claude plugin marketplace add cloudflare/skills
    claude plugin marketplace add gfargo/tui-design-skill
+   claude plugin marketplace add glw907/standards
    for p in $(jq -r '.enabledPlugins | keys[]' ~/.claude/settings.json); do
        claude plugin install "$p"
    done

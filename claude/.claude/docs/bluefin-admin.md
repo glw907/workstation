@@ -268,7 +268,7 @@ deeper verification recipes; it lives in git history, removed 2026-08-30.)
 `kitty-headless-shot` (`bin/.local/bin/`, stowed) drives a real kitty terminal on an
 Xvfb display that exists only inside the `term-headless` distrobox (`bluefin/distrobox.txt`),
 so a TUI capture never opens a window on the live desktop or steals focus. It is the
-general-purpose primitive; the `tui-visual-verify` skill calls it directly.
+general-purpose primitive; the `standards:tui-visual-verify` skill calls it directly.
 `kitty-headless-shot --help` is the spec. Run
 `kitty-headless-shot setup` once per machine to create the box (idempotent); this is
 the first deliberate use of the distrobox tier on this workstation, so it is also the

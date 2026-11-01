@@ -42,13 +42,13 @@ green lane, report BLOCKED with the exact failing output instead of committing a
   Svelte 4 store, `$:`, or `on:` idiom.
 - **DaisyUI v5 on Tailwind v4.** Color through theme tokens, never hardcoded oklch or arbitrary
   Tailwind values. Before writing admin or DaisyUI markup, read the official skill at
-  `~/.claude/skills/daisyui/SKILL.md` and prefer the stock component. The engine's admin design
-  system (`cairn-cms/docs/internal/admin-design-system.md`) and rulings ledger
+  the `standards:daisyui` skill and prefer the stock component. The engine's admin design
+  system (`cairn-cms/.claude/skills/cairn-following-admin-design/references/admin-design-system.md`) and rulings ledger
   (`cairn-cms/docs/internal/engine-rulings.md`) win over the skill on a conflict, and a home-grown
   component no ruling explains is a finding to report.
 - **No em dashes in code comments.** Website content under `src/content/` follows the site's content
   guide, which sets its own policy. cairn-cms docs prose follows the track's drafting brief in
-  `docs/internal/docs-register.md` (developer docs or editor docs, by the page's track).
+  `.claude/skills/cairn-docs/references/docs-register.md` (developer docs or editor docs, by the page's track).
 - **Website content is a different register.** Anything under `src/content/` uses the site's
   web-content voice: read `docs/content-guide.md` in full before touching it, and run its
   self-critique pass on what you wrote.

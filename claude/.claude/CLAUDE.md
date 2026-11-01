@@ -35,7 +35,7 @@ contention: stop editing contested files, wait for the other's commit, verify it
   infer the host from a doc.
 - **OS**: Bluefin DX, `stable` stream (Fedora 44 base, bootc/ostree)
 - **Desktop**: GNOME (Wayland) | **Shell**: bash | **Terminal**: Ptyxis. kitty exists only for
-  the `tui-visual-verify` gate, never the daily terminal.
+  the `standards:tui-visual-verify` gate, never the daily terminal.
 - **Key paths**: `~/Projects/` (repos), `~/.dotfiles/`, `~/.local/bin/` (scripts)
 - **Dev tools**: Node via mise, Python via uv, Go via Homebrew, Java 17 for Android
   (`~/Android/`, `ANDROID_HOME` set in `.bashrc`)
@@ -74,8 +74,8 @@ Tool languages (Geoff, 2026-10-19): a new tool defaults by kind. Bash for glue t
 commands (Python once it parses data or passes ~100 lines); stdlib-only Python for a one-file
 `~/.dotfiles/bin` helper run as `python3 -I` (Go once it needs a package, a build, or a second
 file); Go for a standalone repo tool (a TUI, an installed CLI, concurrency, dependencies);
-TypeScript only where the platform requires it. **Invoke `go-conventions` before any Go code**,
-`elm-conventions` for bubbletea, and `tui-visual-verify` before any TUI claim or gate: only a
+TypeScript only where the platform requires it. **Invoke `standards:go-conventions` before any Go code**,
+`standards:elm-conventions` for bubbletea, and `standards:tui-visual-verify` before any TUI claim or gate: only a
 screenshot of the real terminal is evidence.
 
 ## Git Conventions
@@ -86,7 +86,7 @@ screenshot of the real terminal is evidence.
 
 ## Dependencies (Geoff, 2026-09-13 and 2026-09-14)
 
-Every dependency bump in every repo goes through the `dependency-upgrade` skill (a sweep, a bot PR,
+Every dependency bump in every repo goes through the `standards:dependency-upgrade` skill (a sweep, a bot PR,
 a package taken for a feature, "are we current"). Take every minor and patch by default; always ask
 before a major. A release starts from every dependency's newest production version.
 
@@ -135,7 +135,7 @@ audit; the admin design system wins over both on conflict).
 ## cairn-family work
 
 - **Visual fidelity (2026-07-05)**: UI work that must match a reference invokes the
-  `visual-fidelity` skill at the start and gates on `visual-verifier`; nothing deploys to
+  `standards:visual-fidelity` skill at the start and gates on `standards:visual-verifier`; nothing deploys to
   production without a full-page render read in the main loop.
 - Cairn friction and engine-level UI mechanics (a UI mechanic belongs to cairn, a design choice
   to the site) follow `cairn-pass` and `site-pass`.
@@ -193,7 +193,7 @@ to each standard, and `~/.claude/docs/authoring-charter.md` holds the map. **Nam
 load its standard before drafting**; site content uses the site repo's own content guide. Cairn's
 docs voice is the named overlay: every published cairn page, and cairn.pub's own prose, follows the
 developer brief (editor docs, the editor brief) in
-`~/Projects/cairn-cms/docs/internal/docs-register.md`. Vale, the comment linters, and `tellgrader`
+`~/Projects/cairn-cms/.claude/skills/cairn-docs/references/docs-register.md`. Vale, the comment linters, and `tellgrader`
 are the deterministic net; clean is necessary, never sufficient.
 
 The em dash is banned in code comments (linter-enforced); developer docs follow Google (no

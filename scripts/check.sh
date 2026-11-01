@@ -43,8 +43,7 @@ check_no_old_names() {
     # matches. The planning folders and the move records cite these names as history.
     if git grep -n -I -i -E 'review[-_ ]?desk|claude-desk-[r]eminder|docs/[s]uperpowers' -- . \
         ':!docs/specs/' ':!docs/plans/' ':!docs/research/' ':!docs/HISTORY.md' \
-        ':!scripts/check-moves.sh' ':!tests/check-moves.test.sh' ':!tests/fixtures/ci-green/pr-107-files.txt' \
-        ':!claude/.claude/skills/brainstorming/SKILL.md'; then
+        ':!scripts/check-moves.sh' ':!tests/check-moves.test.sh' ':!tests/fixtures/ci-green/pr-107-files.txt'; then
         echo "a retired name is back in a live file" >&2
         return 1
     fi

@@ -40,8 +40,8 @@ claude-sudo-setup,claude-sudo-clear,secret-receive,fastmail-password}`.
 "Direct changes"). The gate and `claude-tooling-sync verify` still run, and the main checkout's
 pull is what makes it live.
 
-**Checklist globs**: The close review loads `python-conventions` for `*.py`, `go-conventions` for
-`*.go`, and `ts-conventions` for `*.{js,mjs,ts}`.
+**Checklist globs**: The close review loads `standards:python-conventions` for `*.py`, `standards:go-conventions` for
+`*.go`, and `standards:ts-conventions` for `*.{js,mjs,ts}`.
 
 **Close checklist**: Beyond `pass-core` "Close": every new install records itself in its tier's
 manifest (`~/.claude/docs/bluefin-admin.md`), and `claude-tooling-sync verify` passes. The gate's gitleaks step scans the working tree, so run

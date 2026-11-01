@@ -468,3 +468,53 @@ def test_restow_names_the_manual_command_when_stow_fails(tmp_path, monkeypatch, 
     tool.restow(tool.Paths(home))
     text = capsys.readouterr().out
     assert "stow -R claude" in text and "conflict" in text
+
+
+# ---- the standards plugin: verify names the install, update-skills writes to its clone ----
+
+STANDARDS_KEY = "standards@glw907-standards"
+STANDARDS_ENTRY = {**ENTRY, "path": "skills/go", "home": "standards"}
+
+
+def standards_home(tmp_path):
+    """A fixture home whose tracked settings enable the plugin and whose manifest has a plugin skill."""
+    home = fixture_home(tmp_path)
+    claude = home / ".dotfiles" / "claude" / ".claude"
+    (claude / "settings.json").write_text(json.dumps({"enabledPlugins": {STANDARDS_KEY: True}}))
+    (claude / "tooling" / "vendored-skills.json").write_text(
+        json.dumps({"skills": {"go-conventions": STANDARDS_ENTRY}}))
+    return home
+
+
+def test_verify_names_the_install_when_the_standards_plugin_is_absent(tmp_path):
+    home = standards_home(tmp_path)
+    proc = run("verify", "--home", str(home), "--projects-root", str(tmp_path / "projects"),
+              env={"PATH": stub_claude_on_path(tmp_path)})
+    assert proc.returncode == 1
+    assert "claude plugin marketplace add glw907/standards" in out(proc)
+    assert f"claude plugin install {STANDARDS_KEY}" in out(proc)
+
+
+def test_verify_does_not_look_for_a_plugin_skill_under_the_skills_directory(tmp_path):
+    home = standards_home(tmp_path)
+    proc = run("verify", "--home", str(home), "--projects-root", str(tmp_path / "projects"),
+              env={"PATH": stub_claude_on_path(tmp_path)})
+    assert "missing under claude/.claude/skills" not in out(proc)
+
+
+def test_update_skills_refuses_when_the_standards_clone_is_missing(tmp_path):
+    home = standards_home(tmp_path)
+    proc = run("update-skills", "go-conventions", "--home", str(home))
+    assert proc.returncode != 0
+    assert "Projects/standards" in out(proc) and "missing" in out(proc)
+
+
+def test_update_skills_refuses_when_the_standards_clone_is_dirty(tmp_path):
+    home = standards_home(tmp_path)
+    clone = home / "Projects" / "standards"
+    clone.mkdir(parents=True)
+    subprocess.run(["git", "init", "-q", "-b", "main", str(clone)], check=True)
+    (clone / "stray.txt").write_text("uncommitted\n")
+    proc = run("update-skills", "go-conventions", "--home", str(home))
+    assert proc.returncode != 0
+    assert "dirty" in out(proc)
