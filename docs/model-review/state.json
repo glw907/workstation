@@ -1,0 +1,88 @@
+{
+  "reviewed": "2026-11-01",
+  "claude_code_version": "2.1.316",
+  "models": {
+    "fable": "claude-fable-5-1",
+    "opus": "claude-opus-5-5",
+    "sonnet": "claude-sonnet-5-5",
+    "haiku": "claude-haiku-5-5"
+  },
+  "pages": {
+    "models-overview": {
+      "url": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "sha256": "5761ef315b5a4816697fbdc7e4a653d3cb439ccfe9a0a012f90a2d326aba90a2"
+    },
+    "pricing": {
+      "url": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "sha256": "79f8d09b6562f37f5edba5108b871cdd13dba26603efbd748e77a40f18c5ff53"
+    },
+    "deprecations": {
+      "url": "https://platform.claude.com/docs/en/about-claude/model-deprecations",
+      "sha256": "7c01727a08cc32c5812ccecc6dd36caa667ae5bd4e9d907b3b7b4272ce950c28"
+    },
+    "changelog": {
+      "url": "https://code.claude.com/docs/en/changelog",
+      "sha256": "ec19d4b5c059d33f730995355a02b6e18ccd2cf4abcce0e77d875f8c5ed988ad"
+    },
+    "features-overview": {
+      "url": "https://code.claude.com/docs/en/features-overview",
+      "sha256": "41ddb642f22cb4ae27db36bce20c87ff4145380450c410948d01efd77918fa5d"
+    },
+    "memory": {
+      "url": "https://code.claude.com/docs/en/memory",
+      "sha256": "f19bb5aa909fe5588d523cf302a0e15ed5950ca689fbb73bd932c315ec764a49"
+    },
+    "skills": {
+      "url": "https://code.claude.com/docs/en/skills",
+      "sha256": "d2a5d07c0d1cef1d1edcf30f38f6b2712ff70ac050e3d50601cd3dadb42f9097"
+    },
+    "best-practices": {
+      "url": "https://code.claude.com/docs/en/best-practices",
+      "sha256": "fd4ff73e26f2d0f0a80ac0ca77b60760b4ae2c9d0d282070fa6e406804f98ddc"
+    },
+    "goal": {
+      "url": "https://code.claude.com/docs/en/goal",
+      "sha256": "752950e95deef8812deeca3461208948591b5e982a6402b88eadf3bd6fc98456"
+    },
+    "agent-skills-best-practices": {
+      "url": "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices",
+      "sha256": "cb3f49125d6716342b369145655ec8a129a2baeaff3dd56b3087758f9674bd54"
+    },
+    "prompting-opus-5-5": {
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5",
+      "sha256": "0203e04ee828c0ad41c99a814aeaf45f2e2e76ffec7a88da7b724a86ba01d9ea"
+    },
+    "prompting-opus-5": {
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5",
+      "sha256": "b34cb10619cc7b2ba2b6a195210673055c6fb84e1c5d1141ffd26a863f6514a0"
+    },
+    "prompting-sonnet-5-5": {
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5",
+      "sha256": "cba13dfa2b9852ea8d9a07c562592e149b0bb75e22551033b03c84528bca5e65"
+    },
+    "opus-5-5-migration": {
+      "url": "https://platform.claude.com/docs/en/models/opus-5-5/migration-guide",
+      "sha256": "6a1bff4d8f06ec1304752324f7d4469665f73fe179254daf7e45e0c1764cc5ed"
+    },
+    "effort": {
+      "url": "https://platform.claude.com/docs/en/build-with-claude/effort",
+      "sha256": "64bb06b20fb2352c02771478783d2cfd7ad191121f663d9ac1247cc4213ddcec"
+    },
+    "model-config": {
+      "url": "https://code.claude.com/docs/en/model-config",
+      "sha256": "7180ba5975ee6529caebbd3a7847e4bcb5851d0a795efaba3a6f558d226b5842"
+    },
+    "sub-agents": {
+      "url": "https://code.claude.com/docs/en/sub-agents",
+      "sha256": "0fc7d550f8580d12fefae642c4c74b84889817cb3c9f41501c38093016448532"
+    },
+    "env-vars": {
+      "url": "https://code.claude.com/docs/en/env-vars",
+      "sha256": "c6af9335007280dfe50572702d0025e0d4bb8dc28554f607cb739614b7b5c096"
+    },
+    "hooks": {
+      "url": "https://code.claude.com/docs/en/hooks",
+      "sha256": "8e4d5d8c03b5a4cd0e6fe15cc8d71d782a5acc29cf738c584337d024ff1e4ca1"
+    }
+  }
+}
