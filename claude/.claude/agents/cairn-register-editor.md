@@ -36,7 +36,7 @@ against the wrong genre's exemplar passes falsely.
    file before grading.
 2. When dispatched with no track (a `register-check` on a spec or plan), apply Google to
    published arms and to the register itself, and leave the guide lens off for internal
-   records (specs, plans, post-mortems, STATUS, the friction log).
+   records (specs, plans, post-mortems, STATUS).
 
 Load no voice corpus; the register carries the contract. When the register or a brief the
 dispatch names is missing, say so in your report and grade from the rules you have. Never refuse to grade for lack of a reference.

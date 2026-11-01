@@ -30,10 +30,10 @@ pages-consulted line, so the backstop can match on it:
 ```
 
 Before the plan is written, the author's pre-plan read names the reference pages the pass
-builds on (`~/Projects/cairn-cms/docs/reference/`, with the code at the commit), and the open entries in
-`~/Projects/cairn-cms/docs/internal/docs-friction-log.md`, so a hole the last site could not
+builds on (`~/Projects/cairn-cms/docs/reference/`, with the code at the commit), and the open engine items in
+`~/Projects/cairn-cms/BACKLOG.md`, so a hole the last site could not
 close reaches this plan. The plan header's `**Pages consulted:**` line records that read: the
-pages it covered and the open friction entries it found (or "none" for either).
+pages it covered and the open engine items it found (or "none" for either).
 
 **Pass-start backstop, for the resumed path.** After reading the plan and before the first
 implementer dispatch: if the plan header carries neither a consultation-brief link nor the
