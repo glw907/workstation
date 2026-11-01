@@ -414,9 +414,11 @@ id on the default branch, since a squash or rebase rewrites ids. Git and PR bodi
 preference or a ruling's why that no file can.
 
 A hand-over (the STATUS update, the next session's launch prompt, and the research records it
-carries) changes no behavior, so it is never brought to Geoff as a PR (Geoff, 2026-10-11). The
-handing-over session commits it on a branch, runs the gate, opens the PR, and merges it itself with
-`gh pr merge <n> --merge`, then pulls the checkout. Best practices for Claude Code
+carries) changes no behavior, so it takes no PR and no packet (Geoff, 2026-10-11 and 2026-10-31).
+The handing-over session runs the gate, commits it to the default branch, and pushes, committing
+from a worktree when another session is live in the main checkout, as "Direct changes" sets out.
+Where a push to the default branch deploys, as on the sites, it also passes what the repo requires
+before a deploy. Best practices for Claude Code
 (<https://code.claude.com/docs/en/best-practices>): "For tasks where the scope is clear and the fix
 is small ... ask Claude to do it directly."
 
