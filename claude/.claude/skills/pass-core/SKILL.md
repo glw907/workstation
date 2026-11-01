@@ -236,8 +236,8 @@ fits its 3G cap; a browser leg runs alone on the heavy lane after them. Shared l
 
 CI carries the whole suites off the critical path, where it runs on PRs. The first push opens a
 draft PR, and after each push the adapter's watch command runs as a background Bash task
-(`run_in_background`), which re-invokes the session on exit. No task waits for CI before the next. A
-red stops the line, and the fix goes forward or the commit reverts. Where the full-suite home is
+(`run_in_background`), which re-invokes the session on exit. No task waits for CI before the next; a
+red stops the line, as `running-passes` "Execute" sets out. Where the full-suite home is
 local, there is no watch command. On an `auth-data` task, `standards:diff-reviewer` reads the commit while CI
 runs, and a `fix` or `escalate` verdict stops the line like a red. `RUN_GATE_IF_BUSY=defer` leaves
 a heavy leg to the push's CI (exit 76) when another run holds the lock; set it only where CI is the
@@ -294,23 +294,18 @@ would hand a new pass to a session carrying the last initiative's context.
 
 ## Close
 
-The repo's full-suite home is green on the head. One whole-branch Opus review follows:
-`standards:diff-reviewer` at whole-branch scope loads the checklists the adapter's globs match, re-derives
-each task's class, and gives any unread `auth-data` task its read. `standards:visual-verifier` runs on
-rendered UI in a site or the cairn admin. One batched fix chain follows, then the gate again; a
-second review only on a blocker. A fix dispatch quotes each reviewer finding verbatim (location,
-finding, and fix) as the task's acceptance criteria, never a summary. In dubplate, verbatim criteria
-landed at zero fix rounds and paraphrased ones averaged one. An overruled verdict is stated with its
-reason in the PR body, and a correctness-critical overrule re-runs the review at `xhigh`. The
-adapter's close checklist runs (the auth smoke on `auth-data`), STATUS is updated, and
-the PR body opens with a `## Brief` per `~/.claude/docs/voice/approval-brief.md` and carries,
-below it, what landed, each `auth-data` verdict, the `## Decisions` and `## Planning misses`
-sections (see "Judgment calls"), and the score. Each "Found, not done" item worth doing is
-filed through `standards:log-issue` in its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits,
-and listed in the PR body with its backlog number; an item not worth doing stays in the PR body,
-marked dropped. No follow-up is sent to Geoff as its own item, and an initiative-sized one becomes a
-record. A merged PR body is history no session reads (Geoff,
-2026-10-11: dubplate PR #2 left 14 items there).
+The close steps are `running-passes` "Close". Here they gain Geoff's additions. The review is one
+whole-branch Opus review: `standards:diff-reviewer` re-derives each task's class, and
+`standards:visual-verifier` runs on rendered UI in a site or the cairn admin. In dubplate, verbatim
+fix criteria landed at zero fix rounds and paraphrased ones averaged one. A correctness-critical
+overrule re-runs the review at `xhigh`. The adapter's close checklist runs (the auth smoke on
+`auth-data`), and STATUS is updated. The PR body opens with a `## Brief` per
+`~/.claude/docs/voice/approval-brief.md`, then carries what landed, each `auth-data` verdict, the
+`## Decisions` and `## Planning misses` sections (see "Judgment calls"), and the score. A "Found,
+not done" item worth doing is filed through `standards:log-issue`, tagged `#initiative:<id>` when
+a record fits. No follow-up is sent to Geoff as its own item, and an initiative-sized one becomes a
+record. A merged PR body is history no session reads (Geoff, 2026-10-11: dubplate PR #2 left 14
+items there).
 
 When the work is ready for Geoff's read, the session that hands it over sends one packet with
 `approval-queue packet <initiative> <file>`, following `approval-packet`, and stays open until the
