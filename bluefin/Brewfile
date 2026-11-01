@@ -80,3 +80,7 @@ brew "libxml2"      # xmllint for dubplate's XML contract tier; pinned (`brew pi
 # Reads a QR code from a screenshot, for a phone check done without a phone (2026-10-29):
 # Geoff reads the code with zbarimg and answers with voipms-sms.
 brew "zbar"
+
+# Language server for TypeScript code intelligence in Claude Code (2026-10-31).
+# Pulls Homebrew's node as a dependency; mise's node stays first on PATH.
+brew "typescript-language-server"
