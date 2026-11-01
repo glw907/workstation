@@ -339,9 +339,17 @@
     "code-simplifier@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "cloudflare@cloudflare": true,
-    "tui-design@tui-design-marketplace": true
+    "tui-design@tui-design-marketplace": true,
+    "standards@glw907-standards": true
   },
   "extraKnownMarketplaces": {
+    "glw907-standards": {
+      "source": {
+        "source": "github",
+        "repo": "glw907/standards"
+      },
+      "autoUpdate": true
+    },
     "cloudflare": {
       "source": {
         "source": "github",

@@ -15,7 +15,7 @@ audience before drafting anything longer than a paragraph, then write to that st
 Every audience starts from a published external standard. A repo may carry a named house voice on top
 of it as a recorded overlay. The overlay never replaces the base standard's structure, and each
 departure from the base carries its provenance and Geoff's ruling. Cairn's docs voice is the named
-example: `docs/internal/docs-register.md` in cairn-cms holds it as one drafting brief per base guide
+example: `.claude/skills/cairn-docs/references/docs-register.md` in cairn-cms holds it as one drafting brief per base guide
 plus a section that records every deviation.
 
 Website content is the one personal voice. It carries a site's own voice, which lives in the site's

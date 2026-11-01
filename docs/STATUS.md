@@ -51,7 +51,7 @@ thinkpad-x1 owes: pull, `stow -R claude`, `mise install`, `claude-tooling-sync a
 ## Open items
 
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not
-done" go to `BACKLOG.md` through `log-issue`.
+done" go to `BACKLOG.md` through `standards:log-issue`.
 
 thinkpad-x1 also owes Survey 1.2.0 (workstation #138, merged 2026-10-22): on its next session,
 pull `~/.dotfiles`, then run `stow -R claude`, `stow -R bin`, and `claude-tooling-sync apply`. The

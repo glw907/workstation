@@ -122,7 +122,7 @@ PR moved: pull its new head, check what moved, and queue again.
 ## Follow-ups
 
 A follow-up never enters the packet. File each "Found, not done" item worth doing through
-`log-issue` in its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits, and list it
+`standards:log-issue` in its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits, and list it
 in the PR body with its backlog number. An item not worth doing stays in the PR body, marked
 dropped. Work the pass would otherwise build on wrongly is fixed in the pass. A backlog triage,
 when Geoff asks for one, is the separate `approval-queue triage` kind.

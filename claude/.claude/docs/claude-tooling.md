@@ -17,6 +17,7 @@ machine.** The manifests record intent; the script reports what happened.
 | Instructions (cross-repo reference docs, linked from consumer CLAUDE.md files) | `~/.dotfiles/claude/.claude/instructions/` (stowed) | the directory itself | stow |
 | Workstation `CLAUDE.md` | `~/.dotfiles/claude/.claude/` (stowed) | the file itself | stow |
 | `settings.json` (hooks, plugins, env) | tracked at `~/.dotfiles/claude/.claude/settings.json`, generated into `~/.claude/settings.json` (a real file, never stowed) | the tracked file | `claude-tooling-sync apply` |
+| Plugin `standards` (craft skills, reviewer agents, `running-passes`; a skill or agent a second repository needs) | `~/Projects/standards`, public `glw907/standards`, `plugins/standards/`; names are `standards:<name>` | `.claude-plugin/marketplace.json`, validated in its CI; vendored entries carry `"home": "standards"` in `vendored-skills.json` | `claude plugin install standards@glw907-standards`; auto-updates from `main`; `update-skills` opens a pull request there |
 | Plugins | Claude Code's plugin cache | `settings.json` `enabledPlugins` + `extraKnownMarketplaces` | `claude plugin install` |
 | MCP servers, user scope | `~/.claude.json` (not in git; holds other state) | `~/.claude/tooling/mcp-servers.json` (stowed) | `claude-tooling-sync apply` |
 | MCP servers, project scope | a repo's `.mcp.json` | that repo | the repo's own CLAUDE.md names it |
@@ -31,9 +32,9 @@ The rules for adding or changing any piece live in the `claude-infra` skill.
 
 Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; the seats are in
 `pass-core` "Models"): every reviewer agent under `agents/` names `claude-opus-5-5` explicitly
-(`diff-reviewer`, the four domain reviewers, `engine-triage`, `go-architecture-reader`,
-`figure-verifier`, `visual-verifier`, `prose-voice-reviewer`, `cairn-register-editor`,
-`plan-reviewer`). No agent pins Fable 5.1; it is reached only by a per-dispatch escalation.
+(`standards:diff-reviewer`, the four domain reviewers, `engine-triage`, `standards:go-architecture-reader`,
+`standards:figure-verifier`, `standards:visual-verifier`, `prose-voice-reviewer`, `cairn-register-editor`,
+`standards:plan-reviewer`). No agent pins Fable 5.1; it is reached only by a per-dispatch escalation.
 Implementers stay on `sonnet` at effort `medium`. A frontmatter pin is read at session start, so a
 repin reaches a running session only through a per-dispatch `model`; verify a
 repin from a fresh headless session by grepping the subagent transcript's `"model"` field,
@@ -108,9 +109,9 @@ the diff, point the agents that need it at the skill file, commit skills and man
   the launching shell, and a terminal older than the secret leaves it empty (born 2026-09-14).
   The license serves DaisyUI work in every project on this workstation (Geoff, 2026-09-13).
   The license pair lives in the age store (registry entry in `~/.dotfiles/secrets/registry.md`),
-  never in a committed `.mcp.json`. Rule of use: the skill at `~/.claude/skills/daisyui/` (one
+  never in a committed `.mcp.json`. Rule of use: the `standards:daisyui` skill (one
   guide per component) is what reaches implementer and reviewer subagents, which run without
-  MCP, so `cairn-implementer` and `daisyui-a11y-reviewer` point at it; for any DaisyUI markup,
+  MCP, so `cairn-implementer` and `standards:daisyui-a11y-reviewer` point at it; for any DaisyUI markup,
   read the component guide first and ask Blueprint from the main loop when the guide is thin.
   The DaisyUI-first rule itself is the workstation CLAUDE.md section "Claude tooling:
   manifests, scopes, and the DaisyUI-first rule". Standing uses (Geoff, 2026-09-13; audit record
@@ -123,25 +124,30 @@ the diff, point the agents that need it at the skill file, commit skills and man
   `quality_inspector` in report-only mode), filtering the known false positives (tag names
   matched inside doc comments; utilities and documented custom classes reported as unknown),
   and wired in as an advisory step of the per-task gate for admin-markup tasks.
-- **Dependency upgrades:** the authored `dependency-upgrade` skill (2026-09-14), the procedure every
+- **Dependency upgrades:** the authored `standards:dependency-upgrade` skill (2026-09-14), the procedure every
   bump in every repo follows; the global CLAUDE.md "Dependencies" section is the standing rule.
-- **Spec and plan review:** the authored `spec-plan-review` skill (2026-10-10 rewrite), the review
+- **Spec and plan review:** the authored `standards:spec-plan-review` skill (2026-10-10 rewrite), the review
   every spec or plan takes before owner approval; its depth scales with the design's size, and it
-  dispatches the `plan-reviewer` agent. `pass-core` points at it.
+  dispatches the `standards:plan-reviewer` agent. `pass-core` points at it.
 - **Svelte:** the official server (user scope, remote).
 - **Playwright:** Microsoft's server (user scope, stdio).
 - **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook.
-- **Cobra:** one community skill (vendored, MIT) for the cairn Go tool; `go-conventions`
-  and `elm-conventions` stay mandatory.
-- **TUI work:** the order of use is the house skills (`elm-conventions`, `bubbletea-design`,
-  `tui-visual-verify`), then Charm's agent guide for the Crush UI (pinned in `elm-conventions`),
+- **Cobra:** one community skill (vendored, MIT) for the cairn Go tool; `standards:go-conventions`
+  and `standards:elm-conventions` stay mandatory.
+- **TUI work:** the order of use is the house skills (`standards:elm-conventions`, `standards:bubbletea-design`,
+  `standards:tui-visual-verify`), then Charm's agent guide for the Crush UI (pinned in `standards:elm-conventions`),
   then the `tui-design` plugin. `tui-design` (gfargo, MIT) is consulted for layout and
   discoverability patterns; the house skills win on any conflict.
-- **Superpowers:** two skills vendored (`brainstorming`, `receiving-code-review`, MIT); the
+- **Superpowers:** two skills vendored (`standards:brainstorming`, `standards:receiving-code-review`, MIT); the
   plugin stays disabled, since its session-start hook injects a skill-routing prompt into every
   session and Claude Code has no per-plugin hook switch (2026-10-19).
 - **Plugins:** code-review, code-simplifier, frontend-design, skill-creator (Anthropic);
-  cloudflare; tui-design.
+  cloudflare; tui-design; standards (this workstation's portable skills and reviewers).
+
+The placement rule for a skill or agent (Geoff, 2026-10-31): plugin when a second repository needs
+it; the repo when only that repo needs it, since committed files reach cloud sessions; personal
+when it serves Geoff's own operation, its license is `none`, or it depends on something personal.
+A vendored skill's license must allow redistribution to go in the plugin.
 
 Decided against: a docs-only cairn MCP server (the tarball docs plus a skill reach every
 agent), the GitHub MCP server (the `gh` CLI covers it at a third of the tokens), Tailwind,

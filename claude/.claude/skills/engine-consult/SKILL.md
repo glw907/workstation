@@ -69,7 +69,7 @@ disputes.
 ## The standard
 
 The codified standard lives once, in the `engine-triage` agent definition
-(`~/.claude/agents/engine-triage.md`, "The standard" section). Read it before filing a brief, so
+(`.claude/agents/engine-triage.md` in the cairn-cms checkout, "The standard" section). Read it before filing a brief, so
 each item is written against the gate it will meet.
 
 ## Triage mechanics

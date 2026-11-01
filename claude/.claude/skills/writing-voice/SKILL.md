@@ -22,19 +22,19 @@ authoring charter (`~/.claude/docs/authoring-charter.md`).
 |---|---|---|
 | Developer docs, README, or design doc in a Go repo | Google Developer Documentation Style Guide | `~/.claude/docs/voice/technical-doc-go.md` |
 | Developer docs, README, or design doc in a SvelteKit or web repo | Google Developer Documentation Style Guide | `~/.claude/docs/voice/technical-doc-web.md` |
-| Published cairn-cms docs (`docs/admin/`, `docs/extend/`, `docs/reference/`, the front door, the changelog) and cairn.pub's own prose | Google, with the cairn docs voice overlay | the developer-docs drafting brief in cairn-cms `docs/internal/docs-register.md` |
-| Published cairn-cms editor docs (`docs/editors/`) | Microsoft Writing Style Guide, tightened by the editor brief | the editor-docs drafting brief in cairn-cms `docs/internal/docs-register.md` |
-| cairn-cms admin UI copy | Microsoft UI-text voice, professional and restrained: no cute, no chatty | cairn-cms `docs/internal/admin-design-system.md`, Voice |
+| Published cairn-cms docs (`docs/admin/`, `docs/extend/`, `docs/reference/`, the front door, the changelog) and cairn.pub's own prose | Google, with the cairn docs voice overlay | the developer-docs drafting brief in cairn-cms `.claude/skills/cairn-docs/references/docs-register.md` |
+| Published cairn-cms editor docs (`docs/editors/`) | Microsoft Writing Style Guide, tightened by the editor brief | the editor-docs drafting brief in cairn-cms `.claude/skills/cairn-docs/references/docs-register.md` |
+| cairn-cms admin UI copy | Microsoft UI-text voice, professional and restrained: no cute, no chatty | cairn-cms `.claude/skills/cairn-following-admin-design/references/admin-design-system.md`, Voice |
 | Changelog entry, GitHub release note, or upgrade-guide entry | Google Developer Documentation Style Guide (the developer reading the changelog is the same reader as the docs) | `~/.claude/docs/voice/technical-doc-web.md` (Go repo: `technical-doc-go.md`) |
 | End-user and editor product copy, UI-only walkthroughs with no terminal step | Microsoft Writing Style Guide | `~/.claude/docs/voice/editor.md` |
 | CLAUDE.md, skills, agent definitions, hook text | Anthropic Claude Code best practices | `~/.claude/docs/voice/agent-facing.md` |
 | Commit messages and PR bodies | Conventional Commits and the git-commit canon | `~/.claude/docs/voice/commit-and-pr.md` |
 | Approval packet and PR-body brief (the packet file; the `## Brief` of a PR body or design doc); the triage file stays for a backlog triage | Inverted pyramid, Federal Plain Language Guidelines, Nielsen Norman Group on web writing and progressive disclosure | `~/.claude/docs/voice/approval-brief.md` |
-| Go code comments | Go Doc Comments, Effective Go | the go-conventions skill |
-| TypeScript code comments | TSDoc | the ts-conventions skill |
-| Svelte code comments | TSDoc plus the Svelte `@component` convention | the svelte-conventions skill |
-| Python comments and docstrings | PEP 257, PEP 8 | the python-conventions skill |
-| Site content (pages, posts, form copy) | the site's own content guide | the site repo's `docs/content-guide.md`, via the content-draft skill |
+| Go code comments | Go Doc Comments, Effective Go | the standards:go-conventions skill |
+| TypeScript code comments | TSDoc | the standards:ts-conventions skill |
+| Svelte code comments | TSDoc plus the Svelte `@component` convention | the standards:svelte-conventions skill |
+| Python comments and docstrings | PEP 257, PEP 8 | the standards:python-conventions skill |
+| Site content (pages, posts, form copy) | the site's own content guide | the site repo's `docs/content-guide.md`, via the standards:content-draft skill |
 
 Site content is the one personal voice, and it lives in the site repo, out of the workstation's
 scope. Every other audience starts from its external standard. The web dialect follows the repo's stack;
@@ -92,7 +92,7 @@ commit message, and the site's own voice in site content. Overuse is a tell in a
 
 - The registers under `~/.claude/docs/voice/` and the four conventions skills: each names its external
   standard, its linter, and its canonical exemplars. Lean on the exemplars harder than on any rule list.
-  A repo's recorded overlay sits on top of that standard (cairn: `docs/internal/docs-register.md`).
+  A repo's recorded overlay sits on top of that standard (cairn: `.claude/skills/cairn-docs/references/docs-register.md`).
 - Vale, per repo `.vale.ini`, with the Google package on developer docs and the Microsoft package on
   editor copy: the deterministic net on docs prose. The `vale-hook` feeds its findings back as advisory
   context on save, and CI runs the same config. The native comment linters cover code comments (gofmt and

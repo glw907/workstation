@@ -14,9 +14,15 @@ Spec: `~/.dotfiles/docs/specs/2026-10-10-lean-pass-process-design.md`. The repo 
 supplies the gate, fast lane, full-suite home, worktree setup, CI watch, risk-class path map,
 checklist globs, and close checklist, and wins where it disagrees with this skill.
 
+Load `standards:running-passes` first. It holds the portable lifecycle any repo can follow: risk
+classes, the design, plan, execute, and close steps, pairs, gates, judgment calls, and the close
+review. This skill adds only Geoff's operation on top: the Approval Queue, the conductor, the lanes,
+the models, the clock stop, the score, and his rulings. A rule stated in `running-passes` is not
+repeated here.
+
 ## Lifecycle
 
-Each task takes a risk class from the adapter's path map: `auth-data`, `runner`, or `ordinary`.
+Each task takes a risk class from the adapter's path map (`running-passes` defines the three).
 `runner` covers skills, agents, workflows, the gate tools, `.github/workflows`, and
 `scripts/checks`.
 Only Geoff's ruling raises a class, stated in the design in one sentence. A pass takes its highest
@@ -28,7 +34,7 @@ A change that meets "Direct changes" skips this lifecycle.
    outcome, files and interfaces touched, what is out of scope, one end-to-end check, the risk
    class, and every pre-flight item it can foresee (step 4). A design brought for approval goes to Geoff as a design part in a packet, per `approval-packet`.
    An owner fork in the design is a `### Decide:` block in its brief. A design doc opens with `## Brief` after its title, per
-   `~/.claude/docs/voice/approval-brief.md`. The design names its initiative (a record in `~/Projects/initiatives`) or says none applies; cross-repo specs, plans, and research go in `initiatives/<id>/`, and the plan header carries an `Initiative: <id>` line. A design that adds a project, a service, or running infrastructure names where it runs and why, after weighing Cloudflare (Workers, D1, R2) against the Hetzner servers orpheus and ward: what fails together, what the host already carries, cost, and how backup and restore cover it. It never defaults to the host at hand (Geoff, 2026-10-22). Every design runs the `backlog-sweep` skill's scoped sweep before approval, and its full sweep when one is due; the design lists the verdicts, and approving it approves the backlog edits (Geoff, 2026-10-27). A design that clears filed backlog items, such as a friction round, takes its scope from the sweep's verdicts and lists each dropped item with its reason (Geoff, 2026-10-25). Best practices for Claude Code (<https://code.claude.com/docs/en/best-practices>): "Separate research and planning from implementation to avoid solving the wrong problem." If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
+   `~/.claude/docs/voice/approval-brief.md`. The design names its initiative (a record in `~/Projects/initiatives`) or says none applies; cross-repo specs, plans, and research go in `initiatives/<id>/`, and the plan header carries an `Initiative: <id>` line. A design that adds a project, a service, or running infrastructure names where it runs and why, after weighing Cloudflare (Workers, D1, R2) against the Hetzner servers orpheus and ward: what fails together, what the host already carries, cost, and how backup and restore cover it. It never defaults to the host at hand (Geoff, 2026-10-22). Every design runs the `standards:backlog-sweep` skill's scoped sweep before approval, and its full sweep when one is due; the design lists the verdicts, and approving it approves the backlog edits (Geoff, 2026-10-27). A design that clears filed backlog items, such as a friction round, takes its scope from the sweep's verdicts and lists each dropped item with its reason (Geoff, 2026-10-25). Best practices for Claude Code (<https://code.claude.com/docs/en/best-practices>): "Separate research and planning from implementation to avoid solving the wrong problem." If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
    carries
    these two samples, and extras go in "Later", never built:
    > "Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
@@ -70,9 +76,9 @@ A change that meets "Direct changes" skips this lifecycle.
    read cap, then at its escalation rule, then on a returning cause, each time with an in-budget
    fix as the recommendation, and Geoff took it).
 2. **Spec.** An agent writes the approved design at the length precision needs, only if
-   `spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
+   `standards:spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
    probed.
-3. **Spec review.** `spec-plan-review` sets spec and plan review depth. A finding that changes
+3. **Spec review.** `standards:spec-plan-review` sets spec and plan review depth. A finding that changes
    the approved design returns to Geoff as one batched question; every other finding is folded
    without him.
 4. **Plan.** A task list. Each task carries its outcome, files, risk class, acceptance check, test,
@@ -202,7 +208,7 @@ the miss in the PR body's `## Planning misses` section: the question, Geoff's an
 item that should have answered it. Under a conductor, the conductor is that session: it adds the
 entry and the fix after the executor reports PR-ready and before its packet. Before the hand-over
 the session lands the fix where planning executes,
-usually a new item in the `plan-reviewer` checklist, else the adapter or this skill. The fix goes
+usually a new item in the `standards:plan-reviewer` checklist, else the adapter or this skill. The fix goes
 in the same PR when it is in this repo, and otherwise in a dotfiles PR the packet names. A miss
 the fix cannot generalize stays in the PR body, marked one-off.
 
@@ -213,12 +219,10 @@ branch first (2026-10-19: both sessions asked Geoff B3c's read-cap question).
 
 ## Pairs
 
-Two tasks whose files are disjoint, generated outputs included, go to two Agent-tool subagents
-with `isolation: "worktree"` after the session commits, each with the `description` `<pass> task
-<n>` so the session's agent list shows which task each runs; `worktree.baseRef: "head"` branches
-them from that commit. A shared port is an environment variable. Each runs the adapter's setup command
-first, commits, and never pushes. The session merges both, runs the fast lane, and pushes. A merge
-conflict stops the line.
+Pairs run as `running-passes` sets out. On this workstation, the two Agent-tool subagents take
+`isolation: "worktree"` after the session commits, each with the `description` `<pass> task <n>`
+so the session's agent list shows which task each runs; `worktree.baseRef: "head"` branches them
+from that commit. A shared port is an environment variable.
 
 ## Gates
 
@@ -234,7 +238,7 @@ CI carries the whole suites off the critical path, where it runs on PRs. The fir
 draft PR, and after each push the adapter's watch command runs as a background Bash task
 (`run_in_background`), which re-invokes the session on exit. No task waits for CI before the next. A
 red stops the line, and the fix goes forward or the commit reverts. Where the full-suite home is
-local, there is no watch command. On an `auth-data` task, `diff-reviewer` reads the commit while CI
+local, there is no watch command. On an `auth-data` task, `standards:diff-reviewer` reads the commit while CI
 runs, and a `fix` or `escalate` verdict stops the line like a red. `RUN_GATE_IF_BUSY=defer` leaves
 a heavy leg to the push's CI (exit 76) when another run holds the lock; set it only where CI is the
 full-suite home, and never on an `auth-data` task.
@@ -291,8 +295,8 @@ would hand a new pass to a session carrying the last initiative's context.
 ## Close
 
 The repo's full-suite home is green on the head. One whole-branch Opus review follows:
-`diff-reviewer` at whole-branch scope loads the checklists the adapter's globs match, re-derives
-each task's class, and gives any unread `auth-data` task its read. `visual-verifier` runs on
+`standards:diff-reviewer` at whole-branch scope loads the checklists the adapter's globs match, re-derives
+each task's class, and gives any unread `auth-data` task its read. `standards:visual-verifier` runs on
 rendered UI in a site or the cairn admin. One batched fix chain follows, then the gate again; a
 second review only on a blocker. A fix dispatch quotes each reviewer finding verbatim (location,
 finding, and fix) as the task's acceptance criteria, never a summary. In dubplate, verbatim criteria
@@ -302,7 +306,7 @@ adapter's close checklist runs (the auth smoke on `auth-data`), STATUS is update
 the PR body opens with a `## Brief` per `~/.claude/docs/voice/approval-brief.md` and carries,
 below it, what landed, each `auth-data` verdict, the `## Decisions` and `## Planning misses`
 sections (see "Judgment calls"), and the score. Each "Found, not done" item worth doing is
-filed through `log-issue` in its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits,
+filed through `standards:log-issue` in its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits,
 and listed in the PR body with its backlog number; an item not worth doing stays in the PR body,
 marked dropped. No follow-up is sent to Geoff as its own item, and an initiative-sized one becomes a
 record. A merged PR body is history no session reads (Geoff,
@@ -339,6 +343,55 @@ as stale and never forces it. A stale checkout loads the old CLAUDE.md and skill
 session there: on 2026-10-11 six repos still ran the pre-cutover process a day after their lean
 PRs merged.
 
+## Plan review lens
+
+The `standards:plan-reviewer` agent keeps the portable lens. These items are Geoff's operation: his
+stores, sign-ins, hosts, and queue. A plan review dispatched on this workstation adds them to the
+agent's prompt; each was added from a past pass's planning miss.
+
+## Judgment calls and standing answers
+
+- Every stop the plan writes (a cap, a line stop, a ceiling) has a standing answer for its cheap
+  case, and each judgment call the run can plausibly meet is named with its answer, so the run
+  asks Geoff only what the plan could not foresee (`pass-core`, "Lifecycle" step 1 and "Judgment
+  calls"). Each item
+  below this one was added from a past pass's planning miss.
+
+- No count cap (reads, retries, rounds, reruns) and no list of fixable causes stops the line on
+  its own. Each carries the traced-cause standing answer in `pass-core` "Lifecycle" step 1, so only
+  a ceiling, an untraced cause, or an escalation the plan doesn't allow stops it. The plan names
+  which items the run may escalate without breaking its outcome, for a cause that returns after
+  its structural fix (B3c, 2026-10-19: a five-read cap, an escalation traced to a blueprint, then
+  a rollback handler that kept looping after its patch).
+
+## Pre-flight and owner-only steps
+
+- A `[you]` pre-flight item still open when an unattended launch is armed is checked at arm time,
+  and the launch's standing answer says what a proof step does after the run has moved live state.
+  A token proof that deploys `origin/main` can't run once a phone depends on the pass's version
+  (Pass 5, 2026-10-31: the armed timer fired with `tmp-account-tokens` never made).
+
+- Every value the run needs from Geoff is looked up in the stores and records first, and only a
+  value no file holds is asked at design time (Pass 1, 2026-10-19: the recovery address was
+  already on file).
+- The `## Pre-flight` list names every step only Geoff can do (sign-ins, `secret-receive` values,
+  dialogs, permission rules, app or physical actions), each with the check that shows it done.
+  Read every task for a hidden one, and move a step that waits on the pass's output earlier where
+  it can go, and flag any item the design did not foresee, since it holds the launch for a
+  pre-launch packet (Pass 1, 2026-10-19: a Proton Bridge sign-in surfaced mid-run).
+- A pass that launches `claude --bg` in a directory no session has opened (a new repo or
+  checkout) lists the workspace trust prompt as a pre-flight item: Geoff runs `claude` there once
+  and accepts it, checked by a launch that no longer prints "Workspace not trusted" (Survey Pass
+  1, 2026-10-22: the launch refused until Geoff accepted it).
+
+## Hosts and workstation config
+
+- A pass that changes workstation config states what each host (`pavilion`, `thinkpad-x1`)
+  gets, including a host that lacks a prerequisite (Pass W, 2026-10-19: the thinkpad question).
+
+- A pass that ends in a reboot or a `check-drift` run has a standing answer for reversible drift
+  cleanup (2026-10-19: the 1Password cache and the dock pin).
+
 ## Score
 
 The PR body carries the spec's price table rows: Gates on the critical path, Work and review, CI
@@ -368,8 +421,9 @@ is small ... ask Claude to do it directly."
 
 ## Scope
 
-A grant authorizes a mechanism or a boundary, never more work. Work found mid-task is filed in BACKLOG through `log-issue` and listed in the PR body, never sent to the packet as an item, never put into the task in flight, unless the task would
-otherwise build on something known to be wrong (say so then).
+A grant authorizes a mechanism or a boundary, never more work. Work found mid-task follows
+`running-passes` "Execute": it is filed in BACKLOG through `standards:log-issue` and listed in the PR body,
+and here it is never sent to the packet as an item.
 
 ## Launch prompt
 

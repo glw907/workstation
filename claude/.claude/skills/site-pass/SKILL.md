@@ -51,10 +51,10 @@ adds `src/lib/server/{auth,db}/**`, `src/routes/team/{login,tokens}/**`, and `mi
 cairn-pub adds `migrations/**`. `runner` for `.github/workflows/**` and `scripts/**`; `ordinary`
 otherwise.
 
-**Checklist globs**: The close review loads `svelte-reviewer` for `**/*.svelte` and load, action, or
-hook code; `cloudflare-workers-reviewer` for Worker, D1, and `wrangler.*`;
-`web-auth-security-reviewer` for every `auth-data` glob; `daisyui-a11y-reviewer` for markup and
-styles; `content-review` for website content under `src/content/**`. `visual-verifier` reads
+**Checklist globs**: The close review loads `standards:svelte-reviewer` for `**/*.svelte` and load, action, or
+hook code; `standards:cloudflare-workers-reviewer` for Worker, D1, and `wrangler.*`;
+`standards:web-auth-security-reviewer` for every `auth-data` glob; `standards:daisyui-a11y-reviewer` for markup and
+styles; `standards:content-review` for website content under `src/content/**`. `standards:visual-verifier` reads
 rendered pages.
 
 **Close checklist**: Beyond `pass-core` "Close":

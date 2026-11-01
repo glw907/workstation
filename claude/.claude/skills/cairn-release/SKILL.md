@@ -75,7 +75,7 @@ re-check existing pages whose code changed.
   repo's `tool/v*` tags, and the `grep` drops prerelease tags. A cut that ran no sweep leaves no record,
   so its range rolls into the next window. The first window is seeded at `v0.98.0`, since the planning
   sweep (`86fd134c`) ran after that cut and no release commit records one yet.
-- **Finders.** Work from three inputs: the `docs/internal/api-surface.md` diff over the window, the
+- **Finders.** Work from three inputs: the `scripts/checks/api-surface.md` diff over the window, the
   scaffold's emitted-template diff (`templates/`), and the changelog's `Consumers must:` and behavior
   lines. One module or one surface per agent context, never a per-file window (the `v0.97.0..v0.98.0`
   window alone spanned about 192 files). Independent verifiers confirm, correct, or refute each finding

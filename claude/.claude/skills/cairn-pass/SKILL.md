@@ -25,7 +25,7 @@ own environment. The `tool` class gate is
 `make -C tool check` on the light lane; a Node-only workspace suite such as `npm test -w
 packages/create-cairn-site` is light, and the engine's root `npm test` drives Chromium and is never
 light. A lone unrelated test failure, or `Cannot connect to the server in 60 seconds`, is a known
-workstation trap first: `docs/internal/durable-gotchas.md` carries the rerun rule.
+workstation trap first: `.claude/skills/cairn-writing-engine-code/references/durable-gotchas.md` carries the rerun rule.
 
 **Full-suite home**: CI on the draft PR. Local `TIER_GATES.full` (`npm test`, then `npm run
 check:close`, which builds once) runs only on `ci-green` exit 3, with the e2e step run as `--grep-invert
@@ -35,7 +35,7 @@ The gate runs no gitleaks scan, so there is no branch-history scan to owe.
 **Worktree setup**: The launch's `.claude/worktrees/<branch>`, then `npm ci && npm ci --prefix
 examples/showcase && (cd examples/showcase && npx svelte-kit sync)`. The second install keeps a
 worktree's showcase off the main checkout's engine, and the sync writes the `$app/tsconfig` that
-`check:public-skill` needs (`docs/internal/durable-gotchas.md`).
+`check:public-skill` needs (`.claude/skills/cairn-writing-engine-code/references/durable-gotchas.md`).
 
 **CI watch**: `ci-green <sha> --pr <n> --wait` as a background Bash task, re-issued on 75; exit 0
 is green, 1 red, 2 missing, 3 unavailable, 4 held for approval: when the held run's triggering
@@ -56,16 +56,16 @@ class), `**/members/login/**`, `**/admin/signups/**`, `tool/internal/secrets/**`
 (`examples/showcase/src/chassis/`, `templates/waymark/`) takes the class an engine change of its
 kind would take and the engine's quality bar, since a developer copies that code.
 
-**Checklist globs**: The close review loads `svelte-reviewer` for `**/*.svelte` and load, action, or
-hook code; `cloudflare-workers-reviewer` for Worker, D1, and `wrangler.*`;
-`web-auth-security-reviewer` for every `auth-data` glob; `daisyui-a11y-reviewer` for markup, styles,
-and theme config; `go-conventions` for `tool/**`.
+**Checklist globs**: The close review loads `standards:svelte-reviewer` for `**/*.svelte` and load, action, or
+hook code; `standards:cloudflare-workers-reviewer` for Worker, D1, and `wrangler.*`;
+`standards:web-auth-security-reviewer` for every `auth-data` glob; `standards:daisyui-a11y-reviewer` for markup, styles,
+and theme config; `standards:go-conventions` for `tool/**`.
 
 **Close checklist**: Beyond `pass-core` "Close":
 
 - The live admin smoke on `auth-data`, against a real Worker (`wrangler dev`) with a session minted by
   inserting a D1 row, then the magic-link round trip in headless Chromium, reading the link from
-  wrangler's local `send_email` output; follow `docs/internal/admin-smoke-test.md`.
+  wrangler's local `send_email` output; follow `.claude/skills/cairn-running-passes/references/admin-smoke-test.md`.
 - Documentation is a pass dimension: fix every doc the change touched, inbound references included.
   A change to documented behavior fixes its page in the same commit, per the `cairn-docs` skill.
 - A behavior change updates `CHANGELOG.md` under `## Unreleased` and the per-version record
@@ -73,7 +73,7 @@ and theme config; `go-conventions` for `tool/**`.
   one `Consumers must:` line per consumer action. Moving a per-version record updates this skill,
   and `CLAUDE.md`. A removed or renamed symbol is grepped across
   `docs/` and `README.md` and every hit repointed. An intended public-surface change runs `npm run
-  check:surface -- --update` and commits `docs/internal/api-surface.md`. A ruling on a consultation
+  check:surface -- --update` and commits `scripts/checks/api-surface.md`. A ruling on a consultation
   item updates `docs/internal/engine-rulings.md`.
 - Triage `docs/internal/docs-friction-log.md`, complete-or-move: each entry is fixed and deleted,
   promoted to `ROADMAP.md`, or deleted as overtaken, verified against the code first. A promotion to

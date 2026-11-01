@@ -40,6 +40,7 @@ ${VAR} form and resolve at runtime from ~/.local/secrets. See
 ~/.claude/docs/claude-tooling.md for the rules.
 """
 import argparse
+import datetime
 import json
 import os
 import re
@@ -51,6 +52,8 @@ from collections import defaultdict
 from pathlib import Path
 
 MANIFEST_FIELDS = ("repo", "path", "branch", "commit", "license")
+STANDARDS_KEY = "standards@glw907-standards"
+STANDARDS_SKILLS = Path("plugins") / "standards" / "skills"
 NOTE_OPEN = "<!-- local-overlay -->"
 NOTE_CLOSE = "<!-- /local-overlay -->"
 NOTE_BLOCK = re.compile(re.escape(NOTE_OPEN) + r"\n(.*?)\n?" + re.escape(NOTE_CLOSE) + r"\n*",
@@ -228,9 +231,11 @@ def verify(paths, projects_root):
     skills_path = paths.tooling / "vendored-skills.json"
     skills = require_object(load(skills_path), "skills", skills_path)
     print("Vendored skills (claude/tooling/vendored-skills.json):")
-    for name in skills:
+    for name, entry in skills.items():
         d = paths.skills / name
-        if (d / "SKILL.md").exists():
+        if entry.get("home") == "standards":
+            print(f"  + {name} (in the standards plugin)")
+        elif (d / "SKILL.md").exists():
             print(f"  + {name}")
         else:
             print(f"  x {name}: missing under claude/.claude/skills (run claude-tooling-sync update-skills {name})")
@@ -243,6 +248,11 @@ def verify(paths, projects_root):
     for key in enabled:
         if key in out:
             print(f"  + {key}")
+        elif key == STANDARDS_KEY:
+            print(f"  x {key}: enabled in settings.json but not installed; run "
+                  f"`claude plugin marketplace add glw907/standards` then "
+                  f"`claude plugin install {STANDARDS_KEY}`")
+            fail = True
         else:
             print(f"  x {key}: enabled in settings.json but not installed")
             fail = True
@@ -394,15 +404,18 @@ def apply_overlays_cmd(root):
     return 0
 
 
-def fetch_skill(paths, name, entry, skills):
-    """Copy a vendored skill's files from its source repo at the manifest's branch."""
+def fetch_skill(paths, name, entry, skills, dest_root=None):
+    """Copy a vendored skill's files from its source repo at the manifest's branch.
+
+    dest_root replaces the stowed skills directory, for a skill that lives in the standards plugin.
+    """
     repo, path, branch = entry["repo"], entry["path"], entry["branch"]
     head = gh_json(f"repos/{repo}/commits/{branch}")["sha"][:12]
     tree = gh_json(f"repos/{repo}/git/trees/{branch}?recursive=1")["tree"]
     files = [t["path"] for t in tree if t["type"] == "blob" and t["path"].startswith(path + "/")]
     if not files:
         raise SystemExit(f"{name}: no files under {path} in {repo}@{branch}")
-    dest = paths.skills / entry.get("rename", name)
+    dest = (dest_root or paths.skills) / entry.get("rename", name)
     dest.mkdir(parents=True, exist_ok=True)
     for p in files:
         rel = p[len(path) + 1:]
@@ -428,7 +441,11 @@ def update_skills(paths, names):
     manifest = load(manifest_path)
     skills = require_object(manifest, "skills", manifest_path)
     targets = names or list(skills)
-    for name in targets:
+    plugin_targets = [n for n in targets if skills[n].get("home") == "standards"]
+    local_targets = [n for n in targets if n not in plugin_targets]
+    if plugin_targets:
+        update_standards_skills(paths, skills, plugin_targets)
+    for name in local_targets:
         entry = skills[name]
         head, count = fetch_skill(paths, name, entry, skills)
         entry["commit"] = head
@@ -436,9 +453,51 @@ def update_skills(paths, names):
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
         f.write("\n")
-    restow(paths)
-    print("Review the diff, then commit claude/.claude/skills and claude/.claude/tooling together.")
+    if local_targets:
+        restow(paths)
+        print("Review the diff, then commit claude/.claude/skills and claude/.claude/tooling together.")
+    if plugin_targets:
+        print("Commit claude/.claude/tooling once the standards pull request above merges.")
     return 0
+
+
+def git_out(clone, *args):
+    """Run git in clone and return its stdout, raising SystemExit with git's own message on failure."""
+    proc = subprocess.run(["git", "-C", str(clone), *args], capture_output=True, text=True)
+    if proc.returncode:
+        raise SystemExit(f"git {' '.join(args)} failed in {clone}: {proc.stderr.strip()}")
+    return proc.stdout
+
+
+def update_standards_skills(paths, skills, names):
+    """Write the named plugin skills into the standards clone on a branch and open a pull request.
+
+    The clone must exist and be clean. The skill's `note` overlay is workstation-only and never
+    reaches the plugin; its `description` overlay does.
+    """
+    clone = paths.home / "Projects" / "standards"
+    if not (clone / ".git").exists():
+        raise SystemExit(f"{clone} is missing; clone glw907/standards to ~/Projects/standards first")
+    if git_out(clone, "status", "--porcelain").strip():
+        raise SystemExit(f"{clone} is dirty; commit or stash its changes first")
+    previous = git_out(clone, "rev-parse", "--abbrev-ref", "HEAD").strip()
+    branch = "update-skills-" + datetime.date.today().strftime("%Y%m%d")
+    git_out(clone, "fetch", "origin", "main")
+    git_out(clone, "checkout", "-b", branch, "origin/main")
+    dest_root = clone / STANDARDS_SKILLS
+    for name in names:
+        entry = skills[name]
+        plugin_entry = {k: v for k, v in entry.items() if k != "note"}
+        head, count = fetch_skill(paths, name, plugin_entry, skills, dest_root)
+        entry["commit"] = head
+        print(f"  + {name}: {count} files from {entry['repo']}@{head}")
+    git_out(clone, "add", str(STANDARDS_SKILLS))
+    git_out(clone, "commit", "-m", f"Update vendored skills: {', '.join(names)}")
+    git_out(clone, "push", "-u", "origin", branch)
+    subprocess.run(["gh", "pr", "create", "--repo", "glw907/standards", "--head", branch,
+                    "--title", f"Update vendored skills: {', '.join(names)}",
+                    "--body", "Fetched by `claude-tooling-sync update-skills`."], check=True)
+    git_out(clone, "checkout", previous)
 
 
 def restow(paths):
