@@ -22,8 +22,8 @@ authoring charter (`~/.claude/docs/authoring-charter.md`).
 |---|---|---|
 | Developer docs, README, or design doc in a Go repo | Google Developer Documentation Style Guide | `~/.claude/docs/voice/technical-doc-go.md` |
 | Developer docs, README, or design doc in a SvelteKit or web repo | Google Developer Documentation Style Guide | `~/.claude/docs/voice/technical-doc-web.md` |
-| Published cairn-cms docs (`docs/admin/`, `docs/extend/`, `docs/reference/`, the front door, the changelog) and cairn.pub's own prose | Google, with the cairn docs voice overlay | the developer-docs drafting brief in cairn-cms `.claude/skills/cairn-docs/references/docs-register.md` |
-| Published cairn-cms editor docs (`docs/editors/`) | Microsoft Writing Style Guide, tightened by the editor brief | the editor-docs drafting brief in cairn-cms `.claude/skills/cairn-docs/references/docs-register.md` |
+| Published cairn-cms docs (`docs/admin/`, `docs/extend/`, `docs/reference/`, the front door, the changelog) and cairn.pub's own prose | Google, with the cairn docs voice overlay | the developer-docs drafting brief in cairn-cms `.claude/skills/cairn-writing-docs/references/docs-register.md` |
+| Published cairn-cms editor docs (`docs/editors/`) | Microsoft Writing Style Guide, tightened by the editor brief | the editor-docs drafting brief in cairn-cms `.claude/skills/cairn-writing-docs/references/docs-register.md` |
 | cairn-cms admin UI copy | Microsoft UI-text voice, professional and restrained: no cute, no chatty | cairn-cms `.claude/skills/cairn-following-admin-design/references/admin-design-system.md`, Voice |
 | Changelog entry, GitHub release note, or upgrade-guide entry | Google Developer Documentation Style Guide (the developer reading the changelog is the same reader as the docs) | `~/.claude/docs/voice/technical-doc-web.md` (Go repo: `technical-doc-go.md`) |
 | End-user and editor product copy, UI-only walkthroughs with no terminal step | Microsoft Writing Style Guide | `~/.claude/docs/voice/editor.md` |
@@ -74,7 +74,7 @@ brevity as permission to deliver less than the brief asked for.
 
 Before drafting a page for an outside reader, settle what the page must carry, who reads it,
 and what its type does not already cover, because prose work on a page whose shape is wrong
-is wasted. For a cairn page, the `cairn-docs` skill holds the steps.
+is wasted. For a cairn page, the `cairn-writing-docs` skill holds the steps.
 
 Draft one section per read for the cairn front door only (`why-cairn.md`, `docs/README.md`, the
 arm READMEs); a front-door page is never drafted end to end in an autonomous run: stop after each
@@ -92,7 +92,7 @@ commit message, and the site's own voice in site content. Overuse is a tell in a
 
 - The registers under `~/.claude/docs/voice/` and the four conventions skills: each names its external
   standard, its linter, and its canonical exemplars. Lean on the exemplars harder than on any rule list.
-  A repo's recorded overlay sits on top of that standard (cairn: `.claude/skills/cairn-docs/references/docs-register.md`).
+  A repo's recorded overlay sits on top of that standard (cairn: `.claude/skills/cairn-writing-docs/references/docs-register.md`).
 - Vale, per repo `.vale.ini`, with the Google package on developer docs and the Microsoft package on
   editor copy: the deterministic net on docs prose. The `vale-hook` feeds its findings back as advisory
   context on save, and CI runs the same config. The native comment linters cover code comments (gofmt and

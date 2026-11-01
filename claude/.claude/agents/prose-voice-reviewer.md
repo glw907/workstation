@@ -18,7 +18,7 @@ router, and the registers are in `~/.claude/docs/voice/`. Read the
 register's persona, traits, and exemplars before you judge a single sentence. A tell is usually a
 register misapplied, so the register is your standard, not a generic notion of good writing.
 For a published cairn-cms page the register is the track's drafting brief in cairn-cms
-`.claude/skills/cairn-docs/references/docs-register.md`, and for cairn admin UI copy it is the Voice section of
+`.claude/skills/cairn-writing-docs/references/docs-register.md`, and for cairn admin UI copy it is the Voice section of
 `.claude/skills/cairn-following-admin-design/references/admin-design-system.md`.
 
 Then run the deterministic floor: `tellgrader --register <docs|editor|commit|reply|agent|comments>

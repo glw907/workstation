@@ -72,7 +72,7 @@ plainly and stop.
 
 ## Standing rules
 
-- The living rule set is `.claude/skills/cairn-docs/references/docs-register.md`: its drafting brief for the page's
+- The living rule set is `.claude/skills/cairn-writing-docs/references/docs-register.md`: its drafting brief for the page's
   track, the Names, Visuals, and page-anatomy sections, and "Deviations from the base guides".
   It outranks everything here.
 - Findings in Geoff's own words are flagged, never silently applied or silently kept.
