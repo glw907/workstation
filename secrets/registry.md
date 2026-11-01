@@ -121,79 +121,73 @@ To rotate: regenerate the source credential, then `secret-set.sh NAME …` overw
 (Regenerated 2026-08-30 against `sync.sh`'s WORKER_SECRETS routing, the code-side source
 of truth; a mismatch between this table and that table is a bug in whichever changed last.)
 
-| Secret              | Local | 907-life | ecxc | asc-site | xcathletes |
-|---------------------|-------|----------|------|----------|------------|
-| CLOUDFLARE_API_TOKEN | ✓    | ✓        | —    | —        | —          |
-| CAIRN_CF_ACCOUNT_ID | ✓     | —        | —    | —        | —          |
-| CAIRN_CF_READ_TOKEN | ✓     | —        | —    | —        | —          |
-| CAIRN_GH_READ_TOKEN | ✓     | —        | —    | —        | —          |
-| CAIRN_DOCS_READER_OAUTH_TOKEN | ✓ | — | — | — | — |
-| CAIRN_E2E_OAUTH_TOKEN | ✓ | — | — | — | — |
-| CF_ZT_TOKEN         | ✓     | —        | —    | —        | —          |
-| ACCESS_GITHUB_CLIENT_ID / _SECRET | ✓ | — | — | — | — |
-| CF_ACCESS_CLIENT_SECRET | ✓ | —        | —    | —        | —          |
-| ANTHROPIC_API_KEY   | ✓     | —        | ✓    | ✓        | —          |
-| CMS_BOT_PAT         | ✓     | —        | —    | —        | —          |
-| RESEND_API_KEY      | ✓     | ✓        | ✓    | —        | —          |
-| CONTACT_EMAIL       | ✓     | —        | —    | —        | ✓          |
-| DAISYUI_BLUEPRINT_LICENSE | ✓ | —      | —    | —        | —          |
-| DAISYUI_BLUEPRINT_EMAIL | ✓  | —        | —    | —        | —          |
-| HCLOUD_TOKEN_SERVERS | ✓    | —        | —    | —        | —          |
-| CF_WS_SERVERS_TOKEN | ✓     | —        | —    | —        | —          |
-| CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
-| CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
-| CF_ORPHEUS_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
-| CF_WARD_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — | — |
-| MONITOR_READ_TOKEN | ✓ | — | — | — | — |
-| HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD | ✓ | — | — | — | — |
-| IMMICH_DB_PASSWORD | ✓ | — | — | — | — |
-| RESTIC_PASSWORD_ORPHEUS | ✓ | — | — | — | — |
-| TUNNEL_TOKEN_ORPHEUS | ✓ | — | — | — | — |
-| WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERC | ✓ | — | — | — | — |
-| RESTIC_PASSWORD_WARD | ✓ | — | — | — | — |
-| TUNNEL_TOKEN_WARD | ✓ | — | — | — | — |
-| BULWARK_SESSION_SECRET | ✓ | — | — | — | — |
-| STALWART_ADMIN_PASSWORD | ✓ | — | — | — | — |
-| STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2 | ✓ | — | — | — | — |
-| STALWART_PASSWORD_PHONEBOOK | ✓ | — | — | — | — |
-| PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — | — |
-| FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        | —          |
-| FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        | —          |
-| FASTMAIL_OPERATOR2_PASSWORD | ✓ | — | — | — | — |
-| FASTMAIL_OPERATOR2_API_TOKEN | ✓ | — | — | — | — |
-| SPAMHAUS_DQS_KEY | ✓ | — | — | — | — |
-| TEST_YAHOO_ADDRESS | ✓ | — | — | — | — |
-| TEST_YAHOO_PASSWORD | ✓ | — | — | — | — |
-| GITHUB_APP_ID       | ✓     | ✓        | —    | —        | —          |
-| GITHUB_APP_INSTALLATION_ID | ✓ | ✓     | —    | —        | —          |
-| GITHUB_APP_PRIVATE_KEY_B64 | ✓ | ✓     | ✓    | —        | ✓          |
-| GOOGLE_SA_KEY_B64   | ✓     | —        | ✓    | —        | —          |
-| GOOGLE_WORKSPACE_CLI_CLIENT_ID | ✓ | —    | —    | —        | —          |
-| GOOGLE_WORKSPACE_CLI_CLIENT_SECRET | ✓ | — | —  | —        | —          |
-| TWILIO_ACCOUNT_SID  | ✓     | —        | —    | —        | ✓          |
-| TWILIO_API_KEY_SID  | ✓     | —        | —    | —        | ✓          |
-| TWILIO_API_KEY_SECRET | ✓   | —        | —    | —        | ✓          |
-| TWILIO_AUTH_TOKEN   | ✓     | —        | —    | —        | ✓          |
-| VAPID_PRIVATE_KEY   | ✓     | —        | —    | —        | ✓          |
-| DUBPLATE_SMTP_PASSWORD | ✓  | —        | —    | —        | —          |
-| MUSIC_R2_RO_ACCESS_KEY_ID | ✓ | —      | —    | —        | —          |
-| MUSIC_R2_RO_SECRET_ACCESS_KEY | ✓ | — | —    | —        | —          |
-| DUBPLATE_MAGIC_LINK_SECRET | ✓ | —   | —    | —        | —          |
-| DUBPLATE_SESSION_SECRET | ✓ | —      | —    | —        | —          |
-| PHONEBOOK_PHONE_ADMIN_KITCHEN | ✓ | — | — | — | — |
-| PHONEBOOK_VOICEMAIL_PIN | ✓ | — | — | — | — |
-| PHONEBOOK_PHONE_USER | ✓ | — | — | — | — |
-| VOIPMS_API_USERNAME | ✓ | — | — | — | — |
-| VOIPMS_API_PASSWORD | ✓ | — | — | — | — |
-| VOIPMS_RELAY_KEY | ✓ | — | — | — | — |
-| PHONEBOOK_SIP_OFFICE | ✓ | — | — | — | — |
-| PHONEBOOK_SIP_PHONE2 | ✓ | — | — | — | — |
-| PHONEBOOK_SIP_PHONE3 | ✓ | — | — | — | — |
-| PHONEBOOK_SIP_TESTLINE | ✓ | — | — | — | — |
-| PHONEBOOK_ACCESS_CLIENT_ID | ✓ | — | — | — | — |
-| PHONEBOOK_ACCESS_CLIENT_SECRET | ✓ | — | — | — | — |
-| IMMICH_PIKAPODS_API_KEY | ✓ | — | — | — | — |
-| TPLINK_ROUTER_PASSWORD | ✓ | — | — | — | — |
+| Secret              | Local | 907-life | ecxc | asc-site |
+|---------------------|-------|----------|------|----------|
+| CLOUDFLARE_API_TOKEN | ✓    | ✓        | —    | —        |
+| CAIRN_CF_ACCOUNT_ID | ✓     | —        | —    | —        |
+| CAIRN_CF_READ_TOKEN | ✓     | —        | —    | —        |
+| CAIRN_GH_READ_TOKEN | ✓     | —        | —    | —        |
+| CAIRN_DOCS_READER_OAUTH_TOKEN | ✓ | — | — | — |
+| CAIRN_E2E_OAUTH_TOKEN | ✓ | — | — | — |
+| CF_ZT_TOKEN         | ✓     | —        | —    | —        |
+| ACCESS_GITHUB_CLIENT_ID / _SECRET | ✓ | — | — | — |
+| CF_ACCESS_CLIENT_SECRET | ✓ | —        | —    | —        |
+| ANTHROPIC_API_KEY   | ✓     | —        | ✓    | ✓        |
+| CMS_BOT_PAT         | ✓     | —        | —    | —        |
+| RESEND_API_KEY      | ✓     | ✓        | ✓    | —        |
+| DAISYUI_BLUEPRINT_LICENSE | ✓ | —      | —    | —        |
+| DAISYUI_BLUEPRINT_EMAIL | ✓  | —        | —    | —        |
+| HCLOUD_TOKEN_SERVERS | ✓    | —        | —    | —        |
+| CF_WS_SERVERS_TOKEN | ✓     | —        | —    | —        |
+| CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
+| CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
+| CF_ORPHEUS_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
+| CF_WARD_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
+| MONITOR_READ_TOKEN | ✓ | — | — | — |
+| HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD | ✓ | — | — | — |
+| IMMICH_DB_PASSWORD | ✓ | — | — | — |
+| RESTIC_PASSWORD_ORPHEUS | ✓ | — | — | — |
+| TUNNEL_TOKEN_ORPHEUS | ✓ | — | — | — |
+| WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERC | ✓ | — | — | — |
+| RESTIC_PASSWORD_WARD | ✓ | — | — | — |
+| TUNNEL_TOKEN_WARD | ✓ | — | — | — |
+| BULWARK_SESSION_SECRET | ✓ | — | — | — |
+| STALWART_ADMIN_PASSWORD | ✓ | — | — | — |
+| STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2 | ✓ | — | — | — |
+| STALWART_PASSWORD_PHONEBOOK | ✓ | — | — | — |
+| PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — |
+| FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        |
+| FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        |
+| FASTMAIL_OPERATOR2_PASSWORD | ✓ | — | — | — |
+| FASTMAIL_OPERATOR2_API_TOKEN | ✓ | — | — | — |
+| SPAMHAUS_DQS_KEY | ✓ | — | — | — |
+| TEST_YAHOO_ADDRESS | ✓ | — | — | — |
+| TEST_YAHOO_PASSWORD | ✓ | — | — | — |
+| GITHUB_APP_ID       | ✓     | ✓        | —    | —        |
+| GITHUB_APP_INSTALLATION_ID | ✓ | ✓     | —    | —        |
+| GITHUB_APP_PRIVATE_KEY_B64 | ✓ | ✓     | ✓    | —        |
+| GOOGLE_SA_KEY_B64   | ✓     | —        | ✓    | —        |
+| GOOGLE_WORKSPACE_CLI_CLIENT_ID | ✓ | —    | —    | —        |
+| GOOGLE_WORKSPACE_CLI_CLIENT_SECRET | ✓ | — | —  | —        |
+| DUBPLATE_SMTP_PASSWORD | ✓  | —        | —    | —        |
+| MUSIC_R2_RO_ACCESS_KEY_ID | ✓ | —      | —    | —        |
+| MUSIC_R2_RO_SECRET_ACCESS_KEY | ✓ | — | —    | —        |
+| DUBPLATE_MAGIC_LINK_SECRET | ✓ | —   | —    | —        |
+| DUBPLATE_SESSION_SECRET | ✓ | —      | —    | —        |
+| PHONEBOOK_PHONE_ADMIN_KITCHEN | ✓ | — | — | — |
+| PHONEBOOK_VOICEMAIL_PIN | ✓ | — | — | — |
+| PHONEBOOK_PHONE_USER | ✓ | — | — | — |
+| VOIPMS_API_USERNAME | ✓ | — | — | — |
+| VOIPMS_API_PASSWORD | ✓ | — | — | — |
+| VOIPMS_RELAY_KEY | ✓ | — | — | — |
+| PHONEBOOK_SIP_OFFICE | ✓ | — | — | — |
+| PHONEBOOK_SIP_PHONE2 | ✓ | — | — | — |
+| PHONEBOOK_SIP_PHONE3 | ✓ | — | — | — |
+| PHONEBOOK_SIP_TESTLINE | ✓ | — | — | — |
+| PHONEBOOK_ACCESS_CLIENT_ID | ✓ | — | — | — |
+| PHONEBOOK_ACCESS_CLIENT_SECRET | ✓ | — | — | — |
+| IMMICH_PIKAPODS_API_KEY | ✓ | — | — | — |
+| TPLINK_ROUTER_PASSWORD | ✓ | — | — | — |
 
 > `DUBPLATE_MAGIC_LINK_SECRET` and `DUBPLATE_SESSION_SECRET` (minted 2026-10-05, dubplate rung
 > 5d's first-deploy sitting): the greenfield server's two HMAC keys, 48 random bytes each
@@ -268,7 +262,7 @@ tmpfs cache; no password manager holds it for scripts.
   credential-shaped writes at the source.
 - **Also wrapped as a Workers Builds build token** (2026-08-22, Geoff's call): build token
   `503cd3fe-a701-4d5e-be7b-4c93a61335fa` "xcathletes build token (CLAUDE_CODE admin token)"
-  backs the Workers Builds triggers for `xcathletes` and both `907-life` triggers (the
+  backs both `907-life` triggers (the
   three older build tokens on the account were rolled). Rotating this token breaks
   auto-deploy for both workers until a new build token is created
   (`POST /accounts/{id}/builds/tokens` with the new token id and value) and each trigger
@@ -314,15 +308,15 @@ tmpfs cache; no password manager holds it for scripts.
 - **CAIRN_CF_ACCOUNT_ID**: the account id the tool pins. A public identifier, stored so the
   tool's three names resolve from one place.
 - **CAIRN_GH_READ_TOKEN**: GitHub fine-grained token "cairn-tool-read". Contents: Read and
-  Metadata: Read on glw907/ecxc-ski, 907-life, aksailingclub-org, xcathletes-org, and cairn-cms.
+  Metadata: Read on glw907/ecxc-ski, 907-life, aksailingclub-org, and cairn-cms.
   **Expires 2026-10-19; rotate before then** at https://github.com/settings/personal-access-tokens
   (regenerating keeps the scope; re-store with `secret-receive CAIRN_GH_READ_TOKEN`).
   Verified 200 on `commits/main` and `contents/package.json` for the four sites and
   `contents/CHANGELOG.md` on cairn-cms; a contents write verified 403.
 - **Gotcha (born at the mint)**: four of the five repositories are public, and a fine-grained
   token reads a public repository with NO permissions at all. The first mint carried no
-  Contents permission and still probed 200 on all four; only private `xcathletes-org` exposed
-  it (404). Verify any re-mint against `xcathletes-org`.
+  Contents permission and still probed 200 on all four; only the private `xcathletes-org`, since
+  retired, exposed it (404). Verify any re-mint with the Contents permission visible in its settings.
 - **Symptom of expiry**: every GitHub-backed check in `cairn health` turns unknown at once.
 
 ### HCLOUD_TOKEN_SERVERS
@@ -637,59 +631,6 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotate at**: console.cloud.google.com → gws-personal → Google Auth Platform → Clients →
   gws-thinkpad-x1 (reset secret or create a new Desktop client), then `secret-receive` each
   value. Delete `~/.config/gws/client_secret.json` if a downloaded copy exists.
-
-### TWILIO_ACCOUNT_SID / TWILIO_API_KEY_SID / TWILIO_API_KEY_SECRET
-- **Grants**: Twilio REST API on the team-platform account (`AC9387aa5b...`), via the
-  Standard API key "xcathletes-platform-2026-08" (key auth works on the v1 APIs and on
-  classic-API subresources; the account-root read is excluded, use subresource paths).
-- **Used by**: xcathletes platform provisioning (number purchase, toll-free verification or
-  10DLC filing) and, later, the xcathletes Worker's OTP + SMS fallback sends. Add the worker
-  column and sync.sh routing when platform pass 1 T1 creates the Worker.
-- **Scope note**: account funded 2026-08-01 ($20, out of trial). Owns toll-free
-  +1 888-609-8679 (bought 2026-08-02, ~$2.15/mo; verification submitted, see ecxc-ski's
-  team-platform T0 ledger for SIDs). The API key SID is paired with its secret; rotate them
-  together.
-- **Rotate at**: Twilio Console -> Account -> API keys & tokens (revoke, recreate under the
-  same name with a new date, then `secret-set.sh` all three and re-sync).
-
-### CONTACT_EMAIL
-- **Grants**: nothing; it is the destination inbox address for the xcathletes `/contact`
-  form (`geoff.wright@xcathletes.org`, a Cloudflare Email Routing forward to
-  `geoff@907.life`). Stored here so the address is config, never a literal in source,
-  per xcathletes-org's `docs/deploy.md`. Installed 2026-08-26 (public-design pass).
-  Note: 907-life's separately-set CONTACT_EMAIL stays worker-only; only the xcathletes
-  one is managed here.
-- **Used by**: xcathletes Worker (`WORKER_SECRETS["xcathletes"]`), the `/contact` action.
-- **Rotate at**: no credential to rotate; change the value with `secret-set.sh` and
-  `sync.sh --worker xcathletes` when the operator inbox moves, and adjust the Email
-  Routing rule on the xcathletes.org zone to match.
-
-### TWILIO_AUTH_TOKEN
-- **Grants**: the Twilio account's primary Auth Token (full account access, broader than the
-  API key). The xcathletes Worker uses it only to verify the `X-Twilio-Signature` on inbound
-  SMS webhooks (`/api/sms/inbound`, STOP/START/HELP); Twilio signs callbacks with this token
-  and nothing else, so the API key cannot substitute. Installed 2026-08-22.
-- **Used by**: xcathletes Worker (`WORKER_SECRETS["xcathletes"]`).
-- **Rotate at**: Twilio Console -> Account -> API keys & tokens -> Auth Token (request a
-  secondary token, promote it, then `secret-set.sh` and `sync.sh --worker xcathletes`).
-
-### VAPID_PRIVATE_KEY
-- **Grants**: signs Web Push messages as the xcathletes application server. Paired with the
-  PUBLIC key, which is not secret and is committed as the `VAPID_PUBLIC_KEY` var in
-  `xcathletes-org/wrangler.jsonc`; `VAPID_SUBJECT` (`mailto:`) is a committed var too.
-  Generated 2026-08-21 with `@mmmike/web-push`'s `generateVapidKeys()`, base64url, P-256.
-- **Used by**: the xcathletes Worker's push send path (`src/lib/server/push/send.ts`), which
-  reaches only the four allowlisted push hosts. Routed to the worker through sync.sh.
-- **Scope note**: it signs, it does not encrypt. It cannot address a device on its own: a
-  push needs the device's own endpoint plus its p256dh and auth keys, which live in
-  `push_subscriptions` in D1. Not recoverable from any API, unlike TURNSTILE_SECRET_KEY,
-  which is why it lives in this store rather than worker-only.
-- **Rotate at**: nowhere upstream; generate a fresh pair locally. **Rotation invalidates
-  every existing device subscription.** The browser binds a subscription to the public key it
-  was created with, so a new pair does not swap in: every installed phone stops receiving
-  until its own service worker fires `pushsubscriptionchange` and re-subscribes, and a phone
-  that never opens the app again never recovers. Rotate only on suspected compromise, and
-  change `VAPID_PUBLIC_KEY` in `wrangler.jsonc` in the same deploy.
 
 ### MUSIC_R2_RO_ACCESS_KEY_ID / MUSIC_R2_RO_SECRET_ACCESS_KEY
 - **Grants**: R2 API token `ws-r2-music-ro` (id `1de499ec...`; "Claude Code ThinkPad X1"

@@ -262,8 +262,7 @@ the rest unless the step says it is a hard stop.
    ```bash
    cd ~/Projects
    for r in 907-life aksailingclub-legacy aksailingclub-org cairn-cms cairn-pub \
-            cairn-themes dubplate ecxc-ski phonebook poplar \
-            xcathletes-org; do
+            cairn-themes dubplate ecxc-ski phonebook poplar; do
        [ -d "$r" ] || git clone "https://github.com/glw907/$r.git"
    done
    ln -sfn ~/.dotfiles ~/Projects/workstation
