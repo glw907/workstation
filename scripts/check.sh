@@ -77,6 +77,7 @@ run "claude-denied-log hook" bash tests/claude-denied-log.test.sh
 run "cairn-docs-cycle argument guard" bash tests/cairn-docs-cycle.test.sh
 run "monitor-subscribe service" bash tests/monitor-subscribe.test.sh
 run "phonebook units verify" bash tests/phonebook-units.test.sh
+run "maintain-projects cases" bash tests/maintain-projects.test.sh
 run "guidance citation (warning only)" bash scripts/check-guidance-cite.sh
 run "guidance citation test" bash tests/check-guidance-cite.test.sh
 run "claude-context-budget line cap" bash tests/claude-context-budget.test.sh

@@ -1,0 +1,13 @@
+[Unit]
+Description=Monthly update of maintenance-mode projects
+ConditionHost=pavilion
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+Environment=HOME=/var/home/glw907
+TimeoutStartSec=2h
+ExecStart=/usr/bin/systemd-inhibit --what=sleep --who=maintain-projects --why="maintenance update" /usr/bin/setpriv --reuid=glw907 --regid=glw907 --init-groups --inh-caps=-all --no-new-privs /var/home/glw907/.local/bin/maintain-projects

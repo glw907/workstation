@@ -215,6 +215,13 @@ stays the record of what's actually on disk. Current captured files:
   hosts. `ExecStart=` runs the main checkout's `scripts/check/nightly.sh`, so the checkout needs
   `npm ci` after a pull that changes its dependencies. After installing: `sudo -A systemctl daemon-reload && sudo -A systemctl enable --now
   phonebook-nightly.timer phonebook-gate.timer` <!-- host-ok -->
+- `bluefin/etc/systemd/system/maintain-projects.{timer,service}` → `/etc/systemd/system/` (pavilion
+  only, Geoff 2026-11-01): the monthly `maintain-projects` run at 01:00 `America/Anchorage`, built
+  like the phonebook units so it wakes pavilion and finishes before the 04:00 nightly. After
+  installing: `sudo -A systemctl daemon-reload && sudo -A systemctl enable --now
+  maintain-projects.timer` <!-- host-ok -->
+  Pavilion is a desktop that stays awake on AC power. Orpheus, the always-available utility server,
+  takes a job that truly must stay up (Geoff, 2026-11-01).
 
 `/etc` is writable on Bluefin and persists across image updates (unlike `/usr`), so
 there's no technical reason to skip the dotfiles round-trip — treat any direct edit as
