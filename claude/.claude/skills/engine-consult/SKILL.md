@@ -120,7 +120,7 @@ A site-launched session does not auto-load cairn's context. In order:
 5. **Run the full gate list by name**: cairn-cms's `npm run check:close` runs it, including
    `check:comments`, `check:reference:signatures`, `check:surface`, `check:snippets`,
    `check:transcripts`, and `check:symbols`, which the local ritual once skipped.
-6. **The ordered close:** engine merge to `main`, then invoke the **`cairn-release`**
+6. **The ordered close:** engine merge to `main`, then invoke the **`cairn-releasing`**
    skill (the change must be on the registry; a site branch cannot merge on a `file:`
    pin), then `npm run link:consumer -- <site-dir> --restore` from the cairn checkout,
    then the site merge. During development the site consumes via

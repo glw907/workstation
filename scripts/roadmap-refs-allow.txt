@@ -1,4 +1,2 @@
 claude/.claude/skills/cairn-pass/SKILL.md:promoted to `ROADMAP.md`
 claude/.claude/skills/cairn-pass/SKILL.md:`ROADMAP.md` engine-friction entries
-claude/.claude/skills/cairn-release/SKILL.md:CHANGELOG.md ROADMAP.md
-claude/.claude/skills/cairn-release/SKILL.md:`ROADMAP.md` ("Toward 1.0")
