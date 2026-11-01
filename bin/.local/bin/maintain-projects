@@ -15,14 +15,17 @@ hold_days=7
 dry_run=
 [ "${1:-}" = --dry-run ] && dry_run=1
 
-# A user unit starts with no login shell, and these go last so a test's stubs win.
+# A unit starts with no login shell, and these go last so a test's stubs win.
 export PATH="$PATH:$HOME/.local/share/mise/installs/node/lts/bin:/home/linuxbrew/.linuxbrew/bin"
+# A lockfile may name a git+ssh dependency, and a timer has no SSH agent.
+export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=url.https://github.com/.insteadOf GIT_CONFIG_VALUE_0=ssh://git@github.com/
 
 failed=0
 
 report() { # repo message
     printf '%s: %s\n' "$1" "$2" >&2
     failed=1
+    printf 'failed: %s\n' "$2" >"$state/$1.result"
     notify-send --urgency=normal "Maintenance: $1" "$2" 2>/dev/null || true
 }
 
@@ -42,10 +45,12 @@ update_tree() { # repo checkout tree log
     npm update --save --min-release-age="$hold_days" >>"$log" 2>&1 \
         || { report "$repo" "npm update failed. See $log"; return 1; }
     npm audit fix >>"$log" 2>&1 || true
+    [ ! -x node_modules/.bin/playwright ] || npx --no-install playwright install chromium >>"$log" 2>&1 \
+        || { report "$repo" "The browser install failed. See $log"; return 1; }
     npm outdated >"$state/$repo.held" 2>&1 || true
 
     if git diff --quiet -- package.json package-lock.json; then
-        echo "$repo: nothing to update"
+        echo "ok: nothing to update" | tee "$state/$repo.result"
         return 0
     fi
     npm run check >>"$log" 2>&1 \
@@ -55,7 +60,8 @@ update_tree() { # repo checkout tree log
         return 0
     fi
 
-    git commit -q -m "Take the month's dependency updates" -- package.json package-lock.json
+    git commit -q -m "Take the month's dependency updates" -- package.json package-lock.json \
+        || { report "$repo" "git commit failed, and main is unchanged."; return 1; }
     git push -q origin HEAD:main >>"$log" 2>&1 \
         || { report "$repo" "The push to main failed. See $log"; return 1; }
     sha=$(git rev-parse HEAD)
@@ -63,34 +69,38 @@ update_tree() { # repo checkout tree log
         || { report "$repo" "CI failed on $sha, which is on main and may not have deployed."; return 1; }
     git -C "$src" pull -q --ff-only >>"$log" 2>&1 && (cd "$src" && npm ci >>"$log" 2>&1) \
         || { report "$repo" "CI passed, but the main checkout did not update. See $log"; return 1; }
-    echo "$repo: updated and deployed $sha"
+    echo "ok: updated and deployed $sha" | tee "$state/$repo.result"
 }
 
 maintain() { # repo
-    local repo=$1 src=$root/$1 log=$state/$1.log tree
+    local repo=$1 src=$root/$1 log=$state/$1.log tree tmp
     : >"$log"
     if [ "$(git -C "$src" branch --show-current)" != main ] || [ -n "$(git -C "$src" status --porcelain --untracked-files=no)" ]; then
         report "$repo" "Skipped: the main checkout is busy, so it will try again next month."
         return
     fi
     git -C "$src" fetch -q origin main || { report "$repo" "git fetch failed."; return; }
-    tree=$(mktemp -d)/$repo
+    tmp=$(mktemp -d)
+    tree=$tmp/$repo
     git -C "$src" worktree add -q --detach "$tree" origin/main || { report "$repo" "git worktree add failed."; return; }
     update_tree "$repo" "$src" "$tree" "$log"
     cd "$root" || exit 1
     git -C "$src" worktree remove --force "$tree"
+    rm -rf "$tmp"
 }
 
 status() { # repo
-    local last=never held=0
+    local last=never held=0 result='not run'
     [ -f "$state/$1.log" ] && last=$(date -r "$state/$1.log" +%F)
-    [ -f "$state/$1.held" ] && held=$(($(wc -l <"$state/$1.held") - 1))
-    printf '%s: last run %s, %s held behind\n' "$1" "$last" "$held"
+    [ -s "$state/$1.held" ] && held=$(($(wc -l <"$state/$1.held") - 1))
+    [ -f "$state/$1.result" ] && result=$(cat "$state/$1.result")
+    printf '%s: last run %s, %s held behind, %s\n' "$1" "$last" "$held" "$result"
 }
 
 mkdir -p "$state"
-while read -r repo; do
+[ -r "$list" ] || { report maintain-projects "The project list is missing: $list"; exit 1; }
+while read -r repo <&3; do
     case $repo in '' | '#'*) continue ;; esac
     if [ "${1:-}" = --status ]; then status "$repo"; else maintain "$repo"; fi
-done <"$list"
+done 3<"$list"
 exit "$failed"

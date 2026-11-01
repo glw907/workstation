@@ -1,8 +1,0 @@
-[Unit]
-Description=Update the projects in maintenance mode
-ConditionHost=pavilion
-
-[Service]
-Type=oneshot
-ExecStart=%h/.local/bin/maintain-projects
-TimeoutStartSec=2h

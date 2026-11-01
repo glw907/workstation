@@ -72,5 +72,11 @@ check "dirty checkout is skipped" $? 1 1 1
 out=$(PATH="$work/bin:$PATH" MAINTAIN_LIST="$work/list" MAINTAIN_STATE="$work/state" "$script" --status)
 case $out in demo:\ last\ run\ *) ;; *) echo "FAIL: status printed: $out"; fail=1 ;; esac
 
+: >"$work/state/demo.held"
+out=$(PATH="$work/bin:$PATH" MAINTAIN_LIST="$work/list" MAINTAIN_STATE="$work/state" "$script" --status)
+case $out in *' 0 held behind'*) ;; *) echo "FAIL: empty held file printed: $out"; fail=1 ;; esac
+
+rm -f "$work/notified"; rm "$work/list"; run; check "missing list notifies" $? 1 1 1
+
 [ "$fail" = 0 ] && echo "maintain-projects.test.sh: all cases passed"
 exit "$fail"

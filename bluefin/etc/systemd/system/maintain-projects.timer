@@ -1,0 +1,11 @@
+[Unit]
+ConditionHost=pavilion
+Description=Monthly update of maintenance-mode projects, 1:00 AM Anchorage
+
+[Timer]
+OnCalendar=*-*-01 01:00:00 America/Anchorage
+WakeSystem=true
+Persistent=true
+
+[Install]
+WantedBy=timers.target
