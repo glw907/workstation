@@ -67,7 +67,7 @@ rendered pages.
   `docs/plans/<this-pass>.md` to `docs/archive/plans/`), and the spec the
   same way.
 - List cairn friction the pass met under "Cairn friction" in the PR body, verified against cairn-cms.
-  A cairn session files it in cairn-cms's `docs/internal/docs-friction-log.md`. A UI mechanic that
+  A cairn session files it in cairn-cms's `BACKLOG.md`. A UI mechanic that
   belongs to the engine follows `~/.claude/docs/engine-ui-mechanics.md`.
 - Commit specific files only, one commit per task with the task id first in the subject.
 
