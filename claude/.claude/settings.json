@@ -39,6 +39,7 @@
       "Bash(gh repo delete glw907/cairn-e2e-* --yes)",
       "Bash(gh repo delete glw907/cairn-cms-e2e --yes)",
       "Bash(cairn-e2e-env)",
+      "Bash(claude plugin eval plugins/standards *)",
       "Bash(git -C /var/home/glw907/Projects/survey-notes push)",
       "Bash(git -C /var/home/glw907/Projects/survey-notes pull --rebase)",
       "WebSearch",
