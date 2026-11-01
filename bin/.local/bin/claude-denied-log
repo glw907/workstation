@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# claude-denied-log: Claude Code PermissionDenied hook that appends one JSON line per auto mode
+# denial to ~/.local/state/claude-denials.jsonl, so a recurring block shows up as a count. It
+# keeps the first 200 characters of the command or the file path, and the file is private
+# because a command can carry a value. The denial has already happened, so it never blocks.
+{
+  log="${CLAUDE_DENIED_LOG:-$HOME/.local/state/claude-denials.jsonl}"
+  umask 077
+  jq -c '{ts: (now | todate), session: .session_id, cwd, tool: .tool_name, reason,
+    target: ((.tool_input.command // .tool_input.file_path // "") | tostring | .[0:200])}' \
+    >>"$log" 2>/dev/null
+} || true
+exit 0
