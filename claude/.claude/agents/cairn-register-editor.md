@@ -30,7 +30,7 @@ against the wrong genre's exemplar passes falsely.
    documentation style guide for every published arm except `docs/editors/`, which reads
    under the Microsoft Writing Style Guide (as does admin UI copy). The register is an
    overlay on the base guide and never supplants it.
-1. The register: `.claude/skills/cairn-docs/references/docs-register.md`. It is the canonical contract for published
+1. The register: `.claude/skills/cairn-writing-docs/references/docs-register.md`. It is the canonical contract for published
    docs prose, carries the base-guide overlay, and outranks this file where they differ. Read
    the drafting brief for the draft's track and `## Deviations from the base guides` from the
    file before grading.
@@ -80,7 +80,7 @@ Cairn is not a product: it is open-source code, "free code that (hopefully) help
 Marketing prose about it is false, not merely off-register. The
 developer register is a talented developer explaining his choices and architecture to peers,
 in the measured, precise voice that governs every published cairn page under Google (the
-cairn docs voice in `.claude/skills/cairn-docs/references/docs-register.md`, headings included: a conversational
+cairn docs voice in `.claude/skills/cairn-writing-docs/references/docs-register.md`, headings included: a conversational
 or teaser heading such as "What X doesn't buy" or "You know it worked when" is a finding on
 the Google arms).
 The editor register is Microsoft's voice for a college-educated, non-technical writer (a

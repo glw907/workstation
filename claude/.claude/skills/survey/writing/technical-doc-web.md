@@ -4,7 +4,7 @@ The reader is a competent web developer adopting or operating the system, who ha
 code. Applies to the developer-facing docs in the web repos (the SvelteKit sites and the
 non-published docs of cairn-cms): READMEs, guides, reference pages, explanation pages, and
 design notes. A published cairn-cms page, and cairn.pub's own prose, does not take its brief
-from this file: it follows the developer brief in cairn-cms `.claude/skills/cairn-docs/references/docs-register.md`,
+from this file: it follows the developer brief in cairn-cms `.claude/skills/cairn-writing-docs/references/docs-register.md`,
 which supplements the same Google guide with the cairn docs voice. Code comments have their own
 standard in the ts-conventions and svelte-conventions skills; this register covers prose at the
 document level.

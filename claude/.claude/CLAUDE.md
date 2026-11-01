@@ -193,7 +193,7 @@ to each standard, and `~/.claude/docs/authoring-charter.md` holds the map. **Nam
 load its standard before drafting**; site content uses the site repo's own content guide. Cairn's
 docs voice is the named overlay: every published cairn page, and cairn.pub's own prose, follows the
 developer brief (editor docs, the editor brief) in
-`~/Projects/cairn-cms/.claude/skills/cairn-docs/references/docs-register.md`. Vale, the comment linters, and `tellgrader`
+`~/Projects/cairn-cms/.claude/skills/cairn-writing-docs/references/docs-register.md`. Vale, the comment linters, and `tellgrader`
 are the deterministic net; clean is necessary, never sufficient.
 
 The em dash is banned in code comments (linter-enforced); developer docs follow Google (no

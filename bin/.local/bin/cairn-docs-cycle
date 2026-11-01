@@ -2,7 +2,7 @@
 set -uo pipefail
 
 # cairn-docs-cycle: launcher for the monthly cairn docs improvement cycle. Starts one unattended
-# session from cairn-cms's .claude/skills/cairn-docs/evals/cycle-prompt.txt in its own systemd
+# session from cairn-cms's .claude/skills/cairn-writing-docs/evals/cycle-prompt.txt in its own systemd
 # scope, so it outlives the oneshot unit that called it. The session samples real cairn sessions,
 # runs the docs evals on main, queues one triage item, and waits for Geoff's ruling.
 # --dry-run skips the pull and the suite run, and tells the session to write the triage file and
@@ -20,7 +20,7 @@ dry_run=0
 [[ "${1:-}" == "--dry-run" ]] && dry_run=1
 
 repo=${CAIRN_DOCS_CYCLE_REPO:-$HOME/Projects/cairn-cms}
-prompt_file=$repo/.claude/skills/cairn-docs/evals/cycle-prompt.txt
+prompt_file=$repo/.claude/skills/cairn-writing-docs/evals/cycle-prompt.txt
 
 if [[ ! -d "$repo" ]]; then
     echo "cairn docs cycle: no checkout at $repo; nothing to launch"

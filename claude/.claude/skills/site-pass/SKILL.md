@@ -74,8 +74,8 @@ rendered pages.
 A divergence between a cairn-cms docs page and reality is fixed on the page in the same change, per
 cairn's fix rule in its `CLAUDE.md`: edit on a `site-docs/<site>-<pass>` branch off cairn-cms `main`,
 merged by PR under the docs gate before the site pass closes. Never edit cairn-cms `main` directly.
-The `cairn-docs` skill loads only in a cairn-cms session, so read its steps from
-`~/Projects/cairn-cms/.claude/skills/cairn-docs/SKILL.md` before the edit and follow them there.
+The `cairn-writing-docs` skill loads only in a cairn-cms session, so read its steps from
+`~/Projects/cairn-cms/.claude/skills/cairn-writing-docs/SKILL.md` before the edit and follow them there.
 
 ## When not to use
 

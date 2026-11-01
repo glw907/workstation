@@ -11,7 +11,7 @@ machine.** The manifests record intent; the script reports what happened.
 | --- | --- | --- | --- |
 | Skills (authored here) | `~/.dotfiles/claude/.claude/skills/<name>/` (stowed) | the directory itself | stow |
 | Skills (vendored, third party) | same directory | `~/.claude/tooling/vendored-skills.json` (stowed) | `claude-tooling-sync update-skills` |
-| Skills and agents (authored in a project repo) | project scope: `.claude/skills/cairn-docs` and `.claude/agents/docs-fact-checker.md` in `~/Projects/cairn-cms`, owned by that repo | the directory | Claude Code, in a session started in that repo |
+| Skills and agents (authored in a project repo) | project scope: `.claude/skills/cairn-writing-docs` and `.claude/agents/docs-fact-checker.md` in `~/Projects/cairn-cms`, owned by that repo | the directory | Claude Code, in a session started in that repo |
 | Agents | `~/.dotfiles/claude/.claude/agents/<name>.md` (stowed) | the directory itself | stow |
 | Docs (this file and its siblings) | `~/.dotfiles/claude/.claude/docs/` (stowed) | the directory itself | stow |
 | Instructions (cross-repo reference docs, linked from consumer CLAUDE.md files) | `~/.dotfiles/claude/.claude/instructions/` (stowed) | the directory itself | stow |

@@ -48,7 +48,7 @@ green lane, report BLOCKED with the exact failing output instead of committing a
   component no ruling explains is a finding to report.
 - **No em dashes in code comments.** Website content under `src/content/` follows the site's content
   guide, which sets its own policy. cairn-cms docs prose follows the track's drafting brief in
-  `.claude/skills/cairn-docs/references/docs-register.md` (developer docs or editor docs, by the page's track).
+  `.claude/skills/cairn-writing-docs/references/docs-register.md` (developer docs or editor docs, by the page's track).
 - **Website content is a different register.** Anything under `src/content/` uses the site's
   web-content voice: read `docs/content-guide.md` in full before touching it, and run its
   self-critique pass on what you wrote.

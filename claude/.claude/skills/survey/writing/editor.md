@@ -4,7 +4,7 @@ The reader is a non-technical person using the software to get a job done: an ed
 post, someone following a setup guide, a first-time user who has never seen the admin. They did
 not read the code and do not want to. Applies to end-user help, editor guides, setup
 walkthroughs, and the in-product copy a non-technical reader sees. The published cairn-cms
-editor docs (`docs/editors/`) follow the editor brief in cairn-cms `.claude/skills/cairn-docs/references/docs-register.md`,
+editor docs (`docs/editors/`) follow the editor brief in cairn-cms `.claude/skills/cairn-writing-docs/references/docs-register.md`,
 which supplements the same Microsoft guide with its own tightenings; the cairn docs voice does not
 apply there. Cairn admin UI copy follows the Voice section of cairn-cms
 `.claude/skills/cairn-following-admin-design/references/admin-design-system.md`.

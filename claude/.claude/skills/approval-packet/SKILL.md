@@ -104,7 +104,7 @@ checked out at the PR's head, clean and pushed: `approval-queue docs <worktree> 
 background command, like a packet. The title follows the packet title rule. The description file
 holds a background paragraph and then one or two on what the pages change, per the register's
 fourth rule; the command refuses a missing or misshapen one. The notes come from the repo's
-fact-check (cairn: the `cairn-docs` skill's `references/review.md`); check them with
+fact-check (cairn: the `cairn-writing-docs` skill's `references/review.md`); check them with
 `approval-queue notes --check <worktree> <notes.json>` before queuing. The interface is fixed in the Approval Queue README's
 "The docs kind", and the cutover contract (`~/Projects/initiatives/docs-system/plans/2026-10-25-cutover-contract.md`)
 holds the rest.
