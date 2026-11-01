@@ -55,6 +55,10 @@ On a plan, also check these items:
   Read every task for a hidden one, and move a step that waits on the pass's output earlier where
   it can go, and flag any item the design did not foresee, since it holds the launch for a
   pre-launch packet (Pass 1, 2026-10-19: a Proton Bridge sign-in surfaced mid-run).
+  Read every task's writes against auto mode too: a write to Claude's settings, a credential
+  file, or new public surface can be refused however the allow rules read, so each gets a `[you]`
+  item or a path a probe proved (agent-first pass 1, 2026-10-31: `.claude/settings.json` and a
+  container's `oauth.env`).
 - A pass that launches `claude --bg` in a directory no session has opened (a new repo or
   checkout) lists the workspace trust prompt as a pre-flight item: Geoff runs `claude` there once
   and accepts it, checked by a launch that no longer prints "Workspace not trusted" (Survey Pass
