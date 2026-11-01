@@ -56,7 +56,9 @@ skill adds the procedure and never restates the register.
 4. **Research each ask as completed staff work.** Read the files, PRs, review findings, and logs
    the decision turns on, and cite each fact's source (a path, a PR number, a commit). A question
    the facts settle becomes a routine row. An unchecked fact an ask depends on is checked, or the ask is raised as
-   `low-confidence`; the register's third rule says why.
+   `low-confidence`; the register's third rule says why. An ask that rules on a list of items
+   names every item in its `Background:` with the proposed call, and gives each item a `Facts:`
+   bullet with its reason, so Geoff never rules on a tally (Geoff, 2026-11-01).
 5. **Write the title and description, then the layers.** Once the asks are researched, write the
    description that opens the file: a background paragraph, then one or two summary paragraphs
    that let Geoff decide without opening anything below, per the register's fourth rule. The
