@@ -1,0 +1,3 @@
+# Repos in maintenance mode, one name per line, each at ~/Projects/<name>. The maintain-projects
+# timer updates these monthly on pavilion. The maintenance-mode skill says how a repo joins.
+phonebook

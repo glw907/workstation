@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# maintain-projects: the monthly update for every project in maintenance mode. For each repo in
+# bluefin/maintenance-projects.txt it takes the in-range updates at least seven days old, runs the
+# repo's gate, pushes to main, and waits for CI to deploy. A quiet run says nothing; a failure
+# leaves main alone where it can and raises one normal notification. What `npm outdated` still
+# lists goes in the state directory, so a later feature pass can see what is held.
+# The maintenance-mode skill holds the rules. --dry-run stops before the commit, and --status
+# lists each project's last run and how many packages are held behind.
+set -uo pipefail
+
+root=${MAINTAIN_ROOT:-$HOME/Projects}
+list=${MAINTAIN_LIST:-$HOME/.dotfiles/bluefin/maintenance-projects.txt}
+state=${MAINTAIN_STATE:-$HOME/.local/state/maintain-projects}
+hold_days=7
+dry_run=
+[ "${1:-}" = --dry-run ] && dry_run=1
+
+# A user unit starts with no login shell, and these go last so a test's stubs win.
+export PATH="$PATH:$HOME/.local/share/mise/installs/node/lts/bin:/home/linuxbrew/.linuxbrew/bin"
+
+failed=0
+
+report() { # repo message
+    printf '%s: %s\n' "$1" "$2" >&2
+    failed=1
+    notify-send --urgency=normal "Maintenance: $1" "$2" 2>/dev/null || true
+}
+
+ci_passes() { # repo sha
+    local run='' tries=0
+    while [ -z "$run" ] && [ "$tries" -lt 20 ]; do
+        run=$(gh run list -R "glw907/$1" --commit "$2" --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+        [ -n "$run" ] || { sleep "${MAINTAIN_CI_WAIT:-15}"; tries=$((tries + 1)); }
+    done
+    [ -n "$run" ] && gh run watch "$run" -R "glw907/$1" --exit-status >/dev/null
+}
+
+update_tree() { # repo checkout tree log
+    local repo=$1 src=$2 tree=$3 log=$4 sha
+    cd "$tree" || return 1
+    npm ci >>"$log" 2>&1 || { report "$repo" "npm ci failed. See $log"; return 1; }
+    npm update --save --min-release-age="$hold_days" >>"$log" 2>&1 \
+        || { report "$repo" "npm update failed. See $log"; return 1; }
+    npm audit fix >>"$log" 2>&1 || true
+    npm outdated >"$state/$repo.held" 2>&1 || true
+
+    if git diff --quiet -- package.json package-lock.json; then
+        echo "$repo: nothing to update"
+        return 0
+    fi
+    npm run check >>"$log" 2>&1 \
+        || { report "$repo" "The gate failed on this month's updates, and main is unchanged. See $log"; return 1; }
+    if [ -n "$dry_run" ]; then
+        git diff --stat -- package.json package-lock.json
+        return 0
+    fi
+
+    git commit -q -m "Take the month's dependency updates" -- package.json package-lock.json
+    git push -q origin HEAD:main >>"$log" 2>&1 \
+        || { report "$repo" "The push to main failed. See $log"; return 1; }
+    sha=$(git rev-parse HEAD)
+    ci_passes "$repo" "$sha" \
+        || { report "$repo" "CI failed on $sha, which is on main and may not have deployed."; return 1; }
+    git -C "$src" pull -q --ff-only >>"$log" 2>&1 && (cd "$src" && npm ci >>"$log" 2>&1) \
+        || { report "$repo" "CI passed, but the main checkout did not update. See $log"; return 1; }
+    echo "$repo: updated and deployed $sha"
+}
+
+maintain() { # repo
+    local repo=$1 src=$root/$1 log=$state/$1.log tree
+    : >"$log"
+    if [ "$(git -C "$src" branch --show-current)" != main ] || [ -n "$(git -C "$src" status --porcelain --untracked-files=no)" ]; then
+        report "$repo" "Skipped: the main checkout is busy, so it will try again next month."
+        return
+    fi
+    git -C "$src" fetch -q origin main || { report "$repo" "git fetch failed."; return; }
+    tree=$(mktemp -d)/$repo
+    git -C "$src" worktree add -q --detach "$tree" origin/main || { report "$repo" "git worktree add failed."; return; }
+    update_tree "$repo" "$src" "$tree" "$log"
+    cd "$root" || exit 1
+    git -C "$src" worktree remove --force "$tree"
+}
+
+status() { # repo
+    local last=never held=0
+    [ -f "$state/$1.log" ] && last=$(date -r "$state/$1.log" +%F)
+    [ -f "$state/$1.held" ] && held=$(($(wc -l <"$state/$1.held") - 1))
+    printf '%s: last run %s, %s held behind\n' "$1" "$last" "$held"
+}
+
+mkdir -p "$state"
+while read -r repo; do
+    case $repo in '' | '#'*) continue ;; esac
+    if [ "${1:-}" = --status ]; then status "$repo"; else maintain "$repo"; fi
+done <"$list"
+exit "$failed"

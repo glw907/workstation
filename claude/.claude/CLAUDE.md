@@ -86,9 +86,9 @@ screenshot of the real terminal is evidence.
 
 ## Dependencies (Geoff, 2026-09-13 and 2026-09-14)
 
-Every dependency bump in every repo goes through the `standards:dependency-upgrade` skill (a sweep, a bot PR,
-a package taken for a feature, "are we current"). Take every minor and patch by default; always ask
-before a major. A release starts from every dependency's newest production version.
+Every dependency bump in every repo goes through the `standards:dependency-upgrade` skill, except a
+project in `maintenance-mode` (skill), which updates on a timer. Take every minor and patch by default;
+always ask before a major. A release starts from every dependency's newest production version.
 
 ## Cloudflare and API-first
 

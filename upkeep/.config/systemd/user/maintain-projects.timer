@@ -1,0 +1,10 @@
+[Unit]
+Description=Update the projects in maintenance mode each month
+
+[Timer]
+OnCalendar=*-*-01 01:00:00 America/Anchorage
+Persistent=true
+RandomizedDelaySec=15m
+
+[Install]
+WantedBy=timers.target
