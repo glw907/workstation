@@ -12,8 +12,8 @@ archive and the teardown. The sources are in "Why this order".
 
 List everything the project owns, and mark each item sole-owner or shared. A shared item stays.
 
-- **Repo:** unpushed branches, stashes, worktrees, open PRs and issues, releases, Actions secrets,
-  and other sessions working it (`claude agents`, `git status`).
+- **Repo:** unpushed branches, stashes, each worktree's `git status`, open PRs and issues, releases,
+  Actions secrets, and other sessions working it (`claude agents`, `git status`).
 - **Cloudflare:** Workers, custom domains, D1, R2, KV, Queues, Turnstile widgets, Access apps, Email
   Routing rules, Workers Builds triggers, DNS records, and the registrar's expiry and auto-renew.
 - **Vendors:** every service that bills or holds a credential for it, such as phone numbers and API
@@ -29,6 +29,7 @@ Write one age-encrypted file named `<project>-<date>.tar.age`, using the worksta
 - every D1 export, and R2 objects
 - issues and PRs as JSON, and the Worker config
 
+Uncommitted work in any worktree gets committed or dropped first, since a bundle doesn't carry it.
 Never archive a secret value. Restore the file somewhere scratch: decrypt, clone the bundle, and
 load each SQL export into SQLite. Store it at `~/Documents/retired-projects/` and at
 `servers-archive/retired-projects/` in R2, confirming the R2 copy with `rclone check`. Stop on a
@@ -47,7 +48,7 @@ Rerun the inventory for each id before deleting it, and stop if it's no longer s
 2. Delete the Worker, then Turnstile, Builds triggers, D1, and R2.
 3. Stop vendors: release numbers, and revoke each key at its issuer. Deleting a Worker secret
    revokes nothing. Then remove the secrets from the store and the registry.
-4. A kept domain gets parked: no Email Routing, `MX 0 .`, `v=spf1 -all`, and `v=DMARC1; p=reject;`
+4. A kept domain gets parked: no Email Routing (the dashboard turns it off; no workstation token can), `MX 0 .`, `v=spf1 -all`, and `v=DMARC1; p=reject;`
    at the apex. A domain with no use lapses at expiry with auto-renew off, and stays parked until then.
 5. Delete the GitHub repo (`gh auth refresh -s delete_repo` if needed), then the local checkout and
    its worktrees.

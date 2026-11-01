@@ -1,6 +1,6 @@
 ---
 name: engine-consult
-description: Use when authoring a pass plan in ecxc-ski, 907-life, aksailingclub-org, xcathletes-org, cairn-pub, or any other repo whose pass builds against the cairn engine; when a pass starts on a committed plan whose header carries no consultation line; or whenever the work involves a "consultation", an "engine ask", or a request to "consult the engine" before building against a cairn surface.
+description: Use when authoring a pass plan in ecxc-ski, 907-life, aksailingclub-org, cairn-pub, or any other repo whose pass builds against the cairn engine; when a pass starts on a committed plan whose header carries no consultation line; or whenever the work involves a "consultation", an "engine ask", or a request to "consult the engine" before building against a cairn surface.
 ---
 
 # Engine consultation
@@ -42,8 +42,8 @@ plan. The check is a blocking precondition on the first dispatch.
 
 ## Repos bound
 
-Any repo whose pass builds against the engine: the four sites (ecxc-ski, 907-life,
-aksailingclub-org, xcathletes-org), cairn-pub, and future consumers, wherever the plan is
+Any repo whose pass builds against the engine: the three sites (ecxc-ski, 907-life,
+aksailingclub-org), cairn-pub, and future consumers, wherever the plan is
 authored.
 
 ## The brief

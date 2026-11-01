@@ -1,6 +1,6 @@
 ---
 name: site-implementer
-description: Pair subagent for the site repos (ecxc-ski, 907-life, aksailingclub-org, xcathletes-org, cairn-pub). Implements one task from a pass plan in its own worktree: runs npm ci and svelte-kit sync, writes the code and tests, runs the adapter's fast lane through cairn-run-gate, commits, and never pushes. Pinned to Sonnet at medium effort; pass model:opus to upshift a task with novel correctness-critical logic the plan does not fully specify.
+description: Pair subagent for the site repos (ecxc-ski, 907-life, aksailingclub-org, cairn-pub). Implements one task from a pass plan in its own worktree: runs npm ci and svelte-kit sync, writes the code and tests, runs the adapter's fast lane through cairn-run-gate, commits, and never pushes. Pinned to Sonnet at medium effort; pass model:opus to upshift a task with novel correctness-critical logic the plan does not fully specify.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 effort: medium

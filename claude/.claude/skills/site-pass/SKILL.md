@@ -2,7 +2,7 @@
 name: site-pass
 description: >
   The adapter for the lean pass process on the SvelteKit site repos (ecxc-ski, 907-life,
-  aksailingclub-org, xcathletes-org, cairn-pub): gate, fast lane, full-suite home, worktree setup,
+  aksailingclub-org, cairn-pub): gate, fast lane, full-suite home, worktree setup,
   CI watch, risk-class path map, checklist globs, and close checklist. Use on "continue
   development", "next pass", "finish pass", or when a site's own roadmap drives the work. For the
   cairn-cms engine's passes use cairn-pass.
@@ -23,7 +23,6 @@ the first task. Read the plan and spec paths from the site's `CLAUDE.md` or STAT
 | ecxc-ski | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci`, then `npx svelte-kit sync` |
 | 907-life | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci`, then `npx svelte-kit sync` |
 | aksailingclub-org | `npm run check` | check, plus `npx vitest run <touched test files>` | CI on the PR | `npm ci`, then `npx svelte-kit sync` |
-| xcathletes-org | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci`, then `npx svelte-kit sync` |
 | cairn-pub | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci`, then `npx svelte-kit sync` |
 
 **Gate**: `cairn-run-gate '<string>'` on the light lane (`CAIRN_GATE_LANE=light`), since no site gate
@@ -46,8 +45,7 @@ task after each push. The other four sites have no watch command.
 
 **Risk-class path map**: `auth-data` for every site: `src/hooks.server.ts`, `src/routes/admin/**`,
 `wrangler.*`. aksailingclub-org adds `src/member-auth/**`, `src/member-signup/**`,
-`src/admin-club/**`, `migrations/**`, and `data/membershipworks/**` (member PII). xcathletes-org
-adds `src/lib/server/{auth,db}/**`, `src/routes/team/{login,tokens}/**`, and `migrations*/**`.
+`src/admin-club/**`, `migrations/**`, and `data/membershipworks/**` (member PII).
 cairn-pub adds `migrations/**`. `runner` for `.github/workflows/**` and `scripts/**`; `ordinary`
 otherwise.
 
