@@ -129,6 +129,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CAIRN_GH_READ_TOKEN | ✓     | —        | —    | —        |
 | CAIRN_DOCS_READER_OAUTH_TOKEN | ✓ | — | — | — |
 | CAIRN_E2E_OAUTH_TOKEN | ✓ | — | — | — |
+| CAIRN_E2E_GH_TOKEN  | ✓     | —        | —    | —        |
 | CF_ZT_TOKEN         | ✓     | —        | —    | —        |
 | ACCESS_GITHUB_CLIENT_ID / _SECRET | ✓ | — | — | — |
 | CF_ACCESS_CLIENT_SECRET | ✓ | —        | —    | —        |
@@ -294,6 +295,14 @@ tmpfs cache; no password manager holds it for scripts.
   consumes it. The plan's task 4.13 removes it.
 - **Rotate or revoke**: run `claude setup-token` again and re-store with
   `secret-receive CAIRN_E2E_OAUTH_TOKEN`; revoking it does not touch Geoff's own login.
+
+### CAIRN_E2E_GH_TOKEN
+- **Grants**: a fine-grained GitHub token minted by Geoff (2026-10-31, 30-day expiry) limited to
+  `glw907/cairn-cms-e2e`: Contents and Pull requests read and write, Actions and Commit statuses
+  read. It serves only the agent-first plan's Contribute check, through `e2e/gh.env` and
+  `podman run --env-file`, never argv. Local only; no Worker consumes it.
+- **Rotate or revoke**: Geoff revokes it at the plan's task 4.12 from GitHub's token settings, or
+  mints a new one and re-stores it with `secret-receive CAIRN_E2E_GH_TOKEN`.
 
 ### CAIRN_CF_READ_TOKEN / CAIRN_CF_ACCOUNT_ID / CAIRN_GH_READ_TOKEN
 - **Grants**: the Go `cairn` operator tool's read-only credentials (cairn-cms `tool/`), minted
