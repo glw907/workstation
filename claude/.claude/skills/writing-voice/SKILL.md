@@ -22,7 +22,7 @@ authoring charter (`~/.claude/docs/authoring-charter.md`).
 |---|---|---|
 | Developer docs, README, or design doc in a Go repo | Google Developer Documentation Style Guide | `~/.claude/docs/voice/technical-doc-go.md` |
 | Developer docs, README, or design doc in a SvelteKit or web repo | Google Developer Documentation Style Guide | `~/.claude/docs/voice/technical-doc-web.md` |
-| Published cairn-cms docs (`docs/admin/`, `docs/extend/`, `docs/reference/`, the front door, the changelog) and cairn.pub's own prose | Google, with the cairn docs voice overlay | the developer-docs drafting brief in cairn-cms `.claude/skills/cairn-writing-docs/references/docs-register.md` |
+| Published cairn-cms docs (`docs/admin/`, the front door, the changelog) and cairn.pub's own prose | Google, with the cairn docs voice overlay | the developer-docs drafting brief in cairn-cms `.claude/skills/cairn-writing-docs/references/docs-register.md` |
 | Published cairn-cms editor docs (`docs/editors/`) | Microsoft Writing Style Guide, tightened by the editor brief | the editor-docs drafting brief in cairn-cms `.claude/skills/cairn-writing-docs/references/docs-register.md` |
 | cairn-cms admin UI copy | Microsoft UI-text voice, professional and restrained: no cute, no chatty | cairn-cms `.claude/skills/cairn-following-admin-design/references/admin-design-system.md`, Voice |
 | Changelog entry, GitHub release note, or upgrade-guide entry | Google Developer Documentation Style Guide (the developer reading the changelog is the same reader as the docs) | `~/.claude/docs/voice/technical-doc-web.md` (Go repo: `technical-doc-go.md`) |

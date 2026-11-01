@@ -115,7 +115,7 @@ the diff, point the agents that need it at the skill file, commit skills and man
   read the component guide first and ask Blueprint from the main loop when the guide is thin.
   The DaisyUI-first rule itself is the workstation CLAUDE.md section "Claude tooling:
   manifests, scopes, and the DaisyUI-first rule". Standing uses (Geoff, 2026-09-13; audit record
-  `~/Projects/cairn-cms/docs/internal/record/2026-09-13-blueprint-audit.md`): a pre-cut admin
+  <https://github.com/glw907/cairn-cms/blob/pre-agent-first/docs/internal/record/2026-09-13-blueprint-audit.md>): a pre-cut admin
   audit (first run 2026-09-21), `component_syntax_expert` during plan authorship for a new admin
   component, a rerun after every DaisyUI bump, and the same audit over the consumer sites' admin
   screens; the converters and greenfield design tools stay unused. **Owed, not built:** a

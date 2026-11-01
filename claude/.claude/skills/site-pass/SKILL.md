@@ -14,7 +14,7 @@ Load `pass-core` first; it holds the lifecycle and the rules this adapter fills 
 relative to the site repo. The resume prompt is in `docs/STATUS.md`. The plan, spec, archive, and
 architecture-doc paths come from the site's `CLAUDE.md` or STATUS; `docs/{plans,specs}/`
 and `docs/architecture.md` are the usual case, not the only one. The plan header
-carries exactly one of a consultation-brief link or the line "no engine asks", plus a "Pages
+carries exactly one of a consultation-brief link or the line "no engine asks", plus a "Sources
 consulted" line, from `engine-consult`; a committed plan with neither gets the enumeration run before
 the first task. Read the plan and spec paths from the site's `CLAUDE.md` or STATUS.
 

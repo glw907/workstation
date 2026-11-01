@@ -21,19 +21,19 @@ contract, auth, any seam). Exactly two outcomes: a consultation brief, or a reco
 one-line "no engine asks" in the plan header. The null outcome is deliberately cheap.
 
 The plan header carries exactly one of the two engine-consultation lines, plus the
-pages-consulted line, so the backstop can match on it:
+sources-consulted line, so the backstop can match on it:
 
 ```markdown
 **Engine consultation:** no engine asks.
 **Engine consultation:** [<brief filename>](<link to the filed brief>)
-**Pages consulted:** <reference pages read, or "none">
+**Sources consulted:** <exports and skill references read, or "none">
 ```
 
-Before the plan is written, the author's pre-plan read names the reference pages the pass
-builds on (`~/Projects/cairn-cms/docs/reference/`, with the code at the commit), and the open engine items in
+Before the plan is written, the author's pre-plan read names the exports and skill references the
+pass builds on (the doc comments under `~/Projects/cairn-cms/src/lib` and the packaged `skills/`, with the code at the commit), and the open engine items in
 `~/Projects/cairn-cms/BACKLOG.md`, so a hole the last site could not
-close reaches this plan. The plan header's `**Pages consulted:**` line records that read: the
-pages it covered and the open engine items it found (or "none" for either).
+close reaches this plan. The plan header's `**Sources consulted:**` line records that read: the
+exports and references it covered and the open engine items it found (or "none" for either).
 
 **Pass-start backstop, for the resumed path.** After reading the plan and before the first
 implementer dispatch: if the plan header carries neither a consultation-brief link nor the
@@ -119,7 +119,7 @@ A site-launched session does not auto-load cairn's context. In order:
 4. **The lean pass loop** per `cairn-pass`: one executing session, pair subagents where files are
    disjoint, the fast lane per task, and the whole-branch close review.
 5. **Run the full gate list by name**: cairn-cms's `npm run check:close` runs it, including
-   `check:comments`, `check:reference:signatures`, `check:surface`, `check:snippets`,
+   `check:comments`, `check:tiers`, `check:surface`, `check:snippets`,
    `check:transcripts`, and `check:symbols`, which the local ritual once skipped.
 6. **The ordered close:** engine merge to `main`, then read and follow
    `~/Projects/cairn-cms/.claude/skills/cairn-releasing/SKILL.md` (the change must be on the registry; a site branch cannot merge on a `file:`
