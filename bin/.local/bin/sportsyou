@@ -19,6 +19,9 @@ set -euo pipefail
 # was already open without the extension ignores --load-extension on a second
 # launch: quit it and run sportsyou again.
 
+# GNOME and systemd start this with a PATH that lacks ~/.local/bin.
+export PATH="$HOME/.local/bin:$PATH"
+
 profile="${XDG_DATA_HOME:-$HOME/.local/share}/sportsyou-chromium"
 extension="$profile/extension"
 url="${1:-}"
