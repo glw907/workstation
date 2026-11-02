@@ -23,7 +23,7 @@ mkrepo() {
 
 # run <cwd> <initiatives dir>: leaves the hook's stdout in $out and its exit code in $rc.
 run() {
-  out=$(cd "$1" && INITIATIVES_DIR="$2" bash "$SCRIPT" 2>/dev/null)
+  out=$(cd "$1" && INITIATIVES_DIR="$2" FRESH_CHECKOUTS="" bash "$SCRIPT" 2>/dev/null </dev/null)
   rc=$?
 }
 
