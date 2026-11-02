@@ -1,0 +1,9 @@
+[Desktop Entry]
+# Opens the sportsYou window at login, so its alerts run without the browser.
+Version=1.0
+Type=Application
+Name=sportsYou
+Exec=sportsyou
+Icon=chat-message-new-symbolic
+Terminal=false
+X-GNOME-Autostart-enabled=true
