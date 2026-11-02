@@ -213,6 +213,12 @@
             "command": "claude-merge-guard",
             "timeout": 30,
             "onFailure": "block"
+          },
+          {
+            "type": "command",
+            "command": "claude-launch-guard",
+            "timeout": 10,
+            "onFailure": "block"
           }
         ]
       },

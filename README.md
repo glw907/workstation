@@ -64,6 +64,7 @@ Workers by `scripts/secrets/sync.sh`. Architecture, inventory, and rotation:
 | `decision-review.timer` | Monthly systemd user timer (the `upkeep` package) running `decision-review-notify`, which only raises a notification to start the approval-packet decision review |
 | `maintain-projects.timer` | Monthly system timer (`bluefin/etc/systemd/system`) on pavilion running `maintain-projects`, which updates and deploys the repos in `bluefin/maintenance-projects.txt`; a normal notification only on failure |
 | `update-widevine` | Copy Google's Widevine module out of the Chrome stable RPM into Chromium's profile so DRM sites play; `widevine-update.timer` (the `upkeep` package) runs it weekly and skips the download when the RPM is unchanged |
+| `claude-launch-guard` | PreToolUse hook: refuse a `claude --bg` pass launch until the plan records its permission check and review and the session has the `standards` plugin |
 | `chromium-launch` | Start Chromium, adding `--ozone-platform=x11` on an NVIDIA GPU under Wayland so Netflix's DRM video isn't black (Chromium issues 551668260, 548711898). The `applications` package's `chromium-browser.desktop` launches through it |
 | `sportsyou` | Open sportsYou in its own Chromium window and profile, so it keeps running when the daily browser quits. The `applications` package starts it at login |
 

@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+"""PreToolUse hook denying a `claude --bg` pass launch whose plan skipped its pre-launch checks.
+
+The hook finds the plan a launch runs: the prompt file named in `$(cat <file>)`, then the
+`docs/plans/*.md` path that file names, else its sibling with `-prompt.txt` swapped for `.md`. The
+plan's `## Pre-flight` section must carry a `Permissions checked:` line, saying how each task's
+credentials and writes were read against auto mode, and a `Reviewed:` line naming the plan review.
+A launch with no plan is not a pass and goes through. A plan launch is also denied when the
+session's transcript never lists `standards:plan-reviewer`, because a session without the
+`standards` plugin can't run the pass process it is launching. Per the hooks reference
+(https://code.claude.com/docs/en/hooks) a denial is `hookSpecificOutput.permissionDecision:
+"deny"` with a `permissionDecisionReason`, printed with exit 0. This is a slip guard, not a
+security boundary. Every input the script cannot parse exits 0 silently.
+"""
+
+import json
+from pathlib import Path
+import re
+import sys
+
+LAUNCH = re.compile(r"\bclaude\s+(?:[^|;&\n]*\s)?--bg\b")
+PROMPT_FILE = re.compile(r"\$\(\s*cat\s+[\"']?([^\"')\s]+)")
+CHDIR = re.compile(r"(?:^|&&|;)\s*cd\s+[\"']?([^\"'\s;&]+)")
+PLAN_PATH = re.compile(r"[\w./~-]*docs/plans/[\w./-]+\.md")
+REQUIRED = ("Permissions checked:", "Reviewed:")
+
+
+def plan_for(command: str, cwd: Path) -> Path | None:
+    """Return the plan a launch command runs, or None for a launch that names no plan."""
+    moved = CHDIR.search(command)
+    base = cwd / Path(moved.group(1)).expanduser() if moved else cwd
+    found = PROMPT_FILE.search(command)
+    if found:
+        prompt = base / Path(found.group(1)).expanduser()
+        if not prompt.is_file():
+            return None
+        named = PLAN_PATH.search(prompt.read_text(errors="replace"))
+        if named:
+            return base / Path(named.group(0)).expanduser()
+        sibling = prompt.with_name(prompt.name.replace("-prompt.txt", ".md"))
+        return sibling if sibling != prompt and sibling.is_file() else None
+    named = PLAN_PATH.search(command)
+    return base / Path(named.group(0)).expanduser() if named else None
+
+
+def missing(plan: Path) -> list[str]:
+    """Return what the plan's `## Pre-flight` section lacks."""
+    text = plan.read_text(errors="replace")
+    section = re.search(r"^## Pre-flight\s*$(.*?)(?=^## |\Z)", text, re.M | re.S)
+    if not section:
+        return ["a `## Pre-flight` section", *(f"a `{line}` line" for line in REQUIRED)]
+    return [f"a `{line}` line" for line in REQUIRED if line not in section.group(1)]
+
+
+def lacks_standards(transcript: str | None) -> bool:
+    """Return whether a readable transcript never lists the plan-review agent."""
+    if not transcript:
+        return False
+    try:
+        return "standards:plan-reviewer" not in Path(transcript).read_text(errors="replace")
+    except OSError:
+        return False
+
+
+def main() -> None:
+    """Read the hook input and deny a pass launch whose plan lacks its checks."""
+    try:
+        data = json.load(sys.stdin)
+        command = data["tool_input"]["command"]
+        cwd = Path(data.get("cwd") or ".")
+    except (ValueError, KeyError, TypeError):
+        return
+    if not isinstance(command, str) or not LAUNCH.search(command):
+        return
+    plan = plan_for(command, cwd)
+    if plan is None or not plan.is_file():
+        return
+    gaps = missing(plan)
+    if lacks_standards(data.get("transcript_path")):
+        gaps.append("a session with the `standards` plugin loaded (restart the session)")
+    if not gaps:
+        return
+    reason = (
+        f"{plan} needs {', '.join(gaps)} before launch. Read every task for a credential, a "
+        "remote write, a settings write, or new public surface; give each a `[you]` item or a "
+        "probe that proved it; and run the plan review (`pass-core`, Lifecycle step 4)."
+    )
+    print(json.dumps({"hookSpecificOutput": {
+        "hookEventName": "PreToolUse",
+        "permissionDecision": "deny",
+        "permissionDecisionReason": reason,
+    }}))
+
+
+if __name__ == "__main__":
+    main()

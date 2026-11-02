@@ -88,7 +88,7 @@ where the repo's adapter or this skill puts them, the plan is authored per step 
    set from the actual-against-planned path in recent passes' scores, never from a share of a spec's
    figure.
 
-   The plan opens with a `## Pre-flight` list: every step only Geoff can do, such as a sign-in, a
+   The plan opens with a `## Pre-flight` list, and every necessary permission is gathered there, up front (Geoff, 2026-11-01). The list carries a `Permissions checked:` line, saying how each task's credentials and writes were read against auto mode, and a `Reviewed:` line naming the plan review; `claude-launch-guard` refuses a `claude --bg` launch of a plan without them. The list holds every step only Geoff can do, such as a sign-in, a
    value through `secret-receive`, a dialog, a permission rule, a browser or app action, or a
    physical touch. The design's packet carries the items it foresaw as `[you: ...]` steps
    (`approval-packet`), and Geoff runs them in the sitting where he approves the design, since a
@@ -373,6 +373,7 @@ agent's prompt; each was added from a past pass's planning miss.
   it can go, and flag any item the design did not foresee, since it holds the launch for a
   pre-launch packet (Pass 1, 2026-10-19: a Proton Bridge sign-in surfaced mid-run).
   Read every task's writes against auto mode too: a write to Claude's settings, a credential file, or new public surface can be refused however the allow rules read, so each gets a `[you]` item or a path a probe proved (agent-first pass 1, 2026-10-31: `.claude/settings.json` and a container's `oauth.env`).
+- A task that creates or uses a credential with Geoff's own login is a `[you]` item with a tested script, because the classifier refuses it however the plan reads (sportsyou-notify pass 1, 2026-11-01: an app password stopped the run, and the first script failed silently after ward had made the password).
 - A step a run or its merges will need refused by auto mode is settled before launch: Geoff grants
   the narrow permission in the design's sitting, or runs what can already run. A `[you]` item never
   sits between a pass's merges when a permission asked up front would let the session run it. Only
