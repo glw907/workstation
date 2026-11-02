@@ -95,6 +95,9 @@
 
 ## Low
 
+- [ ] **#47** Require a prior-art and vendor-guidance check at the design step `#improvement` `#workstation` *(2026-11-01)*
+  The workstation-sync design reached approval before anyone checked published practice or Anthropic's docs, and Geoff had to ask for both mid-build (2026-11-01). That check caught a real data-loss case in `MEMORY.md` and two gaps. Add the check to the `pass-core` design step or `brainstorming`, so a design names what it took from each source. `claude/.claude/skills/pass-core/SKILL.md`
+
 - [x] **#32** Have `ci-green` report `action_required` as held, not red `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-24)*
   A run triggered by a bot-pushed commit (cairn-cms's baseline regen pushes as `github-actions[bot]`) sits in `action_required`, and `ci-green` reports it as red. Name it held and print the release command, `gh api -X POST repos/<owner>/<repo>/actions/runs/<id>/approve`. Moved from cairn-cms #52. Record B3-11.
   Done: PR #146.
