@@ -119,6 +119,7 @@ def test_wrapped_launches_are_found(repo, wrap):
     'claude --bg 2>&1 "$(cat docs/plans/a-prompt.txt)"', 'claude 2>&1 --bg "$(cat docs/plans/a-prompt.txt)"',
     'claude --bg "" "$(cat docs/plans/a-prompt.txt)"', "claude --bg $(cat docs/plans/a-prompt.txt)",
     'claude --bg "$(< docs/plans/a-prompt.txt)"',
+    'claude --bg "Execute the plan.\n\nPlan: docs/plans/a.md"',
 ])
 def test_prompt_forms_are_found(repo, command):
     (repo / "docs/plans/a.md").write_text(MISSING_REVIEW)
@@ -143,4 +144,11 @@ def test_planner_and_design_prompts_pass(repo, prompt_name, body):
     (repo / "docs/plans/a.md").write_text(MISSING_REVIEW)
     (repo / "docs/plans/a-design.md").write_text("no pre-flight\n")
     (repo / "docs/plans" / prompt_name).write_text(body)
+    assert run(f'claude --bg "$(cat docs/plans/{prompt_name})"', repo) == ""
+
+
+@pytest.mark.parametrize("prompt_name,sibling", [("x-design-prompt.txt", "x-design.md"), ("y-prompt.txt", "y.md")])
+def test_design_prompt_ignores_a_sibling(repo, prompt_name, sibling):
+    (repo / "docs/plans" / sibling).write_text(MISSING_REVIEW)
+    (repo / "docs/plans" / prompt_name).write_text(f"Read docs/plans/{prompt_name[0]}-design.md.\n")
     assert run(f'claude --bg "$(cat docs/plans/{prompt_name})"', repo) == ""

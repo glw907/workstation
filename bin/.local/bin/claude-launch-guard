@@ -66,8 +66,7 @@ def mask(command: str) -> str:
         if quote:
             if char == quote:
                 quote = ""
-            if char != "\n":
-                out[index] = " "
+            out[index] = " "
         elif char in "'\"":
             quote = char
             out[index] = " "
@@ -114,12 +113,15 @@ def plan_for(launch: str, base: Path) -> Path | None:
     prompt = base / Path(os.path.expandvars(found.group(1))).expanduser()
     if PLANNER_PROMPT.search(prompt.name) or not prompt.is_file():
         return None
-    named = named_plan(prompt.read_text(errors="replace"))
+    text = prompt.read_text(errors="replace")
+    named = named_plan(text)
     if named:
         for root in (base, repo_root(prompt)):
             plan = root / Path(named).expanduser()
             if plan.is_file():
                 return plan
+    if PLAN_PATH.search(text):
+        return None
     sibling = prompt.with_name(prompt.name.replace("-prompt.txt", ".md"))
     return sibling if sibling != prompt and sibling.is_file() else None
 
