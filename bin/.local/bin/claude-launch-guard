@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+"""PreToolUse hook denying a `claude --bg` pass launch whose plan skipped its pre-launch checks.
+
+The hook finds the plan a launch runs: the prompt file named in `$(cat <file>)`, then the
+`docs/plans/*.md` path that file names, else its sibling with `-prompt.txt` swapped for `.md`. The
+plan's `## Pre-flight` section must carry a `Permissions checked:` line, saying how each task's
+credentials and writes were read against auto mode, and a `Reviewed:` line naming the plan review.
+A launch with no plan, a planner launch (`*-planning-prompt.txt`, `*-planner-prompt.txt`), and a
+prompt naming only a `-design.md` are not executor passes and go through. A plan launch is also denied when the
+session's transcript never lists `standards:plan-reviewer`, because a session without the
+`standards` plugin can't run the pass process it is launching. Per the hooks reference
+(https://code.claude.com/docs/en/hooks) a denial is `hookSpecificOutput.permissionDecision:
+"deny"` with a `permissionDecisionReason`, printed with exit 0. This is a slip guard, not a
+security boundary: a launch it can't follow, such as one inside `bash -c`, goes through. Every input the script cannot parse exits 0 silently.
+"""
+
+import json
+import os
+from pathlib import Path
+import re
+import sys
+
+HEREDOC = re.compile(r"(?<!<)<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
+REDIRECT = re.compile(r"\d*[<>]&\d*")
+LAUNCH = re.compile(
+    r"(?:^|[;&|({\n!]|\b(?:then|do|else|elif|if|while|until|time|env|nohup|exec|command)\s)\s*"
+    r"(?:[A-Za-z_]\w*=\S*\s+)*(?:(?:env|nohup|exec|command)\s+)*(?:timeout\s+\S+\s+)?"
+    r"(?:\S*/)?claude\b[^;&|\n]*\s--bg\b[^;&|\n]*"
+)
+CHDIR = re.compile(r"(?:^|[;&|(\n])\s*cd\s+[\"']?([^\"';&|)\s]+)")
+PROMPT_FILE = re.compile(r"\$\(\s*(?:cat\s+|<\s*)[\"']?([^\"')\s]+)")
+PLAN_PATH = re.compile(r"[\w./~-]*docs/plans/[\w./-]+\.md")
+PLANNER_PROMPT = re.compile(r"-plann(?:ing|er)-prompt\.txt$")
+REQUIRED = ("Permissions checked:", "Reviewed:")
+
+
+def blank_heredocs(command: str) -> str:
+    """Replace heredoc bodies with spaces, keeping every character's position."""
+    kept: list[str] = []
+    delimiter = None
+    for line in command.split("\n"):
+        if delimiter is not None:
+            if line.strip() == delimiter:
+                delimiter = None
+            kept.append(" " * len(line))
+            continue
+        kept.append(line)
+        found = HEREDOC.search(line)
+        if found:
+            delimiter = found.group(2)
+    return "\n".join(kept)
+
+
+def mask(command: str) -> str:
+    """Blank quoted text, escapes, and comments, so only live shell syntax stays in place."""
+    out = list(command)
+    index, quote = 0, ""
+    while index < len(out):
+        char = out[index]
+        if char == "\\" and quote != "'":
+            out[index] = " "
+            if index + 1 < len(out):
+                out[index + 1] = " "
+            index += 2
+            continue
+        if quote:
+            if char == quote:
+                quote = ""
+            out[index] = " "
+        elif char in "'\"":
+            quote = char
+            out[index] = " "
+        elif char == "#" and (index == 0 or out[index - 1] in " \t\n;&|("):
+            while index < len(out) and out[index] != "\n":
+                out[index] = " "
+                index += 1
+            continue
+        index += 1
+    return REDIRECT.sub(lambda found: " " * len(found.group(0)), "".join(out))
+
+
+def launches(command: str, cwd: Path) -> list[tuple[str, Path]]:
+    """Return each `claude --bg` launch's raw text and its working directory."""
+    text = blank_heredocs(command)
+    found = []
+    for match in LAUNCH.finditer(mask(text)):
+        base = cwd
+        for moved in CHDIR.finditer(text[: match.start() + 1]):
+            base = base / Path(os.path.expandvars(moved.group(1))).expanduser()
+        found.append((text[match.start():match.end()], base))
+    return found
+
+
+def repo_root(prompt: Path) -> Path:
+    """Return the folder that holds a prompt file's `docs/`, or the file's own folder."""
+    for parent in prompt.parents:
+        if parent.name == "docs":
+            return parent.parent
+    return prompt.parent
+
+
+def named_plan(text: str) -> str | None:
+    """Return the first plan path in text, skipping a design."""
+    return next((path for path in PLAN_PATH.findall(text) if not path.endswith("-design.md")), None)
+
+
+def plan_for(launch: str, base: Path) -> Path | None:
+    """Return the plan a launch runs, or None for a planner or a launch that names no plan."""
+    found = PROMPT_FILE.search(launch)
+    if not found:
+        named = named_plan(launch)
+        return base / Path(named).expanduser() if named else None
+    prompt = base / Path(os.path.expandvars(found.group(1))).expanduser()
+    if PLANNER_PROMPT.search(prompt.name) or not prompt.is_file():
+        return None
+    text = prompt.read_text(errors="replace")
+    named = named_plan(text)
+    if named:
+        for root in (base, repo_root(prompt)):
+            plan = root / Path(named).expanduser()
+            if plan.is_file():
+                return plan
+    if PLAN_PATH.search(text):
+        return None
+    sibling = prompt.with_name(prompt.name.replace("-prompt.txt", ".md"))
+    return sibling if sibling != prompt and sibling.is_file() else None
+
+
+def missing(plan: Path) -> list[str]:
+    """Return what the plan's `## Pre-flight` section lacks."""
+    text = plan.read_text(errors="replace")
+    section = re.search(r"^## Pre-flight\s*$(.*?)(?=^## |\Z)", text, re.M | re.S)
+    if not section:
+        return ["a `## Pre-flight` section", *(f"a `{line}` line" for line in REQUIRED)]
+    return [f"a `{line}` line" for line in REQUIRED if line not in section.group(1)]
+
+
+def lacks_standards(transcript: str | None) -> bool:
+    """Return whether a readable transcript never lists the plan-review agent."""
+    if not transcript:
+        return False
+    try:
+        return "standards:plan-reviewer" not in Path(transcript).read_text(errors="replace")
+    except OSError:
+        return False
+
+
+def main() -> None:
+    """Read the hook input and deny a pass launch whose plan lacks its checks."""
+    denials = []
+    try:
+        data = json.load(sys.stdin)
+        for launch, base in launches(data["tool_input"]["command"], Path(data.get("cwd") or ".")):
+            plan = plan_for(launch, base)
+            if plan is None or not plan.is_file():
+                continue
+            gaps = missing(plan)
+            if lacks_standards(data.get("transcript_path")):
+                gaps.append("a session with the `standards` plugin loaded (restart the session)")
+            if gaps:
+                denials.append(f"{plan} needs {', '.join(gaps)}")
+    except (AttributeError, KeyError, OSError, RuntimeError, TypeError, ValueError):
+        return
+    if not denials:
+        return
+    reason = (
+        f"{'; '.join(denials)} before launch. Read every task for a credential, a remote write, "
+        "a settings write, or new public surface; give each a `[you]` item or a probe that "
+        "proved it; and run the plan review (`pass-core`, Lifecycle step 4)."
+    )
+    print(json.dumps({"hookSpecificOutput": {
+        "hookEventName": "PreToolUse",
+        "permissionDecision": "deny",
+        "permissionDecisionReason": reason,
+    }}))
+
+
+if __name__ == "__main__":
+    main()

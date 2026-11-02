@@ -9,6 +9,8 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
+- [ ] **#49** Stop inline comments and quoted operators fooling `claude-merge-guard` `#bug` `#workstation` *(2026-11-01)*
+  Its `stages` copies the two flaws the launch guard review found: `shlex` keeps its `#` commenter, so a comment on the line before `gh pr merge` can merge the stages, and quoted text can pass as an operator. Found by reading only. `claude-launch-guard`'s `mask` is the fix to reuse.
 - [ ] **#48** Catch Do Not Disturb drift on a workstation `#bug` `#workstation` *(2026-11-01)*
   Do Not Disturb is off on thinkpad-x1 (`org.gnome.desktop.notifications show-banners` is true), against the calm desktop rule, and `check-drift` doesn't report it. Turn it on and add the key to what `check-drift` reconciles. Found in the sportsyou-notify design.
 - [ ] **#46** Add Email Sending to `retire-project`'s teardown `#improvement` `#workstation` *(2026-11-01)*
