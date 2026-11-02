@@ -25,7 +25,8 @@ each repo in `~/.dotfiles/bluefin/maintenance-projects.txt`, it:
 
 A quiet month says nothing. A failure raises one normal notification and leaves its log in
 `~/.local/state/maintain-projects/<repo>.log`. A gate failure leaves `main` unchanged. Each
-repo's `<repo>.held` file there lists what stayed behind: majors, and anything a `~` range holds.
+repo's `<repo>.held` file there lists what stayed behind: majors, and anything a `~` range holds. Its
+`<repo>.blocked` file names, for each held major, the installed packages whose peer ranges refuse it.
 
 `maintain-projects --status` lists each project, its last run and result, and how many packages
 are held. Trust it over silence: after a reboot with no login, the keyring is locked, so the run
@@ -60,7 +61,7 @@ limit how far it can roll back, so read that before reverting a deploy.
 
 Run a normal pass through `pass-core` while the project stays in maintenance mode. Its first task is
 a full `standards:dependency-upgrade` sweep, so the feature starts from current dependencies. That
-sweep is where the held majors get decided. The timer skips a dirty or off-`main` checkout but can't
+sweep is where the held majors get decided. Offer a major only after reading `<repo>.blocked` and what the framework says it targets, and put both in front of Geoff: a new release number says nothing about whether the stack can use it. TypeScript 7.0 sat held while `@sveltejs/kit`'s range stopped at 6, and SvelteKit is aiming at 7.1 (Geoff, 2026-11-01). The timer skips a dirty or off-`main` checkout but can't
 see a pass in a worktree, so that pass rebases on the update if one lands first.
 
 ## Leave maintenance mode
