@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# workstation-syncthing: pair this host's Syncthing with the hosts in bluefin/syncthing-devices.txt
+# and share Claude's memory and ~/Documents with them. Safe to rerun; it only adds. A host whose ID
+# is not in the list prints the line to commit and changes nothing, and the other host picks the
+# line up on its next pull. Git repos and secrets stay out of Syncthing: they travel through GitHub.
+set -uo pipefail
+
+list=${SYNCTHING_DEVICES:-$HOME/.dotfiles/bluefin/syncthing-devices.txt}
+memory=${SYNCTHING_MEMORY:-$HOME/.claude/projects}
+documents=${SYNCTHING_DOCUMENTS:-$HOME/Documents}
+host=$(hostname)
+
+# Syncthing renames the older side of a conflict, which would silently drop that side's new
+# entries from the index. MEMORY.md is one entry per line, so a union of the two loses nothing.
+merge_indexes() {
+    local copy index tmp
+    for copy in "$memory"/*/memory/MEMORY.sync-conflict-*.md; do
+        [ -e "$copy" ] || continue
+        index=${copy%/*}/MEMORY.md
+        tmp=$(mktemp) || return 1
+        awk '!NF || !seen[$0]++' "$index" "$copy" >"$tmp" 2>/dev/null
+        mv "$tmp" "$index" && rm -f "$copy"
+    done
+}
+
+share() { # id path
+    syncthing cli config folders list | grep -qxF -- "$1" \
+        || syncthing cli config folders add --id "$1" --label "$1" --path "$2" || return 1
+    # Every change reaches both hosts, so a deletion keeps a copy in .stversions.
+    syncthing cli config folders "$1" versioning type set simple || return 1
+    for peer in "${peers[@]}"; do
+        syncthing cli config folders "$1" devices list | grep -qxF -- "$peer" \
+            || syncthing cli config folders "$1" devices add --device-id "$peer" || return 1
+    done
+}
+
+merge_indexes || exit 1
+own=$(syncthing cli show system | jq -r .myID) || exit 1
+grep -qE "^$host $own$" "$list" || {
+    echo "Add this line to bluefin/syncthing-devices.txt and push: $host $own"
+    exit 0
+}
+
+peers=()
+while read -r name id; do
+    syncthing cli config devices list | grep -qxF -- "$id" \
+        || syncthing cli config devices add --device-id "$id" --name "$name" || exit 1
+    peers+=("$id")
+done < <(grep -vE "^[[:space:]]*(#|$)|^$host " "$list")
+[ "${#peers[@]}" -gt 0 ] || exit 0
+
+# The first match wins, so only each project's memory syncs and the transcripts stay local.
+printf '!/*/memory\n!/*/memory/**\n*\n' >"$memory/.stignore"
+share claude-memory "$memory" && share documents "$documents"

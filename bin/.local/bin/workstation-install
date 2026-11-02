@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# workstation-install <bluefin-dir>: install what the manifests list and this host lacks, in every
+# tier a user can reach. It never upgrades or removes. Layered RPMs and /etc drops need sudo, so
+# they stay with the check-drift report. Runs every tier, then exits nonzero if any failed.
+set -uo pipefail
+
+manifests=$1
+ok=0
+read_list() { grep -vE '^[[:space:]]*(#|$)' "$1"; }
+
+brew bundle install --no-upgrade --file="$manifests/Brewfile" || ok=1
+
+missing=$(comm -23 <(read_list "$manifests/flatpaks.txt" | sort -u) \
+    <(flatpak list --app --columns=application | sort -u))
+if [ -n "$missing" ]; then
+    mapfile -t apps <<<"$missing"
+    flatpak install --noninteractive flathub "${apps[@]}" || ok=1
+fi
+
+have=$(uv tool list 2>/dev/null | grep -v '^- ' | awk '/ v[0-9]/{print $1}')
+while read -r tool; do
+    grep -qxF -- "${tool%%[[ ]*}" <<<"$have" || uv tool install "$tool" || ok=1
+done < <(read_list "$manifests/uv-tools.txt")
+
+mise install || ok=1
+
+# Settings only enable a plugin; each machine has to install it. Without -y, a plugin that wants
+# to run a marketplace command is refused and reported, since a timer has no one to review it.
+settings=$manifests/../claude/.claude/settings.json
+installed=$(claude plugin list --json | jq -r '.[] | select(.scope == "user") | .id')
+while read -r plugin; do
+    grep -qxF -- "$plugin" <<<"$installed" && continue
+    repo=$(jq -r --arg m "${plugin#*@}" '.extraKnownMarketplaces[$m].source.repo // empty' "$settings")
+    [ -z "$repo" ] || claude plugin marketplace add "$repo" || ok=1
+    claude plugin install "$plugin" || ok=1
+done < <(jq -r '.enabledPlugins | to_entries[] | select(.value) | .key' "$settings")
+exit "$ok"

@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+# workstation-sync: the daily run that brings this host current. GitHub is the hub, so the two
+# workstations never need a route to each other. It fast-forwards the repos, applies the dotfiles,
+# installs what the manifests list and the host lacks, updates the tools, and pairs Syncthing, then
+# hands off to check-drift. It never removes anything: adopt-or-remove calls stay with the
+# check-drift report. A quiet run says nothing, and a failure raises one normal notification.
+# --status prints the last result.
+set -uo pipefail
+
+dotfiles=${SYNC_DOTFILES:-$HOME/.dotfiles}
+root=${SYNC_ROOT:-$HOME/Projects}
+state=${SYNC_STATE:-$HOME/.local/state/workstation-sync}
+probe=${SYNC_PROBE:-https://github.com/glw907/workstation}
+
+mkdir -p "$state"
+if [ "${1:-}" = --status ]; then
+    cat "$state/result" 2>/dev/null || echo "not run"
+    exit 0
+fi
+
+# A unit starts with no login shell, and these go last so a test's stubs win.
+export PATH="$PATH:$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.local/share/mise/installs/node/lts/bin:/home/linuxbrew/.linuxbrew/bin:/usr/sbin"
+export ANDROID_HOME=$HOME/Android JAVA_HOME=/home/linuxbrew/.linuxbrew/opt/openjdk@17
+export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"
+# A timer has no SSH agent, so an SSH remote fetches over HTTPS.
+export GIT_CONFIG_COUNT=2 GIT_TERMINAL_PROMPT=0
+export GIT_CONFIG_KEY_0=url.https://github.com/.insteadOf GIT_CONFIG_VALUE_0=git@github.com:
+export GIT_CONFIG_KEY_1=url.https://github.com/.insteadOf GIT_CONFIG_VALUE_1=ssh://git@github.com/
+
+failures=()
+fail() { echo "failed: $1" >&2; failures+=("$1"); }
+step() { # name command...
+    local name=$1
+    shift
+    echo "== $name"
+    "$@" || fail "$name"
+}
+read_list() { grep -vE '^[[:space:]]*(#|$)' "$1"; }
+
+if ! timeout 20 git ls-remote "$probe" HEAD >/dev/null 2>&1; then
+    echo "$(date +%F\ %R): skipped, GitHub unreachable" | tee "$state/result"
+    exit 0
+fi
+
+# `claude agents` keeps a session that has exited, with a null status, so only a live one counts.
+live=$(timeout 10 claude agents --json 2>/dev/null | jq -r '.[] | select(.status != null) | .cwd // empty' 2>/dev/null)
+dotfiles_moved=
+
+# The rules match the SessionStart fast-forward: only the default branch, never under a live
+# session, and only a fast-forward. A repo left behind shows in `check-drift --work-only`.
+forward() { # repo
+    local repo=$1 def old behind
+    timeout 60 git -C "$repo" fetch -q origin || { fail "fetch ${repo##*/}"; return; }
+    def=$(git -C "$repo" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)
+    def=${def#origin/}
+    def=${def:-main}
+    behind=$(git -C "$repo" rev-list --count "HEAD..origin/$def" 2>/dev/null) || return
+    [ "$behind" -gt 0 ] || return
+    old=$(git -C "$repo" rev-parse HEAD)
+    if [ "$(git -C "$repo" branch --show-current)" != "$def" ] \
+        || [ -n "$(git -C "$repo" status --porcelain --untracked-files=no)" ] \
+        || grep -qxF -- "$repo" <<<"$live"; then
+        echo "${repo##*/}: $behind behind, left alone"
+        return
+    fi
+    git -C "$repo" merge -q --ff-only "origin/$def" || { fail "fast-forward ${repo##*/}"; return; }
+    echo "${repo##*/}: pulled $behind"
+    [ "$repo" != "$dotfiles" ] || dotfiles_moved=1
+    if [ -d "$repo/node_modules" ] && git -C "$repo" diff --name-only "$old" HEAD | grep -qx package-lock.json; then
+        (cd "$repo" && npm ci >/dev/null) || fail "npm ci ${repo##*/}"
+    fi
+    if git -C "$repo" diff --name-only "$old" HEAD | grep -qx secrets/values.age; then
+        "$repo/scripts/secrets/secret-set.sh" --sync || fail "secret store"
+    fi
+}
+
+forward "$dotfiles"
+for repo in "$root"/*/; do
+    repo=${repo%/}
+    [ -d "$repo/.git" ] && [ ! -L "$repo" ] && forward "$repo"
+done
+
+# A plain stow only adds links. A restow briefly unlinks ~/.claude under any running session, so
+# it waits for a pull that can have removed a file.
+apply_stow() {
+    local flag=-S pkg ok=0
+    [ -z "$dotfiles_moved" ] || flag=-R
+    while read -r pkg; do
+        (cd "$dotfiles" && stow "$flag" "$pkg") || ok=1
+    done < <(read_list "$dotfiles/bluefin/stow-packages.txt")
+    return "$ok"
+}
+
+enable_timers() {
+    local unit timer ok=0
+    systemctl --user daemon-reload || ok=1
+    for unit in "$dotfiles"/upkeep/.config/systemd/user/*.timer "$dotfiles"/systemd/.config/systemd/user/*.timer; do
+        timer=${unit##*/}
+        systemctl --user is-enabled -q "$timer" 2>/dev/null || systemctl --user enable --now "$timer" || ok=1
+    done
+    return "$ok"
+}
+
+step stow apply_stow
+step "claude tooling" claude-tooling-sync apply
+step timers enable_timers
+step install workstation-install "$dotfiles/bluefin"
+step "tool updates" workstation-update
+step syncthing workstation-syncthing
+step drift check-drift-notify
+
+left=$(check-drift --work-only 2>/dev/null | grep -c '^  !')
+if [ "${#failures[@]}" -gt 0 ]; then
+    summary="failed: ${failures[*]}"
+    notify-send --urgency=normal "Workstation sync" \
+        "$summary. See journalctl --user -u workstation-sync." 2>/dev/null || true
+elif [ "$left" -gt 0 ]; then
+    summary="ok, $left repo or file item(s) left to look at"
+    notify-send --urgency=normal "Workstation sync" \
+        "$left item(s) left here. Run check-drift --work-only." 2>/dev/null || true
+else
+    summary=ok
+fi
+echo "$(date +%F\ %R): $summary" | tee "$state/result"
+[ "${#failures[@]}" -eq 0 ]

@@ -4,15 +4,14 @@ set -euo pipefail
 # Workstation maintenance: update tools outside the ujust update flow
 # Usage: workstation-update
 #
-# `ujust update` handles the system image, Flatpaks, and Homebrew together
-# (including Go, which is brewed) and is the preferred path for that tier;
-# run it separately, interactively, since it can prompt for a reboot.
+# uupd handles the system image, Flatpaks, and Homebrew (including Go, which
+# is brewed) on its own timer; `ujust update` runs the same tier by hand.
 #
 # This script covers what ujust update does not: mise-managed runtimes, uv
 # tool installs, kitty (deliberately upstream-installed as a test harness,
 # never brewed or flatpaked), the Android SDK.
 #
-# Run manually; nothing schedules it. After a brew Go bump, poplar's go.mod
+# workstation-sync runs this daily. After a brew Go bump, poplar's go.mod
 # toolchain pin is a deliberate per-repo commit, not this script's job.
 
 GREEN='\033[0;32m'
@@ -27,6 +26,17 @@ section() {
     echo ""
     echo -e "${BOLD}━━━ $1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 }
+
+# ── Claude Code ────────────────────────────────────────────────────────────
+
+# A Homebrew install never updates itself, and uupd skips brew when its hardware check fails.
+section "Claude Code"
+if brew upgrade --cask claude-code@latest; then
+    echo -e "${GREEN}✓ Claude Code current${NC}"
+else
+    echo -e "${RED}✗ Claude Code upgrade failed${NC}"
+    ERRORS+=("claude-code")
+fi
 
 # ── kitty ──────────────────────────────────────────────────────────────────
 
@@ -85,9 +95,8 @@ fi
 
 section "Done"
 if [[ ${#ERRORS[@]} -eq 0 ]]; then
-    echo -e "${GREEN}✓ All updates completed — run 'ujust update' separately for the system image, Flatpaks, and Homebrew${NC}"
-    echo -e "Then: ${BOLD}check-drift${NC} to reconcile the manifests against the live system"
-else
+    echo -e "${GREEN}✓ All updates completed${NC}"
+    else
     echo -e "${RED}✗ Errors in: ${ERRORS[*]}${NC}"
     exit 1
 fi

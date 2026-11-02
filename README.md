@@ -55,7 +55,10 @@ Workers by `scripts/secrets/sync.sh`. Architecture, inventory, and rotation:
 | Command | Purpose |
 |---------|---------|
 | `check-drift` | Reconcile the repo against the live machine: stow state, layered RPMs, Brewfile, flatpaks, uv tools, staged /etc drops, stray local binaries, git drift |
-| `workstation-update` | Update the tiers `ujust update` does not cover: mise, uv tools, kitty, Android SDK. Run `ujust update` itself separately and interactively |
+| `workstation-sync` | Daily run that brings a host current from GitHub and the manifests, then runs check-drift |
+| `workstation-install` | Install what the manifests list and the host lacks, plugins included |
+| `workstation-syncthing` | Pair Syncthing with the other host; share Claude memory and `~/Documents` |
+| `workstation-update` | Update the tiers uupd does not cover: Claude Code, mise, uv tools, kitty, Android SDK. Run `ujust update` itself separately and interactively |
 | `scripts/check.sh` | The repo gate: shell syntax, ruff docstring rules, the test suite, vale fixtures, gitleaks |
 | `check-drift.timer` | Weekly systemd user timer (the `upkeep` package) running check-drift; desktop notification only when drift exists |
 | `decision-review.timer` | Monthly systemd user timer (the `upkeep` package) running `decision-review-notify`, which only raises a notification to start the approval-packet decision review |

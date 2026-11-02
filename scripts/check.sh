@@ -69,6 +69,7 @@ run "claude-pass agent run" bash tests/claude-pass.test.sh
 run "secret-receive --pass and the sudo dialog" bash tests/secret-receive-pass.test.sh
 run "pass-count counts and hashes" bash tests/pass-count.test.sh
 run "check-drift Proton Pass leg" bash tests/check-drift-proton.test.sh
+run "workstation-sync, workstation-syncthing, and check-drift's work leg" bash tests/workstation-sync.test.sh
 run "check-moves draft check" bash tests/check-moves.test.sh
 run "ci-green test" node tests/ci-green.test.mjs
 run "cairn-run-gate vanish handling" bash tests/cairn-run-gate.test.sh

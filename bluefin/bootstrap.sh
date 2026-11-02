@@ -333,6 +333,7 @@ setup_upkeep_timer() {
     # only when the repo and the live machine disagree.
     systemctl --user daemon-reload || return 1
     systemctl --user enable --now check-drift.timer
+    systemctl --user enable --now workstation-sync.timer
     systemctl --user enable --now model-review.timer
     systemctl --user enable --now decision-review.timer
     # Fedora's chromium ships without Widevine; the weekly updater installs and refreshes it.

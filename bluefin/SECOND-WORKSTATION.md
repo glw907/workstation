@@ -463,8 +463,8 @@ the rest unless the step says it is a hard stop.
    `yes | sdkmanager --licenses` and `sdkmanager platform-tools
    "platforms;android-36" "build-tools;37.0.0"` (the newest stable at the
    time). `.bashrc` sets `JAVA_HOME` to Homebrew's keg-only `openjdk@17`,
-   which `sdkmanager` needs. Done on pavilion 2026-10-13. Optionally, pair
-   Syncthing at `http://127.0.0.1:8384`.
+   which `sdkmanager` needs. Done on pavilion 2026-10-13. `workstation-sync` pairs
+   Syncthing.
 8. Shut down fully and power on, so the zram and OOM drops take effect, and
    confirm GDM logs straight in. A cold start also tests the BIOS
    workaround: `journalctl -b -k | grep -c SOD3` should print 0.
@@ -492,6 +492,12 @@ On 2026-10-24, Netflix in Chromium needed two fixes. Fedora's `chromium` ships w
 4. Quit every Chromium window and start Chromium from the dock. `chrome://components` should list "Widevine Content Decryption Module" with a version.
 5. Play a Netflix title. If the picture is black with no sound, `chromium-launch`'s NVIDIA check is too narrow for this laptop: start a session with the `chrome://media-internals` log for the watch-page player.
 6. Run `check-drift` and expect it clean.
+
+On 2026-11-01, `workstation-sync` took over this section's job: its daily timer pulls, applies, and installs on each host. Each host needs one start, and pavilion owes it:
+
+1. Pull `~/.dotfiles`, then run `stow -R bin upkeep` and `systemctl --user enable --now workstation-sync.timer`.
+2. Run `workstation-syncthing`. On a host missing from `bluefin/syncthing-devices.txt`, it prints the line to add. Commit that line to `main` and push. The other host pairs on its next run.
+3. Run `workstation-sync`, then `workstation-sync --status`, and expect `ok`.
 
 ## After pavilion is up
 

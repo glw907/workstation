@@ -48,6 +48,12 @@ without a new sign-in; if it asks, move the `gws-personal` consent screen back t
 thinkpad-x1 owes: pull, `stow -R claude`, `mise install`, `claude-tooling-sync apply`, then the
 `gws` and `clasp` sign-ins in `bluefin-admin.md` "Google Workspace (gws, clasp)".
 
+## Workstation sync
+
+`workstation-sync` keeps each host current on a daily timer (`bluefin-admin.md` "Update cadence and
+rollback"). Pavilion owes its first start, and pairing waits on it: `bluefin/SECOND-WORKSTATION.md`
+"Changes to carry to thinkpad-x1", the 2026-11-01 entry.
+
 ## Open items
 
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not
