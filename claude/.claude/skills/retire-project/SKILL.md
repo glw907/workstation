@@ -31,7 +31,7 @@ Write one age-encrypted file named `<project>-<date>.tar.age`, using the worksta
 
 Uncommitted work in any worktree gets committed or dropped first, since a bundle doesn't carry it.
 Never archive a secret value. Restore the file somewhere scratch: decrypt, clone the bundle, and
-load each SQL export into SQLite. Store it at `~/Documents/retired-projects/` and at
+load each SQL export into SQLite. Store it at `~/Documents/retired-projects/` and at <!-- host-ok -->
 `servers-archive/retired-projects/` in R2, confirming the R2 copy with `rclone check`. Stop on a
 failed or empty export. The file's sha256 goes in the retirement record.
 

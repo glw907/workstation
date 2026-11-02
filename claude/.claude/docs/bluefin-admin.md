@@ -172,6 +172,22 @@ Updates are checked automatically every 6 hours; a fetched system image applies 
 the next reboot, not immediately. This means "did the update work" is answered after
 a reboot, not after `ujust update` returns.
 
+`workstation-sync` runs daily on each host from a `Persistent=true` user timer. GitHub is the hub,
+so the hosts never need a route to each other. It fast-forwards `~/.dotfiles` and each repo in
+`~/Projects` that sits on its default branch, clean, with no live session. It then applies the
+dotfiles, installs what the manifests list and the host lacks (`workstation-install`, GNOME settings and plugins
+included), runs `workstation-update`, pairs Syncthing, and ends with `check-drift`. It never
+removes anything, and `/etc` drops and layered RPMs stay with the `check-drift` report because a
+timer has no sudo. Only a failure notifies; `workstation-sync --status` prints the last result, and
+`journalctl --user -u workstation-sync` holds the log. `check-drift --work-only` lists uncommitted,
+unpushed, and behind repos and any Syncthing conflict.
+
+Syncthing shares `~/Documents` and each project's Claude memory, and nothing else: transcripts are
+plaintext and stay local, and git repos and secrets travel through GitHub. `.stignore` in
+`~/.claude/projects` holds that line. Device IDs live in `bluefin/syncthing-devices.txt`. Syncthing
+renames the older side of a conflict, so `workstation-syncthing` unions any `MEMORY.md` conflict back
+into the index. Other conflict copies wait for a person, and `check-drift` names them.
+
 Rollback playbook:
 
 1. `bootc status` to see the current and previous deployments.
@@ -422,7 +438,7 @@ The Cloud project is `gws-personal`, number 754967083271. Both tools sign in to 
 geoff@907.life through `gws-thinkpad-x1`, its one Desktop OAuth client. The pair lives in the age
 store as `GOOGLE_WORKSPACE_CLI_CLIENT_ID` / `_CLIENT_SECRET`, and `gws` writes it to
 `~/.config/gws/client_secret.json`, which `clasp login --creds` reads. Each tool holds its own
-token: `gws` encrypted in `~/.config/gws/`, `clasp` in plain `~/.clasprc.json`. The consent screen
+token: `gws` encrypted in `~/.config/gws/`, `clasp` in plain `~/.clasprc.json`. The consent screen <!-- host-ok -->
 was published to In production, unverified, on 2026-10-29, so sign-ins should no longer lapse
 after 7 days; check on 2026-11-05 that `gws` still answers without a new sign-in, and move the
 screen back to Testing if it doesn't. A Claude session starts each sign-in in the background and

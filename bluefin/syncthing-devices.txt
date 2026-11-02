@@ -1,0 +1,3 @@
+# Syncthing device IDs, one host per line. workstation-syncthing pairs each host with the others.
+# An ID is not sensitive: https://docs.syncthing.net/users/faq.html
+thinkpad-x1 3ISN5AG-CUXJHZP-OGWEW67-H6FWL22-T26K4DU-HAVXWBS-JOJG5UZ-7OZ3XQN

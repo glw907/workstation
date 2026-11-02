@@ -57,9 +57,6 @@
 - [ ] **#25** pass-core's design step says what a session does after a pass misses its bar `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-19)*
   Read the pass's final artifacts, not the record's table; compare by word count, since live pages are hard-wrapped; dispatch one fact-check agent per artifact against the code with a file:line evidence bar; trace each wrong claim to its source (draft, page, code comment) before designing the next pass. This turned B3c's 0 of 8 into a diagnosis of the acceptance machinery: `~/Projects/initiatives/docs-system/research/2026-10-19-drafter-b3c-draft-review.md`. `claude/.claude/skills/pass-core/SKILL.md`
 
-- [ ] **#24** Add a `workstation-sync` script that brings a machine current `#feature` `#workstation` *(2026-10-17)*
-  The thinkpad-x1 sync on 2026-10-17 was all mechanical steps: fast-forward `~/.dotfiles` and its tool repos (approval-queue, initiatives), `claude-tooling-sync apply`, `stow -R` each package, enable the timers `bootstrap.sh` enables, and install what the manifests list but the machine lacks. Script those, end with `check-drift`, and add a runbook line that points at it; adopt-or-remove calls stay with the `check-drift` report. Close three gaps that sync exposed. `check-drift` watches only the initiatives clone, so the approval-queue checkout sat 19 commits behind with no `packet` command. It skips `/etc/firefox/policies/policies.json` as "unreadable without sudo", which hid a policy never installed on this laptop. The ratchet's dead-reference check resolves paths on the live filesystem, so `scripts/check.sh` failed on main on a machine missing that policy.
-
 - [ ] **#23** Vale lints no file of `docs/voice/` `#improvement` `#workstation` `#initiative:approval-packets` *(2026-10-17)*
   `vale claude/.claude/docs/voice/approval-brief.md` scopes the register out (0 files linted), so only the `tellgrader` register gate reads it. Decide whether the register belongs in `.vale.ini`'s scope.
 
@@ -97,6 +94,9 @@
   **Release the lid-switch hold when a session ends** (PR #34 triage, 2026-10-12). Neither an executor nor a conductor releases a running `systemd-inhibit ... sleep NNN` lid hold before it ends, so the hold can outlive its session until NNN runs out. Add the release step to `~/.claude/docs/unattended-work-guards.md` and to the ending of `pass-core`'s "Execute" and "Conductor".
 
 ## Low
+
+- [ ] **#47** Require a prior-art and vendor-guidance check at the design step `#improvement` `#workstation` *(2026-11-01)*
+  The workstation-sync design reached approval before anyone checked published practice or Anthropic's docs, and Geoff had to ask for both mid-build (2026-11-01). That check caught a real data-loss case in `MEMORY.md` and two gaps. Add the check to the `pass-core` design step or `brainstorming`, so a design names what it took from each source. `claude/.claude/skills/pass-core/SKILL.md`
 
 - [x] **#32** Have `ci-green` report `action_required` as held, not red `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-24)*
   A run triggered by a bot-pushed commit (cairn-cms's baseline regen pushes as `github-actions[bot]`) sits in `action_required`, and `ci-green` reports it as red. Name it held and print the release command, `gh api -X POST repos/<owner>/<repo>/actions/runs/<id>/approve`. Moved from cairn-cms #52. Record B3-11.
@@ -143,6 +143,8 @@
   **Three `internal/posthook` tests fail when the dotfiles checkout sits under `/tmp`** (`TestRunFlagsChangedLineOnly`, `TestRunSkipsUngovernedPaths`, `TestWholeDocFindingsOnlyOnWrite` return no advisory), so the gate goes red in a scratchpad worktree while the same tests pass in `~/.dotfiles` and in `.claude/worktrees/`. The hook likely treats a `/tmp` path as ungoverned. Make the tests use a path independent of where the checkout lives.
 
 ## Done
+- [x] **#24** Add a `workstation-sync` script that brings a machine current `#feature` `#workstation` *(2026-10-17 → 2026-11-01)*
+  `workstation-sync` runs daily from a user timer on each host; `check-drift --work-only` watches every checkout, approval-queue included. The `/etc/firefox` gap went with Firefox. A path only one host holds carries a `host-ok` marker, which clears the ratchet on the other.
 - [x] **#41** Clear drafter from thinkpad-x1 after its next pull `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-25 → 2026-10-31)*
   thinkpad-x1 may carry `~/.local/bin/drafter`, `~/.config/drafter/`, `~/.local/state/drafter/`, `~/.local/share/drafter/`, and links into a drafter clone. Nothing run on pavilion reaches it. After its next `~/.dotfiles` pull, `check-drift` there lists `drafter` as an unlisted bin: remove those paths, the clone, and the `drafter-page-hook` and `docs-page-chain.js` links.
 

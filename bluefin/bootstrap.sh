@@ -265,6 +265,9 @@ setup_brew() {
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" || return 1
     fi
     eval "$(brew shellenv)" || return 1
+    # Homebrew refuses a third-party formula until it is trusted, one host at a time.
+    brew tap stalwartlabs/tap || return 1
+    brew trust --formula stalwartlabs/tap/vandelay || return 1
     brew bundle --file="$BLUEFIN_DIR/Brewfile"
 }
 
@@ -333,6 +336,7 @@ setup_upkeep_timer() {
     # only when the repo and the live machine disagree.
     systemctl --user daemon-reload || return 1
     systemctl --user enable --now check-drift.timer
+    systemctl --user enable --now workstation-sync.timer
     systemctl --user enable --now model-review.timer
     systemctl --user enable --now decision-review.timer
     # Fedora's chromium ships without Widevine; the weekly updater installs and refreshes it.

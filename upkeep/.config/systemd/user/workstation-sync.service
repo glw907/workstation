@@ -1,0 +1,7 @@
+[Unit]
+Description=Bring this workstation current with GitHub and the manifests
+
+[Service]
+Type=oneshot
+TimeoutStartSec=1h
+ExecStart=%h/.local/bin/workstation-sync
