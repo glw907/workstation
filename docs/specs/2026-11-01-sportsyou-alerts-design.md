@@ -16,7 +16,7 @@ sportsYou has no public API and reaches you only by email, and you have no phone
 ### If you approve
 
 1. A pass creates the repo, builds and tests the program and theme, and installs them on this laptop.
-2. The pass creates the mail password, stores it in the age store, and adds the install to the manifests, so pavilion gets it from the daily sync.
+2. The mail password goes in the age store, and the launcher, the service unit, the desktop entry, and the icons land in this repo, so pavilion gets them and the password from the daily sync. The program itself reaches pavilion by one by-hand clone of `glw907/sportsyou-notify` and `make install`, because the program has a repo of its own and no manifest installs it.
 3. You run one test with a real post and a real chat, and look over the theme.
 
 ### Worth knowing
@@ -62,7 +62,7 @@ The program is Go, the house default for a standalone repo tool, using a pure Go
 
 ### Hosts
 
-thinkpad-x1 gets the service in this pass. pavilion gets it from `workstation-sync`, and needs its first sign-in to the sportsYou window. Both hosts read the same mailbox, so reading an item on one clears it on the other.
+thinkpad-x1 gets the service in this pass. pavilion gets the launcher, unit, icons, and password from `workstation-sync`. It then takes one by-hand step, a clone of `glw907/sportsyou-notify` and `make install`, listed in that repo's README, and it needs its first sign-in to the sportsYou window. Both hosts read the same mailbox, so reading an item on one clears it on the other.
 
 ### Standing answers
 

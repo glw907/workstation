@@ -1,0 +1,17 @@
+[Unit]
+Description=sportsYou unread mail indicator in the top bar
+Documentation=https://github.com/glw907/sportsyou-notify
+After=graphical-session.target network-online.target
+PartOf=graphical-session.target
+Wants=network-online.target
+
+[Service]
+# The indicator opens links through the sportsyou launcher in ~/.local/bin, and
+# a user service's default PATH lacks it.
+Environment=PATH=%h/.local/bin:/usr/bin
+ExecStart=%h/.local/bin/sportsyou-notify
+Restart=always
+RestartSec=20
+
+[Install]
+WantedBy=graphical-session.target

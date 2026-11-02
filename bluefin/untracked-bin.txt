@@ -10,4 +10,5 @@ odin4
 perfspike
 poplar
 samfusdl
+sportsyou-notify
 tellgrader

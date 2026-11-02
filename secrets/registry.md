@@ -154,6 +154,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | STALWART_ADMIN_PASSWORD | ✓ | — | — | — |
 | STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2 | ✓ | — | — | — |
 | STALWART_PASSWORD_PHONEBOOK | ✓ | — | — | — |
+| SPORTSYOU_NOTIFY_JMAP_PASSWORD | ✓ | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        |
@@ -403,6 +404,12 @@ tmpfs cache; no password manager holds it for scripts.
 - **Used by**: the servers repo's `roles/stalwart` (the plan sets the account's password, and `stalwart-apply` signs in with it to name the book and set its grants) and, as `WARD_PASSWORD`, the phonebook Worker, which writes the book's cards.
 - **Generated 2026-10-25** on pavilion (40 random alphanumerics), in the ward address book pass (T3).
 - **Rotate**: ward first (store a new value, re-render ward's secrets, and apply the Stalwart role), then the phonebook Worker's `WARD_PASSWORD`, which also clears the Worker's sign-in stop.
+
+### SPORTSYOU_NOTIFY_JMAP_PASSWORD
+- **Grants**: a Stalwart app password on Geoff's account with seven permissions: `authenticate`, `jmapEmailGet`, `jmapEmailQuery`, `jmapEmailChanges`, `jmapEmailUpdate`, `jmapMailboxGet`, and `jmapMailboxQuery`. It reads and updates the whole mailbox, because Stalwart scopes a password by permission and never by folder. It cannot send mail or delete it permanently. The program touches only the SportsYou folder.
+- **Used by**: `sportsyou-notify` (repo `glw907/sportsyou-notify`), the top-bar indicator service and its Chromium native messaging host, on each workstation. It reads the value from `~/.local/secrets`.
+- **Generated 2026-11-01** on thinkpad-x1 by `scripts/create-app-password.sh` in that repo, in its pass 1. Geoff ran it, because a session's permission layer refuses to create a credential with his login password.
+- **Rotate**: rerun `scripts/create-app-password.sh`, which removes the earlier copy and stores the new value, then run `secret-set.sh --sync` on each host and restart the service.
 
 ### HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD
 - **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token writes only its own server's row. They replaced the media and mail keys, which the rename pass retired.

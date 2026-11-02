@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Open sportsYou in its own window, apart from the daily browser
-# Usage: sportsyou
+# Usage: sportsyou [URL]
 #
 # The dedicated profile folder makes this a separate Chromium process, so
 # quitting the daily browser leaves this window running. A first run seeds the
@@ -10,8 +10,22 @@ set -euo pipefail
 #
 # The site sizes its page to the full window and ignores a classic scrollbar,
 # which then covers the right edge. Overlay scrollbars take up no width.
+#
+# The window loads the sportsyou-notify extension (the theme, read-marking, and
+# the link hand-off) when it is installed. A URL goes to the running window
+# through the extension's native host, so the window keeps its class and its
+# dock icon; a --app=URL window would get a new class. With no window running,
+# the window starts at the sign-in page and then takes the URL. A window that
+# was already open without the extension ignores --load-extension on a second
+# launch: quit it and run sportsyou again.
 
 profile="${XDG_DATA_HOME:-$HOME/.local/share}/sportsyou-chromium"
+extension="$profile/extension"
+url="${1:-}"
+
+if [[ -n $url ]] && sportsyou-notify open "$url" 2>/dev/null; then
+    exit 0
+fi
 
 if [[ ! -e "$profile/Default/Preferences" ]]; then
     mkdir -p "$profile/Default"
@@ -20,10 +34,26 @@ if [[ ! -e "$profile/Default/Preferences" ]]; then
 JSON
 fi
 
-exec chromium-launch \
-    --user-data-dir="$profile" \
-    --no-first-run \
-    --no-default-browser-check \
-    --enable-features=OverlayScrollbar \
-    --app=https://sportsyou.com/login/ \
-    "$@"
+args=(
+    --user-data-dir="$profile"
+    --no-first-run
+    --no-default-browser-check
+    --enable-features=OverlayScrollbar
+    --app=https://sportsyou.com/login/
+)
+if [[ -f "$extension/manifest.json" ]]; then
+    args+=(--disable-extensions-except="$extension" --load-extension="$extension")
+fi
+
+if [[ -z $url ]]; then
+    exec chromium-launch "${args[@]}"
+fi
+
+chromium-launch "${args[@]}" &
+for _ in $(seq 60); do
+    sleep 0.5
+    if sportsyou-notify open "$url" 2>/dev/null; then
+        exit 0
+    fi
+done
+echo "sportsyou: the window opened but did not take the link: $url" >&2
