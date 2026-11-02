@@ -243,8 +243,8 @@ tool or one plain `printf` in its own Bash call, with three lines: `task=<id>`,
 `start=<epoch seconds>`, `estimate=<minutes>`. The global git excludes (`bluefin/git-excludes`) hide
 the file, so it never changes the gate fingerprint. The git dir is no longer the home: a
 worktree-isolated session's guard refuses the Write tool there and many Bash forms, and the hook
-honors `pass-task-clock` in it only for a run already under way. The session removes the file at the task's end,
-and after a pair returns once it has checked the pair's overrun. The `claude-clock-stop` hook
+honors `pass-task-clock` in it only for a run already under way. The session removes the file at
+the task's end, and after a pair returns once it has checked the pair's overrun. The `claude-clock-stop` hook
 returns a stop line past twice the estimate. The session then writes STATUS, runs
 `notify-send -u normal`, and waits for Geoff (one attended event, not a failure). Under a
 conductor, the executor writes STATUS and waits, and the conductor asks per "Judgment calls". A resume rewrites
@@ -265,7 +265,7 @@ executor PR, per `approval-packet`. It merges and pulls the checkout per "Close"
 the next committed prompt from the main checkout after the "Execute" pre-launch checks. For a pass
 it owns, the conductor is the session that hands the packet over in "Close", so the executor's prompt
 ends at PR-ready and never runs `approval-queue`. The `claude-approval-queue-reminder` hook fires on
-every `gh pr create`, since its input can't show that a conductor owns the hand-over, so such an
+every `gh pr create` that opens a PR, since its input can't show that a conductor owns the hand-over, so such an
 executor passes over the reminder. The conductor brings Geoff only packets and product
 or priority calls.
 

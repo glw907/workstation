@@ -11,7 +11,7 @@ that bring a fresh Bluefin install to a working state.
 
 | Path | Contents |
 |------|----------|
-| `bluefin/` | Machine config: `Brewfile`, `flatpaks.txt`, `layered-packages.txt`, staged `/etc` drops, `bootstrap.sh`, `stow-packages.txt` |
+| `bluefin/` | Machine config: `Brewfile`, `flatpaks.txt`, `layered-packages.txt`, staged `/etc` drops, `bootstrap.sh`, `stow-packages.txt`, `git-excludes` |
 | `scripts/` | Repo-maintenance scripts, including the secrets sync pipeline |
 | `secrets/` | Age-encrypted secret store and rotation registry |
 | `docs/` | Repo documentation, including this file's companions |

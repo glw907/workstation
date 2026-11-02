@@ -82,6 +82,8 @@ rm -f "$old_clock"
 excludes="$(pwd)/bluefin/git-excludes"
 git -C "$root/wt" -c core.excludesFile="$excludes" check-ignore -q .pass-task-clock \
   || { echo "FAIL: bluefin/git-excludes does not ignore .pass-task-clock"; fail=1; }
+assert_eq "$(git config --file git/.gitconfig core.excludesFile)" "~/.dotfiles/bluefin/git-excludes" \
+  "the tracked gitconfig names the excludes file"
 
 [ "$fail" -eq 0 ] && echo "claude-clock-stop: OK" || echo "claude-clock-stop: FAILED"
 exit "$fail"
