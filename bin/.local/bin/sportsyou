@@ -7,6 +7,9 @@ set -euo pipefail
 # The dedicated profile folder makes this a separate Chromium process, so
 # quitting the daily browser leaves this window running. A first run seeds the
 # profile with notifications allowed, so the site's alerts need no prompt.
+#
+# The site sizes its page to the full window and ignores a classic scrollbar,
+# which then covers the right edge. Overlay scrollbars take up no width.
 
 profile="${XDG_DATA_HOME:-$HOME/.local/share}/sportsyou-chromium"
 
@@ -21,5 +24,6 @@ exec chromium-launch \
     --user-data-dir="$profile" \
     --no-first-run \
     --no-default-browser-check \
+    --enable-features=OverlayScrollbar \
     --app=https://sportsyou.com/login/ \
     "$@"
