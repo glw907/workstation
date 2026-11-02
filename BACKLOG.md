@@ -9,6 +9,8 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
+- [ ] **#48** Catch Do Not Disturb drift on a workstation `#bug` `#workstation` *(2026-11-01)*
+  Do Not Disturb is off on thinkpad-x1 (`org.gnome.desktop.notifications show-banners` is true), against the calm desktop rule, and `check-drift` doesn't report it. Turn it on and add the key to what `check-drift` reconciles. Found in the sportsyou-notify design.
 - [ ] **#46** Add Email Sending to `retire-project`'s teardown `#improvement` `#workstation` *(2026-11-01)*
   Found retiring xcathletes-org. Step 4 names Email Routing, but a domain onboarded to Email Sending keeps locked `cf-bounce` records that answer "managed by Email Routing" even with routing off. Disabling the domain under Email Sending removed them. Both are dashboard steps, so the inventory and the packet should name them up front.
 - [ ] **#45** Move the Proton Pass procedure into a workstation skill `#improvement` `#workstation` *(2026-10-28)*
