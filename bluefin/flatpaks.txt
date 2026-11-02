@@ -13,7 +13,6 @@ com.discordapp.Discord
 com.fastmail.Fastmail
 com.plexamp.Plexamp
 im.dino.Dino
-io.github.janbar.noson
 org.gajim.Gajim
 io.github.screwys.Rufin
 md.obsidian.Obsidian

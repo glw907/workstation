@@ -389,7 +389,7 @@ the rest unless the step says it is a hard stop.
    machines run artwork with the same numbering.
 
    The dock needs no step here. `setup` applies it from `gnome-settings.txt`:
-   Files, Terminal, Chromium, Hylki, Discord, noson, Rufin, Steam,
+   Files, Terminal, Chromium, Hylki, Discord, Rufin, Steam,
    then Trash. Before that line existed, pavilion kept Bluefin's
    stock dock, including the installer and a dead link to the removed
    Thunderbird ESR (Thunderbird is retired). If an icon is missing, check that its app installed and
