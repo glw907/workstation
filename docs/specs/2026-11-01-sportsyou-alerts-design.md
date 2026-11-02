@@ -29,7 +29,8 @@ The menu lists unread items, newest first, up to ten, with times. An "and N more
 
 - Clicking an item opens its spot and marks that email read. A post opens its post page, an event its calendar page, and anything else the best link in the email. A removed event opens the calendar.
 - Every unread email in the folder counts, login warnings included.
-- Marking an email read in Hylki clears it here too. Reading in the web app can't, because the program sees only the mail, so Mark All Read covers that case.
+- Marking an email read in Hylki clears it here too.
+- Opening a post's or event's own page in the web app, by any route, marks its email read. Reading in the main feed changes no page, so the email stays unread and Mark All Read covers that case.
 - The icon changes when the connection to ward fails, so a broken service never looks like a quiet day.
 - At setup, emails older than one day are marked read, so the count starts near zero.
 
@@ -47,6 +48,10 @@ Real links opened correctly on a signed-in copy of the window's profile on 2026-
 
 A small local extension, loaded only in the sportsYou profile, injects one stylesheet. It uses `prefers-color-scheme` for light and dark. It changes only what your own screen shows, and it may need a touch-up when sportsYou changes its design. The pass proves first that Chromium 156 still loads it and that the page follows the GNOME setting. If the flag no longer loads it, the run installs the extension through the profile's developer mode instead.
 
+### Clearing from the web app
+
+The theme extension also watches the window's address. When it shows a post or event page, it sends the post or event ID to a native messaging host, a small command of the same program that Chromium starts for this extension alone. The host finds the unread email in the SportsYou folder whose link carries that ID, marks it read, and exits, and the service's event stream then updates the count. This opens no network port. The extension doesn't watch scrolling, because that would depend on sportsYou's page structure, and a post scrolling past isn't a post read.
+
 ### Where it runs
 
 It runs on the workstations, because a top-bar icon can only live on the desktop. Cloudflare, orpheus, and ward gain nothing, and ward serves one more JMAP connection per host. If ward is down, the icon shows it and mail is unaffected. There's no state to back up. The password lives in the age store and reaches each host through `sync.sh --local`.
@@ -61,7 +66,7 @@ thinkpad-x1 gets the service in this pass. pavilion gets it from `workstation-sy
 
 ### Standing answers
 
-The run decides these without you, within an estimate of 150 path minutes. A sportsYou email the parser doesn't recognize shows its subject and opens its best link. If a deep link fails in the window, the item opens the home page and the failure goes in the PR's `## Decisions`. If the update permissions refuse the event stream, the run adds the fewest permissions that make it work and lists them there. It stops only if the program would need permission to send or destroy mail.
+The run decides these without you, within an estimate of 180 path minutes. A sportsYou email the parser doesn't recognize shows its subject and opens its best link. If a deep link fails in the window, the item opens the home page and the failure goes in the PR's `## Decisions`. If the update permissions refuse the event stream, the run adds the fewest permissions that make it work and lists them there. If the web app changes address without a page load, the extension listens for that change. If a page's ID can't be matched to an email, the email stays unread and the run lists the case. It stops only if the program would need permission to send or destroy mail.
 
 ### Backlog sweep
 
