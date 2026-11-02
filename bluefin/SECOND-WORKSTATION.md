@@ -486,12 +486,7 @@ Pavilion picked up these changes after setup. Each needs a step on thinkpad-x1, 
 
 On 2026-10-24, Netflix in Chromium needed two fixes. Fedora's `chromium` ships without Google's Widevine module, so `update-widevine` installs it from the Chrome stable RPM and a weekly timer keeps it current (workstation #144). On pavilion, Widevine video then played black under Wayland on the NVIDIA card, a Chromium 151+ regression. `chromium-launch` adds `--ozone-platform=x11` on NVIDIA only, so thinkpad-x1's Intel graphics stays on Wayland.
 
-1. Pull `~/.dotfiles`, then run `stow -R bin upkeep applications` and `claude-tooling-sync apply`.
-2. Run `rpm -q chromium` and confirm Fedora's package is installed. `update-widevine` assumes it.
-3. Run `update-widevine`, then `systemctl --user daemon-reload` and `systemctl --user enable --now widevine-update.timer`.
-4. Quit every Chromium window and start Chromium from the dock. `chrome://components` should list "Widevine Content Decryption Module" with a version.
-5. Play a Netflix title. If the picture is black with no sound, `chromium-launch`'s NVIDIA check is too narrow for this laptop: start a session with the `chrome://media-internals` log for the watch-page player.
-6. Run `check-drift` and expect it clean.
+thinkpad-x1 finished these on 2026-11-02: Geoff confirmed Netflix plays there.
 
 On 2026-11-01, `workstation-sync` took over this section's job: its daily timer pulls, applies, and installs on each host. Each host needs one start, and pavilion owes it:
 
