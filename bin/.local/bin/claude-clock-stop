@@ -2,10 +2,13 @@
 # claude-clock-stop: Claude Code PostToolUse hook that stops a pass task running past twice its
 # estimate (lean pass process spec, Execution item 6; Geoff's ruling 13).
 #
-# The session writes pass-task-clock in its pass worktree's git dir (outside the work tree, so
-# the gate fingerprint holds) at each task start: three lines, task=<id>, start=<epoch seconds>,
-# estimate=<minutes>. The hook resolves that git dir from the hook input's cwd, which follows a
-# `cd` and is the worktree root after EnterWorktree. Once elapsed time passes twice the
+# The session writes .pass-task-clock at its pass worktree's root at each task start: three lines,
+# task=<id>, start=<epoch seconds>, estimate=<minutes>. The name sits in the global git excludes
+# (bluefin/git-excludes), so the gate fingerprint holds. The worktree root is the home because a
+# worktree-isolated session's guard always refuses the Write tool under .git and refuses many Bash
+# forms. A pass-task-clock in the git dir, the old home, still counts for a run already under way.
+# The hook resolves both from the hook input's cwd, which follows a `cd` and is the worktree root
+# after EnterWorktree, so a cwd below the root finds the file too. Once elapsed time passes twice the
 # estimate, it prints one JSON object whose additionalContext tells the session to write STATUS,
 # notify, and wait. Every other case prints nothing: no file, under the threshold, a malformed
 # file, a non-git cwd, a missing tool. It runs after every tool call, so it never exits non-zero.
@@ -13,8 +16,9 @@
   input=$(cat)
   cwd=$(jq -r '.cwd // empty' <<<"$input" 2>/dev/null)
   [ -n "$cwd" ] || exit 0
-  gitdir=$(git -C "$cwd" rev-parse --absolute-git-dir 2>/dev/null) || exit 0
-  file="$gitdir/pass-task-clock"
+  root=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null) || exit 0
+  file="$root/.pass-task-clock"
+  [ -f "$file" ] || file="$(git -C "$cwd" rev-parse --absolute-git-dir 2>/dev/null)/pass-task-clock"
   [ -f "$file" ] || exit 0
   task=$(sed -n 's/^task=//p' "$file" | head -n 1)
   start=$(sed -n 's/^start=//p' "$file" | head -n 1)

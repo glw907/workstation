@@ -1,6 +1,8 @@
 [user]
 	name = glw907
 	email = geoff-login@907.life
+[core]
+	excludesFile = ~/.dotfiles/bluefin/git-excludes
 [credential "https://github.com"]
 	helper = 
 	helper = !gh auth git-credential

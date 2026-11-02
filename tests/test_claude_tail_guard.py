@@ -71,6 +71,7 @@ def test_denied(command):
     result = run_hook({"tool_input": {"command": command}})
     assert result.returncode == 2
     assert "redirect" in result.stderr
+    assert "nothing in this Bash call ran" in result.stderr
 
 
 @pytest.mark.parametrize("command", ALLOWED)

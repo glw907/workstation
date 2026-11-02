@@ -45,6 +45,7 @@ to `restore`.
 | `flatpaks.txt` | Flatpak app IDs to install |
 | `Brewfile` | CLI tool formulae for `brew bundle` |
 | `stow-packages.txt` | The Stow packages this repo manages, single source of truth |
+| `git-excludes` | Global git excludes, named by `core.excludesFile` in `git/.gitconfig`; live on pull, never stowed |
 | `etc/` | Captured `/etc` drops: chromium policies, android udev rule |
 | `devenv-research.md` | Dev-environment tiering research (devcontainers, distrobox); kept here because site-repo backlogs point at this path |
 
