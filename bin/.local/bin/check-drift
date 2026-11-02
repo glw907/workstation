@@ -121,7 +121,7 @@ check_claude_agent() {
     fi
     case "$status" in
         path=proton*) ok "Claude's agent: token in the keyring (claude-pass)" ;;
-        path=none*) warn "Claude's agent: none on this host yet (Geoff creates <host>-claude; bluefin/THINKPAD-PROTON.md)" ;;
+        path=none*) warn "Claude's agent: none on this host yet (Geoff creates <host>-claude; bluefin-admin.md "Secrets")" ;;
         *) warn "unexpected claude-pass --status output" ;;
     esac
 }
