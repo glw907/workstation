@@ -164,7 +164,7 @@ mismatch is a hard stop: never decrypt an unverified blob.
    same session he creates Claude's own agent with `pass-cli agent create
    pavilion-claude --expiration 3m` and grants it each vault Claude may edit
    with `pass-cli agent access grant pavilion-claude --vault-name V --role
-   editor` (`Servers emergency` and `Workstation` to start). He stores its
+   editor` (`Household IT` and `Workstation` to start). He stores its
    token with `secret-tool store --label "Proton Pass claude agent" service
    proton-pass-agent-claude host pavilion`. Claude then reaches Proton Pass
    only through `claude-pass` (Geoff, 2026-10-20).

@@ -58,8 +58,5 @@ rollback"). Pavilion owes its first start, and pairing waits on it: `bluefin/SEC
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not
 done" go to `BACKLOG.md` through `standards:log-issue`.
 
-thinkpad-x1 still owes the Proton Pass move that pavilion finished on 2026-10-19. A session there
-follows `bluefin/THINKPAD-PROTON.md` with Geoff at the keyboard.
-Its step 3 now includes Claude's own agent, `thinkpad-claude`. Pavilion's `pavilion-claude` agent
-(created 2026-10-20, three-month expiry) has no expiry entry, so `check-drift` will not warn
-before it lapses around 2027-01-20.
+Neither `<host>-claude` agent has an expiry entry, so `check-drift` will not warn before
+`pavilion-claude` lapses around 2027-01-20 or `thinkpad-claude` around 2027-02-01.

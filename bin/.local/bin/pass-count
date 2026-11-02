@@ -3,7 +3,7 @@
 # prints counts and hashes, never a value, so Claude can read the output without reading a vault.
 #
 #   pass-count            # one line per vault and category: "<vault>TAB<category>TAB<count>"
-#   pass-count --hashes   # one line per item of "Servers emergency": "<title>TAB<sha256>", the
+#   pass-count --hashes   # one line per item of "Household IT": "<title>TAB<sha256>", the
 #                         #   hash of the item's password (a login) or text (a note)
 #
 # It logs in on the web into a throwaway tmpfs session, never the default one, and logs out and
@@ -13,7 +13,7 @@
 set -euo pipefail
 umask 077
 
-EMERGENCY="${PASS_COUNT_EMERGENCY:-Servers emergency}"
+EMERGENCY="${PASS_COUNT_EMERGENCY:-Household IT}"
 MODE="counts"
 case "${1:-}" in
     "") ;;

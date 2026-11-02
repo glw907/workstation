@@ -344,19 +344,18 @@ never-commit rules and a pointer here.
   `$XDG_RUNTIME_DIR/pass-agent.*` session, runs the one command with an audit reason
   (`CLAUDE_PASS_REASON`, or a default naming the host and subcommand), then logs out and
   removes the directory. A value goes in on stdin (`claude-pass item create login
-  --vault-name "Servers emergency" --from-template -`), never on the command line. A secret
+  --vault-name "Household IT" --from-template -`), never on the command line. A secret
   read with `item view` goes to a file or a pipe, never the transcript. `claude-pass
   --status` prints `path=proton|none`, and `check-drift` reports it without failing.
   To grant another vault, Geoff runs `pass-cli agent access grant <host>-claude
   --vault-name V --role editor` in a throwaway session. The agent expires three months
   after creation (`pass-cli agent create <host>-claude --expiration 3m`; pavilion's was
-  created 2026-10-20). To renew it, Geoff creates a fresh token and stores it with
+  created 2026-10-20, thinkpad-x1's 2026-11-01). To renew it, Geoff creates a fresh token and stores it with
   `secret-tool store --label "Proton Pass claude agent" service proton-pass-agent-claude
   host <host>`. No expiry is recorded, so `check-drift` cannot warn ahead of it.
   Proton throttles the agent's logins after about four quick calls, and `claude-pass` then
   reports "agent login failed (token expired or revoked?)" for 5 to 25 minutes while the token
   is fine, so a batch spaces its calls about 150 seconds apart (2026-10-25).
-  thinkpad-x1 still owes its `thinkpad-claude` agent (`bluefin/THINKPAD-PROTON.md`).
 - **Proton Pass (Pass W, 2026-10-18): Claude never calls bare `pass-cli`**, which would act
   as Geoff's own login and reach every vault. `claude-block-pass` denies `pass-cli`,
   `secret-tool lookup`, `keyctl print|pipe|read`, and any `pass-ws.*`, `pass-recv.*`,
@@ -374,7 +373,7 @@ never-commit rules and a pointer here.
   hand from Proton Pass, never through the agent token. Passkeys route through the browser
   for Geoff's touch, never read directly.
   `secret-receive NAME --pass REF` takes a value from Geoff's own Proton login, and
-  `pass-count` prints his per-vault counts (`--hashes` for `Servers emergency`).
+  `pass-count` prints his per-vault counts (`--hashes` for `Household IT`).
   `claude-sudo-setup` takes the sudo password from a dialog; sudo never reads a password
   manager. 1Password was removed from the workstations on 2026-10-19 (Geoff, 2026-10-18).
 - **Installing a NEW long-lived secret, every project (Geoff, 2026-07-13): the

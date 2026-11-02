@@ -117,8 +117,8 @@ ALLOWED = [
     "ssh-add -l",
     # claude-pass is Claude's route into Proton Pass (Geoff, 2026-10-20).
     "claude-pass --status",
-    'claude-pass item list --vault-name "Servers emergency"',
-    'claude-pass item create login --vault-name "Servers emergency" --from-template - < /tmp/x.json',
+    'claude-pass item list --vault-name "Household IT"',
+    'claude-pass item create login --vault-name "Household IT" --from-template - < /tmp/x.json',
     "printf '%s' \"$tmpl\" | claude-pass item create login --vault-name Workstation --from-template -",
     "CLAUDE_PASS_REASON='rotate a key' claude-pass item view pass://Workstation/x/password > /tmp/out",
     "bash tests/claude-pass.test.sh",

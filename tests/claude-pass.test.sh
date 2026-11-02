@@ -57,9 +57,9 @@ reset; echo "$TOKEN" > "$root/token"
 out=$(printf 'name: x\npassword: s3cret\n' | env CLAUDE_PASS_REASON="store a test login" \
   HOME="$root/home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" WS_HOST=testhost \
   FAKE_PASS_LOG="$root/pass.log" FAKE_PASS_FIXTURE="$root/vault" \
-  bash "$HELPER" item create login --vault-name "Servers emergency" --from-template - 2>&1)
+  bash "$HELPER" item create login --vault-name "Household IT" --from-template - 2>&1)
 assert_eq "$?" "0" "item create exits 0 ($out)"
-grep -q '^item create login --vault-name Servers emergency --from-template - .*reason=store a test login' "$root/pass.log" || { echo "FAIL: item create did not carry the given reason: $(cat "$root/pass.log")"; fail=1; }
+grep -q '^item create login --vault-name Household IT --from-template - .*reason=store a test login' "$root/pass.log" || { echo "FAIL: item create did not carry the given reason: $(cat "$root/pass.log")"; fail=1; }
 assert_eq "$(cat "$root/pass.log.stdin" 2>/dev/null)" "$(printf 'name: x\npassword: s3cret')" "stdin reached item create"
 grep -q 's3cret' "$root/pass.log" && { echo "FAIL: the value from stdin landed in an argument"; fail=1; }
 assert_eq "$(sessions_left)" "0" "item create leaves no session directory"
