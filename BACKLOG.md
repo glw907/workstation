@@ -9,6 +9,8 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
+- [ ] **#50** Let an Approval Queue decision reach the auto-mode classifier `#bug` `#workstation` *(2026-11-02)*
+  On 2026-11-02 the classifier refused `gh pr merge 197 --match-head-commit` as "Merge Without Review" after Geoff approved the PR in the queue, and passed once he typed the instruction. It sees only typed messages, so a queue approval is invisible to it; PR glw907/sportsyou-notify#2 merged under the same command, so the refusal isn't consistent. Find a path that doesn't need a typed repeat.
 - [ ] **#49** Stop inline comments and quoted operators fooling `claude-merge-guard` `#bug` `#workstation` *(2026-11-01)*
   Its `stages` copies the two flaws the launch guard review found: `shlex` keeps its `#` commenter, so a comment on the line before `gh pr merge` can merge the stages, and quoted text can pass as an operator. Found by reading only. `claude-launch-guard`'s `mask` is the fix to reuse.
 - [ ] **#48** Catch Do Not Disturb drift on a workstation `#bug` `#workstation` *(2026-11-01)*
