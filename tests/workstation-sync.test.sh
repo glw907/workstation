@@ -21,7 +21,7 @@ stubs=$tmp/stubs
 calls=$tmp/calls
 mkdir -p "$stubs"
 for cmd in stow claude-tooling-sync workstation-install workstation-update \
-    workstation-syncthing check-drift-notify npm; do
+    workstation-syncthing npm; do
     printf '#!/bin/sh\necho "%s $*" >>"%s"\n' "$cmd" "$calls" >"$stubs/$cmd"
 done
 cat >"$stubs/systemctl" <<STUB
@@ -39,6 +39,7 @@ cat "$tmp/agents.json"
 STUB
 cat >"$stubs/check-drift" <<STUB
 #!/bin/sh
+echo "check-drift \$*" >>"$calls"
 cat "$tmp/work.txt"
 STUB
 chmod +x "$stubs"/*
@@ -58,11 +59,12 @@ dot=$tmp/dot
 root=$tmp/projects
 mkdir "$root"
 git clone -q "$origin" "$dot"
-for name in plain dirty branch live dead; do git clone -q "$origin" "$root/$name"; done
+for name in plain dirty branch live dead sub worktree; do git clone -q "$origin" "$root/$name"; done
 git -C "$root/branch" switch -q -c pass
 touch "$root/dirty/edit" && git -C "$root/dirty" add edit
 echo '[]' >"$tmp/agents.json"
-printf '[{"status":"busy","cwd":"%s"},{"status":null,"cwd":"%s"}]' "$root/live" "$root/dead" >"$tmp/agents.json"
+printf '[{"status":"busy","cwd":"%s"},{"status":null,"cwd":"%s"},{"status":"idle","cwd":"%s"},{"status":"busy","cwd":"%s"}]' \
+    "$root/live" "$root/dead" "$root/sub/src" "$root/worktree/.claude/worktrees/x" >"$tmp/agents.json"
 : >"$tmp/work.txt"
 touch "$seed/package-lock.json"
 git -C "$seed" add .
@@ -86,6 +88,8 @@ check "repo under an exited session pulled" "$want" "$(head_of "$root/dead")"
 refute "dirty repo left" "$want" "$(head_of "$root/dirty")"
 refute "repo on another branch left" "$want" "$(head_of "$root/branch")"
 refute "repo under a live session left" "$want" "$(head_of "$root/live")"
+refute "session in a subdirectory holds the repo" "$want" "$(head_of "$root/sub")"
+check "session in a pass worktree does not" "$want" "$(head_of "$root/worktree")"
 log=$(cat "$calls")
 check "pull restows" "stow -R bin" "$log"
 check "lockfile change runs npm ci" "npm ci" "$log"
@@ -102,13 +106,26 @@ run
 [ "$rc" -eq 1 ] || { echo "FAIL: failed step exit $rc"; fail=1; }
 log=$(cat "$calls")
 check "a failure notifies" "notify --urgency" "$log"
-check "steps after a failure still run" "check-drift-notify" "$log"
+check "steps after a failure still run" "check-drift" "$log"
 printf '#!/bin/sh\nexit 0\n' >"$stubs/workstation-install"
 
-printf '  ! dirty: 1 uncommitted\n' >"$tmp/work.txt"
+printf '  ! dirty: 1 uncommitted\n  x brew\n' >"$tmp/work.txt"
 run
-check "left work notifies" "1 item(s) left here" "$(cat "$calls")"
+refute "left work and drift never interrupt" "notify --urgency" "$(cat "$calls")"
+check "status counts them" "1 drift, 1 left" "$(cat "$tmp/state/result")"
 : >"$tmp/work.txt"
+
+# A failed session listing rules nothing out, so no repo moves.
+touch "$seed/three"
+git -C "$seed" add .
+commit "$seed" three
+git -C "$seed" push -q origin HEAD:main
+want=$(git -C "$seed" rev-parse HEAD)
+cp "$stubs/claude" "$tmp/claude.ok"
+printf '#!/bin/sh\nexit 1\n' >"$stubs/claude"
+run
+refute "listing failure holds the repos" "$want" "$(head_of "$root/plain")"
+cp "$tmp/claude.ok" "$stubs/claude"
 
 run "$tmp/absent.git"
 [ "$rc" -eq 0 ] || { echo "FAIL: offline exit $rc"; fail=1; }
@@ -119,7 +136,7 @@ check "offline is recorded" "unreachable" "$out"
 # the settings declare gets added.
 m=$tmp/manifests
 mkdir -p "$m/bluefin" "$m/claude/.claude" "$tmp/instbin"
-touch "$m/bluefin/Brewfile" "$m/bluefin/flatpaks.txt" "$m/bluefin/uv-tools.txt"
+touch "$m/bluefin/Brewfile" "$m/bluefin/flatpaks.txt" "$m/bluefin/uv-tools.txt" "$m/bluefin/gnome-settings.txt"
 cat >"$m/claude/.claude/settings.json" <<'JSON'
 {"enabledPlugins": {"have@official": true, "off@official": false, "new@market": true, "plain@official": true},
  "extraKnownMarketplaces": {"market": {"source": {"source": "github", "repo": "owner/market"}}}}
@@ -138,6 +155,7 @@ chmod +x "$tmp"/instbin/*
 PATH="$tmp/instbin:$PATH" "$bin/workstation-install" "$m/bluefin" || { echo "FAIL: install exit"; fail=1; }
 log=$(cat "$tmp/plugin-log")
 check "declared marketplace added" "plugin marketplace add owner/market" "$log"
+refute "no blanket acceptance of a marketplace command" " -y" "$log"
 check "project-scoped plugin still installs at user scope" "plugin install new@market" "$log"
 check "enabled plugin installs" "plugin install plain@official" "$log"
 refute "installed plugin left" "plugin install have" "$log"
@@ -180,7 +198,19 @@ check "union keeps the other side" "from a" "$index"
 [ "$(grep -c -- '- one' <<<"$index")" -eq 1 ] || { echo "FAIL: union duplicated a line"; fail=1; }
 [ -z "$(find "$memory" -name '*sync-conflict*')" ] || { echo "FAIL: conflict copy kept"; fail=1; }
 
+mkdir -p "$memory/-b/memory"
+printf -- '- only\n' >"$memory/-b/memory/MEMORY.sync-conflict-20261101-120000-ABC.md"
+pair
+check "conflict with no index becomes the index" "only" "$(cat "$memory/-b/memory/MEMORY.md")"
+
 printf '# comment\n%s OWN\nother PEER\n' "$host" >"$tmp/devices.txt"
+mkdir "$memory/.stignore"
+pair
+[ "$rc" -ne 0 ] || { echo "FAIL: an unwritable ignore file must stop the run"; fail=1; }
+[ ! -e "$st/folders" ] || { echo "FAIL: a folder was shared with no ignore file"; fail=1; }
+rmdir "$memory/.stignore"
+: >"$st/log"
+rm -f "$st/devices"
 pair
 [ "$rc" -eq 0 ] || { echo "FAIL: pairing exit $rc: $out"; fail=1; }
 log=$(cat "$st/log")

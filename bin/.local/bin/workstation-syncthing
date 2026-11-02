@@ -13,14 +13,35 @@ host=$(hostname)
 # Syncthing renames the older side of a conflict, which would silently drop that side's new
 # entries from the index. MEMORY.md is one entry per line, so a union of the two loses nothing.
 merge_indexes() {
-    local copy index tmp
+    local copy index tmp stamp
     for copy in "$memory"/*/memory/MEMORY.sync-conflict-*.md; do
         [ -e "$copy" ] || continue
         index=${copy%/*}/MEMORY.md
-        tmp=$(mktemp) || return 1
-        awk '!NF || !seen[$0]++' "$index" "$copy" >"$tmp" 2>/dev/null
-        mv "$tmp" "$index" && rm -f "$copy"
+        if [ ! -e "$index" ]; then
+            mv "$copy" "$index" || return 1
+            continue
+        fi
+        # The folder root is ignored and on the same filesystem, so the rename is atomic.
+        tmp=$(mktemp "$memory/.merge.XXXXXX") || return 1
+        stamp=$(stat -c %Y.%s "$index")
+        awk '!NF || !seen[$0]++' "$index" "$copy" >"$tmp" && chmod --reference="$index" "$tmp" \
+            || { rm -f "$tmp"; return 1; }
+        # A session wrote the index meanwhile: leave the conflict for the next run.
+        if [ "$(stat -c %Y.%s "$index")" != "$stamp" ]; then
+            rm -f "$tmp"
+            continue
+        fi
+        mv "$tmp" "$index" && rm -f "$copy" || return 1
     done
+}
+
+# Share nothing unless this is in place: a shared folder with no ignore file sends transcripts.
+write_ignore() {
+    local want tmp
+    want=$'!/*/memory\n!/*/memory/**\n*'
+    [ "$(cat "$memory/.stignore" 2>/dev/null)" != "$want" ] || return 0
+    tmp=$(mktemp "$memory/.merge.XXXXXX") || return 1
+    printf '%s\n' "$want" >"$tmp" && mv -T "$tmp" "$memory/.stignore" || { rm -f "$tmp"; return 1; }
 }
 
 share() { # id path
@@ -50,5 +71,5 @@ done < <(grep -vE "^[[:space:]]*(#|$)|^$host " "$list")
 [ "${#peers[@]}" -gt 0 ] || exit 0
 
 # The first match wins, so only each project's memory syncs and the transcripts stay local.
-printf '!/*/memory\n!/*/memory/**\n*\n' >"$memory/.stignore"
+write_ignore || exit 1
 share claude-memory "$memory" && share documents "$documents"

@@ -265,6 +265,9 @@ setup_brew() {
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" || return 1
     fi
     eval "$(brew shellenv)" || return 1
+    # Homebrew refuses a third-party formula until it is trusted, one host at a time.
+    brew tap stalwartlabs/tap || return 1
+    brew trust --formula stalwartlabs/tap/vandelay || return 1
     brew bundle --file="$BLUEFIN_DIR/Brewfile"
 }
 

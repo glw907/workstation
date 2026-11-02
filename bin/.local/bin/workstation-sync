@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # workstation-sync: the daily run that brings this host current. GitHub is the hub, so the two
 # workstations never need a route to each other. It fast-forwards the repos, applies the dotfiles,
-# installs what the manifests list and the host lacks, updates the tools, and pairs Syncthing, then
-# hands off to check-drift. It never removes anything: adopt-or-remove calls stay with the
-# check-drift report. A quiet run says nothing, and a failure raises one normal notification.
-# --status prints the last result.
+# installs what the manifests list and the host lacks, updates the tools, and pairs Syncthing. It
+# never removes anything: adopt-or-remove calls stay with the check-drift report. Only a failure
+# notifies, once. Drift keeps its weekly notification, and left work never interrupts, so
+# --status prints both counts from the last run.
 set -uo pipefail
 
 dotfiles=${SYNC_DOTFILES:-$HOME/.dotfiles}
@@ -43,7 +43,22 @@ if ! timeout 20 git ls-remote "$probe" HEAD >/dev/null 2>&1; then
 fi
 
 # `claude agents` keeps a session that has exited, with a null status, so only a live one counts.
-live=$(timeout 10 claude agents --json 2>/dev/null | jq -r '.[] | select(.status != null) | .cwd // empty' 2>/dev/null)
+# If the listing fails, nothing can be ruled out, so every repo stays put.
+live=$(timeout 10 claude agents --json 2>/dev/null | jq -r '.[] | select(.status != null) | .cwd // empty')
+listed=$?
+
+# A session in a pass worktree leaves the main checkout free to move.
+busy() { # repo
+    local cwd
+    [ "$listed" -eq 0 ] || return 0
+    while read -r cwd; do
+        case "$cwd/" in
+            "$1/.claude/worktrees/"*) ;;
+            "$1/"*) return 0 ;;
+        esac
+    done <<<"$live"
+    return 1
+}
 dotfiles_moved=
 
 # The rules match the SessionStart fast-forward: only the default branch, never under a live
@@ -59,7 +74,7 @@ forward() { # repo
     old=$(git -C "$repo" rev-parse HEAD)
     if [ "$(git -C "$repo" branch --show-current)" != "$def" ] \
         || [ -n "$(git -C "$repo" status --porcelain --untracked-files=no)" ] \
-        || grep -qxF -- "$repo" <<<"$live"; then
+        || busy "$repo"; then
         echo "${repo##*/}: $behind behind, left alone"
         return
     fi
@@ -107,19 +122,16 @@ step timers enable_timers
 step install workstation-install "$dotfiles/bluefin"
 step "tool updates" workstation-update
 step syncthing workstation-syncthing
-step drift check-drift-notify
-
+echo "== drift"
+drift=$(check-drift 2>&1 | tee /dev/stderr | grep -c '^  x')
 left=$(check-drift --work-only 2>/dev/null | grep -c '^  !')
+summary="$drift drift, $left left to look at"
 if [ "${#failures[@]}" -gt 0 ]; then
-    summary="failed: ${failures[*]}"
+    summary="failed: ${failures[*]}; $summary"
     notify-send --urgency=normal "Workstation sync" \
-        "$summary. See journalctl --user -u workstation-sync." 2>/dev/null || true
-elif [ "$left" -gt 0 ]; then
-    summary="ok, $left repo or file item(s) left to look at"
-    notify-send --urgency=normal "Workstation sync" \
-        "$left item(s) left here. Run check-drift --work-only." 2>/dev/null || true
+        "Failed: ${failures[*]}. See journalctl --user -u workstation-sync." 2>/dev/null || true
 else
-    summary=ok
+    summary="ok, $summary"
 fi
 echo "$(date +%F\ %R): $summary" | tee "$state/result"
 [ "${#failures[@]}" -eq 0 ]
