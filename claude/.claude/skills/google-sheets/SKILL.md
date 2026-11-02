@@ -7,15 +7,22 @@ description: Use when building, editing, or testing a Google Sheet or its Apps S
 
 Claude works on Geoff's sheets as geoff@907.life through two CLIs. `gws` reads and writes values,
 formatting, and structure through the Sheets API. `clasp` pushes Apps Script code, runs functions,
-and reads logs. Claude has no browser view of a sheet: no Google identity is signed in to its
-Chromium profile, because creating one needs a phone (Geoff, 2026-10-29). Tokens, scopes, and the
-Cloud project are in `~/.claude/docs/bluefin-admin.md` "Google Workspace (gws, clasp)".
+and reads logs. No Google identity is signed in to Claude's Chromium profile, because creating one
+needs a phone (Geoff, 2026-10-29), so Claude sees a sheet in a browser only after Geoff shares it by
+link. Then claude-in-chrome opens the real Sheets interface. Tokens, scopes, and the Cloud project
+are in `~/.claude/docs/bluefin-admin.md` "Google Workspace (gws, clasp)".
 
 Sheets API behavior (A1 ranges, `batchUpdate` requests, validation rules, reading raw JSON) is in
 the `anthropic-skills:google-workspace` skill's `references/sheets.md` and
 `scripts/sheets_helper.py`. Read those before a structural write; this skill doesn't restate them.
 Two quirks seen on the gear sheet: a `ONE_OF_RANGE` rule sent with a relative range comes back
 absolute, so set per-row rules one row at a time; and a simple trigger never fires on an API write.
+
+## Design before building
+
+A sheet people work in is an interface. Before scripting one, read `references/sheet-design.md`,
+write down each tab's job and the format of each kind of value, and get a mockup link-shared for
+review (Geoff, 2026-11-02). The 2026-11-02 attendance mockup skipped this and came out a mess.
 
 ## Sign-ins
 
@@ -53,8 +60,13 @@ Commands, flags, and failure messages: `references/apps-script.md`.
    status, trigger runs included.
 5. Restore the values from step 2.
 6. If the change touches anything on screen (a toast, a menu, a dialog, formatting a person
-   reads), end with one browser check for Geoff: what to open, what to do, and what he should see.
-   Name it in the PR or the reply.
+   reads), and the sheet is link-shared, check it yourself in claude-in-chrome. Otherwise end with
+   one browser check for Geoff: what to open, what to do, and what he should see. Name it in the
+   PR or the reply.
+
+A simple trigger can't be driven by `clasp run-function` before the Cloud project switch. To see
+whether one ran, have it write a start and a finish marker to a hidden tab, reload the sheet in the
+browser, and read the markers with `gws`.
 
 How to write the handlers and `tests.gs` so a test can drive them: `references/trigger-tests.md`.
 
