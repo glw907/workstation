@@ -63,3 +63,43 @@ def test_session_must_have_the_standards_plugin(repo, tmp_path, text, denied):
     transcript = tmp_path / "t.jsonl"
     transcript.write_text(text)
     assert ("deny" in run(LAUNCH, repo, transcript)) is denied
+
+
+@pytest.mark.parametrize("command", [
+    "grep -n 'claude --bg' docs/plans/a.md",
+    "sed -n '/claude --bg/p' docs/plans/a.md",
+    'echo "claude --bg docs/plans/a.md"',
+    'git add docs/plans/a.md && git commit -m "Refuse claude --bg launches"',
+    "cat > n.md <<'EOF'\n" + LAUNCH + "\nEOF",
+])
+def test_a_mention_is_not_a_launch(repo, command):
+    (repo / "docs/plans/a.md").write_text(MISSING_REVIEW)
+    assert run(command, repo) == ""
+
+
+@pytest.mark.parametrize("command", [
+    LAUNCH, f"FOO=1 {LAUNCH}", f"(cd . && {LAUNCH})", 'claude --bg \\\n  "$(cat docs/plans/a-prompt.txt)"',
+    f"git status; {LAUNCH}", 'claude --name "a&b" --bg "$(cat docs/plans/a-prompt.txt)"',
+])
+def test_launch_shapes_are_found(repo, command):
+    (repo / "docs/plans/a.md").write_text(MISSING_REVIEW)
+    assert "deny" in run(command, repo)
+
+
+def test_plan_beside_a_prompt_outside_the_launch_folder(repo, tmp_path_factory):
+    (repo / "docs/plans/a.md").write_text(MISSING_REVIEW)
+    away = tmp_path_factory.mktemp("main")
+    assert "deny" in run(f'claude --bg "$(cat {repo}/docs/plans/a-prompt.txt)"', away)
+
+
+@pytest.mark.parametrize("payload", [
+    {"tool_input": {"command": f"cd ~nosuchuser123 && {LAUNCH}"}},
+    {"tool_input": {"command": LAUNCH}, "transcript_path": 7},
+    {"tool_input": {"command": 7}},
+    {"tool_input": {"command": "echo 'unclosed"}},
+])
+def test_bad_input_exits_silently(repo, payload):
+    (repo / "docs/plans/a.md").write_text(COMPLETE)
+    done = subprocess.run([sys.executable, str(SCRIPT)], input=json.dumps({**payload, "cwd": str(repo)}),
+                          text=True, capture_output=True)
+    assert (done.returncode, done.stdout, done.stderr) == (0, "", "")

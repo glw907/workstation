@@ -16,31 +16,92 @@ security boundary. Every input the script cannot parse exits 0 silently.
 import json
 from pathlib import Path
 import re
+import shlex
 import sys
 
-LAUNCH = re.compile(r"\bclaude\s+(?:[^|;&\n]*\s)?--bg\b")
-PROMPT_FILE = re.compile(r"\$\(\s*cat\s+[\"']?([^\"')\s]+)")
-CHDIR = re.compile(r"(?:^|&&|;)\s*cd\s+[\"']?([^\"'\s;&]+)")
+HEREDOC = re.compile(r"(?<!<)<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
+ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
+PROMPT_FILE = re.compile(r"\$\s*\(\s*cat\s+[\"']?([^\"')\s]+)")
 PLAN_PATH = re.compile(r"[\w./~-]*docs/plans/[\w./-]+\.md")
 REQUIRED = ("Permissions checked:", "Reviewed:")
 
 
-def plan_for(command: str, cwd: Path) -> Path | None:
-    """Return the plan a launch command runs, or None for a launch that names no plan."""
-    moved = CHDIR.search(command)
-    base = cwd / Path(moved.group(1)).expanduser() if moved else cwd
-    found = PROMPT_FILE.search(command)
-    if found:
-        prompt = base / Path(found.group(1)).expanduser()
-        if not prompt.is_file():
-            return None
-        named = PLAN_PATH.search(prompt.read_text(errors="replace"))
-        if named:
-            return base / Path(named.group(0)).expanduser()
-        sibling = prompt.with_name(prompt.name.replace("-prompt.txt", ".md"))
-        return sibling if sibling != prompt and sibling.is_file() else None
-    named = PLAN_PATH.search(command)
-    return base / Path(named.group(0)).expanduser() if named else None
+def strip_heredocs(command: str) -> str:
+    """Drop heredoc bodies so their text is never tokenized as commands."""
+    kept: list[str] = []
+    delimiter = None
+    for line in command.split("\n"):
+        if delimiter is not None:
+            if line.strip() == delimiter:
+                delimiter = None
+            continue
+        kept.append(line)
+        found = HEREDOC.search(line)
+        if found:
+            delimiter = found.group(2)
+    return "\n".join(kept)
+
+
+def stages(command: str) -> list[list[str]]:
+    """Split a command into simple commands at pipes, `&&`, `||`, `;`, `&`, and newlines."""
+    lexer = shlex.shlex(command.replace("\\\n", " "), posix=True, punctuation_chars="|;&()\n")
+    lexer.whitespace = " \t\r"
+    lexer.whitespace_split = True
+    result: list[list[str]] = [[]]
+    for token in lexer:
+        if set(token) <= set("|;&()\n"):
+            result.append([])
+        else:
+            result[-1].append(token)
+    return [stage for stage in result if stage]
+
+
+def words(stage: list[str]) -> list[str]:
+    """Return a stage's words after any leading variable assignments."""
+    index = 0
+    while index < len(stage) and ASSIGNMENT.match(stage[index]):
+        index += 1
+    return stage[index:]
+
+
+def launch_stage(command: str, cwd: Path) -> tuple[list[str], Path] | None:
+    """Return the `claude --bg` stage and its working directory, or None when none runs."""
+    base = cwd
+    for stage in stages(strip_heredocs(command)):
+        run = words(stage)
+        if len(run) > 1 and run[0] == "cd":
+            base = base / Path(run[1]).expanduser()
+        elif run and Path(run[0]).name == "claude" and "--bg" in run:
+            return run, base
+    return None
+
+
+def repo_root(prompt: Path) -> Path:
+    """Return the folder that holds a prompt file's `docs/`, or the file's own folder."""
+    for parent in prompt.parents:
+        if parent.name == "docs":
+            return parent.parent
+    return prompt.parent
+
+
+def plan_for(stage: list[str], base: Path) -> Path | None:
+    """Return the plan a launch stage runs, or None for a launch that names no plan."""
+    text = " ".join(stage)
+    found = PROMPT_FILE.search(text)
+    if not found:
+        named = PLAN_PATH.search(text)
+        return base / Path(named.group(0)).expanduser() if named else None
+    prompt = base / Path(found.group(1)).expanduser()
+    if not prompt.is_file():
+        return None
+    named = PLAN_PATH.search(prompt.read_text(errors="replace"))
+    if named:
+        for root in (base, repo_root(prompt)):
+            plan = root / Path(named.group(0)).expanduser()
+            if plan.is_file():
+                return plan
+    sibling = prompt.with_name(prompt.name.replace("-prompt.txt", ".md"))
+    return sibling if sibling != prompt and sibling.is_file() else None
 
 
 def missing(plan: Path) -> list[str]:
@@ -66,18 +127,17 @@ def main() -> None:
     """Read the hook input and deny a pass launch whose plan lacks its checks."""
     try:
         data = json.load(sys.stdin)
-        command = data["tool_input"]["command"]
-        cwd = Path(data.get("cwd") or ".")
-    except (ValueError, KeyError, TypeError):
+        launch = launch_stage(data["tool_input"]["command"], Path(data.get("cwd") or "."))
+        if launch is None:
+            return
+        plan = plan_for(*launch)
+        if plan is None or not plan.is_file():
+            return
+        gaps = missing(plan)
+        if lacks_standards(data.get("transcript_path")):
+            gaps.append("a session with the `standards` plugin loaded (restart the session)")
+    except (AttributeError, KeyError, OSError, RuntimeError, TypeError, ValueError):
         return
-    if not isinstance(command, str) or not LAUNCH.search(command):
-        return
-    plan = plan_for(command, cwd)
-    if plan is None or not plan.is_file():
-        return
-    gaps = missing(plan)
-    if lacks_standards(data.get("transcript_path")):
-        gaps.append("a session with the `standards` plugin loaded (restart the session)")
     if not gaps:
         return
     reason = (
