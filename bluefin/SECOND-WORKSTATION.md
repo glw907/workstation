@@ -30,7 +30,7 @@ These were settled with Geoff on 2026-10-12. Follow them, don't reopen them.
 
 ## Hardware
 
-The machine is an HP Pavilion Gaming Desktop TG01-2xxx: 16 GB of DDR4-3200
+The machine is an HP Pavilion Gaming Desktop TG01-2xxx: 32 GB of DDR4
 in two slots (64 GB maximum, as 2×32 GB), a 512 GB NVMe SSD, a 32 GB Intel Optane module,
 and an Nvidia GTX 1660 Super, on BIOS F.24. Three things blocked the
 2026-10-12 install, and a fourth hung most boots afterwards. A reinstall hits

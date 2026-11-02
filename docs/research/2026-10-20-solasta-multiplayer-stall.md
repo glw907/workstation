@@ -18,7 +18,7 @@ can resume without the session transcript.
 | UMM settings | `Solasta_Data/Managed/UnityModManager/Params.xml` has `CheckUpdates` 0. Keep it 0 after any reinstall |
 | Video settings | 2560 x 1440, fullscreen window, Medium quality, half-resolution textures, TAA, FSR off. The High and full-texture set is held back until the RAM arrives |
 | Network | Pavilion on the 5 GHz SSID `Warwick 4070 5G` (profile priority 20, band `a`). RTL8821CE power-save workaround persisted in `bluefin/etc/modprobe.d/rtw88-no-lps-deep.conf` (retired 2026-10-25) and `bluefin/etc/NetworkManager/conf.d/wifi-powersave-off.conf` (kept) |
-| RAM | 15 GiB usable (2 x 8 GB DDR4-3200). 2 x 16 GB kit on order |
+| RAM | 15 GiB usable (2 x 8 GB DDR4-3200). Replaced by 32 GB by 2026-11-01: `free` shows 31 GiB and zram sits at its 20 GiB cap |
 | Wi-Fi card | Realtek RTL8821CE (rtw88). Replaced by the Intel AX210 (iwlwifi) on 2026-10-25 |
 
 The game's own files live in the Proton prefix:
