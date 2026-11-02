@@ -103,3 +103,44 @@ def test_bad_input_exits_silently(repo, payload):
     done = subprocess.run([sys.executable, str(SCRIPT)], input=json.dumps({**payload, "cwd": str(repo)}),
                           text=True, capture_output=True)
     assert (done.returncode, done.stdout, done.stderr) == (0, "", "")
+
+
+@pytest.mark.parametrize("wrap", [
+    'claude --bg "no plan"; {}', "if true; then {}; fi", "for x in 1; do {}; done", "{{ {}; }}", "! {}",
+    "env {}", "nohup {}", "command {}", "timeout 5 {}", "echo hi # it's a note\n{}", "cd . # go\n{}",
+    "curl -s http://x/y#z && {}",
+])
+def test_wrapped_launches_are_found(repo, wrap):
+    (repo / "docs/plans/a.md").write_text(MISSING_REVIEW)
+    assert "deny" in run(wrap.format(LAUNCH), repo)
+
+
+@pytest.mark.parametrize("command", [
+    'claude --bg 2>&1 "$(cat docs/plans/a-prompt.txt)"', 'claude 2>&1 --bg "$(cat docs/plans/a-prompt.txt)"',
+    'claude --bg "" "$(cat docs/plans/a-prompt.txt)"', "claude --bg $(cat docs/plans/a-prompt.txt)",
+    'claude --bg "$(< docs/plans/a-prompt.txt)"',
+])
+def test_prompt_forms_are_found(repo, command):
+    (repo / "docs/plans/a.md").write_text(MISSING_REVIEW)
+    assert "deny" in run(command, repo)
+
+
+@pytest.mark.parametrize("command", [
+    'echo ";" claude --bg docs/plans/a.md', 'echo "" claude --bg docs/plans/a.md',
+    "printf '%s\\n' '&&' claude --bg docs/plans/a.md", 'find . -exec echo {} ";" claude --bg docs/plans/a.md',
+    "echo x \; claude --bg docs/plans/a.md", "# claude --bg docs/plans/a.md",
+])
+def test_quoted_operators_are_not_launches(repo, command):
+    (repo / "docs/plans/a.md").write_text(MISSING_REVIEW)
+    assert run(command, repo) == ""
+
+
+@pytest.mark.parametrize("prompt_name,body", [
+    ("a-planning-prompt.txt", "Plan from docs/plans/a.md.\n"), ("a-planner-prompt.txt", "Plan from docs/plans/a.md.\n"),
+    ("b-prompt.txt", "Read docs/plans/a-design.md.\n"),
+])
+def test_planner_and_design_prompts_pass(repo, prompt_name, body):
+    (repo / "docs/plans/a.md").write_text(MISSING_REVIEW)
+    (repo / "docs/plans/a-design.md").write_text("no pre-flight\n")
+    (repo / "docs/plans" / prompt_name).write_text(body)
+    assert run(f'claude --bg "$(cat docs/plans/{prompt_name})"', repo) == ""
