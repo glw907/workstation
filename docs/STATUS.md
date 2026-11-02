@@ -45,8 +45,7 @@ Built 2026-10-29, merged 2026-10-31 as #169 (plan `docs/plans/2026-10-29-google-
 the `google-sheets` skill, `clasp` through `mise`, and trigger tests; the gear sheet passed end
 to end (ecxc-ski `f8488b8`). On 2026-11-05, check that `gws drive files list` still answers
 without a new sign-in; if it asks, move the `gws-personal` consent screen back to Testing.
-thinkpad-x1 owes: pull, `stow -R claude`, `mise install`, `claude-tooling-sync apply`, then the
-`gws` and `clasp` sign-ins in `bluefin-admin.md` "Google Workspace (gws, clasp)".
+thinkpad-x1 owes the `clasp` sign-in in `bluefin-admin.md` "Google Workspace (gws, clasp)".
 
 ## Workstation sync
 
@@ -58,11 +57,6 @@ rollback"). Pavilion owes its first start, and pairing waits on it: `bluefin/SEC
 
 Strategic and standing items live in `ROADMAP.md`. Findings the PR body lists as "Found, not
 done" go to `BACKLOG.md` through `standards:log-issue`.
-
-thinkpad-x1 also owes Survey 1.2.0 (workstation #138, merged 2026-10-22): on its next session,
-pull `~/.dotfiles`, then run `stow -R claude`, `stow -R bin`, and `claude-tooling-sync apply`. The
-first wording correction there clones `glw907/survey-notes`; the monthly writing review runs on
-pavilion only.
 
 thinkpad-x1 still owes the Proton Pass move that pavilion finished on 2026-10-19. A session there
 follows `bluefin/THINKPAD-PROTON.md` with Geoff at the keyboard.
