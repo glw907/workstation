@@ -31,9 +31,10 @@ HEREDOC = re.compile(r"(?<!<)<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 PIPES = {"|", "|&"}
 MESSAGE = (
-    "Blocked: piping a gate or CI-watch command into tail or head hides its "
-    "output until it exits. Run it bare, or redirect it to a file "
-    "(cmd > /tmp/out.log 2>&1) and read the file."
+    "Blocked: nothing in this Bash call ran, including every command before and "
+    "after this pipe, so reissue all of it. Piping a gate or CI-watch command "
+    "into tail or head hides its output until it exits. Run it bare, or redirect "
+    "it to a file (cmd > /tmp/out.log 2>&1) and read the file."
 )
 
 
