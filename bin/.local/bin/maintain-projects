@@ -3,7 +3,8 @@
 # bluefin/maintenance-projects.txt it takes the in-range updates at least seven days old, runs the
 # repo's gate, pushes to main, and waits for CI to deploy. A quiet run says nothing; a failure
 # leaves main alone where it can and raises one normal notification. What `npm outdated` still
-# lists goes in the state directory, so a later feature pass can see what is held.
+# lists goes in the state directory, so a later feature pass can see what is held, and each held
+# major is checked against the peer ranges of what is installed, so that pass sees what refuses it.
 # The maintenance-mode skill holds the rules. --dry-run stops before the commit, and --status
 # lists each project's last run and how many packages are held behind.
 set -uo pipefail
@@ -29,6 +30,31 @@ report() { # repo message
     notify-send --urgency=normal "Maintenance: $1" "$2" 2>/dev/null || true
 }
 
+# held_majors: one line per held major, naming each installed package whose peer range refuses it.
+# Node, because the repo's own semver reads the ranges.
+held_majors() {
+    node -e '
+const fs = require("fs"), path = require("path");
+const semver = require(path.resolve("node_modules/semver"));
+const major = (v) => Number(v.split(".")[0]);
+const installed = fs.readdirSync("node_modules").flatMap((d) =>
+  d.startsWith("@") ? fs.readdirSync(path.join("node_modules", d)).map((s) => path.join(d, s)) : [d]);
+const peers = installed.flatMap((d) => {
+  try {
+    const p = JSON.parse(fs.readFileSync(path.join("node_modules", d, "package.json"), "utf8"));
+    return [{ name: p.name, peers: p.peerDependencies ?? {} }];
+  } catch {
+    return [];
+  }
+});
+for (const [pkg, v] of Object.entries(JSON.parse(fs.readFileSync(0, "utf8") || "{}"))) {
+  if (!v.current || !v.latest || major(v.latest) <= major(v.current)) continue;
+  const refused = peers.filter((p) => p.peers[pkg] && !semver.satisfies(v.latest, p.peers[pkg]));
+  const names = refused.map((p) => `${p.name} (${p.peers[pkg]})`).join(", ");
+  console.log(`${pkg} ${v.latest}: ${names ? `refused by ${names}` : "no peer refuses it"}`);
+}'
+}
+
 ci_passes() { # repo sha
     local run='' tries=0
     while [ -z "$run" ] && [ "$tries" -lt 20 ]; do
@@ -48,6 +74,7 @@ update_tree() { # repo checkout tree log
     [ ! -x node_modules/.bin/playwright ] || npx --no-install playwright install chromium >>"$log" 2>&1 \
         || { report "$repo" "The browser install failed. See $log"; return 1; }
     npm outdated >"$state/$repo.held" 2>&1 || true
+    { npm outdated --json 2>/dev/null || true; } | held_majors >"$state/$repo.blocked" 2>>"$log" || true
 
     if git diff --quiet -- package.json package-lock.json; then
         echo "ok: nothing to update" | tee "$state/$repo.result"
@@ -90,11 +117,12 @@ maintain() { # repo
 }
 
 status() { # repo
-    local last=never held=0 result='not run'
+    local last=never held=0 blocked=0 result='not run'
     [ -f "$state/$1.log" ] && last=$(date -r "$state/$1.log" +%F)
     [ -s "$state/$1.held" ] && held=$(($(wc -l <"$state/$1.held") - 1))
+    [ -f "$state/$1.blocked" ] && blocked=$(grep -c 'refused by' "$state/$1.blocked")
     [ -f "$state/$1.result" ] && result=$(cat "$state/$1.result")
-    printf '%s: last run %s, %s held behind, %s\n' "$1" "$last" "$held" "$result"
+    printf '%s: last run %s, %s held behind, %s majors refused by a peer, %s\n' "$1" "$last" "$held" "$blocked" "$result"
 }
 
 mkdir -p "$state"
