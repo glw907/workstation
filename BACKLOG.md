@@ -141,7 +141,7 @@
 
 ## Done
 - [x] **#24** Add a `workstation-sync` script that brings a machine current `#feature` `#workstation` *(2026-10-17 → 2026-11-01)*
-  `workstation-sync` runs daily from a user timer on each host; `check-drift --work-only` watches every checkout, approval-queue included. The `/etc/firefox` gap went with Firefox. The ratchet's live-filesystem check stays open: PR #166 notes the same failure.
+  `workstation-sync` runs daily from a user timer on each host; `check-drift --work-only` watches every checkout, approval-queue included. The `/etc/firefox` gap went with Firefox. A path only one host holds carries a `host-ok` marker, which clears the ratchet on the other.
 - [x] **#41** Clear drafter from thinkpad-x1 after its next pull `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-25 → 2026-10-31)*
   thinkpad-x1 may carry `~/.local/bin/drafter`, `~/.config/drafter/`, `~/.local/state/drafter/`, `~/.local/share/drafter/`, and links into a drafter clone. Nothing run on pavilion reaches it. After its next `~/.dotfiles` pull, `check-drift` there lists `drafter` as an unlisted bin: remove those paths, the clone, and the `drafter-page-hook` and `docs-page-chain.js` links.
 

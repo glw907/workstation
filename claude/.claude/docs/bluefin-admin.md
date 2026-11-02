@@ -438,7 +438,7 @@ The Cloud project is `gws-personal`, number 754967083271. Both tools sign in to 
 geoff@907.life through `gws-thinkpad-x1`, its one Desktop OAuth client. The pair lives in the age
 store as `GOOGLE_WORKSPACE_CLI_CLIENT_ID` / `_CLIENT_SECRET`, and `gws` writes it to
 `~/.config/gws/client_secret.json`, which `clasp login --creds` reads. Each tool holds its own
-token: `gws` encrypted in `~/.config/gws/`, `clasp` in plain `~/.clasprc.json`. The consent screen
+token: `gws` encrypted in `~/.config/gws/`, `clasp` in plain `~/.clasprc.json`. The consent screen <!-- host-ok -->
 was published to In production, unverified, on 2026-10-29, so sign-ins should no longer lapse
 after 7 days; check on 2026-11-05 that `gws` still answers without a new sign-in, and move the
 screen back to Testing if it doesn't. A Claude session starts each sign-in in the background and
