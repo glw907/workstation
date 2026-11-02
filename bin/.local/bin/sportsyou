@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Open sportsYou in its own window, apart from the daily browser
+# Usage: sportsyou
+#
+# The dedicated profile folder makes this a separate Chromium process, so
+# quitting the daily browser leaves this window running. A first run seeds the
+# profile with notifications allowed, so the site's alerts need no prompt.
+
+profile="${XDG_DATA_HOME:-$HOME/.local/share}/sportsyou-chromium"
+
+if [[ ! -e "$profile/Default/Preferences" ]]; then
+    mkdir -p "$profile/Default"
+    cat >"$profile/Default/Preferences" <<'JSON'
+{"profile":{"content_settings":{"exceptions":{"notifications":{"https://sportsyou.com:443,*":{"setting":1}}}}}}
+JSON
+fi
+
+exec chromium-launch \
+    --user-data-dir="$profile" \
+    --no-first-run \
+    --no-default-browser-check \
+    --app=https://sportsyou.com/login/ \
+    "$@"

@@ -1,0 +1,12 @@
+[Desktop Entry]
+# The window bin/sportsyou opens, apart from the daily browser.
+Version=1.0
+Type=Application
+Name=sportsYou
+Comment=Team chat and posts
+Exec=sportsyou
+Icon=chat-message-new-symbolic
+Terminal=false
+Categories=Network;Chat;
+StartupWMClass=chrome-sportsyou.com__login_-Default
+StartupNotify=true

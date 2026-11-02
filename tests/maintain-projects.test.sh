@@ -14,7 +14,8 @@ cat >"$work/bin/npm" <<'S'
 case $1 in
   update) [ -n "${STUB_CHANGE:-}" ] && echo "$RANDOM" >>package-lock.json ;;
   run) exit "${STUB_GATE:-0}" ;;
-  outdated) exit 1 ;;
+  ci) [ -z "${STUB_MODULES:-}" ] || cp -r "$STUB_MODULES" node_modules ;;
+  outdated) [ "${2:-}" = --json ] && [ -n "${STUB_MODULES:-}" ] && cat "$STUB_MODULES/../outdated.json"; exit 1 ;;
 esac
 exit 0
 S
@@ -66,6 +67,19 @@ setup; run; check "no change stays quiet" $? 0 1 0
 setup; STUB_CHANGE=1 STUB_GATE=1 run; check "gate failure leaves main" $? 1 1 1
 setup; STUB_CHANGE=1 run --dry-run; check "dry run pushes nothing" $? 0 1 0
 setup; STUB_CHANGE=1 STUB_CI=1 run; check "CI failure notifies" $? 1 2 1
+# A held major names the peer that refuses it, and one nothing refuses says so.
+mkdir -p "$work/held/node_modules/semver" "$work/held/node_modules/@fw/kit"
+echo 'module.exports = { satisfies: (v, r) => r === "any" };' >"$work/held/node_modules/semver/index.js"
+echo '{"name":"semver"}' >"$work/held/node_modules/semver/package.json"
+echo '{"name":"@fw/kit","peerDependencies":{"lang":"^6.0.0","tool":"any"}}' >"$work/held/node_modules/@fw/kit/package.json"
+cat >"$work/held/outdated.json" <<'J'
+{"lang":{"current":"6.0.3","latest":"7.0.2"},"tool":{"current":"4.1.0","latest":"5.0.0"},"small":{"current":"1.0.0","latest":"1.2.0"}}
+J
+setup; STUB_MODULES="$work/held/node_modules" run; check "held majors run stays quiet" $? 0 1 0
+[ "$(cat "$work/state/demo.blocked")" = 'lang 7.0.2: refused by @fw/kit (^6.0.0)
+tool 5.0.0: no peer refuses it' ] || { echo "FAIL: held major's peers: $(cat "$work/state/demo.blocked")"; fail=1; }
+PATH="$work/bin:$PATH" MAINTAIN_LIST="$work/list" MAINTAIN_STATE="$work/state" "$script" --status \
+    | grep -q '1 majors refused by a peer' || { echo "FAIL: --status omits the refused major"; fail=1; }
 setup; echo x >>"$work/Projects/demo/package.json"; STUB_CHANGE=1 run
 check "dirty checkout is skipped" $? 1 1 1
 
