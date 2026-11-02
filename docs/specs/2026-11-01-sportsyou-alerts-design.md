@@ -8,7 +8,7 @@ sportsYou has no public API and reaches you only by email, and you have no phone
 
 ### What changes
 
-- A new private repo, `glw907/sportsyou-indicator`, holds one Go program with tests, a README, and a backlog, plus the theme stylesheet.
+- A new private repo, `glw907/sportsyou-notify`, holds one Go program with tests, a README, and a backlog, plus the theme stylesheet.
 - Each workstation runs the program as a systemd user service. It watches only the SportsYou folder.
 - A sportsYou icon stays in the top bar, with a count beside it when anything is unread. GNOME sends no notifications for this mail.
 - The sportsYou window follows your GNOME light or dark style, in Adwaita's colors with your accent color.
