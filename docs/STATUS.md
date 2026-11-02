@@ -45,7 +45,6 @@ Built 2026-10-29, merged 2026-10-31 as #169 (plan `docs/plans/2026-10-29-google-
 the `google-sheets` skill, `clasp` through `mise`, and trigger tests; the gear sheet passed end
 to end (ecxc-ski `f8488b8`). On 2026-11-05, check that `gws drive files list` still answers
 without a new sign-in; if it asks, move the `gws-personal` consent screen back to Testing.
-thinkpad-x1 owes the `clasp` sign-in in `bluefin-admin.md` "Google Workspace (gws, clasp)".
 
 ## Workstation sync
 
