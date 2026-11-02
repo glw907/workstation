@@ -24,7 +24,7 @@ secrets/values.age (encrypted, safe to commit)
 ```
 
 - **Proton Pass** holds the age encryption key, in the `Workstation` vault (one item); a paper copy exists too
-- **claude-pass** is Claude's own route into Proton Pass (Geoff, 2026-10-20): the `<host>-claude` agent, editor on `Servers emergency` and `Workstation`, creates and edits items there. Because it is editor on `Workstation`, the vault that holds the age-key item, Claude can read or change that item too, per Geoff's ruling. It plays no part in the age-key path above
+- **claude-pass** is Claude's own route into Proton Pass (Geoff, 2026-10-20): the `<host>-claude` agent, editor on `Household IT` and `Workstation`, creates and edits items there. Because it is editor on `Workstation`, the vault that holds the age-key item, Claude can read or change that item too, per Geoff's ruling. It plays no part in the age-key path above
 - **values.age** is the encrypted bundle committed to this repo and holds all secret values
 - **sync.sh** decrypts with the age key from `ws-pass-key` (the host's Proton agent token; a host with no token fails and is told to run `ws-pass-key --store`) and pushes to targets
 - **~/.local/secrets** is chmod 600, gitignored, sourced by `.bashrc`
@@ -357,7 +357,7 @@ tmpfs cache; no password manager holds it for scripts.
 
 ### WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERC
 - **Grants**: one household member's login to their own Floccus bookmark share at `https://dav.907.life/<name>/`, and nothing else. Each member's bookmarks file is also encrypted with a passphrase that member keeps, so the login alone doesn't reveal it.
-- **Used by**: the servers repo's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in Proton Pass as "Bookmarks WebDAV: <name>": Geoff's own in the `Workstation` vault with his other personal tool logins, and each other member's in `Servers emergency`, for Geoff to share with that member (Geoff, 2026-10-24).
+- **Used by**: the servers repo's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in Proton Pass as "Bookmarks WebDAV: <name>": Geoff's own in the `Workstation` vault with his other personal tool logins, and each other member's in `Household IT`, for Geoff to share with that member (Geoff, 2026-10-24).
 - **Generated 2026-10-21** on pavilion (32 random bytes, base64url), in the bookmarks pass.
 - **Deleted 2026-10-24**: `_MEMBERA` and `_MEMBERB`, with their shares, after Geoff ruled that household members A and B were never people, only two unused Fastmail logins (servers#21).
 - **Rotate**: store a new value, update the Proton Pass item, re-render orpheus's `/etc/webdav/<name>.env`, restart `webdav@<name>`, and paste the new value into the member's Floccus on each device (servers `docs/runbook.md`, "Bookmark sync").
@@ -394,7 +394,7 @@ tmpfs cache; no password manager holds it for scripts.
 
 ### STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2
 - **Grants**: the passwords of four Stalwart accounts on ward: Geoff's and the second operator's mailboxes, and the two rehearsal test accounts. The mailbox passwords let their holders read that mail.
-- **Used by**: the servers repo's `roles/stalwart` (the plan sets each account's password from the store) and the rehearsal scripts (`vandelay-run.sh`, L6's sends). The second operator's also goes into `Servers emergency` for him.
+- **Used by**: the servers repo's `roles/stalwart` (the plan sets each account's password from the store) and the rehearsal scripts (`vandelay-run.sh`, L6's sends). The second operator's also goes into `Household IT` for him.
 - **Generated 2026-10-21** on pavilion (40 random alphanumerics), in the mail server pass (L3). Each is shared with its owner in Pass 6; until then only the rehearsal uses them.
 - **Rotate**: store a new value and apply the Stalwart role again.
 

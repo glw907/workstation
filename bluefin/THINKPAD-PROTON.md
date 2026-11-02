@@ -44,7 +44,7 @@ takes the password in a dialog. Claude never runs bare `pass-cli`; the
    pavilion's has (Geoff, 2026-10-20). He runs
    `pass-cli agent create thinkpad-claude --expiration 3m`, then
    `pass-cli agent access grant thinkpad-claude --vault-name V --role editor`
-   for `Servers emergency` and for `Workstation`. He stores its token with
+   for `Household IT` and for `Workstation`. He stores its token with
    `secret-tool store --label "Proton Pass claude agent" service
    proton-pass-agent-claude host "$(hostname -s)"`, which prompts for the
    value. `claude-pass --status` must print `path=proton`.

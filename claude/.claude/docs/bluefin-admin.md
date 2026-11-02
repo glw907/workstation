@@ -344,7 +344,7 @@ never-commit rules and a pointer here.
   `$XDG_RUNTIME_DIR/pass-agent.*` session, runs the one command with an audit reason
   (`CLAUDE_PASS_REASON`, or a default naming the host and subcommand), then logs out and
   removes the directory. A value goes in on stdin (`claude-pass item create login
-  --vault-name "Servers emergency" --from-template -`), never on the command line. A secret
+  --vault-name "Household IT" --from-template -`), never on the command line. A secret
   read with `item view` goes to a file or a pipe, never the transcript. `claude-pass
   --status` prints `path=proton|none`, and `check-drift` reports it without failing.
   To grant another vault, Geoff runs `pass-cli agent access grant <host>-claude
@@ -374,7 +374,7 @@ never-commit rules and a pointer here.
   hand from Proton Pass, never through the agent token. Passkeys route through the browser
   for Geoff's touch, never read directly.
   `secret-receive NAME --pass REF` takes a value from Geoff's own Proton login, and
-  `pass-count` prints his per-vault counts (`--hashes` for `Servers emergency`).
+  `pass-count` prints his per-vault counts (`--hashes` for `Household IT`).
   `claude-sudo-setup` takes the sudo password from a dialog; sudo never reads a password
   manager. 1Password was removed from the workstations on 2026-10-19 (Geoff, 2026-10-18).
 - **Installing a NEW long-lived secret, every project (Geoff, 2026-07-13): the
