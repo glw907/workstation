@@ -558,6 +558,13 @@ tmpfs cache; no password manager holds it for scripts.
   2026-07-14 (aksailingclub.org was removed the same day); sends from any other domain fail
 - **Rotate at**: https://resend.com/api-keys
 
+### ECXC_COACH_PASSCODE
+- **Grants**: Entry to the ECXC attendance coach page
+- **Used by**: ECXC team sheet, hidden Settings tab cell B3, which is the working value
+- **Scope note**: a shared low-stakes passcode that coaches hold; ten wrong tries lock the page
+  for ten minutes
+- **Rotate at**: change Settings!B3 on the team sheet, then update this store
+
 ### FASTMAIL_API_TOKEN
 - **Grants**: Full Fastmail JMAP access (mail, contacts, calendars, files, settings)
 - **Domain**: 907.life (business plan)
