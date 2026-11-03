@@ -154,6 +154,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | STALWART_ADMIN_PASSWORD | ✓ | — | — | — |
 | STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2 | ✓ | — | — | — |
 | STALWART_PASSWORD_PHONEBOOK | ✓ | — | — | — |
+| STALWART_PASSWORD_CAIRN_GATE | ✓ | — | — | — |
 | SPORTSYOU_NOTIFY_JMAP_PASSWORD | ✓ | — | — | — |
 | PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        |
@@ -404,6 +405,12 @@ tmpfs cache; no password manager holds it for scripts.
 - **Used by**: the servers repo's `roles/stalwart` (the plan sets the account's password, and `stalwart-apply` signs in with it to name the book and set its grants) and, as `WARD_PASSWORD`, the phonebook Worker, which writes the book's cards.
 - **Generated 2026-10-25** on pavilion (40 random alphanumerics), in the ward address book pass (T3).
 - **Rotate**: ward first (store a new value, re-render ward's secrets, and apply the Stalwart role), then the phonebook Worker's `WARD_PASSWORD`, which also clears the Worker's sign-in stop.
+
+### STALWART_PASSWORD_CAIRN_GATE
+- **Grants**: sign-in to the `cairn-gate@probe.907.life` test mailbox on ward, in the `probe.907.life` test domain. The account holds only test mail and is outside the household address book.
+- **Used by**: the servers repo's `roles/stalwart` (the plan sets the account's password) and cairn-cms's release gate, which reads the mailbox over JMAP to check a sign-in email and follow its link. The mailbox is also the email of the gate's GitHub test account.
+- **Generated 2026-11-03** on pavilion (32 random bytes, base64url), for cairn-cms's setup-fix pass.
+- **Rotate**: store a new value, re-render ward's secrets and apply the Stalwart role (`scripts/apply.sh ward --apply` in the servers repo), then `secret-set.sh --sync` on each host.
 
 ### SPORTSYOU_NOTIFY_JMAP_PASSWORD
 - **Grants**: a Stalwart app password on Geoff's account with seven permissions: `authenticate`, `jmapEmailGet`, `jmapEmailQuery`, `jmapEmailChanges`, `jmapEmailUpdate`, `jmapMailboxGet`, and `jmapMailboxQuery`. It reads and updates the whole mailbox, because Stalwart scopes a password by permission and never by folder. It cannot send mail or delete it permanently. The program touches only the SportsYou folder.
