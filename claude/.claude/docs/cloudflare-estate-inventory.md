@@ -75,6 +75,7 @@ The scheme:
 | `orpheus-r2-backup-rw` | account | R2 object read and write, `servers-backup-orpheus` | `CF_ORPHEUS_R2_BACKUP_RW_TOKEN` + pair | Orpheus's restic |
 | `ward-r2-backup-rw` | account | R2 object read and write, `servers-backup-ward` | `CF_WARD_R2_BACKUP_RW_TOKEN` + pair | Ward's restic |
 | `ci-phonebook` | account | Individual Workers Editor on `phonebook`; D1 Write | `glw907/phonebook`'s `CLOUDFLARE_API_TOKEN` Actions secret; origin `CF_CI_PHONEBOOK_TOKEN` | The phonebook's CI deploys |
+| `ws-cairn-gate` | user (exception to rule 2: Workers Builds accepts only user tokens, "Account-scoped tokens are not supported", <https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/>) | `carin-test.org` only: Zone, DNS, SSL and Certificates Write. Account: Workers Scripts, Email Sending, Workers CI, D1, Workers R2 Storage Write | `CF_WS_CAIRN_GATE_TOKEN` | cairn-cms's release gate; moves to account ownership once Builds allows it |
 | `ci-deploy` | account | Workers Editor across all Workers | Each repo's `CLOUDFLARE_API_TOKEN` Actions secret; origin `CF_CI_DEPLOY_TOKEN` | Every site deploy and Workers Builds |
 
 `ci-deploy` is planned, not live. Until it lands, five repos' Actions secrets and the Workers

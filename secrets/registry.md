@@ -138,6 +138,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | DAISYUI_BLUEPRINT_EMAIL | ✓  | —        | —    | —        |
 | HCLOUD_TOKEN_SERVERS | ✓    | —        | —    | —        |
 | CF_WS_SERVERS_TOKEN | ✓     | —        | —    | —        |
+| CF_WS_CAIRN_GATE_TOKEN | ✓ | — | — | — |
 | CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
 | CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
 | CF_ORPHEUS_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
@@ -320,6 +321,17 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotate at**: console.hetzner.cloud > project servers > Security > API tokens
 - **Received 2026-10-17** via `secret-receive` (desktop dialog, value never in transcript);
   verified with an empty `hcloud server list` and an SSH key created then deleted.
+
+### CF_WS_CAIRN_GATE_TOKEN
+- **Grants**: Cloudflare **user-owned** token `ws-cairn-gate` (id `2a378914...`), an exception to
+  the token scheme's rule 2: Workers Builds accepts only user tokens. Zone `carin-test.org` only:
+  Zone Write, DNS Write, SSL and Certificates Write. Account: Workers Scripts Write, Email Sending
+  Write, Workers CI Write, D1 Write, Workers R2 Storage Write. No expiry.
+- **Used by**: cairn-cms's release gate (`scripts/gate/run-gate.sh`), which passes it to
+  `create-cairn-site` as the setup token and tears down each test install with it.
+- **Minted 2026-11-03** on pavilion from `tmp-token-setup`, which was then deleted.
+- **Rotate**: mint a new one the same way, store it, delete the old one by id. Move it to account
+  ownership once Builds accepts account tokens.
 
 ### CF_WS_SERVERS_TOKEN
 - **Grants**: Cloudflare account-owned token `ws-servers` (id `6a5623b2...`). Zone 907.life
