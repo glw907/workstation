@@ -3,7 +3,7 @@
 #
 # The host's Proton agent token sits in GNOME Keyring (service proton-pass-agent, host <host>).
 # With it, this helper logs in to a session directory under $XDG_RUNTIME_DIR, reads the one item
-# in the Workstation vault with a reason that names the caller and host, writes the key to the
+# in the Age key vault with a reason that names the caller and host, writes the key to the
 # cache, then logs out and removes the session directory. No standing session is left behind.
 #
 # A host whose keyring holds no token has no way to the key: the helper says so and exits, and
@@ -16,7 +16,7 @@
 #                          #   (--expires YYYY-MM-DD overrides the default three months)
 #
 # Environment: WS_PASS_CALLER names the calling script in the read's reason; WS_HOST overrides
-# `hostname -s`; WS_PASS_VAULT, WS_PASS_ITEM, and WS_PASS_FIELD name the item (Workstation, the
+# `hostname -s`; WS_PASS_VAULT, WS_PASS_ITEM, and WS_PASS_FIELD name the item (Age key, the
 # age key item, key).
 set -euo pipefail
 umask 077
@@ -25,7 +25,7 @@ sess=""
 CACHE="${CACHE:-/dev/shm/.age-key-$(id -u)}"
 HOST="${WS_HOST:-$(hostname -s)}"
 CALLER="${WS_PASS_CALLER:-ws-pass-key}"
-VAULT="${WS_PASS_VAULT:-Workstation}"
+VAULT="${WS_PASS_VAULT:-Age key}"
 ITEM="${WS_PASS_ITEM:-Workstation age encryption key}"
 FIELD="${WS_PASS_FIELD:-key}"
 

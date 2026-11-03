@@ -23,11 +23,11 @@ real_cache="/dev/shm/.age-key-$(id -u)"
 mtime() { stat -c %Y "$1" 2>/dev/null || echo absent; }
 real_cache_before=$(mtime "$real_cache")
 
-mkdir -p "$root/bin" "$root/run" "$root/vault/Workstation/age" "$root/home/.local"
+mkdir -p "$root/bin" "$root/run" "$root/vault/Age key/age" "$root/home/.local"
 cp "$repo/tests/fixtures/pass-cli" "$root/bin/pass-cli"
 age-keygen -o "$root/key.txt" 2>/dev/null
 recip=$(age-keygen -y "$root/key.txt")
-cp "$root/key.txt" "$root/vault/Workstation/age/key"
+cp "$root/key.txt" "$root/vault/Age key/age/key"
 TOKEN='pst_fake::KEY'
 
 # secret-tool stub: lookup prints the token (or the expiry) file when present; store saves stdin.
@@ -66,7 +66,7 @@ assert_eq "$?" "0" "token path exits 0 ($out)"
 assert_eq "$(cat "$root/cache" 2>/dev/null)" "$(cat "$root/key.txt")" "cache holds the vault's key"
 assert_eq "$(stat -c %a "$root/cache" 2>/dev/null)" "600" "cache is mode 600"
 grep -q 'reason=test-suite: read age key on testhost' "$root/pass.log" || { echo "FAIL: the read carries no reason naming script and host"; fail=1; }
-grep -q 'item view pass://Workstation/age/key' "$root/pass.log" || { echo "FAIL: the read did not use a pass:// reference"; fail=1; }
+grep -q 'item view pass://Age key/age/key' "$root/pass.log" || { echo "FAIL: the read did not use a pass:// reference"; fail=1; }
 assert_eq "$(grep -c "session=$root/run/pass-ws\.[A-Za-z0-9]* " "$root/pass.log")" "$(pass_calls)" "every call used a per-run session directory under XDG_RUNTIME_DIR"
 grep -q "$TOKEN" "$root/pass.log" && { echo "FAIL: the token leaked into a recorded argument"; fail=1; }
 case "$out" in *"$TOKEN"*) echo "FAIL: the token leaked into the helper's output"; fail=1 ;; esac

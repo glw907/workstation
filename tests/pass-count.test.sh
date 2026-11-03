@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # pass-count.test.sh: prove pass-count prints per-vault, per-category counts and, in --hashes mode,
-# one SHA-256 per item of Household IT, without ever printing an item's value; and that it
+# one SHA-256 per item of Infrastructure, without ever printing an item's value; and that it
 # logs in to a throwaway session that is gone afterward. Runs against the fake pass-cli
 # (tests/fixtures/pass-cli) and fixture JSON only.
 set -uo pipefail
@@ -18,7 +18,7 @@ mkdir -p "$root/bin" "$root/run" "$root/vault"
 cp "$(pwd)/tests/fixtures/pass-cli" "$root/bin/pass-cli"
 
 cat > "$root/vault/_vaults.json" <<'EOF'
-{"vaults":[{"name":"Personal","share_id":"sh1"},{"name":"Household IT","share_id":"sh2"}]}
+{"vaults":[{"name":"Personal","share_id":"sh1"},{"name":"Infrastructure","share_id":"sh2"}]}
 EOF
 cat > "$root/vault/_items-sh1.json" <<'EOF'
 {"items":[
@@ -46,13 +46,13 @@ case "$out" in *"Personal"*"Login"*"2"*) ;; *) echo "FAIL: Personal logins not c
 assert_eq "$(grep -c 'Personal	Login	2$' <<< "$out")" "1" "Personal has 2 logins"
 assert_eq "$(grep -c 'Personal	Note	1$' <<< "$out")" "1" "Personal has 1 note"
 assert_eq "$(grep -c 'Personal	Alias	1$' <<< "$out")" "1" "Personal has 1 alias"
-assert_eq "$(grep -c 'Household IT	Login	2$' <<< "$out")" "1" "Household IT has 2 logins"
+assert_eq "$(grep -c 'Infrastructure	Login	2$' <<< "$out")" "1" "Infrastructure has 2 logins"
 case "$out" in *p-one*|*hush-*) echo "FAIL: counts printed an item value"; fail=1 ;; esac
 assert_eq "$(ls -d "$root/run/pass-count."* 2>/dev/null | wc -l)" "0" "the throwaway session is removed"
 grep -q '^logout' "$root/pass.log" || { echo "FAIL: no logout"; fail=1; }
 assert_eq "$(grep -vc "session=$root/run/pass-count\." "$root/pass.log")" "0" "every call used the throwaway session"
 
-# --hashes prints one title<TAB>sha256 line per Household IT item, and never the value.
+# --hashes prints one title<TAB>sha256 line per Infrastructure item, and never the value.
 out=$(run --hashes)
 assert_eq "$?" "0" "--hashes exit 0 ($out)"
 want_media=$(printf '%s' 'hush-media' | sha256sum | cut -d' ' -f1)
