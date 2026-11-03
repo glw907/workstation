@@ -139,6 +139,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | HCLOUD_TOKEN_SERVERS | ✓    | —        | —    | —        |
 | CF_WS_SERVERS_TOKEN | ✓     | —        | —    | —        |
 | CF_WS_CAIRN_GATE_TOKEN | ✓ | — | — | — |
+| GITHUB_TEST_LOGIN / _PASSWORD / _TOTP_SECRET / _TOKEN / _RECOVERY_CODES | ✓ | — | — | — |
 | CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
 | CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
 | CF_ORPHEUS_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
@@ -321,6 +322,18 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotate at**: console.hetzner.cloud > project servers > Security > API tokens
 - **Received 2026-10-17** via `secret-receive` (desktop dialog, value never in transcript);
   verified with an empty `hcloud server list` and an SSH key created then deleted.
+
+### GITHUB_TEST_LOGIN / _PASSWORD / _TOTP_SECRET / _TOKEN / _RECOVERY_CODES
+- **Grants**: the GitHub machine account `glw907-test`: its sign-in (login, password, the TOTP
+  secret for 2FA, and the recovery codes, space-separated) and a classic personal access token
+  with `repo` and `delete_repo`, no expiry.
+- **Used by**: every project's automated tests that need a GitHub account; first, cairn-cms's
+  release gate. How to drive it: `~/.claude/docs/test-accounts.md`. Proton Pass record: the
+  Workstation item "GitHub test account (glw907-test)".
+- **Created 2026-11-03** on pavilion: Geoff signed up; a session set up 2FA, the token, and the
+  recovery codes through Playwright. A screenshot exposed an abandoned setup's codes, so the set
+  was regenerated; the stored set was never displayed.
+- **Rotate**: as `test-accounts.md` "Rotate" says, then update the vault item.
 
 ### CF_WS_CAIRN_GATE_TOKEN
 - **Grants**: Cloudflare **user-owned** token `ws-cairn-gate` (id `2a378914...`), an exception to

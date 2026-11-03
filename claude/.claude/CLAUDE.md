@@ -113,7 +113,7 @@ scheme). Use an API or CLI first for external services; no dashboard unless the 
 - **Proton Pass is the authoritative record of every credential** (Geoff, 2026-10-27). Before
   claiming one is missing, or asking Geoff when one is rejected, check its item (`claude-pass`) and
   the stores (`~/.local/secrets`, the registry, `wrangler secret list`), by name, never a value.
-- Full flows, exceptions, and store order: `bluefin-admin.md` "Secrets".
+- Full flows, exceptions, and store order: `bluefin-admin.md` "Secrets". Test accounts: `test-accounts.md`.
 
 ## Other workstation services
 
