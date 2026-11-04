@@ -15,6 +15,9 @@ trap 'rm -rf "$root"' EXIT
 assert_eq() {
   [ "$1" = "$2" ] || { echo "FAIL: $3: got '$1', want '$2'"; fail=1; }
 }
+assert_has() {  # assert_has <output> <fragment> <label>
+  case "$1" in *"$2"*) ;; *) echo "FAIL: $3: no '$2' in: $1"; fail=1 ;; esac
+}
 
 # A stub reader prints the file named by its env var and exits with the code in the other.
 for name in claude-pass ws-pass-key; do
@@ -55,6 +58,13 @@ assert_eq "$out" "$want" "rows are this host's, lowercase roles, sorted, with th
 case "$out" in *"Secret Item Title"*) echo "FAIL: an item title reached stdout"; fail=1 ;; esac
 grep -q '^share list --output json$' "$root/log" || { echo "FAIL: claude-pass was not asked for share list --output json: $(cat "$root/log")"; fail=1; }
 grep -q '^--shares$' "$root/log" || { echo "FAIL: ws-pass-key was not asked for --shares: $(cat "$root/log")"; fail=1; }
+
+# A share with no type field, or an unrecognized one, never prints its name.
+printf '%s\n' '{"shares":[{"name":"A Secret Item Title","share_role":"Viewer"},{"share_type":"Mystery","name":"Another Title","share_role":"Editor"}]}' > "$root/claude.json"
+out=$(access)
+assert_has "$out" "testhost-claude	(item share)	viewer" "an untyped share prints anonymously"
+assert_has "$out" "testhost-claude	(item share)	editor" "an unrecognized type prints anonymously"
+case "$out" in *"Title"*) echo "FAIL: a title leaked from an untyped share: $out"; fail=1 ;; esac
 
 # A sign-in that fails exits nonzero with nothing on stdout, even when the other agent answered.
 for who in claude-pass ws-pass-key; do

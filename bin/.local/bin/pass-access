@@ -5,7 +5,9 @@
 # Each agent lists its own shares with its own token (two sign-ins): <host>-claude through
 # claude-pass share list, and <host>-scripts through ws-pass-key --shares. A vault share prints
 # its vault name; an item share prints "(item share)" in the vault column and never its title, so
-# a transcript or a public fixture carries no item title. Roles print in lower case. The list is
+# a transcript or a public fixture carries no item title. Only a share typed "vault" prints a
+# name; a share with no type, or one this script does not recognize, prints as an item share, so
+# a changed reply shape shows up as a grant mismatch and never as a leaked title. Roles print in lower case. The list is
 # read tolerantly: a bare array or {"shares": [...]}, snake_case or camelCase keys.
 #
 # A failed sign-in exits 1 with nothing on stdout. Environment: CLAUDE_PASS and WS_PASS_KEY name
@@ -22,7 +24,7 @@ rows() {
         (if type == "array" then . else (.shares // .) end)[]
         | ((.share_type // .shareType // .type // "") | ascii_downcase) as $kind
         | [ $agent,
-            (if $kind == "item" then "(item share)" else (.name // .vault_name // .vaultName // "unnamed") end),
+            (if $kind == "vault" then (.name // .vault_name // .vaultName // "unnamed") else "(item share)" end),
             ((.share_role // .shareRole // .role // "unknown") | ascii_downcase) ]
         | @tsv' <<< "$2"
 }

@@ -10,6 +10,7 @@ fail=0
 root="$(mktemp -d)"
 trap 'rm -rf "$root"' EXIT
 
+assert_eq() { [ "$1" = "$2" ] || { echo "FAIL: $3: got '$1', want '$2'"; fail=1; }; }
 assert_has() {  # assert_has <output> <fragment> <label>
   case "$1" in *"$2"*) ;; *) echo "FAIL: $3: no '$2' in: $1"; fail=1 ;; esac
 }
@@ -95,7 +96,12 @@ assert_has "$out" "rc=1" "an extra row fails"
 sed 's/^\(pavilion-claude\tProjects\t\)editor/\1viewer/' "$CAPTURE" > "$root/role.tsv"
 out=$(drift "$HEALTHY" STUB_ACCESS="$root/role.tsv")
 assert_has "$out" "rc=1" "a row whose role differs fails"
-assert_has "$out" "Projects" "the differing row is named"
+assert_has "$out" "grant missing: pavilion-claude	Projects	editor" "the row the map expects is named"
+assert_has "$out" "grant extra: pavilion-claude	Projects	viewer" "the row pass-access saw is named"
+
+# An earlier leg's failure must not hide a matching grant leg.
+out=$(drift "$HEALTHY" STUB_NO_BREW=1)
+assert_has "$out" "grants match" "the ok line survives an earlier failure"
 
 out=$(drift "$HEALTHY" PASS_GRANTS="$root/absent.tsv")
 assert_has "$out" "no grant map" "a missing map is named"
@@ -116,6 +122,55 @@ out=$(drift "$HEALTHY" PASS_ACCESS_SKIP=1)
 assert_has "$out" "skipped" "PASS_ACCESS_SKIP warns that it skipped"
 assert_has "$out" "rc=0" "a skipped grant leg exits 0"
 assert_eq_calls 0 "PASS_ACCESS_SKIP signs in to nothing"
+
+# The title lint: check-drift --titles reads each Claude vault's list through claude-pass, applies
+# the naming rules, writes findings (mode 600) to a file, and prints only the count and the path.
+# The stub serves $root/lists/<vault>.json; every title here is invented.
+mkdir -p "$root/lists"
+cat > "$root/claude-lists" <<'EOF'
+#!/usr/bin/env bash
+echo "$*" >> "$STUB_LIST_LOG"
+[ "$1 $2" = "item list" ] || exit 2
+v=""
+while [ $# -gt 0 ]; do [ "$1" = --vault-name ] && v="$2"; shift; done
+cat "$STUB_LISTS/$v.json"
+EOF
+chmod +x "$root/claude-lists"
+for v in Infrastructure Projects ASC "Test accounts" "Age key"; do echo '{"items":[]}' > "$root/lists/$v.json"; done
+echo '{"items":[{"title":"Fine Service"},{"title":"zbrand"}]}' > "$root/lists/Projects.json"
+printf 'zbrand\n' > "$root/exceptions.txt"
+titles() {  # titles [env...]; prints stdout then "rc=N"
+  local out rc
+  out=$(env CLAUDE_PASS="$root/claude-lists" STUB_LISTS="$root/lists" STUB_LIST_LOG="$root/list.log" \
+    PASS_TITLE_EXCEPTIONS="$root/exceptions.txt" PASS_TITLE_FINDINGS="$root/findings.tsv" PASS_TITLE_GAP=0 \
+    "$@" bash "$DRIFT" --titles 2>&1)
+  rc=$?
+  printf '%s\nrc=%s' "$out" "$rc"
+}
+: > "$root/list.log"
+out=$(titles)
+assert_has "$out" "no findings" "a clean list reports none"
+assert_has "$out" "rc=0" "a clean list exits 0 (the exception-listed brand passes)"
+[ "$(wc -l < "$root/list.log")" = 5 ] || { echo "FAIL: --titles did not read the five vaults: $(cat "$root/list.log")"; fail=1; }
+
+echo '{"items":[{"title":"example.com"},{"title":"Login"},{"title":"gadget thing"},{"title":"Foo (a) (b)"},{"title":"Same"},{"title":"Same"},{"title":"Old","state":"Trashed"},{"title":"Old","state":"Active"}]}' > "$root/lists/Infrastructure.json"
+out=$(titles)
+assert_has "$out" "5 findings" "five rule breaks are counted (domain, generic, lowercase, qualifier, duplicate)"
+assert_has "$out" "$root/findings.tsv" "the findings path is printed"
+assert_has "$out" "rc=1" "findings exit 1"
+case "$out" in *example.com*|*Same*|*gadget*|*Login*) echo "FAIL: a title reached stdout: $out"; fail=1 ;; esac
+assert_eq "$(stat -c %a "$root/findings.tsv")" "600" "the findings file is mode 600"
+grep -q "^Infrastructure	example.com	a domain" "$root/findings.tsv" || { echo "FAIL: the domain finding is missing from the file"; fail=1; }
+grep -q "^Infrastructure	Same	same title twice" "$root/findings.tsv" || { echo "FAIL: the duplicate finding is missing from the file"; fail=1; }
+assert_eq "$(wc -l < "$root/findings.tsv")" "5" "the file holds one line per finding (a duplicate title counts once)"
+
+out=$(titles PASS_TITLE_EXCEPTIONS="$root/absent.txt")
+assert_has "$out" "no exceptions file" "a missing exceptions file says so"
+
+printf '#!/usr/bin/env bash\nexit 1\n' > "$root/claude-fail"; chmod +x "$root/claude-fail"
+out=$(titles CLAUDE_PASS="$root/claude-fail")
+assert_has "$out" "could not list" "a failed list is named"
+assert_has "$out" "rc=1" "a failed list fails the run"
 
 # The expiry warnings read every Claude row in the map, from dates relative to today.
 d() { date -d "$1" +%F; }

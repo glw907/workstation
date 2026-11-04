@@ -1,0 +1,9 @@
+{"op":"rename","vault":"Alpha","title":"Old name","new_title":"New name"}
+{"op":"note","vault":"Alpha","title":"Router login","note":"For: the router."}
+{"op":"trash","vault":"Alpha","title":"Dup"}
+{"op":"trash","vault":"Alpha","title":"Missing"}
+{"op":"move","vault":"Alpha","title":"Mover","to":"Beta"}
+{"op":"grant","agent":"x-claude","vault":"Beta","role":"editor"}
+{"op":"revoke","agent":"x-claude","vault":"Alpha"}
+{"op":"revoke","agent":"x-scripts","share_id":"sid-9"}
+{"op":"audit","vault":"Alpha"}

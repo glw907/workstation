@@ -122,7 +122,7 @@ check_proton() {
 # timer would otherwise fail on a throttle. PASS_ACCESS_SKIP=1 skips the sign-ins for a session
 # that reruns this script. PASS_ACCESS and PASS_GRANTS point the leg at a stub and a test map.
 check_grants() {
-    local map="${PASS_GRANTS:-$DOTFILES/secrets/proton-grants.tsv}" access="${PASS_ACCESS:-pass-access}"
+    local gfail=0 expires_epoch map="${PASS_GRANTS:-$DOTFILES/secrets/proton-grants.tsv}" access="${PASS_ACCESS:-pass-access}"
     local host="${WS_HOST:-$(hostname -s)}" want got row agent expires today days
     if [[ ! -s "$map" ]] || [[ -z "$(tail -n +2 "$map")" ]]; then
         bad "no grant map rows at $map (secrets/proton-grants.tsv)"
@@ -136,16 +136,16 @@ check_grants() {
         want=$(awk -F'\t' -v OFS='\t' -v h="$host" 'NR > 1 && ($1 == h "-claude" || $1 == h "-scripts") { print $1, $2, $3 }' "$map" | LC_ALL=C sort)
         got=$(LC_ALL=C sort <<< "$got")
         while IFS= read -r row; do
-            [[ -n "$row" ]] && bad "grant missing: $row"
+            [[ -n "$row" ]] && { bad "grant missing: $row"; gfail=1; }
         done < <(LC_ALL=C comm -23 <(printf '%s\n' "$want") <(printf '%s\n' "$got"))
         while IFS= read -r row; do
-            [[ -n "$row" ]] && bad "grant extra: $row"
+            [[ -n "$row" ]] && { bad "grant extra: $row"; gfail=1; }
         done < <(LC_ALL=C comm -13 <(printf '%s\n' "$want") <(printf '%s\n' "$got"))
-        if (( fail == 0 )); then ok "grants match the map for $host"; fi
+        if (( gfail == 0 )); then ok "grants match the map for $host"; fi
     fi
-    today=$(date +%s -d "$(date +%F)")
+    today=$(date -u +%s -d "$(date +%F)")
     while IFS=$'\t' read -r agent expires; do
-        if ! expires_epoch=$(date +%s -d "$expires" 2>/dev/null) || [[ ! "$expires" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+        if ! expires_epoch=$(date -u +%s -d "$expires" 2>/dev/null) || [[ ! "$expires" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
             bad "$agent: malformed expires '$expires' in the grant map"
             continue
         fi
@@ -174,6 +174,60 @@ check_claude_agent() {
         *) warn "unexpected claude-pass --status output" ;;
     esac
 }
+
+# The item-title lint (monthly, from the model review): reads the five Claude vaults through
+# claude-pass, PASS_TITLE_GAP seconds apart (default 150: Proton throttles agent logins after a
+# few quick calls), and applies the naming scheme (decisions, "Naming and notes"): no domain as a
+# title, no generic title, no lowercase start, a qualifier only in one trailing parenthesis, and
+# no two active items with one title in a vault. Exceptions (brands written in lowercase) come
+# one per line from PASS_TITLE_EXCEPTIONS, a private file; a title equal to, or starting with, one
+# passes. Findings go to PASS_TITLE_FINDINGS (mode 600) as vault, title, and reason; stdout gets
+# the count and that path only, so no title reaches a transcript or a public PR.
+check_titles() {
+    local claude_bin="${CLAUDE_PASS:-claude-pass}" gap="${PASS_TITLE_GAP:-150}" state="$HOME/.local/state/credential-hygiene"
+    local ex_file="${PASS_TITLE_EXCEPTIONS:-$state/title-exceptions.txt}" out="${PASS_TITLE_FINDINGS:-$state/title-findings.tsv}"
+    local vault list first=1 exceptions="[]" count
+    echo "Proton Pass item titles:"
+    if [[ -r "$ex_file" ]]; then
+        exceptions=$(jq -Rn '[inputs | select(length > 0)]' < "$ex_file")
+    else
+        warn "no exceptions file at $ex_file; running with none"
+    fi
+    mkdir -p "$(dirname "$out")"
+    ( umask 077; : > "$out" )
+    for vault in Infrastructure Projects ASC "Test accounts" "Age key"; do
+        (( first )) || sleep "$gap"
+        first=0
+        if ! list=$("$claude_bin" item list --vault-name "$vault" --output json 2>/dev/null) || ! jq -e . >/dev/null 2>&1 <<< "$list"; then
+            bad "could not list a vault (Proton throttles agent logins; retry in 25 minutes)"
+            continue
+        fi
+        jq -r --arg v "$vault" --argjson ex "$exceptions" '
+            def active: ((.state // "Active") | tostring | ascii_downcase) as $s | ($s == "active" or $s == "1" or $s == "?");
+            [(.items // .)[] | select(active) | (.content.title // .title // "untitled")] as $titles
+            | ($titles | group_by(.) | map({key: .[0], value: length}) | from_entries) as $count
+            | ($titles | unique)[] as $t
+            | [ (if ($t | test("^[A-Za-z0-9_.-]+\\.(com|org|net|io|me|life|gov|edu|app|co|biz|ai|us|is|tv)$"; "i")) then "a domain, not the service'"'"'s name" else empty end),
+                (if ($t | gsub("^\\s+|\\s+$"; "") | ascii_downcase | IN("login", "account", "id", "password", "untitled", "new item")) then "a generic title" else empty end),
+                (if ($t | test("^[a-z]")) and (($t | split(" ")[0]) as $w | $w == ($w | ascii_downcase) and ($w | test("[a-z]")))
+                    and ($ex | any(. as $e | $t == $e or ($t | startswith($e))) | not) then "starts lowercase" else empty end),
+                (if ($t | test("^[^()]+( \\([^()]+\\))?$") | not) then "qualifier not in one trailing parenthesis" else empty end),
+                (if $count[$t] > 1 then "same title twice in this vault; add a qualifier" else empty end) ]
+            | select(length > 0) | [$v, $t, join("; ")] | @tsv' <<< "$list" >> "$out"
+    done
+    chmod 600 "$out"
+    count=$(wc -l < "$out")
+    if (( count > 0 )); then
+        bad "$count findings (details: $out)"
+    else
+        ok "no findings"
+    fi
+}
+
+if [[ "${1:-}" == "--titles" ]]; then
+    check_titles
+    exit "$fail"
+fi
 
 if [[ "${1:-}" == "--proton-only" ]]; then
     check_proton
