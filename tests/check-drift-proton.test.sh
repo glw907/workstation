@@ -167,6 +167,12 @@ assert_eq "$(wc -l < "$root/findings.tsv")" "5" "the file holds one line per fin
 out=$(titles PASS_TITLE_EXCEPTIONS="$root/absent.txt")
 assert_has "$out" "no exceptions file" "a missing exceptions file says so"
 
+echo '{"items":[{"title":{"leaky":"SECRETVALUE"}}]}' > "$root/lists/ASC.json"
+out=$(titles)
+assert_has "$out" "could not read the titles" "a title jq cannot process fails the run"
+assert_has "$out" "rc=1" "an unreadable title exits 1"
+case "$out" in *SECRETVALUE*|*leaky*) echo "FAIL: a value from an unreadable title reached stdout: $out"; fail=1 ;; esac
+echo '{"items":[]}' > "$root/lists/ASC.json"
 printf '#!/usr/bin/env bash\nexit 1\n' > "$root/claude-fail"; chmod +x "$root/claude-fail"
 out=$(titles CLAUDE_PASS="$root/claude-fail")
 assert_has "$out" "could not list" "a failed list is named"

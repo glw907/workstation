@@ -332,15 +332,16 @@ never-commit rules and a pointer here.
   did in 1Password, creating and editing items, but only through `claude-pass`.** Each
   host gets an agent, `pavilion-claude` or `thinkpad-claude`, with role editor on
   `Infrastructure`, `Projects`, `ASC`, `Test accounts`, and `Age key` (the
-  credential-hygiene layout, 2026-11-03). His Private and family vaults stay out of reach,
-  except for `pavilion-claude`'s temporary grant for that initiative's triage, which is
-  revoked when it ends. As editor on `Age key`, Claude can read or change the age key too;
+  credential-hygiene layout, 2026-11-03). His Private and family vaults stay out of reach.
+  The `proton-pass` skill holds the vault map, the naming rules, and the procedures; the
+  grants and token expiries are in `secrets/proton-grants.tsv`. As editor on `Age key`, Claude can read or change the age key too;
   that follows from the ruling. `claude-pass` runs only the
-  subcommands item, vault, folder, password, totp, info, and user. Under `item` it allows
+  subcommands item, vault, folder, share, password, totp, info, and user. Under `item` it allows
   list, view, create, update, trash, untrash, and move, so `item share`, `item member`, and
   `item delete` are refused. Under `vault` it allows only list, so `vault share`, `vault
   transfer`, `vault member`, and vault create, update, and delete are refused. Every other
-  top-level command (run, login, agent, ssh-agent, share, invite, ...) is refused too, all
+  top-level command (run, login, agent, ssh-agent, invite, ...) is refused too, and `share`
+  runs only as `share list` (what `pass-access` reads). Every refusal comes
   before the token is read. The reason must be 1 to 300 characters. `claude-pass <pass-cli args>` reads the agent's token from GNOME
   Keyring (service `proton-pass-agent-claude`, host `<host>`), logs in to a fresh
   `$XDG_RUNTIME_DIR/pass-agent.*` session, runs the one command with an audit reason
@@ -354,7 +355,8 @@ never-commit rules and a pointer here.
   expires three months after creation (`pass-cli agent create <name> --expiration 3m`);
   `pavilion-claude` expires 2027-01-20 and `thinkpad-claude` 2027-02-02. To renew it, Geoff creates a fresh token and stores it with
   `secret-tool store --label "Proton Pass claude agent" service proton-pass-agent-claude
-  host <host>`. No expiry is recorded, so `check-drift` cannot warn ahead of it.
+  host <host>`. The grant map records each Claude agent's expiry, so `check-drift` warns
+  within 30 days of it and fails once past (update the map when you renew).
   Proton throttles the agent's logins after about four quick calls, and `claude-pass` then
   reports "agent login failed (token expired or revoked?)" for 5 to 25 minutes while the token
   is fine, so a batch spaces its calls about 150 seconds apart (2026-10-25).

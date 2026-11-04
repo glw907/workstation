@@ -41,6 +41,8 @@ command -v jq >/dev/null || die "jq not installed"
 # Every line must be a JSON object with a known op and its required fields.
 REQUIRED='{"move":["vault","title","to"],"rename":["vault","title","new_title"],"note":["vault","title","note"],
   "trash":["vault","title"],"grant":["agent","vault"],"revoke":["agent"],"audit":["vault"]}'
+bad_agents="$(jq -r 'select(.agent != null) | .agent | select(test("^[A-Za-z0-9][A-Za-z0-9_.-]*$") | not)' "$FILE" 2>/dev/null)"
+[[ -z "$bad_agents" ]] || die "an agent name must start with a letter or digit and hold only letters, digits, dot, dash, underscore"
 problems="$(jq -rn --argjson req "$REQUIRED" '
     [inputs] | to_entries[]
     | .key as $n | .value as $o
@@ -86,7 +88,7 @@ declare -A LIST
 for vault in $(jq -r 'select(.op | IN("move", "rename", "note", "trash")) | .vault | @base64' "$FILE" | sort -u); do
     name="$(base64 -d <<< "$vault")"
     LIST[$name]="$(pass-cli item list --vault-name "$name" --output json 2>/dev/null </dev/null \
-        | jq -c '[(.items // .)[] | select((.state // "Active") == "Active") | {t: .title, id: (.id // .item_id)}]' 2>/dev/null)"
+        | jq -c '[(.items // .)[] | select((.state // "Active") == "Active") | {t: (.content.title // .title), id: (.id // .item_id)}]' 2>/dev/null)"
 done
 
 VAULTS_JSON=""
@@ -96,7 +98,7 @@ AGENTS_JSON=""
 vault_share_id() {
     [[ -n "$VAULTS_JSON" ]] || VAULTS_JSON="$(pass-cli vault list --output json 2>/dev/null </dev/null)"
     jq -r --arg v "$1" '
-        [.. | objects | select(.name == $v)
+        [(.vaults // .shares // .)[] | select(.name == $v)
          | to_entries[] | select((.key | ascii_downcase | test("share")) and (.key | ascii_downcase | test("id")) and (.value | type == "string"))
          | .value][0] // empty' <<< "$VAULTS_JSON"
 }
@@ -143,6 +145,8 @@ while IFS= read -r op <&3; do
             fi ;;
         *)
             mapfile -t ids < <(jq -r --arg t "$title" '.[] | select(.t == $t) | .id' <<< "${LIST[$vault]:-[]}")
+            # "all" is honored only by move and trash; a rename or note edits exactly one item.
+            if [[ "$kind" == rename || "$kind" == note ]]; then all=false; fi
             if [[ ${#ids[@]} -eq 0 || ( ${#ids[@]} -gt 1 && "$all" != true ) ]]; then
                 echo "FAILED: $kind $vault / $title matched ${#ids[@]} items"; rc=9
             elif [[ "$kind" == trash ]]; then
@@ -155,13 +159,18 @@ while IFS= read -r op <&3; do
             else  # note: the new lines go above the old note, which is read and never printed
                 id="${ids[0]}"
                 note="$(jq -r .note <<< "$op")"
-                old="$(pass-cli item view --vault-name="$vault" --item-id="$id" --output json 2>/dev/null </dev/null | jq -r '.item.content.note // ""')"
-                if [[ -n "$old" && "$old" == "$note"* ]]; then
-                    note=""   # an earlier run already put this note there
-                elif [[ -n "$old" ]]; then
-                    note="$note"$'\n\n'"$old"
+                # A failed read must not become an empty old note, or the update would overwrite it.
+                if ! old="$(pass-cli item view --vault-name="$vault" --item-id="$id" --output json 2>/dev/null </dev/null \
+                        | jq -er '.item.content | if type == "object" then (.note // "") else error end' 2>/dev/null)"; then
+                    echo "FAILED: note $vault / $title: could not read the old note"; rc=9
+                else
+                    if [[ -n "$old" && "$old" == "$note"* ]]; then
+                        note=""   # an earlier run already put this note there
+                    elif [[ -n "$old" ]]; then
+                        note="$note"$'\n\n'"$old"
+                    fi
+                    [[ -z "$note" ]] || quiet pass-cli item update --vault-name="$vault" --item-id="$id" --field "note=$note" || rc=$?
                 fi
-                [[ -z "$note" ]] || quiet pass-cli item update --vault-name="$vault" --item-id="$id" --field "note=$note" || rc=$?
                 unset old note
             fi ;;
     esac

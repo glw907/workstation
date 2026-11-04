@@ -71,7 +71,10 @@ assert_eq "$(calls login)" "1" "--apply logs in once"
 assert_eq "$(calls 'item list')" "1" "--apply lists the one named vault once"
 assert_has "$out" "FAILED: trash Alpha / Dup matched 2 items" "an ambiguous title fails its line"
 assert_has "$out" "FAILED: trash Alpha / Missing matched 0 items" "a title with no match fails its line"
-assert_has "$out" "done: 7 ok, 2 failed" "the two bad lines are counted and the rest ran"
+assert_has "$out" "FAILED: rename Alpha / Dup matched 2 items" "a rename never takes all, even with all:true"
+assert_has "$out" "could not read the old note" "a note whose old text cannot be read fails"
+assert_has "$out" "done: 7 ok, 4 failed" "the bad lines are counted and the rest ran"
+if grep -q -- '--item-id=a7 --field note=\|--item-id=a2\|--item-id=a3' "$root/pass.log"; then echo "FAIL: a failed line still edited an item"; fail=1; fi
 assert_lacks "$out" "Error opening share" "the share noise is filtered"
 grep -q '^item move --from-vault-name=Alpha --item-id=a5 --to-vault-name=Beta' "$root/pass.log" || { echo "FAIL: the move after a failed line did not run"; fail=1; }
 grep -q '^item update --vault-name=Alpha --item-id=a4 --field title=New name' "$root/pass.log" || { echo "FAIL: the rename did not run"; fail=1; }
@@ -116,6 +119,7 @@ for _ in $(seq 40); do grep -q '^item list' "$root/pass.log" 2>/dev/null && brea
 pkill -TERM -f "bash $SITTING --apply $root/ops.jsonl"
 wait "$bg" 2>/dev/null
 sleep 3
+case "$(cat "$root/term.out")" in *"done:"*) echo "FAIL: the TERM never landed; the run finished"; fail=1 ;; esac
 assert_eq "$(sessions_left)" "0" "TERM leaves no session directory"
 grep -q 'logout' "$root/pass.log" || { echo "FAIL: TERM skipped the logout"; fail=1; }
 

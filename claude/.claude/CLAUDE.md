@@ -108,8 +108,8 @@ scheme). Use an API or CLI first for external services; no dashboard unless the 
 - **A new long-lived secret originates in the workstation age store** (`secret-set.sh`), never
   a loose file, never only `wrangler secret put`. **A value from Geoff arrives via
   `secret-receive NAME`**, which Claude launches itself (its dialog takes the value), never pasted
-  into chat. **Claude uses Proton Pass only via `claude-pass`** (its own agent, editor on granted
-  vaults; values on stdin), never bare `pass-cli`; other vaults via `secret-receive --pass`.
+  into chat. **Claude uses Proton Pass only via `claude-pass`** (values on stdin), never bare
+  `pass-cli` or `pass-sitting` (Geoff's bulk tool); the `proton-pass` skill holds the rest.
 - **Proton Pass is the authoritative record of every credential** (Geoff, 2026-10-27). Before
   claiming one is missing, or asking Geoff when one is rejected, check its item (`claude-pass`) and
   the stores (`~/.local/secrets`, the registry, `wrangler secret list`), by name, never a value.

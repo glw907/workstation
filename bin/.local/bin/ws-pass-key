@@ -18,7 +18,8 @@
 #
 # Environment: WS_PASS_CALLER names the calling script in the read's reason; WS_HOST overrides
 # `hostname -s`; WS_PASS_VAULT, WS_PASS_ITEM, and WS_PASS_FIELD name the item (Age key, the
-# age key item, key).
+# age key item, key). Without WS_PASS_ITEM the item is read under its new title, then under the
+# old one, until pass C removes the old title.
 set -euo pipefail
 umask 077
 sess=""
@@ -27,7 +28,13 @@ CACHE="${CACHE:-/dev/shm/.age-key-$(id -u)}"
 HOST="${WS_HOST:-$(hostname -s)}"
 CALLER="${WS_PASS_CALLER:-ws-pass-key}"
 VAULT="${WS_PASS_VAULT:-Age key}"
-ITEM="${WS_PASS_ITEM:-Workstation age encryption key}"
+# The age key item's title is read in order until one answers: the new title, then the old one,
+# which pass C removes once both hosts have pulled. WS_PASS_ITEM reads only the title it names.
+if [[ -n "${WS_PASS_ITEM:-}" ]]; then
+    ITEMS=("$WS_PASS_ITEM")
+else
+    ITEMS=("Age key (workstation)" "Workstation age encryption key")
+fi
 FIELD="${WS_PASS_FIELD:-key}"
 
 die() { echo "ws-pass-key: $*" >&2; exit 1; }
@@ -103,8 +110,12 @@ fetch_proton() {
     local token="$1" reason
     login_session "$token"
     reason="$CALLER: read age key on $HOST"
-    PROTON_PASS_AGENT_REASON="$reason" pass-cli item view "pass://$VAULT/$ITEM/$FIELD" 2>/dev/null \
-        | sed 's/^"//;s/"$//' > "$CACHE" || true
+    local title
+    for title in "${ITEMS[@]}"; do
+        PROTON_PASS_AGENT_REASON="$reason" pass-cli item view "pass://$VAULT/$title/$FIELD" 2>/dev/null \
+            | sed 's/^"//;s/"$//' > "$CACHE" || true
+        if [[ -s "$CACHE" ]]; then break; fi
+    done
 }
 
 case "${1:-}" in
@@ -126,5 +137,5 @@ unset token
 chmod 600 "$CACHE" 2>/dev/null || true
 if [[ ! -s "$CACHE" ]]; then
     rm -f "$CACHE"
-    die "could not fetch the age key (is the agent token valid and the vault item named $VAULT/$ITEM?)"
+    die "could not fetch the age key (is the agent token valid and the vault item named $VAULT/${ITEMS[0]}$([[ ${#ITEMS[@]} -gt 1 ]] && echo " or ${ITEMS[1]}")?)"
 fi

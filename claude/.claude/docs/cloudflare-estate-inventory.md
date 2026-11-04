@@ -183,7 +183,7 @@ cannot add or change one; that edit goes through `ws-admin`.
   before declaring a credential unmanaged.
 - **Proton Pass** (Geoff's vaults): the home for a value in no scripted store, such as a
   dashboard login or a rarely needed credential. Claude reaches the vaults Geoff granted its
-  own agent (`Household IT` and `Workstation` to start) through `claude-pass`, and can
+  own agent (editor on `Infrastructure`, `Projects`, `ASC`, `Test accounts`, and `Age key`) through `claude-pass`, and can
   create and edit items there; it never calls bare `pass-cli`. A value from any other vault
   arrives through `secret-receive NAME --pass REF`, which runs Geoff's own login in a
   throwaway session. See the global CLAUDE.md Secrets rule and `bluefin-admin.md` "Secrets".

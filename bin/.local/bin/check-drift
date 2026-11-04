@@ -194,7 +194,7 @@ check_titles() {
         warn "no exceptions file at $ex_file; running with none"
     fi
     mkdir -p "$(dirname "$out")"
-    ( umask 077; : > "$out" )
+    rm -f "$out"; ( umask 077; : > "$out" )
     for vault in Infrastructure Projects ASC "Test accounts" "Age key"; do
         (( first )) || sleep "$gap"
         first=0
@@ -202,7 +202,7 @@ check_titles() {
             bad "could not list a vault (Proton throttles agent logins; retry in 25 minutes)"
             continue
         fi
-        jq -r --arg v "$vault" --argjson ex "$exceptions" '
+        if ( umask 077; jq -r --arg v "$vault" --argjson ex "$exceptions" '
             def active: ((.state // "Active") | tostring | ascii_downcase) as $s | ($s == "active" or $s == "1" or $s == "?");
             [(.items // .)[] | select(active) | (.content.title // .title // "untitled")] as $titles
             | ($titles | group_by(.) | map({key: .[0], value: length}) | from_entries) as $count
@@ -210,17 +210,22 @@ check_titles() {
             | [ (if ($t | test("^[A-Za-z0-9_.-]+\\.(com|org|net|io|me|life|gov|edu|app|co|biz|ai|us|is|tv)$"; "i")) then "a domain, not the service'"'"'s name" else empty end),
                 (if ($t | gsub("^\\s+|\\s+$"; "") | ascii_downcase | IN("login", "account", "id", "password", "untitled", "new item")) then "a generic title" else empty end),
                 (if ($t | test("^[a-z]")) and (($t | split(" ")[0]) as $w | $w == ($w | ascii_downcase) and ($w | test("[a-z]")))
-                    and ($ex | any(. as $e | $t == $e or ($t | startswith($e))) | not) then "starts lowercase" else empty end),
+                    and ($ex | any(. as $e | $t == $e or ($t | startswith($e + " "))) | not) then "starts lowercase" else empty end),
                 (if ($t | test("^[^()]+( \\([^()]+\\))?$") | not) then "qualifier not in one trailing parenthesis" else empty end),
                 (if $count[$t] > 1 then "same title twice in this vault; add a qualifier" else empty end) ]
-            | select(length > 0) | [$v, $t, join("; ")] | @tsv' <<< "$list" >> "$out"
+            | select(length > 0) | [$v, $t, join("; ")] | @tsv' <<< "$list" > "$out.part" 2>/dev/null ); then
+            cat "$out.part" >> "$out"
+        else
+            bad "could not read the titles of a vault"
+        fi
+        rm -f "$out.part"
     done
     chmod 600 "$out"
     count=$(wc -l < "$out")
     if (( count > 0 )); then
         bad "$count findings (details: $out)"
     else
-        ok "no findings"
+        ok "no findings in the vaults read"
     fi
 }
 

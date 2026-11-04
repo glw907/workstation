@@ -359,6 +359,10 @@ agent's prompt; each was added from a past pass's planning miss.
 
 ## Pre-flight and owner-only steps
 
+- A bulk edit of Proton Pass vaults (moves, renames, notes, trashes, grants, revokes) is a
+  `[you]` step: the session writes a `pass-sitting` file and Geoff runs `pass-sitting FILE`, then
+  `--apply`, in a Ptyxis terminal. The hook refuses `pass-sitting` to Claude (`proton-pass` skill).
+
 - A `[you]` pre-flight item still open when an unattended launch is armed is checked at arm time,
   and the launch's standing answer says what a proof step does after the run has moved live state.
   A token proof that deploys `origin/main` can't run once a phone depends on the pass's version

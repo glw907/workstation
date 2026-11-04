@@ -329,7 +329,7 @@ tmpfs cache; no password manager holds it for scripts.
   with `repo` and `delete_repo`, no expiry.
 - **Used by**: every project's automated tests that need a GitHub account; first, cairn-cms's
   release gate. How to drive it: `~/.claude/docs/test-accounts.md`. Proton Pass record: the
-  `Test accounts` vault item "GitHub test account (glw907-test)".
+  `Test accounts` vault item "GitHub (glw907-test)".
 - **Created 2026-11-03** on pavilion: Geoff signed up; a session set up 2FA, the token, and the
   recovery codes through Playwright. A screenshot exposed an abandoned setup's codes, so the set
   was regenerated; the stored set was never displayed.
@@ -384,7 +384,7 @@ tmpfs cache; no password manager holds it for scripts.
 
 ### WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERC
 - **Grants**: one household member's login to their own Floccus bookmark share at `https://dav.907.life/<name>/`, and nothing else. Each member's bookmarks file is also encrypted with a passphrase that member keeps, so the login alone doesn't reveal it.
-- **Used by**: the servers repo's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in Proton Pass as "Bookmarks WebDAV: <name>": Geoff's own and each other member's in `Infrastructure`, the members' for Geoff to share with that member (Geoff, 2026-10-24).
+- **Used by**: the servers repo's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in Proton Pass in `Infrastructure` (Geoff's and each other member's), the members' for Geoff to share with that member (Geoff, 2026-10-24).
 - **Generated 2026-10-21** on pavilion (32 random bytes, base64url), in the bookmarks pass.
 - **Deleted 2026-10-24**: `_MEMBERA` and `_MEMBERB`, with their shares, after Geoff ruled that household members A and B were never people, only two unused Fastmail logins (servers#21).
 - **Rotate**: store a new value, update the Proton Pass item, re-render orpheus's `/etc/webdav/<name>.env`, restart `webdav@<name>`, and paste the new value into the member's Floccus on each device (servers `docs/runbook.md`, "Bookmark sync").
@@ -843,7 +843,7 @@ Secrets this registry will set:
 
 - **Algorithm**: X25519 (age native)
 - **Public key**: age197mcd2m3z90t49n9t5v3ujjntw7krfkw5y9sjfc545v28qvezugshg7jgk
-- **Private key storage**: Proton Pass > `Age key` vault > "Workstation age encryption key"
+- **Private key storage**: Proton Pass > `Age key` vault > "Age key (workstation)"
   (the only item in that vault), plus a paper copy checked 2026-10-19 against the recipient
   with `age-keygen -y`. Each host reads it with its own agent token (`pavilion-scripts`, later
   `thinkpad-scripts`; viewer role on that vault only). The ASC age key stays in its own key
