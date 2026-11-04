@@ -45,8 +45,8 @@ sitting() {  # sitting [env...] -- <args...>; stdout and stderr together
 reset
 out=$(sitting -- "$root/ops.jsonl")
 assert_eq "$?" "0" "the dry run exits 0"
-assert_has "$out" "rename	Alpha	Old name	New name" "the dry run prints a rename"
-assert_has "$out" "revoke		x-scripts	sid-9" "the dry run prints a revoke by share id"
+assert_has "$out" "rename	vault=Alpha	title=Old name	new_title=New name" "the dry run prints a rename"
+assert_has "$out" "revoke	agent=x-scripts	share_id=sid-9" "the dry run prints a revoke by share id"
 assert_has "$out" "Dry run only" "the dry run says so"
 [ ! -e "$root/pass.log" ] || { echo "FAIL: the dry run called pass-cli: $(cat "$root/pass.log")"; fail=1; }
 assert_eq "$(sessions_left)" "0" "the dry run makes no session directory"
@@ -55,6 +55,18 @@ assert_eq "$(sessions_left)" "0" "the dry run makes no session directory"
 printf '{"op":"trash","vault":"Alpha"}\n{"op":"explode"}\n' > "$root/bad.jsonl"
 out=$(sitting -- "$root/bad.jsonl")
 [ "$?" -ne 0 ] || { echo "FAIL: a bad file exited 0"; fail=1; }
+printf '%s\n' '{"op":"grant","agent":"a-claude","vault":"V","to":"viewer","role":"manager"}' \
+    '{"op":"rename","vault":"V","title":"T","new_title":"U","all":true}' \
+    '{"op":"revoke","agent":"a-claude","vault":"V","share_id":"s"}' \
+    '{"op":"grant","agent":"-bad","vault":"V"}' > "$root/fields.jsonl"
+out3=$(sitting -- "$root/fields.jsonl")
+[ "$?" -ne 0 ] || { echo "FAIL: a file with unknown fields exited 0"; fail=1; }
+assert_has "$out3" "an agent name must start" "a bad agent name is refused"
+sed -i '$d' "$root/fields.jsonl"
+out3=$(sitting -- "$root/fields.jsonl")
+assert_has "$out3" "line 1: unknown field to" "an unknown field is named, so the dry run cannot hide it"
+assert_has "$out3" "line 2: unknown field all" "all is refused on a rename"
+assert_has "$out3" "line 3: revoke needs exactly one of vault and share_id" "a revoke names its target once"
 printf 'not json\n' > "$root/notjson.jsonl"
 out2=$(sitting -- "$root/notjson.jsonl")
 [ "$?" -ne 0 ] || { echo "FAIL: a non-JSON file exited 0"; fail=1; }
@@ -71,7 +83,7 @@ assert_eq "$(calls login)" "1" "--apply logs in once"
 assert_eq "$(calls 'item list')" "1" "--apply lists the one named vault once"
 assert_has "$out" "FAILED: trash Alpha / Dup matched 2 items" "an ambiguous title fails its line"
 assert_has "$out" "FAILED: trash Alpha / Missing matched 0 items" "a title with no match fails its line"
-assert_has "$out" "FAILED: rename Alpha / Dup matched 2 items" "a rename never takes all, even with all:true"
+assert_has "$out" "FAILED: rename Alpha / Dup matched 2 items" "an ambiguous rename edits nothing"
 assert_has "$out" "could not read the old note" "a note whose old text cannot be read fails"
 assert_has "$out" "done: 7 ok, 4 failed" "the bad lines are counted and the rest ran"
 if grep -q -- '--item-id=a7 --field note=\|--item-id=a2\|--item-id=a3' "$root/pass.log"; then echo "FAIL: a failed line still edited an item"; fail=1; fi

@@ -22,8 +22,8 @@ own login and reach every vault:
   file and Geoff runs it.
 
 claude-pass itself passes, because its command text names neither pass-cli nor a session
-directory, and it runs only its allowlisted subcommands (item, vault, folder, password, totp,
-info, user). This hook also treats `claude-pass run` as a wrapper, so a pass-cli placed
+directory, and it runs only its allowlisted subcommands (item, vault, folder, share, password,
+totp, info, user). This hook also treats `claude-pass run` as a wrapper, so a pass-cli placed
 after it is still denied.
 
 There is no allowance: the agent token pops up no prompt, so a rate
@@ -64,7 +64,7 @@ SITTING_REASON = (
 # A command starts at the line start or after a shell separator or keyword, behind variable
 # assignments and the wrappers that pass a command through (each with options that may take a
 # value, and timeout's duration). An absolute or $(...)-built path to the binary counts.
-SEP = r"(?:^|(?<!\\)[;&|(`{!\n]|\$\()\s*(?:(?:if|then|else|elif|do|while|until)\s+)*"
+SEP = r"(?:^|(?<!\\)[;&|(`{!\n)]|\$\()\s*(?:(?:if|then|else|elif|do|while|until|coproc)\s+)*"
 ASSIGN = r"(?:\w+=\S*\s+)*"
 OPTS = r"(?:-\S+\s+(?:[^-\s]\S*\s+)?)*"
 WRAP = (
@@ -72,12 +72,15 @@ WRAP = (
     r"|strace|unbuffer|claude-pass\s+run|(?:busybox\s+)?(?:ba|z|da|k)?sh\s+(?:-\S+\s+)*?-\w*c)\s+" + OPTS + r"(?:\d+\S*\s+)?" + ASSIGN + r")*"
 )
 BIN = r"(?:\$\([^)]*\)[^\s;&|]*/|[^\s;&|]*/)?"
-START = SEP + ASSIGN + WRAP + BIN
+# A redirection may come before the command name, and a redirect may touch the name.
+REDIR = r"(?:\d*[<>]+&?[^\s;&|]*\s*)*"
+NAMEEND = r"(?=[\s<>&;|)]|$)"
+START = SEP + ASSIGN + REDIR + WRAP + BIN
 END = r"(?=[/\s;&|)<>`]|$)"
 PATTERNS = [
-    re.compile(START + r"pass-cli(?:\s|$)"),
-    re.compile(START + r"secret-tool\s+" + OPTS + r"(?:lookup|search)\b"),
-    re.compile(START + r"keyctl\s+" + OPTS + r"(?:print|pipe|read)\b"),
+    re.compile(START + r"pass-cli" + NAMEEND),
+    re.compile(START + r"secret-tool" + NAMEEND + r"\s*" + REDIR + OPTS + r"(?:lookup|search)\b"),
+    re.compile(START + r"keyctl" + NAMEEND + r"\s*" + REDIR + OPTS + r"(?:print|pipe|read)\b"),
     re.compile(
         r"(?<![\w-])pass-(?:"
         # A session name is the prefix and a dot, then a suffix with no later dot-and-letter in
@@ -85,8 +88,8 @@ PATTERNS = [
         # with an extension, such as pass-count.test.sh, is not one.
         r"(?:ws|recv|count|agent|sitting)\.(?![^\s/;&|)<>`]*\.[A-Za-z])"
         # The bare pass-ws prefix, and a glob that could name any session directory.
-        r"|ws(?:[*?\[]|" + END + r")|[*?\[]|[wrcas][*?\[])"
-        r"|\.local/share/proton-pass|share/proton-pass-[*?c]"
+        r"|ws(?:[*?\[]|" + END + r")|[*?\[{]|(?:w|r|re|rec|recv|c|co|cou|coun|count|a|ag|age|agen|agent|s|si|sit|sitt|sitti|sittin|sitting)[*?\[{])"
+        r"|\.local/share/proton[-*?\[]|share/proton-pass-[*?c]"
     ),
 ]
 
@@ -99,12 +102,27 @@ SITTING_PATTERNS = [
         SEP + ASSIGN + WRAP + r"(?:busybox\s+)?" + BIN + r"(?:(?:ba|z|da|k)?sh|source|\.)\s+"
         r"(?:-[oO]\s+\S+\s+|-(?!n\b)\S*\s+)*(?:<\s*)?(?:[^\s;&|]*/)?" + SITTING_NAME
     ),
+    # `bash -n +n FILE` runs the file: +n turns noexec back off.
+    re.compile(r"(?:ba|z|da|k)?sh\s+[^;&|\n]*\+\w*n\b[^;&|\n]*" + SITTING_NAME),
 ]
 
 
 HEREDOC = re.compile(r"(?<!<)<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
-SHELL_FEED = re.compile(r"(?:^|[\s;&|(])(?:(?:ba|z|da|k)?sh|eval|source|ssh)(?:\s|$)")
+SHELL_FEED = re.compile(r"(?:^|[\s;&|(/])(?:(?:ba|z|da|k)?sh|eval|source|ssh)(?:\s|$)")
 LOOKUP = re.compile(r"\bcommand\s+-[vV]\b")
+
+
+def real_heredoc(prefix):
+    """Return True when a << sits outside a comment, a quote, and arithmetic, so it can open a heredoc.
+
+    A fake start would hide every later line from the patterns, so any doubt keeps the body.
+    """
+    return (
+        prefix.count("'") % 2 == 0
+        and prefix.count('"') % 2 == 0
+        and "#" not in prefix
+        and "((" not in prefix
+    )
 
 
 def strip_heredocs(cmd):
@@ -118,7 +136,7 @@ def strip_heredocs(cmd):
             continue
         kept.append(line)
         found = HEREDOC.search(line)
-        if found and not SHELL_FEED.search(line[: found.start()]):
+        if found and real_heredoc(line[: found.start()]) and not SHELL_FEED.search(line[: found.start()]):
             delimiter = found.group(2)
     return "\n".join(kept)
 
@@ -133,6 +151,7 @@ def normalize(cmd):
     cmd = cmd.replace("\\\n", "")
     cmd = re.sub(r"''|\"\"", "", cmd)
     cmd = re.sub(r"\\(?=\w)", "", cmd)
+    cmd = re.sub(r"\$(?=['\"])", "", cmd)
     return cmd.replace("'", "").replace('"', "")
 
 

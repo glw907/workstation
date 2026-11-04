@@ -41,20 +41,25 @@ command -v jq >/dev/null || die "jq not installed"
 # Every line must be a JSON object with a known op and its required fields.
 REQUIRED='{"move":["vault","title","to"],"rename":["vault","title","new_title"],"note":["vault","title","note"],
   "trash":["vault","title"],"grant":["agent","vault"],"revoke":["agent"],"audit":["vault"]}'
+# Every field a line may carry. An unknown field is refused, so the dry run shows all there is.
+ALLOWED='{"move":["op","vault","title","to","all"],"rename":["op","vault","title","new_title"],
+  "note":["op","vault","title","note"],"trash":["op","vault","title","all"],
+  "grant":["op","agent","vault","role"],"revoke":["op","agent","vault","share_id"],"audit":["op","vault"]}'
 bad_agents="$(jq -r 'select(.agent != null) | .agent | select(test("^[A-Za-z0-9][A-Za-z0-9_.-]*$") | not)' "$FILE" 2>/dev/null)"
 [[ -z "$bad_agents" ]] || die "an agent name must start with a letter or digit and hold only letters, digits, dot, dash, underscore"
-problems="$(jq -rn --argjson req "$REQUIRED" '
+problems="$(jq -rn --argjson req "$REQUIRED" --argjson allowed "$ALLOWED" '
     [inputs] | to_entries[]
     | .key as $n | .value as $o
     | if ($o | type) != "object" or ($req[$o.op // ""] == null) then "line \($n + 1): not an operation"
       else ($req[$o.op] | map(select($o[.] == null)) | select(length > 0) | "line \($n + 1): \($o.op) needs \(join(", "))") end
-    , (select(.value.op == "revoke" and .value.vault == null and .value.share_id == null) | "line \(.key + 1): revoke needs vault or share_id")
+    , (select($o.op == "revoke" and (($o.vault == null) == ($o.share_id == null))) | "line \($n + 1): revoke needs exactly one of vault and share_id")
+    , (select(($o | type) == "object" and $allowed[$o.op // ""] != null) | (($o | keys) - $allowed[$o.op]) | select(length > 0) | "line \($n + 1): unknown field \(join(", "))")
 ' "$FILE" 2>&1)" || die "$FILE is not JSON lines: $problems"
 [[ -z "$problems" ]] || die "$problems"
 
 if (( APPLY == 0 )); then
-    jq -r '[.op, (.vault // ""), (.title // .agent // ""),
-            (.new_title // .to // .role // .share_id // (if .note then "(note)" else "" end))] | @tsv' "$FILE"
+    # Every field but the note text, so the dry run shows what --apply will use.
+    jq -r '[.op] + (to_entries | map(select(.key != "op" and .key != "note") | "\(.key)=\(.value)")) + (if .note then ["note=(text)"] else [] end) | @tsv' "$FILE"
     echo
     echo "Dry run only. Run pass-sitting --apply $FILE to make these changes."
     exit 0
@@ -122,7 +127,7 @@ ok=0; bad=0; unknown_fields=0
 while IFS= read -r op <&3; do
     kind="$(jq -r .op <<< "$op")"
     vault="$(jq -r '.vault // ""' <<< "$op")"
-    title="$(jq -r '.title // .agent // ""' <<< "$op")"
+    title="$(jq -r 'if .op == "grant" or .op == "revoke" then .agent else (.title // "") end' <<< "$op")"
     all="$(jq -r '.all // false' <<< "$op")"
     rc=0
     case "$kind" in
@@ -164,7 +169,7 @@ while IFS= read -r op <&3; do
                         | jq -er '.item.content | if type == "object" then (.note // "") else error end' 2>/dev/null)"; then
                     echo "FAILED: note $vault / $title: could not read the old note"; rc=9
                 else
-                    if [[ -n "$old" && "$old" == "$note"* ]]; then
+                    if [[ -n "$old" && ( "$old" == "$note" || "$old" == "$note"$'\n\n'* ) ]]; then
                         note=""   # an earlier run already put this note there
                     elif [[ -n "$old" ]]; then
                         note="$note"$'\n\n'"$old"

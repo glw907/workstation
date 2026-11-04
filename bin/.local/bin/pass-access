@@ -26,13 +26,13 @@ rows() {
         | [ $agent,
             (if $kind == "vault" then (.name // .vault_name // .vaultName // "unnamed") else "(item share)" end),
             ((.share_role // .shareRole // .role // "unknown") | ascii_downcase) ]
-        | @tsv' <<< "$2"
+        | @tsv' <<< "$2" 2>/dev/null
 }
 
 claude_json="$("$CLAUDE_BIN" share list --output json)" || { echo "pass-access: $HOST-claude could not list its shares" >&2; exit 1; }
 scripts_json="$("$KEY_BIN" --shares)" || { echo "pass-access: $HOST-scripts could not list its shares" >&2; exit 1; }
 
-{
-    rows "$HOST-claude" "$claude_json"
-    rows "$HOST-scripts" "$scripts_json"
-} | LC_ALL=C sort
+# Collected first, so a reply that does not parse leaves stdout empty.
+claude_rows="$(rows "$HOST-claude" "$claude_json")" || { echo "pass-access: the $HOST-claude reply did not parse" >&2; exit 1; }
+scripts_rows="$(rows "$HOST-scripts" "$scripts_json")" || { echo "pass-access: the $HOST-scripts reply did not parse" >&2; exit 1; }
+printf '%s\n%s\n' "$claude_rows" "$scripts_rows" | grep -v '^$' | LC_ALL=C sort
