@@ -140,8 +140,11 @@ assert_eq "$(cat "$root/cache" 2>/dev/null)" "$(cat "$root/key.txt")" "only the 
 rm -rf "$root/vault/Age key/Workstation age encryption key"
 reset; echo "$TOKEN" > "$root/token"
 out=$(default_helper)
-[ "$?" -ne 0 ] || [ ! -s "$root/cache" ] || { echo "FAIL: neither title left a cache"; fail=1; }
+rc=$?
+[ "$rc" -ne 0 ] || { echo "FAIL: neither title exited 0"; fail=1; }
 [ ! -s "$root/cache" ] || { echo "FAIL: neither title still produced a cache"; fail=1; }
+assert_eq "$(grep -c '^item view' "$root/pass.log")" "2" "both titles were tried, new first"
+assert_eq "$(sessions_left)" "0" "the fallback path leaves no session directory"
 case "$out" in *"Age key (workstation)"*"Workstation age encryption key"*) ;; *) echo "FAIL: the failure did not name both titles: $out"; fail=1 ;; esac
 mkdir -p "$root/vault/Age key/Workstation age encryption key" && cp "$root/key.txt" "$root/vault/Age key/Workstation age encryption key/key"
 reset; echo "$TOKEN" > "$root/token"
