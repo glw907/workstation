@@ -12,7 +12,7 @@ BLOCK = BIN / "claude-block-pass"
 GUARD = BIN / "claude-secret-guard"
 
 DENIED = [
-    "pass-cli item view pass://Workstation/key/key",
+    "pass-cli item view pass://Age key/key/key",
     "pass-cli login",
     "PROTON_PASS_SESSION_DIR=/tmp/x pass-cli info",
     "cd ~ && pass-cli item list",
@@ -98,6 +98,35 @@ DENIED = [
     "cat > /tmp/x <<'EOF'\nnotes\nEOF\npass-cli info",
     # An unescaped pipe is still a pipe.
     "echo x | pass-cli info",
+    # pass-sitting's session directory, by name and by glob.
+    "ls $XDG_RUNTIME_DIR/pass-sitting.AbC123",
+    "cat $XDG_RUNTIME_DIR/pass-s*/session",
+    "cat /run/user/1000/pass-s?/x",
+    # A session name stays a match when a bare prefix or a short suffix ends the component.
+    "ls $XDG_RUNTIME_DIR/pass-ws/",
+]
+
+# Geoff alone runs pass-sitting, so the hook refuses it to Claude in every form, with a reason
+# that says so.
+SITTING = [
+    "pass-sitting plan.jsonl",
+    "pass-sitting --apply plan.jsonl",
+    "~/.local/bin/pass-sitting x",
+    "/var/home/glw907/.local/bin/pass-sitting x",
+    "$HOME/.local/bin/pass-sitting x",
+    "./bin/.local/bin/pass-sitting x",
+    "bash bin/.local/bin/pass-sitting x",
+    "source ~/.local/bin/pass-sitting",
+    ". ~/.local/bin/pass-sitting",
+    "~/.local/bin/pass-s* x",
+    "env A=1 pass-sitting x",
+    "bash -c 'pass-sitting x'",
+    "echo x | xargs pass-sitting",
+    "cd ~ && pass-sitting x",
+    '"pass-sitting" x',
+    "p''ass-sitting x",
+    "nohup pass-sitting x",
+    "bash <<'EOF'\npass-sitting x\nEOF",
 ]
 
 ALLOWED = [
@@ -117,12 +146,23 @@ ALLOWED = [
     "ssh-add -l",
     # claude-pass is Claude's route into Proton Pass (Geoff, 2026-10-20).
     "claude-pass --status",
-    'claude-pass item list --vault-name "Household IT"',
-    'claude-pass item create login --vault-name "Household IT" --from-template - < /tmp/x.json',
-    "printf '%s' \"$tmpl\" | claude-pass item create login --vault-name Workstation --from-template -",
-    "CLAUDE_PASS_REASON='rotate a key' claude-pass item view pass://Workstation/x/password > /tmp/out",
+    "claude-pass item list --vault-name Infrastructure",
+    "claude-pass item create login --vault-name Infrastructure --from-template - < /tmp/x.json",
+    "printf '%s' \"$tmpl\" | claude-pass item create login --vault-name Projects --from-template -",
+    "CLAUDE_PASS_REASON='rotate a key' claude-pass item view pass://Projects/x/password > /tmp/out",
+    "claude-pass share list --output json",
     "bash tests/claude-pass.test.sh",
     "micro bin/.local/bin/claude-pass",
+    # A session name is a whole path component: a file that only starts with one passes.
+    "bash tests/pass-count.test.sh",
+    "git log -- tests/pass-count.test.sh",
+    # The pass-sitting source, its test, and mentions of it are not a run.
+    "bash tests/pass-sitting.test.sh",
+    "cat bin/.local/bin/pass-sitting",
+    "git diff -- bin/.local/bin/pass-sitting",
+    "shellcheck bin/.local/bin/pass-sitting",
+    "bash -n bin/.local/bin/pass-sitting",
+    "git commit -m 'add pass-sitting'",
     # False positives from real sessions (2026-10-19 to 2026-10-21).
     "command -v pass-cli pass-count ws-pass-key secret-receive; ",
     "grep -n -i 'never calls\\|pass-cli' ~/.claude/docs/bluefin-admin.md | head -8",
@@ -154,6 +194,16 @@ def test_denied(cmd):
     assert decision["permissionDecision"] == "deny"
     assert "ws-pass-key" in decision["permissionDecisionReason"]
     assert "claude-pass" in decision["permissionDecisionReason"]
+
+
+@pytest.mark.parametrize("cmd", SITTING)
+def test_pass_sitting_denied_to_claude(cmd):
+    result = run(BLOCK, bash(cmd))
+    assert result.returncode == 0
+    decision = json.loads(result.stdout)["hookSpecificOutput"]
+    assert decision["permissionDecision"] == "deny"
+    assert "Geoff" in decision["permissionDecisionReason"]
+    assert "pass-sitting" in decision["permissionDecisionReason"]
 
 
 @pytest.mark.parametrize("cmd", ALLOWED)

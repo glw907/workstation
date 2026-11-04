@@ -12,7 +12,14 @@ own login and reach every vault:
 - secret-tool lookup and search, which print the agent tokens held in GNOME Keyring;
 - keyctl print, pipe, and read, which dump the kernel keyring pass-cli keeps its key in;
 - any mention of a pass-cli session directory (pass-ws.*, pass-recv.*, pass-count.*,
-  claude-pass's pass-agent.*, the default ~/.local/share/proton-pass-cli).
+  pass-sitting.*, claude-pass's pass-agent.*, the default ~/.local/share/proton-pass-cli). A
+  session name counts only as a whole path component: the prefix, a dot, a suffix of 1 to 12
+  letters, digits, or glob characters, then a slash, space, separator, or the end. So a file
+  such as tests/pass-count.test.sh passes, and a bare prefix such as pass-ws/ still matches;
+- pass-sitting in command position, in every form (bare, by path, after a wrapper, or as the
+  script of bash, sh, source, or a dot; `bash -n` only checks syntax and passes). Geoff alone
+  runs pass-sitting under his own login, and the refusal says so: Claude writes the sitting
+  file and Geoff runs it.
 
 claude-pass itself passes, because its command text names neither pass-cli nor a session
 directory, and it runs only its allowlisted subcommands (item, vault, folder, password, totp,
@@ -46,6 +53,14 @@ DENY_REASON = (
     "vault the claude agent cannot reach."
 )
 
+SITTING_REASON = (
+    "pass-sitting denied: Geoff alone runs pass-sitting, under his own Proton login, in a Ptyxis "
+    "terminal. Claude writes the sitting file (a JSON-lines list of moves, renames, notes, "
+    "trashes, grants, and revokes) and tells Geoff the two commands to run: pass-sitting FILE for "
+    "the dry run, then pass-sitting --apply FILE. For Claude's own reads and writes use "
+    "claude-pass."
+)
+
 # A command starts at the line start or after a shell separator or keyword, behind variable
 # assignments and the wrappers that pass a command through (each with options that may take a
 # value, and timeout's duration). An absolute or $(...)-built path to the binary counts.
@@ -58,13 +73,30 @@ WRAP = (
 )
 BIN = r"(?:\$\([^)]*\)[^\s;&|]*/|[^\s;&|]*/)?"
 START = SEP + ASSIGN + WRAP + BIN
+END = r"(?=[/\s;&|)<>`]|$)"
 PATTERNS = [
     re.compile(START + r"pass-cli(?:\s|$)"),
     re.compile(START + r"secret-tool\s+" + OPTS + r"(?:lookup|search)\b"),
     re.compile(START + r"keyctl\s+" + OPTS + r"(?:print|pipe|read)\b"),
     re.compile(
-        r"(?<![\w-])pass-(?:w[s*](?:[./*]|\s|$)|recv\.|count\.|agent\.|[*?\[]|[wrca][*?\[])"
+        r"(?<![\w-])pass-(?:"
+        # A session name is a whole path component: the prefix, a dot, 1 to 12 name or glob
+        # characters, then a separator. A file such as pass-count.test.sh is not one.
+        r"(?:ws|recv|count|agent|sitting)\.[A-Za-z0-9*?\[\]]{1,12}" + END +
+        # The bare pass-ws prefix, and a glob that could name any session directory.
+        r"|ws(?:[*?\[]|" + END + r")|[*?\[]|[wrcas][*?\[])"
         r"|\.local/share/proton-pass|share/proton-pass-[*?c]"
+    ),
+]
+
+# Geoff alone runs pass-sitting, so Claude's Bash never does, in any form. A shell reading the
+# file counts, except `bash -n`, which only checks syntax.
+SITTING_NAME = r"pass-sitting(?=[\s;&|)<>]|$)"
+SITTING_PATTERNS = [
+    re.compile(START + r"(?:pass-sitting(?=[\s;&|)<>]|$)|pass-s[*?\[])"),
+    re.compile(
+        SEP + ASSIGN + WRAP + r"(?:(?:ba|z|da|k)?sh|source|\.)\s+(?:-(?!n\b)\S*\s+)*"
+        r"(?:[^\s;&|]*/)?" + SITTING_NAME
     ),
 ]
 
@@ -113,13 +145,17 @@ def main():
         return 0
     cmd = (data.get("tool_input") or {}).get("command", "")
     cmd = normalize(LOOKUP.sub("type", strip_heredocs(cmd)))
-    if not any(p.search(cmd) for p in PATTERNS):
+    if any(p.search(cmd) for p in SITTING_PATTERNS):
+        reason = SITTING_REASON
+    elif any(p.search(cmd) for p in PATTERNS):
+        reason = DENY_REASON
+    else:
         return 0
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
             "permissionDecision": "deny",
-            "permissionDecisionReason": DENY_REASON,
+            "permissionDecisionReason": reason,
         }
     }))
     return 0
