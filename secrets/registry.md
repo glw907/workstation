@@ -10,7 +10,7 @@ Plaintext inventory — no secret values here. All values live in `secrets/value
 secrets document, at the path every project's doctrine already references.)
 
 ```
-Proton Pass Workstation vault (age key only)
+Proton Pass Age key vault (age key only)
     |
     v  ws-pass-key
     |
@@ -23,8 +23,8 @@ secrets/values.age (encrypted, safe to commit)
     +---> Cloudflare Workers (per-worker secrets via wrangler)
 ```
 
-- **Proton Pass** holds the age encryption key, in the `Workstation` vault (one item); a paper copy exists too
-- **claude-pass** is Claude's own route into Proton Pass (Geoff, 2026-10-20): the `<host>-claude` agent, editor on `Household IT` and `Workstation`, creates and edits items there. Because it is editor on `Workstation`, the vault that holds the age-key item, Claude can read or change that item too, per Geoff's ruling. It plays no part in the age-key path above
+- **Proton Pass** holds the age encryption key, in the `Age key` vault (one item); a paper copy exists too
+- **claude-pass** is Claude's own route into Proton Pass (Geoff, 2026-10-20): the `pavilion-claude` or `thinkpad-claude` agent, editor on `Infrastructure`, `Projects`, `ASC`, `Test accounts`, and `Age key` (the credential-hygiene layout, 2026-11-03), creates and edits items there. Because it is editor on `Age key`, Claude can read or change that item too, per Geoff's ruling. It plays no part in the age-key path above
 - **values.age** is the encrypted bundle committed to this repo and holds all secret values
 - **sync.sh** decrypts with the age key from `ws-pass-key` (the host's Proton agent token; a host with no token fails and is told to run `ws-pass-key --store`) and pushes to targets
 - **~/.local/secrets** is chmod 600, gitignored, sourced by `.bashrc`
@@ -329,7 +329,7 @@ tmpfs cache; no password manager holds it for scripts.
   with `repo` and `delete_repo`, no expiry.
 - **Used by**: every project's automated tests that need a GitHub account; first, cairn-cms's
   release gate. How to drive it: `~/.claude/docs/test-accounts.md`. Proton Pass record: the
-  Workstation item "GitHub test account (glw907-test)".
+  `Test accounts` vault item "GitHub test account (glw907-test)".
 - **Created 2026-11-03** on pavilion: Geoff signed up; a session set up 2FA, the token, and the
   recovery codes through Playwright. A screenshot exposed an abandoned setup's codes, so the set
   was regenerated; the stored set was never displayed.
@@ -384,7 +384,7 @@ tmpfs cache; no password manager holds it for scripts.
 
 ### WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERC
 - **Grants**: one household member's login to their own Floccus bookmark share at `https://dav.907.life/<name>/`, and nothing else. Each member's bookmarks file is also encrypted with a passphrase that member keeps, so the login alone doesn't reveal it.
-- **Used by**: the servers repo's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in Proton Pass as "Bookmarks WebDAV: <name>": Geoff's own in the `Workstation` vault with his other personal tool logins, and each other member's in `Household IT`, for Geoff to share with that member (Geoff, 2026-10-24).
+- **Used by**: the servers repo's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in Proton Pass as "Bookmarks WebDAV: <name>": Geoff's own and each other member's in `Infrastructure`, the members' for Geoff to share with that member (Geoff, 2026-10-24).
 - **Generated 2026-10-21** on pavilion (32 random bytes, base64url), in the bookmarks pass.
 - **Deleted 2026-10-24**: `_MEMBERA` and `_MEMBERB`, with their shares, after Geoff ruled that household members A and B were never people, only two unused Fastmail logins (servers#21).
 - **Rotate**: store a new value, update the Proton Pass item, re-render orpheus's `/etc/webdav/<name>.env`, restart `webdav@<name>`, and paste the new value into the member's Floccus on each device (servers `docs/runbook.md`, "Bookmark sync").
@@ -421,7 +421,7 @@ tmpfs cache; no password manager holds it for scripts.
 
 ### STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2
 - **Grants**: the passwords of four Stalwart accounts on ward: Geoff's and the second operator's mailboxes, and the two rehearsal test accounts. The mailbox passwords let their holders read that mail.
-- **Used by**: the servers repo's `roles/stalwart` (the plan sets each account's password from the store) and the rehearsal scripts (`vandelay-run.sh`, L6's sends). The second operator's also goes into `Household IT` for him.
+- **Used by**: the servers repo's `roles/stalwart` (the plan sets each account's password from the store) and the rehearsal scripts (`vandelay-run.sh`, L6's sends). The second operator's also goes into `Infrastructure` for him.
 - **Generated 2026-10-21** on pavilion (40 random alphanumerics), in the mail server pass (L3). Each is shared with its owner in Pass 6; until then only the rehearsal uses them.
 - **Rotate**: store a new value and apply the Stalwart role again.
 
@@ -597,8 +597,8 @@ tmpfs cache; no password manager holds it for scripts.
 - **Grants**: nothing on its own; the address of the throwaway Yahoo Mail test account
 - **Used by**: the self-hosting Pass 5 rehearsal's delivery tests, which send to it and read
   it through Yahoo webmail in Claude's Chromium profile
-- **Rotate at**: not rotated; the account's login is in the Workstation vault
-- **History**: stored from the Workstation vault 2026-10-21; it replaces the plan's Gmail test
+- **Rotate at**: not rotated; the account's login is in the `Test accounts` vault
+- **History**: stored from the Proton Pass item 2026-10-21 (now in `Test accounts`); it replaces the plan's Gmail test
   account on Geoff's ruling (Google's sign-up needs a smartphone)
 
 ### TEST_YAHOO_PASSWORD
@@ -606,7 +606,7 @@ tmpfs cache; no password manager holds it for scripts.
   phone, so a new browser sign-in needs him
 - **Used by**: the Pass 5 rehearsal's webmail sign-in in Claude's Chromium profile. Yahoo
   withholds app passwords from new accounts, so no IMAP or SMTP use
-- **Rotate at**: Yahoo > Account security > Change password, then the Workstation vault item
+- **Rotate at**: Yahoo > Account security > Change password, then the `Test accounts` vault item
   `login.yahoo.com`, then store it again from the vault
 - **History**: stored 2026-10-21. A fragment of the first password reached that session's
   transcript, because `~/.local/secrets` is written unquoted and the value held shell
@@ -726,7 +726,7 @@ tmpfs cache; no password manager holds it for scripts.
   through `scripts/voipms/lib.sh`, and `secrets/render.sh orpheus`, which writes
   `/etc/servers/voipms-relay.env`.
 - **Constraints**: exactly 64 lowercase hex characters; `render.sh` and both Caddy install scripts
-  refuse anything else. Copy in Proton Pass: the `VOIPMS_RELAY_KEY` item in `Household IT`.
+  refuse anything else. Copy in Proton Pass: the `VOIPMS_RELAY_KEY` item in `Infrastructure`.
 - **Rotation**: `openssl rand -hex 32 | secret-set.sh VOIPMS_RELAY_KEY --stdin`, keeping the
   trailing newline. Update the Pass item, run `scripts/apply.sh orpheus --apply` (Caddy reads the
   key only at start, so the install restarts it), then put the Worker secret. A host other than
@@ -843,7 +843,7 @@ Secrets this registry will set:
 
 - **Algorithm**: X25519 (age native)
 - **Public key**: age197mcd2m3z90t49n9t5v3ujjntw7krfkw5y9sjfc545v28qvezugshg7jgk
-- **Private key storage**: Proton Pass > `Workstation` vault > "Workstation age encryption key"
+- **Private key storage**: Proton Pass > `Age key` vault > "Workstation age encryption key"
   (the only item in that vault), plus a paper copy checked 2026-10-19 against the recipient
   with `age-keygen -y`. Each host reads it with its own agent token (`pavilion-scripts`, later
   `thinkpad-scripts`; viewer role on that vault only). The ASC age key stays in its own key

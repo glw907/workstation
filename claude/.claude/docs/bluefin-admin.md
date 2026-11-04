@@ -330,10 +330,12 @@ never-commit rules and a pointer here.
 
 - **Claude's own Proton Pass agent (Geoff, 2026-10-20): Claude works in Proton Pass as it
   did in 1Password, creating and editing items, but only through `claude-pass`.** Each
-  host gets an agent named `<host>-claude` with role editor on named vaults: `Servers
-  emergency` and `Workstation` to start, more as Geoff grants them. His Private and family
-  vaults stay out of reach. `Workstation` holds the age-key item, so as its editor Claude can
-  read or change that item too; that follows from the ruling. `claude-pass` runs only the
+  host gets an agent, `pavilion-claude` or `thinkpad-claude`, with role editor on
+  `Infrastructure`, `Projects`, `ASC`, `Test accounts`, and `Age key` (the
+  credential-hygiene layout, 2026-11-03). His Private and family vaults stay out of reach,
+  except for `pavilion-claude`'s temporary grant for that initiative's triage, which is
+  revoked when it ends. As editor on `Age key`, Claude can read or change the age key too;
+  that follows from the ruling. `claude-pass` runs only the
   subcommands item, vault, folder, password, totp, info, and user. Under `item` it allows
   list, view, create, update, trash, untrash, and move, so `item share`, `item member`, and
   `item delete` are refused. Under `vault` it allows only list, so `vault share`, `vault
@@ -344,13 +346,13 @@ never-commit rules and a pointer here.
   `$XDG_RUNTIME_DIR/pass-agent.*` session, runs the one command with an audit reason
   (`CLAUDE_PASS_REASON`, or a default naming the host and subcommand), then logs out and
   removes the directory. A value goes in on stdin (`claude-pass item create login
-  --vault-name "Household IT" --from-template -`), never on the command line. A secret
+  --vault-name "Infrastructure" --from-template -`), never on the command line. A secret
   read with `item view` goes to a file or a pipe, never the transcript. `claude-pass
   --status` prints `path=proton|none`, and `check-drift` reports it without failing.
-  To grant another vault, Geoff runs `pass-cli agent access grant <host>-claude
-  --vault-name V --role editor` in a throwaway session. The agent expires three months
-  after creation (`pass-cli agent create <host>-claude --expiration 3m`; pavilion's was
-  created 2026-10-20, thinkpad-x1's 2026-11-01). To renew it, Geoff creates a fresh token and stores it with
+  To grant another vault, Geoff runs `pass-cli agent access grant pavilion-claude
+  --vault-name V --role editor` (or `thinkpad-claude`) in a throwaway session. The agent
+  expires three months after creation (`pass-cli agent create <name> --expiration 3m`);
+  `pavilion-claude` expires 2027-01-20 and `thinkpad-claude` 2027-02-02. To renew it, Geoff creates a fresh token and stores it with
   `secret-tool store --label "Proton Pass claude agent" service proton-pass-agent-claude
   host <host>`. No expiry is recorded, so `check-drift` cannot warn ahead of it.
   Proton throttles the agent's logins after about four quick calls, and `claude-pass` then
@@ -365,15 +367,16 @@ never-commit rules and a pointer here.
   read with a reason, then logout. A host with no token fails with a message to run
   `ws-pass-key --store`; there is no `op` fallback. `check-drift` fails such a host and
   reports each host's path and the token's expiry (`ws-pass-key --status`, three-month
-  expiry). The `Workstation` vault holds one item, the age key; each host has its own agent
-  (`pavilion-scripts`, later `thinkpad-scripts`, viewer role on that vault only), which Geoff
+  expiry). The `Age key` vault holds one item, the age key; each host has its own agent
+  (`pavilion-scripts` and `thinkpad-scripts`, viewer role on that vault only), which Geoff
   creates in a throwaway session with `pass-cli agent create <host>-scripts --expiration 3m
-  --vault Workstation`. A paper copy of the key also exists. The ASC age key stays in
+  --vault "Age key"`. The key needs a vault of its own: an item share hides its parent
+  vault, so `ws-pass-key`'s `pass://Age key/...` lookup needs a vault grant (2026-11-03). A paper copy of the key also exists. The ASC age key stays in
   its own key file (`~/.config/age/asc-key.txt`); when that is missing, Geoff restores it by
   hand from Proton Pass, never through the agent token. Passkeys route through the browser
   for Geoff's touch, never read directly.
   `secret-receive NAME --pass REF` takes a value from Geoff's own Proton login, and
-  `pass-count` prints his per-vault counts (`--hashes` for `Household IT`).
+  `pass-count` prints his per-vault counts (`--hashes` for `Infrastructure`).
   `claude-sudo-setup` takes the sudo password from a dialog; sudo never reads a password
   manager. 1Password was removed from the workstations on 2026-10-19 (Geoff, 2026-10-18).
 - **Installing a NEW long-lived secret, every project (Geoff, 2026-07-13): the

@@ -38,7 +38,7 @@ import sys
 
 DENY_REASON = (
     "Proton Pass access denied: Claude reaches Proton Pass only through claude-pass, its own "
-    "agent (claude-pass item list --vault-name Workstation; a value goes in on stdin with "
+    "agent (claude-pass item list --vault-name Infrastructure; a value goes in on stdin with "
     "claude-pass item create login --from-template -). Claude never calls pass-cli directly, "
     "reads an agent token (secret-tool lookup), dumps the kernel keyring (keyctl "
     "print/pipe/read), or opens a pass-cli session directory. Use ws-pass-key for the age key, "
