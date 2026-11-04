@@ -104,6 +104,19 @@ DENIED = [
     "cat /run/user/1000/pass-s?/x",
     # A session name stays a match when a bare prefix or a short suffix ends the component.
     "ls $XDG_RUNTIME_DIR/pass-ws/",
+    # A script names a session directory with a variable, a long tail, or odd characters.
+    "cat $XDG_RUNTIME_DIR/pass-ws.$id/session",
+    "cat $XDG_RUNTIME_DIR/pass-agent.${s}/x",
+    "cat $XDG_RUNTIME_DIR/pass-sitting.$x/session",
+    "ls -d $XDG_RUNTIME_DIR/pass-recv.XXXXXXXXXXXXX",
+    "ls $XDG_RUNTIME_DIR/pass-count.ab_cd",
+    "ls $XDG_RUNTIME_DIR/pass-ws.abc-1",
+    "cp -r $XDG_RUNTIME_DIR/pass-agent.abc:/tmp",
+    "echo ${d:-$XDG_RUNTIME_DIR/pass-ws.abc}",
+    "ls {$XDG_RUNTIME_DIR/pass-ws.abc,x}",
+    "ls $XDG_RUNTIME_DIR/pass-ws.abc,",
+    "ls $XDG_RUNTIME_DIR/pass-ws.",
+    "find $XDG_RUNTIME_DIR -name pass-agent.\\*",
 ]
 
 # Geoff alone runs pass-sitting, so the hook refuses it to Claude in every form, with a reason
@@ -126,6 +139,17 @@ SITTING = [
     '"pass-sitting" x',
     "p''ass-sitting x",
     "nohup pass-sitting x",
+    "x=`pass-sitting`",
+    "~/.local/bin/pass-sit* x",
+    "~/.local/bin/pass-sittin? x",
+    "~/.local/bin/pass-sitting? x",
+    "/usr/bin/bash ~/.local/bin/pass-sitting --apply x",
+    "/bin/sh ~/.local/bin/pass-sitting x",
+    "busybox sh ~/.local/bin/pass-sitting x",
+    "bash < ~/.local/bin/pass-sitting",
+    "bash -s < ~/.local/bin/pass-sitting",
+    "bash -o errexit ~/.local/bin/pass-sitting x",
+    "bash -O extglob ~/.local/bin/pass-sitting x",
     "bash <<'EOF'\npass-sitting x\nEOF",
 ]
 

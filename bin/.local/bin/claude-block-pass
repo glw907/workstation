@@ -13,9 +13,9 @@ own login and reach every vault:
 - keyctl print, pipe, and read, which dump the kernel keyring pass-cli keeps its key in;
 - any mention of a pass-cli session directory (pass-ws.*, pass-recv.*, pass-count.*,
   pass-sitting.*, claude-pass's pass-agent.*, the default ~/.local/share/proton-pass-cli). A
-  session name counts only as a whole path component: the prefix, a dot, a suffix of 1 to 12
-  letters, digits, or glob characters, then a slash, space, separator, or the end. So a file
-  such as tests/pass-count.test.sh passes, and a bare prefix such as pass-ws/ still matches;
+  session name is the prefix and a dot with no later dot-and-letter in the same path component
+  (a variable, a glob, or a mktemp tail all count), or a bare prefix such as pass-ws/. So a
+  file with an extension, such as tests/pass-count.test.sh, passes;
 - pass-sitting in command position, in every form (bare, by path, after a wrapper, or as the
   script of bash, sh, source, or a dot; `bash -n` only checks syntax and passes). Geoff alone
   runs pass-sitting under his own login, and the refusal says so: Claude writes the sitting
@@ -80,9 +80,10 @@ PATTERNS = [
     re.compile(START + r"keyctl\s+" + OPTS + r"(?:print|pipe|read)\b"),
     re.compile(
         r"(?<![\w-])pass-(?:"
-        # A session name is a whole path component: the prefix, a dot, 1 to 12 name or glob
-        # characters, then a separator. A file such as pass-count.test.sh is not one.
-        r"(?:ws|recv|count|agent|sitting)\.[A-Za-z0-9*?\[\]]{1,12}" + END +
+        # A session name is the prefix and a dot, then a suffix with no later dot-and-letter in
+        # the same path component (a variable, a glob, or a mktemp tail all qualify). A file
+        # with an extension, such as pass-count.test.sh, is not one.
+        r"(?:ws|recv|count|agent|sitting)\.(?![^\s/;&|)<>`]*\.[A-Za-z])"
         # The bare pass-ws prefix, and a glob that could name any session directory.
         r"|ws(?:[*?\[]|" + END + r")|[*?\[]|[wrcas][*?\[])"
         r"|\.local/share/proton-pass|share/proton-pass-[*?c]"
@@ -91,12 +92,12 @@ PATTERNS = [
 
 # Geoff alone runs pass-sitting, so Claude's Bash never does, in any form. A shell reading the
 # file counts, except `bash -n`, which only checks syntax.
-SITTING_NAME = r"pass-sitting(?=[\s;&|)<>]|$)"
+SITTING_NAME = r"pass-sitting(?=[\s;&|)<>`]|$)"
 SITTING_PATTERNS = [
-    re.compile(START + r"(?:pass-sitting(?=[\s;&|)<>]|$)|pass-s[*?\[])"),
+    re.compile(START + r"(?:" + SITTING_NAME + r"|pass-s[\w-]*[*?\[])"),
     re.compile(
-        SEP + ASSIGN + WRAP + r"(?:(?:ba|z|da|k)?sh|source|\.)\s+(?:-(?!n\b)\S*\s+)*"
-        r"(?:[^\s;&|]*/)?" + SITTING_NAME
+        SEP + ASSIGN + WRAP + r"(?:busybox\s+)?" + BIN + r"(?:(?:ba|z|da|k)?sh|source|\.)\s+"
+        r"(?:-[oO]\s+\S+\s+|-(?!n\b)\S*\s+)*(?:<\s*)?(?:[^\s;&|]*/)?" + SITTING_NAME
     ),
 ]
 
