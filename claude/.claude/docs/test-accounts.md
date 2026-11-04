@@ -20,8 +20,9 @@ installations live here, never on `glw907`.
   separate token for a wider scope rather than widening this one.
 - Age store (`~/.local/secrets`): `GITHUB_TEST_LOGIN`, `GITHUB_TEST_PASSWORD`,
   `GITHUB_TEST_TOTP_SECRET`, `GITHUB_TEST_TOKEN`, `GITHUB_TEST_RECOVERY_CODES` (space-separated).
-- Proton Pass: the Workstation vault item "GitHub test account (glw907-test)" holds the same
-  login, password, TOTP, and, in its note, the token and recovery codes.
+- Proton Pass: the `Test accounts` vault item "GitHub test account (glw907-test)" holds the
+  same login, password, and TOTP. The token and recovery codes go into its note with the
+  credential-hygiene notes batch; until then the age store is their only copy.
 
 ### Driving it
 
@@ -35,6 +36,8 @@ installations live here, never on `glw907`.
 - Page gotchas (2026-11-03): GitHub pages hold live connections, so wait on `load` plus a
   short pause, never `networkidle`. The classic token form's expiration is a menu button, not a
   `<select>`. 2FA turns on only after step 2's recovery codes are downloaded and confirmed.
+  The "Confirm access" (sudo) page needs the TOTP code typed and then a click on Verify;
+  filling the field alone doesn't submit it.
 - Never screenshot a page that shows a secret (a setup key, recovery codes, a new token): a
   screenshot read into a session puts the value in its transcript. Extract the value from the
   DOM and store it unseen.
@@ -63,6 +66,15 @@ Geoff's aliases are on `m.907.life`; `me.907.life` is Oliver's. Neither is a tes
 - Token: `ws-cairn-gate`, user-owned (Workers Builds accepts only user tokens), store name
   `CF_WS_CAIRN_GATE_TOKEN`. Scopes and the ownership exception: `cloudflare-estate-inventory.md`.
 - Domain: `carin-test.org`, the test zone for site installs, with Email Sending on.
+- Workers Builds: `glw907-test` is connected (the Cloudflare Workers and Pages GitHub App,
+  All repositories). This was verified on 2026-11-03 by connecting a throwaway repo through
+  `PUT /accounts/<id>/builds/repos/connections`.
+- To reconnect, sign in to GitHub as `glw907-test` first. The docs' "Pages > Connect to Git"
+  path no longer exists. Use Workers & Pages > Create application > Continue with GitHub,
+  then add the account from the GitHub account menu.
+- A half-linked install shows "Error connecting to git account" in the dashboard and code
+  `8000008` from that API route. Uninstall the app at
+  <https://github.com/settings/installations> as `glw907-test`, then reconnect.
 
 ## npm
 
