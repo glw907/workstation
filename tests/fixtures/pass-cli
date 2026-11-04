@@ -46,6 +46,13 @@ case "$cmd" in
         [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }
         cat "${FAKE_PASS_FIXTURE:?FAKE_PASS_FIXTURE is not set}/_vaults.json"
         ;;
+    share)
+        # SYNTHETIC: a reply modeled on the pass-cli docs' fields (share_type, name, share_role),
+        # not on a recorded run. A test supplies $FAKE_PASS_FIXTURE/_shares.json.
+        [[ "${1:-}" == list ]] || { echo "fake pass-cli: unsupported: share ${1:-}" >&2; exit 2; }
+        [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }
+        cat "${FAKE_PASS_FIXTURE:?FAKE_PASS_FIXTURE is not set}/_shares.json"
+        ;;
     item)
         if [[ "${1:-}" == list ]]; then
             [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }

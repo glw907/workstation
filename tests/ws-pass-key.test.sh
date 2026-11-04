@@ -129,6 +129,26 @@ reset
 out=$(helper --status)
 case "$out" in *"path=none"*) ;; *) echo "FAIL: --status without a token: $out"; fail=1 ;; esac
 
+# 6b. --shares signs in once with the scripts token, lists the shares with a reason, logs out,
+# and never touches the cache. The reply is SYNTHETIC (the pass-cli docs' fields), supplied here.
+reset; echo "$TOKEN" > "$root/token"
+echo '{"shares":[{"share_type":"Vault","name":"Age key","share_role":"Viewer"}]}' > "$root/vault/_shares.json"
+out=$(helper --shares)
+assert_eq "$?" "0" "--shares exits 0 ($out)"
+case "$out" in *'"share_role":"Viewer"'*) ;; *) echo "FAIL: --shares did not print the share list: $out"; fail=1 ;; esac
+assert_eq "$(grep -c '^login' "$root/pass.log")" "1" "--shares signs in once"
+assert_eq "$(grep -c '^share list --output json' "$root/pass.log")" "1" "--shares lists the shares once"
+grep -q 'reason=test-suite: list shares on testhost' "$root/pass.log" || { echo "FAIL: --shares carried no reason naming script and host"; fail=1; }
+grep -q 'logout' "$root/pass.log" || { echo "FAIL: --shares never logged out"; fail=1; }
+assert_eq "$(sessions_left)" "0" "--shares leaves no session directory"
+[ ! -e "$root/cache" ] || { echo "FAIL: --shares touched the cache"; fail=1; }
+grep -q "$TOKEN" "$root/pass.log" && { echo "FAIL: --shares leaked the token into a recorded argument"; fail=1; }
+reset
+out=$(helper --shares)
+[ "$?" -ne 0 ] || { echo "FAIL: --shares with no token exited 0"; fail=1; }
+case "$out" in *"no agent token"*) ;; *) echo "FAIL: --shares with no token did not say so: $out"; fail=1 ;; esac
+assert_eq "$(pass_calls)" "0" "--shares with no token makes no pass-cli call"
+
 # 7. --store reads the token from the dialog into the keyring, with an expiry three months out.
 reset
 out=$(helper --store)

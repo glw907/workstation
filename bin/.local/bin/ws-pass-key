@@ -14,6 +14,7 @@
 #   ws-pass-key --status   # print "path=proton|none host=H expires=DATE days=N"; fetches nothing
 #   ws-pass-key --store    # keep a new agent token (from a hidden dialog) in the keyring
 #                          #   (--expires YYYY-MM-DD overrides the default three months)
+#   ws-pass-key --shares   # print the shares the scripts agent can reach, as JSON (pass-access)
 #
 # Environment: WS_PASS_CALLER names the calling script in the read's reason; WS_HOST overrides
 # `hostname -s`; WS_PASS_VAULT, WS_PASS_ITEM, and WS_PASS_FIELD name the item (Age key, the
@@ -74,8 +75,8 @@ store() {
     echo "ws-pass-key: agent token for $HOST stored in the keyring; expires $expires."
 }
 
-fetch_proton() {
-    local token="$1" reason
+login_session() {
+    local token="$1"
     [[ -n "${XDG_RUNTIME_DIR:-}" ]] || die "XDG_RUNTIME_DIR is not set; no tmpfs for a session"
     # One directory per run, so a planted or orphaned session is never reused and two direct
     # callers never log each other out. Global: the EXIT trap outlives this function.
@@ -84,8 +85,23 @@ fetch_proton() {
     export PROTON_PASS_DISABLE_TELEMETRY=1
     # The session is gone when this function's work is done, whatever the outcome.
     trap 'pass-cli logout >/dev/null 2>&1 || true; rm -rf "$sess"' EXIT
-    PROTON_PASS_PERSONAL_ACCESS_TOKEN="$token" pass-cli login >/dev/null 2>&1 ||
+    PROTON_PASS_PERSONAL_ACCESS_TOKEN="$token" pass-cli login >/dev/null 2>&1 </dev/null ||
         die "agent login failed for $HOST (token expired or revoked?)"
+}
+
+# Print the shares this host's scripts agent can reach, as pass-cli's JSON. It touches no cache.
+shares() {
+    local token
+    token="$(lookup_token)"
+    [[ -n "$token" ]] || die "no agent token for $HOST in the keyring; run ws-pass-key --store"
+    login_session "$token"
+    unset token
+    PROTON_PASS_AGENT_REASON="$CALLER: list shares on $HOST" pass-cli share list --output json
+}
+
+fetch_proton() {
+    local token="$1" reason
+    login_session "$token"
     reason="$CALLER: read age key on $HOST"
     PROTON_PASS_AGENT_REASON="$reason" pass-cli item view "pass://$VAULT/$ITEM/$FIELD" 2>/dev/null \
         | sed 's/^"//;s/"$//' > "$CACHE" || true
@@ -94,7 +110,8 @@ fetch_proton() {
 case "${1:-}" in
     --status) status; exit 0 ;;
     --store)  shift; store "$@"; exit 0 ;;
-    -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --shares) shares; exit $? ;;
+    -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     "") ;;
     *) die "unknown option: $1" ;;
 esac

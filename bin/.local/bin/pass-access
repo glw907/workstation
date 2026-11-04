@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# pass-access: print what this host's Proton Pass agents can reach, one row per share, as
+# agent<TAB>vault<TAB>role, sorted. check-drift compares the rows with secrets/proton-grants.tsv.
+#
+# Each agent lists its own shares with its own token (two sign-ins): <host>-claude through
+# claude-pass share list, and <host>-scripts through ws-pass-key --shares. A vault share prints
+# its vault name; an item share prints "(item share)" in the vault column and never its title, so
+# a transcript or a public fixture carries no item title. Roles print in lower case. The list is
+# read tolerantly: a bare array or {"shares": [...]}, snake_case or camelCase keys.
+#
+# A failed sign-in exits 1 with nothing on stdout. Environment: CLAUDE_PASS and WS_PASS_KEY name
+# the two readers (as check-drift does); WS_HOST overrides `hostname -s`.
+set -euo pipefail
+
+HOST="${WS_HOST:-$(hostname -s)}"
+CLAUDE_BIN="${CLAUDE_PASS:-claude-pass}"
+KEY_BIN="${WS_PASS_KEY:-ws-pass-key}"
+
+# rows <agent> <json> prints the agent's rows, or fails when the reply is not JSON.
+rows() {
+    jq -r --arg agent "$1" '
+        (if type == "array" then . else (.shares // .) end)[]
+        | ((.share_type // .shareType // .type // "") | ascii_downcase) as $kind
+        | [ $agent,
+            (if $kind == "item" then "(item share)" else (.name // .vault_name // .vaultName // "unnamed") end),
+            ((.share_role // .shareRole // .role // "unknown") | ascii_downcase) ]
+        | @tsv' <<< "$2"
+}
+
+claude_json="$("$CLAUDE_BIN" share list --output json)" || { echo "pass-access: $HOST-claude could not list its shares" >&2; exit 1; }
+scripts_json="$("$KEY_BIN" --shares)" || { echo "pass-access: $HOST-scripts could not list its shares" >&2; exit 1; }
+
+{
+    rows "$HOST-claude" "$claude_json"
+    rows "$HOST-scripts" "$scripts_json"
+} | LC_ALL=C sort

@@ -7,7 +7,8 @@ set -uo pipefail
 # Sections: stow state per package, rpm-ostree layered set, Homebrew,
 # flatpaks (against the manifest, with Bluefin's stock set implicit), uv
 # tools, staged /etc drops, untracked ~/.local/bin executables, the
-# git state, user lingering, and the Proton Pass wiring. Exit 0 only
+# git state, user lingering, and the Proton Pass wiring (including the grant map against
+# pass-access, and every Claude agent's token expiry from that map). Exit 0 only
 # when everything matches; exit 1 with per-item detail otherwise. The
 # manifests record intent; this script reports what happened.
 
@@ -109,6 +110,54 @@ check_proton() {
         esac
     fi
     check_claude_agent
+    check_grants
+}
+
+# The grant map (secrets/proton-grants.tsv) against what this host's agents can reach, and every
+# Claude agent's token expiry from the map. The grant comparison covers only this host's rows
+# (<host>-claude, <host>-scripts), since a token is readable only where its keyring is; the
+# expiry leg reads every Claude row, so either host warns for both. A "keyring" expiry (the
+# scripts agents) is not date-checked here: ws-pass-key --status above reads it. A failed
+# sign-in warns, because Proton throttles the agent after a few quick logins and the weekly
+# timer would otherwise fail on a throttle. PASS_ACCESS_SKIP=1 skips the sign-ins for a session
+# that reruns this script. PASS_ACCESS and PASS_GRANTS point the leg at a stub and a test map.
+check_grants() {
+    local map="${PASS_GRANTS:-$DOTFILES/secrets/proton-grants.tsv}" access="${PASS_ACCESS:-pass-access}"
+    local host="${WS_HOST:-$(hostname -s)}" want got row agent expires today days
+    if [[ ! -s "$map" ]] || [[ -z "$(tail -n +2 "$map")" ]]; then
+        bad "no grant map rows at $map (secrets/proton-grants.tsv)"
+        return 0
+    fi
+    if [[ "${PASS_ACCESS_SKIP:-}" == 1 ]]; then
+        warn "grant check skipped (PASS_ACCESS_SKIP=1); no sign-in made"
+    elif ! got=$("$access" 2>/dev/null); then
+        warn "pass-access could not sign in (Proton throttles agent logins after a few quick calls; retry in 25 minutes)"
+    else
+        want=$(awk -F'\t' -v OFS='\t' -v h="$host" 'NR > 1 && ($1 == h "-claude" || $1 == h "-scripts") { print $1, $2, $3 }' "$map" | LC_ALL=C sort)
+        got=$(LC_ALL=C sort <<< "$got")
+        while IFS= read -r row; do
+            [[ -n "$row" ]] && bad "grant missing: $row"
+        done < <(LC_ALL=C comm -23 <(printf '%s\n' "$want") <(printf '%s\n' "$got"))
+        while IFS= read -r row; do
+            [[ -n "$row" ]] && bad "grant extra: $row"
+        done < <(LC_ALL=C comm -13 <(printf '%s\n' "$want") <(printf '%s\n' "$got"))
+        if (( fail == 0 )); then ok "grants match the map for $host"; fi
+    fi
+    today=$(date +%s -d "$(date +%F)")
+    while IFS=$'\t' read -r agent expires; do
+        if ! expires_epoch=$(date +%s -d "$expires" 2>/dev/null) || [[ ! "$expires" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            bad "$agent: malformed expires '$expires' in the grant map"
+            continue
+        fi
+        days=$(( (expires_epoch - today) / 86400 ))
+        if (( days < 0 )); then
+            bad "$agent expired $(( -days )) days ago (renew it)"
+        elif (( days <= 30 )); then
+            warn "$agent expires in $days days (renew it)"
+        else
+            ok "$agent expires in $days days"
+        fi
+    done < <(awk -F'\t' 'NR > 1 && $1 ~ /-claude$/ && !seen[$1 FS $4]++ { print $1 "\t" $4 }' "$map")
 }
 
 # Claude's own Proton Pass agent (<host>-claude, reached through claude-pass). Informational:
