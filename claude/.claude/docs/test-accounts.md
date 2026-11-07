@@ -21,9 +21,9 @@ installations live here, never on `glw907`.
 - Age store (`~/.local/secrets`): `GITHUB_TEST_LOGIN`, `GITHUB_TEST_PASSWORD`,
   `GITHUB_TEST_TOTP_SECRET`, `GITHUB_TEST_TOKEN`, `GITHUB_TEST_RECOVERY_CODES` (space-separated).
 - Proton Pass: the `Test accounts` vault item "GitHub (glw907-test)" holds the
-  same login, password, and TOTP. The token and recovery codes go into it as two hidden
-  fields that Geoff fills in Proton's web app (`pass-cli` takes a field value only in argv, which
-  Claude keeps secrets out of); until then the age store is their only copy.
+  same login and password, the TOTP in the login's 2FA slot, and two hidden fields, "Token"
+  and "Recovery codes" (rebuilt 2026-11-07 from a template on stdin, per the `proton-pass`
+  skill).
 
 ### Driving it
 

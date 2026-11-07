@@ -329,8 +329,8 @@ tmpfs cache; no password manager holds it for scripts.
   with `repo` and `delete_repo`, no expiry.
 - **Used by**: every project's automated tests that need a GitHub account; first, cairn-cms's
   release gate. How to drive it: `~/.claude/docs/test-accounts.md`. Proton Pass record: the
-  `Test accounts` vault item "GitHub (glw907-test)". The token and recovery codes go into it as
-  two hidden fields that Geoff fills in Proton's web app; until then the age store is their only copy.
+  `Test accounts` vault item "GitHub (glw907-test)". It holds the token and recovery codes as
+  hidden fields named "Token" and "Recovery codes", and the TOTP in the login's 2FA slot.
 - **Created 2026-11-03** on pavilion: Geoff signed up; a session set up 2FA, the token, and the
   recovery codes through Playwright. A screenshot exposed an abandoned setup's codes, so the set
   was regenerated; the stored set was never displayed.
