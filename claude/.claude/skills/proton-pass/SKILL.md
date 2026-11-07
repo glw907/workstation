@@ -37,6 +37,8 @@ signs in to it, and money or medical accounts lean to `Cathy & Geoff` unless a k
 A title is the service's name as people say it, never a domain. A qualifier goes in one trailing
 parenthesis, only when one vault holds more than one account at the service, usually the username
 or whose it is. A key or secret is named system, then secret, then scope. No generic titles.
+A custom field's title is sentence case, as Proton Pass shows its own fields ("Token",
+"Recovery codes"), never lowercase or a variable name (Geoff, 2026-11-07).
 
 Technical vaults carry the full note template, each line only where a source supports it: `For`,
 `Used by`, `Rotate`, `Recovery`, `Mask`, `Reviewed`. Personal and family vaults carry only the lines
@@ -50,9 +52,13 @@ count and writes titles to a private findings file, so no title reaches a transc
   create, update, trash, untrash, move), vault list, folder (list, create, update, move), share
   list, and password, totp, info, user. Anything else is refused before the token is read.
 - A value goes in on stdin (`item create login --vault-name V --from-template -`), never in argv.
-  A secret read with `item view` goes to a file or a pipe, never the transcript. A field value
-  cannot go on stdin (`item update --field` takes it in argv), so Geoff fills secret fields in
-  Proton's web app.
+  A secret read with `item view` goes to a file or a pipe, never the transcript. A custom field
+  with a secret value goes in through the template's `extra_fields` array (`{"kind": "hidden",
+  "title": "Token", "value": ...}`), piped to `item create ... --from-template -`, because `item
+  update --field` takes its value in argv. To add one to an existing item, create the item again
+  from a template carrying every field, check it, then trash the old one. Read the item's
+  current fields first (names and types only), so nothing is added twice (pass-cli docs,
+  "Custom fields in templates"; Geoff, 2026-11-07).
 - Set `CLAUDE_PASS_REASON` to say why; the default names the host and verb.
 - Proton throttles an agent's logins after about four quick calls. "Agent login failed" with a
   good token is the throttle: wait 25 minutes, then space calls 150 seconds apart. Run any chain
