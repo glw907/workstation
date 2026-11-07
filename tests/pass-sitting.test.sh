@@ -3,7 +3,7 @@
 # the invented replies in tests/fixtures/pass-sitting. A dry run makes no call; --apply logs in
 # once and lists each named vault once; a title that matches none or several fails its line while
 # the next line still runs; a note lands above the old one and the old text never reaches stdout
-# or the results file; revoke passes the share id it resolved or was given; the audit prints the
+# or the results file; revoke passes the share id on its line; the audit prints the
 # grant map's shape; and the session directory is gone after a success, a failed login, and a
 # TERM. pass-sitting never runs against real Proton: this is the only place it runs for Claude.
 set -uo pipefail
@@ -67,6 +67,10 @@ out3=$(sitting -- "$root/fields.jsonl")
 assert_has "$out3" "line 1: unknown field to" "an unknown field is named, so the dry run cannot hide it"
 assert_has "$out3" "line 2: unknown field all" "all is refused on a rename"
 assert_has "$out3" "line 3: unknown field vault" "a revoke by vault is refused: only the agent-side share_id works"
+printf '%s\n' '{"op":"revoke","agent":"a-claude"}' '{"op":"revoke","agent":"a-claude","share_id":""}' > "$root/norevoke.jsonl"
+out3=$(sitting -- "$root/norevoke.jsonl")
+assert_has "$out3" "line 1: revoke needs share_id" "a revoke without a share id is refused"
+assert_has "$out3" "line 2: revoke needs a non-empty share_id" "an empty share id is refused in the dry run"
 printf 'not json\n' > "$root/notjson.jsonl"
 out2=$(sitting -- "$root/notjson.jsonl")
 [ "$?" -ne 0 ] || { echo "FAIL: a non-JSON file exited 0"; fail=1; }

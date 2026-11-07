@@ -52,6 +52,7 @@ problems="$(jq -rn --argjson req "$REQUIRED" --argjson allowed "$ALLOWED" '
     | .key as $n | .value as $o
     | if ($o | type) != "object" or ($req[$o.op // ""] == null) then "line \($n + 1): not an operation"
       else ($req[$o.op] | map(select($o[.] == null)) | select(length > 0) | "line \($n + 1): \($o.op) needs \(join(", "))") end
+    , (select(($o | type) == "object" and $o.op == "revoke" and $o.share_id == "") | "line \($n + 1): revoke needs a non-empty share_id")
     , (select(($o | type) == "object" and $allowed[$o.op // ""] != null) | (($o | keys) - $allowed[$o.op]) | select(length > 0) | "line \($n + 1): unknown field \(join(", "))")
 ' "$FILE" 2>&1)" || die "$FILE is not JSON lines: $problems"
 [[ -z "$problems" ]] || die "$problems"
