@@ -71,6 +71,11 @@ printf '%s\n' '{"op":"revoke","agent":"a-claude"}' '{"op":"revoke","agent":"a-cl
 out3=$(sitting -- "$root/norevoke.jsonl")
 assert_has "$out3" "line 1: revoke needs share_id" "a revoke without a share id is refused"
 assert_has "$out3" "line 2: revoke needs a non-empty share_id" "an empty share id is refused in the dry run"
+printf '%s\n' '{"op":"revoke","agent":"a-claude","share_id":5}' '{"op":"revoke","agent":"a-claude","share_id":"  "}' '{"op":"grant","agent":7,"vault":"V"}' > "$root/types.jsonl"
+out3=$(sitting -- "$root/types.jsonl")
+assert_has "$out3" "line 1: revoke needs a non-empty share_id" "a numeric share id is refused"
+assert_has "$out3" "line 2: revoke needs a non-empty share_id" "a blank share id is refused"
+assert_has "$out3" "line 3: agent must be a string" "a non-string agent is refused"
 printf 'not json\n' > "$root/notjson.jsonl"
 out2=$(sitting -- "$root/notjson.jsonl")
 [ "$?" -ne 0 ] || { echo "FAIL: a non-JSON file exited 0"; fail=1; }
@@ -105,8 +110,8 @@ assert_lacks "$(cat "$root/ops.jsonl.results.tsv")" "OLDSECRETNOTE" "the results
 assert_eq "$(stat -c %a "$root/ops.jsonl.results.tsv")" "600" "the results file is mode 600"
 
 # 2c. A revoke takes the agent-side share id on its line (the owner's id from vault list is refused by pass-cli).
-grep -q '^agent access revoke x-claude --share-id sid-agent-claude' "$root/pass.log" || { echo "FAIL: revoke did not pass the line's agent-side share id"; fail=1; }
-grep -q '^agent access revoke x-scripts --share-id sid-9' "$root/pass.log" || { echo "FAIL: revoke did not pass the line's share id"; fail=1; }
+grep -q '^agent access revoke x-claude --share-id=sid-agent-claude' "$root/pass.log" || { echo "FAIL: revoke did not pass the line's agent-side share id"; fail=1; }
+grep -q '^agent access revoke x-scripts --share-id=sid-9' "$root/pass.log" || { echo "FAIL: revoke did not pass the line's share id"; fail=1; }
 
 # 2d. The audit prints agent, vault, role, expiry, and says when a field could not be read.
 assert_has "$out" "x-claude	Alpha	editor	2027-01-20" "the audit row for an agent with an expiry"

@@ -52,7 +52,8 @@ problems="$(jq -rn --argjson req "$REQUIRED" --argjson allowed "$ALLOWED" '
     | .key as $n | .value as $o
     | if ($o | type) != "object" or ($req[$o.op // ""] == null) then "line \($n + 1): not an operation"
       else ($req[$o.op] | map(select($o[.] == null)) | select(length > 0) | "line \($n + 1): \($o.op) needs \(join(", "))") end
-    , (select(($o | type) == "object" and $o.op == "revoke" and $o.share_id == "") | "line \($n + 1): revoke needs a non-empty share_id")
+    , (select(($o | type) == "object" and $o.op == "revoke" and $o.share_id != null and (($o.share_id | type) != "string" or ($o.share_id | test("^\\s*$")))) | "line \($n + 1): revoke needs a non-empty share_id")
+    , (select(($o | type) == "object" and $o.agent != null and ($o.agent | type) != "string") | "line \($n + 1): agent must be a string")
     , (select(($o | type) == "object" and $allowed[$o.op // ""] != null) | (($o | keys) - $allowed[$o.op]) | select(length > 0) | "line \($n + 1): unknown field \(join(", "))")
 ' "$FILE" 2>&1)" || die "$FILE is not JSON lines: $problems"
 [[ -z "$problems" ]] || die "$problems"
@@ -124,7 +125,7 @@ while IFS= read -r op <&3; do
         grant)
             quiet pass-cli agent access grant "$title" --vault-name "$vault" --role "$(jq -r '.role // "editor"' <<< "$op")" || rc=$? ;;
         revoke)
-            quiet pass-cli agent access revoke "$title" --share-id "$(jq -r .share_id <<< "$op")" || rc=$? ;;
+            quiet pass-cli agent access revoke "$title" --share-id="$(jq -r .share_id <<< "$op")" || rc=$? ;;
         audit)
             if rows="$(audit_vault "$vault")"; then
                 printf '%s\n' "$rows"

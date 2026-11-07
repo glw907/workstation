@@ -144,6 +144,24 @@ DENIED = [
     "ls $XDG_RUNTIME_DIR/pass-ws.abc,",
     "ls $XDG_RUNTIME_DIR/pass-ws.",
     "find $XDG_RUNTIME_DIR -name pass-agent.\\*",
+    # A variable, substitution, or backtick glued to the command name.
+    "pass-cli$x info",
+    "pass-cli${x} info",
+    "pass-cli$() info",
+    "pass-cli`` info",
+    # ANSI-C quoting that spells the name with hex or octal escapes.
+    "$'pass\\x2dcli' info",
+    "$'pass\\055cli' info",
+    "$'\\x70ass-cli' info",
+    # A glob or brace on the command name, and on the session prefix.
+    "~/.local/bin/pass-cl? info",
+    "pass-cl{i,} info",
+    "ls $XDG_RUNTIME_DIR/pas?-agent.x",
+    "ls $XDG_RUNTIME_DIR/*-agent.*",
+    "builtin pass-cli info",
+    # An escaped << and $[...] arithmetic open no heredoc, so the next line runs.
+    "echo x \\<<EOF\npass-cli info\nEOF",
+    "echo $[1<<x]\npass-cli info\nx",
 ]
 
 # Geoff alone runs pass-sitting, so the hook refuses it to Claude in every form, with a reason
@@ -181,6 +199,18 @@ SITTING = [
     ">/tmp/o pass-sitting --apply f",
     "bash -O extglob ~/.local/bin/pass-sitting x",
     "bash <<'EOF'\npass-sitting x\nEOF",
+    "pass-sitting$x --apply f",
+    "pass-sitting${IFS}--apply f",
+    "pass-sitting$(true) --apply f",
+    "$'pass\\x2dsitting' --apply f",
+    "$'pass-sitt\\151ng' --apply f",
+    "~/.local/bin/pass-sittin{g,} x",
+    "cat \\<<EOF\npass-sitting --apply f\nEOF",
+    "bash -n +o noexec ~/.local/bin/pass-sitting --apply f",
+    "bash -o noexec +o noexec ~/.local/bin/pass-sitting",
+    "cat ~/.local/bin/pass-sitting | bash -s -- --apply f",
+    "bash <(cat ~/.local/bin/pass-sitting) --apply f",
+    "bash /dev/stdin --apply f < ~/.local/bin/pass-sitting",
 ]
 
 ALLOWED = [
