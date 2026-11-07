@@ -30,7 +30,7 @@ installations live here, never on `glw907`.
 - API: `GITHUB_TEST_TOKEN` as a bearer token. `GET /user` answers `glw907-test`, and the
   `x-oauth-scopes` header lists the scopes.
 - Browser: for pages no API reaches (creating or installing a GitHub App, settings), drive
-  Playwright with a persistent profile at `~/.local/state/github-test/profile` (mode 0700), which
+  Playwright with a persistent profile at `~/.local/state/github-test/profile` (mode 0700), which <!-- host-ok -->
   keeps the session between runs. Fill the password from the store. A fresh device or sudo prompt
   asks for a TOTP code: compute it from `GITHUB_TEST_TOTP_SECRET` (RFC 6238, SHA-1, 30 s, 6
   digits). A new-device email code arrives in the test mailbox.
