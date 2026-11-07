@@ -90,7 +90,7 @@ its fields are conditional, audit-tier ones consultation entries usually omit).
   pass now, or queued engine pass with the fallback sanctioned interim and a retirement
   trigger). An accept's ledger entry stays open until the consuming site task lands; the
   consuming pass closes it with a one-line seam-fit report (fit as designed, or the
-  friction found), so a seam landed ahead of its consumer is never left unproven.
+  backlog items found), so a seam landed ahead of its consumer is never left unproven.
 - **Decline**: with a recorded reason, into the ledger. The site's declared fallback is
   thereby sanctioned as the proper end state, not debt.
 - **Defer**: names the evidence that would reopen it (usually a second consumer) and
