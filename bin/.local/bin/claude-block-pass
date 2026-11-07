@@ -8,7 +8,8 @@ ruling of 2026-10-20). The other reviewed scripts (ws-pass-key, secret-receive -
 age key and Geoff's own reads. This hook denies the direct routes, which would act as Geoff's
 own login and reach every vault:
 
-- pass-cli in command position, since a user session can mint tokens and read any vault;
+- pass-cli in command position, since a user session can mint tokens and read any vault. A glob
+  or brace there (p*-cli, {pass-cli,}) counts when it could expand to the name;
 - secret-tool lookup and search, which print the agent tokens held in GNOME Keyring;
 - keyctl print, pipe, and read, which dump the kernel keyring pass-cli keeps its key in;
 - any mention of a pass-cli session directory (pass-ws.*, pass-recv.*, pass-count.*,
@@ -34,7 +35,7 @@ is not a command and passes.
 
 This is a guardrail, not a boundary: Claude runs as the same UID, so an indirect call
 (PC=pass-cli; $PC info) or another interpreter gets past any regex. A heredoc body is
-dropped unless the heredoc feeds a shell (bash, sh, eval, source, ssh), so a script written with
+dropped unless the heredoc feeds a shell (bash, sh, eval, source, ssh, before or after the <<), so a script written with
 `cat > file <<EOF` or a `python3 - <<EOF` edit may mention pass-cli. `command -v pass-cli` only
 looks the name up, and a backslash-escaped bar in a grep pattern is not a pipe. Known false positives: a
 line that starts with pass-cli inside a multi-line quoted message, and a plain grep for the
@@ -42,6 +43,7 @@ session-directory names.
 """
 
 import codecs
+import fnmatch
 import json
 import re
 import sys
@@ -106,7 +108,12 @@ PATTERNS = [
 # Geoff alone runs pass-sitting, so Claude's Bash never does, in any form. A shell reading the
 # file counts, except `bash -n`, which only checks syntax.
 SITTING_NAME = r"pass-sitting(?=[\s;&|)<>`$]|$)"
-SHELL_CMD = SEP + ASSIGN + WRAP + BIN + r"(?:(?:ba|z|da|k)?sh|source|\.)(?!\s+-n\b)(?=\s|$)"
+SHELL_CMD = (
+    SEP + ASSIGN + WRAP + BIN
+    + r"(?:busybox\s+)?(?:(?:r?ba|z|da|k)?sh|source|\.)(?!\s+-n\b(?![^;&|\n]*\s\+))(?=\s|$)"
+)
+# The script name as a whole word, with or without a directory.
+SITTING_WORD = r"(?:^|[\s/<(=])" + SITTING_NAME
 SITTING_PATTERNS = [
     re.compile(START + r"(?:" + SITTING_NAME + r"|pass-s[\w-]*[*?\[{])"),
     re.compile(
@@ -115,13 +122,78 @@ SITTING_PATTERNS = [
     ),
     # `bash -n +o noexec FILE` and `bash -n +n FILE` run the file: any + option turns a flag off.
     re.compile(r"(?:ba|z|da|k)?sh\s+[^;&|\n]*\+\S*[^;&|\n]*" + SITTING_NAME),
-    # A shell in command position anywhere on a line that names a .../pass-sitting path: the
+    # A shell in command position anywhere on a line that names pass-sitting as a word: the
     # path may reach the shell through a pipe, a process substitution, or stdin. A false positive
     # costs nothing, since only Geoff runs pass-sitting. `bash -n` only checks syntax and passes.
     re.compile(
-        r"(?:" + SHELL_CMD + r"[^\n]*/" + SITTING_NAME + r"|/" + SITTING_NAME + r"[^\n]*" + SHELL_CMD + r")"
+        r"(?:" + SHELL_CMD + r"[^\n]*" + SITTING_WORD + r"|" + SITTING_WORD + r"[^\n]*" + SHELL_CMD + r")"
     ),
 ]
+
+
+COMMAND_WORD = re.compile(START + r"(?P<word>[^\s;&|()<>`]+)")
+TOKEN = re.compile(r"[^\s;&|()<>`]+")
+GLOB_CHARS = re.compile(r"[*?\[\]{}]")
+
+
+def expand_braces(word, limit=64):
+    """Return the words a {a,b} group expands to, nested groups included, capped at limit."""
+    start = word.find("{")
+    if start < 0:
+        return [word]
+    depth, commas = 0, []
+    for i in range(start, len(word)):
+        if word[i] == "{":
+            depth += 1
+        elif word[i] == "," and depth == 1:
+            commas.append(i)
+        elif word[i] == "}":
+            depth -= 1
+            if depth == 0:
+                if not commas:
+                    return [word]
+                bounds = [start] + commas + [i]
+                out = []
+                for a, b in zip(bounds, bounds[1:]):
+                    out += expand_braces(word[:start] + word[a + 1 : b] + word[i + 1 :], limit)
+                return out[:limit]
+    return [word]
+
+
+def glob_names(word, names):
+    """Return True when a glob or brace word's basename could expand to one of names.
+
+    The basename needs four literal characters, so a bare * or *.md never counts.
+    """
+    if not GLOB_CHARS.search(word):
+        return False
+    for candidate in expand_braces(word.rsplit("/", 1)[-1]):
+        if len(GLOB_CHARS.sub("", candidate)) >= 4 and any(
+            fnmatch.fnmatchcase(name, candidate) for name in names
+        ):
+            return True
+    return False
+
+
+def command_glob(cmd, names):
+    """Return True when a command-position word is a glob that could expand to one of names."""
+    return any(glob_names(m.group("word"), names) for m in COMMAND_WORD.finditer(cmd))
+
+
+def default_session_named(cmd):
+    """Return True when a token names the default session directory, proton-pass-cli.
+
+    A bare name counts only after a cd or pushd, since `brew pin proton-pass-cli` names the package.
+    """
+    moved = re.search(r"(?:^|[\s;&|(])(?:cd|pushd)\s", cmd) is not None
+    for token in TOKEN.findall(cmd):
+        if re.search(r"/proton-pass-cli(?![\w-])|(?<![\w-])proton-pass-cli/", token):
+            return True
+        if moved and token == "proton-pass-cli":
+            return True
+        if glob_names(token, ["proton-pass-cli"]):
+            return True
+    return False
 
 
 HEREDOC = re.compile(r"(?<![<\\])<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
@@ -140,6 +212,7 @@ def real_heredoc(prefix):
         and "#" not in prefix
         and "((" not in prefix
         and "$[" not in prefix
+        and "${" not in prefix
     )
 
 
@@ -154,8 +227,10 @@ def strip_heredocs(cmd):
             continue
         kept.append(line)
         found = HEREDOC.search(line)
-        if found and real_heredoc(line[: found.start()]) and not SHELL_FEED.search(line[: found.start()]):
-            delimiter = found.group(2)
+        if found and real_heredoc(line[: found.start()]):
+            feeds_shell = SHELL_FEED.search(line[: found.start()]) or SHELL_FEED.search(line[found.end() :])
+            if not feeds_shell:
+                delimiter = found.group(2)
     return "\n".join(kept)
 
 
@@ -194,9 +269,9 @@ def main():
         return 0
     cmd = (data.get("tool_input") or {}).get("command", "")
     cmd = normalize(LOOKUP.sub("type", strip_heredocs(cmd)))
-    if any(p.search(cmd) for p in SITTING_PATTERNS):
+    if any(p.search(cmd) for p in SITTING_PATTERNS) or command_glob(cmd, ["pass-sitting"]):
         reason = SITTING_REASON
-    elif any(p.search(cmd) for p in PATTERNS):
+    elif any(p.search(cmd) for p in PATTERNS) or command_glob(cmd, ["pass-cli"]) or default_session_named(cmd):
         reason = DENY_REASON
     else:
         return 0

@@ -162,6 +162,24 @@ DENIED = [
     # An escaped << and $[...] arithmetic open no heredoc, so the next line runs.
     "echo x \\<<EOF\npass-cli info\nEOF",
     "echo $[1<<x]\npass-cli info\nx",
+    # A glob or brace before or inside pass- on the command word expands to pass-cli.
+    "p*-cli info",
+    "pa?s-cli info",
+    "[p]ass-cli info",
+    "{pass-cli,} info",
+    "~/.local/bin/p?ss-cli info",
+    "/usr/bin/*ass-cli info",
+    # A heredoc piped into a shell runs its body; a fake one inside ${...} hides nothing.
+    "cat <<EOF | bash\npass-cli info\nEOF",
+    "cat <<'EOF' | sh -s\npass-cli info\nEOF",
+    "tee /dev/null <<EOF | bash\npass-cli info\nEOF",
+    "echo ${x:-<<EOF}\npass-cli info\nEOF",
+    # The default session directory by a bare name after a cd, a trailing slash, or a glob.
+    "cd ~/.local/share && tar c proton-pass-cli",
+    "cd ~/.local/share; cat proton-pass-cli/.session/data",
+    "ls ~/.local/*/proton-pass-cli",
+    "ls ~/.local/share/p*-pass-cli",
+    "ls ~/.local/share/*pass-cli",
 ]
 
 # Geoff alone runs pass-sitting, so the hook refuses it to Claude in every form, with a reason
@@ -211,6 +229,23 @@ SITTING = [
     "cat ~/.local/bin/pass-sitting | bash -s -- --apply f",
     "bash <(cat ~/.local/bin/pass-sitting) --apply f",
     "bash /dev/stdin --apply f < ~/.local/bin/pass-sitting",
+    # -n excuses a shell only when no + option turns it back off.
+    "cat ~/.local/bin/pass-sitting | bash -n +o noexec -s -- --apply f",
+    "cat ~/.local/bin/pass-sitting | bash -n +n -s -- --apply f",
+    # The stdin forms with a bare name, after a cd.
+    "cd ~/.local/bin && cat pass-sitting | bash -s -- --apply f",
+    "cd ~/.local/bin && bash <(cat pass-sitting) --apply f",
+    "cd ~/.local/bin; bash /dev/stdin --apply f < pass-sitting",
+    "cd ~/.local/bin; busybox sh -s < pass-sitting",
+    "cd ~/.local/bin; rbash -s < pass-sitting",
+    # A glob before or inside pass- on the command word.
+    "*-sitting --apply f",
+    "~/.local/bin/p*-sitting --apply f",
+    "~/.local/bin/p?ss-sitting x",
+    # A heredoc piped into a shell runs its body.
+    "cat <<EOF | bash\npass-sitting --apply f\nEOF",
+    "cat <<'EOF' | sh -s -- --apply f\npass-sitting --apply f\nEOF",
+    "tee /dev/null <<EOF | bash -s\npass-sitting --apply f\nEOF",
 ]
 
 ALLOWED = [
@@ -253,6 +288,12 @@ ALLOWED = [
     "grep -rn -i 'proton-pass-cli\\|pass-cli' ~/.dotfiles/bluefin/Brewfile* 2>/dev/null | head -3",
     "cat > bin/.local/bin/claude-pass <<'EOF'\n#!/usr/bin/env bash\npass-cli \"$@\"\nEOF",
     "python3 -I - <<'EOF'\nold='''Claude never runs `pass-cli`; the hook denies it.'''\n- pass-cli in command position\nEOF",
+    # Commands that look near the hook's patterns but run nothing it guards.
+    "pass-access",
+    "ls *",
+    "cat docs/*.md",
+    "brew pin proton-pass-cli",
+    "bash -n bin/.local/bin/pass-sitting && shellcheck bin/.local/bin/pass-sitting",
 ]
 
 
