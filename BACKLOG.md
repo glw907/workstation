@@ -9,6 +9,8 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
+- [ ] **#51** Make `claude-block-pass` read shell words instead of matching text `#improvement` `#workstation` `#initiative:credential-hygiene` *(2026-11-07)*
+  The hook matches each Bash command against regex patterns, so each disguised spelling needs another pattern. Pass A's review rounds found 11 kinds of bypass (globs, ANSI-C quoting, fake heredocs, stdin feeds), and all are folded and tested (glw907/workstation#201). The third round's probes never ran, because a classifier stopped the reviewer, so the fixes in 4c951ef are unprobed. Geoff merged it as it stood ("Merge now", 2026-11-07). Parse the command into words (`shlex` with `punctuation_chars`, or `bashlex`) and decide on command-position words. Also settle whether a bare `proton-pass-cli` should count only after `cd` or `pushd`.
 - [ ] **#50** Let an Approval Queue decision reach the auto-mode classifier `#bug` `#workstation` *(2026-11-02)* *(swept 2026-11-03)*
   On 2026-11-02 the classifier refused `gh pr merge 197 --match-head-commit` as "Merge Without Review" after Geoff approved the PR in the queue, and passed once he typed the instruction. It sees only typed messages, so a queue approval is invisible to it; PR glw907/sportsyou-notify#2 merged under the same command, so the refusal isn't consistent. Find a path that doesn't need a typed repeat.
 - [ ] **#49** Stop inline comments and quoted operators fooling `claude-merge-guard` `#bug` `#workstation` *(2026-11-01)* *(swept 2026-11-03)*
