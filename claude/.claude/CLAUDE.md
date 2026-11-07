@@ -102,9 +102,8 @@ scheme). Use an API or CLI first for external services; no dashboard unless the 
 
 ## Secrets
 
-- **Never commit**: API tokens, passwords, keys, `.env` files with real values. **Local dev**:
-  `~/.bashrc` (non-sensitive) or `~/.local/secrets` (sensitive). **CI/CD**: GitHub Actions
-  secrets. **Runtime**: Cloudflare Workers secrets.
+- **Never commit**: API tokens, passwords, keys, `.env` files with real values. **Local dev**: `~/.bashrc`
+  (non-sensitive) or `~/.local/secrets` (sensitive). **CI/CD**: Actions secrets. **Runtime**: Workers secrets.
 - **A new long-lived secret originates in the workstation age store** (`secret-set.sh`), never
   a loose file, never only `wrangler secret put`. **A value from Geoff arrives via
   `secret-receive NAME`**, which Claude launches itself (its dialog takes the value), never pasted
@@ -113,6 +112,7 @@ scheme). Use an API or CLI first for external services; no dashboard unless the 
 - **Proton Pass is the authoritative record of every credential** (Geoff, 2026-10-27). Before
   claiming one is missing, or asking Geoff when one is rejected, check its item (`claude-pass`) and
   the stores (`~/.local/secrets`, the registry, `wrangler secret list`), by name, never a value.
+- **Geoff has no smartphone** (2026-11-07): never suggest a phone app; his 2FA is Proton Pass TOTP or a key.
 - Full flows, exceptions, and store order: `bluefin-admin.md` "Secrets". Test accounts: `test-accounts.md`.
 
 ## Other workstation services
