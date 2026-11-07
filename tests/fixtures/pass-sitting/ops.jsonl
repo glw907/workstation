@@ -6,6 +6,6 @@
 {"op":"note","vault":"Alpha","title":"No view","note":"For: nothing."}
 {"op":"move","vault":"Alpha","title":"Mover","to":"Beta"}
 {"op":"grant","agent":"x-claude","vault":"Beta","role":"editor"}
-{"op":"revoke","agent":"x-claude","vault":"Alpha"}
+{"op":"revoke","agent":"x-claude","share_id":"sid-agent-claude"}
 {"op":"revoke","agent":"x-scripts","share_id":"sid-9"}
 {"op":"audit","vault":"Alpha"}

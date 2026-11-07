@@ -13,7 +13,7 @@
 #   {"op":"note","vault":V,"title":T,"note":TEXT}      # goes above any existing note
 #   {"op":"trash","vault":V,"title":T}
 #   {"op":"grant","agent":A,"vault":V,"role":"editor"} # role defaults to editor
-#   {"op":"revoke","agent":A,"vault":V}                # or "share_id":ID instead of "vault"
+#   {"op":"revoke","agent":A,"share_id":ID}            # ID is the agent's own, from its `vault list`
 #   {"op":"audit","vault":V}                           # prints agent, vault, role, expiry
 # A title that matches no item, or more than one, fails its line (add "all":true to a move or
 # trash to take every match), and the next line still runs. Each vault an item operation names
@@ -40,11 +40,11 @@ command -v jq >/dev/null || die "jq not installed"
 
 # Every line must be a JSON object with a known op and its required fields.
 REQUIRED='{"move":["vault","title","to"],"rename":["vault","title","new_title"],"note":["vault","title","note"],
-  "trash":["vault","title"],"grant":["agent","vault"],"revoke":["agent"],"audit":["vault"]}'
+  "trash":["vault","title"],"grant":["agent","vault"],"revoke":["agent","share_id"],"audit":["vault"]}'
 # Every field a line may carry. An unknown field is refused, so the dry run shows all there is.
 ALLOWED='{"move":["op","vault","title","to","all"],"rename":["op","vault","title","new_title"],
   "note":["op","vault","title","note"],"trash":["op","vault","title","all"],
-  "grant":["op","agent","vault","role"],"revoke":["op","agent","vault","share_id"],"audit":["op","vault"]}'
+  "grant":["op","agent","vault","role"],"revoke":["op","agent","share_id"],"audit":["op","vault"]}'
 bad_agents="$(jq -r 'select(.agent != null) | .agent | select(test("^[A-Za-z0-9][A-Za-z0-9_.-]*$") | not)' "$FILE" 2>/dev/null)"
 [[ -z "$bad_agents" ]] || die "an agent name must start with a letter or digit and hold only letters, digits, dot, dash, underscore"
 problems="$(jq -rn --argjson req "$REQUIRED" --argjson allowed "$ALLOWED" '
@@ -52,7 +52,6 @@ problems="$(jq -rn --argjson req "$REQUIRED" --argjson allowed "$ALLOWED" '
     | .key as $n | .value as $o
     | if ($o | type) != "object" or ($req[$o.op // ""] == null) then "line \($n + 1): not an operation"
       else ($req[$o.op] | map(select($o[.] == null)) | select(length > 0) | "line \($n + 1): \($o.op) needs \(join(", "))") end
-    , (select($o.op == "revoke" and (($o.vault == null) == ($o.share_id == null))) | "line \($n + 1): revoke needs exactly one of vault and share_id")
     , (select(($o | type) == "object" and $allowed[$o.op // ""] != null) | (($o | keys) - $allowed[$o.op]) | select(length > 0) | "line \($n + 1): unknown field \(join(", "))")
 ' "$FILE" 2>&1)" || die "$FILE is not JSON lines: $problems"
 [[ -z "$problems" ]] || die "$problems"
@@ -96,17 +95,7 @@ for vault in $(jq -r 'select(.op | IN("move", "rename", "note", "trash")) | .vau
         | jq -c '[(.items // .)[] | select((.state // "Active") == "Active") | {t: (.content.title // .title), id: (.id // .item_id)}]' 2>/dev/null)"
 done
 
-VAULTS_JSON=""
 AGENTS_JSON=""
-
-# The share id of a named vault, from one `vault list` taken on first use.
-vault_share_id() {
-    [[ -n "$VAULTS_JSON" ]] || VAULTS_JSON="$(pass-cli vault list --output json 2>/dev/null </dev/null)"
-    jq -r --arg v "$1" '
-        [(.vaults // .shares // .)[] | select(.name == $v)
-         | to_entries[] | select((.key | ascii_downcase | test("share")) and (.key | ascii_downcase | test("id")) and (.value | type == "string"))
-         | .value][0] // empty' <<< "$VAULTS_JSON"
-}
 
 # audit <vault>: agent, vault, role, expiry for each member, in the grant map's shape.
 audit_vault() {
@@ -134,13 +123,7 @@ while IFS= read -r op <&3; do
         grant)
             quiet pass-cli agent access grant "$title" --vault-name "$vault" --role "$(jq -r '.role // "editor"' <<< "$op")" || rc=$? ;;
         revoke)
-            id="$(jq -r '.share_id // ""' <<< "$op")"
-            [[ -n "$id" ]] || id="$(vault_share_id "$vault")"
-            if [[ -z "$id" ]]; then
-                echo "FAILED: revoke $title on $vault: no share id"; rc=9
-            else
-                quiet pass-cli agent access revoke "$title" --share-id "$id" || rc=$?
-            fi ;;
+            quiet pass-cli agent access revoke "$title" --share-id "$(jq -r .share_id <<< "$op")" || rc=$? ;;
         audit)
             if rows="$(audit_vault "$vault")"; then
                 printf '%s\n' "$rows"

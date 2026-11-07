@@ -66,7 +66,7 @@ sed -i '$d' "$root/fields.jsonl"
 out3=$(sitting -- "$root/fields.jsonl")
 assert_has "$out3" "line 1: unknown field to" "an unknown field is named, so the dry run cannot hide it"
 assert_has "$out3" "line 2: unknown field all" "all is refused on a rename"
-assert_has "$out3" "line 3: revoke needs exactly one of vault and share_id" "a revoke names its target once"
+assert_has "$out3" "line 3: unknown field vault" "a revoke by vault is refused: only the agent-side share_id works"
 printf 'not json\n' > "$root/notjson.jsonl"
 out2=$(sitting -- "$root/notjson.jsonl")
 [ "$?" -ne 0 ] || { echo "FAIL: a non-JSON file exited 0"; fail=1; }
@@ -100,8 +100,8 @@ assert_lacks "$out" "OLDSECRETNOTE" "stdout"
 assert_lacks "$(cat "$root/ops.jsonl.results.tsv")" "OLDSECRETNOTE" "the results file"
 assert_eq "$(stat -c %a "$root/ops.jsonl.results.tsv")" "600" "the results file is mode 600"
 
-# 2c. A revoke resolves the vault's share id, or takes the one on its line.
-grep -q '^agent access revoke x-claude --share-id sid-alpha' "$root/pass.log" || { echo "FAIL: revoke did not pass the resolved share id"; fail=1; }
+# 2c. A revoke takes the agent-side share id on its line (the owner's id from vault list is refused by pass-cli).
+grep -q '^agent access revoke x-claude --share-id sid-agent-claude' "$root/pass.log" || { echo "FAIL: revoke did not pass the line's agent-side share id"; fail=1; }
 grep -q '^agent access revoke x-scripts --share-id sid-9' "$root/pass.log" || { echo "FAIL: revoke did not pass the line's share id"; fail=1; }
 
 # 2d. The audit prints agent, vault, role, expiry, and says when a field could not be read.

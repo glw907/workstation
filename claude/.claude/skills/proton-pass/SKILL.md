@@ -78,6 +78,9 @@ form). Claude writes the JSON-lines sitting file (the header of `bin/.local/bin/
 the shape) and tells Geoff the two commands: `pass-sitting FILE`, then `pass-sitting --apply FILE`,
 in a Ptyxis terminal, not through `!`.
 
+A `revoke` line carries the agent-side `share_id`, read from that agent's `vault list --output
+json`. The owner's share id for the same vault is rejected by `agent access revoke`.
+
 ## Aliases
 
 Masked and alias addresses use `m.907.life` (backlog #45, Geoff 2026-10-28). The servers repo's
