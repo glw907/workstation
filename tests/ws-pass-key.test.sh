@@ -120,8 +120,7 @@ out=$(env -u XDG_RUNTIME_DIR HOME="$root/home" PATH="$root/bin:$PATH" WS_HOST=te
 [ "$?" -ne 0 ] || { echo "FAIL: a missing XDG_RUNTIME_DIR exited 0"; fail=1; }
 [ ! -s "$root/cache" ] || { echo "FAIL: a missing XDG_RUNTIME_DIR left a cache"; fail=1; }
 
-# 5d. The default item is read under its new title, then under the old one until pass C drops it;
-# WS_PASS_ITEM reads only the title it names.
+# 5d. The default item is read under its held title only; WS_PASS_ITEM reads only the title it names.
 default_helper() {  # default_helper [env...]: no WS_PASS_ITEM
   env HOME="$root/home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" WS_HOST=testhost \
     CACHE="$root/cache" FAKE_PASS_LOG="$root/pass.log" FAKE_PASS_FIXTURE="$root/vault" \
@@ -131,25 +130,29 @@ reset; echo "$TOKEN" > "$root/token"
 mkdir -p "$root/vault/Age key"
 mkdir -p "$root/vault/Age key/Age key (workstation)" && cp "$root/key.txt" "$root/vault/Age key/Age key (workstation)/key"
 out=$(default_helper)
-assert_eq "$(cat "$root/cache" 2>/dev/null)" "$(cat "$root/key.txt")" "the new title fills the cache"
+assert_eq "$(cat "$root/cache" 2>/dev/null)" "$(cat "$root/key.txt")" "the held title fills the cache"
 rm -rf "$root/vault/Age key/Age key (workstation)"
+# A vault that holds only the retired title fails, and the message names the held title.
 mkdir -p "$root/vault/Age key/Workstation age encryption key" && cp "$root/key.txt" "$root/vault/Age key/Workstation age encryption key/key"
 reset; echo "$TOKEN" > "$root/token"
 out=$(default_helper)
-assert_eq "$(cat "$root/cache" 2>/dev/null)" "$(cat "$root/key.txt")" "only the old title still fills the cache"
+rc=$?
+[ "$rc" -ne 0 ] || { echo "FAIL: a vault holding only the retired title exited 0"; fail=1; }
+[ ! -s "$root/cache" ] || { echo "FAIL: the retired title still filled the cache"; fail=1; }
+assert_eq "$(grep -c '^item view' "$root/pass.log")" "1" "only the held title was tried"
+assert_eq "$(sessions_left)" "0" "the failure path leaves no session directory"
+case "$out" in *"Age key (workstation)"*) ;; *) echo "FAIL: the failure did not name the held title: $out"; fail=1 ;; esac
+case "$out" in *"Workstation age encryption key"*) echo "FAIL: the failure named the retired title: $out"; fail=1 ;; esac
 rm -rf "$root/vault/Age key/Workstation age encryption key"
 reset; echo "$TOKEN" > "$root/token"
 out=$(default_helper)
 rc=$?
-[ "$rc" -ne 0 ] || { echo "FAIL: neither title exited 0"; fail=1; }
-[ ! -s "$root/cache" ] || { echo "FAIL: neither title still produced a cache"; fail=1; }
-assert_eq "$(grep -c '^item view' "$root/pass.log")" "2" "both titles were tried, new first"
-assert_eq "$(sessions_left)" "0" "the fallback path leaves no session directory"
-case "$out" in *"Age key (workstation)"*"Workstation age encryption key"*) ;; *) echo "FAIL: the failure did not name both titles: $out"; fail=1 ;; esac
+[ "$rc" -ne 0 ] || { echo "FAIL: an empty vault exited 0"; fail=1; }
+[ ! -s "$root/cache" ] || { echo "FAIL: an empty vault produced a cache"; fail=1; }
 mkdir -p "$root/vault/Age key/Workstation age encryption key" && cp "$root/key.txt" "$root/vault/Age key/Workstation age encryption key/key"
 reset; echo "$TOKEN" > "$root/token"
 out=$(default_helper WS_PASS_ITEM="Age key (workstation)")
-[ ! -s "$root/cache" ] || { echo "FAIL: WS_PASS_ITEM still fell back to the old title"; fail=1; }
+[ ! -s "$root/cache" ] || { echo "FAIL: WS_PASS_ITEM still fell back to the retired title"; fail=1; }
 rm -rf "$root/vault/Age key/Workstation age encryption key"
 
 # 6. --status names the path and the expiry without printing the token.
