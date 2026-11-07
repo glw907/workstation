@@ -157,8 +157,9 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2 | ✓ | — | — | — |
 | STALWART_PASSWORD_PHONEBOOK | ✓ | — | — | — |
 | STALWART_PASSWORD_CAIRN_GATE | ✓ | — | — | — |
+| STALWART_PASSWORD_TECH | ✓ | — | — | — |
+| TECH_MAIL_APP_PASSWORD | ✓ | — | — | — |
 | SPORTSYOU_NOTIFY_JMAP_PASSWORD | ✓ | — | — | — |
-| PIKAPODS_SFTP_HOST / _USER / _PASSWORD | ✓ | — | — | — |
 | FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        |
 | FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        |
 | FASTMAIL_OPERATOR2_PASSWORD | ✓ | — | — | — |
@@ -452,6 +453,20 @@ tmpfs cache; no password manager holds it for scripts.
 - **Generated 2026-11-03** on pavilion (32 random bytes, base64url), for cairn-cms's setup-fix pass.
 - **Rotate**: store a new value, re-render ward's secrets and apply the Stalwart role (`scripts/apply.sh ward --apply` in the servers repo), then `secret-set.sh --sync` on each host.
 
+### STALWART_PASSWORD_TECH
+- **Grants**: sign-in to ward's technical mailbox with the account password. It opens the whole mailbox, which receives the reset mail for Geoff's technical accounts, so Claude never reads it as a credential and never signs in with it.
+- **Used by**: the servers repo's `roles/stalwart` (the plan sets the account's password) and `scripts/tech-mailbox-setup.sh`, which makes it. Claude's ward applies hold it in their process, as they hold every ward password.
+- **Copy**: Proton Pass, in the `Private` vault, made by the setup script under Geoff's own login. Claude has no grant on that vault.
+- **Status**: pending. The setup script makes the value on its first run, after the pass B servers PR merges.
+- **Rotate**: change the Proton Pass item and the store name together (`secret-set.sh`), then apply ward (`scripts/apply.sh ward --apply` in the servers repo).
+
+### TECH_MAIL_APP_PASSWORD
+- **Grants**: a read-only Stalwart app password on the technical mailbox, described `claude-reader`. Its permissions are `authenticate`, `jmapEmailGet`, `jmapEmailQuery`, `jmapEmailChanges`, `jmapMailboxGet`, and `jmapMailboxQuery`: it reads and cannot send, delete, or change a filter. The setup script proves that on every run.
+- **Used by**: the servers repo's `scripts/tech-mail.sh`, which reads one `export` line of `~/.local/secrets`. Workstation only: it is never in the servers store.
+- **Copy**: none. A rerun of the setup script replaces it.
+- **Status**: pending. The setup script makes it, and a session commits `secrets/values.age` afterwards.
+- **Rotate**: `secret-set.sh TECH_MAIL_APP_PASSWORD --delete`, then rerun `scripts/tech-mailbox-setup.sh` in the servers repo.
+
 ### SPORTSYOU_NOTIFY_JMAP_PASSWORD
 - **Grants**: a Stalwart app password on Geoff's account with seven permissions: `authenticate`, `jmapEmailGet`, `jmapEmailQuery`, `jmapEmailChanges`, `jmapEmailUpdate`, `jmapMailboxGet`, and `jmapMailboxQuery`. It reads and updates the whole mailbox, because Stalwart scopes a password by permission and never by folder. It cannot send mail or delete it permanently. The program touches only the SportsYou folder.
 - **Used by**: `sportsyou-notify` (repo `glw907/sportsyou-notify`), the top-bar indicator service and its Chromium native messaging host, on each workstation. It reads the value from `~/.local/secrets`.
@@ -482,16 +497,6 @@ tmpfs cache; no password manager holds it for scripts.
   refused another (403); the read-only token lists both backup buckets.
 - **Rotate**: as for `CF_WS_SERVERS_TOKEN`; a server's token also rotates when that server is
   rebuilt or compromised.
-
-### PIKAPODS_SFTP_HOST / PIKAPODS_SFTP_USER / PIKAPODS_SFTP_PASSWORD
-- **Grants**: SFTP into the PikaPods Immich pod's storage (`photos/` holds Immich's six data
-  directories, `config/` and `libraries/` the rest). The host and user are private, not secret:
-  they live here and in the servers repo's privacy patterns, never in a public file.
-- **Used by**: the self-hosting Immich cutover (Pass 3), which copies the six directories, and
-  the servers repo's `scripts/dry-run.sh`. Log in with `sshpass -e` so the password stays off
-  the command line.
-- **Received 2026-10-18**: the password through a desktop dialog; verified with an SFTP listing.
-- **Rotate at**: PikaPods > the pod > Settings > SFTP. Dies with the pod when PikaPods is retired.
 
 ### ACCESS_GITHUB_CLIENT_ID / ACCESS_GITHUB_CLIENT_SECRET
 - **Issuer**: the GitHub OAuth app "Wright Family Access" on Geoff's GitHub account, callback
