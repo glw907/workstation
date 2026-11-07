@@ -469,9 +469,9 @@ tmpfs cache; no password manager holds it for scripts.
 
 ### SPORTSYOU_NOTIFY_JMAP_PASSWORD
 - **Grants**: a Stalwart app password on Geoff's account with seven permissions: `authenticate`, `jmapEmailGet`, `jmapEmailQuery`, `jmapEmailChanges`, `jmapEmailUpdate`, `jmapMailboxGet`, and `jmapMailboxQuery`. It reads and updates the whole mailbox, because Stalwart scopes a password by permission and never by folder. It cannot send mail or delete it permanently. The program touches only the SportsYou folder.
-- **Used by**: `sportsyou-notify` (repo `glw907/sportsyou-notify`), the top-bar indicator service and its Chromium native messaging host, on each workstation. It reads the value from `~/.local/secrets`.
+- **Used by**: `sportsyou-notify` (repo `glw907/sportsyou-notify`), the top-bar indicator service and its Chromium native messaging host, on each workstation. It reads the value from `~/.local/secrets`. Proton Pass record: the `Projects` vault.
 - **Generated 2026-11-01** on thinkpad-x1 by `scripts/create-app-password.sh` in that repo, in its pass 1. Geoff ran it, because a session's permission layer refuses to create a credential with his login password.
-- **Rotate**: rerun `scripts/create-app-password.sh`, which removes the earlier copy and stores the new value, then run `secret-set.sh --sync` on each host and restart the service.
+- **Rotate**: rerun `scripts/create-app-password.sh`, which removes the earlier copy and stores the new value, then run `secret-set.sh --sync` on each host, restart the service, and update the Proton Pass record. Rotated 2026-11-05 on thinkpad-x1. Pavilion missed the sync until 2026-11-07, and its service got `401 Unauthorized` until its restart.
 
 ### HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD
 - **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token writes only its own server's row. They replaced the media and mail keys, which the rename pass retired.
