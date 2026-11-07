@@ -42,16 +42,67 @@ case "$cmd" in
         rm -f "$sess/session"
         ;;
     vault)
-        [[ "${1:-}" == list ]] || { echo "fake pass-cli: unsupported: vault ${1:-}" >&2; exit 2; }
         [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }
+        if [[ "${1:-}" == member && "${2:-}" == list ]]; then
+            # SYNTHETIC: modeled on the pass-cli docs, not on a recorded run. Served from
+            # $FAKE_PASS_FIXTURE/_members-<vault name>.json.
+            shift 2
+            name=""
+            while [[ $# -gt 0 ]]; do
+                case "$1" in --vault-name) name="${2:-}" ;; --vault-name=*) name="${1#*=}" ;; esac
+                shift
+            done
+            cat "${FAKE_PASS_FIXTURE:?FAKE_PASS_FIXTURE is not set}/_members-$name.json"
+            exit $?
+        fi
+        [[ "${1:-}" == list ]] || { echo "fake pass-cli: unsupported: vault ${1:-}" >&2; exit 2; }
         cat "${FAKE_PASS_FIXTURE:?FAKE_PASS_FIXTURE is not set}/_vaults.json"
+        ;;
+    agent)
+        [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }
+        # SYNTHETIC: `agent list --output json` and `agent access grant|revoke` follow the
+        # pass-cli docs; no run recorded a reply to either.
+        case "${1:-} ${2:-}" in
+            "list "*) cat "${FAKE_PASS_FIXTURE:?FAKE_PASS_FIXTURE is not set}/_agents.json" ;;
+            "access grant"|"access revoke") ;;
+            *) echo "fake pass-cli: unsupported: agent ${1:-} ${2:-}" >&2; exit 2 ;;
+        esac
+        ;;
+    share)
+        # SYNTHETIC: a reply modeled on the pass-cli docs' fields (share_type, name, share_role),
+        # not on a recorded run. A test supplies $FAKE_PASS_FIXTURE/_shares.json.
+        [[ "${1:-}" == list ]] || { echo "fake pass-cli: unsupported: share ${1:-}" >&2; exit 2; }
+        [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }
+        cat "${FAKE_PASS_FIXTURE:?FAKE_PASS_FIXTURE is not set}/_shares.json"
         ;;
     item)
         if [[ "${1:-}" == list ]]; then
             [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }
             share=""
-            while [[ $# -gt 0 ]]; do [[ "$1" == --share-id ]] && share="${2:-}"; shift; done
+            while [[ $# -gt 0 ]]; do
+                case "$1" in
+                    --share-id|--vault-name) share="${2:-}" ;;
+                    --vault-name=*) share="${1#*=}" ;;
+                esac
+                shift
+            done
+            [[ -z "${FAKE_PASS_NOISE:-}" ]] || echo "Error opening share deadbeef" >&2
+            [[ -z "${FAKE_PASS_SLEEP:-}" ]] || sleep "$FAKE_PASS_SLEEP"
             cat "${FAKE_PASS_FIXTURE:?FAKE_PASS_FIXTURE is not set}/_items-$share.json"
+            exit $?
+        fi
+        if [[ "${1:-}" == update || "${1:-}" == trash || "${1:-}" == move ]] && [[ "$*" == *--item-id* ]]; then
+            # Replies modeled on ~/.local/state/credential-hygiene/apply.sh and apply2.sh: each
+            # prints nothing on success; the noise line is the one those scripts filter.
+            [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }
+            [[ -z "${FAKE_PASS_NOISE:-}" ]] || echo "Error opening share deadbeef" >&2
+            exit 0
+        fi
+        if [[ "${1:-}" == view && "$*" == *--item-id* ]]; then
+            [[ -f "$sess/session" ]] || { echo "fake pass-cli: not logged in" >&2; exit 1; }
+            id=""
+            for a in "$@"; do case "$a" in --item-id=*) id="${a#*=}" ;; esac; done
+            cat "${FAKE_PASS_FIXTURE:?FAKE_PASS_FIXTURE is not set}/_view-$id.json"
             exit $?
         fi
         if [[ "${1:-}" == create ]]; then

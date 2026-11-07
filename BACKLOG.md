@@ -17,8 +17,6 @@
   Do Not Disturb was off on thinkpad-x1 (`org.gnome.desktop.notifications show-banners` is true), against the calm desktop rule. `check-drift` already reconciles the key (`bluefin/gnome-settings.txt:16`), so find why it did not flag the drift there. Found in the sportsyou-notify design.
 - [ ] **#46** Add Email Sending to `retire-project`'s teardown `#improvement` `#workstation` *(2026-11-01)* *(swept 2026-11-03)*
   Found retiring xcathletes-org. Step 4 names Email Routing, but a domain onboarded to Email Sending keeps locked `cf-bounce` records that answer "managed by Email Routing" even with routing off. Disabling the domain under Email Sending removed them. Both are dashboard steps, so the inventory and the packet should name them up front.
-- [ ] **#45** Move the Proton Pass procedure into a workstation skill `#improvement` `#workstation` *(2026-10-28)*
-  The procedure in `bluefin-admin.md` "Secrets" (which vault a new item goes in, the subcommands `claude-pass` allows, the login throttle, `secret-receive`) reaches a session only if it opens that doc. On 2026-10-28 the google-sheets session put the helper account's login in Geoff's own vault before Geoff ruled `Workstation`, and found late that `pass-cli` cannot create an alias. Geoff's Proton aliases live at `m.907.life` (Geoff, 2026-10-28), though `~/Projects/servers/docs/decisions.md` names `me.907.life` as his masked-address domain; the skill should state the right one. A skill that triggers on credential work would carry all of this; the doc keeps the facts and a pointer.
 - [ ] **#44** Make a conductor's session name match the name its executor trusts `#bug` `#workstation` `#initiative:docs-system` *(2026-10-27)* *(swept 2026-11-03)*
   The docs eval trust conductor prompt opens "You are conductor-cairn-cms", but nothing set that name: the session ran as `initiatives-b1`. The executor takes cross-session messages only from `conductor-cairn-cms`, so it refused Geoff's relayed pause on 2026-10-27, and the pause took a hard `claude stop` instead (glw907/cairn-cms#154, Planning misses). Fix in `pass-core` "Launch prompt": a conductor hand-over carries the exact `claude --name <conductor>` line, and the conductor prompt's first step checks its own row in `claude agents --json` and stops on a mismatch.
 
@@ -135,6 +133,8 @@
   **Three `internal/posthook` tests fail when the dotfiles checkout sits under `/tmp`** (`TestRunFlagsChangedLineOnly`, `TestRunSkipsUngovernedPaths`, `TestWholeDocFindingsOnlyOnWrite` return no advisory), so the gate goes red in a scratchpad worktree while the same tests pass in `~/.dotfiles` and in `.claude/worktrees/`. The hook likely treats a `/tmp` path as ungoverned. Make the tests use a path independent of where the checkout lives.
 
 ## Done
+- [x] **#45** Move the Proton Pass procedure into a workstation skill `#improvement` `#workstation` *(2026-10-28 → 2026-11-03)*
+  done: the `proton-pass` skill (`claude/.claude/skills/proton-pass/`) holds the procedure and states `m.907.life`, and CLAUDE.md and `bluefin-admin.md` point at it.
 - [x] **#4** Poplar adopts pass-core `#improvement` `#workstation` `#initiative:poplar-refounding` *(2026-10-14 → 2026-11-03)*
   done: `~/Projects/poplar/CLAUDE.md:59` loads `poplar-pass`, then `pass-core`.
 - [x] **#28** Create the Survey house style `#feature` `#workstation` *(2026-10-21 → 2026-11-03)*

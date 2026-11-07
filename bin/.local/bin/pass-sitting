@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+# pass-sitting: Geoff's bulk Proton Pass tool. It runs moves, renames, notes, trashes, grants,
+# revokes, and a grant audit from one file, under Geoff's own login, after a dry run. Only Geoff
+# runs it, in a Ptyxis terminal; claude-block-pass refuses it to Claude, who writes the sitting
+# file and tells Geoff the two commands.
+#
+#   pass-sitting FILE           # dry run: print each operation, sign in to nothing
+#   pass-sitting --apply FILE   # sign in once on the web, then carry the operations out
+#
+# FILE is JSON lines, one operation per line:
+#   {"op":"move","vault":V,"title":T,"to":V2}
+#   {"op":"rename","vault":V,"title":T,"new_title":T2}
+#   {"op":"note","vault":V,"title":T,"note":TEXT}      # goes above any existing note
+#   {"op":"trash","vault":V,"title":T}
+#   {"op":"grant","agent":A,"vault":V,"role":"editor"} # role defaults to editor
+#   {"op":"revoke","agent":A,"share_id":ID}            # ID is the agent's own, from its `vault list`
+#   {"op":"audit","vault":V}                           # prints agent, vault, role, expiry
+# A title that matches no item, or more than one, fails its line (add "all":true to a move or
+# trash to take every match), and the next line still runs. Each vault an item operation names
+# is listed once before any change.
+#
+# It logs in to a throwaway tmpfs session ($XDG_RUNTIME_DIR/pass-sitting.XXXXXX), never the
+# default one, and logs out and removes it on every exit, HUP, INT, and TERM included. The results
+# go to FILE.results.tsv (op, vault, title or agent, rc). An existing note is read into a
+# variable and never printed. A note or a new title travels in the command line by design: it
+# holds the naming scheme's metadata, never a secret value.
+set -uo pipefail
+umask 077
+
+die() { echo "pass-sitting: $*" >&2; exit 1; }
+
+APPLY=0
+case "${1:-}" in
+    --apply) APPLY=1; shift ;;
+    -h|--help|"") sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
+FILE="${1:-}"
+[[ -f "$FILE" ]] || die "no such file: ${FILE:-<none>}"
+command -v jq >/dev/null || die "jq not installed"
+
+# Every line must be a JSON object with a known op and its required fields.
+REQUIRED='{"move":["vault","title","to"],"rename":["vault","title","new_title"],"note":["vault","title","note"],
+  "trash":["vault","title"],"grant":["agent","vault"],"revoke":["agent","share_id"],"audit":["vault"]}'
+# Every field a line may carry. An unknown field is refused, so the dry run shows all there is.
+ALLOWED='{"move":["op","vault","title","to","all"],"rename":["op","vault","title","new_title"],
+  "note":["op","vault","title","note"],"trash":["op","vault","title","all"],
+  "grant":["op","agent","vault","role"],"revoke":["op","agent","share_id"],"audit":["op","vault"]}'
+bad_agents="$(jq -r 'select(.agent != null) | .agent | select(test("^[A-Za-z0-9][A-Za-z0-9_.-]*$") | not)' "$FILE" 2>/dev/null)"
+[[ -z "$bad_agents" ]] || die "an agent name must start with a letter or digit and hold only letters, digits, dot, dash, underscore"
+problems="$(jq -rn --argjson req "$REQUIRED" --argjson allowed "$ALLOWED" '
+    [inputs] | to_entries[]
+    | .key as $n | .value as $o
+    | if ($o | type) != "object" or ($req[$o.op // ""] == null) then "line \($n + 1): not an operation"
+      else ($req[$o.op] | map(select($o[.] == null)) | select(length > 0) | "line \($n + 1): \($o.op) needs \(join(", "))") end
+    , (select(($o | type) == "object" and $o.op == "revoke" and $o.share_id != null and (($o.share_id | type) != "string" or ($o.share_id | test("^\\s*$")))) | "line \($n + 1): revoke needs a non-empty share_id")
+    , (select(($o | type) == "object" and $o.agent != null and ($o.agent | type) != "string") | "line \($n + 1): agent must be a string")
+    , (select(($o | type) == "object" and $allowed[$o.op // ""] != null) | (($o | keys) - $allowed[$o.op]) | select(length > 0) | "line \($n + 1): unknown field \(join(", "))")
+' "$FILE" 2>&1)" || die "$FILE is not JSON lines: $problems"
+[[ -z "$problems" ]] || die "$problems"
+
+if (( APPLY == 0 )); then
+    # Every field but the note text, so the dry run shows what --apply will use.
+    jq -r '[.op] + (to_entries | map(select(.key != "op" and .key != "note") | "\(.key)=\(.value)")) + (if .note then ["note=(text)"] else [] end) | @tsv' "$FILE"
+    echo
+    echo "Dry run only. Run pass-sitting --apply $FILE to make these changes."
+    exit 0
+fi
+
+command -v pass-cli >/dev/null || die "pass-cli not installed"
+[[ -n "${XDG_RUNTIME_DIR:-}" ]] || die "XDG_RUNTIME_DIR is not set; no tmpfs for a session"
+RESULTS="$FILE.results.tsv"
+
+SESSION="$(mktemp -d "$XDG_RUNTIME_DIR/pass-sitting.XXXXXX")"
+export PROTON_PASS_SESSION_DIR="$SESSION"
+export PROTON_PASS_DISABLE_TELEMETRY=1
+trap 'pass-cli logout >/dev/null 2>&1 || true; rm -rf "$SESSION"' EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+# Run a pass-cli command with its output dropped and the share-open noise filtered from stderr.
+quiet() {
+    "$@" >/dev/null 2>"$SESSION/err" </dev/null
+    local rc=$?
+    grep -v 'Error opening share' "$SESSION/err" >&2
+    return $rc
+}
+
+echo "Log in to Proton Pass in the browser when asked." >&2
+pass-cli login 2> >(grep -v 'Error opening share' >&2) || die "login failed"
+
+# One listing per vault the item operations name, taken before any change.
+declare -A LIST
+for vault in $(jq -r 'select(.op | IN("move", "rename", "note", "trash")) | .vault | @base64' "$FILE" | sort -u); do
+    name="$(base64 -d <<< "$vault")"
+    LIST[$name]="$(pass-cli item list --vault-name "$name" --output json 2>/dev/null </dev/null \
+        | jq -c '[(.items // .)[] | select((.state // "Active") == "Active") | {t: (.content.title // .title), id: (.id // .item_id)}]' 2>/dev/null)"
+done
+
+AGENTS_JSON=""
+
+# audit <vault>: agent, vault, role, expiry for each member, in the grant map's shape.
+audit_vault() {
+    local vault="$1" members
+    [[ -n "$AGENTS_JSON" ]] || AGENTS_JSON="$(pass-cli agent list --output json 2>/dev/null </dev/null)"
+    members="$(pass-cli vault member list --vault-name "$vault" --output json 2>/dev/null </dev/null)" || return 1
+    jq -e . >/dev/null 2>&1 <<< "$members" || return 1
+    jq -r --arg v "$vault" --argjson agents "$(jq -c . <<< "$AGENTS_JSON" 2>/dev/null || echo null)" '
+        ((($agents // {}) | (.agents // .) | if type == "array" then . else [] end)
+         | map({key: (.name // .agent_name // ""), value: (.expiration // .expires // .expiry // "unknown")}) | from_entries) as $exp
+        | (.members // .vault_members // .)[]
+        | (.agent_name // .name // .email // .member // "unknown") as $who
+        | [$who, $v, (.role // .share_role // "unknown"), ($exp[$who] // "unknown")] | @tsv' <<< "$members"
+}
+
+: > "$RESULTS"
+ok=0; bad=0; unknown_fields=0
+while IFS= read -r op <&3; do
+    kind="$(jq -r .op <<< "$op")"
+    vault="$(jq -r '.vault // ""' <<< "$op")"
+    title="$(jq -r 'if .op == "grant" or .op == "revoke" then .agent else (.title // "") end' <<< "$op")"
+    all="$(jq -r '.all // false' <<< "$op")"
+    rc=0
+    case "$kind" in
+        grant)
+            quiet pass-cli agent access grant "$title" --vault-name "$vault" --role "$(jq -r '.role // "editor"' <<< "$op")" || rc=$? ;;
+        revoke)
+            quiet pass-cli agent access revoke "$title" --share-id="$(jq -r .share_id <<< "$op")" || rc=$? ;;
+        audit)
+            if rows="$(audit_vault "$vault")"; then
+                printf '%s\n' "$rows"
+                grep -q 'unknown' <<< "$rows" && unknown_fields=1
+            else
+                echo "FAILED: audit $vault could not be read"; rc=1
+            fi ;;
+        *)
+            mapfile -t ids < <(jq -r --arg t "$title" '.[] | select(.t == $t) | .id' <<< "${LIST[$vault]:-[]}")
+            # "all" is honored only by move and trash; a rename or note edits exactly one item.
+            if [[ "$kind" == rename || "$kind" == note ]]; then all=false; fi
+            if [[ ${#ids[@]} -eq 0 || ( ${#ids[@]} -gt 1 && "$all" != true ) ]]; then
+                echo "FAILED: $kind $vault / $title matched ${#ids[@]} items"; rc=9
+            elif [[ "$kind" == trash ]]; then
+                for id in "${ids[@]}"; do quiet pass-cli item trash --vault-name="$vault" --item-id="$id" || rc=$?; done
+            elif [[ "$kind" == move ]]; then
+                to="$(jq -r .to <<< "$op")"
+                for id in "${ids[@]}"; do quiet pass-cli item move --from-vault-name="$vault" --item-id="$id" --to-vault-name="$to" || rc=$?; done
+            elif [[ "$kind" == rename ]]; then
+                quiet pass-cli item update --vault-name="$vault" --item-id="${ids[0]}" --field "title=$(jq -r .new_title <<< "$op")" || rc=$?
+            else  # note: the new lines go above the old note, which is read and never printed
+                id="${ids[0]}"
+                note="$(jq -r .note <<< "$op")"
+                # A failed read must not become an empty old note, or the update would overwrite it.
+                if ! old="$(pass-cli item view --vault-name="$vault" --item-id="$id" --output json 2>/dev/null </dev/null \
+                        | jq -er '.item.content | if type == "object" then (.note // "") else error end' 2>/dev/null)"; then
+                    echo "FAILED: note $vault / $title: could not read the old note"; rc=9
+                else
+                    if [[ -n "$old" && ( "$old" == "$note" || "$old" == "$note"$'\n\n'* ) ]]; then
+                        note=""   # an earlier run already put this note there
+                    elif [[ -n "$old" ]]; then
+                        note="$note"$'\n\n'"$old"
+                    fi
+                    [[ -z "$note" ]] || quiet pass-cli item update --vault-name="$vault" --item-id="$id" --field "note=$note" || rc=$?
+                fi
+                unset old note
+            fi ;;
+    esac
+    if [[ $rc -eq 0 ]]; then ok=$((ok + 1)); else bad=$((bad + 1)); [[ $rc -ne 9 ]] && echo "FAILED: $kind $vault / $title"; fi
+    printf '%s\t%s\t%s\t%s\n' "$kind" "$vault" "$title" "$rc" >> "$RESULTS"
+done 3< "$FILE"
+(( unknown_fields == 0 )) || echo "audit: some fields could not be read and show as unknown" >&2
+echo "done: $ok ok, $bad failed ($RESULTS)"

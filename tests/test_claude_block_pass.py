@@ -12,7 +12,7 @@ BLOCK = BIN / "claude-block-pass"
 GUARD = BIN / "claude-secret-guard"
 
 DENIED = [
-    "pass-cli item view pass://Workstation/key/key",
+    "pass-cli item view pass://Age key/key/key",
     "pass-cli login",
     "PROTON_PASS_SESSION_DIR=/tmp/x pass-cli info",
     "cd ~ && pass-cli item list",
@@ -98,6 +98,154 @@ DENIED = [
     "cat > /tmp/x <<'EOF'\nnotes\nEOF\npass-cli info",
     # An unescaped pipe is still a pipe.
     "echo x | pass-cli info",
+    # pass-sitting's session directory, by name and by glob.
+    "ls $XDG_RUNTIME_DIR/pass-sitting.AbC123",
+    "cat $XDG_RUNTIME_DIR/pass-s*/session",
+    "cat /run/user/1000/pass-s?/x",
+    "cat $XDG_RUNTIME_DIR/pass-sitting*/session.json",
+    "ls $XDG_RUNTIME_DIR/pass-sitting*",
+    "ls -d $XDG_RUNTIME_DIR/pass-si*/",
+    "cat $XDG_RUNTIME_DIR/pass-sitt*/session.json",
+    "d=$(ls -d $XDG_RUNTIME_DIR/pass-sitting?*)",
+    "ls $XDG_RUNTIME_DIR/pass-agent*",
+    "ls $XDG_RUNTIME_DIR/pass-co*",
+    "ls $XDG_RUNTIME_DIR/pass-ag*",
+    "ls -d $XDG_RUNTIME_DIR/pass-{agent,ws}.*",
+    "ls ~/.local/share/proton*",
+    # A fake heredoc start in a comment, a quote, or arithmetic must not hide the next line.
+    "# <<EOF\npass-cli info",
+    "echo '<<EOF'\npass-cli info",
+    "echo $((1<<x))\npass-cli info",
+    # A redirection before the command or glued to its name, ANSI-C quoting, case arms, coproc.
+    "</dev/null pass-cli info",
+    "2>&1 pass-cli info",
+    "pass-cli>&2 item list",
+    "pass-cli>/tmp/o item list",
+    "secret-tool>&2 lookup service proton-pass-agent-claude host x",
+    "</dev/null secret-tool lookup service x",
+    "keyctl>&2 print 123",
+    "$'pass-cli' info",
+    '$"pass-cli" info',
+    "case 1 in 1) pass-cli info;; esac",
+    "coproc pass-cli info",
+    "/bin/bash <<EOF\npass-cli info\nEOF",
+    # A session name stays a match when a bare prefix or a short suffix ends the component.
+    "ls $XDG_RUNTIME_DIR/pass-ws/",
+    # A script names a session directory with a variable, a long tail, or odd characters.
+    "cat $XDG_RUNTIME_DIR/pass-ws.$id/session",
+    "cat $XDG_RUNTIME_DIR/pass-agent.${s}/x",
+    "cat $XDG_RUNTIME_DIR/pass-sitting.$x/session",
+    "ls -d $XDG_RUNTIME_DIR/pass-recv.XXXXXXXXXXXXX",
+    "ls $XDG_RUNTIME_DIR/pass-count.ab_cd",
+    "ls $XDG_RUNTIME_DIR/pass-ws.abc-1",
+    "cp -r $XDG_RUNTIME_DIR/pass-agent.abc:/tmp",
+    "echo ${d:-$XDG_RUNTIME_DIR/pass-ws.abc}",
+    "ls {$XDG_RUNTIME_DIR/pass-ws.abc,x}",
+    "ls $XDG_RUNTIME_DIR/pass-ws.abc,",
+    "ls $XDG_RUNTIME_DIR/pass-ws.",
+    "find $XDG_RUNTIME_DIR -name pass-agent.\\*",
+    # A variable, substitution, or backtick glued to the command name.
+    "pass-cli$x info",
+    "pass-cli${x} info",
+    "pass-cli$() info",
+    "pass-cli`` info",
+    # ANSI-C quoting that spells the name with hex or octal escapes.
+    "$'pass\\x2dcli' info",
+    "$'pass\\055cli' info",
+    "$'\\x70ass-cli' info",
+    # A glob or brace on the command name, and on the session prefix.
+    "~/.local/bin/pass-cl? info",
+    "pass-cl{i,} info",
+    "ls $XDG_RUNTIME_DIR/pas?-agent.x",
+    "ls $XDG_RUNTIME_DIR/*-agent.*",
+    "builtin pass-cli info",
+    # An escaped << and $[...] arithmetic open no heredoc, so the next line runs.
+    "echo x \\<<EOF\npass-cli info\nEOF",
+    "echo $[1<<x]\npass-cli info\nx",
+    # A glob or brace before or inside pass- on the command word expands to pass-cli.
+    "p*-cli info",
+    "pa?s-cli info",
+    "[p]ass-cli info",
+    "{pass-cli,} info",
+    "~/.local/bin/p?ss-cli info",
+    "/usr/bin/*ass-cli info",
+    # A heredoc piped into a shell runs its body; a fake one inside ${...} hides nothing.
+    "cat <<EOF | bash\npass-cli info\nEOF",
+    "cat <<'EOF' | sh -s\npass-cli info\nEOF",
+    "tee /dev/null <<EOF | bash\npass-cli info\nEOF",
+    "echo ${x:-<<EOF}\npass-cli info\nEOF",
+    # The default session directory by a bare name after a cd, a trailing slash, or a glob.
+    "cd ~/.local/share && tar c proton-pass-cli",
+    "cd ~/.local/share; cat proton-pass-cli/.session/data",
+    "ls ~/.local/*/proton-pass-cli",
+    "ls ~/.local/share/p*-pass-cli",
+    "ls ~/.local/share/*pass-cli",
+]
+
+# Geoff alone runs pass-sitting, so the hook refuses it to Claude in every form, with a reason
+# that says so.
+SITTING = [
+    "pass-sitting plan.jsonl",
+    "pass-sitting --apply plan.jsonl",
+    "~/.local/bin/pass-sitting x",
+    "/var/home/glw907/.local/bin/pass-sitting x",
+    "$HOME/.local/bin/pass-sitting x",
+    "./bin/.local/bin/pass-sitting x",
+    "bash bin/.local/bin/pass-sitting x",
+    "source ~/.local/bin/pass-sitting",
+    ". ~/.local/bin/pass-sitting",
+    "~/.local/bin/pass-s* x",
+    "env A=1 pass-sitting x",
+    "bash -c 'pass-sitting x'",
+    "echo x | xargs pass-sitting",
+    "cd ~ && pass-sitting x",
+    '"pass-sitting" x',
+    "p''ass-sitting x",
+    "nohup pass-sitting x",
+    "x=`pass-sitting`",
+    "~/.local/bin/pass-sit* x",
+    "~/.local/bin/pass-sittin? x",
+    "~/.local/bin/pass-sitting? x",
+    "/usr/bin/bash ~/.local/bin/pass-sitting --apply x",
+    "/bin/sh ~/.local/bin/pass-sitting x",
+    "busybox sh ~/.local/bin/pass-sitting x",
+    "bash < ~/.local/bin/pass-sitting",
+    "bash -s < ~/.local/bin/pass-sitting",
+    "bash -o errexit ~/.local/bin/pass-sitting x",
+    "bash -n +n ~/.local/bin/pass-sitting --apply f",
+    "# <<EOF\npass-sitting --apply f",
+    ">/tmp/o pass-sitting --apply f",
+    "bash -O extglob ~/.local/bin/pass-sitting x",
+    "bash <<'EOF'\npass-sitting x\nEOF",
+    "pass-sitting$x --apply f",
+    "pass-sitting${IFS}--apply f",
+    "pass-sitting$(true) --apply f",
+    "$'pass\\x2dsitting' --apply f",
+    "$'pass-sitt\\151ng' --apply f",
+    "~/.local/bin/pass-sittin{g,} x",
+    "cat \\<<EOF\npass-sitting --apply f\nEOF",
+    "bash -n +o noexec ~/.local/bin/pass-sitting --apply f",
+    "bash -o noexec +o noexec ~/.local/bin/pass-sitting",
+    "cat ~/.local/bin/pass-sitting | bash -s -- --apply f",
+    "bash <(cat ~/.local/bin/pass-sitting) --apply f",
+    "bash /dev/stdin --apply f < ~/.local/bin/pass-sitting",
+    # -n excuses a shell only when no + option turns it back off.
+    "cat ~/.local/bin/pass-sitting | bash -n +o noexec -s -- --apply f",
+    "cat ~/.local/bin/pass-sitting | bash -n +n -s -- --apply f",
+    # The stdin forms with a bare name, after a cd.
+    "cd ~/.local/bin && cat pass-sitting | bash -s -- --apply f",
+    "cd ~/.local/bin && bash <(cat pass-sitting) --apply f",
+    "cd ~/.local/bin; bash /dev/stdin --apply f < pass-sitting",
+    "cd ~/.local/bin; busybox sh -s < pass-sitting",
+    "cd ~/.local/bin; rbash -s < pass-sitting",
+    # A glob before or inside pass- on the command word.
+    "*-sitting --apply f",
+    "~/.local/bin/p*-sitting --apply f",
+    "~/.local/bin/p?ss-sitting x",
+    # A heredoc piped into a shell runs its body.
+    "cat <<EOF | bash\npass-sitting --apply f\nEOF",
+    "cat <<'EOF' | sh -s -- --apply f\npass-sitting --apply f\nEOF",
+    "tee /dev/null <<EOF | bash -s\npass-sitting --apply f\nEOF",
 ]
 
 ALLOWED = [
@@ -117,18 +265,35 @@ ALLOWED = [
     "ssh-add -l",
     # claude-pass is Claude's route into Proton Pass (Geoff, 2026-10-20).
     "claude-pass --status",
-    'claude-pass item list --vault-name "Household IT"',
-    'claude-pass item create login --vault-name "Household IT" --from-template - < /tmp/x.json',
-    "printf '%s' \"$tmpl\" | claude-pass item create login --vault-name Workstation --from-template -",
-    "CLAUDE_PASS_REASON='rotate a key' claude-pass item view pass://Workstation/x/password > /tmp/out",
+    "claude-pass item list --vault-name Infrastructure",
+    "claude-pass item create login --vault-name Infrastructure --from-template - < /tmp/x.json",
+    "printf '%s' \"$tmpl\" | claude-pass item create login --vault-name Projects --from-template -",
+    "CLAUDE_PASS_REASON='rotate a key' claude-pass item view pass://Projects/x/password > /tmp/out",
+    "claude-pass share list --output json",
     "bash tests/claude-pass.test.sh",
     "micro bin/.local/bin/claude-pass",
+    # A session name is a whole path component: a file that only starts with one passes.
+    "bash tests/pass-count.test.sh",
+    "git log -- tests/pass-count.test.sh",
+    # The pass-sitting source, its test, and mentions of it are not a run.
+    "bash tests/pass-sitting.test.sh",
+    "cat bin/.local/bin/pass-sitting",
+    "git diff -- bin/.local/bin/pass-sitting",
+    "shellcheck bin/.local/bin/pass-sitting",
+    "bash -n bin/.local/bin/pass-sitting",
+    "git commit -m 'add pass-sitting'",
     # False positives from real sessions (2026-10-19 to 2026-10-21).
     "command -v pass-cli pass-count ws-pass-key secret-receive; ",
     "grep -n -i 'never calls\\|pass-cli' ~/.claude/docs/bluefin-admin.md | head -8",
     "grep -rn -i 'proton-pass-cli\\|pass-cli' ~/.dotfiles/bluefin/Brewfile* 2>/dev/null | head -3",
     "cat > bin/.local/bin/claude-pass <<'EOF'\n#!/usr/bin/env bash\npass-cli \"$@\"\nEOF",
     "python3 -I - <<'EOF'\nold='''Claude never runs `pass-cli`; the hook denies it.'''\n- pass-cli in command position\nEOF",
+    # Commands that look near the hook's patterns but run nothing it guards.
+    "pass-access",
+    "ls *",
+    "cat docs/*.md",
+    "brew pin proton-pass-cli",
+    "bash -n bin/.local/bin/pass-sitting && shellcheck bin/.local/bin/pass-sitting",
 ]
 
 
@@ -154,6 +319,16 @@ def test_denied(cmd):
     assert decision["permissionDecision"] == "deny"
     assert "ws-pass-key" in decision["permissionDecisionReason"]
     assert "claude-pass" in decision["permissionDecisionReason"]
+
+
+@pytest.mark.parametrize("cmd", SITTING)
+def test_pass_sitting_denied_to_claude(cmd):
+    result = run(BLOCK, bash(cmd))
+    assert result.returncode == 0
+    decision = json.loads(result.stdout)["hookSpecificOutput"]
+    assert decision["permissionDecision"] == "deny"
+    assert "Geoff" in decision["permissionDecisionReason"]
+    assert "pass-sitting" in decision["permissionDecisionReason"]
 
 
 @pytest.mark.parametrize("cmd", ALLOWED)

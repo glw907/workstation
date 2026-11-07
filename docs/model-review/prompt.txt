@@ -28,23 +28,28 @@ Steps, in order:
    skipped; name the item and the reason in your hand-over. The usage glance (item 4) needs an
    interactive session, so skip it with that reason.
 
-5. A gap becomes a one-page design in docs/specs/ named
+5. Run the item-title lint: `check-drift --titles`, with the Bash tool's `run_in_background` (it
+   makes five Proton sign-ins 150 seconds apart, past the foreground limit) and never with
+   PASS_ACCESS_SKIP. Wait for it to exit. Put only the finding count in your hand-over: the titles
+   stay in its findings file, so none reaches a PR or a notification.
+
+6. A gap becomes a one-page design in docs/specs/ named
    <YYYY-MM-DD>-model-review-<slug>-design.md: the gap, the evidence with its source URL, the
    proposed change, and the audit findings it takes. One design per gap.
 
-6. Rewrite docs/model-review/state.json with the current model ids, the Claude Code version, and
+7. Rewrite docs/model-review/state.json with the current model ids, the Claude Code version, and
    a digest (a hash of the fetched text) per page you fetched. If you skipped the fetch, keep the
    old digests. If no gap turned up, append one line to docs/model-review/log.md: the date, the
    Claude Code version, and the model ids. Commit on your branch.
 
-7. Hand over. Run `bash scripts/gate.sh` first and fix a red in your own files. Then:
+8. Hand over. Run `bash scripts/gate.sh` first and fix a red in your own files. Then:
    - With a design: push the branch to glw907/workstation, open a PR whose body lists each design
      and the audit findings it takes, and run `notify-send -u normal "Model review: design ready"
      "<the PR URL>"`. Do not merge; Geoff approves.
    - Quiet month: the commit is a hand-over that changes no behavior. Push the branch, open a PR,
      and merge it yourself with `gh pr merge <n> --merge`. Send no notification.
 
-8. After step 7, in this same session, run the servers monthly review: if
+9. After step 8, in this same session, run the servers monthly review: if
    /var/home/glw907/Projects/servers/docs/monthly-review/prompt.txt exists, read it and follow it.
    It has its own worktree, branch, and PR; name its result on one line in your final report to
    Geoff,    after the model review's own hand-over. The Survey writing review is a separate session that

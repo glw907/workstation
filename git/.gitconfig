@@ -1,6 +1,6 @@
 [user]
 	name = glw907
-	email = geoff-login@907.life
+	email = 14229321+glw907@users.noreply.github.com
 [core]
 	excludesFile = ~/.dotfiles/bluefin/git-excludes
 [credential "https://github.com"]

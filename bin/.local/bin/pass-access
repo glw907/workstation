@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# pass-access: print what this host's Proton Pass agents can reach, one row per share, as
+# agent<TAB>vault<TAB>role, sorted. check-drift compares the rows with secrets/proton-grants.tsv.
+#
+# Each agent lists its own shares with its own token (two sign-ins): <host>-claude through
+# claude-pass share list, and <host>-scripts through ws-pass-key --shares. A vault share prints
+# its vault name; an item share prints "(item share)" in the vault column and never its title, so
+# a transcript or a public fixture carries no item title. Only a share typed "vault" prints a
+# name; a share with no type, or one this script does not recognize, prints as an item share, so
+# a changed reply shape shows up as a grant mismatch and never as a leaked title. Roles print in lower case. The list is
+# read tolerantly: a bare array or {"shares": [...]}, snake_case or camelCase keys.
+#
+# A failed sign-in exits 1 with nothing on stdout. Environment: CLAUDE_PASS and WS_PASS_KEY name
+# the two readers (as check-drift does); WS_HOST overrides `hostname -s`.
+set -euo pipefail
+
+HOST="${WS_HOST:-$(hostname -s)}"
+CLAUDE_BIN="${CLAUDE_PASS:-claude-pass}"
+KEY_BIN="${WS_PASS_KEY:-ws-pass-key}"
+
+# rows <agent> <json> prints the agent's rows, or fails when the reply is not JSON.
+rows() {
+    jq -r --arg agent "$1" '
+        (if type == "array" then . else (.shares // .) end)[]
+        | ((.share_type // .shareType // .type // "") | ascii_downcase) as $kind
+        | [ $agent,
+            (if $kind == "vault" then (.name // .vault_name // .vaultName // "unnamed") else "(item share)" end),
+            ((.share_role // .shareRole // .role // "unknown") | ascii_downcase) ]
+        | @tsv' <<< "$2" 2>/dev/null
+}
+
+claude_json="$("$CLAUDE_BIN" share list --output json)" || { echo "pass-access: $HOST-claude could not list its shares" >&2; exit 1; }
+scripts_json="$("$KEY_BIN" --shares)" || { echo "pass-access: $HOST-scripts could not list its shares" >&2; exit 1; }
+
+# Collected first, so a reply that does not parse leaves stdout empty.
+claude_rows="$(rows "$HOST-claude" "$claude_json")" || { echo "pass-access: the $HOST-claude reply did not parse" >&2; exit 1; }
+scripts_rows="$(rows "$HOST-scripts" "$scripts_json")" || { echo "pass-access: the $HOST-scripts reply did not parse" >&2; exit 1; }
+printf '%s\n%s\n' "$claude_rows" "$scripts_rows" | grep -v '^$' | LC_ALL=C sort

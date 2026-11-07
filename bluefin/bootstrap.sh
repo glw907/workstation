@@ -510,7 +510,7 @@ Image:
   - `docker --version` works (DX ships it; its absence means the devmode
     rebase never landed).
 
-Next: create this host's Proton Pass agent token (viewer on the Workstation
+Next: create this host's Proton Pass agent token (viewer on the Age key
 vault) and store it with `ws-pass-key --store`.
 
 FIRST WORKSTATION ONLY (the 2026-08 Mint migration): open a NEW terminal --

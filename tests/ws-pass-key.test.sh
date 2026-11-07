@@ -120,6 +120,38 @@ out=$(env -u XDG_RUNTIME_DIR HOME="$root/home" PATH="$root/bin:$PATH" WS_HOST=te
 [ "$?" -ne 0 ] || { echo "FAIL: a missing XDG_RUNTIME_DIR exited 0"; fail=1; }
 [ ! -s "$root/cache" ] || { echo "FAIL: a missing XDG_RUNTIME_DIR left a cache"; fail=1; }
 
+# 5d. The default item is read under its new title, then under the old one until pass C drops it;
+# WS_PASS_ITEM reads only the title it names.
+default_helper() {  # default_helper [env...]: no WS_PASS_ITEM
+  env HOME="$root/home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" WS_HOST=testhost \
+    CACHE="$root/cache" FAKE_PASS_LOG="$root/pass.log" FAKE_PASS_FIXTURE="$root/vault" \
+    WS_PASS_CALLER=test-suite "$@" bash "$KEY_HELPER" 2>&1
+}
+reset; echo "$TOKEN" > "$root/token"
+mkdir -p "$root/vault/Age key"
+mkdir -p "$root/vault/Age key/Age key (workstation)" && cp "$root/key.txt" "$root/vault/Age key/Age key (workstation)/key"
+out=$(default_helper)
+assert_eq "$(cat "$root/cache" 2>/dev/null)" "$(cat "$root/key.txt")" "the new title fills the cache"
+rm -rf "$root/vault/Age key/Age key (workstation)"
+mkdir -p "$root/vault/Age key/Workstation age encryption key" && cp "$root/key.txt" "$root/vault/Age key/Workstation age encryption key/key"
+reset; echo "$TOKEN" > "$root/token"
+out=$(default_helper)
+assert_eq "$(cat "$root/cache" 2>/dev/null)" "$(cat "$root/key.txt")" "only the old title still fills the cache"
+rm -rf "$root/vault/Age key/Workstation age encryption key"
+reset; echo "$TOKEN" > "$root/token"
+out=$(default_helper)
+rc=$?
+[ "$rc" -ne 0 ] || { echo "FAIL: neither title exited 0"; fail=1; }
+[ ! -s "$root/cache" ] || { echo "FAIL: neither title still produced a cache"; fail=1; }
+assert_eq "$(grep -c '^item view' "$root/pass.log")" "2" "both titles were tried, new first"
+assert_eq "$(sessions_left)" "0" "the fallback path leaves no session directory"
+case "$out" in *"Age key (workstation)"*"Workstation age encryption key"*) ;; *) echo "FAIL: the failure did not name both titles: $out"; fail=1 ;; esac
+mkdir -p "$root/vault/Age key/Workstation age encryption key" && cp "$root/key.txt" "$root/vault/Age key/Workstation age encryption key/key"
+reset; echo "$TOKEN" > "$root/token"
+out=$(default_helper WS_PASS_ITEM="Age key (workstation)")
+[ ! -s "$root/cache" ] || { echo "FAIL: WS_PASS_ITEM still fell back to the old title"; fail=1; }
+rm -rf "$root/vault/Age key/Workstation age encryption key"
+
 # 6. --status names the path and the expiry without printing the token.
 reset; echo "$TOKEN" > "$root/token"; echo "2027-01-15" > "$root/expiry"
 out=$(helper --status)
@@ -128,6 +160,26 @@ case "$out" in *"$TOKEN"*) echo "FAIL: --status printed the token"; fail=1 ;; es
 reset
 out=$(helper --status)
 case "$out" in *"path=none"*) ;; *) echo "FAIL: --status without a token: $out"; fail=1 ;; esac
+
+# 6b. --shares signs in once with the scripts token, lists the shares with a reason, logs out,
+# and never touches the cache. The reply is SYNTHETIC (the pass-cli docs' fields), supplied here.
+reset; echo "$TOKEN" > "$root/token"
+echo '{"shares":[{"share_type":"Vault","name":"Age key","share_role":"Viewer"}]}' > "$root/vault/_shares.json"
+out=$(helper --shares)
+assert_eq "$?" "0" "--shares exits 0 ($out)"
+case "$out" in *'"share_role":"Viewer"'*) ;; *) echo "FAIL: --shares did not print the share list: $out"; fail=1 ;; esac
+assert_eq "$(grep -c '^login' "$root/pass.log")" "1" "--shares signs in once"
+assert_eq "$(grep -c '^share list --output json' "$root/pass.log")" "1" "--shares lists the shares once"
+grep -q 'reason=test-suite: list shares on testhost' "$root/pass.log" || { echo "FAIL: --shares carried no reason naming script and host"; fail=1; }
+grep -q 'logout' "$root/pass.log" || { echo "FAIL: --shares never logged out"; fail=1; }
+assert_eq "$(sessions_left)" "0" "--shares leaves no session directory"
+[ ! -e "$root/cache" ] || { echo "FAIL: --shares touched the cache"; fail=1; }
+grep -q "$TOKEN" "$root/pass.log" && { echo "FAIL: --shares leaked the token into a recorded argument"; fail=1; }
+reset
+out=$(helper --shares)
+[ "$?" -ne 0 ] || { echo "FAIL: --shares with no token exited 0"; fail=1; }
+case "$out" in *"no agent token"*) ;; *) echo "FAIL: --shares with no token did not say so: $out"; fail=1 ;; esac
+assert_eq "$(pass_calls)" "0" "--shares with no token makes no pass-cli call"
 
 # 7. --store reads the token from the dialog into the keyring, with an expiry three months out.
 reset

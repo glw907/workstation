@@ -1,0 +1,4 @@
+Replies for tests/pass-sitting.test.sh. The item list and item view shapes follow
+~/.local/state/credential-hygiene/apply2.sh (recorded runs). _members-*.json and _agents.json
+are SYNTHETIC: no run recorded a reply to `vault member list` or `agent list`, so they follow the
+pass-cli docs. All titles, ids, and note text here are invented.

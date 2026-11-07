@@ -359,6 +359,10 @@ agent's prompt; each was added from a past pass's planning miss.
 
 ## Pre-flight and owner-only steps
 
+- A bulk edit of Proton Pass vaults (moves, renames, notes, trashes, grants, revokes) is a
+  `[you]` step: the session writes a `pass-sitting` file and Geoff runs `pass-sitting FILE`, then
+  `--apply`, in a Ptyxis terminal. The hook refuses `pass-sitting` to Claude (`proton-pass` skill).
+
 - A `[you]` pre-flight item still open when an unattended launch is armed is checked at arm time,
   and the launch's standing answer says what a proof step does after the run has moved live state.
   A token proof that deploys `origin/main` can't run once a phone depends on the pass's version
@@ -372,7 +376,7 @@ agent's prompt; each was added from a past pass's planning miss.
   Read every task for a hidden one, and move a step that waits on the pass's output earlier where
   it can go, and flag any item the design did not foresee, since it holds the launch for a
   pre-launch packet (Pass 1, 2026-10-19: a Proton Bridge sign-in surfaced mid-run).
-  Read every task's writes against auto mode too: a write to Claude's settings, a credential file, or new public surface can be refused however the allow rules read, so each gets a `[you]` item or a path a probe proved (agent-first pass 1, 2026-10-31: `.claude/settings.json` and a container's `oauth.env`).
+  Read every task's writes against auto mode too: a write to Claude's settings, a credential file, or new public surface can be refused however the allow rules read, so each gets a `[you]` item or a path a probe proved in a `claude --bg` session, since an interactive session's auto mode can pass an edit a background executor's refuses (agent-first pass 1, 2026-10-31: `.claude/settings.json` and a container's `oauth.env`; credential-hygiene pass A, 2026-11-04: `claude/.claude/settings.json`).
 - A task that creates or uses a credential with Geoff's own login is a `[you]` item with a tested script, because the classifier refuses it however the plan reads (sportsyou-notify pass 1, 2026-11-01: an app password stopped the run, and the first script failed silently after ward had made the password).
 - A step a run or its merges will need refused by auto mode is settled before launch: Geoff grants
   the narrow permission in the design's sitting, or runs what can already run. A `[you]` item never

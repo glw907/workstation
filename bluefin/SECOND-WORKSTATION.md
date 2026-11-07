@@ -159,12 +159,13 @@ mismatch is a hard stop: never decrypt an unverified blob.
    the cask, move `~/.claude/skills` aside, and rerun `setup`.
 4. Create the host's Proton agent token. In a throwaway `pass-cli` session, Geoff
    runs `pass-cli agent create pavilion-scripts --expiration 3m --vault
-   Workstation` (viewer role on that vault only), then runs
+   "Age key"` (viewer role on that vault only), then runs
    `ws-pass-key --store` and enters the token in the hidden dialog. In the
    same session he creates Claude's own agent with `pass-cli agent create
    pavilion-claude --expiration 3m` and grants it each vault Claude may edit
    with `pass-cli agent access grant pavilion-claude --vault-name V --role
-   editor` (`Household IT` and `Workstation` to start). He stores its
+   editor` (`Infrastructure`, `Projects`, `ASC`, `Test accounts`, and `Age key`;
+   `secrets/proton-grants.tsv` records them). He stores its
    token with `secret-tool store --label "Proton Pass claude agent" service
    proton-pass-agent-claude host pavilion`. Claude then reaches Proton Pass
    only through `claude-pass` (Geoff, 2026-10-20).
@@ -199,8 +200,8 @@ the rest unless the step says it is a hard stop.
    ```
 3. Write the local secrets, then add ward as a GNOME Online Accounts account for contacts and
    calendars: Settings, Online Accounts, Calendar, Contacts and Files, server
-   `https://mail.907.life`, user `geoff@907.life`, the password from `907.life mail: geoff` in
-   the Workstation vault, then turn Files off. Leave only Personal (contacts and calendar) and
+   `https://mail.907.life`, user `geoff@907.life`, the account's password from Proton Pass
+   (Geoff reads it from his vaults), then turn Files off. Leave only Personal (contacts and calendar) and
    Global Address Book enabled.
    ```bash
    ~/.dotfiles/scripts/secrets/sync.sh --local
