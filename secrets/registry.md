@@ -457,14 +457,14 @@ tmpfs cache; no password manager holds it for scripts.
 - **Grants**: sign-in to ward's technical mailbox with the account password. It opens the whole mailbox, which receives the reset mail for Geoff's technical accounts, so Claude never reads it as a credential and never signs in with it.
 - **Used by**: the servers repo's `roles/stalwart` (the plan sets the account's password) and `scripts/tech-mailbox-setup.sh`, which makes it. Claude's ward applies hold it in their process, as they hold every ward password.
 - **Copy**: Proton Pass, in the `Private` vault, made by the setup script under Geoff's own login. Claude has no grant on that vault.
-- **Status**: pending. The setup script makes the value on its first run, after the pass B servers PR merges.
+- **Status**: set 2026-11-07 by the setup script's first run. The Proton Pass item is in `Private`.
 - **Rotate**: change the Proton Pass item and the store name together (`secret-set.sh`), then apply ward (`scripts/apply.sh ward --apply` in the servers repo).
 
 ### TECH_MAIL_APP_PASSWORD
 - **Grants**: a read-only Stalwart app password on the technical mailbox, described `claude-reader`. Its permissions are `authenticate`, `jmapEmailGet`, `jmapEmailQuery`, `jmapEmailChanges`, `jmapMailboxGet`, and `jmapMailboxQuery`: it reads and cannot send, delete, or change a filter. The setup script proves that on every run.
 - **Used by**: the servers repo's `scripts/tech-mail.sh`, which reads one `export` line of `~/.local/secrets`. Workstation only: it is never in the servers store.
 - **Copy**: none. A rerun of the setup script replaces it.
-- **Status**: pending. The setup script makes it, and a session commits `secrets/values.age` afterwards.
+- **Status**: set 2026-11-07 by the setup script's first run, which proved it reads and is refused a send and a delete.
 - **Rotate**: `secret-set.sh TECH_MAIL_APP_PASSWORD --delete`, then rerun `scripts/tech-mailbox-setup.sh` in the servers repo.
 
 ### SPORTSYOU_NOTIFY_JMAP_PASSWORD
