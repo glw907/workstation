@@ -58,9 +58,12 @@ The scheme:
    tokens, `tmp-account-tokens` (Account > Account API Tokens > Edit, the same TTL) from
    <https://dash.cloudflare.com/?to=/:account/api-tokens&permissionGroupKeys=%5B%7B%22key%22%3A%22account_api_tokens%22%2C%22type%22%3A%22edit%22%7D%5D&name=tmp-account-tokens>.
    Cloudflare refuses to let one make the other: "sub-token is not allowed to have permissions
-   to manage other tokens" (error 1001, 2026-10-18). Each arrives in a RAM-only scratch store
-   (`VALUES=/dev/shm/tmp-setup-$(id -u).age`, `LOCAL_SECRETS=$XDG_RUNTIME_DIR/self-hosting/secrets-tmp-setup`),
-   never the age store, and is deleted through the API when the work ends. If a fresh token
+   to manage other tokens" (error 1001, 2026-10-18). Each arrives in a RAM-only scratch store, never the age store. Create the store empty first
+   (`umask 077; mkdir -p "$XDG_RUNTIME_DIR/self-hosting"; printf '' | age -r <RECIP> -o /dev/shm/tmp-setup-$(id -u).age`,
+   with `RECIP` from `secret-set.sh`), then receive with the flags, never the `VALUES=`/`LOCAL_SECRETS=`
+   variables, which `secret-receive` resets so `secret-set.sh` rebuilds `~/.local/secrets` from the scratch
+   store alone: `secret-receive <NAME> --values /dev/shm/tmp-setup-$(id -u).age --local
+   "$XDG_RUNTIME_DIR/self-hosting/secrets-tmp-setup"`. Each and is deleted through the API when the work ends. If a fresh token
    verifies active but answers `9109 Invalid access token` on the token endpoints, check its
    TTL start date; correcting the TTL fixed it on 2026-10-18.
 
@@ -76,6 +79,7 @@ The scheme:
 | `ward-r2-backup-rw` | account | R2 object read and write, `servers-backup-ward` | `CF_WARD_R2_BACKUP_RW_TOKEN` + pair | Ward's restic |
 | `ci-phonebook` | account | Individual Workers Editor on `phonebook`; D1 Write | `glw907/phonebook`'s `CLOUDFLARE_API_TOKEN` Actions secret; origin `CF_CI_PHONEBOOK_TOKEN` | The phonebook's CI deploys |
 | `ws-cairn-gate` | user (exception to rule 2: Workers Builds accepts only user tokens, "Account-scoped tokens are not supported", <https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/>) | `carin-test.org` only: Zone, DNS, SSL and Certificates Write. Account: Workers Scripts, Email Sending, Workers CI, D1, Workers R2 Storage Write | `CF_WS_CAIRN_GATE_TOKEN` | cairn-cms's release gate; moves to account ownership once Builds allows it |
+| `ci-cairn-build` | user (rule 2's Builds exception, as `ws-cairn-gate`) | Account `120c269ad6d3dfbe6d63a0bb53758ca0`: Workers Scripts, D1, Workers R2 Storage Edit | `CF_CI_CAIRN_BUILD_TOKEN` | **Production-critical.** The Workers Builds deploy token behind the account's shared `cairn-build` registration, used by the cairn release gate and by every cairn site's Builds deploys on the account. Never roll or delete it without re-pointing every trigger that holds the registration. |
 | `ci-deploy` | account | Workers Editor across all Workers | Each repo's `CLOUDFLARE_API_TOKEN` Actions secret; origin `CF_CI_DEPLOY_TOKEN` | Every site deploy and Workers Builds |
 
 `ci-deploy` is planned, not live. Until it lands, five repos' Actions secrets and the Workers

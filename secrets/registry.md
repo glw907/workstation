@@ -347,6 +347,20 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotate**: mint a new one the same way, store it, delete the old one by id. Move it to account
   ownership once Builds accepts account tokens.
 
+### CF_CI_CAIRN_BUILD_TOKEN
+- **Grants**: Cloudflare **user-owned** token `ci-cairn-build` (id `15320960...`), rule 2's Builds
+  exception. Account `120c269ad6d3dfbe6d63a0bb53758ca0` only: Workers Scripts Edit, D1 Edit, Workers R2
+  Storage Edit. No expiry.
+- **Used by**: the account's shared Workers Builds registration `cairn-build`, which `create-cairn-site`
+  registers once per account and every later cairn site's Builds deploys reuse; first, cairn-cms's
+  release gate. **Production-critical**: never roll or delete it without re-pointing every trigger that
+  holds that registration. Proton Pass record: `Infrastructure` vault item "Cloudflare token
+  ci-cairn-build".
+- **Created 2026-11-04** on pavilion by Geoff from the narrow prefilled link, at the release round's
+  pre-flight; the probe script registered, wrote with, and deleted probes under it.
+- **Rotate**: create a new one from the same link, store it, register it with Builds, re-point every
+  trigger, then delete the old registration by uuid and the old token by id.
+
 ### CF_WS_SERVERS_TOKEN
 - **Grants**: Cloudflare account-owned token `ws-servers` (id `6a5623b2...`). Zone 907.life
   only: DNS Write, Dynamic URL Redirects Write (Single Redirect), Workers Routes Write, Zone
