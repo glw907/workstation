@@ -217,6 +217,14 @@ Pairs run as `running-passes` sets out. On this workstation, the two Agent-tool 
 so the session's agent list shows which task each runs; `worktree.baseRef: "head"` branches them
 from that commit. A shared port is an environment variable.
 
+In a worktree-isolated subagent, Claude Code's built-in isolation refused `git` inside a command
+substitution (`echo "$(git rev-parse HEAD)"`) and `git -C <another worktree of the same repo>`.
+The messages said the form was too complex to verify, or that it redirected git via `-C`. They
+named no hook and left no entry in the denials log (probe of 2026-11-04, cairn-cms pass
+release-process-b). Dispatch prompts tell pairs to run git as plain, separate calls from their
+worktree path, without `-C` into the shared checkout. Plain `cd <worktree> && git status`, a chained
+`git status && git log -1 --oneline`, and a quoted heredoc that only mentions git words all ran.
+
 ## Gates
 
 The adapter's classifier selects the fast lane's legs: type check, the selected unit and component
