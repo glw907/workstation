@@ -39,13 +39,13 @@ trap 'shred -u "$DECRYPTED_FILE" "$OUT_FILE" 2>/dev/null || true' EXIT
 # --- Worker routing table ---
 # Maps worker name -> space-separated list of secrets to push
 declare -A WORKER_SECRETS
-# cairn-cms admin (shared GitHub App — one app installed on both repos). Per-site
-# MAGIC_LINK_SECRET/SESSION_SECRET are NOT managed here (worker-only, rotatable —
-# set directly via `wrangler secret put`; they must differ per site for session isolation).
-WORKER_SECRETS["907-life"]="CLOUDFLARE_API_TOKEN RESEND_API_KEY GITHUB_APP_ID GITHUB_APP_INSTALLATION_ID GITHUB_APP_PRIVATE_KEY_B64"
+# Per-site cairn MAGIC_LINK_SECRET/SESSION_SECRET are NOT managed here (worker-only,
+# rotatable, set directly via `wrangler secret put`; they must differ per site for session
+# isolation). The old 907-life worker left this table at the 907-rebuild retirement
+# (2026-11-07); the rebuilt site's setup owns its own secrets.
 # ecxc.ski's worker, renamed from "ecnordic" at the ECXC rebrand (Rename 4, 2026-06-08).
 # The Waymark rebuild commits appId/installationId in cairn.config.ts (public identifiers),
-# so unlike 907-life only the App PRIVATE KEY is a worker secret here. GOOGLE_SA_KEY_B64 is
+# so only the App PRIVATE KEY is a worker secret here. GOOGLE_SA_KEY_B64 is
 # the registration-roster Sheets writer (registry.md has the scope). ANTHROPIC_API_KEY
 # powers the cairn editor's tidy copy-edit (site.config.yaml tidy.enabled). RESEND_API_KEY
 # switches the site's dual-transport email layer to Resend (2026-07-14 cutover; the Resend

@@ -115,83 +115,83 @@ To rotate: regenerate the source credential, then `secret-set.sh NAME …` overw
 
 ## Master Routing Table
 
-(Worker names: 907-life's worker is `907-life`; ecxc.ski's worker is `ecxc` — renamed from
+(Worker names: ecxc.ski's worker is `ecxc` — renamed from
 `ecnordic` at the ECXC rebrand, Rename 4, 2026-06-08.)
 
 (Regenerated 2026-08-30 against `sync.sh`'s WORKER_SECRETS routing, the code-side source
 of truth; a mismatch between this table and that table is a bug in whichever changed last.)
 
-| Secret              | Local | 907-life | ecxc | asc-site |
-|---------------------|-------|----------|------|----------|
-| CLOUDFLARE_API_TOKEN | ✓    | ✓        | —    | —        |
-| CAIRN_CF_ACCOUNT_ID | ✓     | —        | —    | —        |
-| CAIRN_CF_READ_TOKEN | ✓     | —        | —    | —        |
-| CAIRN_GH_READ_TOKEN | ✓     | —        | —    | —        |
-| CAIRN_DOCS_READER_OAUTH_TOKEN | ✓ | — | — | — |
-| CF_ZT_TOKEN         | ✓     | —        | —    | —        |
-| ACCESS_GITHUB_CLIENT_ID / _SECRET | ✓ | — | — | — |
-| CF_ACCESS_CLIENT_SECRET | ✓ | —        | —    | —        |
-| ANTHROPIC_API_KEY   | ✓     | —        | ✓    | ✓        |
-| CMS_BOT_PAT         | ✓     | —        | —    | —        |
-| RESEND_API_KEY      | ✓     | ✓        | ✓    | —        |
-| DAISYUI_BLUEPRINT_LICENSE | ✓ | —      | —    | —        |
-| DAISYUI_BLUEPRINT_EMAIL | ✓  | —        | —    | —        |
-| HCLOUD_TOKEN_SERVERS | ✓    | —        | —    | —        |
-| CF_WS_SERVERS_TOKEN | ✓     | —        | —    | —        |
-| CF_WS_CAIRN_GATE_TOKEN | ✓ | — | — | — |
-| GITHUB_TEST_LOGIN / _PASSWORD / _TOTP_SECRET / _TOKEN / _RECOVERY_CODES | ✓ | — | — | — |
-| CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
-| CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
-| CF_ORPHEUS_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
-| CF_WARD_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — | — |
-| MONITOR_READ_TOKEN | ✓ | — | — | — |
-| HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD | ✓ | — | — | — |
-| IMMICH_DB_PASSWORD | ✓ | — | — | — |
-| RESTIC_PASSWORD_ORPHEUS | ✓ | — | — | — |
-| TUNNEL_TOKEN_ORPHEUS | ✓ | — | — | — |
-| WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERC | ✓ | — | — | — |
-| RESTIC_PASSWORD_WARD | ✓ | — | — | — |
-| TUNNEL_TOKEN_WARD | ✓ | — | — | — |
-| BULWARK_SESSION_SECRET | ✓ | — | — | — |
-| STALWART_ADMIN_PASSWORD | ✓ | — | — | — |
-| STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2 | ✓ | — | — | — |
-| STALWART_PASSWORD_PHONEBOOK | ✓ | — | — | — |
-| STALWART_PASSWORD_CAIRN_GATE | ✓ | — | — | — |
-| STALWART_PASSWORD_TECH | ✓ | — | — | — |
-| TECH_MAIL_APP_PASSWORD | ✓ | — | — | — |
-| SPORTSYOU_NOTIFY_JMAP_PASSWORD | ✓ | — | — | — |
-| FASTMAIL_API_TOKEN  | ✓     | —        | —    | —        |
-| FASTMAIL_DAV_PASSWORD | ✓   | —        | —    | —        |
-| FASTMAIL_OPERATOR2_PASSWORD | ✓ | — | — | — |
-| FASTMAIL_OPERATOR2_API_TOKEN | ✓ | — | — | — |
-| SPAMHAUS_DQS_KEY | ✓ | — | — | — |
-| TEST_YAHOO_ADDRESS | ✓ | — | — | — |
-| TEST_YAHOO_PASSWORD | ✓ | — | — | — |
-| GITHUB_APP_ID       | ✓     | ✓        | —    | —        |
-| GITHUB_APP_INSTALLATION_ID | ✓ | ✓     | —    | —        |
-| GITHUB_APP_PRIVATE_KEY_B64 | ✓ | ✓     | ✓    | —        |
-| GOOGLE_SA_KEY_B64   | ✓     | —        | ✓    | —        |
-| GOOGLE_WORKSPACE_CLI_CLIENT_ID | ✓ | —    | —    | —        |
-| GOOGLE_WORKSPACE_CLI_CLIENT_SECRET | ✓ | — | —  | —        |
-| DUBPLATE_SMTP_PASSWORD | ✓  | —        | —    | —        |
-| MUSIC_R2_RO_ACCESS_KEY_ID | ✓ | —      | —    | —        |
-| MUSIC_R2_RO_SECRET_ACCESS_KEY | ✓ | — | —    | —        |
-| DUBPLATE_MAGIC_LINK_SECRET | ✓ | —   | —    | —        |
-| DUBPLATE_SESSION_SECRET | ✓ | —      | —    | —        |
-| PHONEBOOK_PHONE_ADMIN_KITCHEN | ✓ | — | — | — |
-| PHONEBOOK_VOICEMAIL_PIN | ✓ | — | — | — |
-| PHONEBOOK_PHONE_USER | ✓ | — | — | — |
-| VOIPMS_API_USERNAME | ✓ | — | — | — |
-| VOIPMS_API_PASSWORD | ✓ | — | — | — |
-| VOIPMS_RELAY_KEY | ✓ | — | — | — |
-| PHONEBOOK_SIP_OFFICE | ✓ | — | — | — |
-| PHONEBOOK_SIP_PHONE2 | ✓ | — | — | — |
-| PHONEBOOK_SIP_PHONE3 | ✓ | — | — | — |
-| PHONEBOOK_SIP_TESTLINE | ✓ | — | — | — |
-| PHONEBOOK_ACCESS_CLIENT_ID | ✓ | — | — | — |
-| PHONEBOOK_ACCESS_CLIENT_SECRET | ✓ | — | — | — |
-| IMMICH_PIKAPODS_API_KEY | ✓ | — | — | — |
-| TPLINK_ROUTER_PASSWORD | ✓ | — | — | — |
+| Secret              | Local | ecxc | asc-site |
+|---------------------|-------|------|----------|
+| CLOUDFLARE_API_TOKEN | ✓    | —    | —        |
+| CAIRN_CF_ACCOUNT_ID | ✓     | —    | —        |
+| CAIRN_CF_READ_TOKEN | ✓     | —    | —        |
+| CAIRN_GH_READ_TOKEN | ✓     | —    | —        |
+| CAIRN_DOCS_READER_OAUTH_TOKEN | ✓ | — | — |
+| CF_ZT_TOKEN         | ✓     | —    | —        |
+| ACCESS_GITHUB_CLIENT_ID / _SECRET | ✓ | — | — |
+| CF_ACCESS_CLIENT_SECRET | ✓ | —    | —        |
+| ANTHROPIC_API_KEY   | ✓     | ✓    | ✓        |
+| CMS_BOT_PAT         | ✓     | —    | —        |
+| RESEND_API_KEY      | ✓     | ✓    | —        |
+| DAISYUI_BLUEPRINT_LICENSE | ✓ | —    | —        |
+| DAISYUI_BLUEPRINT_EMAIL | ✓  | —    | —        |
+| HCLOUD_TOKEN_SERVERS | ✓    | —    | —        |
+| CF_WS_SERVERS_TOKEN | ✓     | —    | —        |
+| CF_WS_CAIRN_GATE_TOKEN | ✓ | — | — |
+| GITHUB_TEST_LOGIN / _PASSWORD / _TOTP_SECRET / _TOKEN / _RECOVERY_CODES | ✓ | — | — |
+| CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
+| CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
+| CF_ORPHEUS_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
+| CF_WARD_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
+| MONITOR_READ_TOKEN | ✓ | — | — |
+| HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD | ✓ | — | — |
+| IMMICH_DB_PASSWORD | ✓ | — | — |
+| RESTIC_PASSWORD_ORPHEUS | ✓ | — | — |
+| TUNNEL_TOKEN_ORPHEUS | ✓ | — | — |
+| WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERC | ✓ | — | — |
+| RESTIC_PASSWORD_WARD | ✓ | — | — |
+| TUNNEL_TOKEN_WARD | ✓ | — | — |
+| BULWARK_SESSION_SECRET | ✓ | — | — |
+| STALWART_ADMIN_PASSWORD | ✓ | — | — |
+| STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2 | ✓ | — | — |
+| STALWART_PASSWORD_PHONEBOOK | ✓ | — | — |
+| STALWART_PASSWORD_CAIRN_GATE | ✓ | — | — |
+| STALWART_PASSWORD_TECH | ✓ | — | — |
+| TECH_MAIL_APP_PASSWORD | ✓ | — | — |
+| SPORTSYOU_NOTIFY_JMAP_PASSWORD | ✓ | — | — |
+| FASTMAIL_API_TOKEN  | ✓     | —    | —        |
+| FASTMAIL_DAV_PASSWORD | ✓   | —    | —        |
+| FASTMAIL_OPERATOR2_PASSWORD | ✓ | — | — |
+| FASTMAIL_OPERATOR2_API_TOKEN | ✓ | — | — |
+| SPAMHAUS_DQS_KEY | ✓ | — | — |
+| TEST_YAHOO_ADDRESS | ✓ | — | — |
+| TEST_YAHOO_PASSWORD | ✓ | — | — |
+| GITHUB_APP_ID       | ✓     | —    | —        |
+| GITHUB_APP_INSTALLATION_ID | ✓ | —    | —        |
+| GITHUB_APP_PRIVATE_KEY_B64 | ✓ | ✓    | —        |
+| GOOGLE_SA_KEY_B64   | ✓     | ✓    | —        |
+| GOOGLE_WORKSPACE_CLI_CLIENT_ID | ✓ | —    | —        |
+| GOOGLE_WORKSPACE_CLI_CLIENT_SECRET | ✓ | —  | —        |
+| DUBPLATE_SMTP_PASSWORD | ✓  | —    | —        |
+| MUSIC_R2_RO_ACCESS_KEY_ID | ✓ | —    | —        |
+| MUSIC_R2_RO_SECRET_ACCESS_KEY | ✓ | —    | —        |
+| DUBPLATE_MAGIC_LINK_SECRET | ✓ | —    | —        |
+| DUBPLATE_SESSION_SECRET | ✓ | —    | —        |
+| PHONEBOOK_PHONE_ADMIN_KITCHEN | ✓ | — | — |
+| PHONEBOOK_VOICEMAIL_PIN | ✓ | — | — |
+| PHONEBOOK_PHONE_USER | ✓ | — | — |
+| VOIPMS_API_USERNAME | ✓ | — | — |
+| VOIPMS_API_PASSWORD | ✓ | — | — |
+| VOIPMS_RELAY_KEY | ✓ | — | — |
+| PHONEBOOK_SIP_OFFICE | ✓ | — | — |
+| PHONEBOOK_SIP_PHONE2 | ✓ | — | — |
+| PHONEBOOK_SIP_PHONE3 | ✓ | — | — |
+| PHONEBOOK_SIP_TESTLINE | ✓ | — | — |
+| PHONEBOOK_ACCESS_CLIENT_ID | ✓ | — | — |
+| PHONEBOOK_ACCESS_CLIENT_SECRET | ✓ | — | — |
+| IMMICH_PIKAPODS_API_KEY | ✓ | — | — |
+| TPLINK_ROUTER_PASSWORD | ✓ | — | — |
 
 > `DUBPLATE_MAGIC_LINK_SECRET` and `DUBPLATE_SESSION_SECRET` (minted 2026-10-05, dubplate rung
 > 5d's first-deploy sitting): the greenfield server's two HMAC keys, 48 random bytes each
@@ -217,20 +217,19 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 
 > The ecxc worker stopped needing `GITHUB_APP_ID`/`GITHUB_APP_INSTALLATION_ID` as secrets at
 > the Waymark rebuild (2026-07-05): the v2 adapter commits both in `cairn.config.ts` (they
-> are public identifiers), and only the private key stays secret. 907-life still takes all
-> three as secrets.
+> are public identifiers), and only the private key stays secret.
 
 > `GITHUB_APP_*` are the cairn-cms committing identity (GitHub App, App ID 3847496,
-> Installation `135372268` — single install on glw907, both repos selected). **Both the `ecxc`
-> and `907-life` workers are wired into `sync.sh` and pushed (ecxc go-live 2026-05-25 as
-> ecnordic, 907-life go-live 2026-05-26);** `sync.sh --worker 907-life` re-pushes the shared
-> App secrets reproducibly.
+> Installation `135372268` — single install on glw907). **The `ecxc` worker is wired into
+> `sync.sh` and pushed (go-live 2026-05-25 as ecnordic).** The old `907-life` worker was
+> wired too until the 907-rebuild retirement (2026-11-07) took it out, so a routine sync can't
+> push the shared App key into the rebuilt site's worker.
 >
 > **Per-site, NOT in this registry:** each cairn site's `MAGIC_LINK_SECRET` + `SESSION_SECRET`
 > are worker-only (set directly via `wrangler secret put`, freshly generated per site so sessions
 > don't cross sites — the locked "no cross-site SSO" decision). Rotatable: regenerate + re-put to
-> invalidate all active links/sessions. `sync.sh --verify` will list them as "extra" on both the
-> ecxc and 907-life workers — expected (same as CONTACT_EMAIL / TURNSTILE_SECRET_KEY).
+> invalidate all active links/sessions. `sync.sh --verify` will list them as "extra" on the
+> ecxc worker — expected (same as CONTACT_EMAIL / TURNSTILE_SECRET_KEY).
 
 **Not in values.age:** the sudo password. `claude-sudo-setup` takes it from a dialog into the
 tmpfs cache; no password manager holds it for scripts.
@@ -266,7 +265,7 @@ tmpfs cache; no password manager holds it for scripts.
   credential-shaped writes at the source.
 - **Also wrapped as a Workers Builds build token** (2026-08-22, Geoff's call): build token
   `503cd3fe-a701-4d5e-be7b-4c93a61335fa` "xcathletes build token (CLAUDE_CODE admin token)"
-  backs both `907-life` triggers (the
+  backed both old `907-life` triggers until the 907-rebuild teardown deleted them (the
   three older build tokens on the account were rolled). Rotating this token breaks
   auto-deploy for both workers until a new build token is created
   (`POST /accounts/{id}/builds/tokens` with the new token id and value) and each trigger
@@ -556,7 +555,7 @@ tmpfs cache; no password manager holds it for scripts.
 
 ### RESEND_API_KEY
 - **Grants**: Resend transactional email API
-- **Used by**: 907-life contact form worker, ecxc worker (all outbound mail: registration
+- **Used by**: ecxc worker (all outbound mail: registration
   record/parent/coach copies, contact form, cairn magic links; the 2026-07-14 cutover off
   Cloudflare Email Service), local email testing
 - **Scope note**: the Resend account's one verified sending domain is ecxc.ski as of
@@ -658,7 +657,7 @@ tmpfs cache; no password manager holds it for scripts.
 - **Key encoding**: `GITHUB_APP_PRIVATE_KEY_B64` is the RSA PEM base64-encoded single-line
   (the registry is line-parsed; multi-line PEM would break it). Decode with `atob()` in the
   Worker before handing to `@octokit/auth-app`.
-- **Used by**: cairn-cms admin Worker (ecnordic + 907-life) — wired in Pass A.
+- **Used by**: cairn-cms admin Worker (ecxc) — wired in Pass A. The old 907-life worker used it until the 907-rebuild retirement (2026-11-07).
 - **Rotate at**: https://github.com/settings/apps → cairn-cms → Private keys (generate new,
   base64 it, update values.age, re-run sync.sh). Revoke old key in the same screen.
 
@@ -845,26 +844,6 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotate**: change it on the router's admin page, then `secret-receive TPLINK_ROUTER_PASSWORD`.
   A scripted login shares the router's single admin session, so a run logs Geoff's browser out.
 
-
-## 907-life Worker — Existing Secrets Audit
-
-Secrets currently set on the worker (via `wrangler secret list --name 907-life`):
-- CONTACT_EMAIL — not managed by this registry (worker-only config)
-- RESEND_API_KEY — managed here
-- TURNSTILE_SECRET_KEY — not managed by this registry (worker-only config)
-- GITHUB_APP_ID / GITHUB_APP_INSTALLATION_ID / GITHUB_APP_PRIVATE_KEY_B64 — managed here (cairn admin, go-live 2026-05-26)
-- MAGIC_LINK_SECRET / SESSION_SECRET — worker-only (per-site cairn HMAC keys, set directly via `wrangler secret put`)
-
-Secrets this registry will set:
-- CLOUDFLARE_API_TOKEN — added by sync.sh
-- RESEND_API_KEY — updated by sync.sh
-- GITHUB_APP_ID / GITHUB_APP_INSTALLATION_ID / GITHUB_APP_PRIVATE_KEY_B64 — pushed by sync.sh
-
-> The `--verify` mode will report CONTACT_EMAIL, TURNSTILE_SECRET_KEY, MAGIC_LINK_SECRET, and
-> SESSION_SECRET as "extra" (present on worker but not in registry). This is expected — they're
-> managed elsewhere (worker-only config / per-site HMAC keys).
-
----
 
 ## age Key Details
 
