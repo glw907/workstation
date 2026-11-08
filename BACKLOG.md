@@ -4,6 +4,16 @@
 
 ## High
 
+- [ ] **#52** Make the clean-room site-rebuild tool reusable and unattended `#feature` `#workstation` `#initiative:907-rebuild` *(2026-11-08)*
+  Geoff (2026-11-08): "asking me for the wizard's progress is a problem. You need a way to do this work unattended." Several more site rebuilds (retire, naive clean-room rebuild, collect friction) are queued. Today the tool is `initiatives/907-rebuild/tools/cleanroom-run` plus `cleanroom-settings.json`, and the run stopped for Geoff again and again. The record of every miss and its fix is `initiatives/907-rebuild/plans/2026-11-08-planning-misses.md`. Build `cleanroom` in `bin/.local/bin` (stdlib Python, per the tool-language rule) with these forms:
+  - `init`: homes, settings, and canaries.
+  - `signin`: drives the gh device flow with a dead session bus, `setup-git`, and the wrangler login/whoami/logout; checks where each credential is stored and its scopes; batches the codes for Geoff.
+  - `probe`: an isolation probe plus a full build probe (scaffold, dev server, build, Playwright screenshot, commit, push to a scratch branch). Geoff approves the settings once in pre-flight.
+  - `shell`: runs under `script -q -f <log>`, with `BROWSER` set to echo links into the log, so the observer follows setup unattended. A monitor watches `~/.config/cairn/sites/*.json` `.step`.
+  - `turn`: a fresh session per builder task with a handoff note, and ledger rows written from the `modelUsage` totals.
+  - `teardown`: generated from the inventory. The dry run checks each API family's write scope, and the script logs to the repo and resumes.
+  It ships the settings 907-rebuild proved: `NODE_USE_ENV_PROXY=1`, the Playwright hosts, `allowAllUnixSockets` (the bus stays masked), a wide everyday Bash allowlist that allows chained commands, and a pre-seeded Playwright browser or a pointer to `/usr/bin/chromium-browser`.
+
 - [ ] **#39** Add the kill-only-your-PIDs rule to the read-only agents in glw907/standards `#bug` `#workstation` `#initiative:docs-system` *(2026-10-25)* *(swept 2026-11-03)*
   On 2026-10-25 a `plan-reviewer` probing a `pgrep` pattern cleaned up its fake processes with `pkill -f 'drafter page'` and killed batch 5's live drafting run, which resumed. Add a line to each read-only agent body: a probe kills only PIDs it started, never by pattern. `plan-reviewer`, `diff-reviewer`, and the rest moved to the standards plugin (glw907/standards), so add it there; `cairn-register-editor` and `prose-voice-reviewer` in `claude/.claude/agents/` need it too.
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
