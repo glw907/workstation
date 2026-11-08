@@ -26,7 +26,7 @@ Survey is starting guidance, not a set of fixed rules. Depart from it where the 
 - Pick the recipe in `DESIGN.md` that matches the app, and say in the change which one you followed.
 - Consider motion in every place and keep it only where it helps. `DESIGN.md` says when.
 - A value that fails contrast is tuned within its hue, and the change lists the old and new values.
-- Report each gap or hole you find in Survey: a value that fails contrast, a state Survey doesn't style, a case its rules don't cover, or a departure other projects would make too. Add an entry to `FRICTION.md` in `/var/home/glw907/Projects/survey` as a direct commit to `main`, naming the component or rule, what you measured or saw, and the fix you used. Then work around it in the project's CSS until Survey ships the fix.
+- Report each gap or hole you find in Survey: a value that fails contrast, a state Survey doesn't style, a case its rules don't cover, or a departure other projects would make too. Add an item to `BACKLOG.md` in `/var/home/glw907/Projects/survey` as a direct commit to `main`, naming the component or rule, what you measured or saw, and the fix you used. Then work around it in the project's CSS until Survey ships the fix.
 
 ## Writing
 

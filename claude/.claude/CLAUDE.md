@@ -137,7 +137,7 @@ audit; the admin design system wins over both on conflict).
 - **Visual fidelity (2026-07-05)**: UI work that must match a reference invokes the
   `standards:visual-fidelity` skill at the start and gates on `standards:visual-verifier`; nothing deploys to
   production without a full-page render read in the main loop.
-- Cairn friction and engine-level UI mechanics (a UI mechanic belongs to cairn, a design choice
+- Cairn backlog items and engine-level UI mechanics (a UI mechanic belongs to cairn, a design choice
   to the site) follow `cairn-pass` and `site-pass`.
 
 ## Claude Code Agent Usage
