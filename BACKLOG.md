@@ -9,7 +9,7 @@
   - `init`: homes, settings, and canaries.
   - `signin`: drives the gh device flow with a dead session bus, `setup-git`, and the wrangler login/whoami/logout; checks where each credential is stored and its scopes; batches the codes for Geoff.
   - `probe`: an isolation probe plus a full build probe (scaffold, dev server, build, Playwright screenshot, commit, push to a scratch branch). Geoff approves the settings once in pre-flight.
-  - `shell`: runs under `script -q -f <log>`, with `BROWSER` set to echo links into the log, so the observer follows setup unattended. A monitor watches `~/.config/cairn/sites/*.json` `.step`.
+  - `shell`: runs under `script -q -f <log>`, with `BROWSER` set to a relay that opens each link in Geoff's Chromium (Geoff, 2026-11-08: "any copy and paste of urls required during the setup process is a failure"), so the observer follows setup unattended. A monitor watches `~/.config/cairn/sites/*.json` `.step`.
   - `turn`: a fresh session per builder task with a handoff note, and ledger rows written from the `modelUsage` totals.
   - `teardown`: generated from the inventory. The dry run checks each API family's write scope, and the script logs to the repo and resumes.
   It ships the settings 907-rebuild proved: `NODE_USE_ENV_PROXY=1`, the Playwright hosts, `allowAllUnixSockets` (the bus stays masked), a wide everyday Bash allowlist that allows chained commands, and a pre-seeded Playwright browser or a pointer to `/usr/bin/chromium-browser`.
