@@ -139,6 +139,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | HCLOUD_TOKEN_SERVERS | ✓    | —    | —        |
 | CF_WS_SERVERS_TOKEN | ✓     | —    | —        |
 | CF_WS_CAIRN_GATE_TOKEN | ✓ | — | — |
+| CF_WS_CAIRN_CLEANROOM_TOKEN | ✓ | — | — |
 | GITHUB_TEST_LOGIN / _PASSWORD / _TOTP_SECRET / _TOKEN / _RECOVERY_CODES | ✓ | — | — |
 | CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
 | CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
@@ -346,6 +347,16 @@ tmpfs cache; no password manager holds it for scripts.
 - **Minted 2026-11-03** on pavilion from `tmp-token-setup`, which was then deleted.
 - **Rotate**: mint a new one the same way, store it, delete the old one by id. Move it to account
   ownership once Builds accepts account tokens.
+
+### CF_WS_CAIRN_CLEANROOM_TOKEN
+- **Grants**: Cloudflare **account-owned** token `ws-cairn-cleanroom` (id `a4c8be5d...`). Account: Workers
+  Scripts Write, D1 Write, Workers R2 Storage Write, Email Sending Write, Account Settings Read.
+  Zone `carin-test.org` only: Zone Read, DNS Write, Workers Routes Write. Expires 2026-12-10.
+- **Used by**: the cairn-setup clean room (setup tooling passes 1 to 3), which hands it to
+  `cairn new` inside the sandbox; it runs as the `cleanroom` user (Decide S-8).
+- **Minted 2026-11-09** on pavilion by Geoff, per the setup tooling plan's pre-flight item 3.
+- **Rotate**: none; it is deleted at the polish loop's end (Decide S-6). A rerun past its expiry
+  mints a new one the same way.
 
 ### CF_CI_CAIRN_BUILD_TOKEN
 - **Grants**: Cloudflare **user-owned** token `ci-cairn-build` (id `15320960...`), rule 2's Builds
