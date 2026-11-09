@@ -140,6 +140,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CF_WS_SERVERS_TOKEN | ✓     | —    | —        |
 | CF_WS_CAIRN_GATE_TOKEN | ✓ | — | — |
 | CF_WS_CAIRN_CLEANROOM_TOKEN | ✓ | — | — |
+| CLAUDE_CLEANROOM_OAUTH_TOKEN | ✓ | — | — |
 | GITHUB_TEST_LOGIN / _PASSWORD / _TOTP_SECRET / _TOKEN / _RECOVERY_CODES | ✓ | — | — |
 | CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
 | CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
@@ -357,6 +358,15 @@ tmpfs cache; no password manager holds it for scripts.
 - **Minted 2026-11-09** on pavilion by Geoff, per the setup tooling plan's pre-flight item 3.
 - **Rotate**: none; it is deleted at the polish loop's end (Decide S-6). A rerun past its expiry
   mints a new one the same way.
+
+### CLAUDE_CLEANROOM_OAUTH_TOKEN
+- **Grants**: a Claude Code subscription token from `claude setup-token` on Geoff's Claude account,
+  so the clean room's runs draw on that plan's usage limits. No API key: the Console org holds no
+  credit (Decide S-3, reversed 2026-11-09).
+- **Used by**: the cairn-setup clean room's naive builder sessions, as `CLAUDE_CODE_OAUTH_TOKEN`.
+- **Minted 2026-11-09** on pavilion by Geoff, per the setup tooling plan's pre-flight item 4.
+- **Rotate**: run `claude setup-token` again and store the new value; it lasts about a year.
+  Delete it at the polish loop's end if no later run needs it.
 
 ### CF_CI_CAIRN_BUILD_TOKEN
 - **Grants**: Cloudflare **user-owned** token `ci-cairn-build` (id `15320960...`), rule 2's Builds
