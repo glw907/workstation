@@ -188,7 +188,7 @@ def test_geoffs_home_appears_only_where_the_template_names_it(room):
     room("init", "a1")
     base = room.root / "a1"
     for path in [p for p in base.rglob("*") if p.is_file()]:
-        if path.name == "settings.json":
+        if path.name in ("settings.json", "probe-commands.md"):
             continue
         assert "/var/home/glw907" not in path.read_text(), path
     settings = json.loads((base / "home/.claude/settings.json").read_text())

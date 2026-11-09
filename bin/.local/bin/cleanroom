@@ -16,9 +16,11 @@ Forms:
   capture <name>                       print the session pane with handed-in values redacted
   scan <name> <file>...                fail when a handed-in value or the canary is in a file
   stop <name>                          end the run's tmux sessions and processes
+  probe <name> --commands FILE [--secret STORE[:ENV]]... [--env K=V]... [--cap-usd N] [--cap-min N]
+                                       run the probe list, answer every prompt "No", grade it
 
 The run directory (/var/tmp/cleanroom/<name>/run) holds session.log, state.json,
-statusline.json, transcript.jsonl, urls.log, and meta.json; a grader adds
+statusline.json, transcript.jsonl, urls.log, meta.json, and probe.md; a grader adds
 stand-in.jsonl, run-record.json, and run-record.md. ledger.jsonl and probes.jsonl sit in the root.
 
 With the cleanroom Unix user present, every step that touches the clean home runs as that user
@@ -26,6 +28,7 @@ through `sudo -n -u cleanroom ... _child <name> <step>`; without it the steps ru
 """
 
 import argparse
+import hashlib
 import json
 import os
 import pwd
@@ -36,6 +39,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -46,6 +50,7 @@ ENV_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 URL_RE = re.compile(r"^https?://\S+$")
 TOOL = Path(os.path.realpath(__file__))
 TEMPLATE = TOOL.parent.parent / "share/cleanroom/settings.json"
+PROBE_LIST = TOOL.parent.parent / "share/cleanroom/probe-commands.md"
 MIN_SECRET_LENGTH = 8
 
 # Dollars per million tokens (input, output, cache read) from the claude-api skill's table of
@@ -150,12 +155,13 @@ def run_child(name: str, step: str) -> None:
     if user is None:
         child(name, step)
         return
-    keep = ",".join(k for k in ("CLEANROOM_ROOT", "CLEANROOM_KILL_GRACE") if k in os.environ)
-    cmd = ["/usr/bin/sudo", "-n", "-u", user]
-    if keep:
-        cmd.append(f"--preserve-env={keep}")
+    # The child's HOME is the clean user's, so the caller's paths for the probe list go by environment.
+    fill = {"@CANARY@": str(state_dir() / "canary"), "@SECRETS@": str(secrets_file())}
+    env = {**os.environ, "CLEANROOM_FILL": json.dumps(fill)}
+    names = ["CLEANROOM_FILL"] + [k for k in ("CLEANROOM_ROOT", "CLEANROOM_KILL_GRACE") if k in env]
+    cmd = ["/usr/bin/sudo", "-n", "-u", user, f"--preserve-env={','.join(names)}"]
     cmd += ["--", "/usr/bin/python3", "-I", str(TOOL), "_child", name, step]
-    if subprocess.run(cmd, check=False).returncode != 0:
+    if subprocess.run(cmd, env=env, check=False).returncode != 0:
         raise Refusal(f"_child {step} failed as {user}")
 
 
@@ -277,6 +283,25 @@ def make_home(name: str) -> None:
     relay.write_text(f"#!/bin/sh\nprintf '%s\\n' \"$1\" >> '{run_dir(name)}/urls.log'\n")
     relay.chmod(0o755)
     write_private(name_dir(name) / "keyring-pass", secrets.token_urlsafe(24))
+    (home / "work/probe-commands.md").write_text(fill_probe_list(name, home))
+
+
+def fill_probe_list(name: str, home: Path) -> str:
+    """Return the probe list with its absolute-path placeholders replaced."""
+    fill = json.loads(
+        os.environ.get("CLEANROOM_FILL")
+        or json.dumps({"@CANARY@": str(state_dir() / "canary"), "@SECRETS@": str(secrets_file())})
+    )
+    fill |= {
+        "@RUN_DIR@": str(run_dir(name)),
+        "@HOME@": str(home),
+        "@NAME@": name,
+        "@USER@": pwd.getpwuid(os.getuid()).pw_name,
+    }
+    text = PROBE_LIST.read_text()
+    for key, value in fill.items():
+        text = text.replace(key, value)
+    return text
 
 
 def newest_transcript(home: Path) -> Path | None:
@@ -580,21 +605,30 @@ def write_handoff(name: str, env: dict, plan: dict) -> Path:
 
 
 def cmd_run(args: argparse.Namespace) -> None:
-    name = check_name(args.name)
+    name = start_run(args.name, args.goal, args.secret, args.env, args.cap_usd, args.cap_min)
+    print(f"session {session_name(name)}")
+    print(f"run directory {run_dir(name)}")
+
+
+def start_run(
+    name: str, goal: str, secret: list[str], extra_env: list[str], cap_usd: float, cap_min: float
+) -> str:
+    """Start a run's tmux session and watcher, and return the checked name."""
+    name = check_name(name)
     if not home_dir(name).is_dir():
         raise Refusal(f"no clean room {name!r}; run `cleanroom init {name}` first")
     session = session_name(name)
     if session in tmux_sessions():
         raise Refusal(f"tmux session {session} is already running")
-    specs = parse_secrets(args.secret)
-    env = clean_env(name, specs, parse_env(args.env))
+    specs = parse_secrets(secret)
+    env = clean_env(name, specs, parse_env(extra_env))
     start = time.time()
     meta = {
         "name": name,
         "start": start,
-        "goal": args.goal,
-        "cap_usd": args.cap_usd,
-        "cap_min": args.cap_min,
+        "goal": goal,
+        "cap_usd": cap_usd,
+        "cap_min": cap_min,
         "secrets": specs,
         "session": session,
     }
@@ -603,7 +637,7 @@ def cmd_run(args: argparse.Namespace) -> None:
                   "turns": 0})
     # --foreground keeps claude in the terminal's foreground process group; without it the
     # pty stops claude on its first read of the tty (SIGTTIN).
-    inner = ["timeout", "--foreground", "--signal=TERM", f"{args.cap_min + 1:g}m", "claude", args.goal]
+    inner = ["timeout", "--foreground", "--signal=TERM", f"{cap_min + 1:g}m", "claude", goal]
     handoff = write_handoff(name, env, {"argv": inner, "log": True})
     python = sys.executable
     pane = shlex.join([python, "-I", str(TOOL), "_exec", name, str(handoff)])
@@ -615,8 +649,7 @@ def cmd_run(args: argparse.Namespace) -> None:
         ledger_write({"name": name, "start": start, "end": time.time(), "state": "failed",
                       "cost": 0.0, "turns": 0})
         raise Refusal(f"tmux could not start {session}: {res.stderr.strip()}")
-    print(f"session {session}")
-    print(f"run directory {run_dir(name)}")
+    return name
 
 
 def cmd_exec(args: argparse.Namespace) -> int:
@@ -840,17 +873,25 @@ def cmd_open(args: argparse.Namespace) -> None:
 # ---------------------------------------------------------------------------------------------
 
 
-def handed_in_values(name: str) -> list[tuple[str, str]]:
-    """Return (label, value) for each credential the run was given, plus the canary."""
-    out = []
-    meta_path = run_dir(name) / "meta.json"
-    if meta_path.exists():
-        for spec in json.loads(meta_path.read_text())["secrets"]:
-            out.append((spec["store"], read_secret(spec["store"])))
+def values_for(specs: list[dict]) -> list[tuple[str, str]]:
+    """Return (label, value) for each credential in specs, plus the canary when it exists."""
+    out = [(spec["store"], read_secret(spec["store"])) for spec in specs]
     canary = state_dir() / "canary"
     if canary.exists():
         out.append(("canary", canary.read_text().strip()))
     return out
+
+
+def handed_in_values(name: str) -> list[tuple[str, str]]:
+    """Return (label, value) for each credential the run was given, plus the canary."""
+    meta_path = run_dir(name) / "meta.json"
+    specs = json.loads(meta_path.read_text())["secrets"] if meta_path.exists() else []
+    return values_for(specs)
+
+
+def leaks(values: list[tuple[str, str]], data: bytes) -> list[str]:
+    """Return the labels of the values found in data."""
+    return [label for label, value in values if value.encode() in data]
 
 
 def cmd_capture(args: argparse.Namespace) -> None:
@@ -875,7 +916,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
             data = Path(file).read_bytes()
         except OSError as err:
             raise Refusal(f"cannot read {file}: {err.strerror}") from err
-        bad += [f"{file}: holds {label}" for label, value in values if value.encode() in data]
+        bad += [f"{file}: holds {label}" for label in leaks(values, data)]
     if bad:
         raise Refusal("\n".join(bad))
 
@@ -898,6 +939,264 @@ def cmd_statusline(args: argparse.Namespace) -> None:
         print(f"${float(cost):.2f}")
     except (OSError, ValueError, TypeError):
         return
+
+
+# ---------------------------------------------------------------------------------------------
+# probe
+# ---------------------------------------------------------------------------------------------
+
+ITEM_RE = re.compile(r"^- (denied|fails|prompt|ok|prints|omits)(?: \[(.*?)\])?: `(.+)`$")
+HEADER_RE = re.compile(r"^\s*(?:\w+ command|Tool use|Fetch)\s*$")
+OPTION_RE = re.compile(r"^\s*[❯>]?\s*(\d+)\.\s+(.*?)\s*$")
+DENIAL_RE = re.compile(
+    r"EACCES|EPERM|permission denied|operation not permitted"
+    r"|blocked by (?:the )?sandbox|sandbox.{0,40}(?:denied|blocked)",
+    re.IGNORECASE,
+)
+PROBE_GOAL = (
+    "Read ~/work/probe-commands.md. Each list line holds an expectation word and one command in"
+    " backticks. Run the commands exactly as written, in order, one Bash call each (a command"
+    " that starts with WebFetch means call the WebFetch tool on that URL). Never retry, work"
+    " around, or fix a failure. After each one, say its number and its exit status. End with the"
+    " line PROBE DONE."
+)
+
+
+def parse_probe_list(text: str) -> list[dict]:
+    """Return the list's items as {word, arg, command}; other lines are prose and are skipped.
+
+    An item is a markdown list line, `- WORD: `COMMAND``, or `- WORD [ARG]: `COMMAND`` for the
+    words that take an argument. The words: denied (a read the sandbox must stop), fails (a
+    non-zero exit is the pass), prompt (a permission prompt is the pass), ok (exit 0), prints
+    [TEXT] (the output is exactly TEXT), omits [NAMES] (no space-separated NAME is a word of the
+    output).
+    """
+    items = []
+    for line in text.splitlines():
+        found = ITEM_RE.match(line)
+        if found:
+            items.append({"word": found[1], "arg": found[2] or "", "command": found[3]})
+    return items
+
+
+def parse_prompt(pane_text: str) -> dict | None:
+    """Return the permission prompt on the pane as {command, no_key, no_text}, or None.
+
+    Assumed layout of Claude Code 2.1.319, to be refined against the real pane: a block headed
+    "Bash command" (another tool has its own heading, such as "Fetch"), then the command text up
+    to the first blank line, then a description; then "Do you want to proceed?", numbered options
+    ("1. Yes" through "3. No") whose last starts with "No", and "Esc to cancel". no_key is the
+    digit of the option whose text starts with "No".
+    """
+    lines = pane_text.splitlines()
+    asks = [i for i, line in enumerate(lines) if "Do you want to proceed?" in line]
+    if not asks or not any("Esc to cancel" in line for line in lines[asks[-1]:]):
+        return None
+    ask = asks[-1]
+    heads = [i for i in range(ask) if HEADER_RE.match(lines[i])]
+    if not heads:
+        return None
+    block = []
+    for line in lines[heads[-1] + 1:ask]:
+        if not line.strip():
+            if block:
+                break
+            continue
+        block.append(line.strip())
+    command = " ".join(block)
+    if not lines[heads[-1]].strip().endswith("command"):
+        command = f"WebFetch {command}"
+    options = [m.groups() for line in lines[ask + 1:] if (m := OPTION_RE.match(line))]
+    no = next(((key, text) for key, text in options if text.startswith("No")), (None, None))
+    return {"command": command, "no_key": no[0], "no_text": no[1]}
+
+
+def result_text(content: object) -> str:
+    """Flatten a tool_result's content, a string or a list of text blocks."""
+    if isinstance(content, list):
+        return "\n".join(b.get("text", "") for b in content if isinstance(b, dict))
+    return str(content)
+
+
+def transcript_calls(path: Path) -> list[dict]:
+    """Return the transcript's tool calls, in order, as {command, text, is_error}.
+
+    A call the transcript does not yet answer has text None. A WebFetch call's command reads
+    "WebFetch URL", the form the probe list uses.
+    """
+    calls: dict[str, dict] = {}
+    if not path.exists():
+        return []
+    for line in path.read_text().splitlines():
+        content = (json.loads(line).get("message") or {}).get("content") if line.strip() else None
+        for block in content if isinstance(content, list) else []:
+            if block.get("type") == "tool_use":
+                inp = block.get("input", {})
+                command = inp.get("command") or f"{block.get('name')} {inp.get('url', '')}"
+                calls[block["id"]] = {"command": command, "text": None, "is_error": False}
+            elif block.get("type") == "tool_result" and block.get("tool_use_id") in calls:
+                call = calls[block["tool_use_id"]]
+                call["text"] = result_text(block.get("content"))
+                call["is_error"] = bool(block.get("is_error"))
+    return list(calls.values())
+
+
+def norm(command: str) -> str:
+    """Collapse whitespace so a pane-wrapped command compares equal to the list's."""
+    return " ".join(command.split())
+
+
+def exit_failed(call: dict) -> bool:
+    return call["is_error"] or bool(re.search(r"Exit code [1-9]", call["text"]))
+
+
+def grade_item(item: dict, call: dict | None, prompts: list[dict]) -> str | None:
+    """Return why an item failed, or None when it passed."""
+    word, arg = item["word"], item["arg"]
+    if word == "prompt":
+        asked = any(norm(p["command"]) == norm(item["command"]) for p in prompts)
+        return None if asked else "no prompt appeared"
+    if call is None or call["text"] is None:
+        return "the session never reported it"
+    text = call["text"]
+    if word == "denied":
+        if "No such file" in text:
+            return "No such file: the read never reached a denial"
+        return None if DENIAL_RE.search(text) else "no denial evidence"
+    if word == "fails":
+        return None if exit_failed(call) else "exited 0"
+    if exit_failed(call):
+        return "exited non-zero"
+    if word == "prints" and text.strip() != arg:
+        return f"printed {text.strip()[:60]!r}, expected {arg!r}"
+    if word == "omits":
+        seen = [n for n in arg.split() if n in text.split()]
+        return f"output lists {', '.join(seen)}" if seen else None
+    return None
+
+
+def pane_text(session: str) -> str:
+    res = tmux(["capture-pane", "-p", "-J", "-t", f"{session}:main"])
+    return res.stdout if res.returncode == 0 else ""
+
+
+def append_probe_row(row: dict) -> None:
+    """Append a row to probes.jsonl atomically."""
+    path = root() / "probes.jsonl"
+    old = path.read_text() if path.exists() else ""
+    write_atomic(path, old + json.dumps(row) + "\n")
+
+
+def precheck(values: list[tuple[str, str]]) -> None:
+    """Refuse unless the canary exists and the matcher finds every value in a control file."""
+    if not (state_dir() / "canary").exists():
+        raise Refusal(f"no canary at {state_dir() / 'canary'}; run `cleanroom init` first")
+    with tempfile.TemporaryDirectory() as tmp:
+        control = Path(tmp) / "control"
+        control.write_text("".join(f"{value}\n" for _, value in values))
+        found = leaks(values, control.read_bytes())
+    missed = [label for label, _ in values if label not in found]
+    if missed:
+        raise Refusal(f"the matcher missed {', '.join(missed)} in its control file")
+
+
+def cmd_probe(args: argparse.Namespace) -> int:
+    name = check_name(args.name)
+    filled = home_dir(name) / "work/probe-commands.md"
+    if not filled.exists():
+        raise Refusal(f"{filled} is missing; run `cleanroom init {name} --fresh`")
+    items = parse_probe_list(filled.read_text())
+    source = parse_probe_list(Path(args.commands).read_text())
+    if [i["word"] for i in items] != [i["word"] for i in source]:
+        raise Refusal(f"{filled} differs from {args.commands}; run `cleanroom init {name} --fresh`")
+    values = values_for(parse_secrets(args.secret))
+    precheck(values)
+    start_run(name, PROBE_GOAL, args.secret, args.env, args.cap_usd, args.cap_min)
+    rd, session = run_dir(name), session_name(name)
+    tick = seconds("CLEANROOM_PROBE_TICK", 5)
+    deadline = time.time() + args.cap_min * 60
+    prompts: list[dict] = []
+    pane_hits: set[str] = set()
+    last = None
+    while time.time() < deadline:
+        time.sleep(tick)
+        text = pane_text(session)
+        pane_hits.update(leaks(values, text.encode()))
+        prompt = parse_prompt(text)
+        if prompt and prompt != last:
+            if prompt["no_key"]:
+                tmux(["send-keys", "-t", f"{session}:main", prompt["no_key"]])
+            prompts.append(prompt)
+        last = prompt
+        state_path = rd / "state.json"
+        if state_path.exists() and json.loads(state_path.read_text())["state"] != "running":
+            break
+        calls = transcript_calls(rd / "transcript.jsonl")[: len(items)]
+        if len(calls) == len(items) and all(c["text"] is not None for c in calls):
+            break
+    cmd_stop(argparse.Namespace(name=name))
+    run_child(name, "mirror")
+    return finish_probe(name, items, values, prompts, pane_hits)
+
+
+def finish_probe(
+    name: str,
+    items: list[dict],
+    values: list[tuple[str, str]],
+    prompts: list[dict],
+    pane_hits: set[str],
+) -> int:
+    """Grade the run, write run/probe.md and the probes.jsonl row, and return the exit status."""
+    rd = run_dir(name)
+    calls = transcript_calls(rd / "transcript.jsonl")
+    state_path = rd / "state.json"
+    state = json.loads(state_path.read_text()) if state_path.exists() else {}
+    rows, failed = [], []
+    for item in items:
+        call = next((c for c in calls if c["command"] == item["command"]), None)
+        why = grade_item(item, call, prompts)
+        rows.append((item, why))
+        if why:
+            failed.append(f"{item['word']} `{item['command']}`: {why}")
+    expected = {norm(i["command"]) for i in items if i["word"] == "prompt"}
+    for p in prompts:
+        if norm(p["command"]) not in expected:
+            failed.append(f"unexpected prompt for `{p['command']}`")
+        if not p["no_key"]:
+            failed.append(f"prompt for `{p['command']}` showed no No option to answer")
+    verdicts = []
+    for label, value in values:
+        where = [f.name for f in (rd / "transcript.jsonl", rd / "session.log")
+                 if f.exists() and value.encode() in f.read_bytes()]
+        where += ["pane"] if label in pane_hits else []
+        verdicts.append((label, where))
+        if where:
+            failed.append(f"{label} is in the {', '.join(where)}")
+    denials = [(c["command"], m.group(0)) for c in calls
+               if c["text"] and (m := DENIAL_RE.search(c["text"]))]
+    sha = hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()
+    verdict = "fail" if failed else "pass"
+    out = [f"# Probe {name}: {verdict}", "", f"Template sha256: {sha}", "", "## Commands", ""]
+    for item, why in rows:
+        arg = f" [{item['arg']}]" if item["arg"] else ""
+        out.append(f"- {item['word']}{arg}: `{item['command']}`: "
+                   f"{'PASS' if why is None else 'FAIL, ' + why}")
+    out += ["", "## Prompts", ""]
+    out += [f"- `{p['command']}`: answered {p['no_text']} (key {p['no_key']})" for p in prompts]
+    out += ["none"] if not prompts else []
+    out += ["", "## Sandbox denials in the transcript", ""]
+    out += [f"- `{cmd}`: {word}" for cmd, word in denials] or ["none"]
+    out += ["", "## Canary and handed-in values", ""]
+    out += [f"- {label}: {'FOUND in ' + ', '.join(where) if where else 'absent'}"
+            for label, where in verdicts]
+    out += ["", "## Cost", "", f"- statusline: {state.get('cost_statusline')}",
+            f"- transcript: {state.get('cost_transcript')}", "", "## Failures", ""]
+    out += [f"- {f}" for f in failed] or ["none"]
+    path = rd / "probe.md"
+    write_atomic(path, "\n".join(out) + "\n")
+    append_probe_row({"sha256": sha, "verdict": verdict, "path": str(path)})
+    print(f"probe {verdict}: {path}")
+    return 1 if failed else 0
 
 
 # ---------------------------------------------------------------------------------------------
@@ -990,6 +1289,15 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("stop", help="end the run's tmux sessions and processes")
     p.add_argument("name")
     p.set_defaults(func=cmd_stop)
+
+    p = sub.add_parser("probe", help="run the probe list and grade the sandbox")
+    p.add_argument("name")
+    p.add_argument("--commands", required=True, metavar="FILE")
+    p.add_argument("--secret", action="append", default=[], metavar="STORE[:ENV]")
+    p.add_argument("--env", action="append", default=[], metavar="KEY=VALUE")
+    p.add_argument("--cap-usd", type=float, default=5.0)
+    p.add_argument("--cap-min", type=float, default=20.0)
+    p.set_defaults(func=cmd_probe)
 
     p = sub.add_parser("statusline", help=argparse.SUPPRESS)
     p.add_argument("run_dir")
