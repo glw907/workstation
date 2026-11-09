@@ -1009,7 +1009,7 @@ def parse_prompt(pane_text: str) -> dict | None:
             if block:
                 break
             continue
-        block.append(line.strip())
+        block.append(line.strip().removeprefix("│").strip())
     command = " ".join(block)
     if not lines[heads[-1]].strip().endswith("command"):
         command = f"WebFetch {command}"
@@ -1077,39 +1077,55 @@ def outside_control(command: str) -> dict[str, str]:
     return found
 
 
-def masked_by_sandbox(text: str, exit_ok: bool, control: dict[str, str]) -> str | None:
+def masked_by_sandbox(
+    text: str, exit_ok: bool, control: dict[str, str], known: dict[str, str]
+) -> str | None:
     """Return how the output shows a masked path, or None.
 
-    Evidence is a "No such file" line that names a path the control found outside, or an empty
-    listing, with exit 0, of a directory the control found non-empty.
+    Evidence is a "No such file" line that names a path the list's control found outside (any
+    item's path: a shadow script reads the canary the list names elsewhere), or an empty
+    listing, with exit 0, of a directory this item names that the control found non-empty.
     """
-    for path, kind in control.items():
-        if kind != "dir" and "No such file" in text and path in text:
+    for path in known:
+        if known[path] != "empty-dir" and "No such file" in text and path in text:
             return f"masked: {path} exists outside and is absent inside"
-        if kind == "dir" and exit_ok and not text.strip().replace("(Bash completed with no output)", ""):
+    quiet = not text.strip().replace("(Bash completed with no output)", "")
+    for path, kind in control.items():
+        if kind == "dir" and exit_ok and quiet:
             return f"masked: {path} is non-empty outside and empty inside"
     return None
 
 
 def grade_item(
-    item: dict, call: dict | None, prompts: list[dict], control: dict[str, str] | None = None
+    item: dict,
+    call: dict | None,
+    prompts: list[dict],
+    control: dict[str, str] | None = None,
+    known: dict[str, str] | None = None,
 ) -> tuple[str | None, str | None]:
     """Return (why it failed, note on how it passed): the first is None when the item passed."""
-    why = grade_failure(item, call, prompts, control or {})
-    return (why, None) if why else (None, masked_note(item, call, control or {}))
+    control, known = control or {}, known or control or {}
+    why = grade_failure(item, call, prompts, control, known)
+    return (why, None) if why else (None, masked_note(item, call, control, known))
 
 
-def masked_note(item: dict, call: dict | None, control: dict[str, str]) -> str | None:
+def masked_note(
+    item: dict, call: dict | None, control: dict[str, str], known: dict[str, str]
+) -> str | None:
     """Name the masking evidence a passing denied item relied on, if it relied on any."""
     if item["word"] != "denied" or call is None or call["text"] is None:
         return None
     if DENIAL_RE.search(call["text"]):
         return None
-    return masked_by_sandbox(call["text"], not exit_failed(call), control)
+    return masked_by_sandbox(call["text"], not exit_failed(call), control, known)
 
 
 def grade_failure(
-    item: dict, call: dict | None, prompts: list[dict], control: dict[str, str]
+    item: dict,
+    call: dict | None,
+    prompts: list[dict],
+    control: dict[str, str],
+    known: dict[str, str],
 ) -> str | None:
     """Return why an item failed, or None when it passed."""
     word, arg = item["word"], item["arg"]
@@ -1120,7 +1136,7 @@ def grade_failure(
         return "the session never reported it"
     text = call["text"]
     if word == "denied":
-        if DENIAL_RE.search(text) or masked_by_sandbox(text, not exit_failed(call), control):
+        if DENIAL_RE.search(text) or masked_by_sandbox(text, not exit_failed(call), control, known):
             return None
         if "No such file" in text:
             return "No such file: the read never reached a denial"
@@ -1182,6 +1198,7 @@ def cmd_probe(args: argparse.Namespace) -> int:
     pane_hits: set[str] = set()
     last = None
     answered = False
+    text = ""
     while time.time() < deadline:
         time.sleep(tick)
         text = pane_text(session)
@@ -1206,7 +1223,7 @@ def cmd_probe(args: argparse.Namespace) -> int:
             break
     cmd_stop(argparse.Namespace(name=name))
     run_child(name, "mirror")
-    return finish_probe(name, items, values, prompts, pane_hits, controls)
+    return finish_probe(name, items, values, prompts, pane_hits, controls, text)
 
 
 def finish_probe(
@@ -1216,6 +1233,7 @@ def finish_probe(
     prompts: list[dict],
     pane_hits: set[str],
     controls: dict[int, dict[str, str]],
+    last_pane: str = "",
 ) -> int:
     """Grade the run, write run/probe.md and the probes.jsonl row, and return the exit status."""
     rd = run_dir(name)
@@ -1225,7 +1243,8 @@ def finish_probe(
     rows, failed = [], []
     for n, item in enumerate(items):
         call = next((c for c in calls if c["command"] == item["command"]), None)
-        why, note = grade_item(item, call, prompts, controls.get(n))
+        known = {p: k for c in controls.values() for p, k in c.items()}
+        why, note = grade_item(item, call, prompts, controls.get(n), known)
         rows.append((item, why, note))
         if why:
             failed.append(f"{item['word']} `{item['command']}`: {why}")
@@ -1263,6 +1282,8 @@ def finish_probe(
     out += ["", "## Cost", "", f"- statusline: {state.get('cost_statusline')}",
             f"- transcript: {state.get('cost_transcript')}", "", "## Failures", ""]
     out += [f"- {f}" for f in failed] or ["none"]
+    if failed and last_pane.strip() and not pane_hits:
+        out += ["", "## Last pane", "", "```", *last_pane.rstrip().splitlines(), "```"]
     path = rd / "probe.md"
     write_atomic(path, "\n".join(out) + "\n")
     append_probe_row({"sha256": sha, "verdict": verdict, "path": str(path)})

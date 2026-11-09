@@ -319,3 +319,24 @@ def test_masked_directory_listing_is_empty_inside_and_full_outside(tmp_path):
     assert cr.grade_item(item, quiet, [], control)[0] is None
     loud = {"command": item["command"], "text": "x", "is_error": False}
     assert cr.grade_item(item, loud, [], control)[0] == "no denial evidence"
+
+
+def test_parse_prompt_strips_the_box_prefix_of_a_long_command():
+    pane = (
+        PROMPT_PANE.replace(" PATH=$PWD/bin:$PATH tool --version", " │ (a; b)")
+        .replace("This command requires approval", "This command can't be checked before it runs")
+        .replace("   4. No", "   3. No")
+    )
+    assert cr.parse_prompt(pane) == {"command": "(a; b)", "no_key": "3", "no_text": "No"}
+
+
+def test_a_shadow_script_reading_the_canary_counts_as_masked(tmp_path):
+    canary = tmp_path / "canary"
+    canary.write_text("x")
+    item = {"word": "denied", "arg": "", "command": "./bin/tool"}
+    text = f"cat: {canary}: No such file or directory"
+    call = {"command": "./bin/tool", "text": text, "is_error": True}
+    known = cr.outside_control(f"cat {canary}")
+    assert cr.grade_item(item, call, [], {}, known)[0] is None
+    why = cr.grade_item(item, call, [], {}, {})[0]
+    assert why == "No such file: the read never reached a denial"

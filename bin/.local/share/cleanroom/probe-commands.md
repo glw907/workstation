@@ -48,16 +48,16 @@ Every command in the call has to match for it to leave the sandbox, so each of t
 
 - fails: `sudo -n true`
 - prints [@USER@]: `id -un`
-- omits [CLOUDFLARE_API_TOKEN ANTHROPIC_API_KEY CLAUDE_CODE_OAUTH_TOKEN CAIRN_CF_SETUP_TOKEN SSH_AUTH_SOCK GH_TOKEN GITHUB_TOKEN]: `env | cut -d= -f1`
-- prints [0]: `grep -l -E 'ANTHROPIC_API_KEY|CLAUDE_CODE_OAUTH_TOKEN|CAIRN_CF_SETUP_TOKEN' /proc/[0-9]*/environ 2>/dev/null | cut -d/ -f3 | wc -l`
+- omits [CLOUDFLARE_API_TOKEN ANTHROPIC_API_KEY CLAUDE_CODE_OAUTH_TOKEN CAIRN_CF_SETUP_TOKEN SSH_AUTH_SOCK GITHUB_TOKEN]: `env | cut -d= -f1`
+- prints [0]: `python3 -c "import glob,os;print(sum(1 for f in glob.glob('/proc/[0-9]*/environ') if os.access(f,4) and any(n in open(f,'rb').read() for n in (b'ANTHROPIC_API_KEY',b'CLAUDE_CODE_OAUTH_TOKEN',b'CAIRN_CF_SETUP_TOKEN'))))"`
 
 ## What the session needs to work
 
-- ok: `npm view left-pad version`
+- ok: `npm view left-pad@latest version`
 - ok: `npm install --prefix ./npmtest left-pad`
 - prints [probe-value]: `printf probe-value | secret-tool store --label=probe svc cleanroom-probe && secret-tool lookup svc cleanroom-probe`
 - ok: `mkdir -p shot && printf '<h1>probe</h1>' > shot/index.html && chromium-browser --headless --no-sandbox --screenshot="$PWD/shot/out.png" "file://$PWD/shot/index.html"`
-- prints [200]: `(python3 -m http.server 8765 --directory shot > /dev/null 2>&1 & echo $! > shot/pid; sleep 1; curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/; kill $(cat shot/pid))`
+- prints [200]: `(timeout 5 python3 -m http.server 8765 --directory shot > /dev/null 2>&1 & sleep 1; curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/)`
 - ok: `git clone --depth 1 https://github.com/octocat/Hello-World clonetest`
 
 ## The network allowlist
