@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""Build and run clean rooms for naive Claude Code sessions.
+
+A clean room is a home directory under /var/tmp/cleanroom/<name>/ that holds nothing from this
+workstation: a settings file the sandbox enforces, a private session bus and keyring, and a
+cleared environment. The tool reads credentials from ~/.local/secrets by store name and never
+prints a value. It knows nothing about any one product.
+
+Forms:
+  init <name> [--fresh [--discard]]   make a clean home, its settings, and the canary
+"""
+
+import argparse
+import json
+import os
+import pwd
+import re
+import secrets
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
+TOOL = Path(os.path.realpath(__file__))
+TEMPLATE = TOOL.parent.parent / "share/cleanroom/settings.json"
+
+
+class Refusal(Exception):
+    """A request the tool declines, reported on stderr with exit status 1."""
+
+
+def root() -> Path:
+    """Return the directory that holds every clean room (overridable for tests)."""
+    return Path(os.environ.get("CLEANROOM_ROOT", "/var/tmp/cleanroom"))
+
+
+def state_dir() -> Path:
+    """Return the per-user state directory that holds the canary."""
+    default = Path.home() / ".local/state/cleanroom"
+    return Path(os.environ.get("CLEANROOM_STATE", default))
+
+
+def check_name(name: str) -> str:
+    """Return name if it is a safe single path segment, else refuse."""
+    if not NAME_RE.fullmatch(name):
+        raise Refusal(f"bad name {name!r}: use a-z, 0-9 and '-', at most 40 characters")
+    return name
+
+
+def name_dir(name: str) -> Path:
+    return root() / check_name(name)
+
+
+def home_dir(name: str) -> Path:
+    return name_dir(name) / "home"
+
+
+def run_dir(name: str) -> Path:
+    return name_dir(name) / "run"
+
+
+def child_user() -> str | None:
+    """Return the Unix user the session runs as, or None when it runs in-process."""
+    user = os.environ.get("CLEANROOM_USER", "cleanroom")
+    if not user:
+        return None
+    try:
+        pwd.getpwnam(user)
+    except KeyError:
+        return None
+    return user
+
+
+def run_child(name: str, step: str) -> None:
+    """Run one _child step as the clean room's user, or in-process when there is none."""
+    check_name(name)
+    user = child_user()
+    if user is None or user == pwd.getpwuid(os.getuid()).pw_name:
+        child(name, step)
+        return
+    keep = ",".join(k for k in ("CLEANROOM_ROOT",) if k in os.environ)
+    cmd = ["sudo", "-n", "-u", user]
+    if keep:
+        cmd.append(f"--preserve-env={keep}")
+    cmd += ["--", "/usr/bin/python3", "-I", str(TOOL), "_child", name, step]
+    if subprocess.run(cmd, check=False).returncode != 0:
+        raise Refusal(f"_child {step} failed as {user}")
+
+
+def remove_tree(path: Path, depth: int) -> None:
+    """Delete path with shutil.rmtree, only when it sits depth levels below the root."""
+    if path.is_symlink():
+        raise Refusal(f"refusing to remove a symlink: {path}")
+    rel = path.resolve().relative_to(root().resolve())
+    if len(rel.parts) != depth or not NAME_RE.fullmatch(rel.parts[0]):
+        raise Refusal(f"refusing to remove {path}: not {depth} below {root()}")
+    shutil.rmtree(path)
+
+
+def write_private(path: Path, text: str) -> None:
+    """Write text to a new 0600 file."""
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(text)
+
+
+def seed_claude_json(home: Path) -> dict:
+    """Return the first-run state that keeps Claude Code's onboarding and trust prompts away.
+
+    The keys come from a credential-free first-run probe of Claude Code 2.1.319: the
+    onboarding flag, the auto mode notice flags, and the work folder's trust flag.
+    """
+    return {
+        "hasCompletedOnboarding": True,
+        "hasSeenAutoDefaultNotice": True,
+        "hasResetAutoModeOptInForDefaultOffer": True,
+        "theme": "dark",
+        "projects": {
+            str(home / "work"): {
+                "allowedTools": [],
+                "hasTrustDialogAccepted": True,
+                "hasClaudeMdExternalIncludesApproved": False,
+                "hasClaudeMdExternalIncludesWarningShown": False,
+            }
+        },
+    }
+
+
+def bus_config(home: Path) -> str:
+    """Return the stock session bus config with its listen address moved into the home."""
+    stock = Path("/usr/share/dbus-1/session.conf").read_text()
+    listen = "<listen>unix:tmpdir=/tmp</listen>"
+    if stock.count(listen) != 1:
+        raise Refusal("the stock session bus config has no single <listen> line to replace")
+    return stock.replace(listen, f"<listen>unix:dir={home}/.cache/dbus</listen>")
+
+
+def child(name: str, step: str) -> None:
+    """Run a step that touches the clean home, as the clean room's user."""
+    if step == "home":
+        make_home(name)
+    elif step == "remove":
+        nd = name_dir(name)
+        if home_dir(name).exists():
+            remove_tree(home_dir(name), 2)
+        (nd / "keyring-pass").unlink(missing_ok=True)
+    else:
+        raise Refusal(f"unknown _child step {step!r}")
+
+
+def make_home(name: str) -> None:
+    """Create the clean home: settings, first-run state, bus config, keyring password, relay."""
+    home = home_dir(name)
+    for sub in ("", ".claude", ".config/cleanroom", ".cache/dbus", ".local/bin", "work", "tmp"):
+        (home / sub).mkdir(parents=True, exist_ok=True)
+        (home / sub).chmod(0o755)
+    (home / ".cache/dbus").chmod(0o700)
+    filled = (
+        TEMPLATE.read_text()
+        .replace("@RUN_DIR@", str(run_dir(name)))
+        .replace("@TOOL@", str(TOOL))
+    )
+    json.loads(filled)
+    (home / ".claude/settings.json").write_text(filled)
+    (home / ".claude.json").write_text(json.dumps(seed_claude_json(home), indent=2) + "\n")
+    (home / ".config/cleanroom/bus.conf").write_text(bus_config(home))
+    relay = home / ".local/bin/open-url"
+    relay.write_text(f"#!/bin/sh\nprintf '%s\\n' \"$1\" >> '{run_dir(name)}/urls.log'\n")
+    relay.chmod(0o755)
+    write_private(name_dir(name) / "keyring-pass", secrets.token_urlsafe(24))
+
+
+def init_canary() -> Path:
+    """Create the canary file if it is missing and return its path."""
+    state = state_dir()
+    state.mkdir(parents=True, exist_ok=True)
+    state.chmod(0o700)
+    canary = state / "canary"
+    if not canary.exists():
+        write_private(canary, "canary-" + secrets.token_hex(16) + "\n")
+    return canary
+
+
+def cmd_init(args: argparse.Namespace) -> None:
+    nd = name_dir(args.name)
+    if args.discard and not args.fresh:
+        raise Refusal("--discard goes with --fresh")
+    if nd.exists():
+        if not args.fresh:
+            raise Refusal(f"{nd} exists; use --fresh to rebuild it")
+        graded = (run_dir(args.name) / "run-record.json").exists()
+        if not graded and not args.discard:
+            raise Refusal(f"{nd} has no run-record.json; --discard throws that run away")
+        print(f"removing {nd}: its home, run directory, and keyring password")
+        run_child(args.name, "remove")
+        remove_tree(nd, 1)
+    root().mkdir(parents=True, exist_ok=True)
+    nd.mkdir()
+    run_dir(args.name).mkdir()
+    user = child_user()
+    if user is not None and user != pwd.getpwuid(os.getuid()).pw_name:
+        subprocess.run(
+            ["setfacl", "-m", f"u:{user}:rwx", str(nd), str(run_dir(args.name))], check=True
+        )
+    run_child(args.name, "home")
+    canary = init_canary()
+    print(f"clean room {args.name}: {home_dir(args.name)}")
+    print(f"canary: {canary}")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="cleanroom", description=__doc__.split("\n")[0])
+    sub = parser.add_subparsers(dest="form", required=True)
+    p = sub.add_parser("init", help="make a clean home, its settings, and the canary")
+    p.add_argument("name")
+    p.add_argument("--fresh", action="store_true", help="rebuild an existing room")
+    p.add_argument("--discard", action="store_true", help="with --fresh, drop an ungraded run")
+    p.set_defaults(func=cmd_init)
+    p = sub.add_parser("_child")
+    p.add_argument("name")
+    p.add_argument("step")
+    p.set_defaults(func=lambda a: child(a.name, a.step))
+    args = parser.parse_args(argv)
+    try:
+        args.func(args)
+    except Refusal as err:
+        print(f"cleanroom: {err}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,192 @@
+{
+  "permissions": {
+    "defaultMode": "default",
+    "blockReadsOutsideWorkingDirectories": true,
+    "blockWritesOutsideWorkingDirectories": true,
+    "allow": [
+      "Bash(/usr/bin/chromium-browser *)",
+      "Bash(awk *)",
+      "Bash(basename *)",
+      "Bash(bash *)",
+      "Bash(cat *)",
+      "Bash(cd *)",
+      "Bash(chmod *)",
+      "Bash(chromium-browser *)",
+      "Bash(cmp *)",
+      "Bash(cp *)",
+      "Bash(curl *)",
+      "Bash(cut *)",
+      "Bash(date *)",
+      "Bash(diff *)",
+      "Bash(dirname *)",
+      "Bash(du *)",
+      "Bash(echo *)",
+      "Bash(env *)",
+      "Bash(file *)",
+      "Bash(find *)",
+      "Bash(gh *)",
+      "Bash(git *)",
+      "Bash(grep *)",
+      "Bash(head *)",
+      "Bash(jq *)",
+      "Bash(kill *)",
+      "Bash(ln *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(mv *)",
+      "Bash(node *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(pkill *)",
+      "Bash(printf *)",
+      "Bash(pwd *)",
+      "Bash(rm *)",
+      "Bash(sed *)",
+      "Bash(seq *)",
+      "Bash(sh *)",
+      "Bash(sleep *)",
+      "Bash(sort *)",
+      "Bash(stat *)",
+      "Bash(tail *)",
+      "Bash(tar *)",
+      "Bash(tee *)",
+      "Bash(test *)",
+      "Bash(timeout *)",
+      "Bash(touch *)",
+      "Bash(tr *)",
+      "Bash(uniq *)",
+      "Bash(wc *)",
+      "Bash(which *)",
+      "Bash(xargs *)",
+      "Bash(~/work/tools/* *)",
+      "Edit",
+      "WebSearch",
+      "Write",
+      "Bash(cairn *)",
+      "Bash(npm create cairn-site)",
+      "Bash(npm create cairn-site -- *)",
+      "Bash(npx create-cairn-site *)",
+      "WebFetch(domain:registry.npmjs.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:codeload.github.com)",
+      "WebFetch(domain:*.githubusercontent.com)",
+      "WebFetch(domain:api.cloudflare.com)",
+      "WebFetch(domain:carin-test.org)",
+      "WebFetch(domain:*.carin-test.org)",
+      "WebFetch(domain:*.workers.dev)",
+      "WebFetch(domain:code.claude.com)",
+      "WebFetch(domain:docs.claude.com)",
+      "WebFetch(domain:cdn.playwright.dev)",
+      "WebFetch(domain:playwright.download.prss.microsoft.com)"
+    ],
+    "deny": [
+      "Read(//var/home/glw907/**)",
+      "Read(//home/glw907/**)",
+      "Read(//tmp/**)",
+      "Read(//run/user/**)",
+      "Read(//dev/shm/**)",
+      "Read(//var/tmp/cairn-cleanroom/logs/**)",
+      "Read(//var/tmp/cairn-cleanroom/acceptance/**)",
+      "Edit(~/.claude/**)",
+      "Write(~/.claude/**)",
+      "Bash(*907-life-legacy*)",
+      "Bash(*cairn-build*)",
+      "Bash(*cairn-907-auth*)",
+      "Bash(*wrangler delete*)",
+      "Bash(*d1 delete*)",
+      "Bash(*r2 bucket delete*)",
+      "Bash(*r2 object delete*)",
+      "Bash(*repo delete*)",
+      "Bash(*-X DELETE*)",
+      "Bash(*--method DELETE*)",
+      "Bash(git push*--force*)",
+      "Bash(git push* -f*)",
+      "Read(//var/tmp/cleanroom/*/run/**)",
+      "Read(//var/home/glw907/.local/state/cleanroom/**)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "filesystem": {
+      "denyRead": [
+        "/var/home/glw907",
+        "/home/glw907",
+        "/tmp",
+        "/var/tmp",
+        "/run/user/1000",
+        "/dev/shm",
+        "//var/tmp/cleanroom/*/run/**",
+        "//var/home/glw907/.local/state/cleanroom/**"
+      ],
+      "allowRead": [
+        "~/work",
+        "~/tmp",
+        "~/.npm",
+        "~/.cache",
+        "~/.config/gh",
+        "/var/home/glw907/.local/share/mise/installs/node",
+        "/home/linuxbrew/.linuxbrew",
+        "/var/home/linuxbrew/.linuxbrew"
+      ],
+      "allowWrite": [
+        "~/tmp",
+        "~/.npm",
+        "~/.cache",
+        "~/.config/gh"
+      ]
+    },
+    "network": {
+      "strictAllowlist": true,
+      "allowedDomains": [
+        "registry.npmjs.org",
+        "github.com",
+        "api.github.com",
+        "codeload.github.com",
+        "*.githubusercontent.com",
+        "api.cloudflare.com",
+        "carin-test.org",
+        "*.carin-test.org",
+        "*.workers.dev",
+        "code.claude.com",
+        "docs.claude.com",
+        "cdn.playwright.dev",
+        "playwright.download.prss.microsoft.com"
+      ],
+      "allowAllUnixSockets": true
+    },
+    "excludedCommands": [
+      "cairn *",
+      "npm create cairn-site",
+      "npm create cairn-site -- *",
+      "npx create-cairn-site *"
+    ],
+    "credentials": {
+      "envVars": [
+        {
+          "name": "CAIRN_CF_SETUP_TOKEN",
+          "mode": "deny"
+        },
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "mode": "deny"
+        },
+        {
+          "name": "CLAUDE_CODE_OAUTH_TOKEN",
+          "mode": "deny"
+        }
+      ]
+    }
+  },
+  "disableClaudeAiConnectors": true,
+  "syncClaudeAiSkills": false,
+  "env": {
+    "NODE_USE_ENV_PROXY": "1"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "python3 -I @TOOL@ statusline @RUN_DIR@"
+  }
+}
