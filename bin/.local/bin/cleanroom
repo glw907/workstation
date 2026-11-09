@@ -263,9 +263,6 @@ def child(name: str, step: str) -> None:
 def make_home(name: str) -> None:
     """Create the clean home: settings, first-run state, bus config, keyring password, relay."""
     home = home_dir(name)
-    socket = home / ".cache/dbus/dbus-XXXXXXXXXX"
-    if len(str(socket)) >= 100:
-        raise Refusal(f"{socket} is too long for a unix socket path (limit 108); use a shorter root")
     for sub in ("", ".claude", ".config/cleanroom", ".cache/dbus", ".local/bin", "work", "tmp"):
         (home / sub).mkdir(parents=True, exist_ok=True)
         (home / sub).chmod(0o755)
@@ -427,6 +424,9 @@ def clean_path() -> str:
 def clean_env(name: str, secret_specs: list[dict], extra: dict) -> dict:
     """Return the cleared environment: a short base set plus the handed-in values."""
     home = home_dir(name)
+    socket = home / ".cache/dbus/dbus-XXXXXXXXXX"
+    if len(str(socket)) >= 100:
+        raise Refusal(f"{socket} is too long for a unix socket path (limit 108); use a shorter root")
     env = {
         "HOME": str(home),
         "PATH": clean_path(),
