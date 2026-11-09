@@ -1,8 +1,8 @@
 {
-  "reviewed": "2026-11-01",
-  "claude_code_version": "2.1.316",
+  "reviewed": "2026-11-09",
+  "claude_code_version": "2.1.319",
   "models": {
-    "fable": "claude-fable-5-1",
+    "fable": "claude-fable-5-2",
     "opus": "claude-opus-5-5",
     "sonnet": "claude-sonnet-5-5",
     "haiku": "claude-haiku-5-5"
@@ -10,15 +10,15 @@
   "pages": {
     "models-overview": {
       "url": "https://platform.claude.com/docs/en/about-claude/models/overview",
-      "sha256": "5761ef315b5a4816697fbdc7e4a653d3cb439ccfe9a0a012f90a2d326aba90a2"
+      "sha256": "a6b6ea43f997802dc8b34aeaaaade72592cb872b8acb692f7a15240c06a3d85f"
     },
     "pricing": {
       "url": "https://platform.claude.com/docs/en/about-claude/pricing",
-      "sha256": "79f8d09b6562f37f5edba5108b871cdd13dba26603efbd748e77a40f18c5ff53"
+      "sha256": "4fe2b894c1ec51f87e10428bb630886489c6a668fb674bc607a2c36a6834aabb"
     },
     "deprecations": {
       "url": "https://platform.claude.com/docs/en/about-claude/model-deprecations",
-      "sha256": "7c01727a08cc32c5812ccecc6dd36caa667ae5bd4e9d907b3b7b4272ce950c28"
+      "sha256": "a04f5853f198f546cbf1927059fc701c3ea82aacf709a9a66f3bf37855045b03"
     },
     "changelog": {
       "url": "https://code.claude.com/docs/en/changelog",
@@ -66,11 +66,11 @@
     },
     "effort": {
       "url": "https://platform.claude.com/docs/en/build-with-claude/effort",
-      "sha256": "64bb06b20fb2352c02771478783d2cfd7ad191121f663d9ac1247cc4213ddcec"
+      "sha256": "87c3900847cb21bd1b44f466831fd97a9d19f689e65400da4157b6302a4ee55f"
     },
     "model-config": {
       "url": "https://code.claude.com/docs/en/model-config",
-      "sha256": "7180ba5975ee6529caebbd3a7847e4bcb5851d0a795efaba3a6f558d226b5842"
+      "sha256": "c6446dc7662677f023f86607ba9fc009f420bace3e9c9cb18b0a110f2aa9a379"
     },
     "sub-agents": {
       "url": "https://code.claude.com/docs/en/sub-agents",
@@ -83,6 +83,31 @@
     "hooks": {
       "url": "https://code.claude.com/docs/en/hooks",
       "sha256": "8e4d5d8c03b5a4cd0e6fe15cc8d71d782a5acc29cf738c584337d024ff1e4ca1"
+    },
+    "fable-5-2-overview": {
+      "url": "https://platform.claude.com/docs/en/models/fable-5-2/overview",
+      "sha256": "ffc55e1cf381b571ce8868388ff8fe223437edee54f9ed910df26b47d0764e92"
+    },
+    "fable-5-2-whats-new": {
+      "url": "https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2",
+      "sha256": "8c42cb814b8231528b3684711fe30d30f0855cc388b7f57a3f63f762839f0098"
+    },
+    "fable-5-2-migration": {
+      "url": "https://platform.claude.com/docs/en/models/fable-5-2/migration-guide",
+      "sha256": "7cb7cd45c09f1d728e65406a6f3cf7a6ef5b5676f4c7e4458365765667f974ff"
+    },
+    "prompting-fable-5-2": {
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-2",
+      "sha256": "6e2ad08df7e9468048a4a57b63a6c154fe9f82d46e292aec944cefbfa3b22a84"
+    },
+    "advisor": {
+      "url": "https://code.claude.com/docs/en/advisor",
+      "sha256": "372783706a7a700ac52a80ef267561e6a57fee2f7c905cc4132a1255a69c033a"
+    },
+    "fable-on-plan": {
+      "url": "https://support.claude.com/en/articles/15424964-claude-fable-models-on-your-plan",
+      "sha256": "dcf51dd57d0c00a2e75daa00c5cb95c9020edc1729ceb853a00662739de2612b"
     }
-  }
+  },
+  "note": "2026-11-09 off-cycle run for the Fable 5.2 release. It graded the model, pricing, deprecation, effort, model-config, advisor, and Fable 5.2 pages only. The changelog and the other Claude Code pages keep their 2026-11-01 digests so the December run regrades them."
 }

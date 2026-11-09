@@ -14,9 +14,11 @@ subagents at `medium`. Both are prompt rules. `CLAUDE_CODE_SUBAGENT_MODEL=sonnet
 half in `settings.json`, and nothing enforces the effort half. A missed effort from a planner at
 `high` or an adjudication at `max` runs the subagent at that level.
 
-The live `~/.claude/settings.json` also saves `effortLevel: medium` under `claude-opus-5-5`. That
-matches Claude Code's default for the model, so it has no effect today. It would outrank a changed
-default, and the checklist treats a saved level as drift.
+The live `~/.claude/settings.json` also saves an effort level under `claude-opus-5-5`. On
+2026-11-01 it was `medium`, which matches Claude Code's default and had no effect. On 2026-11-09 it
+read `high`, so every Opus 5.5 session, conductors included, now starts a
+level above the `medium` that `pass-core` "Models" sets. The checklist treats a saved level as
+drift either way.
 
 The 2026-09-28 sweep filed an effort sweep to `ROADMAP.md`. The workstation's ROADMAP was later
 retired, and `BACKLOG.md` doesn't carry the item.
