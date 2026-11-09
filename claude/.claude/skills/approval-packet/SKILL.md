@@ -44,6 +44,10 @@ skill adds the procedure and never restates the register.
    `## Decisions` entries (`pass-core`, "Judgment calls") go in that part's row, one line each,
    so Geoff can reverse one in his decision note; an entry that meets one of the seven rules is
    an ask. Its `## Planning misses` entries go in the same row, each naming the fix that landed.
+   A design part carries its scoped backlog sweep's verdicts, its estimate in path minutes, and
+   every pre-flight item it foresees (`pass-core`, "Lifecycle" steps 1 and 4); a design missing
+   one is unfinished staff work and is not sent (theme-garden, 2026-11-08: a design approved
+   without all three left its planner to supply them and hold the launch for another packet).
    A packet whose approval launches a pass carries the plan's `## Pre-flight` items as
    `[you: <label>]` steps in `## If you approve`, in order. Each step gives the exact commands,
    clicks, or values to enter and the check that shows it done, so Geoff runs the sitting from
