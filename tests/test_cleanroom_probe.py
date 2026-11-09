@@ -26,21 +26,23 @@ spec = importlib.util.spec_from_loader("cleanroom_tool", loader)
 cr = importlib.util.module_from_spec(spec)
 loader.exec_module(cr)
 
-PROMPT_PANE = """\
+RULE = "╌" * 60
+# The layout of Claude Code 2.1.319, as captured from a real pane.
+PROMPT_PANE = f"""\
  Some earlier output
-
  Bash command
-
-   PATH=$PWD/bin:$PATH tool --version
-
-   Run the shadow tool
-
+ Tip: auto mode handles these prompts for you — choose "switch to auto mode" below
+ Run the shadow tool
+{RULE}
+ PATH=$PWD/bin:$PATH tool --version
+{RULE}
+ This command requires approval
  Do you want to proceed?
- > 1. Yes
-   2. Yes, and don't ask again for tool commands
-   3. No
-
- Esc to cancel
+ ❯ 1. Yes
+   2. Yes, and don’t ask again for: tool commands
+   3. Yes, and switch to auto mode · auto mode handles these prompts for you
+   4. No
+ Esc to cancel · Tab to amend
 """
 
 # The list the stubs run; CANARY is replaced with the canary's path.
@@ -62,19 +64,21 @@ home = os.environ["HOME"]
 os.makedirs(f"{home}/.claude/projects/p", exist_ok=True)
 out = open(f"{home}/.claude/projects/p/s.jsonl", "a")
 items = re.findall(r"^- (\w+): `(.*)`$", open(f"{home}/work/probe-commands.md").read(), re.M)
-canary = open(os.environ["CANARY"]).read().strip()
-PROMPT = """
+canary_path = os.environ["CANARY"]
+canary = open(canary_path).read().strip()
+RULE = "\u254c" * 60
+PROMPT = f"""
  Bash command
-
-   %s
-
-   description
-
+ Run it
+{RULE}
+ %s
+{RULE}
+ This command requires approval
  Do you want to proceed?
- > 1. Yes
-   2. Yes, and don't ask again
-   3. No
-
+ \u276f 1. Yes
+   2. Yes, and do not ask again
+   3. Yes, and switch to auto mode
+   4. No
  Esc to cancel
 """
 
@@ -90,7 +94,11 @@ def ask():
     tty.setcbreak(fd)
     key = os.read(fd, 1).decode()
     termios.tcsetattr(fd, termios.TCSADRAIN, old)
-    print(f"\nanswered {key}", flush=True)
+    # The dialog leaves the screen once it is answered.
+    print(f"\x1b[2J\x1b[Hanswered {key}", flush=True)
+    # A real session stops after a "No" and waits; it goes on when told to.
+    line = sys.stdin.readline()
+    print(f"told: {line.strip()}", flush=True)
     return key
 
 
@@ -103,7 +111,11 @@ for n, (word, command) in enumerate(items):
         ask()
         result, error = "The user doesn't want to proceed", True
     elif word == "denied":
-        result = "No such file or directory" if mode == "nosuch" else "cat: Permission denied"
+        result = {
+            "nosuch": "No such file or directory",
+            "masked": f"cat: {canary_path}: No such file or directory",
+            "missing": "cat: /no/such/path/anywhere: No such file or directory",
+        }.get(mode, "cat: Permission denied")
         error = True
     elif word == "fails":
         result, error = "Exit code 1", True
@@ -167,11 +179,15 @@ def probe(tmp_path):
             LIST.replace("CANARY", str(canary))
         )
         extra = ["--secret", "STUB_KEY:STUB_VAL"] if secret else []
-        return run(
+        res = run(
             "probe", name, "--commands", str(tmp_path / "list.md"), "--cap-min", "1", *extra,
             "--env", f"PATH={tmp_path / 'stubs'}:{os.environ['PATH']}",
             "--env", f"STUB_MODE={mode}", "--env", f"CANARY={canary}",
         )
+        report = root / name / "run/probe.md"
+        if res.returncode and report.exists():
+            res.stdout += report.read_text()
+        return res
 
     def rows():
         path = root / "probes.jsonl"
@@ -196,9 +212,9 @@ def test_probe_list_parses_every_item():
     assert (user["word"], user["arg"]) == ("prints", "@USER@")
 
 
-def test_parse_prompt_reads_the_assumed_layout():
+def test_parse_prompt_reads_the_real_layout():
     got = cr.parse_prompt(PROMPT_PANE)
-    assert got == {"command": "PATH=$PWD/bin:$PATH tool --version", "no_key": "3", "no_text": "No"}
+    assert got == {"command": "PATH=$PWD/bin:$PATH tool --version", "no_key": "4", "no_text": "No"}
     assert cr.parse_prompt("just output\n$ ls\n") is None
     assert cr.parse_prompt(PROMPT_PANE.replace(" Esc to cancel", "")) is None
     fetch = PROMPT_PANE.replace("Bash command", "Fetch").replace(
@@ -225,7 +241,7 @@ def test_clean_stub_passes_and_appends_a_row(probe):
     assert row["verdict"] == "pass"
     assert row["sha256"] == hashlib.sha256((SHARE / "settings.json").read_bytes()).hexdigest()
     report = Path(row["path"]).read_text()
-    assert "answered No (key 3)" in report and row["sha256"] in report
+    assert "answered No (key 4)" in report and row["sha256"] in report
     assert "canary: absent" in report
 
 
@@ -235,7 +251,7 @@ def test_unexpected_prompt_fails_and_records_the_no(probe):
     assert res.returncode == 1
     report = (probe.root / "p2/run/probe.md").read_text()
     assert "unexpected prompt for `echo hi`" in report
-    assert "`echo hi`: answered No (key 3)" in report
+    assert "`echo hi`: answered No (key 4)" in report
     assert probe.rows()[0]["verdict"] == "fail"
 
 
@@ -277,3 +293,29 @@ def test_missing_canary_fails_before_the_session_starts(probe):
         ["tmux", "list-sessions"], env=probe.env, capture_output=True, text=True, check=False
     )
     assert "cleanroom-p6" not in listing.stdout
+
+
+@live
+def test_a_masked_path_passes_when_it_exists_outside(probe):
+    res = probe.go("p7", "masked")
+    assert res.returncode == 0, res.stdout + res.stderr
+    report = (probe.root / "p7/run/probe.md").read_text()
+    assert "PASS (masked:" in report and "exists outside and is absent inside" in report
+
+
+@live
+def test_no_such_file_for_a_path_missing_outside_still_fails(probe):
+    res = probe.go("p8", "missing")
+    assert res.returncode == 1
+    assert "FAIL, No such file" in (probe.root / "p8/run/probe.md").read_text()
+
+
+def test_masked_directory_listing_is_empty_inside_and_full_outside(tmp_path):
+    (tmp_path / "x").write_text("y")
+    control = cr.outside_control(f"ls {tmp_path}")
+    assert control == {str(tmp_path): "dir"}
+    item = {"word": "denied", "arg": "", "command": f"ls {tmp_path}"}
+    quiet = {"command": item["command"], "text": "(Bash completed with no output)", "is_error": False}
+    assert cr.grade_item(item, quiet, [], control)[0] is None
+    loud = {"command": item["command"], "text": "x", "is_error": False}
+    assert cr.grade_item(item, loud, [], control)[0] == "no denial evidence"

@@ -947,12 +947,14 @@ def cmd_statusline(args: argparse.Namespace) -> None:
 
 ITEM_RE = re.compile(r"^- (denied|fails|prompt|ok|prints|omits)(?: \[(.*?)\])?: `(.+)`$")
 HEADER_RE = re.compile(r"^\s*(?:\w+ command|Tool use|Fetch)\s*$")
+RULE_RE = re.compile(r"^\s*╌{8,}\s*$")
 OPTION_RE = re.compile(r"^\s*[❯>]?\s*(\d+)\.\s+(.*?)\s*$")
 DENIAL_RE = re.compile(
     r"EACCES|EPERM|permission denied|operation not permitted"
     r"|blocked by (?:the )?sandbox|sandbox.{0,40}(?:denied|blocked)",
     re.IGNORECASE,
 )
+PROBE_CONTINUE = "Continue with the next command in the list."
 PROBE_GOAL = (
     "Read ~/work/probe-commands.md. Each list line holds an expectation word and one command in"
     " backticks. Run the commands exactly as written, in order, one Bash call each (a command"
@@ -982,11 +984,11 @@ def parse_probe_list(text: str) -> list[dict]:
 def parse_prompt(pane_text: str) -> dict | None:
     """Return the permission prompt on the pane as {command, no_key, no_text}, or None.
 
-    Assumed layout of Claude Code 2.1.319, to be refined against the real pane: a block headed
-    "Bash command" (another tool has its own heading, such as "Fetch"), then the command text up
-    to the first blank line, then a description; then "Do you want to proceed?", numbered options
-    ("1. Yes" through "3. No") whose last starts with "No", and "Esc to cancel". no_key is the
-    digit of the option whose text starts with "No".
+    Layout of Claude Code 2.1.319, read from a real pane: a "Bash command" heading (another
+    tool has its own heading, such as "Fetch"), an optional tip and a description, the command
+    between two rules of "╌" characters, "This command requires approval", "Do you want to
+    proceed?", numbered options, and "Esc to cancel". The option that starts with "No" is last;
+    no_key is its digit.
     """
     lines = pane_text.splitlines()
     asks = [i for i, line in enumerate(lines) if "Do you want to proceed?" in line]
@@ -996,8 +998,13 @@ def parse_prompt(pane_text: str) -> dict | None:
     heads = [i for i in range(ask) if HEADER_RE.match(lines[i])]
     if not heads:
         return None
+    rules = [i for i in range(heads[-1], ask) if RULE_RE.match(lines[i])]
+    if len(rules) >= 2:
+        body = lines[rules[-2] + 1:rules[-1]]
+    else:
+        body = lines[heads[-1] + 1:ask]
     block = []
-    for line in lines[heads[-1] + 1:ask]:
+    for line in body:
         if not line.strip():
             if block:
                 break
@@ -1050,7 +1057,60 @@ def exit_failed(call: dict) -> bool:
     return call["is_error"] or bool(re.search(r"Exit code [1-9]", call["text"]))
 
 
-def grade_item(item: dict, call: dict | None, prompts: list[dict]) -> str | None:
+PATH_RE = re.compile(r"(?<![\w.$-])/[\w.@/-]+")
+
+
+def outside_control(command: str) -> dict[str, str]:
+    """Map each absolute path in command that exists outside the sandbox to what it is there.
+
+    The sandbox hides a denied path (bubblewrap masks it), so inside the session the path reads
+    as absent or as an empty directory. This control, taken before the session starts, is what
+    tells a masked path from a missing one.
+    """
+    found = {}
+    for path in PATH_RE.findall(command):
+        path = path.rstrip("/") or "/"
+        if os.path.isdir(path):
+            found[path] = "dir" if os.listdir(path) else "empty-dir"
+        elif os.path.lexists(path):
+            found[path] = "file"
+    return found
+
+
+def masked_by_sandbox(text: str, exit_ok: bool, control: dict[str, str]) -> str | None:
+    """Return how the output shows a masked path, or None.
+
+    Evidence is a "No such file" line that names a path the control found outside, or an empty
+    listing, with exit 0, of a directory the control found non-empty.
+    """
+    for path, kind in control.items():
+        if kind != "dir" and "No such file" in text and path in text:
+            return f"masked: {path} exists outside and is absent inside"
+        if kind == "dir" and exit_ok and not text.strip().replace("(Bash completed with no output)", ""):
+            return f"masked: {path} is non-empty outside and empty inside"
+    return None
+
+
+def grade_item(
+    item: dict, call: dict | None, prompts: list[dict], control: dict[str, str] | None = None
+) -> tuple[str | None, str | None]:
+    """Return (why it failed, note on how it passed): the first is None when the item passed."""
+    why = grade_failure(item, call, prompts, control or {})
+    return (why, None) if why else (None, masked_note(item, call, control or {}))
+
+
+def masked_note(item: dict, call: dict | None, control: dict[str, str]) -> str | None:
+    """Name the masking evidence a passing denied item relied on, if it relied on any."""
+    if item["word"] != "denied" or call is None or call["text"] is None:
+        return None
+    if DENIAL_RE.search(call["text"]):
+        return None
+    return masked_by_sandbox(call["text"], not exit_failed(call), control)
+
+
+def grade_failure(
+    item: dict, call: dict | None, prompts: list[dict], control: dict[str, str]
+) -> str | None:
     """Return why an item failed, or None when it passed."""
     word, arg = item["word"], item["arg"]
     if word == "prompt":
@@ -1060,9 +1120,11 @@ def grade_item(item: dict, call: dict | None, prompts: list[dict]) -> str | None
         return "the session never reported it"
     text = call["text"]
     if word == "denied":
+        if DENIAL_RE.search(text) or masked_by_sandbox(text, not exit_failed(call), control):
+            return None
         if "No such file" in text:
             return "No such file: the read never reached a denial"
-        return None if DENIAL_RE.search(text) else "no denial evidence"
+        return "no denial evidence"
     if word == "fails":
         return None if exit_failed(call) else "exited 0"
     if exit_failed(call):
@@ -1111,6 +1173,7 @@ def cmd_probe(args: argparse.Namespace) -> int:
         raise Refusal(f"{filled} differs from {args.commands}; run `cleanroom init {name} --fresh`")
     values = values_for(parse_secrets(args.secret))
     precheck(values)
+    controls = {n: outside_control(item["command"]) for n, item in enumerate(items)}
     start_run(name, PROBE_GOAL, args.secret, args.env, args.cap_usd, args.cap_min)
     rd, session = run_dir(name), session_name(name)
     tick = seconds("CLEANROOM_PROBE_TICK", 5)
@@ -1118,6 +1181,7 @@ def cmd_probe(args: argparse.Namespace) -> int:
     prompts: list[dict] = []
     pane_hits: set[str] = set()
     last = None
+    answered = False
     while time.time() < deadline:
         time.sleep(tick)
         text = pane_text(session)
@@ -1126,7 +1190,13 @@ def cmd_probe(args: argparse.Namespace) -> int:
         if prompt and prompt != last:
             if prompt["no_key"]:
                 tmux(["send-keys", "-t", f"{session}:main", prompt["no_key"]])
+                answered = True
             prompts.append(prompt)
+        elif answered and not prompt:
+            # After a "No" the session stops and waits, so tell it to go on.
+            tmux(["send-keys", "-t", f"{session}:main", "-l", PROBE_CONTINUE])
+            tmux(["send-keys", "-t", f"{session}:main", "Enter"])
+            answered = False
         last = prompt
         state_path = rd / "state.json"
         if state_path.exists() and json.loads(state_path.read_text())["state"] != "running":
@@ -1136,7 +1206,7 @@ def cmd_probe(args: argparse.Namespace) -> int:
             break
     cmd_stop(argparse.Namespace(name=name))
     run_child(name, "mirror")
-    return finish_probe(name, items, values, prompts, pane_hits)
+    return finish_probe(name, items, values, prompts, pane_hits, controls)
 
 
 def finish_probe(
@@ -1145,6 +1215,7 @@ def finish_probe(
     values: list[tuple[str, str]],
     prompts: list[dict],
     pane_hits: set[str],
+    controls: dict[int, dict[str, str]],
 ) -> int:
     """Grade the run, write run/probe.md and the probes.jsonl row, and return the exit status."""
     rd = run_dir(name)
@@ -1152,10 +1223,10 @@ def finish_probe(
     state_path = rd / "state.json"
     state = json.loads(state_path.read_text()) if state_path.exists() else {}
     rows, failed = [], []
-    for item in items:
+    for n, item in enumerate(items):
         call = next((c for c in calls if c["command"] == item["command"]), None)
-        why = grade_item(item, call, prompts)
-        rows.append((item, why))
+        why, note = grade_item(item, call, prompts, controls.get(n))
+        rows.append((item, why, note))
         if why:
             failed.append(f"{item['word']} `{item['command']}`: {why}")
     expected = {norm(i["command"]) for i in items if i["word"] == "prompt"}
@@ -1177,10 +1248,10 @@ def finish_probe(
     sha = hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()
     verdict = "fail" if failed else "pass"
     out = [f"# Probe {name}: {verdict}", "", f"Template sha256: {sha}", "", "## Commands", ""]
-    for item, why in rows:
+    for item, why, note in rows:
         arg = f" [{item['arg']}]" if item["arg"] else ""
-        out.append(f"- {item['word']}{arg}: `{item['command']}`: "
-                   f"{'PASS' if why is None else 'FAIL, ' + why}")
+        result = f"FAIL, {why}" if why else "PASS" + (f" ({note})" if note else "")
+        out.append(f"- {item['word']}{arg}: `{item['command']}`: {result}")
     out += ["", "## Prompts", ""]
     out += [f"- `{p['command']}`: answered {p['no_text']} (key {p['no_key']})" for p in prompts]
     out += ["none"] if not prompts else []
