@@ -1,0 +1,1 @@
+glw907 ALL=(cleanroom) NOPASSWD:SETENV: /usr/bin/python3 -I /var/home/glw907/.dotfiles/* _child *
