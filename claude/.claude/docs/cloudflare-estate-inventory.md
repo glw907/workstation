@@ -79,8 +79,13 @@ The scheme:
 | `ward-r2-backup-rw` | account | R2 object read and write, `servers-backup-ward` | `CF_WARD_R2_BACKUP_RW_TOKEN` + pair | Ward's restic |
 | `ci-phonebook` | account | Individual Workers Editor on `phonebook`; D1 Write | `glw907/phonebook`'s `CLOUDFLARE_API_TOKEN` Actions secret; origin `CF_CI_PHONEBOOK_TOKEN` | The phonebook's CI deploys |
 | `ws-cairn-gate` | user (exception to rule 2: Workers Builds accepts only user tokens, "Account-scoped tokens are not supported", <https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/>) | `carin-test.org` only: Zone, DNS, SSL and Certificates Write. Account: Workers Scripts, Email Sending, Workers CI, D1, Workers R2 Storage Write | `CF_WS_CAIRN_GATE_TOKEN` | cairn-cms's release gate; moves to account ownership once Builds allows it |
+| `ws-cairn-cleanroom` | account, no IP filter, minted 2026-11-09, ends 2026-12-09 | Account `120c269ad6d3dfbe6d63a0bb53758ca0`: Workers Scripts, D1, Workers R2 Storage, Email Sending Edit; Account Settings Read. `carin-test.org` only: Zone Read, DNS Edit, Workers Routes Edit | `CF_WS_CAIRN_CLEANROOM_TOKEN` | The clean room's setup token and the cairn gate's sweep: the one token for the clean room's setup run, the run site's Actions deploy secret, and the sweep (`ws-cairn-gate` lacks Account Settings Read and Workers Routes). |
 | `ci-cairn-build` | user (rule 2's Builds exception, as `ws-cairn-gate`) | Account `120c269ad6d3dfbe6d63a0bb53758ca0`: Workers Scripts, D1, Workers R2 Storage Edit | `CF_CI_CAIRN_BUILD_TOKEN` | **Production-critical.** The Workers Builds deploy token behind the account's shared `cairn-build` registration, used by the cairn release gate and by every cairn site's Builds deploys on the account. Never roll or delete it without re-pointing every trigger that holds the registration. |
 | `ci-deploy` | account | Workers Editor across all Workers | Each repo's `CLOUDFLARE_API_TOKEN` Actions secret; origin `CF_CI_DEPLOY_TOKEN` | Every site deploy and Workers Builds |
+
+`ws-cairn-cleanroom` can act on the production account's Workers, D1, and R2, which serve live sites
+(Geoff accepted this on 2026-11-09). Its 30-day end date is the limit: Geoff deletes it when the
+setup-tooling loop ends, through a step in the end packet.
 
 `ci-deploy` is planned, not live. Until it lands, five repos' Actions secrets and the Workers
 Builds build token hold `ws-admin`, and `CF_ZT_TOKEN` ("Zero Trust Edit") stays because the
