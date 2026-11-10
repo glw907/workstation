@@ -1,0 +1,6 @@
+{"repos": ["alpha"],
+ "prs": {"alpha": [{"number": 2, "headRefName": "uniq-branch", "createdAt": "2026-11-02T09:00:00Z", "mergedAt": "2026-11-02T12:00:00Z", "body": ""}]},
+ "records": [
+  {"kind": "gate", "toplevel": "{HOME}/.claude/jobs/x/tmp/dot-wt", "branch": "uniq-branch", "start": "2026-11-02T10:00:00Z", "end": "2026-11-02T10:06:00Z", "lockWaitSeconds": 0, "outcome": "exit"},
+  {"kind": "gate", "toplevel": "{HOME}/.cache/wt-x", "branch": "nope", "start": "2026-11-02T10:00:00Z", "end": "2026-11-02T10:06:00Z", "lockWaitSeconds": 0, "outcome": "exit"}
+ ]}

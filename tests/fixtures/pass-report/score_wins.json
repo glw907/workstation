@@ -1,0 +1,9 @@
+{"repos": ["alpha"],
+ "prs": {"alpha": [
+  {"number": 1, "headRefName": "one", "createdAt": "2026-11-02T09:00:00Z", "mergedAt": "2026-11-02T12:00:00Z", "body": "Done.\n\n<!-- pass-score {\"planPathMin\": 100, \"actualPathMin\": 50, \"fixRounds\": 1, \"reds\": 0, \"attended\": null, \"escapes\": 0} -->"},
+  {"number": 2, "headRefName": "two", "createdAt": "2026-11-03T09:00:00Z", "mergedAt": "2026-11-03T12:00:00Z", "body": ""}
+ ]},
+ "backfill": {"version": 1, "rows": [
+  {"repo": "alpha", "pr": 1, "planPathMin": 999, "actualPathMin": 111, "fixRounds": 9, "reds": 0, "attended": 0, "escapes": 0},
+  {"repo": "alpha", "pr": 2, "planPathMin": 200, "actualPathMin": 100, "fixRounds": 3, "reds": 1, "attended": 0, "escapes": 0}
+ ]}}

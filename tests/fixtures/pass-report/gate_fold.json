@@ -1,0 +1,6 @@
+{"repos": ["workstation"],
+ "prs": {"workstation": [{"number": 7, "headRefName": "pass-x", "createdAt": "2026-11-02T09:00:00Z", "mergedAt": "2026-11-02T12:00:00Z", "body": ""}]},
+ "records": [
+  {"kind": "gate", "toplevel": "{HOME}/Projects/workstation-wt/x", "branch": "pass-x", "start": "2026-11-02T10:00:00Z", "end": "2026-11-02T10:10:00Z", "lockWaitSeconds": 60, "outcome": "exit"},
+  {"kind": "gate", "toplevel": "{HOME}/Projects/workstation-wt/x", "branch": "pass-x", "start": "2026-11-02T10:20:00Z", "end": "2026-11-02T10:25:00Z", "lockWaitSeconds": 0, "outcome": "lost"}
+ ]}
