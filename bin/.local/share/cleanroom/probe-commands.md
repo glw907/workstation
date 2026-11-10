@@ -79,12 +79,16 @@ repository is created if it is absent.
 
 ## The launcher resolves the gate candidate
 
-The first item fills the clean home's npx cache. The second reads the version the cache holds, which
-is the version `gate` pointed at when the run started.
+`create-cairn-site@latest` is the retired 0.99.0-rc.4 wizard, which prints a "Retired:" notice when it
+runs, so a call that reaches it fails these items. The first item asks the registry for the resolved
+version from inside the sandbox, where `npm view` matches no exclusion. The next two run the launcher
+outside it. The last reads the versions the clean home's npx cache holds, apart from the shadow package
+an earlier item writes.
 
-- ok: `npm create cairn-site -- --help`
-- ok: `npx create-cairn-site --help`
-- prints [2.0.0-dev.1]: `node -e "const g=require('fs').globSync('@HOME@/.npm/_npx/*/node_modules/create-cairn-site/package.json');console.log([...new Set(g.map(f=>require(f).version).filter(v=>v!=='1.0.0'))].join(','))"`
+- omits [0.99.0-rc.4]: `npm view create-cairn-site version`
+- omits [Retired:]: `npm create cairn-site -- --help`
+- omits [Retired:]: `npx create-cairn-site --help`
+- omits [0.99.0-rc.4]: `node -e "const g=require('fs').globSync('@HOME@/.npm/_npx/*/node_modules/create-cairn-site/package.json');console.log([...new Set(g.map(f=>require(f).version).filter(v=>v!=='1.0.0'))].join(','))"`
 
 ## An excluded command stays out of reach of every credential
 
