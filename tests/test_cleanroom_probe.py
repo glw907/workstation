@@ -45,6 +45,19 @@ PROMPT_PANE = f"""\
  Esc to cancel · Tab to amend
 """
 
+FETCH_PANE = f"""\
+ Fetch
+ Claude wants to fetch content from example.com
+{RULE}
+ url: https://example.com/
+ prompt: Summarize briefly.
+{RULE}
+ Do you want to allow Claude to fetch this content?
+ ❯ 1. Yes
+   2. Yes, and don't ask again for example.com
+   3. No, and tell Claude what to do differently (esc)
+"""
+
 # The list the stubs run; CANARY is replaced with the canary's path.
 LIST = """\
 Prose line, skipped.
@@ -216,11 +229,12 @@ def test_parse_prompt_reads_the_real_layout():
     got = cr.parse_prompt(PROMPT_PANE)
     assert got == {"command": "PATH=$PWD/bin:$PATH tool --version", "no_key": "4", "no_text": "No"}
     assert cr.parse_prompt("just output\n$ ls\n") is None
-    assert cr.parse_prompt(PROMPT_PANE.replace(" Esc to cancel", "")) is None
-    fetch = PROMPT_PANE.replace("Bash command", "Fetch").replace(
-        "PATH=$PWD/bin:$PATH tool --version", "https://example.com/"
-    )
-    assert cr.parse_prompt(fetch)["command"] == "WebFetch https://example.com/"
+    assert cr.parse_prompt("output quoting: Do you want to proceed?\n") is None
+    assert cr.parse_prompt(FETCH_PANE) == {
+        "command": "WebFetch https://example.com/",
+        "no_key": "3",
+        "no_text": "No, and tell Claude what to do differently (esc)",
+    }
 
 
 @live

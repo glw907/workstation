@@ -57,7 +57,7 @@ Every command in the call has to match for it to leave the sandbox, so each of t
 - ok: `npm install --prefix ./npmtest left-pad`
 - prints [probe-value]: `printf probe-value | secret-tool store --label=probe svc cleanroom-probe && secret-tool lookup svc cleanroom-probe`
 - ok: `mkdir -p shot && printf '<h1>probe</h1>' > shot/index.html && chromium-browser --headless --no-sandbox --screenshot="$PWD/shot/out.png" "file://$PWD/shot/index.html"`
-- prints [200]: `(timeout 5 python3 -m http.server 8765 --directory shot > /dev/null 2>&1 & sleep 1; curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/)`
+- prints [200]: `python3 -c "import http.server as h,threading,urllib.request as u;s=h.HTTPServer(('127.0.0.1',8765),h.SimpleHTTPRequestHandler);threading.Thread(target=s.serve_forever,daemon=True).start();print(u.urlopen('http://127.0.0.1:8765/').status)"`
 - ok: `git clone --depth 1 https://github.com/octocat/Hello-World clonetest`
 
 ## The network allowlist

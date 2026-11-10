@@ -951,6 +951,7 @@ def cmd_statusline(args: argparse.Namespace) -> None:
 
 ITEM_RE = re.compile(r"^- (denied|fails|prompt|ok|prints|omits)(?: \[(.*?)\])?: `(.+)`$")
 HEADER_RE = re.compile(r"^\s*(?:\w+ command|Tool use|Fetch)\s*$")
+ASK_RE = re.compile(r"Do you want to (?:proceed|allow[^?]*)\?")
 RULE_RE = re.compile(r"^\s*╌{8,}\s*$")
 OPTION_RE = re.compile(r"^\s*[❯>]?\s*(\d+)\.\s+(.*?)\s*$")
 DENIAL_RE = re.compile(
@@ -988,15 +989,16 @@ def parse_probe_list(text: str) -> list[dict]:
 def parse_prompt(pane_text: str) -> dict | None:
     """Return the permission prompt on the pane as {command, no_key, no_text}, or None.
 
-    Layout of Claude Code 2.1.319, read from a real pane: a "Bash command" heading (another
-    tool has its own heading, such as "Fetch"), an optional tip and a description, the command
-    between two rules of "╌" characters, "This command requires approval", "Do you want to
-    proceed?", numbered options, and "Esc to cancel". The option that starts with "No" is last;
+    Layout of Claude Code 2.1.319, read from real panes: a "Bash command" heading, an optional
+    tip and a description, the command between two rules of "╌" characters (a long one behind a
+    "│ " prefix), "This command requires approval", "Do you want to proceed?", then numbered
+    options. A WebFetch prompt has a "Fetch" heading, a `url:` line between the rules, and "Do
+    you want to allow Claude to fetch this content?". The option that starts with "No" is last;
     no_key is its digit.
     """
     lines = pane_text.splitlines()
-    asks = [i for i, line in enumerate(lines) if "Do you want to proceed?" in line]
-    if not asks or not any("Esc to cancel" in line for line in lines[asks[-1]:]):
+    asks = [i for i, line in enumerate(lines) if ASK_RE.search(line)]
+    if not asks:
         return None
     ask = asks[-1]
     heads = [i for i in range(ask) if HEADER_RE.match(lines[i])]
@@ -1016,9 +1018,12 @@ def parse_prompt(pane_text: str) -> dict | None:
         block.append(line.strip().removeprefix("│").strip())
     command = " ".join(block)
     if not lines[heads[-1]].strip().endswith("command"):
-        command = f"WebFetch {command}"
+        url = next((b.removeprefix("url:").strip() for b in block if b.startswith("url:")), command)
+        command = f"WebFetch {url}"
     options = [m.groups() for line in lines[ask + 1:] if (m := OPTION_RE.match(line))]
     no = next(((key, text) for key, text in options if text.startswith("No")), (None, None))
+    if len(options) < 2 or no[0] is None:
+        return None
     return {"command": command, "no_key": no[0], "no_text": no[1]}
 
 
