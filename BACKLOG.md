@@ -4,16 +4,6 @@
 
 ## High
 
-- [ ] **#52** Make the clean-room site-rebuild tool reusable and unattended `#feature` `#workstation` `#initiative:907-rebuild` *(2026-11-08)*
-  Geoff (2026-11-08): "asking me for the wizard's progress is a problem. You need a way to do this work unattended." Several more site rebuilds (retire, naive clean-room rebuild, collect friction) are queued. Today the tool is `initiatives/907-rebuild/tools/cleanroom-run` plus `cleanroom-settings.json`, and the run stopped for Geoff again and again. The record of every miss and its fix is `initiatives/907-rebuild/plans/2026-11-08-planning-misses.md`. Build `cleanroom` in `bin/.local/bin` (stdlib Python, per the tool-language rule) with these forms:
-  - `init`: homes, settings, and canaries.
-  - `signin`: drives the gh device flow with a dead session bus, `setup-git`, and the wrangler login/whoami/logout; checks where each credential is stored and its scopes; batches the codes for Geoff.
-  - `probe`: an isolation probe plus a full build probe (scaffold, dev server, build, Playwright screenshot, commit, push to a scratch branch). Geoff approves the settings once in pre-flight.
-  - `shell`: runs under `script -q -f <log>`, with `BROWSER` set to a relay that opens each link in Geoff's Chromium (Geoff, 2026-11-08: "any copy and paste of urls required during the setup process is a failure"), so the observer follows setup unattended. A monitor watches `~/.config/cairn/sites/*.json` `.step`.
-  - `turn`: a fresh session per builder task with a handoff note, and ledger rows written from the `modelUsage` totals.
-  - `teardown`: generated from the inventory. The dry run checks each API family's write scope, and the script logs to the repo and resumes. It deletes the site's GitHub App first, while the App's private key still exists (`DELETE /app` with the App JWT): GitHub has no user-token API for deleting an App, and on 907-rebuild the key went with the Worker, so the App could only go in the browser. Geoff's gh token now carries `delete_repo` (2026-11-08).
-  It ships the settings 907-rebuild proved: `NODE_USE_ENV_PROXY=1`, the Playwright hosts, `allowAllUnixSockets` (the bus stays masked), a wide everyday Bash allowlist that allows chained commands, and a pre-seeded Playwright browser or a pointer to `/usr/bin/chromium-browser`.
-
 - [ ] **#39** Add the kill-only-your-PIDs rule to the read-only agents in glw907/standards `#bug` `#workstation` `#initiative:docs-system` *(2026-10-25)* *(swept 2026-11-03)*
   On 2026-10-25 a `plan-reviewer` probing a `pgrep` pattern cleaned up its fake processes with `pkill -f 'drafter page'` and killed batch 5's live drafting run, which resumed. Add a line to each read-only agent body: a probe kills only PIDs it started, never by pattern. `plan-reviewer`, `diff-reviewer`, and the rest moved to the standards plugin (glw907/standards), so add it there; `cairn-register-editor` and `prose-voice-reviewer` in `claude/.claude/agents/` need it too.
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
@@ -99,6 +89,9 @@
 
 ## Low
 
+- [ ] **#53** Tighten `cleanroom`'s trust edges `#improvement` `#workstation` `#initiative:cairn-setup` *(2026-11-09)*
+  Found in pass 1's whole-branch review (glw907/workstation#215). (1) The sudoers rule's `*` after `~/.dotfiles/` also matches `/` and spaces, so glw907 can run any script under `~/.dotfiles` as `cleanroom`, wider than the "only `_child`" in `bluefin-admin.md`; it adds no privilege, since glw907 owns those files. (2) The probe's `env | cut -d= -f1` item is a six-name denylist; an allowlist of the expected names would test "no workstation variable" directly. (3) The statusline and transcript costs differed by 55% in the last probe ($0.2067 against $0.3209); the cause is untraced, and the caps use the higher figure. (4) `run_child` and `launch` build the same sudo argument list, and `cmd_shell` builds its plan twice. (5) The re-review's notes, all fail-closed: a failed write at a cost stop makes the watcher's `except` call `end_run` a second time and overwrite the ledger cause with `stopped:watcher`; `trusted_dir` does not check the sticky bit, so a room built before pass 1's fixes needs `init --fresh`; `CLEANROOM_USER` is not in `--preserve-env`, so a non-default user breaks `@USER@`; and `probes.jsonl` does not record whether a probe ran isolated or in-process. (6) `cleanroom shell` leaves its `gnome-keyring-daemon` running after the command exits (it daemonizes out of `dbus-run-session`); `stop` kills it, so a `run` or `probe` is clean, but a bare `shell` is not. Do (1) with the next change to the sudoers file; the rest when a later pass touches `cleanroom`.
+  Record: `~/Projects/initiatives/cairn-setup/research/cleanroom-probe-1.md`
 - [ ] **#47** Require a prior-art and vendor-guidance check at the design step `#improvement` `#workstation` *(2026-11-01)* *(swept 2026-11-03)*
   The workstation-sync design reached approval before anyone checked published practice or Anthropic's docs, and Geoff had to ask for both mid-build (2026-11-01). That check caught a real data-loss case in `MEMORY.md` and two gaps. Add the check to the `pass-core` design step or `brainstorming`, so a design names what it took from each source. `claude/.claude/skills/pass-core/SKILL.md`
 
@@ -147,6 +140,8 @@
   **Three `internal/posthook` tests fail when the dotfiles checkout sits under `/tmp`** (`TestRunFlagsChangedLineOnly`, `TestRunSkipsUngovernedPaths`, `TestWholeDocFindingsOnlyOnWrite` return no advisory), so the gate goes red in a scratchpad worktree while the same tests pass in `~/.dotfiles` and in `.claude/worktrees/`. The hook likely treats a `/tmp` path as ungoverned. Make the tests use a path independent of where the checkout lives.
 
 ## Done
+- [x] **#52** Make the clean-room site-rebuild tool reusable and unattended `#feature` `#workstation` `#initiative:907-rebuild` `#initiative:cairn-setup` *(2026-11-08 → 2026-11-09)*
+  done: `bin/.local/bin/cleanroom` (stdlib Python) has `init`, `run`, `shell`, `cost`, `capture`, `scan`, `stop`, and `probe`, with its settings template in `bin/.local/share/cleanroom/`; `signin` and `turn` were dropped and `teardown` becomes cairn's run sweep. The probe record is `~/Projects/initiatives/cairn-setup/research/cleanroom-probe-1.md` (glw907/workstation#215).
 - [x] **#45** Move the Proton Pass procedure into a workstation skill `#improvement` `#workstation` *(2026-10-28 → 2026-11-03)*
   done: the `proton-pass` skill (`claude/.claude/skills/proton-pass/`) holds the procedure and states `m.907.life`, and CLAUDE.md and `bluefin-admin.md` point at it.
 - [x] **#4** Poplar adopts pass-core `#improvement` `#workstation` `#initiative:poplar-refounding` *(2026-10-14 → 2026-11-03)*

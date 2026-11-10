@@ -367,6 +367,11 @@ if [[ "$(hostname)" == pavilion ]]; then
         etc_pair "$BLUEFIN/etc/systemd/system/$unit" "/etc/systemd/system/$unit"
     done
 fi
+# The clean room's user and the sudoers rule that lets glw907 act as it, pavilion only.
+if [[ "$(hostname)" == pavilion ]]; then
+    etc_pair "$BLUEFIN/etc/sysusers.d/cleanroom.conf" /etc/sysusers.d/cleanroom.conf
+    etc_pair "$BLUEFIN/etc/sudoers.d/cleanroom" /etc/sudoers.d/cleanroom
+fi
 
 echo ""
 echo "Untracked ~/.local/bin executables (bluefin/untracked-bin.txt):"

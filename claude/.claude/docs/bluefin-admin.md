@@ -238,6 +238,14 @@ stays the record of what's actually on disk. Current captured files:
   maintain-projects.timer` <!-- host-ok -->
   Pavilion is a desktop that stays awake on AC power. Orpheus, the always-available utility server,
   takes a job that truly must stay up (Geoff, 2026-11-01).
+- `bluefin/etc/sysusers.d/cleanroom.conf` → `/etc/sysusers.d/` and
+  `bluefin/etc/sudoers.d/cleanroom` → `/etc/sudoers.d/` (pavilion only, where the clean room
+  runs; thinkpad-x1 skips both and `cleanroom` refuses to run there; mode 0440; Geoff 2026-11-09): the
+  `cleanroom` system user (no login) that runs a clean-room session, and the rule that lets glw907
+  run only the tool's internal `_child` form as that user, never as root. After installing:
+  `sudo -A install -m 0440 bluefin/etc/sudoers.d/cleanroom /etc/sudoers.d/`, then
+  `sudo -A install -m 0644 bluefin/etc/sysusers.d/cleanroom.conf /etc/sysusers.d/`
+  and `sudo -A systemd-sysusers` to create the user
 
 `/etc` is writable on Bluefin and persists across image updates (unlike `/usr`), so
 there's no technical reason to skip the dotfiles round-trip — treat any direct edit as

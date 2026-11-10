@@ -77,6 +77,23 @@ Geoff's aliases are on `m.907.life`; `me.907.life` is Oliver's. Neither is a tes
   `8000008` from that API route. Uninstall the app at
   <https://github.com/settings/installations> as `glw907-test`, then reconnect.
 
+## Clean room
+
+A clean room is a home directory that holds nothing from this workstation, where a naive Claude
+Code session runs as the `cleanroom` Unix user. It tests cairn's setup path and later site
+rebuilds. The tool is `bin/.local/bin/cleanroom`; `cleanroom --help` and its module docstring are
+its doc.
+
+- Cloudflare token: `ws-cairn-cleanroom`, store name `CF_WS_CAIRN_CLEANROOM_TOKEN`. Scopes, owner,
+  and the production exposure: `cloudflare-estate-inventory.md`. Geoff deletes it when the
+  setup-tooling loop ends (end date 2026-12-09), through a step in the end packet.
+- Claude credential: the subscription token from `claude setup-token`, store name
+  `CLAUDE_CLEANROOM_OAUTH_TOKEN`, handed to a run as `CLAUDE_CODE_OAUTH_TOKEN`. An API key would
+  have stopped the first run (the Console org held $1.13 in credits). The loop's dollar caps are
+  Claude Code's client-side cost estimates, and runs draw on the subscription's usage limits.
+- A run gets the Cloudflare token and the Claude token. It gets `GITHUB_TEST_TOKEN` (above) only
+  for the probe, never for a naive run.
+
 ## npm
 
 Releases publish from GitHub Actions through npm trusted publishing (OIDC), with no stored npm

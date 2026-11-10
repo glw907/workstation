@@ -1,0 +1,1508 @@
+#!/usr/bin/env python3
+"""Build and run clean rooms for naive Claude Code sessions.
+
+A clean room is a home directory under /var/tmp/cleanroom/<name>/ that holds nothing from this
+workstation: a settings file the sandbox enforces, a private session bus and keyring, and a
+cleared environment. The tool reads credentials from ~/.local/secrets by store name and never
+prints a value. It knows nothing about any one product.
+
+Forms:
+  init <name> [--fresh [--discard]]    make a clean home, its settings, and the canary
+  run <name> --goal TEXT [--secret STORE[:ENV]]... [--env K=V]... [--cap-usd N] [--cap-min N]
+                                       start an interactive session in a tmux pane, then return
+  shell <name> [--tmux S [--socket P]] [-c CMD] [--open-with CMD]
+                                       open the same environment without Claude
+  cost <transcript.jsonl>              print a transcript's dollar total
+  capture <name>                       print the session pane with handed-in values redacted
+  scan <name> <file>...                fail when a handed-in value or the canary is in a file
+  stop <name>                          end the run's tmux sessions and processes
+  probe <name> --commands FILE [--secret STORE[:ENV]]... [--env K=V]... [--cap-usd N] [--cap-min N]
+                                       run the probe list, answer every prompt "No", grade it
+
+The run directory (/var/tmp/cleanroom/<name>/run) holds session.log, state.json,
+statusline.json, transcript.jsonl, urls.log, meta.json, and probe.md; a grader adds
+stand-in.jsonl, run-record.json, and run-record.md. ledger.jsonl and probes.jsonl sit in the root.
+
+With the cleanroom Unix user present, every step that touches the clean home runs as that user
+through `sudo -n -u cleanroom ... _child <name> <step>`; without it the steps run in-process.
+"""
+
+import argparse
+import hashlib
+import json
+import os
+import pwd
+import re
+import secrets
+import shlex
+import shutil
+import signal
+import stat
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+from pathlib import Path
+
+NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
+STORE_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
+ENV_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+URL_RE = re.compile(r"^https?://\S+$")
+TOOL = Path(os.path.realpath(__file__))
+TEMPLATE = TOOL.parent.parent / "share/cleanroom/settings.json"
+PROBE_LIST = TOOL.parent.parent / "share/cleanroom/probe-commands.md"
+PUSH_SCRIPT = TOOL.parent.parent / "share/cleanroom/probe-push.sh"
+MIN_SECRET_LENGTH = 8
+
+# Dollars per million tokens (input, output, cache read) from the claude-api skill's table of
+# 2026-10-06. Cache writes cost 1.25x input for a 5-minute entry and 2x for a 1-hour entry.
+# The longest model-id prefix wins; an unknown model is priced as the dearest row, so a cap
+# trips early instead of late.
+PRICES = {
+    "claude-fable-5": (10.0, 50.0, 0.25),
+    "claude-mythos-5": (10.0, 50.0, 0.25),
+    "claude-opus-5-5": (4.0, 20.0, 0.20),
+    "claude-opus-5": (5.0, 25.0, 0.50),
+    "claude-opus-4": (5.0, 25.0, 0.50),
+    "claude-sonnet-5": (2.0, 10.0, 0.20),
+    "claude-sonnet-4": (3.0, 15.0, 0.30),
+    "claude-haiku-5": (0.10, 0.50, 0.01),
+    "claude-haiku-4": (1.0, 5.0, 0.10),
+}
+DEAREST = PRICES["claude-fable-5"]
+
+
+class Refusal(Exception):
+    """A request the tool declines, reported on stderr with exit status 1."""
+
+
+def root() -> Path:
+    """Return the directory that holds every clean room (overridable for tests)."""
+    return Path(os.environ.get("CLEANROOM_ROOT", "/var/tmp/cleanroom"))
+
+
+def state_dir() -> Path:
+    """Return the per-user state directory that holds the canary."""
+    default = Path.home() / ".local/state/cleanroom"
+    return Path(os.environ.get("CLEANROOM_STATE", default))
+
+
+def secrets_file() -> Path:
+    return Path(os.environ.get("CLEANROOM_SECRETS", Path.home() / ".local/secrets"))
+
+
+def seconds(var: str, default: float) -> float:
+    """Return a timing knob from the environment; tests shorten these."""
+    return float(os.environ.get(var, default))
+
+
+def check_name(name: str) -> str:
+    """Return name if it is a safe single path segment, else refuse."""
+    if not NAME_RE.fullmatch(name):
+        raise Refusal(f"bad name {name!r}: use a-z, 0-9 and '-', at most 40 characters")
+    return name
+
+
+def name_dir(name: str) -> Path:
+    return root() / check_name(name)
+
+
+def home_dir(name: str) -> Path:
+    return name_dir(name) / "home"
+
+
+def run_dir(name: str) -> Path:
+    return name_dir(name) / "run"
+
+
+def session_name(name: str) -> str:
+    return f"cleanroom-{check_name(name)}"
+
+
+def scripted_socket() -> Path:
+    return state_dir() / "tmux-scripted.sock"
+
+
+def child_user() -> str | None:
+    """Return the Unix user the session runs as, or None for an explicit in-process run.
+
+    CLEANROOM_USER set to the empty string asks for in-process mode, which the tests use. A
+    missing user is a refusal and never a quiet fall back to the caller, since that would give up
+    the isolation Decide S-8 asks for and the probe could not see it.
+    """
+    user = os.environ.get("CLEANROOM_USER")
+    if user == "":
+        return None
+    user = user or "cleanroom"
+    try:
+        pwd.getpwnam(user)
+    except KeyError:
+        raise Refusal(
+            f"no Unix user {user!r}: install the sysusers and sudoers files (bluefin-admin.md), or"
+            " set CLEANROOM_USER= to run in-process without the isolation"
+        ) from None
+    return user
+
+
+def other_user() -> str | None:
+    """Return the clean room's user when it differs from the caller, else None."""
+    user = child_user()
+    if user is None or user == pwd.getpwuid(os.getuid()).pw_name:
+        return None
+    return user
+
+
+def am_clean_user() -> bool:
+    """Report whether this process runs as the clean room's own user."""
+    user = child_user()
+    return user is not None and pwd.getpwnam(user).pw_uid == os.getuid()
+
+
+def run_child(name: str, step: str) -> None:
+    """Run one _child step as the clean room's user, or in-process when there is none."""
+    check_name(name)
+    user = other_user()
+    if user is None:
+        child(name, step)
+        return
+    # The child's HOME is the clean user's, so the caller's paths for the probe list go by environment.
+    fill = {"@CANARY@": str(state_dir() / "canary"), "@SECRETS@": str(secrets_file())}
+    env = {**os.environ, "CLEANROOM_FILL": json.dumps(fill)}
+    names = ["CLEANROOM_FILL"] + [k for k in ("CLEANROOM_ROOT", "CLEANROOM_KILL_GRACE") if k in env]
+    cmd = ["/usr/bin/sudo", "-n", "-u", user, f"--preserve-env={','.join(names)}"]
+    cmd += ["--", "/usr/bin/python3", "-I", str(TOOL), "_child", name, step]
+    if subprocess.run(cmd, env=env, check=False).returncode != 0:
+        raise Refusal(f"_child {step} failed as {user}")
+
+
+def remove_tree(path: Path, depth: int) -> None:
+    """Delete path with shutil.rmtree, only when it sits depth levels below the root."""
+    if path.is_symlink():
+        raise Refusal(f"refusing to remove a symlink: {path}")
+    try:
+        rel = path.resolve().relative_to(root().resolve())
+    except ValueError:
+        raise Refusal(f"refusing to remove {path}: it resolves outside {root()}") from None
+    if len(rel.parts) != depth or not NAME_RE.fullmatch(rel.parts[0]):
+        raise Refusal(f"refusing to remove {path}: not {depth} below {root()}")
+    shutil.rmtree(path)
+
+
+def write_private(path: Path, text: str) -> None:
+    """Write text to a new 0600 file."""
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(text)
+
+
+def write_atomic(path: Path, text: str, mode: int = 0o644) -> None:
+    """Replace path with text through a random temporary file in the same directory.
+
+    mkstemp creates the file exclusively, so a file or link planted at a guessable name by the
+    clean user (who can write the run directory) is never followed.
+    """
+    write_bytes_atomic(path, text.encode(), mode)
+
+
+def write_bytes_atomic(path: Path, data: bytes, mode: int = 0o644) -> None:
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+        os.chmod(tmp, mode)
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+
+
+def trusted_dir(path: Path) -> Path:
+    """Return path once it is a real directory the caller owns, else refuse.
+
+    The clean user can write the room's directories, so before the caller writes a file there it
+    checks that the directory was not swapped for a link to somewhere of the caller's.
+    """
+    info = path.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
+        raise Refusal(f"{path} is not a directory of yours")
+    return path
+
+
+def seed_claude_json(home: Path) -> dict:
+    """Return the first-run state that keeps Claude Code's onboarding and trust prompts away.
+
+    The keys come from a credential-free first-run probe of Claude Code 2.1.319: the
+    onboarding flag, the auto mode notice flags, and the work folder's trust flag.
+    """
+    return {
+        "hasCompletedOnboarding": True,
+        "hasSeenAutoDefaultNotice": True,
+        "hasResetAutoModeOptInForDefaultOffer": True,
+        "projects": {
+            str(home / "work"): {
+                "allowedTools": [],
+                "hasTrustDialogAccepted": True,
+                "hasClaudeMdExternalIncludesApproved": False,
+                "hasClaudeMdExternalIncludesWarningShown": False,
+            }
+        },
+    }
+
+
+def seed_approval(home: Path, env: dict) -> None:
+    """Record the first-run approval of the handed-in credential in ~/.claude.json.
+
+    A CLAUDE_CODE_OAUTH_TOKEN needs none: Claude Code 2.1.319 answered its first turn with no
+    prompt and wrote no approval key (probed through `cleanroom run --secret`). An
+    ANTHROPIC_API_KEY is approved by its last 20 characters under customApiKeyResponses, the
+    form Claude Code has long used; no API key was available to probe it live.
+    """
+    path = home / ".claude.json"
+    data = json.loads(path.read_text())
+    key = env.get("ANTHROPIC_API_KEY")
+    if key:
+        data["customApiKeyResponses"] = {"approved": [key[-20:]], "rejected": []}
+    write_atomic(path, json.dumps(data, indent=2) + "\n")
+
+
+def bus_config(home: Path) -> str:
+    """Return the stock session bus config with its listen address moved into the home."""
+    stock = Path("/usr/share/dbus-1/session.conf").read_text()
+    listen = "<listen>unix:tmpdir=/tmp</listen>"
+    services = "<standard_session_servicedirs />"
+    if stock.count(listen) != 1 or stock.count(services) != 1:
+        raise Refusal("the stock session bus config lacks a single <listen> and servicedirs line")
+    # No activatable services: Chromium's portal calls would otherwise start desktop services
+    # on the private bus whose stderr lands in the session's terminal.
+    stock = stock.replace(services, "<!-- no service activation in a clean room -->")
+    return stock.replace(listen, f"<listen>unix:dir={home}/.cache/dbus</listen>")
+
+
+# ---------------------------------------------------------------------------------------------
+# Steps that touch the clean home (run as the clean room's user)
+# ---------------------------------------------------------------------------------------------
+
+
+def child(name: str, step: str) -> None:
+    """Run a step that touches the clean home, as the clean room's user."""
+    os.umask(0o022)
+    if step == "home":
+        make_home(name)
+    elif step == "remove":
+        if home_dir(name).exists():
+            remove_tree(home_dir(name), 2)
+        (name_dir(name) / "keyring-pass").unlink(missing_ok=True)
+    elif step == "mirror":
+        mirror_transcript(name)
+    elif step == "kill":
+        kill_processes(name)
+    elif step == "exec":
+        exec_plan(name)
+    else:
+        raise Refusal(f"unknown _child step {step!r}")
+
+
+def make_home(name: str) -> None:
+    """Create the clean home: settings, first-run state, bus config, keyring password, relay."""
+    home = home_dir(name)
+    for sub in ("", ".claude", ".config/cleanroom", ".cache/dbus", ".local/bin", "work", "tmp"):
+        (home / sub).mkdir(parents=True, exist_ok=True)
+        (home / sub).chmod(0o755)
+    (home / ".cache/dbus").chmod(0o700)
+    filled = (
+        TEMPLATE.read_text()
+        .replace("@RUN_DIR@", str(run_dir(name)))
+        .replace("@TOOL@", str(TOOL))
+    )
+    json.loads(filled)
+    (home / ".claude/settings.json").write_text(filled)
+    (home / ".claude.json").write_text(json.dumps(seed_claude_json(home), indent=2) + "\n")
+    (home / ".config/cleanroom/bus.conf").write_text(bus_config(home))
+    relay = home / ".local/bin/open-url"
+    relay.write_text(f"#!/bin/sh\nprintf '%s\\n' \"$1\" >> '{run_dir(name)}/urls.log'\n")
+    relay.chmod(0o755)
+    write_private(name_dir(name) / "keyring-pass", secrets.token_urlsafe(24))
+    (home / "work/probe-commands.md").write_text(fill_probe_list(name, home))
+    (home / "work/push.sh").write_text(fill_probe_list(name, home, PUSH_SCRIPT))
+
+
+def fill_probe_list(name: str, home: Path, source: Path = PROBE_LIST) -> str:
+    """Return a probe data file (the list by default) with its placeholders replaced."""
+    fill = json.loads(
+        os.environ.get("CLEANROOM_FILL")
+        or json.dumps({"@CANARY@": str(state_dir() / "canary"), "@SECRETS@": str(secrets_file())})
+    )
+    fill |= {
+        "@RUN_DIR@": str(run_dir(name)),
+        "@HOME@": str(home),
+        "@NAME@": name,
+        "@USER@": child_user() or pwd.getpwuid(os.getuid()).pw_name,
+    }
+    text = source.read_text()
+    for key, value in fill.items():
+        text = text.replace(key, value)
+    return text
+
+
+def mirror_transcript(name: str) -> None:
+    """Join every transcript under the home into run/transcript.jsonl, readable by the caller.
+
+    A transcript Claude Code is still appending to can end in half a line, which is dropped. The
+    copy takes the newest source's time, so the watcher sees the transcript advance.
+    """
+    files = sorted(
+        (home_dir(name) / ".claude/projects").glob("**/*.jsonl"), key=lambda f: f.stat().st_mtime_ns
+    )
+    if not files:
+        return
+    parts = []
+    for file in files:
+        data = file.read_bytes()
+        parts.append(data[: data.rfind(b"\n") + 1])
+    blob = b"".join(parts)
+    dst = run_dir(name) / "transcript.jsonl"
+    newest = files[-1].stat().st_mtime_ns
+    if dst.exists() and dst.read_bytes() == blob and dst.stat().st_mtime_ns == newest:
+        return
+    write_bytes_atomic(dst, blob)
+    os.utime(dst, ns=(newest, newest))
+
+
+def process_ids(name: str) -> list[int]:
+    """List the run's processes: all of the clean user's, else those whose HOME is the clean home."""
+    me = os.getpid()
+    skip = {me}
+    pid = me
+    while pid > 1:
+        stat = Path(f"/proc/{pid}/stat").read_text()
+        pid = int(stat.rsplit(")", 1)[1].split()[1])
+        skip.add(pid)
+    want = f"HOME={home_dir(name)}".encode()
+    found = []
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit() or int(entry.name) in skip:
+            continue
+        try:
+            if am_clean_user():
+                hit = entry.stat().st_uid == os.getuid()
+            else:
+                hit = want in (entry / "environ").read_bytes().split(b"\0")
+        except OSError:
+            continue
+        if hit:
+            found.append(int(entry.name))
+    return found
+
+
+def alive(pid: int) -> bool:
+    try:
+        stat = Path(f"/proc/{pid}/stat").read_text()
+    except OSError:
+        return False
+    return stat.rsplit(")", 1)[1].split()[0] != "Z"
+
+
+def signal_if_alive(pid: int, sig: int) -> None:
+    try:
+        if alive(pid):
+            os.kill(pid, sig)
+    except ProcessLookupError:
+        pass
+
+
+def kill_processes(name: str) -> None:
+    """Send TERM to the run's processes, then KILL to any left after the grace period."""
+    pids = process_ids(name)
+    for pid in pids:
+        signal_if_alive(pid, signal.SIGTERM)
+    deadline = time.time() + seconds("CLEANROOM_KILL_GRACE", 10)
+    while time.time() < deadline and any(alive(p) for p in pids):
+        time.sleep(0.1)
+    for pid in pids:
+        signal_if_alive(pid, signal.SIGKILL)
+
+
+# ---------------------------------------------------------------------------------------------
+# The environment and the session
+# ---------------------------------------------------------------------------------------------
+
+
+def read_secret(store: str) -> str:
+    """Return the store's value, read by a child bash so it never reaches argv."""
+    if not STORE_RE.fullmatch(store):
+        raise Refusal(f"bad store name {store!r}")
+    cmd = ["bash", "-c", 'source "$1"; printf %s "${!2}"', "_", str(secrets_file()), store]
+    res = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if res.returncode != 0 or not res.stdout:
+        raise Refusal(f"{store} is missing or empty in {secrets_file()}")
+    if len(res.stdout) < MIN_SECRET_LENGTH:
+        raise Refusal(f"{store} is too short to redact safely")
+    return res.stdout
+
+
+def parse_secrets(specs: list[str]) -> list[dict]:
+    """Turn STORE[:ENV] specs into {store, env} records (names only)."""
+    out = []
+    for spec in specs:
+        store, _, var = spec.partition(":")
+        var = var or store
+        if not STORE_RE.fullmatch(store) or not ENV_RE.fullmatch(var):
+            raise Refusal(f"bad --secret {spec!r}: expected STORE or STORE:ENV")
+        out.append({"store": store, "env": var})
+    return out
+
+
+def parse_env(pairs: list[str]) -> dict:
+    out = {}
+    for pair in pairs:
+        key, eq, val = pair.partition("=")
+        if not eq or not ENV_RE.fullmatch(key):
+            raise Refusal(f"bad --env {pair!r}: expected KEY=VALUE")
+        out[key] = val
+    return out
+
+
+def clean_path() -> str:
+    node = Path.home() / ".local/share/mise/installs/node/lts/bin"
+    base = "/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin"
+    return f"{node}:{base}" if node.is_dir() else base
+
+
+def clean_env(name: str, secret_specs: list[dict], extra: dict) -> dict:
+    """Return the cleared environment: a short base set plus the handed-in values."""
+    home = home_dir(name)
+    socket = home / ".cache/dbus/dbus-XXXXXXXXXX"
+    if len(str(socket)) >= 100:
+        raise Refusal(f"{socket} is too long for a unix socket path (limit 108); use a shorter root")
+    env = {
+        "HOME": str(home),
+        "PATH": clean_path(),
+        "LANG": "C.UTF-8",
+        "TERM": os.environ.get("TERM") or "xterm-256color",
+        "TMPDIR": str(home / "tmp"),
+        "BROWSER": str(home / ".local/bin/open-url"),
+        "DISABLE_AUTOUPDATER": "1",
+    }
+    for spec in secret_specs:
+        env[spec["env"]] = read_secret(spec["store"])
+    env.update(extra)
+    return env
+
+
+def session_argv(name: str, inner: list[str], log: bool) -> list[str]:
+    """Wrap inner in a private session bus and an unlocked keyring, logged by script when asked."""
+    home = home_dir(name)
+    script = (
+        'gnome-keyring-daemon --unlock --components=secrets < "$1" > /dev/null;'
+        ' cd "$2" || exit 1; shift 2; exec "$@"'
+    )
+    wrapper = [
+        "dbus-run-session",
+        f"--config-file={home}/.config/cleanroom/bus.conf",
+        "--",
+        "bash",
+        "-c",
+        script,
+        "_",
+        str(name_dir(name) / "keyring-pass"),
+        str(home / "work"),
+        *inner,
+    ]
+    if not log:
+        return wrapper
+    # script runs its command through $SHELL, and the clean room's user has a nologin shell, so
+    # it gets /bin/bash (set in build_exec) and the wrapped command drops the variable again.
+    logfile = str(run_dir(name) / "session.log")
+    command = shlex.join(["env", "-u", "SHELL", *wrapper])
+    return ["script", "-q", "-f", "-e", "-c", command, logfile]
+
+
+def launch(name: str, env: dict, plan: dict) -> int:
+    """Run a plan in the clean environment, as the clean room's user when there is one."""
+    user = other_user()
+    if user is None:
+        argv, final = build_exec(name, env, plan)
+        return subprocess.run(argv, env=final, check=False).returncode
+    names = [k for k in env if k not in ("HOME", "PATH", "TMPDIR")]
+    handed = {k: env[k] for k in names}
+    handed |= {
+        "CLEANROOM_PATH": env["PATH"],
+        "CLEANROOM_ENV_NAMES": ",".join(names),
+        "CLEANROOM_PLAN": json.dumps(plan),
+    }
+    keep = list(handed)
+    if "CLEANROOM_ROOT" in os.environ:
+        handed["CLEANROOM_ROOT"] = os.environ["CLEANROOM_ROOT"]
+        keep.append("CLEANROOM_ROOT")
+    cmd = ["/usr/bin/sudo", "-n", "-u", user, f"--preserve-env={','.join(keep)}", "--"]
+    cmd += ["/usr/bin/python3", "-I", str(TOOL), "_child", name, "exec"]
+    return subprocess.run(cmd, env=handed, check=False).returncode
+
+
+def build_exec(name: str, env: dict, plan: dict) -> tuple[list[str], dict]:
+    """Return the final argv and environment for a plan, after seeding the approval."""
+    home = home_dir(name)
+    final = dict(env)
+    final["HOME"] = str(home)
+    final["TMPDIR"] = str(home / "tmp")
+    seed_approval(home, final)
+    if plan.get("log"):
+        final["SHELL"] = "/bin/bash"
+    return session_argv(name, plan["argv"], plan.get("log", False)), final
+
+
+def exec_plan(name: str) -> None:
+    """Replace this process with the plan the caller handed in by environment name."""
+    names = os.environ["CLEANROOM_ENV_NAMES"].split(",")
+    env = {n: os.environ[n] for n in names if n}
+    env["PATH"] = os.environ["CLEANROOM_PATH"]
+    argv, final = build_exec(name, env, json.loads(os.environ["CLEANROOM_PLAN"]))
+    os.execvpe(argv[0], argv, final)
+
+
+# ---------------------------------------------------------------------------------------------
+# Cost and the ledger
+# ---------------------------------------------------------------------------------------------
+
+
+def price_of(model: str) -> tuple[float, float, float]:
+    best = max((p for p in PRICES if model.startswith(p)), key=len, default=None)
+    return PRICES[best] if best else DEAREST
+
+
+def usage_cost(model: str, usage: dict) -> float:
+    """Return the dollars one assistant message cost, from its usage block."""
+    price_in, price_out, price_read = price_of(model)
+    created = usage.get("cache_creation") or {}
+    write_1h = created.get("ephemeral_1h_input_tokens", 0)
+    write_5m = created.get(
+        "ephemeral_5m_input_tokens", usage.get("cache_creation_input_tokens", 0) - write_1h
+    )
+    total = (
+        usage.get("input_tokens", 0) * price_in
+        + usage.get("output_tokens", 0) * price_out
+        + usage.get("cache_read_input_tokens", 0) * price_read
+        + write_5m * price_in * 1.25
+        + write_1h * price_in * 2.0
+    )
+    return total / 1e6
+
+
+def transcript_totals(path: Path) -> tuple[float, int]:
+    """Return a transcript's dollar total and its count of assistant messages."""
+    seen: dict[str, tuple[str, dict]] = {}
+    for line in path.read_text().splitlines():
+        if not line.strip():
+            continue
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        msg = entry.get("message")
+        if not isinstance(msg, dict) or "usage" not in msg:
+            continue
+        model = msg.get("model", "")
+        if model.startswith("<"):
+            continue
+        seen[msg.get("id") or entry.get("uuid") or str(len(seen))] = (model, msg["usage"])
+    return sum(usage_cost(m, u) for m, u in seen.values()), len(seen)
+
+
+def ledger_write(row: dict) -> None:
+    """Add or replace the ledger row with the same name and start, atomically."""
+    path = root() / "ledger.jsonl"
+    rows = []
+    if path.exists():
+        rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    rows = [r for r in rows if (r["name"], r["start"]) != (row["name"], row["start"])]
+    rows.append(row)
+    write_atomic(path, "".join(json.dumps(r) + "\n" for r in rows))
+
+
+# ---------------------------------------------------------------------------------------------
+# tmux
+# ---------------------------------------------------------------------------------------------
+
+
+def tmux(args: list[str], socket: Path | None = None) -> subprocess.CompletedProcess:
+    cmd = ["tmux"] + (["-S", str(socket)] if socket else []) + args
+    return subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+
+def tmux_sessions(socket: Path | None = None) -> list[str]:
+    res = tmux(["list-sessions", "-F", "#{session_name}"], socket)
+    return res.stdout.split() if res.returncode == 0 else []
+
+
+def has_window(session: str, window: str) -> bool:
+    res = tmux(["list-windows", "-t", session, "-F", "#{window_name}"])
+    return res.returncode == 0 and window in res.stdout.split()
+
+
+# ---------------------------------------------------------------------------------------------
+# run, and its watcher
+# ---------------------------------------------------------------------------------------------
+
+
+def write_handoff(name: str, env: dict, plan: dict) -> Path:
+    """Write the environment and plan to a 0600 file that _exec reads and removes."""
+    base = Path(os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}") / "cleanroom"
+    base.mkdir(mode=0o700, parents=True, exist_ok=True)
+    path = base / f"{name}-{secrets.token_hex(4)}.json"
+    write_private(path, json.dumps({"env": env, "plan": plan}))
+    return path
+
+
+def cmd_run(args: argparse.Namespace) -> None:
+    name = start_run(args.name, args.goal, args.secret, args.env, args.cap_usd, args.cap_min)
+    print(f"session {session_name(name)}")
+    print(f"run directory {run_dir(name)}")
+
+
+def start_run(
+    name: str, goal: str, secret: list[str], extra_env: list[str], cap_usd: float, cap_min: float
+) -> str:
+    """Start a run's tmux session and watcher, and return the checked name."""
+    name = check_name(name)
+    if not home_dir(name).is_dir():
+        raise Refusal(f"no clean room {name!r}; run `cleanroom init {name}` first")
+    session = session_name(name)
+    if session in tmux_sessions():
+        raise Refusal(f"tmux session {session} is already running")
+    specs = parse_secrets(secret)
+    env = clean_env(name, specs, parse_env(extra_env))
+    start = time.time()
+    meta = {
+        "name": name,
+        "start": start,
+        "goal": goal,
+        "cap_usd": cap_usd,
+        "cap_min": cap_min,
+        "secrets": specs,
+        "session": session,
+    }
+    write_atomic(trusted_dir(run_dir(name)) / "meta.json", json.dumps(meta, indent=2) + "\n")
+    ledger_write({"name": name, "start": start, "end": None, "state": "running", "cost": 0.0,
+                  "turns": 0})
+    # --foreground keeps claude in the terminal's foreground process group; without it the
+    # pty stops claude on its first read of the tty (SIGTTIN).
+    inner = ["timeout", "--foreground", "--signal=TERM", f"{cap_min + 1:g}m", "claude", goal]
+    handoff = write_handoff(name, env, {"argv": inner, "log": True})
+    python = sys.executable
+    pane = shlex.join([python, "-I", str(TOOL), "_exec", name, str(handoff)])
+    watch = shlex.join([python, "-I", str(TOOL), "_watch", name])
+    res = tmux(["new-session", "-d", "-s", session, "-n", "watch", "-x", "200", "-y", "50", watch,
+                ";", "new-window", "-t", session, "-n", "main", pane])
+    if res.returncode != 0:
+        handoff.unlink(missing_ok=True)
+        ledger_write({"name": name, "start": start, "end": time.time(), "state": "failed",
+                      "cost": 0.0, "turns": 0})
+        raise Refusal(f"tmux could not start {session}: {res.stderr.strip()}")
+    return name
+
+
+def cmd_exec(args: argparse.Namespace) -> int:
+    """Run inside the tmux pane: read the hand-off, remove it, and launch the plan."""
+    path = Path(args.handoff)
+    data = json.loads(path.read_text())
+    path.unlink()
+    env = data["env"]
+    env["TERM"] = os.environ.get("TERM") or env["TERM"]
+    return launch(args.name, env, data["plan"])
+
+
+def observe(name: str, meta: dict) -> dict:
+    """Mirror the transcript and read every cost figure; raise on anything unreadable."""
+    run_child(name, "mirror")
+    rd = run_dir(name)
+    sl_path, tr_path = rd / "statusline.json", rd / "transcript.jsonl"
+    sl_cost, sl_mtime = None, None
+    if sl_path.exists():
+        sl_cost = float(json.loads(sl_path.read_text())["cost"]["total_cost_usd"])
+        sl_mtime = sl_path.stat().st_mtime
+    tr_cost, turns, tr_mtime = 0.0, 0, None
+    if tr_path.exists():
+        tr_cost, turns = transcript_totals(tr_path)
+        tr_mtime = tr_path.stat().st_mtime
+    now = time.time()
+    return {
+        "elapsed_min": (now - meta["start"]) / 60,
+        "cost_statusline": sl_cost,
+        "cost_transcript": tr_cost,
+        "cost": max(sl_cost or 0.0, tr_cost),
+        "turns": turns,
+        "transcript_mtime": tr_mtime,
+        "statusline_mtime": sl_mtime,
+        "now": now,
+    }
+
+
+def verdict(meta: dict, obs: dict) -> str | None:
+    """Return the stop state the observation calls for, or None to keep going."""
+    if obs["cost"] >= meta["cap_usd"]:
+        return "stopped:cost"
+    if obs["elapsed_min"] >= meta["cap_min"]:
+        return "stopped:time"
+    stale = seconds("CLEANROOM_STALE", 120)
+    sl_age = obs["now"] - (obs["statusline_mtime"] or meta["start"])
+    advancing = obs["transcript_mtime"] is not None and obs["now"] - obs["transcript_mtime"] < stale
+    if sl_age > stale and advancing:
+        return "stopped:cost-unknown"
+    return None
+
+
+def record_state(name: str, meta: dict, state: str, obs: dict | None, ended: bool) -> None:
+    obs = obs or {}
+    if ended:
+        ledger_write({"name": name, "start": meta["start"], "end": time.time(), "state": state,
+                      "cost": round(obs.get("cost", 0.0), 4), "turns": obs.get("turns", 0)})
+    body = {
+        "state": state,
+        "elapsed_min": round(obs.get("elapsed_min", 0.0), 2),
+        "cost_statusline": obs.get("cost_statusline"),
+        "cost_transcript": obs.get("cost_transcript"),
+        "transcript_mtime": obs.get("transcript_mtime"),
+        "updated": time.time(),
+    }
+    write_atomic(trusted_dir(run_dir(name)) / "state.json", json.dumps(body) + "\n")
+
+
+def end_run(name: str, meta: dict, state: str, obs: dict | None) -> None:
+    """Interrupt the session twice, wait, record the end, then stop everything."""
+    session = meta["session"]
+    try:
+        for _ in range(2):
+            tmux(["send-keys", "-t", f"{session}:main", "C-c"])
+            time.sleep(0.3)
+        time.sleep(seconds("CLEANROOM_GRACE", 30))
+        try:
+            obs = observe(name, meta)
+        except Exception:  # noqa: BLE001 - the stop must still happen with the last good figures
+            pass
+        record_state(name, meta, state, obs, ended=True)
+    finally:
+        stop(name)
+
+
+def watch(name: str) -> None:
+    """Write state.json every tick and stop the session at either cap, failing closed."""
+    meta = json.loads((run_dir(name) / "meta.json").read_text())
+    tick = seconds("CLEANROOM_TICK", 15)
+    seen_main = False
+    obs = None
+    while True:
+        try:
+            obs = observe(name, meta)
+            main_alive = has_window(meta["session"], "main")
+            seen_main = seen_main or main_alive
+            state = verdict(meta, obs)
+            if state is None and not main_alive and (seen_main or obs["elapsed_min"] > 0.2):
+                record_state(name, meta, "exited", obs, ended=True)
+                stop(name)
+                return
+            if state:
+                end_run(name, meta, state, obs)
+                return
+            record_state(name, meta, "running", obs, ended=False)
+        except Exception:  # noqa: BLE001 - any failure of the watcher itself ends the run
+            end_run(name, meta, "stopped:watcher", obs)
+            return
+        time.sleep(tick)
+
+
+def stop(name: str) -> None:
+    """End the run's processes, then its tmux sessions on both sockets.
+
+    The processes go first because the watcher calls this from inside the session it ends.
+    """
+    try:
+        run_child(name, "kill")
+    finally:
+        base = session_name(name)
+        for socket in (None, scripted_socket()):
+            if socket is not None and not socket.exists():
+                continue
+            for session in tmux_sessions(socket):
+                if session == base or session.startswith(base + "-"):
+                    tmux(["kill-session", "-t", session], socket)
+
+
+def cmd_stop(args: argparse.Namespace) -> None:
+    """Stop a run by hand, recording it as stopped:manual when it was still running."""
+    name = check_name(args.name)
+    state_path, meta_path = run_dir(name) / "state.json", run_dir(name) / "meta.json"
+    if state_path.exists() and meta_path.exists():
+        if json.loads(state_path.read_text())["state"] == "running":
+            meta = json.loads(meta_path.read_text())
+            try:
+                obs = observe(name, meta)
+            except Exception:  # noqa: BLE001 - record the stop even when a figure is unreadable
+                obs = None
+            record_state(name, meta, "stopped:manual", obs, ended=True)
+    stop(name)
+
+
+# ---------------------------------------------------------------------------------------------
+# shell
+# ---------------------------------------------------------------------------------------------
+
+
+def drain_urls(log: Path, offset: int, command: list[str]) -> int:
+    """Run command once for each new URL line in log and return the new offset."""
+    if not log.exists():
+        return offset
+    data = log.read_bytes()[offset:]
+    consumed = data.rfind(b"\n") + 1
+    for line in data[:consumed].decode(errors="replace").splitlines():
+        if URL_RE.fullmatch(line.strip()):
+            subprocess.run(command + [line.strip()], check=False)
+    return offset + consumed
+
+
+def watch_urls(name: str, command: list[str], stop_when) -> None:
+    """Tail urls.log and open each new URL, until stop_when() is true and the log is drained."""
+    log = run_dir(name) / "urls.log"
+    offset = log.stat().st_size if log.exists() else 0
+    while True:
+        done = stop_when()
+        offset = drain_urls(log, offset, command)
+        if done:
+            return
+        time.sleep(0.2)
+
+
+def cmd_shell(args: argparse.Namespace) -> int:
+    name = check_name(args.name)
+    if not home_dir(name).is_dir():
+        raise Refusal(f"no clean room {name!r}; run `cleanroom init {name}` first")
+    env = clean_env(name, parse_secrets(args.secret), parse_env(args.env))
+    command = shlex.split(args.open_with) if args.open_with else None
+    if args.tmux:
+        socket = Path(args.socket) if args.socket else None
+        plan = {"argv": ["bash", "--noprofile", "--norc", "-i"], "log": False}
+        if args.c is not None:
+            plan["argv"] = ["bash", "--noprofile", "--norc", "-c", args.c]
+        env["PS1"] = f"[cleanroom {name}] \\w \\$ "
+        handoff = write_handoff(name, env, plan)
+        pane = shlex.join([sys.executable, "-I", str(TOOL), "_exec", name, str(handoff)])
+        res = tmux(["new-session", "-d", "-s", args.tmux, pane], socket)
+        if res.returncode != 0:
+            handoff.unlink(missing_ok=True)
+            raise Refusal(f"tmux could not start {args.tmux}: {res.stderr.strip()}")
+        if command:
+            cmd = [sys.executable, "-I", str(TOOL), "_open", name, args.tmux, args.open_with]
+            if socket:
+                cmd.append(str(socket))
+            subprocess.Popen(cmd, start_new_session=True, stdin=subprocess.DEVNULL,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print(f"session {args.tmux}")
+        return 0
+    if args.c is not None:
+        plan = {"argv": ["bash", "--noprofile", "--norc", "-c", args.c], "log": False}
+    else:
+        env["PS1"] = f"[cleanroom {name}] \\w \\$ "
+        plan = {"argv": ["bash", "--noprofile", "--norc", "-i"], "log": False}
+    finished = threading.Event()
+    opener = None
+    if command:
+        opener = threading.Thread(target=watch_urls, args=(name, command, finished.is_set))
+        opener.start()
+    try:
+        return launch(name, env, plan)
+    finally:
+        finished.set()
+        if opener:
+            opener.join()
+
+
+def cmd_open(args: argparse.Namespace) -> None:
+    """Tail urls.log for a detached shell until its tmux session ends."""
+    socket = Path(args.socket) if args.socket else None
+    watch_urls(args.name, shlex.split(args.open_with),
+               lambda: args.session not in tmux_sessions(socket))
+
+
+# ---------------------------------------------------------------------------------------------
+# capture, scan, cost, statusline
+# ---------------------------------------------------------------------------------------------
+
+
+def values_for(specs: list[dict]) -> list[tuple[str, str]]:
+    """Return (label, value) for each credential in specs, plus the canary when it exists."""
+    out = [(spec["store"], read_secret(spec["store"])) for spec in specs]
+    canary = state_dir() / "canary"
+    if canary.exists():
+        out.append(("canary", canary.read_text().strip()))
+    return out
+
+
+def handed_in_values(name: str) -> list[tuple[str, str]]:
+    """Return (label, value) for each credential the run was given, plus the canary."""
+    meta_path = run_dir(name) / "meta.json"
+    specs = json.loads(meta_path.read_text())["secrets"] if meta_path.exists() else []
+    return values_for(specs)
+
+
+def leaks(values: list[tuple[str, str]], data: bytes) -> list[str]:
+    """Return the labels of the values found in data."""
+    return [label for label, value in values if value.encode() in data]
+
+
+def cmd_capture(args: argparse.Namespace) -> None:
+    name = check_name(args.name)
+    socket = Path(args.socket) if args.socket else None
+    target = args.session or f"{session_name(name)}:main"
+    res = tmux(["capture-pane", "-p", "-J", "-S", "-", "-t", target], socket)
+    if res.returncode != 0:
+        raise Refusal(f"no pane {target}: {res.stderr.strip()}")
+    text = res.stdout
+    for label, value in handed_in_values(name):
+        text = text.replace(value, f"[redacted:{label}]")
+    sys.stdout.write(text)
+
+
+def cmd_scan(args: argparse.Namespace) -> None:
+    check_name(args.name)
+    values = handed_in_values(args.name)
+    bad = []
+    for file in args.files:
+        try:
+            data = Path(file).read_bytes()
+        except OSError as err:
+            raise Refusal(f"cannot read {file}: {err.strerror}") from err
+        bad += [f"{file}: holds {label}" for label in leaks(values, data)]
+    if bad:
+        raise Refusal("\n".join(bad))
+
+
+def cmd_cost(args: argparse.Namespace) -> None:
+    total, _ = transcript_totals(Path(args.transcript))
+    print(f"${total:.4f}")
+
+
+def cmd_statusline(args: argparse.Namespace) -> None:
+    """Save the JSON Claude Code passes in and print a short status; never fail loudly."""
+    try:
+        target = Path(args.run_dir)
+        rel = target.resolve().relative_to(root().resolve())
+        if len(rel.parts) != 2 or rel.parts[1] != "run":
+            return
+        data = json.load(sys.stdin)
+        write_atomic(target / "statusline.json", json.dumps(data))
+        cost = data.get("cost", {}).get("total_cost_usd", 0)
+        print(f"${float(cost):.2f}")
+    except (OSError, ValueError, TypeError):
+        return
+
+
+# ---------------------------------------------------------------------------------------------
+# probe
+# ---------------------------------------------------------------------------------------------
+
+ITEM_RE = re.compile(r"^- (denied|fails|prompt|ok|prints|omits)(?: \[(.*?)\])?: `(.+)`$")
+HEADER_RE = re.compile(r"^\s*(?:\w+ command|Tool use|Fetch)\s*$")
+ASK_RE = re.compile(r"Do you want to (?:proceed|allow[^?]*)\?")
+RULE_RE = re.compile(r"^\s*╌{8,}\s*$")
+OPTION_RE = re.compile(r"^\s*[❯>]?\s*(\d+)\.\s+(.*?)\s*$")
+DENIAL_RE = re.compile(
+    r"EACCES|EPERM|permission denied|operation not permitted"
+    r"|blocked by (?:the )?sandbox|sandbox.{0,40}(?:denied|blocked)",
+    re.IGNORECASE,
+)
+PROBE_CONTINUE = "Continue with the next command in the list."
+PROBE_GOAL = (
+    "Read ~/work/probe-commands.md. Each list line holds an expectation word and one command in"
+    " backticks. Run the commands exactly as written, in order, one Bash call each (a command"
+    " that starts with WebFetch means call the WebFetch tool on that URL). Never retry, work"
+    " around, or fix a failure. After each one, say its number and its exit status. End with the"
+    " line PROBE DONE."
+)
+
+
+def parse_probe_list(text: str) -> list[dict]:
+    """Return the list's items as {word, arg, command}; other lines are prose and are skipped.
+
+    An item is a markdown list line, `- WORD: `COMMAND``, or `- WORD [ARG]: `COMMAND`` for the
+    words that take an argument. The words: denied (a read the sandbox must stop), fails (a
+    non-zero exit is the pass), prompt (a permission prompt is the pass), ok (exit 0), prints
+    [TEXT] (the output is exactly TEXT), omits [NAMES] (no space-separated NAME is a word of the
+    output).
+    """
+    items = []
+    for line in text.splitlines():
+        found = ITEM_RE.match(line)
+        if found:
+            items.append({"word": found[1], "arg": found[2] or "", "command": found[3]})
+    return items
+
+
+def parse_prompt(pane_text: str) -> dict | None:
+    """Return the permission prompt on the pane as {command, no_key, no_text}, or None.
+
+    Layout of Claude Code 2.1.319, read from real panes: a "Bash command" heading, an optional
+    tip and a description, the command between two rules of "╌" characters (a long one behind a
+    "│ " prefix), "This command requires approval", "Do you want to proceed?", then numbered
+    options. A WebFetch prompt has a "Fetch" heading, a `url:` line between the rules, and "Do
+    you want to allow Claude to fetch this content?". The option that starts with "No" is last;
+    no_key is its digit.
+    """
+    lines = pane_text.splitlines()
+    asks = [i for i, line in enumerate(lines) if ASK_RE.search(line)]
+    if not asks:
+        return None
+    ask = asks[-1]
+    heads = [i for i in range(ask) if HEADER_RE.match(lines[i])]
+    if not heads:
+        return None
+    rules = [i for i in range(heads[-1], ask) if RULE_RE.match(lines[i])]
+    if len(rules) >= 2:
+        body = lines[rules[-2] + 1:rules[-1]]
+    else:
+        body = lines[heads[-1] + 1:ask]
+    block = []
+    for line in body:
+        if not line.strip():
+            if block:
+                break
+            continue
+        block.append(line.strip().removeprefix("│").strip())
+    command = " ".join(block)
+    if not lines[heads[-1]].strip().endswith("command"):
+        url = next((b.removeprefix("url:").strip() for b in block if b.startswith("url:")), command)
+        command = f"WebFetch {url}"
+    options = [m.groups() for line in lines[ask + 1:] if (m := OPTION_RE.match(line))]
+    no = next(((key, text) for key, text in options if text.startswith("No")), (None, None))
+    if len(options) < 2 or no[0] is None:
+        return None
+    return {"command": command, "no_key": no[0], "no_text": no[1]}
+
+
+def result_text(content: object) -> str:
+    """Flatten a tool_result's content, a string or a list of text blocks."""
+    if isinstance(content, list):
+        return "\n".join(b.get("text", "") for b in content if isinstance(b, dict))
+    return str(content)
+
+
+def transcript_calls(path: Path) -> list[dict]:
+    """Return the transcript's tool calls, in order, as {command, text, is_error}.
+
+    A call the transcript does not yet answer has text None. A WebFetch call's command reads
+    "WebFetch URL", the form the probe list uses.
+    """
+    calls: dict[str, dict] = {}
+    if not path.exists():
+        return []
+    for line in path.read_text().splitlines():
+        try:
+            content = (json.loads(line).get("message") or {}).get("content") if line.strip() else None
+        except ValueError:
+            continue
+        for block in content if isinstance(content, list) else []:
+            if block.get("type") == "tool_use":
+                inp = block.get("input", {})
+                command = inp.get("command") or f"{block.get('name')} {inp.get('url', '')}"
+                calls[block["id"]] = {"command": command, "text": None, "is_error": False}
+            elif block.get("type") == "tool_result" and block.get("tool_use_id") in calls:
+                call = calls[block["tool_use_id"]]
+                call["text"] = result_text(block.get("content"))
+                call["is_error"] = bool(block.get("is_error"))
+    return list(calls.values())
+
+
+def norm(command: str) -> str:
+    """Collapse whitespace so a pane-wrapped command compares equal to the list's."""
+    return " ".join(command.split())
+
+
+def exit_failed(call: dict) -> bool:
+    return call["is_error"] or bool(re.search(r"Exit code [1-9]", call["text"]))
+
+
+PATH_RE = re.compile(r"(?<![\w.$/-])/[\w.@-][\w.@/-]*")
+
+
+def outside_control(command: str) -> dict[str, str]:
+    """Map each absolute path in command that exists outside the sandbox to what it is there.
+
+    The sandbox hides a denied path (bubblewrap masks it), so inside the session the path reads
+    as absent or as an empty directory. This control, taken before the session starts, is what
+    tells a masked path from a missing one.
+    """
+    found = {}
+    for path in PATH_RE.findall(command):
+        path = path.rstrip("/") or "/"
+        if os.path.isdir(path):
+            found[path] = "dir" if os.listdir(path) else "empty-dir"
+        elif os.path.lexists(path):
+            found[path] = "file"
+    return found
+
+
+def masked_by_sandbox(
+    text: str, exit_ok: bool, control: dict[str, str], known: dict[str, str]
+) -> str | None:
+    """Return how the output shows a masked path, or None.
+
+    Evidence is a "No such file" line that names, as a whole path, one a denied item names and
+    the control found outside (a shadow script reads the canary another item names), or an
+    empty listing, with exit 0, of a directory this item names that the control found non-empty.
+    """
+    for path in known:
+        whole = rf"(?<![\w./-]){re.escape(path)}(?![\w./-])"
+        if "No such file" in text and re.search(whole, text):
+            return f"masked: {path} exists outside and is absent inside"
+    quiet = not text.strip().replace("(Bash completed with no output)", "")
+    for path, kind in control.items():
+        if kind == "dir" and exit_ok and quiet:
+            return f"masked: {path} is non-empty outside and empty inside"
+    return None
+
+
+def grade_item(
+    item: dict,
+    call: dict | None,
+    prompts: list[dict],
+    control: dict[str, str] | None = None,
+    known: dict[str, str] | None = None,
+) -> tuple[str | None, str | None]:
+    """Return (why it failed, note on how it passed): the first is None when the item passed."""
+    control, known = control or {}, known or control or {}
+    why = grade_failure(item, call, prompts, control, known)
+    return (why, None) if why else (None, masked_note(item, call, control, known))
+
+
+def masked_note(
+    item: dict, call: dict | None, control: dict[str, str], known: dict[str, str]
+) -> str | None:
+    """Name the masking evidence a passing denied item relied on, if it relied on any."""
+    if item["word"] != "denied" or call is None or call["text"] is None:
+        return None
+    if DENIAL_RE.search(call["text"]):
+        return None
+    return masked_by_sandbox(call["text"], not exit_failed(call), control, known)
+
+
+def grade_failure(
+    item: dict,
+    call: dict | None,
+    prompts: list[dict],
+    control: dict[str, str],
+    known: dict[str, str],
+) -> str | None:
+    """Return why an item failed, or None when it passed."""
+    word, arg = item["word"], item["arg"]
+    if word == "prompt":
+        asked = any(norm(p["command"]) == norm(item["command"]) for p in prompts)
+        return None if asked else "no prompt appeared"
+    if call is None or call["text"] is None:
+        return "the session never reported it"
+    text = call["text"]
+    if word == "denied":
+        if DENIAL_RE.search(text) or masked_by_sandbox(text, not exit_failed(call), control, known):
+            return None
+        if "No such file" in text:
+            return "No such file: the read never reached a denial"
+        return "no denial evidence"
+    if word == "fails":
+        return None if exit_failed(call) else "exited 0"
+    if exit_failed(call):
+        return "exited non-zero"
+    if word == "prints" and text.strip() != arg:
+        return f"printed {text.strip()[:60]!r}, expected {arg!r}"
+    if word == "omits":
+        seen = [n for n in arg.split() if n in text.split()]
+        return f"output lists {', '.join(seen)}" if seen else None
+    return None
+
+
+def pane_text(session: str) -> str:
+    res = tmux(["capture-pane", "-p", "-J", "-t", f"{session}:main"])
+    return res.stdout if res.returncode == 0 else ""
+
+
+def append_probe_row(row: dict) -> None:
+    """Append a row to probes.jsonl atomically."""
+    path = root() / "probes.jsonl"
+    old = path.read_text() if path.exists() else ""
+    write_atomic(path, old + json.dumps(row) + "\n")
+
+
+def precheck(values: list[tuple[str, str]]) -> None:
+    """Refuse unless the canary exists and the matcher finds every value in a control file."""
+    if not (state_dir() / "canary").exists():
+        raise Refusal(f"no canary at {state_dir() / 'canary'}; run `cleanroom init` first")
+    with tempfile.TemporaryDirectory() as tmp:
+        control = Path(tmp) / "control"
+        control.write_text("".join(f"{value}\n" for _, value in values))
+        found = leaks(values, control.read_bytes())
+    missed = [label for label, _ in values if label not in found]
+    if missed:
+        raise Refusal(f"the matcher missed {', '.join(missed)} in its control file")
+
+
+def cmd_probe(args: argparse.Namespace) -> int:
+    name = check_name(args.name)
+    filled = home_dir(name) / "work/probe-commands.md"
+    if not filled.exists():
+        raise Refusal(f"{filled} is missing; run `cleanroom init {name} --fresh`")
+    items = parse_probe_list(filled.read_text())
+    source = parse_probe_list(Path(args.commands).read_text())
+    if [i["word"] for i in items] != [i["word"] for i in source]:
+        raise Refusal(f"{filled} differs from {args.commands}; run `cleanroom init {name} --fresh`")
+    values = values_for(parse_secrets(args.secret))
+    precheck(values)
+    controls = {n: outside_control(item["command"]) for n, item in enumerate(items)}
+    start_run(name, PROBE_GOAL, args.secret, args.env, args.cap_usd, args.cap_min)
+    rd, session = run_dir(name), session_name(name)
+    tick = seconds("CLEANROOM_PROBE_TICK", 5)
+    deadline = time.time() + args.cap_min * 60
+    prompts: list[dict] = []
+    pane_hits: set[str] = set()
+    last = None
+    answered = False
+    text = ""
+    while time.time() < deadline:
+        time.sleep(tick)
+        text = pane_text(session)
+        pane_hits.update(leaks(values, text.encode()))
+        prompt = parse_prompt(text)
+        if prompt and prompt != last:
+            if prompt["no_key"]:
+                tmux(["send-keys", "-t", f"{session}:main", prompt["no_key"]])
+                answered = True
+            prompts.append(prompt)
+        elif answered and not prompt:
+            # After a "No" the session stops and waits, so tell it to go on.
+            tmux(["send-keys", "-t", f"{session}:main", "-l", PROBE_CONTINUE])
+            tmux(["send-keys", "-t", f"{session}:main", "Enter"])
+            answered = False
+        last = prompt
+        state_path = rd / "state.json"
+        if state_path.exists() and json.loads(state_path.read_text())["state"] != "running":
+            break
+        calls = transcript_calls(rd / "transcript.jsonl")
+        answered_all = all(
+            any(c["command"] == item["command"] and c["text"] is not None for c in calls)
+            for item in items
+        )
+        if answered_all:
+            break
+    cmd_stop(argparse.Namespace(name=name))
+    run_child(name, "mirror")
+    return finish_probe(name, items, values, prompts, pane_hits, controls, text)
+
+
+def finish_probe(
+    name: str,
+    items: list[dict],
+    values: list[tuple[str, str]],
+    prompts: list[dict],
+    pane_hits: set[str],
+    controls: dict[int, dict[str, str]],
+    last_pane: str = "",
+) -> int:
+    """Grade the run, write run/probe.md and the probes.jsonl row, and return the exit status."""
+    rd = run_dir(name)
+    calls = transcript_calls(rd / "transcript.jsonl")
+    state_path = rd / "state.json"
+    state = json.loads(state_path.read_text()) if state_path.exists() else {}
+    rows, failed = [], []
+    known = {
+        p: k
+        for n, item in enumerate(items)
+        if item["word"] == "denied"
+        for p, k in controls.get(n, {}).items()
+    }
+    for n, item in enumerate(items):
+        call = next((c for c in calls if c["command"] == item["command"]), None)
+        why, note = grade_item(item, call, prompts, controls.get(n), known)
+        rows.append((item, why, note))
+        if why:
+            failed.append(f"{item['word']} `{item['command']}`: {why}")
+    expected = {norm(i["command"]) for i in items if i["word"] == "prompt"}
+    for p in prompts:
+        if norm(p["command"]) not in expected:
+            failed.append(f"unexpected prompt for `{p['command']}`")
+        if not p["no_key"]:
+            failed.append(f"prompt for `{p['command']}` showed no No option to answer")
+    verdicts = []
+    for label, value in values:
+        where = [f.name for f in (rd / "transcript.jsonl", rd / "session.log")
+                 if f.exists() and value.encode() in f.read_bytes()]
+        where += ["pane"] if label in pane_hits else []
+        verdicts.append((label, where))
+        if where:
+            failed.append(f"{label} is in the {', '.join(where)}")
+    denials = [(c["command"], m.group(0)) for c in calls
+               if c["text"] and (m := DENIAL_RE.search(c["text"]))]
+    sha = hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()
+    verdict = "fail" if failed else "pass"
+    out = [f"# Probe {name}: {verdict}", "", f"Template sha256: {sha}", "", "## Commands", ""]
+    for item, why, note in rows:
+        arg = f" [{item['arg']}]" if item["arg"] else ""
+        result = f"FAIL, {why}" if why else "PASS" + (f" ({note})" if note else "")
+        out.append(f"- {item['word']}{arg}: `{item['command']}`: {result}")
+    out += ["", "## Prompts", ""]
+    out += [f"- `{p['command']}`: answered {p['no_text']} (key {p['no_key']})" for p in prompts]
+    out += ["none"] if not prompts else []
+    out += ["", "## Sandbox denials in the transcript", ""]
+    out += [f"- `{cmd}`: {word}" for cmd, word in denials] or ["none"]
+    out += ["", "## Canary and handed-in values", ""]
+    out += [f"- {label}: {'FOUND in ' + ', '.join(where) if where else 'absent'}"
+            for label, where in verdicts]
+    out += ["", "## Cost", "", f"- statusline: {state.get('cost_statusline')}",
+            f"- transcript: {state.get('cost_transcript')}", "", "## Failures", ""]
+    out += [f"- {f}" for f in failed] or ["none"]
+    if failed and last_pane.strip() and not pane_hits:
+        out += ["", "## Last pane", "", "```", *last_pane.rstrip().splitlines(), "```"]
+    path = trusted_dir(rd) / "probe.md"
+    write_atomic(path, "\n".join(out) + "\n")
+    append_probe_row({"sha256": sha, "verdict": verdict, "path": str(path)})
+    print(f"probe {verdict}: {path}")
+    return 1 if failed else 0
+
+
+# ---------------------------------------------------------------------------------------------
+# init
+# ---------------------------------------------------------------------------------------------
+
+
+def init_canary() -> Path:
+    """Create the canary file if it is missing and return its path."""
+    state = state_dir()
+    state.mkdir(parents=True, exist_ok=True)
+    state.chmod(0o700)
+    canary = state / "canary"
+    if not canary.exists():
+        write_private(canary, "canary-" + secrets.token_hex(16) + "\n")
+    return canary
+
+
+def cmd_init(args: argparse.Namespace) -> None:
+    nd = name_dir(args.name)
+    if args.discard and not args.fresh:
+        raise Refusal("--discard goes with --fresh")
+    user = other_user()
+    if nd.exists():
+        if not args.fresh:
+            raise Refusal(f"{nd} exists; use --fresh to rebuild it")
+        graded = (run_dir(args.name) / "run-record.json").exists()
+        if not graded and not args.discard:
+            raise Refusal(f"{nd} has no run-record.json; --discard throws that run away")
+        print(f"removing {nd}: its home, run directory, and keyring password")
+        run_child(args.name, "remove")
+        remove_tree(nd, 1)
+    root().mkdir(parents=True, exist_ok=True)
+    nd.mkdir()
+    run_dir(args.name).mkdir()
+    if user is not None:
+        subprocess.run(
+            ["setfacl", "-m", f"u:{user}:rwx", str(nd), str(run_dir(args.name))], check=True
+        )
+        # Sticky, so the clean user can add files but never rename or replace the caller's entries.
+        os.chmod(nd, 0o1775)
+        os.chmod(run_dir(args.name), 0o1775)
+    run_child(args.name, "home")
+    canary = init_canary()
+    print(f"clean room {args.name}: {home_dir(args.name)}")
+    print(f"canary: {canary}")
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="cleanroom", description=__doc__.split("\n")[0])
+    sub = parser.add_subparsers(dest="form", required=True)
+
+    p = sub.add_parser("init", help="make a clean home, its settings, and the canary")
+    p.add_argument("name")
+    p.add_argument("--fresh", action="store_true", help="rebuild an existing room")
+    p.add_argument("--discard", action="store_true", help="with --fresh, drop an ungraded run")
+    p.set_defaults(func=cmd_init)
+
+    p = sub.add_parser("run", help="start an interactive session in a tmux pane")
+    p.add_argument("name")
+    p.add_argument("--goal", required=True)
+    p.add_argument("--secret", action="append", default=[], metavar="STORE[:ENV]")
+    p.add_argument("--env", action="append", default=[], metavar="KEY=VALUE")
+    p.add_argument("--cap-usd", type=float, default=20.0)
+    p.add_argument("--cap-min", type=float, default=60.0)
+    p.set_defaults(func=cmd_run)
+
+    p = sub.add_parser("shell", help="open the clean environment without Claude")
+    p.add_argument("name")
+    p.add_argument("--tmux", metavar="SESSION")
+    p.add_argument("--socket", metavar="PATH")
+    p.add_argument("-c", metavar="COMMAND")
+    p.add_argument("--open-with", metavar="CMD")
+    p.add_argument("--secret", action="append", default=[], metavar="STORE[:ENV]")
+    p.add_argument("--env", action="append", default=[], metavar="KEY=VALUE")
+    p.set_defaults(func=cmd_shell)
+
+    p = sub.add_parser("cost", help="print a transcript's dollar total")
+    p.add_argument("transcript")
+    p.set_defaults(func=cmd_cost)
+
+    p = sub.add_parser("capture", help="print the session pane with handed-in values redacted")
+    p.add_argument("name")
+    p.add_argument("--session", metavar="TARGET", help="a tmux target in place of the run's pane")
+    p.add_argument("--socket", metavar="PATH")
+    p.set_defaults(func=cmd_capture)
+
+    p = sub.add_parser("scan", help="fail when a handed-in value or the canary is in a file")
+    p.add_argument("name")
+    p.add_argument("files", nargs="+")
+    p.set_defaults(func=cmd_scan)
+
+    p = sub.add_parser("stop", help="end the run's tmux sessions and processes")
+    p.add_argument("name")
+    p.set_defaults(func=cmd_stop)
+
+    p = sub.add_parser("probe", help="run the probe list and grade the sandbox")
+    p.add_argument("name")
+    p.add_argument("--commands", required=True, metavar="FILE")
+    p.add_argument("--secret", action="append", default=[], metavar="STORE[:ENV]")
+    p.add_argument("--env", action="append", default=[], metavar="KEY=VALUE")
+    p.add_argument("--cap-usd", type=float, default=5.0)
+    p.add_argument("--cap-min", type=float, default=20.0)
+    p.set_defaults(func=cmd_probe)
+
+    p = sub.add_parser("statusline", help=argparse.SUPPRESS)
+    p.add_argument("run_dir")
+    p.set_defaults(func=cmd_statusline)
+
+    p = sub.add_parser("_exec", help=argparse.SUPPRESS)
+    p.add_argument("name")
+    p.add_argument("handoff")
+    p.set_defaults(func=cmd_exec)
+
+    p = sub.add_parser("_watch", help=argparse.SUPPRESS)
+    p.add_argument("name")
+    p.set_defaults(func=lambda a: watch(check_name(a.name)))
+
+    p = sub.add_parser("_open", help=argparse.SUPPRESS)
+    p.add_argument("name")
+    p.add_argument("session")
+    p.add_argument("open_with")
+    p.add_argument("socket", nargs="?")
+    p.set_defaults(func=cmd_open)
+
+    p = sub.add_parser("_child", help=argparse.SUPPRESS)
+    p.add_argument("name")
+    p.add_argument("step")
+    p.set_defaults(func=lambda a: child(check_name(a.name), a.step))
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    try:
+        status = args.func(args)
+    except Refusal as err:
+        print(f"cleanroom: {err}", file=sys.stderr)
+        return 1
+    return status or 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
