@@ -117,7 +117,7 @@
   The best practices page retired "Use subagents to protect your context window" because each subagent "costs extra tokens" (<https://code.claude.com/docs/en/best-practices>). Keep the "Initiative-scoped sessions" rule, since it is about cache re-reads, and narrow it to reads across several files. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
 
 - [ ] **#66** Cut `writing-voice.md:64-65` and `:80-81` and re-test in glw907/survey `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
-  `output-styles/writing-voice.md` is vendored from glw907/survey, so the cut of those two passages and the re-test of the style land there, not here. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
+  `output-styles/writing-voice.md` is vendored from glw907/survey, so the cut of those two passages and the re-test of the style land in glw907/survey. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
 
 - [ ] **#54** Clamp token counts and keep the first turn in `cleanroom`'s transcript cost `#bug` `#workstation` `#initiative:cairn-setup` *(2026-11-09)*
   `usage_cost` does not clamp negative token counts, and `transcript_totals` lets a later line that reuses a message id replace the real turn, so a transcript the agent can write could lower the dollar figure the cap reads. Both predate the cost-unknown change (glw907/workstation#218), and the agent already holds a simpler path through `cleanroom statusline`. Clamp each count at zero and keep the first line seen for an id.
