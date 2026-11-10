@@ -2,7 +2,7 @@
 # claude-context-budget: size budgets for context-loaded Claude files.
 #
 # These files load into every session's context (CLAUDE.md and its @-imports at
-# session start, the auto-memory MEMORY.md index on recall), so their length is a
+# session start, the auto-memory MEMORY.md index on recall, a .claude/rules file), so their length is a
 # per-session token tax. This gate catches regrowth at write time.
 #
 # Modes:
@@ -20,6 +20,7 @@ CLAUDE_MD_BUDGET="${CLAUDE_MD_BUDGET:-6000}"
 IMPORT_BUDGET="${IMPORT_BUDGET:-4000}"
 MEMORY_INDEX_BUDGET="${MEMORY_INDEX_BUDGET:-1500}"
 CLAUDE_MD_LINE_CAP="${CLAUDE_MD_LINE_CAP:-200}"
+RULE_BUDGET="${RULE_BUDGET:-1000}"
 
 tokens_of() { echo $(( $(wc -c < "$1") / 4 )); }
 
@@ -32,6 +33,8 @@ budget_for() {
     echo "$MEMORY_INDEX_BUDGET"; return
   fi
   [[ "$base" == *.md ]] || return 0
+  # A .claude/rules file loads into context when its paths match (every session if it has none).
+  if [[ "$f" == */.claude/rules/* ]]; then echo "$RULE_BUDGET"; return; fi
   # An @-import: some ancestor CLAUDE.md references this file.
   dir=$(dirname "$f")
   while [ "$dir" != "/" ] && [ "$dir" != "$HOME" ]; do

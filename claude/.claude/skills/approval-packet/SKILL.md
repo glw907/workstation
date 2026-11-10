@@ -135,4 +135,4 @@ when Geoff asks for one, is the separate `approval-queue triage` kind.
 
 ## PR body
 
-A PR body still opens with `## Brief`, the record on GitHub; the packet is the hand-over.
+A PR body opens with `## Brief`, the record on GitHub; the packet is the hand-over.

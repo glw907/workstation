@@ -6,7 +6,7 @@ the suggestion rules) remain in force for Fable use beyond the 50% weekly cap.
 
 There is no cutoff anymore: as of 2026-07-20 Fable 5 is permanently included on the Max plan
 at ~50% of regular usage limits. This doc now governs Fable use BEYOND that allocation, where
-Fable runs on usage credits at API rates (output $50/MTok, 2x Opus 5; cache reads $0.25/MTok on Fable 5.1, half Opus 5's; batch $5/$25). Token efficiency is
+Fable runs on usage credits at API rates (Fable 5.2: input $8, output $40/MTok, 2x Opus 5.5; cache reads $0.20/MTok, equal to Opus 5.5's; batch $4/$20). Token efficiency is
 the design constraint: credit-metered Fable is a scheduled specialist with three access
 modes, batch-first.
 
@@ -95,22 +95,30 @@ probably the wrong invocation.
 
 ## Pricing and allowance
 
-| Measure | Fable 5.1 | Opus 5.5 | Opus 5 | Sonnet 5.5 | Haiku 5.5 |
+| Measure | Fable 5.2 | Opus 5.5 | Opus 5 | Sonnet 5.5 | Haiku 5.5 |
 |---|---|---|---|---|---|
-| Input / output, per MTok | $10 / $50 | $4 / $20 | $5 / $25 | $2 / $10 | $0.10 / $0.50 up to 100k context, $0.50 / $2.50 above |
-| Cache read, per MTok | $0.25 | not recorded here (claude.com/pricing) | $0.50 | $0.10 (halved from $0.20 on 2026-10-07) | $0.01 up to 100k, $0.05 above |
-| Batch | half of base | half of base | half of base | not recorded here | not recorded here |
+| Input / output, per MTok | $8 / $40 | $4 / $20 | $5 / $25 | $2 / $10 | $0.10 / $0.50 up to 100k context, $0.50 / $2.50 above |
+| Cache read, per MTok | $0.20 | $0.20 | $0.50 | $0.10 (halved from $0.20 on 2026-10-07) | $0.01 up to 100k, $0.05 above |
+| Batch, input / output | $4 / $20 | $2 / $10 | half of base | $1 / $5 | $0.05 / $0.25 up to 100k, $0.25 / $1.25 above |
 
-Haiku 5.5 source: https://www.anthropic.com/claude-haiku-5-5.
+Read 2026-11-10 from the pricing page (https://platform.claude.com/docs/en/about-claude/pricing). Opus 5.5 and
+Sonnet 5.5 cache reads are 0.05x base input, and Fable's are 0.025x. Fable 5.1 was $10 / $50 with $0.25 cache read
+and $5 / $25 batch. Opus 5.5's $0.20 and Sonnet 5.5's $0.10 hold the 2:1 ratio of their base prices, so the cache
+read doesn't reopen the seat question, and Fable holds no seat.
 
-- **The Max allowance (verified 2026-08-21, unchanged for 5.1).** Fable draws from the same weekly
+- **The Max and Ultra allowance (verified 2026-11-10, unchanged since 5.1).** Fable draws from the same weekly
   pool as every model and may take up to 50% of it; past that, usage falls to credits at API rates.
   Anthropic publishes no per-model draw rate, and `/usage` shows no per-model share, so the metering
-  cannot be measured here (https://support.claude.com/en/articles/15424964-claude-fable-5-on-your-plan).
+  cannot be measured here (https://support.claude.com/en/articles/15424964-claude-fable-models-on-your-plan).
   The design therefore minimizes Fable's context, never its turns.
 - **Overflow.** Beyond the allocation, Fable runs on credits. This doc is the overflow playbook:
   batch-first, per-dispatch one-shots, and never silently spend or silently absorb Fable-tier work.
   Propose job, mode, and size in one sentence and let Geoff decide.
-- **Fable 5.1's saving is effort-dependent.** Anthropic estimates 25% to 45% below Fable 5.
-  Artificial Analysis measured 5.1 at `max` about 20% more per task, from roughly 1.7 times the
-  output tokens (https://artificialanalysis.ai/articles/claude-fable-5-1).
+- **Fable 5.2's saving is unquantified.** Anthropic says only that on Medium effort Fable 5.2 "can accomplish
+  challenging tasks with fewer tokens than Fable 5.1", with no figure
+  (https://www.anthropic.com/claude-fable-and-mythos-5-2). Fable 5.1's own saving was effort-dependent: Artificial
+  Analysis measured it at `max` about 20% more per task than Fable 5
+  (https://artificialanalysis.ai/articles/claude-fable-5-1).
+- **Launch resets.** A Max, Ultra, or premium Team subscriber billed before 2026-11-09 gets one to three Fable
+  limit resets by subscription length (under six months one, six to twelve two, over twelve three). They expire
+  2027-03-08 at 11:59 pm PT (https://support.claude.com/en/articles/17506494-claude-fable-5-2-launch-offers).

@@ -27,7 +27,8 @@ profile flag on; the profile resolves on its own from the graded repo's opt-in, 
 stays a reviewer's separate, explicit act, not something an agent definition does. Exit 2 is not an
 error: it means a finding carries `"gate": true` (a trailing-hinge run or an appositive stack under the
 docs-register profile), and the report on stdout is complete. Its findings are
-facts; carry them into the report as Blockers without re-litigating them, and note its counts
+facts, so carry them without re-litigating them: a finding with `"gate": true` is a Blocker and any
+other finding is a Warning. Note its counts
 (soft slop, tricolons, cadence CV) as context. Spend your judgment on what the scanner cannot
 see: register fit, invented specifics the source facts do not support, shape and rhythm choices,
 and the tells that need reading rather than matching. Do not spend words re-reporting clean scans.

@@ -111,6 +111,30 @@ relaunches with `resumeFromRunId`, or resumes at the first task whose acceptance
 that fires while the link is still down fails and the next one retries, which is the property the
 notification lacks. Arm it at launch, not when something already looks slow.
 
+## `/goal`: continue a session that stopped early (trial from 2026-11-10)
+
+The `/loop` wake-up answers a session the API link left unwoken. `/goal` answers a different
+failure: a session that ends its turn in text with work still owed, which a `claude -p` run treats
+as the end. The two are complementary, and neither replaces the other. Anthropic's Opus 5.5 guide
+names the failure ("An unattended agent loop that treats such a turn as the end of the task stops
+running there"), and the `/goal` page says "Setting a goal with `-p` runs the loop to completion in
+a single invocation" (<https://code.claude.com/docs/en/goal>).
+
+Facts that shape the launch form:
+
+- `claude -p "/goal <condition>"` is the whole form. The condition is the directive, up to 4,000
+  characters, so any file path or instruction the session needs goes inside it.
+- A goal doesn't change the permission mode. Unattended goal turns need `--permission-mode auto`.
+- A small fast model evaluates the condition at each end of turn. The page documents no exit codes.
+- A condition must allow every legitimate end. A dry run or a quiet month ends early on purpose, so
+  the condition names that end state, or the goal never clears.
+
+`model-review-notify` launches the monthly review this way. Two probes on 2026-11-10 proved the
+form under `-p` with `--permission-mode auto`: a goal needing two steps ran both and cleared, and a
+goal met by stopping at once cleared with no extra work. The December run is the full test. That
+review says whether to extend `/goal` to executors and conductors, which keep the `/loop` wake-up
+for now.
+
 ## Restart recovery re-arms the FULL set (born of a 7% near-miss, 2026-09-03)
 
 A harness process restart orphans every background guard at once. Recovery after ANY

@@ -78,6 +78,7 @@ run "cairn-run-gate vanish handling" bash tests/cairn-run-gate.test.sh
 run "claude-clock-stop hook" bash tests/claude-clock-stop.test.sh
 run "claude-denied-log hook" bash tests/claude-denied-log.test.sh
 run "cairn-docs-cycle argument guard" bash tests/cairn-docs-cycle.test.sh
+run "model-review-notify gates" bash tests/model-review-notify.test.sh
 run "monitor-subscribe service" bash tests/monitor-subscribe.test.sh
 run "phonebook units verify" bash tests/phonebook-units.test.sh
 run "maintain-projects cases" bash tests/maintain-projects.test.sh

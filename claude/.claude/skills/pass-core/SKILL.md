@@ -63,8 +63,7 @@ where the repo's adapter or this skill puts them, the plan is authored per step 
    tells Geoff. Before Geoff leaves the run, the approval batch asks how to answer each stop the
    run can foresee, an estimate overrun up to a named ceiling among them, and the design records
    each answer as a standing approval the planner applies in place of stopping. A stop with no
-   standing answer still stops (Geoff, 2026-10-12: the intake-1 overnight run stopped at 01:17 on
-   a 995-minute plan against a 780-minute line, and nothing ran until morning). Past a count cap
+   standing answer still stops (Geoff, 2026-10-12). Past a count cap
    (`running-passes` "Plan"), the run goes on
    while each retry fixes a cause the session has traced and spend stays inside the ceiling, and
    each fix is a reversible change listed in the PR's `## Decisions`. A cause that returns after
@@ -72,9 +71,7 @@ where the repo's adapter or this skill puts them, the plan is authored per step 
    of patching it again. If the cause returns after that, the session escalates the item in the PR
    and goes on with the rest. The plan names which items it can escalate without breaking its
    outcome. The run stops only on the spend or path ceiling, a cause it cannot trace, or an
-   escalation the plan doesn't allow, which would change the design (2026-10-19: B3c stopped at its
-   read cap, then at its escalation rule, then on a returning cause, each time with an in-budget
-   fix as the recommendation, and Geoff took it).
+   escalation the plan doesn't allow, which would change the design (Geoff, 2026-10-19).
 2. **Spec.** An agent writes the approved design at the length precision needs, only if
    `standards:spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
    probed.
@@ -83,8 +80,7 @@ where the repo's adapter or this skill puts them, the plan is authored per step 
    without him.
 4. **Plan.** The task list is `running-passes` "Plan". A plan whose path minutes exceed twice its
    design's estimate goes back to Geoff with the reason before launch. The sum over every task
-   counts pairs twice and never sets the stop (Geoff, 2026-10-12: intake-1 stopped on a 995-minute
-   task sum whose path was 725, under its 780 line). The design states its estimate in path minutes,
+   counts pairs twice and never sets the stop (Geoff, 2026-10-12). The design states its estimate in path minutes,
    set from the actual-against-planned path in recent passes' scores, never from a share of a spec's
    figure.
 
@@ -98,8 +94,7 @@ where the repo's adapter or this skill puts them, the plan is authored per step 
    answers, a store name present, a rule in `settings.json`). A step that needs the pass's own
    output is moved earlier or given a path without Geoff where it can be. Whatever remains goes
    into one named sitting at a set point in the plan, and the design approval says when. A run
-   that waits on Geoff for a step the list left out is a planning miss (2026-10-19: Pass 1's mail
-   reader waited 40 minutes on a Proton Bridge sign-in that needed nothing the pass built).
+   that waits on Geoff for a step the list left out is a planning miss.
 5. **Execute.** See "Execute".
 6. **Close.** See "Close". Geoff decides the packet in the Approval Queue, except that a pass whose highest
    class is `ordinary` merges its own PR (see "Close").
@@ -133,8 +128,8 @@ is small ... ask Claude to do it directly."
   executor reasoning moves the next pass to `high` (Sonnet 5.5 page: "start at medium for
   well-specified tasks and move to high for harder or longer ones").
 - Reserve `xhigh` and `max` for work where you've measured a quality gain (Opus 5.5 page). An
-  unsettled decision re-runs at `xhigh`, then `max` (one session-only adjudication), then one
-  `fable` dispatch, per dispatch and never a session switch or frontmatter pin. Reviewers take
+  unsettled decision re-runs at `xhigh`, then one
+  `fable` dispatch at `high`, per dispatch and never a session switch or frontmatter pin. Reviewers take
   `claude-opus-5-5` from agent frontmatter. `haiku` reads and copies, never decides, and stays under
   100k context. `low` effort suits mechanical subagents, never Fable.
 
@@ -189,8 +184,7 @@ wake-up (`/loop` with no interval) and, if the lid may close, the lid-switch hol
 
 The calls and the `## Decisions` format are `running-passes` "Execute". Here the session also stops
 for a stop the plan writes once its standing answer runs out (see "Lifecycle" step 1), and for a
-clock stop. In the three days to 2026-10-19, Geoff took the recommended option on 24 of 36 questions, five of
-them mid-run calls inside approved scope. Prompting Claude Opus 5
+clock stop. Prompting Claude Opus 5
 (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
 "Make routine judgment calls yourself, and check in only when different readings of the request
 would lead to materially different work."
@@ -208,7 +202,7 @@ the fix cannot generalize stays in the PR body, marked one-off.
 A stop has one asker. An executor whose pass has a conductor never asks Geoff itself: it writes
 the stop to STATUS and waits, with no `notify-send`. The conductor asks once, commits the ruling
 to the plan branch, then stops and relaunches the executor per "Conductor", which merges the plan
-branch first (2026-10-19: both sessions asked Geoff B3c's read-cap question).
+branch first.
 
 ## Pairs
 
@@ -297,8 +291,8 @@ attaches to it. The conductor never calls `EnterWorktree`, because the
 isolation would apply to its subagents too; it edits a worktree by path instead.
 A watch over `claude agents --json --all` reads each field with `.get`, since a row can lack `id`.
 While a planner is out, the conductor merges no STATUS edit to the default branch, because the
-executor's merge of the plan branch then conflicts in STATUS (twice on 2026-10-11); it batches its
-STATUS changes into the hand-over after that pass lands (conductor `4bea6e68`, 2026-10-11).
+executor's merge of the plan branch then conflicts in STATUS; it batches its STATUS changes into
+the hand-over after that pass lands.
 
 On a hand-off message, the conductor replies with one line naming the pass before anything else.
 It ends when no pass it owns is open (each PR merged or closed, the packet's decision acted on, the checkout
@@ -319,8 +313,7 @@ overrule re-runs the review at `xhigh`. The adapter's close checklist runs (the 
 `## Decisions` and `## Planning misses` sections (see "Judgment calls"), and the score. A "Found,
 not done" item worth doing is filed through `standards:log-issue`, tagged `#initiative:<id>` when
 a record fits. No follow-up is sent to Geoff as its own item, and an initiative-sized one becomes a
-record. A merged PR body is history no session reads (Geoff, 2026-10-11: dubplate PR #2 left 14
-items there).
+record. A merged PR body is history no session reads (Geoff, 2026-10-11).
 
 When the work is ready for Geoff's read, the session that hands it over sends one packet with
 `approval-queue packet <initiative> <file>`, following `approval-packet`, and stays open until the
@@ -328,8 +321,8 @@ command exits with Geoff's decision as JSON. An approve is Geoff's merge authori
 whose verdict is `approve`, the authorization a launch prompt's "never merge" otherwise withholds:
 the session merges as `approval-packet` step 7 sets out, with `--match-head-commit <head>` taken
 from the decision, and pulls the checkout as below. On reject, it fixes forward from the note. A
-pass that merges its own PR sends nothing (Geoff, 2026-10-11). `approval-queue triage` survives
-only for an explicit backlog triage.
+pass that merges its own PR sends nothing (Geoff, 2026-10-11). `approval-queue triage` is only for
+an explicit backlog triage.
 
 A pass whose highest class is `ordinary` merges its own PR with `gh pr merge <n> --merge` after a
 green full-suite home and an accepted whole-branch review. Its follow-ups go to `BACKLOG.md` and the
@@ -350,8 +343,7 @@ Whoever merges a PR then brings that repo's main checkout up to date: `git -C <c
 --ff-only` when the checkout is on its default branch, has no uncommitted change in a file the
 merge touches, and has no live session (`claude agents --json`). Otherwise it reports the checkout
 as stale and never forces it. A stale checkout loads the old CLAUDE.md and skills into the next
-session there: on 2026-10-11 six repos still ran the pre-cutover process a day after their lean
-PRs merged.
+session there.
 
 ## Plan review lens
 
@@ -363,16 +355,13 @@ agent's prompt; each was added from a past pass's planning miss.
 
 - Every stop the plan writes (a cap, a line stop, a ceiling) has a standing answer for its cheap
   case, and each judgment call the run can plausibly meet is named with its answer, so the run
-  asks Geoff only what the plan could not foresee (`pass-core`, "Lifecycle" step 1 and "Judgment
-  calls"). Each item
-  below this one was added from a past pass's planning miss.
+  asks Geoff only what the plan could not foresee ("Lifecycle" step 1 and "Judgment calls").
 
 - No count cap (reads, retries, rounds, reruns) and no list of fixable causes stops the line on
-  its own. Each carries the traced-cause standing answer in `pass-core` "Lifecycle" step 1, so only
+  its own. Each carries the traced-cause standing answer in "Lifecycle" step 1, so only
   a ceiling, an untraced cause, or an escalation the plan doesn't allow stops it. The plan names
   which items the run may escalate without breaking its outcome, for a cause that returns after
-  its structural fix (B3c, 2026-10-19: a five-read cap, an escalation traced to a blueprint, then
-  a rollback handler that kept looping after its patch).
+  its structural fix.
 
 ## Pre-flight and owner-only steps
 
@@ -386,16 +375,15 @@ agent's prompt; each was added from a past pass's planning miss.
   (Pass 5, 2026-10-31: the armed timer fired with `tmp-account-tokens` never made).
 
 - Every value the run needs from Geoff is looked up in the stores and records first, and only a
-  value no file holds is asked at design time (Pass 1, 2026-10-19: the recovery address was
-  already on file).
+  value no file holds is asked at design time.
 - The `## Pre-flight` list names every step only Geoff can do (sign-ins, `secret-receive` values,
   dialogs, permission rules, app or physical actions), each with the check that shows it done.
   Read every task for a hidden one, and move a step that waits on the pass's output earlier where
   it can go, and flag any item the design did not foresee, since it holds the launch for a
-  pre-launch packet (Pass 1, 2026-10-19: a Proton Bridge sign-in surfaced mid-run).
-  Read every task's writes against auto mode too: a write to Claude's settings, a credential file, or new public surface can be refused however the allow rules read, so each gets a `[you]` item or a path a probe proved in a `claude --bg` session, since an interactive session's auto mode can pass an edit a background executor's refuses (agent-first pass 1, 2026-10-31: `.claude/settings.json` and a container's `oauth.env`; credential-hygiene pass A, 2026-11-04: `claude/.claude/settings.json`).
-- A task that creates or uses a credential with Geoff's own login is a `[you]` item with a tested script, because the classifier refuses it however the plan reads (sportsyou-notify pass 1, 2026-11-01: an app password stopped the run, and the first script failed silently after ward had made the password).
-- A standing answer that sends a sourced-secret command to Geoff, or to the conductor to run, is a pre-flight `[you]` item with the exact command, or the plan proves a path inside a harness that sources its own secrets. Auto mode refuses the session's sourced-secret read, and a peer cannot run a refused command for it (cairn release gate pass A, 2026-11-07: S7's mailbox query reached Geoff mid-run, and the harness's own diagnostic then answered it).
+  pre-launch packet.
+  Read every task's writes against auto mode too: a write to Claude's settings, a credential file, or new public surface can be refused however the allow rules read, so each gets a `[you]` item or a path a probe proved in a `claude --bg` session, since an interactive session's auto mode can pass an edit a background executor's refuses.
+- A task that creates or uses a credential with Geoff's own login is a `[you]` item with a tested script, because the classifier refuses it however the plan reads.
+- A standing answer that sends a sourced-secret command to Geoff, or to the conductor to run, is a pre-flight `[you]` item with the exact command, or the plan proves a path inside a harness that sources its own secrets. Auto mode refuses the session's sourced-secret read, and a peer cannot run a refused command for it.
 - A step a run or its merges will need refused by auto mode is settled before launch: Geoff grants
   the narrow permission in the design's sitting, or runs what can already run. A `[you]` item never
   sits between a pass's merges when a permission asked up front would let the session run it. Only
@@ -403,18 +391,19 @@ agent's prompt; each was added from a past pass's planning miss.
   set point. A conductor reads each pass for these before launching it and brings them as one list
   (Geoff, 2026-10-31: agent-first pass 1's plugin install held five merges for over an hour:
   "You should have asked for the necessary permission up front.").
-- A pass that launches `claude --bg` in a directory no session has opened (a new repo or
-  checkout) lists the workspace trust prompt as a pre-flight item: Geoff runs `claude` there once
-  and accepts it, checked by a launch that no longer prints "Workspace not trusted" (Survey Pass
-  1, 2026-10-22: the launch refused until Geoff accepted it).
+- A pass that launches `claude --bg` in a directory no session has opened (a new repo,
+  checkout, or worktree the conductor cuts) lists the workspace trust prompt as a pre-flight item:
+  Geoff runs `claude` there once and accepts it, checked by a launch that doesn't print "Workspace
+  not trusted". A trusted parent directory doesn't cover the new path (November model review,
+  2026-11-10: `~/Projects` was trusted, and the pass P worktree still refused the launch).
 
 ## Hosts and workstation config
 
 - A pass that changes workstation config states what each host (`pavilion`, `thinkpad-x1`)
-  gets, including a host that lacks a prerequisite (Pass W, 2026-10-19: the thinkpad question).
+  gets, including a host that lacks a prerequisite.
 
 - A pass that ends in a reboot or a `check-drift` run has a standing answer for reversible drift
-  cleanup (2026-10-19: the 1Password cache and the dock pin).
+  cleanup.
 
 ## Score
 
@@ -442,7 +431,7 @@ the step that should have caught the escape, and only that changes.
 `docs/STATUS.md` is present tense and 60 lines or fewer: current state, next action, open
 decisions. Initiatives are records in the initiatives repo, managed by `/log-project`; a repo's own backlog is `BACKLOG.md`. A commit id cited in a ledger is one that survives a merge: a merge commit, or an
 id on the default branch, since a squash or rebase rewrites ids. Git and PR bodies are the history;
-A repo's history file and post-mortems stop growing (ruling 8). A lesson lands where it executes: a skill, agent, tool, or repo doc. Memory holds only a
+nothing is appended to a repo's history file or to a post-mortem. A lesson lands where it executes: a skill, agent, tool, or repo doc. Memory holds only a
 preference or a ruling's why that no file can.
 
 A hand-over (the STATUS update, the next session's launch prompt, and the research records it
