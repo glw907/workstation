@@ -26,8 +26,8 @@ Error-tier findings are defects; fix or flag them before spending agent tokens. 
 suggestions ride along as advisory context only. Also run `tellgrader --register docs <file>`
 (the workstation tell scanner) for the classes Vale does not carry: connector openers, the
 evidence-tiered slop lexicon, scaffold headers, bold-lead bullets, flat cadence. Its docs
-register only approximates cairn's own voice, so treat its findings as advisory candidates for
-Gate 2, not automatic defects.
+register resolves from the graded repo's opt-in. Its findings are facts that Gate 2 carries
+without re-litigating. Gate 2 spends its judgment on what the scanner cannot see.
 
 ## Gate 2: register (the editor's ear)
 
