@@ -231,8 +231,12 @@ def bus_config(home: Path) -> str:
     """Return the stock session bus config with its listen address moved into the home."""
     stock = Path("/usr/share/dbus-1/session.conf").read_text()
     listen = "<listen>unix:tmpdir=/tmp</listen>"
-    if stock.count(listen) != 1:
-        raise Refusal("the stock session bus config has no single <listen> line to replace")
+    services = "<standard_session_servicedirs />"
+    if stock.count(listen) != 1 or stock.count(services) != 1:
+        raise Refusal("the stock session bus config lacks a single <listen> and servicedirs line")
+    # No activatable services: Chromium's portal calls would otherwise start desktop services
+    # on the private bus whose stderr lands in the session's terminal.
+    stock = stock.replace(services, "<!-- no service activation in a clean room -->")
     return stock.replace(listen, f"<listen>unix:dir={home}/.cache/dbus</listen>")
 
 

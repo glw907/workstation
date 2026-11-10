@@ -103,6 +103,7 @@ def test_bus_config_listens_in_the_home(room):
     conf = (room.root / "a1/home/.config/cleanroom/bus.conf").read_text()
     assert f"<listen>unix:dir={room.root}/a1/home/.cache/dbus</listen>" in conf
     assert "/tmp</listen>" not in conf
+    assert "<standard_session_servicedirs" not in conf
 
 
 def test_browser_relay_appends_and_prints_nothing(room):

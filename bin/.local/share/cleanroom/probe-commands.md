@@ -49,7 +49,7 @@ Every command in the call has to match for it to leave the sandbox, so each of t
 - fails: `sudo -n true`
 - prints [@USER@]: `id -un`
 - omits [CLOUDFLARE_API_TOKEN ANTHROPIC_API_KEY CLAUDE_CODE_OAUTH_TOKEN CAIRN_CF_SETUP_TOKEN SSH_AUTH_SOCK GITHUB_TOKEN]: `env | cut -d= -f1`
-- prints [0]: `python3 -c "import glob,os;print(sum(1 for f in glob.glob('/proc/[0-9]*/environ') if os.access(f,4) and any(n in open(f,'rb').read() for n in (b'ANTHROPIC_API_KEY',b'CLAUDE_CODE_OAUTH_TOKEN',b'CAIRN_CF_SETUP_TOKEN'))))"`
+- prints [ok]: `python3 -c "import os;n=[p for p in os.listdir('/proc') if p.isdigit()];print('ok' if len(n)<8 else 'visible:'+str(len(n)))"`
 
 ## What the session needs to work
 
