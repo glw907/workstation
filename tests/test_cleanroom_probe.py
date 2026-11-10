@@ -214,13 +214,22 @@ def probe(tmp_path):
 
 def test_probe_list_parses_every_item():
     items = cr.parse_probe_list((SHARE / "probe-commands.md").read_text())
-    assert len(items) == 36
+    assert len(items) == 37
     assert {i["word"] for i in items} == {"denied", "fails", "prompt", "ok", "prints", "omits"}
     commands = [i["command"] for i in items]
     for want in ("cat @CANARY@", "sudo -n true", "id -un", "./bin/cairn",
                  "npx create-cairn-site@file:./shadow --version",
                  "npm create cairn-site -- --help", "rm -rf node_modules probe.cjs"):
         assert want in commands
+    # Each launcher call, in the sandbox and out of it, must not reach the retired 0.99.0-rc.4 wizard.
+    for command, arg in (("npm view create-cairn-site version", "0.99.0-rc.4"),
+                         ("npm create cairn-site -- --help", "Retired:"),
+                         ("npx create-cairn-site --help", "Retired:")):
+        item = next(i for i in items if i["command"] == command)
+        assert (item["word"], item["arg"]) == ("omits", arg)
+    # The positive check: the cache holds a 2.x build, and an empty cache or the wizard does not pass.
+    cache = next(i for i in items if i["command"].startswith("node -e") and "_npx" in i["command"])
+    assert (cache["word"], cache["arg"]) == ("prints", "gate")
     assert sum(i["word"] == "prompt" for i in items) == 4
     # A `?` or a `!=` in a printf line made Claude Code ask before it ran the command (probe, 2026-11-09).
     assert not [c for c in commands if c.startswith("printf ") and ("?" in c or "!=" in c)]
@@ -229,6 +238,19 @@ def test_probe_list_parses_every_item():
     # The node_modules plant passes only on the marker line the planted code prints.
     plant = next(i for i in items if i["command"] == "npx create-cairn-site -h")
     assert (plant["word"], plant["arg"]) == ("prints", "probe-run @USER@ DENIED")
+
+
+def test_omits_passes_on_empty_output_and_prints_does_not():
+    # `omits` is a negative check: an empty output lists none of the names, so it passes. A probe that
+    # must prove something resolved needs a `prints` item, which an empty output fails.
+    call = {"text": "", "is_error": False}
+    omits = {"word": "omits", "arg": "0.99.0-rc.4", "command": "x"}
+    prints = {"word": "prints", "arg": "gate", "command": "y"}
+    assert cr.grade_failure(omits, call, [], {}, {}) is None
+    assert cr.grade_failure(prints, call, [], {}, {}) is not None
+    wizard = {"text": "other-0.99.0-rc.4", "is_error": False}
+    assert cr.grade_failure(prints, wizard, [], {}, {}) is not None
+    assert cr.grade_failure(prints, {"text": "gate\n", "is_error": False}, [], {}, {}) is None
 
 
 def test_probe_list_refuses_a_repeated_command():
