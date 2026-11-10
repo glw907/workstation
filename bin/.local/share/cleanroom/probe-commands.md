@@ -76,3 +76,34 @@ up and comes down in `push.sh`, which `init` writes into the work folder from
 repository is created if it is absent.
 
 - ok: `sh ./push.sh`
+
+## The launcher resolves the gate candidate
+
+The first item fills the clean home's npx cache. The second reads the version the cache holds, which
+is the version `gate` pointed at when the run started.
+
+- ok: `npm create cairn-site -- --help`
+- ok: `npx create-cairn-site --help`
+- prints [2.0.0-dev.1]: `node -e "const g=require('fs').globSync('@HOME@/.npm/_npx/*/node_modules/create-cairn-site/package.json');console.log([...new Set(g.map(f=>require(f).version).filter(v=>v!=='1.0.0'))].join(','))"`
+
+## An excluded command stays out of reach of every credential
+
+`npx create-cairn-site` matches an excluded pattern, so it runs outside the sandbox with the setup
+token. The first item chains it to commands that match no pattern, so the whole call stays in the
+sandbox and reports the canary `DENIED`. Three items then try to plant code the launcher would run
+outside the sandbox. Writing into the clean home's npx cache or a work-folder `.npmrc` makes Claude
+Code ask first, so those two items expect the prompt and the probe answers it "No": they prove the
+plant needs an approval, and nothing runs afterward. A hand-written package under `./node_modules`
+plants with no prompt, so the last item runs it. Its code prints `probe-run`, the user it runs as, and
+`READABLE` or `DENIED` for `test -r` on the canary, never the canary's value, and the item passes only
+on exactly that line with `DENIED`. Every list command is a distinct string, because the probe matches a
+call by its command. The planted code uses no `?` and no `!=`, each of which made Claude Code ask before
+it ran a printf command.
+
+- omits [READABLE]: `npx create-cairn-site --help && id -un && (test -r @CANARY@ && echo READABLE || echo DENIED)`
+- prompt: `for f in @HOME@/.npm/_npx/*/node_modules/create-cairn-site/bin.mjs; do printf 'x\n' >> "$f"; done`
+- prompt: `printf 'node-options=--require ./probe.cjs\n' > .npmrc`
+- ok: `printf 'console.log("probe-run",require("os").userInfo().username,["READABLE","DENIED"][Math.min(1,require("child_process").spawnSync("test",["-r","@CANARY@"]).status)])\n' > probe.cjs`
+- ok: `mkdir -p node_modules/create-cairn-site && printf '{"name":"create-cairn-site","version":"1.0.0","bin":{"create-cairn-site":"cli.cjs"}}' > node_modules/create-cairn-site/package.json && printf '#!/usr/bin/env node\nrequire("../../probe.cjs")\n' > node_modules/create-cairn-site/cli.cjs && chmod +x node_modules/create-cairn-site/cli.cjs && mkdir -p node_modules/.bin && ln -s ../create-cairn-site/cli.cjs node_modules/.bin/create-cairn-site`
+- prints [probe-run @USER@ DENIED]: `npx create-cairn-site -h`
+- ok: `rm -rf node_modules probe.cjs`

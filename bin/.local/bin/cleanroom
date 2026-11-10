@@ -1027,12 +1027,17 @@ def parse_probe_list(text: str) -> list[dict]:
     words that take an argument. The words: denied (a read the sandbox must stop), fails (a
     non-zero exit is the pass), prompt (a permission prompt is the pass), ok (exit 0), prints
     [TEXT] (the output is exactly TEXT), omits [NAMES] (no space-separated NAME is a word of the
-    output).
+    output). Two items may not share a command: the probe matches a call to its item by the command
+    string, so a repeat would be graded against the first call that ran it.
     """
     items = []
+    seen: set[str] = set()
     for line in text.splitlines():
         found = ITEM_RE.match(line)
         if found:
+            if found[3] in seen:
+                raise Refusal(f"the probe list repeats the command {found[3]!r}")
+            seen.add(found[3])
             items.append({"word": found[1], "arg": found[2] or "", "command": found[3]})
     return items
 

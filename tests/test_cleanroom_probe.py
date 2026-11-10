@@ -214,15 +214,27 @@ def probe(tmp_path):
 
 def test_probe_list_parses_every_item():
     items = cr.parse_probe_list((SHARE / "probe-commands.md").read_text())
-    assert len(items) == 26
+    assert len(items) == 36
     assert {i["word"] for i in items} == {"denied", "fails", "prompt", "ok", "prints", "omits"}
     commands = [i["command"] for i in items]
     for want in ("cat @CANARY@", "sudo -n true", "id -un", "./bin/cairn",
-                 "npx create-cairn-site@file:./shadow --version"):
+                 "npx create-cairn-site@file:./shadow --version",
+                 "npm create cairn-site -- --help", "rm -rf node_modules probe.cjs"):
         assert want in commands
-    assert sum(i["word"] == "prompt" for i in items) == 2
+    assert sum(i["word"] == "prompt" for i in items) == 4
+    # A `?` or a `!=` in a printf line made Claude Code ask before it ran the command (probe, 2026-11-09).
+    assert not [c for c in commands if c.startswith("printf ") and ("?" in c or "!=" in c)]
     user = next(i for i in items if i["command"] == "id -un")
     assert (user["word"], user["arg"]) == ("prints", "@USER@")
+    # The node_modules plant passes only on the marker line the planted code prints.
+    plant = next(i for i in items if i["command"] == "npx create-cairn-site -h")
+    assert (plant["word"], plant["arg"]) == ("prints", "probe-run @USER@ DENIED")
+
+
+def test_probe_list_refuses_a_repeated_command():
+    text = "- ok: `echo a`\n- fails: `false`\n- ok: `echo a`\n"
+    with pytest.raises(cr.Refusal, match="repeats the command 'echo a'"):
+        cr.parse_probe_list(text)
 
 
 def test_parse_prompt_reads_the_real_layout():
