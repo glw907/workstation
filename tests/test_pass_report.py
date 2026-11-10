@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -72,6 +73,23 @@ def test_ci_wait_is_the_union_of_overlapping_runs(tmp_path):
     # 10:05 to 10:50 is 45 minutes; summing the four runs would give 70.
     assert "| CI wait on the PR | 1 | 45.0 | 45.0 | 45.0 |" in out
     assert "dynamic" not in out
+
+
+def test_run_list_is_cached_across_runs(tmp_path):
+    first = report(tmp_path, fixture("union.json"))
+    env = {
+        **os.environ,
+        "PASS_REPORT_GH": str(FIXTURES / "fake-gh"),
+        "PASS_REPORT_HOME": str(first.home),
+        "XDG_CACHE_HOME": str(tmp_path / "cache"),
+        "FAKE_GH_DATA": str(tmp_path / "gh.json"),
+        "FAKE_GH_LOG": str(tmp_path / "gh.log"),
+    }
+    # Sleep past a second boundary so a window keyed to the current second would differ.
+    time.sleep(1.1)
+    subprocess.run([sys.executable, "-I", str(SCRIPT), "--since", "2026-10-01"], env=env, capture_output=True, check=True)
+    calls = (tmp_path / "gh.log").read_text().splitlines()
+    assert sum(c.startswith("run list") for c in calls) == 1
 
 
 def test_full_run_range_is_split_and_both_halves_counted(tmp_path):

@@ -447,7 +447,9 @@ def main(argv):
         runs_by_repo = {}
         for repo in repos:
             lo = min([since] + [p["created"] for p in prs_by_repo[repo]])
-            fetched = fetch_runs(gh, repo, int(lo.timestamp()), int(now.timestamp()))
+            # End at the next hour boundary so the window, and the cache key built from it, hold for the TTL.
+            end = (int(now.timestamp()) // HOUR + 1) * HOUR
+            fetched = fetch_runs(gh, repo, int(lo.timestamp()), end)
             runs_by_repo[repo] = [r for r in fetched if r["status"] == "completed" and r["event"] != "dynamic"]
     except GhError as err:
         print(f"pass-report: gh failed: {err}", file=sys.stderr)
@@ -503,11 +505,15 @@ def main(argv):
             unscored += 1
 
     out = ["# Pass score report", "", f"Window: {since_day} to {now.strftime('%Y-%m-%d')}", ""]
-    for repo in repos:
-        section, _ = repo_section(
-            repo, prs_by_repo[repo], runs_by_repo[repo], joined, waits.get(repo, []), scores.get(repo, []), gh,
-        )
-        out.append(section)
+    try:
+        for repo in repos:
+            section, _ = repo_section(
+                repo, prs_by_repo[repo], runs_by_repo[repo], joined, waits.get(repo, []), scores.get(repo, []), gh,
+            )
+            out.append(section)
+    except GhError as err:
+        print(f"pass-report: gh failed: {err}", file=sys.stderr)
+        return 1
     out += ["## Notes", ""]
     out.append("- Gate records read: " + ", ".join(str(p) for p in record_files))
     out += [f"- Not found: {m}" for m in missing]
