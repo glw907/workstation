@@ -1,0 +1,309 @@
+--- a/.claude/skills/dotfiles-pass/SKILL.md
++++ b/.claude/skills/dotfiles-pass/SKILL.md
+@@ -47,6 +47,6 @@
+ manifest (`~/.claude/docs/bluefin-admin.md`), and `claude-tooling-sync verify` passes. The gate's gitleaks step scans the working tree, so run
+ one `gitleaks git` branch-history scan at close. A merge to
+ `main` is followed by `stow -R bin` when a script was added, and by `claude-tooling-sync apply` when it
+-touched `claude/.claude/settings.json`, since the live file no longer follows a pull. Prose follows the workstation writing
++touched `claude/.claude/settings.json`, since the live file doesn't follow a pull. Prose follows the workstation writing
+ voice. The Vale and tellgrader nets run as `PostToolUse` hooks on each edit; `scripts/check.sh`
+ runs only their test suites.
+--- a/claude/.claude/agents/site-implementer.md
++++ b/claude/.claude/agents/site-implementer.md
+@@ -27,7 +27,7 @@
+ 
+ ## Workflow
+ 
+-1. Ask any clarifying question before you start if the task or its boundaries are unclear.
++1. If the task or its boundaries are unclear, report NEEDS_CONTEXT before you change anything.
+ 2. Where the task has a testable contract, write the failing test first on an `auth-data` task and
+    confirm it fails for the right reason. Other tasks take a test at the lowest layer that can see
+    the behavior; a docs-only task needs none.
+@@ -41,8 +41,8 @@
+ - **Svelte 5 runes** throughout (`$props`, `$state`, `$derived`, `$effect`, `$bindable`); never the
+   Svelte 4 store, `$:`, or `on:` idiom.
+ - **DaisyUI v5 on Tailwind v4.** Color through theme tokens, never hardcoded oklch or arbitrary
+-  Tailwind values. Before writing admin or DaisyUI markup, read the official skill at
+-  the `standards:daisyui` skill and prefer the stock component. The engine's admin design
++  Tailwind values. Before writing admin or DaisyUI markup, read the `standards:daisyui`
++  skill and prefer the stock component. The engine's admin design
+   system (`cairn-cms/.claude/skills/cairn-following-admin-design/references/admin-design-system.md`) and rulings ledger
+   (`cairn-cms/docs/internal/engine-rulings.md`) win over the skill on a conflict, and a home-grown
+   component no ruling explains is a finding to report.
+--- a/claude/.claude/skills/approval-packet/SKILL.md
++++ b/claude/.claude/skills/approval-packet/SKILL.md
+@@ -129,4 +129,4 @@
+ 
+ ## PR body
+ 
+-A PR body still opens with `## Brief`, the record on GitHub; the packet is the hand-over.
++A PR body opens with `## Brief`, the record on GitHub; the packet is the hand-over.
+--- a/claude/.claude/skills/claude-infra/SKILL.md
++++ b/claude/.claude/skills/claude-infra/SKILL.md
+@@ -45,7 +45,8 @@
+    task as asked rather than quietly narrowing, widening, or transforming it. Finish the whole
+    task, and stop short of actions that are clearly beyond what was asked." Anything beyond the
+    request goes in "Later", never into a task.
+-5. **Land the change through a PR** whose commit messages and body cite the guidance URL.
++5. **Land the change through a PR** whose commit messages and body cite the guidance URL, unless
++   it meets `pass-core` "Direct changes".
+ 6. **Audit** with `/doctor prompt-audit`, `/skill-doctor`, and Anthropic's `skill-creator`. Run
+    them; their output is the audit, not a restatement here.
+ 
+--- a/claude/.claude/skills/engine-consult/SKILL.md
++++ b/claude/.claude/skills/engine-consult/SKILL.md
+@@ -120,7 +120,7 @@
+    disjoint, the fast lane per task, and the whole-branch close review.
+ 5. **Run the full gate list by name**: cairn-cms's `npm run check:close` runs it, including
+    `check:comments`, `check:reference:signatures`, `check:surface`, `check:snippets`,
+-   `check:transcripts`, and `check:symbols`, which the local ritual once skipped.
++   `check:transcripts`, and `check:symbols`.
+ 6. **The ordered close:** engine merge to `main`, then read and follow
+    `~/Projects/cairn-cms/.claude/skills/cairn-releasing/SKILL.md` (the change must be on the registry; a site branch cannot merge on a `file:`
+    pin), then `npm run link:consumer -- <site-dir> --restore` from the cairn checkout,
+@@ -129,10 +129,9 @@
+ 
+ ## The reactive-harvest fallback
+ 
+-Consultation cannot foresee what a pass discovers while building. Mid-pass discoveries
+-still file, using the same four-field item schema, and their later triage runs through
+-the same `engine-triage` agent against the same ledger. The paste-then-delete staging
+-mechanics stay as they are.
++Consultation cannot foresee what a pass discovers while building. File each mid-pass
++discovery with the same four-field item schema. Its later triage runs through the same
++`engine-triage` agent against the same ledger.
+ 
+ ## First run
+ 
+--- a/claude/.claude/skills/log-project/SKILL.md
++++ b/claude/.claude/skills/log-project/SKILL.md
+@@ -1,12 +1,9 @@
+ ---
+ name: log-project
+ description: >
+-  Create or update an initiative record in `~/Projects/initiatives`. Use when
+-  the user wants to track a multi-issue effort or initiative, bigger than a
+-  single backlog item. Trigger on: "log project", "new project", "start an initiative", "add
+-  to roadmap", "track this effort", "we need a project for", or when the user
+-  describes a multi-step effort that spans several backlog items. Also trigger
+-  on "close project", "finish project", "project status", or "update roadmap".
++  Create, update, close, or report on an initiative record in
++  `~/Projects/initiatives`. Use when the user wants to track a multi-step effort
++  bigger than a single backlog item, or asks about a project's or roadmap's status.
+ ---
+ 
+ # Log Project
+@@ -15,8 +12,7 @@
+ (`~/Projects/initiatives`, GitHub `glw907/initiatives`). An initiative groups
+ related work across one or more repos under a shared goal. The record tells the
+ story of where the work is going; each repo's `BACKLOG.md` tracks the individual
+-pieces. Never create a `ROADMAP.md`: cairn-cms keeps its own until its own pass,
+-and every other repo has retired the file.
++pieces. Never create a `ROADMAP.md`; only cairn-cms keeps one.
+ 
+ ## Step 1: Place the work
+ 
+--- a/claude/.claude/skills/pass-core/SKILL.md
++++ b/claude/.claude/skills/pass-core/SKILL.md
+@@ -63,8 +63,7 @@
+    tells Geoff. Before Geoff leaves the run, the approval batch asks how to answer each stop the
+    run can foresee, an estimate overrun up to a named ceiling among them, and the design records
+    each answer as a standing approval the planner applies in place of stopping. A stop with no
+-   standing answer still stops (Geoff, 2026-10-12: the intake-1 overnight run stopped at 01:17 on
+-   a 995-minute plan against a 780-minute line, and nothing ran until morning). Past a count cap
++   standing answer still stops (Geoff, 2026-10-12). Past a count cap
+    (`running-passes` "Plan"), the run goes on
+    while each retry fixes a cause the session has traced and spend stays inside the ceiling, and
+    each fix is a reversible change listed in the PR's `## Decisions`. A cause that returns after
+@@ -72,9 +71,7 @@
+    of patching it again. If the cause returns after that, the session escalates the item in the PR
+    and goes on with the rest. The plan names which items it can escalate without breaking its
+    outcome. The run stops only on the spend or path ceiling, a cause it cannot trace, or an
+-   escalation the plan doesn't allow, which would change the design (2026-10-19: B3c stopped at its
+-   read cap, then at its escalation rule, then on a returning cause, each time with an in-budget
+-   fix as the recommendation, and Geoff took it).
++   escalation the plan doesn't allow, which would change the design (Geoff, 2026-10-19).
+ 2. **Spec.** An agent writes the approved design at the length precision needs, only if
+    `standards:spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
+    probed.
+@@ -83,8 +80,7 @@
+    without him.
+ 4. **Plan.** The task list is `running-passes` "Plan". A plan whose path minutes exceed twice its
+    design's estimate goes back to Geoff with the reason before launch. The sum over every task
+-   counts pairs twice and never sets the stop (Geoff, 2026-10-12: intake-1 stopped on a 995-minute
+-   task sum whose path was 725, under its 780 line). The design states its estimate in path minutes,
++   counts pairs twice and never sets the stop (Geoff, 2026-10-12). The design states its estimate in path minutes,
+    set from the actual-against-planned path in recent passes' scores, never from a share of a spec's
+    figure.
+ 
+@@ -98,8 +94,7 @@
+    answers, a store name present, a rule in `settings.json`). A step that needs the pass's own
+    output is moved earlier or given a path without Geoff where it can be. Whatever remains goes
+    into one named sitting at a set point in the plan, and the design approval says when. A run
+-   that waits on Geoff for a step the list left out is a planning miss (2026-10-19: Pass 1's mail
+-   reader waited 40 minutes on a Proton Bridge sign-in that needed nothing the pass built).
++   that waits on Geoff for a step the list left out is a planning miss.
+ 5. **Execute.** See "Execute".
+ 6. **Close.** See "Close". Geoff decides the packet in the Approval Queue, except that a pass whose highest
+    class is `ordinary` merges its own PR (see "Close").
+@@ -189,8 +184,7 @@
+ 
+ The calls and the `## Decisions` format are `running-passes` "Execute". Here the session also stops
+ for a stop the plan writes once its standing answer runs out (see "Lifecycle" step 1), and for a
+-clock stop. In the three days to 2026-10-19, Geoff took the recommended option on 24 of 36 questions, five of
+-them mid-run calls inside approved scope. Prompting Claude Opus 5
++clock stop. Prompting Claude Opus 5
+ (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
+ "Make routine judgment calls yourself, and check in only when different readings of the request
+ would lead to materially different work."
+@@ -208,7 +202,7 @@
+ A stop has one asker. An executor whose pass has a conductor never asks Geoff itself: it writes
+ the stop to STATUS and waits, with no `notify-send`. The conductor asks once, commits the ruling
+ to the plan branch, then stops and relaunches the executor per "Conductor", which merges the plan
+-branch first (2026-10-19: both sessions asked Geoff B3c's read-cap question).
++branch first.
+ 
+ ## Pairs
+ 
+@@ -275,8 +269,8 @@
+ isolation would apply to its subagents too; it edits a worktree by path instead.
+ A watch over `claude agents --json --all` reads each field with `.get`, since a row can lack `id`.
+ While a planner is out, the conductor merges no STATUS edit to the default branch, because the
+-executor's merge of the plan branch then conflicts in STATUS (twice on 2026-10-11); it batches its
+-STATUS changes into the hand-over after that pass lands (conductor `4bea6e68`, 2026-10-11).
++executor's merge of the plan branch then conflicts in STATUS; it batches its STATUS changes into
++the hand-over after that pass lands.
+ 
+ On a hand-off message, the conductor replies with one line naming the pass before anything else.
+ It ends when no pass it owns is open (each PR merged or closed, the packet's decision acted on, the checkout
+@@ -297,8 +291,7 @@
+ `## Decisions` and `## Planning misses` sections (see "Judgment calls"), and the score. A "Found,
+ not done" item worth doing is filed through `standards:log-issue`, tagged `#initiative:<id>` when
+ a record fits. No follow-up is sent to Geoff as its own item, and an initiative-sized one becomes a
+-record. A merged PR body is history no session reads (Geoff, 2026-10-11: dubplate PR #2 left 14
+-items there).
++record. A merged PR body is history no session reads (Geoff, 2026-10-11).
+ 
+ When the work is ready for Geoff's read, the session that hands it over sends one packet with
+ `approval-queue packet <initiative> <file>`, following `approval-packet`, and stays open until the
+@@ -306,8 +299,8 @@
+ whose verdict is `approve`, the authorization a launch prompt's "never merge" otherwise withholds:
+ the session merges as `approval-packet` step 7 sets out, with `--match-head-commit <head>` taken
+ from the decision, and pulls the checkout as below. On reject, it fixes forward from the note. A
+-pass that merges its own PR sends nothing (Geoff, 2026-10-11). `approval-queue triage` survives
+-only for an explicit backlog triage.
++pass that merges its own PR sends nothing (Geoff, 2026-10-11). `approval-queue triage` is only for
++an explicit backlog triage.
+ 
+ A pass whose highest class is `ordinary` merges its own PR with `gh pr merge <n> --merge` after a
+ green full-suite home and an accepted whole-branch review. Its follow-ups go to `BACKLOG.md` and the
+@@ -328,8 +321,7 @@
+ --ff-only` when the checkout is on its default branch, has no uncommitted change in a file the
+ merge touches, and has no live session (`claude agents --json`). Otherwise it reports the checkout
+ as stale and never forces it. A stale checkout loads the old CLAUDE.md and skills into the next
+-session there: on 2026-10-11 six repos still ran the pre-cutover process a day after their lean
+-PRs merged.
++session there.
+ 
+ ## Plan review lens
+ 
+@@ -341,16 +333,13 @@
+ 
+ - Every stop the plan writes (a cap, a line stop, a ceiling) has a standing answer for its cheap
+   case, and each judgment call the run can plausibly meet is named with its answer, so the run
+-  asks Geoff only what the plan could not foresee (`pass-core`, "Lifecycle" step 1 and "Judgment
+-  calls"). Each item
+-  below this one was added from a past pass's planning miss.
++  asks Geoff only what the plan could not foresee ("Lifecycle" step 1 and "Judgment calls").
+ 
+ - No count cap (reads, retries, rounds, reruns) and no list of fixable causes stops the line on
+-  its own. Each carries the traced-cause standing answer in `pass-core` "Lifecycle" step 1, so only
++  its own. Each carries the traced-cause standing answer in "Lifecycle" step 1, so only
+   a ceiling, an untraced cause, or an escalation the plan doesn't allow stops it. The plan names
+   which items the run may escalate without breaking its outcome, for a cause that returns after
+-  its structural fix (B3c, 2026-10-19: a five-read cap, an escalation traced to a blueprint, then
+-  a rollback handler that kept looping after its patch).
++  its structural fix.
+ 
+ ## Pre-flight and owner-only steps
+ 
+@@ -360,14 +349,13 @@
+   (Pass 5, 2026-10-31: the armed timer fired with `tmp-account-tokens` never made).
+ 
+ - Every value the run needs from Geoff is looked up in the stores and records first, and only a
+-  value no file holds is asked at design time (Pass 1, 2026-10-19: the recovery address was
+-  already on file).
++  value no file holds is asked at design time.
+ - The `## Pre-flight` list names every step only Geoff can do (sign-ins, `secret-receive` values,
+   dialogs, permission rules, app or physical actions), each with the check that shows it done.
+   Read every task for a hidden one, and move a step that waits on the pass's output earlier where
+   it can go, and flag any item the design did not foresee, since it holds the launch for a
+-  pre-launch packet (Pass 1, 2026-10-19: a Proton Bridge sign-in surfaced mid-run).
+-  Read every task's writes against auto mode too: a write to Claude's settings, a credential file, or new public surface can be refused however the allow rules read, so each gets a `[you]` item or a path a probe proved (agent-first pass 1, 2026-10-31: `.claude/settings.json` and a container's `oauth.env`).
++  pre-launch packet.
++  Read every task's writes against auto mode too: a write to Claude's settings, a credential file, or new public surface can be refused however the allow rules read, so each gets a `[you]` item or a path a probe proved.
+ - A step a run or its merges will need refused by auto mode is settled before launch: Geoff grants
+   the narrow permission in the design's sitting, or runs what can already run. A `[you]` item never
+   sits between a pass's merges when a permission asked up front would let the session run it. Only
+@@ -377,16 +365,15 @@
+   "You should have asked for the necessary permission up front.").
+ - A pass that launches `claude --bg` in a directory no session has opened (a new repo or
+   checkout) lists the workspace trust prompt as a pre-flight item: Geoff runs `claude` there once
+-  and accepts it, checked by a launch that no longer prints "Workspace not trusted" (Survey Pass
+-  1, 2026-10-22: the launch refused until Geoff accepted it).
++  and accepts it, checked by a launch that doesn't print "Workspace not trusted".
+ 
+ ## Hosts and workstation config
+ 
+ - A pass that changes workstation config states what each host (`pavilion`, `thinkpad-x1`)
+-  gets, including a host that lacks a prerequisite (Pass W, 2026-10-19: the thinkpad question).
++  gets, including a host that lacks a prerequisite.
+ 
+ - A pass that ends in a reboot or a `check-drift` run has a standing answer for reversible drift
+-  cleanup (2026-10-19: the 1Password cache and the dock pin).
++  cleanup.
+ 
+ ## Score
+ 
+@@ -405,7 +392,7 @@
+ `docs/STATUS.md` is present tense and 60 lines or fewer: current state, next action, open
+ decisions. Initiatives are records in the initiatives repo, managed by `/log-project`; a repo's own backlog is `BACKLOG.md`. A commit id cited in a ledger is one that survives a merge: a merge commit, or an
+ id on the default branch, since a squash or rebase rewrites ids. Git and PR bodies are the history;
+-`docs/HISTORY.md` and post-mortems stop growing (ruling 8). A lesson lands where it executes: a skill, agent, tool, or repo doc. Memory holds only a
++nothing is appended to `docs/HISTORY.md` or to a post-mortem. A lesson lands where it executes: a skill, agent, tool, or repo doc. Memory holds only a
+ preference or a ruling's why that no file can.
+ 
+ A hand-over (the STATUS update, the next session's launch prompt, and the research records it
+--- a/claude/.claude/skills/site-pass/SKILL.md
++++ b/claude/.claude/skills/site-pass/SKILL.md
+@@ -41,7 +41,7 @@
+ worktree's first gate fails without it.
+ 
+ **CI watch**: Only aksailingclub-org: `gh pr checks <n> --watch --fail-fast` as a background Bash
+-task after each push. The other four sites have no watch command.
++task after each push. The other three sites have no watch command.
+ 
+ **Risk-class path map**: `auth-data` for every site: `src/hooks.server.ts`, `src/routes/admin/**`,
+ `wrangler.*`. aksailingclub-org adds `src/member-auth/**`, `src/member-signup/**`,
+--- a/claude/.claude/skills/vps-conventions/SKILL.md
++++ b/claude/.claude/skills/vps-conventions/SKILL.md
+@@ -76,10 +76,7 @@
+ ## Risky remote steps under auto mode
+ 
+ Auto mode ignores ssh allow rules, narrow prefixes included, so the classifier judges every
+-`ssh` command on its own terms. The servers cutover's stub proof on 2026-10-22 showed it: with
+-both `Bash(ssh -o BatchMode=yes geoff@ward.907.life *)` and a narrower `... sudo stalwart-jmap *`
+-rule in place, `stalwart-jmap destroy` over ssh was still denied as Unverifiable Deletion Scope.
+-Exact rules for repo scripts did run.
++`ssh` command on its own terms. Exact rules for repo scripts do run.
+ 
+ A remote step the classifier won't clear, such as a deletion or a DNS change, goes in a
+ reviewed script in the repo. The script takes its targets as arguments and prints them before
+@@ -103,6 +100,6 @@
+ | "`ReadWritePaths` will allow the dir once the script mkdirs it" | Startup fails before the script runs. Pre-create on the host. |
+ | "The path unit will catch every trigger" | Coalesced while active, lost in the re-arm gap. Timer backstop required. |
+ | "Add the package to cloud-init and the box has it" | Only the next box. Live boxes need remediation, same commit as the gate update. |
+-| "`compose up -d` after an ipam change converges the stack" | It recreates the network but reattaches live containers WITHOUT their service aliases, so container-name DNS (`navidrome`) silently dies while static `extra_hosts` routes keep working. Follow any compose network change with `up -d --force-recreate`. (Born 2026-09-01: dubplate subnet pin 502'd Navidrome.) |
++| "`compose up -d` after an ipam change converges the stack" | It recreates the network but reattaches live containers WITHOUT their service aliases, so container-name DNS (`navidrome`) silently dies while static `extra_hosts` routes keep working. Follow any compose network change with `up -d --force-recreate`. |
+ | "It's a helper/template unit, hardening is for the main services" | Helpers run with the same privileges. Harden every unit. |
+ | "An allow rule for `ssh host *` lets the session run that step unattended" | Auto mode ignores ssh allow rules, so the classifier still judges it. Wrap the step in a reviewed script with an exact rule. |
