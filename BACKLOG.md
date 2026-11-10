@@ -89,6 +89,9 @@
 
 ## Low
 
+- [ ] **#57** Run an effort sweep on the 5.5 models before carrying effort settings forward `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+  For Opus 5.5 and Sonnet 5.5, the effort page says to "Run an effort sweep on your own evals rather than carrying settings over from an earlier model" (<https://platform.claude.com/docs/en/build-with-claude/effort>). The 2026-09-28 sweep filed this to the retired ROADMAP, and it fell out. It needs an eval this machine can't run yet: a fixed task set graded the same way at each level. Record: `docs/specs/2026-11-01-model-review-subagent-effort-design.md`.
+
 - [ ] **#54** Clamp token counts and keep the first turn in `cleanroom`'s transcript cost `#bug` `#workstation` `#initiative:cairn-setup` *(2026-11-09)*
   `usage_cost` does not clamp negative token counts, and `transcript_totals` lets a later line that reuses a message id replace the real turn, so a transcript the agent can write could lower the dollar figure the cap reads. Both predate the cost-unknown change (glw907/workstation#218), and the agent already holds a simpler path through `cleanroom statusline`. Clamp each count at zero and keep the first line seen for an id.
   Placement: with the next `cleanroom` change.
