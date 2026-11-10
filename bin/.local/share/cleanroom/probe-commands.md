@@ -67,7 +67,7 @@ Every command in the call has to match for it to leave the sandbox, so each of t
 
 ## A push to a scratch branch
 
-Needs `--secret GITHUB_TEST_TOKEN:GH_TOKEN`, which the template leaves visible. The branch goes
+The repository is `glw907-test/cleanroom-push`, created with a README so `main` is its default branch (the first branch pushed to an empty repository becomes the default and cannot be deleted). Needs `--secret GITHUB_TEST_TOKEN:GH_TOKEN`, which the template leaves visible. The branch goes
 up and comes down in `push.sh`, which `init` writes into the work folder from
 `probe-push.sh` because Claude Code asks before it runs a chain of shell operators; the
 repository is created if it is absent.
