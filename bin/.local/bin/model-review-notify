@@ -3,7 +3,7 @@ set -uo pipefail
 
 # model-review-notify: timer-facing launcher for the monthly Claude model,
 # effort, and skill review. Runs Anthropic's prompt audit, then an unattended
-# review session in a fresh worktree from docs/model-review/prompt.txt.
+# review session in a fresh worktree, driven by /goal from docs/model-review/prompt.txt.
 # --dry-run skips the pull and tells the session to commit locally and stop:
 # no push, no PR, no notification. Logs to the journal.
 #
@@ -57,11 +57,15 @@ echo "monthly model review starting from $repo (dry run: $dry_run)"
 status=0
 
 if claude -p --model opus --effort medium "/doctor prompt-audit" > "$report"; then
-    prompt="$(cat "$repo/docs/model-review/prompt.txt")"
-    prompt+=$'\n\n'"The audit report is at $report."
+    # A /goal keeps an unattended session going until the condition holds, so
+    # a text-only end of turn with steps still owed does not end the run.
+    # The condition carries the whole task, since /goal takes no other text.
+    prompt="/goal Follow every step of $repo/docs/model-review/prompt.txt. The audit report is at $report."
+    condition=" Done when every step of that file is complete and your final message names the PR URL or says the month was quiet."
     if (( dry_run )); then
-        prompt+=$'\n\n'"This is a dry run: commit on your branch and stop. Do not push, open a PR, or send a notification."
+        condition=" This is a dry run: commit on your branch and stop. Do not push, open a PR, or send a notification. Done when the commit exists and your final message says so."
     fi
+    prompt+="$condition"
 
     claude -p --model opus --effort high --permission-mode auto \
         -w "model-review-$(date +%Y-%m)" "$prompt" || {
