@@ -391,9 +391,11 @@ agent's prompt; each was added from a past pass's planning miss.
   set point. A conductor reads each pass for these before launching it and brings them as one list
   (Geoff, 2026-10-31: agent-first pass 1's plugin install held five merges for over an hour:
   "You should have asked for the necessary permission up front.").
-- A pass that launches `claude --bg` in a directory no session has opened (a new repo or
-  checkout) lists the workspace trust prompt as a pre-flight item: Geoff runs `claude` there once
-  and accepts it, checked by a launch that doesn't print "Workspace not trusted".
+- A pass that launches `claude --bg` in a directory no session has opened (a new repo,
+  checkout, or worktree the conductor cuts) lists the workspace trust prompt as a pre-flight item:
+  Geoff runs `claude` there once and accepts it, checked by a launch that doesn't print "Workspace
+  not trusted". A trusted parent directory doesn't cover the new path (November model review,
+  2026-11-10: `~/Projects` was trusted, and the pass P worktree still refused the launch).
 
 ## Hosts and workstation config
 
