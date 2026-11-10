@@ -2,8 +2,9 @@
 set -uo pipefail
 
 # model-review-notify: timer-facing launcher for the monthly Claude model,
-# effort, and skill review. Runs Anthropic's prompt audit, then an unattended
-# review session in a fresh worktree, driven by /goal from docs/model-review/prompt.txt.
+# effort, and skill review. Runs Anthropic's prompt audit on the workstation and
+# on the standards plugin, then an unattended review session in a fresh
+# worktree, driven by /goal from docs/model-review/prompt.txt.
 # --dry-run skips the pull and tells the session to commit locally and stop:
 # no push, no PR, no notification. Logs to the journal.
 #
@@ -19,7 +20,27 @@ dry_run=0
 
 repo=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../../.." && pwd)
 report=$(mktemp /tmp/model-review-audit.XXXXXX)
-trap 'rm -f "$report"' EXIT
+report_standards=$(mktemp /tmp/model-review-audit-standards.XXXXXX)
+trap 'rm -f "$report" "$report_standards"' EXIT
+
+# The standards checkout sits on a feature branch, so it is never pulled. A
+# detached worktree of it moves to origin/main each run and carries the plugin
+# audit. MODEL_REVIEW_STANDARDS_REPO points a test elsewhere.
+standards_repo="${MODEL_REVIEW_STANDARDS_REPO:-$HOME/Projects/standards}"
+standards_wt="$standards_repo/.claude/worktrees/model-review-audit"
+
+# audit_standards writes the plugin audit to $report_standards. It returns 1,
+# with a log line, when the plugin cannot be read or audited.
+audit_standards() {
+    git -C "$standards_repo" fetch origin || { echo "standards fetch failed"; return 1; }
+    if [[ -d "$standards_wt" ]]; then
+        git -C "$standards_wt" checkout --detach origin/main || return 1
+    else
+        git -C "$standards_repo" worktree add --detach "$standards_wt" origin/main || return 1
+    fi
+    (cd "$standards_wt" && claude -p --model opus --effort medium \
+        "/doctor prompt-audit plugins/standards") > "$report_standards"
+}
 
 if (( ! dry_run )) && [[ "$(hostname -s)" != pavilion ]]; then
     echo "not pavilion: the monthly review runs there only"
@@ -60,7 +81,13 @@ if claude -p --model opus --effort medium "/doctor prompt-audit" > "$report"; th
     # A /goal keeps an unattended session going until the condition holds, so
     # a text-only end of turn with steps still owed does not end the run.
     # The condition carries the whole task, since /goal takes no other text.
-    prompt="/goal Follow every step of $repo/docs/model-review/prompt.txt. The audit report is at $report."
+    prompt="/goal Follow every step of $repo/docs/model-review/prompt.txt. The workstation audit report is at $report."
+    if audit_standards; then
+        prompt+=" The standards plugin audit report is at $report_standards."
+    else
+        echo "standards audit failed; the review runs without it"
+        prompt+=" The standards plugin audit failed this run: note that gap in your hand-over."
+    fi
     condition=" Done when every step of that file is complete and your final message names the PR URL or says the month was quiet."
     if (( dry_run )); then
         condition=" This is a dry run: commit on your branch and stop. Do not push, open a PR, or send a notification. Done when the commit exists and your final message says so."
