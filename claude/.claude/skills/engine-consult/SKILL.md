@@ -120,7 +120,7 @@ A site-launched session does not auto-load cairn's context. In order:
    disjoint, the fast lane per task, and the whole-branch close review.
 5. **Run the full gate list by name**: cairn-cms's `npm run check:close` runs it, including
    `check:comments`, `check:tiers`, `check:surface`, `check:snippets`,
-   `check:transcripts`, and `check:symbols`, which the local ritual once skipped.
+   `check:transcripts`, and `check:symbols`.
 6. **The ordered close:** engine merge to `main`, then read and follow
    `~/Projects/cairn-cms/.claude/skills/cairn-releasing/SKILL.md` (the change must be on the registry; a site branch cannot merge on a `file:`
    pin), then `npm run link:consumer -- <site-dir> --restore` from the cairn checkout,
@@ -129,10 +129,9 @@ A site-launched session does not auto-load cairn's context. In order:
 
 ## The reactive-harvest fallback
 
-Consultation cannot foresee what a pass discovers while building. Mid-pass discoveries
-still file, using the same four-field item schema, and their later triage runs through
-the same `engine-triage` agent against the same ledger. The paste-then-delete staging
-mechanics stay as they are.
+Consultation cannot foresee what a pass discovers while building. File each mid-pass
+discovery with the same four-field item schema. Its later triage runs through the same
+`engine-triage` agent against the same ledger.
 
 ## First run
 

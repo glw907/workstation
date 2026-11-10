@@ -41,7 +41,7 @@ sync`. The sync writes `.svelte-kit/tsconfig.json`, which `npm run check` needs,
 worktree's first gate fails without it.
 
 **CI watch**: Only aksailingclub-org: `gh pr checks <n> --watch --fail-fast` as a background Bash
-task after each push. The other four sites have no watch command.
+task after each push. The other three sites have no watch command.
 
 **Risk-class path map**: `auth-data` for every site: `src/hooks.server.ts`, `src/routes/admin/**`,
 `wrangler.*`. aksailingclub-org adds `src/member-auth/**`, `src/member-signup/**`,

@@ -76,10 +76,7 @@ never fixed `/tmp` names. Pin and checksum anything piped to a root shell.
 ## Risky remote steps under auto mode
 
 Auto mode ignores ssh allow rules, narrow prefixes included, so the classifier judges every
-`ssh` command on its own terms. The servers cutover's stub proof on 2026-10-22 showed it: with
-both `Bash(ssh -o BatchMode=yes geoff@ward.907.life *)` and a narrower `... sudo stalwart-jmap *`
-rule in place, `stalwart-jmap destroy` over ssh was still denied as Unverifiable Deletion Scope.
-Exact rules for repo scripts did run.
+`ssh` command on its own terms. Exact rules for repo scripts do run.
 
 A remote step the classifier won't clear, such as a deletion or a DNS change, goes in a
 reviewed script in the repo. The script takes its targets as arguments and prints them before
@@ -103,6 +100,6 @@ its write targets — "argued statically" is acceptable, "assumed" is not.
 | "`ReadWritePaths` will allow the dir once the script mkdirs it" | Startup fails before the script runs. Pre-create on the host. |
 | "The path unit will catch every trigger" | Coalesced while active, lost in the re-arm gap. Timer backstop required. |
 | "Add the package to cloud-init and the box has it" | Only the next box. Live boxes need remediation, same commit as the gate update. |
-| "`compose up -d` after an ipam change converges the stack" | It recreates the network but reattaches live containers WITHOUT their service aliases, so container-name DNS (`navidrome`) silently dies while static `extra_hosts` routes keep working. Follow any compose network change with `up -d --force-recreate`. (Born 2026-09-01: dubplate subnet pin 502'd Navidrome.) |
+| "`compose up -d` after an ipam change converges the stack" | It recreates the network but reattaches live containers WITHOUT their service aliases, so container-name DNS (`navidrome`) silently dies while static `extra_hosts` routes keep working. Follow any compose network change with `up -d --force-recreate`. |
 | "It's a helper/template unit, hardening is for the main services" | Helpers run with the same privileges. Harden every unit. |
 | "An allow rule for `ssh host *` lets the session run that step unattended" | Auto mode ignores ssh allow rules, so the classifier still judges it. Wrap the step in a reviewed script with an exact rule. |

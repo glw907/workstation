@@ -45,7 +45,8 @@ the inventory are in `~/.claude/docs/claude-tooling.md`.
    task as asked rather than quietly narrowing, widening, or transforming it. Finish the whole
    task, and stop short of actions that are clearly beyond what was asked." Anything beyond the
    request goes in "Later", never into a task.
-5. **Land the change through a PR** whose commit messages and body cite the guidance URL.
+5. **Land the change through a PR** whose commit messages and body cite the guidance URL, unless
+   it meets `pass-core` "Direct changes".
 6. **Audit** with `/doctor prompt-audit`, `/skill-doctor`, and Anthropic's `skill-creator`. Run
    them; their output is the audit, not a restatement here.
 
@@ -60,9 +61,9 @@ a tool's NOTE before the next dispatch.
 
 ## Rules for tooling
 
-- Scope by reach. A skill on disk reaches every agent, including the implementer and
-  reviewer subagents that run a fixed tool list; an MCP server reaches only the main loop and
-  unrestricted agents. When a library offers both, take the skill first and the server for
+- Scope by reach. A plugin skill reaches an agent with a fixed tool list only through the
+  `Skill` tool on its `tools` line or a `skills:` preload in its frontmatter; an MCP server
+  reaches only the main loop and unrestricted agents. When a library offers both, take the skill first and the server for
   on-demand retrieval or tools the skill cannot carry.
 - User scope for stack-wide, project scope only for repo-specific. Everything the
   cairn-family stack shares (Svelte, Playwright, DaisyUI) is user scope and in the manifest.
