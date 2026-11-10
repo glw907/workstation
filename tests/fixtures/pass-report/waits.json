@@ -1,0 +1,7 @@
+{"repos": ["alpha"],
+ "decisions": [
+  {"time": "2026-11-10T19:00:00Z", "packet": "20261110T093000-1", "ref": "glw907/alpha#1", "kind": "pr"},
+  {"time": "2026-10-17T18:42:18Z", "packet": "20261017T104118-428179", "ref": "glw907/alpha#3", "kind": "pr"},
+  {"time": "2026-11-10T19:00:00Z", "packet": "20261110T120000-2", "ref": "glw907/alpha:specs/x.md", "kind": "design"},
+  {"time": "2026-11-10T19:00:00Z", "packet": "20261110T093000-3", "ref": "glw907/alpha#4", "kind": "other"}
+ ]}
