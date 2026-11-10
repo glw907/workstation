@@ -68,6 +68,7 @@ Every command in the call has to match for it to leave the sandbox, so each of t
 ## A push to a scratch branch
 
 Needs `--secret GITHUB_TEST_TOKEN:GH_TOKEN`, which the template leaves visible. The branch goes
-up and comes down in the one command; the repository is created if it is absent.
+up and comes down in one script, `push.sh`, written first because Claude Code asks before it runs a chain of shell operators; the repository is created if it is absent.
 
-- ok: `(gh repo view glw907-test/cleanroom-probe > /dev/null 2>&1 || gh repo create glw907-test/cleanroom-probe --public) && gh auth setup-git && git clone https://github.com/glw907-test/cleanroom-probe pushtest && cd pushtest && git checkout -b probe-@NAME@ && git -c user.name=probe -c user.email=probe@example.invalid commit --allow-empty -m probe && git push origin probe-@NAME@ && git push origin --delete probe-@NAME@`
+- ok: `printf 'set -e\ngh repo view glw907-test/cleanroom-probe > /dev/null 2>&1 || gh repo create glw907-test/cleanroom-probe --public\ngh auth setup-git\ngit clone https://github.com/glw907-test/cleanroom-probe pushtest\ncd pushtest\ngit checkout -b probe-@NAME@\ngit -c user.name=probe -c user.email=probe@example.invalid commit --allow-empty -m probe\ngit push origin probe-@NAME@\ngit push origin --delete probe-@NAME@\n' > push.sh`
+- ok: `sh ./push.sh`

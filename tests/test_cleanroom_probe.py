@@ -214,7 +214,7 @@ def probe(tmp_path):
 
 def test_probe_list_parses_every_item():
     items = cr.parse_probe_list((SHARE / "probe-commands.md").read_text())
-    assert len(items) == 26
+    assert len(items) == 27
     assert {i["word"] for i in items} == {"denied", "fails", "prompt", "ok", "prints", "omits"}
     commands = [i["command"] for i in items]
     for want in ("cat @CANARY@", "sudo -n true", "id -un", "./bin/cairn",
