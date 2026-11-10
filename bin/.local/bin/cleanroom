@@ -1227,8 +1227,12 @@ def cmd_probe(args: argparse.Namespace) -> int:
         state_path = rd / "state.json"
         if state_path.exists() and json.loads(state_path.read_text())["state"] != "running":
             break
-        calls = transcript_calls(rd / "transcript.jsonl")[: len(items)]
-        if len(calls) == len(items) and all(c["text"] is not None for c in calls):
+        calls = transcript_calls(rd / "transcript.jsonl")
+        answered_all = all(
+            any(c["command"] == item["command"] and c["text"] is not None for c in calls)
+            for item in items
+        )
+        if answered_all:
             break
     cmd_stop(argparse.Namespace(name=name))
     run_child(name, "mirror")
