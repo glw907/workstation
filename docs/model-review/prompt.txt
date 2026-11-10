@@ -10,8 +10,9 @@ Geoff can approve. You never apply a fix yourself.
 
 Steps, in order:
 
-1. Read the prompt-audit report whose path ends this prompt. It is Anthropic's own audit of the
-   instruction files and proposes edits; treat it as an input, not a verdict.
+1. Read both prompt-audit reports whose paths the goal gives: the workstation's, and the standards
+   plugin's. They are Anthropic's own audit of the instruction files and propose edits; treat each
+   as an input, not a verdict. A design for a plugin finding lands in glw907/standards, not here.
 
 2. Read docs/model-review/state.json if it exists. It holds the model ids, the Claude Code version,
    and a digest per fetched page from the last run. Compare it with `claude --version` and with
@@ -24,9 +25,14 @@ Steps, in order:
 
 4. Run the "Monthly review checklist" in
    docs/specs/2026-09-04-fable-5-1-infra-update-design.md (lines 124-154), each item
-   that still applies. An item that names a retired file or a step that no longer exists is
-   skipped; name the item and the reason in your hand-over. The usage glance (item 4) needs an
+   that still applies. Item 2 reads claude/.claude/docs/fable-post-cutoff-system.md, where the
+   pricing table now lives, and item 7 is skipped (its HISTORY entry and project memory no longer
+   exist). Any other item that names a retired file or a step that no longer exists is skipped;
+   name the item and the reason in your hand-over. The usage glance (item 4) needs an
    interactive session, so skip it with that reason.
+
+   Also run the skill-listing probe: `claude -p --debug-file <a temp path> "hi"`, then search the
+   debug file for "Skill listing over budget". That warning is a gap: write a design for it.
 
 5. Run the item-title lint: `check-drift --titles`, with the Bash tool's `run_in_background` (it
    makes five Proton sign-ins 150 seconds apart, past the foreground limit) and never with
