@@ -13,18 +13,21 @@ assert_eq() {
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-mkdir -p "$tmp/bin" "$tmp/home" "$tmp/standards/.claude/worktrees/model-review-audit"
+# The launcher puts $HOME/.local/bin first on PATH, so the stubs live there.
+bindir="$tmp/home/.local/bin"
+mkdir -p "$bindir" "$tmp/standards/.claude/worktrees/model-review-audit"
 
 # Each stub appends its name and arguments to $STUB_LOG and answers from the STUB_* variables.
 stub() {
-  printf '#!/usr/bin/env bash\n%s\n' "$2" > "$tmp/bin/$1"
-  chmod +x "$tmp/bin/$1"
+  printf '#!/usr/bin/env bash\n%s\n' "$2" > "$bindir/$1"
+  chmod +x "$bindir/$1"
 }
 stub hostname 'echo "${STUB_HOST:-pavilion}"'
 stub git 'echo "git $*" >> "$STUB_LOG"
 case " $* " in
   *" pull "*) exit "${STUB_PULL_RC:-0}" ;;
   *" ls-remote "*) exit "${STUB_LS_RC:-2}" ;;
+  *" fetch "*) exit "${STUB_FETCH_RC:-0}" ;;
 esac
 exit 0'
 stub claude 'echo "claude $*" >> "$STUB_LOG"; echo "stub report"'
@@ -38,7 +41,7 @@ run_case() {
   export STUB_LOG="$tmp/$1.log"
   : > "$STUB_LOG"
   shift
-  PATH="$tmp/bin:$PATH" HOME="$tmp/home" MODEL_REVIEW_PULL_DELAY=0 \
+  HOME="$tmp/home" MODEL_REVIEW_PULL_DELAY=0 \
     MODEL_REVIEW_STANDARDS_REPO="$tmp/standards" "$SCRIPT" "$@" > /dev/null 2>&1
   rc=$?
   log=$(cat "$STUB_LOG")
@@ -64,6 +67,12 @@ grep -q "refs/heads/worktree-model-review-$(date +%Y-%m)" <<< "$log" \
   || { echo "FAIL: existing branch: ls-remote did not name this month's branch"; fail=1; }
 grep -q '^claude' <<< "$log" && { echo "FAIL: existing branch reached claude"; fail=1; }
 
+# A branch check that cannot reach origin (exit 128) fails closed: exit 1, a notification, no claude call.
+STUB_LS_RC=128 run_case branch-check-error
+assert_eq "$rc" "1" "branch check error exit"
+grep -q '^notify-send' <<< "$log" || { echo "FAIL: branch check error: no notify-send"; fail=1; }
+grep -q '^claude' <<< "$log" && { echo "FAIL: branch check error reached claude"; fail=1; }
+
 # The normal path runs both audits and the /goal session, then both follow-on launchers.
 run_case normal
 assert_eq "$rc" "0" "normal exit"
@@ -74,6 +83,12 @@ grep -q '^claude .*/goal .*standards plugin audit report is at' <<< "$log" \
   || { echo "FAIL: normal: /goal call lacks the standards report path"; fail=1; }
 grep -q '^survey-writing-review' <<< "$log" || { echo "FAIL: normal: no writing review"; fail=1; }
 grep -q '^cairn-docs-cycle' <<< "$log" || { echo "FAIL: normal: no docs cycle"; fail=1; }
+
+# A standards audit that cannot fetch lets the review go on, and the goal names the gap.
+STUB_FETCH_RC=1 run_case audit-failure
+assert_eq "$rc" "0" "audit failure exit"
+grep -q '^claude .*/goal .*standards plugin audit failed this run' <<< "$log" \
+  || { echo "FAIL: audit failure: goal lacks the gap note"; fail=1; }
 
 # A dry run on another host skips the gates and the follow-on launchers, and its goal says to stop.
 STUB_HOST=thinkpad-x1 run_case dry-run --dry-run

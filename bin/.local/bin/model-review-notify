@@ -12,8 +12,7 @@ set -uo pipefail
 # month's branch on origin, stops before any session starts.
 # MODEL_REVIEW_PULL_DELAY sets the seconds between pull retries (default 60).
 
-# Appended, so a caller's PATH (a test's stubs) wins over the real tools.
-export PATH="$PATH:$HOME/.local/bin:$HOME/.local/share/mise/shims:/home/linuxbrew/.linuxbrew/bin:/usr/bin"
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/home/linuxbrew/.linuxbrew/bin:/usr/bin:$PATH"
 
 dry_run=0
 [[ "${1:-}" == "--dry-run" ]] && dry_run=1
@@ -29,8 +28,8 @@ trap 'rm -f "$report" "$report_standards"' EXIT
 standards_repo="${MODEL_REVIEW_STANDARDS_REPO:-$HOME/Projects/standards}"
 standards_wt="$standards_repo/.claude/worktrees/model-review-audit"
 
-# audit_standards writes the plugin audit to $report_standards. It returns 1,
-# with a log line, when the plugin cannot be read or audited.
+# audit_standards writes the plugin audit to $report_standards. It returns
+# non-zero when the plugin cannot be fetched, checked out, or audited.
 audit_standards() {
     git -C "$standards_repo" fetch origin || { echo "standards fetch failed"; return 1; }
     if [[ -d "$standards_wt" ]]; then
@@ -65,11 +64,24 @@ if (( ! dry_run )); then
             "Rerun with: systemctl --user start model-review.service"
         exit 1
     fi
-    if git -C "$repo" ls-remote --exit-code origin \
-        "refs/heads/worktree-model-review-$(date +%Y-%m)" > /dev/null; then
-        echo "this month's review branch is already on origin; nothing to do"
-        exit 0
-    fi
+    # ls-remote --exit-code answers 0 for a found ref and 2 for none. Any other
+    # code is a transport or auth error, and guessing "absent" would start a
+    # duplicate review.
+    git -C "$repo" ls-remote --exit-code origin \
+        "refs/heads/worktree-model-review-$(date +%Y-%m)" > /dev/null
+    case $? in
+        0)
+            echo "this month's review branch is already on origin; nothing to do"
+            exit 0
+            ;;
+        2) ;;
+        *)
+            echo "could not check origin for this month's review branch"
+            notify-send -u normal "Model review: branch check failed" \
+                "Rerun with: systemctl --user start model-review.service"
+            exit 1
+            ;;
+    esac
 fi
 
 cd "$repo" || exit 1
