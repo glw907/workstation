@@ -421,7 +421,16 @@ agent's prompt; each was added from a past pass's planning miss.
 The PR body carries the spec's price table rows: Gates on the critical path, Work and review, CI
 waits on the path, Fix rounds and reds, Close, and Total. Gate and lock time come from
 `cairn-run-gate --records <toplevel> <branch>`; the clock runs from the first execution commit to
-PR-ready. The Work and review row names the plan's path minutes beside the actual, the figure the
+PR-ready.
+
+Below the table, the PR body carries one HTML comment that `pass-report` reads:
+`<!-- pass-score {"planPathMin": 170, "actualPathMin": 140, "fixRounds": 1, "reds": 0, "attended": 2, "escapes": 0} -->`.
+`planPathMin` and `actualPathMin` are the plan's path minutes and the measured ones, `fixRounds` counts
+review and fix rounds, `reds` counts failed CI runs on the PR, `attended` counts attended events, and
+`escapes` counts escaped defects. Each is an integer or `null`. Only figures no machine records go in
+it: gate, lock, and CI times come from the run records and `gh`.
+
+The Work and review row names the plan's path minutes beside the actual, the figure the
 next design's estimate is set from. It lists the attended events (the design, the packet read, one per clock stop, and one per
 mid-run question, which names the plan item that should have answered it) and any escape,
 a behavioral, security, or contract defect that surfaces through the next pass's close, CI on

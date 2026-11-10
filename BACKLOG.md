@@ -115,9 +115,8 @@
   Record: `~/Projects/initiatives/docs-system/research/2026-10-22-extend-blueprints-pilot-friction.md`
   Batch 2: the agent hands back through `SubagentHandback`, so saving its array verbatim needs a transcript parser. Give the save a sanctioned path, or have the agent write its array to a named file (record 18).
   Done: PR #146 (the agent writes its array to the path the dispatch names).
-- [ ] **#10** Give cairn-run-gate per-leg timing in its run records `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
-  **Give `cairn-run-gate` per-leg timing in its run records**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11). The stale `gateMatches` comment went with `pass-execute.js`. Also fix `cairn-run-gate --records`, which prints epoch-sized values instead of durations.
-
+- [ ] **#10** Give cairn-run-gate per-leg timing in its run records `#improvement` `#workstation` `#initiative:dev-speed` *(2026-10-14)* *(swept 2026-11-03)*
+  **Give `cairn-run-gate` per-leg timing in its run records**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11). The stale `gateMatches` comment went with `pass-execute.js`.
 - [ ] **#11** Move the CSP and queue items to the approval-queue backlog `#improvement` `#workstation` `#initiative:approval-queue` *(2026-10-14)* *(swept 2026-11-03)*
   **Move to the approval-queue backlog**, where the code lives (`~/Projects/approval-queue`), deferred by Geoff's triage of workstation PR #13 (2026-10-11). A running app keeps serving its old build after a merge changes `~/Projects/approval-queue/approval-queue/`. Nothing prunes decided items from the state directory. A SIGKILL or power loss leaves the item on the index. The CSP limits only `script-src`, so a remote image in a PR body loads at view time (`img-src 'self' data:` closes it). `~/Projects/approval-queue/tests/approval-queue.test.sh` never runs the 10-second "did not answer" exit or the lock release.
 
