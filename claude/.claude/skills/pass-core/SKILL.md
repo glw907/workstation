@@ -244,6 +244,15 @@ runs, and a `fix` or `escalate` verdict stops the line like a red. `RUN_GATE_IF_
 a heavy leg to the push's CI (exit 76) when another run holds the lock; set it only where CI is the
 full-suite home, and never on an `auth-data` task.
 
+A test never cuts a release candidate (Geoff, 2026-11-09). A run that needs a published build to
+prove something, such as a proving round or a probe, publishes a snapshot test build: a `dev`
+prerelease version under a test dist-tag such as `gate`, with no GitHub release, no rc tag, and no
+changelog release heading. An rc is cut only for an actual release candidate, once its install
+process is effective and tested; otherwise a polish loop publishes ten or twenty of them.
+This is the split changesets draws between a snapshot release, made "for testing without updating
+the versions" under its own dist-tag, and pre-release mode for a planned beta or RC cycle
+(<https://github.com/changesets/changesets/blob/main/docs/snapshot-releases.md>).
+
 ## Clock stop
 
 At each task start the session writes `.pass-task-clock` at the pass worktree's root, by the Write
