@@ -19,6 +19,7 @@
       "commit": "19a0626ae856",
       "license": "MIT",
       "installed": "2026-09-13",
+      "description": "Golang CLI command tree library using spf13/cobra — cobra.Command, RunE vs Run, PersistentPreRunE hook chain, Args validators (NoArgs, ExactArgs, MatchAll, custom), persistent vs local flags, command groups, ValidArgsFunction, RegisterFlagCompletionFunc, ShellCompDirective, usage/help template customization, man-page and markdown doc generation, and testing with SetArgs/SetOut/SetErr. Apply when using or adopting spf13/cobra, or when the codebase imports `github.com/spf13/cobra`.",
       "_why": "Cobra command-tree conventions for the planned cairn Go tool; go-conventions stays mandatory beside it.",
       "home": "standards"
     },

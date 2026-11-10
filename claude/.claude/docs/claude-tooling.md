@@ -13,6 +13,7 @@ machine.** The manifests record intent; the script reports what happened.
 | Skills (vendored, third party) | same directory | `~/.claude/tooling/vendored-skills.json` (stowed) | `claude-tooling-sync update-skills` |
 | Skills and agents (authored in a project repo) | project scope: `.claude/skills/cairn-writing-docs` and `.claude/agents/docs-fact-checker.md` in `~/Projects/cairn-cms`, owned by that repo | the directory | Claude Code, in a session started in that repo |
 | Agents | `~/.dotfiles/claude/.claude/agents/<name>.md` (stowed) | the directory itself | stow |
+| Rules (path-scoped, loaded when a session touches a matching file) | `~/.dotfiles/claude/.claude/rules/<name>.md` (stowed to `~/.claude/rules/`) | the directory itself | stow |
 | Docs (this file and its siblings) | `~/.dotfiles/claude/.claude/docs/` (stowed) | the directory itself | stow |
 | Instructions (cross-repo reference docs, linked from consumer CLAUDE.md files) | `~/.dotfiles/claude/.claude/instructions/` (stowed) | the directory itself | stow |
 | Workstation `CLAUDE.md` | `~/.dotfiles/claude/.claude/` (stowed) | the file itself | stow |
@@ -131,11 +132,9 @@ the diff, point the agents that need it at the skill file, commit skills and man
   dispatches the `standards:plan-reviewer` agent. `pass-core` points at it.
 - **Svelte:** the official server (user scope, remote).
 - **Playwright:** Microsoft's server (user scope, stdio).
-- **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook. A repo here
-  commits its Vale styles and pins Vale in CI: never run `vale sync` against a committed `styles/`
-  directory (setup commits the StylesPath instead of ignoring it, and runs `vale sync` only to
-  populate it before that commit), never edit the CI pin, and land a fix on a pass branch, never a
-  branch per file.
+- **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook. What a repo
+  here does differently from those skills is in `claude/.claude/rules/vale.md`, which loads when a session
+  touches `.vale.ini` or `styles/`.
 - **VHS:** `vhs` is not installed on this workstation (`bluefin/Brewfile` has no `vhs`); install it
   through the `dependency-upgrade` skill before running any tape.
 - **Cobra:** one community skill (vendored, MIT) for the cairn Go tool; `standards:go-conventions`
