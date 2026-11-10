@@ -1,7 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "env": {
-    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet",
+    "CLAUDE_CODE_SUBAGENT_EFFORT": "medium"
   },
   "worktree": {
     "baseRef": "head"
@@ -95,8 +96,8 @@
       "Bash(systemctl list-timers *)",
       "Bash(dig *)",
       "Bash(lsblk *)",
-      "mcp__playwright-chromium__browser_take_screenshot",
-      "mcp__playwright-chromium__browser_snapshot",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_snapshot",
       "mcp__claude-in-chrome__tabs_context_mcp",
       "mcp__claude-in-chrome__get_page_text",
       "mcp__claude-in-chrome__list_connected_browsers",
@@ -222,7 +223,8 @@
           {
             "type": "command",
             "command": "claude-block-pass",
-            "timeout": 10
+            "timeout": 10,
+            "onFailure": "block"
           },
           {
             "type": "command",
@@ -232,7 +234,8 @@
           {
             "type": "command",
             "command": "claude-secret-guard",
-            "timeout": 10
+            "timeout": 30,
+            "onFailure": "block"
           },
           {
             "type": "command",
@@ -259,7 +262,8 @@
           {
             "type": "command",
             "command": "claude-secret-guard",
-            "timeout": 10
+            "timeout": 10,
+            "onFailure": "block"
           },
           {
             "type": "command",
@@ -414,6 +418,19 @@
     }
   },
   "outputStyle": "writing-voice",
+  "skillOverrides": {
+    "anthropic-skills:docs": "name-only",
+    "anthropic-skills:pptx": "name-only",
+    "anthropic-skills:xlsx": "name-only",
+    "anthropic-skills:computer-use": "name-only",
+    "anthropic-skills:docx": "name-only",
+    "anthropic-skills:built-in-browser": "name-only",
+    "anthropic-skills:chrome-browser": "name-only",
+    "anthropic-skills:pdf": "name-only",
+    "anthropic-skills:morning": "name-only",
+    "anthropic-skills:skill-creator": "name-only",
+    "anthropic-skills:google-workspace": "name-only"
+  },
   "tui": "fullscreen",
   "autoMemoryEnabled": true,
   "skipDangerousModePermissionPrompt": true,
