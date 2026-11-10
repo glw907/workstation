@@ -1,12 +1,9 @@
 ---
 name: log-project
 description: >
-  Create or update an initiative record in `~/Projects/initiatives`. Use when
-  the user wants to track a multi-issue effort or initiative, bigger than a
-  single backlog item. Trigger on: "log project", "new project", "start an initiative", "add
-  to roadmap", "track this effort", "we need a project for", or when the user
-  describes a multi-step effort that spans several backlog items. Also trigger
-  on "close project", "finish project", "project status", or "update roadmap".
+  Create, update, close, or report on an initiative record in
+  `~/Projects/initiatives`. Use when the user wants to track a multi-step effort
+  bigger than a single backlog item, or asks about a project's or roadmap's status.
 ---
 
 # Log Project
@@ -15,8 +12,7 @@ Create or update a strategic initiative as a record in the initiatives repo
 (`~/Projects/initiatives`, GitHub `glw907/initiatives`). An initiative groups
 related work across one or more repos under a shared goal. The record tells the
 story of where the work is going; each repo's `BACKLOG.md` tracks the individual
-pieces. Never create a `ROADMAP.md`: cairn-cms keeps its own until its own pass,
-and every other repo has retired the file.
+pieces. Never create a `ROADMAP.md`; only cairn-cms keeps one.
 
 ## Step 1: Place the work
 
