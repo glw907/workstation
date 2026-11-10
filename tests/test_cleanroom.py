@@ -247,5 +247,19 @@ def test_template_keeps_the_invariants():
     assert "//var/home/glw907/.local/state/cleanroom/**" in deny_read
 
 
+def test_a_missing_clean_user_is_a_refusal_not_a_quiet_downgrade(room, tmp_path):
+    env = {**os.environ, "CLEANROOM_ROOT": str(room.root), "CLEANROOM_STATE": str(room.state),
+           "CLEANROOM_USER": "nosuchuserxyz"}
+    res = subprocess.run([sys.executable, "-I", str(TOOL), "init", "a1"], env=env,
+                         capture_output=True, text=True, check=False)
+    assert res.returncode != 0 and "no Unix user" in res.stderr
+    assert not (room.root / "a1").exists()
+    env.pop("CLEANROOM_USER")
+    env["CLEANROOM_USER"] = ""
+    ok = subprocess.run([sys.executable, "-I", str(TOOL), "init", "a1"], env=env,
+                        capture_output=True, text=True, check=False)
+    assert ok.returncode == 0
+
+
 def test_the_tool_names_no_product():
     assert subprocess.run(["grep", "-ci", "cairn", str(TOOL)], capture_output=True).stdout == b"0\n"

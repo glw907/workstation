@@ -4,6 +4,7 @@ import json
 import os
 import pwd
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -192,6 +193,26 @@ def test_a_watcher_that_raises_ends_as_stopped_watcher(lroom):
 
 
 @live
+def test_a_watcher_that_cannot_write_its_state_still_ends_the_run(lroom):
+    lroom.start("r1", "sleep")
+    state = lroom.root / "r1/run/state.json"
+    wait_for(state.exists)
+
+    def block():
+        # A directory in state.json's place makes the watcher's next write fail.
+        try:
+            state.unlink()
+            state.mkdir()
+        except OSError:
+            return False
+        return True
+
+    wait_for(block)
+    assert lroom.final("r1")["state"] == "stopped:watcher"
+    wait_for(lambda: not list(holders(lroom.root)))
+
+
+@live
 def test_stop_ends_a_detached_child_and_rewrites_the_row(lroom):
     lroom.start("r1", "detached")
     wait_for(lambda: (lroom.root / "r1/run/state.json").exists())
@@ -348,6 +369,8 @@ def test_the_session_runs_as_the_clean_user_and_cannot_read_the_store(tmp_path):
         assert res.stdout.split() == ["cleanroom", "DENIED"], res.stderr
         owner = (base / "root/s1/home/.claude/settings.json").stat().st_uid
         assert pwd.getpwuid(owner).pw_name == "cleanroom"
+        for sub in ("root/s1", "root/s1/run"):
+            assert (base / sub).stat().st_mode & stat.S_ISVTX, f"{sub} is not sticky"
         assert run("init", "s1", "--fresh", "--discard").returncode == 0
     finally:
         subprocess.run(

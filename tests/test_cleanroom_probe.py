@@ -356,3 +356,77 @@ def test_a_shadow_script_reading_the_canary_counts_as_masked(tmp_path):
     assert cr.grade_item(item, call, [], {}, known)[0] is None
     why = cr.grade_item(item, call, [], {}, {})[0]
     assert why == "No such file: the read never reached a denial"
+
+
+def filled_list(tmp_path):
+    """Return the shipped list with its placeholders pointing at real files under tmp_path."""
+    (tmp_path / "canary").write_text("x")
+    (tmp_path / "secrets").write_text("x")
+    (tmp_path / "run").mkdir()
+    fill = {"@CANARY@": str(tmp_path / "canary"), "@SECRETS@": str(tmp_path / "secrets"),
+            "@RUN_DIR@": str(tmp_path / "run"), "@HOME@": str(tmp_path), "@NAME@": "n",
+            "@USER@": "u"}
+    text = (SHARE / "probe-commands.md").read_text()
+    for key, value in fill.items():
+        text = text.replace(key, value)
+    return cr.parse_probe_list(text)
+
+
+def graded(items, command, text):
+    """Grade the denied item running command against output text, with the list's controls."""
+    controls = {n: cr.outside_control(i["command"]) for n, i in enumerate(items)}
+    known = {p: k for n, i in enumerate(items) if i["word"] == "denied"
+             for p, k in controls[n].items()}
+    n = next(n for n, i in enumerate(items) if i["command"] == command)
+    call = {"command": command, "text": text, "is_error": True}
+    return cr.grade_item(items[n], call, [], controls[n], known)[0], known
+
+
+def test_the_shipped_list_cannot_pass_an_unrelated_missing_file(tmp_path):
+    items = filled_list(tmp_path)
+    shadow = "./bin/cairn"
+    why, known = graded(items, shadow, "bash: ./bin/cairn: No such file or directory")
+    assert "/" not in known and why
+    assert graded(items, shadow, "cat: /nonexistent/x: No such file or directory")[0]
+    canary = f"cat: {tmp_path / 'canary'}: No such file or directory"
+    assert graded(items, shadow, canary)[0] is None
+
+
+def test_a_masked_directory_and_a_longer_path_are_told_apart(tmp_path):
+    items = filled_list(tmp_path)
+    ls_run = f"ls {tmp_path / 'run'}"
+    assert graded(items, ls_run, f"ls: cannot access '{tmp_path / 'run'}': No such file")[0] is None
+    tmp_item = "ls /tmp"
+    other = "ls: cannot access '/var/tmp/other': No such file or directory"
+    assert graded(items, tmp_item, other)[0]
+
+
+def test_mirror_joins_every_transcript_and_drops_a_torn_line(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLEANROOM_ROOT", str(tmp_path / "root"))
+    base = tmp_path / "root/n"
+    for sub in ("home/.claude/projects/a", "home/.claude/projects/b", "run"):
+        (base / sub).mkdir(parents=True)
+    (base / "home/.claude/projects/a/s1.jsonl").write_text("one\ntwo\n")
+    (base / "home/.claude/projects/b/s2.jsonl").write_text("three\npart")
+    cr.mirror_transcript("n")
+    assert (base / "run/transcript.jsonl").read_text() == "one\ntwo\nthree\n"
+
+
+def test_write_atomic_never_follows_a_planted_link(tmp_path):
+    victim = tmp_path / "victim"
+    victim.write_text("keep")
+    (tmp_path / "out").mkdir()
+    for guess in (f".state.json.{os.getpid()}.tmp", ".state.json.tmp"):
+        (tmp_path / "out" / guess).symlink_to(victim)
+    cr.write_atomic(tmp_path / "out/state.json", "new")
+    assert victim.read_text() == "keep"
+    assert (tmp_path / "out/state.json").read_text() == "new"
+
+
+def test_trusted_dir_refuses_a_link(tmp_path):
+    real = tmp_path / "real"
+    real.mkdir()
+    (tmp_path / "link").symlink_to(real)
+    assert cr.trusted_dir(real) == real
+    with pytest.raises(cr.Refusal):
+        cr.trusted_dir(tmp_path / "link")

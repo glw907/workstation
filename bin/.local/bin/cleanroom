@@ -37,6 +37,7 @@ import secrets
 import shlex
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -69,7 +70,7 @@ PRICES = {
     "claude-haiku-5": (0.10, 0.50, 0.01),
     "claude-haiku-4": (1.0, 5.0, 0.10),
 }
-DEAREST = (10.0, 50.0, 0.25)
+DEAREST = PRICES["claude-fable-5"]
 
 
 class Refusal(Exception):
@@ -124,14 +125,23 @@ def scripted_socket() -> Path:
 
 
 def child_user() -> str | None:
-    """Return the Unix user the session runs as, or None when it runs in-process."""
-    user = os.environ.get("CLEANROOM_USER", "cleanroom")
-    if not user:
+    """Return the Unix user the session runs as, or None for an explicit in-process run.
+
+    CLEANROOM_USER set to the empty string asks for in-process mode, which the tests use. A
+    missing user is a refusal and never a quiet fall back to the caller, since that would give up
+    the isolation Decide S-8 asks for and the probe could not see it.
+    """
+    user = os.environ.get("CLEANROOM_USER")
+    if user == "":
         return None
+    user = user or "cleanroom"
     try:
         pwd.getpwnam(user)
     except KeyError:
-        return None
+        raise Refusal(
+            f"no Unix user {user!r}: install the sysusers and sudoers files (bluefin-admin.md), or"
+            " set CLEANROOM_USER= to run in-process without the isolation"
+        ) from None
     return user
 
 
@@ -170,7 +180,10 @@ def remove_tree(path: Path, depth: int) -> None:
     """Delete path with shutil.rmtree, only when it sits depth levels below the root."""
     if path.is_symlink():
         raise Refusal(f"refusing to remove a symlink: {path}")
-    rel = path.resolve().relative_to(root().resolve())
+    try:
+        rel = path.resolve().relative_to(root().resolve())
+    except ValueError:
+        raise Refusal(f"refusing to remove {path}: it resolves outside {root()}") from None
     if len(rel.parts) != depth or not NAME_RE.fullmatch(rel.parts[0]):
         raise Refusal(f"refusing to remove {path}: not {depth} below {root()}")
     shutil.rmtree(path)
@@ -184,11 +197,36 @@ def write_private(path: Path, text: str) -> None:
 
 
 def write_atomic(path: Path, text: str, mode: int = 0o644) -> None:
-    """Replace path with text through a temporary file in the same directory."""
-    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    tmp.write_text(text)
-    tmp.chmod(mode)
-    os.replace(tmp, path)
+    """Replace path with text through a random temporary file in the same directory.
+
+    mkstemp creates the file exclusively, so a file or link planted at a guessable name by the
+    clean user (who can write the run directory) is never followed.
+    """
+    write_bytes_atomic(path, text.encode(), mode)
+
+
+def write_bytes_atomic(path: Path, data: bytes, mode: int = 0o644) -> None:
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+        os.chmod(tmp, mode)
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+
+
+def trusted_dir(path: Path) -> Path:
+    """Return path once it is a real directory the caller owns, else refuse.
+
+    The clean user can write the room's directories, so before the caller writes a file there it
+    checks that the directory was not swapped for a link to somewhere of the caller's.
+    """
+    info = path.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
+        raise Refusal(f"{path} is not a directory of yours")
+    return path
 
 
 def seed_claude_json(home: Path) -> dict:
@@ -299,7 +337,7 @@ def fill_probe_list(name: str, home: Path, source: Path = PROBE_LIST) -> str:
         "@RUN_DIR@": str(run_dir(name)),
         "@HOME@": str(home),
         "@NAME@": name,
-        "@USER@": pwd.getpwuid(os.getuid()).pw_name,
+        "@USER@": child_user() or pwd.getpwuid(os.getuid()).pw_name,
     }
     text = source.read_text()
     for key, value in fill.items():
@@ -307,24 +345,28 @@ def fill_probe_list(name: str, home: Path, source: Path = PROBE_LIST) -> str:
     return text
 
 
-def newest_transcript(home: Path) -> Path | None:
-    files = list((home / ".claude/projects").glob("**/*.jsonl"))
-    return max(files, key=lambda p: p.stat().st_mtime_ns, default=None)
-
-
 def mirror_transcript(name: str) -> None:
-    """Copy the newest transcript to run/transcript.jsonl, readable by the caller."""
-    src = newest_transcript(home_dir(name))
-    if src is None:
+    """Join every transcript under the home into run/transcript.jsonl, readable by the caller.
+
+    A transcript Claude Code is still appending to can end in half a line, which is dropped. The
+    copy takes the newest source's time, so the watcher sees the transcript advance.
+    """
+    files = sorted(
+        (home_dir(name) / ".claude/projects").glob("**/*.jsonl"), key=lambda f: f.stat().st_mtime_ns
+    )
+    if not files:
         return
+    parts = []
+    for file in files:
+        data = file.read_bytes()
+        parts.append(data[: data.rfind(b"\n") + 1])
+    blob = b"".join(parts)
     dst = run_dir(name) / "transcript.jsonl"
-    if dst.exists() and dst.stat().st_size == src.stat().st_size:
-        if dst.stat().st_mtime_ns == src.stat().st_mtime_ns:
-            return
-    tmp = dst.with_name(".transcript.jsonl.tmp")
-    shutil.copy2(src, tmp)
-    tmp.chmod(0o644)
-    os.replace(tmp, dst)
+    newest = files[-1].stat().st_mtime_ns
+    if dst.exists() and dst.read_bytes() == blob and dst.stat().st_mtime_ns == newest:
+        return
+    write_bytes_atomic(dst, blob)
+    os.utime(dst, ns=(newest, newest))
 
 
 def process_ids(name: str) -> list[int]:
@@ -490,10 +532,9 @@ def launch(name: str, env: dict, plan: dict) -> int:
         "CLEANROOM_PLAN": json.dumps(plan),
     }
     keep = list(handed)
-    for extra in ("CLEANROOM_ROOT",):
-        if extra in os.environ:
-            handed[extra] = os.environ[extra]
-            keep.append(extra)
+    if "CLEANROOM_ROOT" in os.environ:
+        handed["CLEANROOM_ROOT"] = os.environ["CLEANROOM_ROOT"]
+        keep.append("CLEANROOM_ROOT")
     cmd = ["/usr/bin/sudo", "-n", "-u", user, f"--preserve-env={','.join(keep)}", "--"]
     cmd += ["/usr/bin/python3", "-I", str(TOOL), "_child", name, "exec"]
     return subprocess.run(cmd, env=handed, check=False).returncode
@@ -554,7 +595,10 @@ def transcript_totals(path: Path) -> tuple[float, int]:
     for line in path.read_text().splitlines():
         if not line.strip():
             continue
-        entry = json.loads(line)
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
         msg = entry.get("message")
         if not isinstance(msg, dict) or "usage" not in msg:
             continue
@@ -638,7 +682,7 @@ def start_run(
         "secrets": specs,
         "session": session,
     }
-    write_atomic(run_dir(name) / "meta.json", json.dumps(meta, indent=2) + "\n")
+    write_atomic(trusted_dir(run_dir(name)) / "meta.json", json.dumps(meta, indent=2) + "\n")
     ledger_write({"name": name, "start": start, "end": None, "state": "running", "cost": 0.0,
                   "turns": 0})
     # --foreground keeps claude in the terminal's foreground process group; without it the
@@ -710,6 +754,9 @@ def verdict(meta: dict, obs: dict) -> str | None:
 
 def record_state(name: str, meta: dict, state: str, obs: dict | None, ended: bool) -> None:
     obs = obs or {}
+    if ended:
+        ledger_write({"name": name, "start": meta["start"], "end": time.time(), "state": state,
+                      "cost": round(obs.get("cost", 0.0), 4), "turns": obs.get("turns", 0)})
     body = {
         "state": state,
         "elapsed_min": round(obs.get("elapsed_min", 0.0), 2),
@@ -718,25 +765,24 @@ def record_state(name: str, meta: dict, state: str, obs: dict | None, ended: boo
         "transcript_mtime": obs.get("transcript_mtime"),
         "updated": time.time(),
     }
-    write_atomic(run_dir(name) / "state.json", json.dumps(body) + "\n")
-    if ended:
-        ledger_write({"name": name, "start": meta["start"], "end": time.time(), "state": state,
-                      "cost": round(obs.get("cost", 0.0), 4), "turns": obs.get("turns", 0)})
+    write_atomic(trusted_dir(run_dir(name)) / "state.json", json.dumps(body) + "\n")
 
 
 def end_run(name: str, meta: dict, state: str, obs: dict | None) -> None:
     """Interrupt the session twice, wait, record the end, then stop everything."""
     session = meta["session"]
-    for _ in range(2):
-        tmux(["send-keys", "-t", f"{session}:main", "C-c"])
-        time.sleep(0.3)
-    time.sleep(seconds("CLEANROOM_GRACE", 30))
     try:
-        obs = observe(name, meta)
-    except Exception:  # noqa: BLE001 - the stop must still happen with the last good figures
-        pass
-    record_state(name, meta, state, obs, ended=True)
-    stop(name)
+        for _ in range(2):
+            tmux(["send-keys", "-t", f"{session}:main", "C-c"])
+            time.sleep(0.3)
+        time.sleep(seconds("CLEANROOM_GRACE", 30))
+        try:
+            obs = observe(name, meta)
+        except Exception:  # noqa: BLE001 - the stop must still happen with the last good figures
+            pass
+        record_state(name, meta, state, obs, ended=True)
+    finally:
+        stop(name)
 
 
 def watch(name: str) -> None:
@@ -753,14 +799,15 @@ def watch(name: str) -> None:
             state = verdict(meta, obs)
             if state is None and not main_alive and (seen_main or obs["elapsed_min"] > 0.2):
                 record_state(name, meta, "exited", obs, ended=True)
+                stop(name)
                 return
+            if state:
+                end_run(name, meta, state, obs)
+                return
+            record_state(name, meta, "running", obs, ended=False)
         except Exception:  # noqa: BLE001 - any failure of the watcher itself ends the run
             end_run(name, meta, "stopped:watcher", obs)
             return
-        if state:
-            end_run(name, meta, state, obs)
-            return
-        record_state(name, meta, "running", obs, ended=False)
         time.sleep(tick)
 
 
@@ -769,14 +816,16 @@ def stop(name: str) -> None:
 
     The processes go first because the watcher calls this from inside the session it ends.
     """
-    run_child(name, "kill")
-    base = session_name(name)
-    for socket in (None, scripted_socket()):
-        if socket is not None and not socket.exists():
-            continue
-        for session in tmux_sessions(socket):
-            if session == base or session.startswith(base + "-"):
-                tmux(["kill-session", "-t", session], socket)
+    try:
+        run_child(name, "kill")
+    finally:
+        base = session_name(name)
+        for socket in (None, scripted_socket()):
+            if socket is not None and not socket.exists():
+                continue
+            for session in tmux_sessions(socket):
+                if session == base or session.startswith(base + "-"):
+                    tmux(["kill-session", "-t", session], socket)
 
 
 def cmd_stop(args: argparse.Namespace) -> None:
@@ -1046,7 +1095,10 @@ def transcript_calls(path: Path) -> list[dict]:
     if not path.exists():
         return []
     for line in path.read_text().splitlines():
-        content = (json.loads(line).get("message") or {}).get("content") if line.strip() else None
+        try:
+            content = (json.loads(line).get("message") or {}).get("content") if line.strip() else None
+        except ValueError:
+            continue
         for block in content if isinstance(content, list) else []:
             if block.get("type") == "tool_use":
                 inp = block.get("input", {})
@@ -1068,7 +1120,7 @@ def exit_failed(call: dict) -> bool:
     return call["is_error"] or bool(re.search(r"Exit code [1-9]", call["text"]))
 
 
-PATH_RE = re.compile(r"(?<![\w.$-])/[\w.@/-]+")
+PATH_RE = re.compile(r"(?<![\w.$/-])/[\w.@-][\w.@/-]*")
 
 
 def outside_control(command: str) -> dict[str, str]:
@@ -1093,12 +1145,13 @@ def masked_by_sandbox(
 ) -> str | None:
     """Return how the output shows a masked path, or None.
 
-    Evidence is a "No such file" line that names a path the list's control found outside (any
-    item's path: a shadow script reads the canary the list names elsewhere), or an empty
-    listing, with exit 0, of a directory this item names that the control found non-empty.
+    Evidence is a "No such file" line that names, as a whole path, one a denied item names and
+    the control found outside (a shadow script reads the canary another item names), or an
+    empty listing, with exit 0, of a directory this item names that the control found non-empty.
     """
     for path in known:
-        if known[path] != "empty-dir" and "No such file" in text and path in text:
+        whole = rf"(?<![\w./-]){re.escape(path)}(?![\w./-])"
+        if "No such file" in text and re.search(whole, text):
             return f"masked: {path} exists outside and is absent inside"
     quiet = not text.strip().replace("(Bash completed with no output)", "")
     for path, kind in control.items():
@@ -1256,9 +1309,14 @@ def finish_probe(
     state_path = rd / "state.json"
     state = json.loads(state_path.read_text()) if state_path.exists() else {}
     rows, failed = [], []
+    known = {
+        p: k
+        for n, item in enumerate(items)
+        if item["word"] == "denied"
+        for p, k in controls.get(n, {}).items()
+    }
     for n, item in enumerate(items):
         call = next((c for c in calls if c["command"] == item["command"]), None)
-        known = {p: k for c in controls.values() for p, k in c.items()}
         why, note = grade_item(item, call, prompts, controls.get(n), known)
         rows.append((item, why, note))
         if why:
@@ -1299,7 +1357,7 @@ def finish_probe(
     out += [f"- {f}" for f in failed] or ["none"]
     if failed and last_pane.strip() and not pane_hits:
         out += ["", "## Last pane", "", "```", *last_pane.rstrip().splitlines(), "```"]
-    path = rd / "probe.md"
+    path = trusted_dir(rd) / "probe.md"
     write_atomic(path, "\n".join(out) + "\n")
     append_probe_row({"sha256": sha, "verdict": verdict, "path": str(path)})
     print(f"probe {verdict}: {path}")
@@ -1326,6 +1384,7 @@ def cmd_init(args: argparse.Namespace) -> None:
     nd = name_dir(args.name)
     if args.discard and not args.fresh:
         raise Refusal("--discard goes with --fresh")
+    user = other_user()
     if nd.exists():
         if not args.fresh:
             raise Refusal(f"{nd} exists; use --fresh to rebuild it")
@@ -1338,11 +1397,13 @@ def cmd_init(args: argparse.Namespace) -> None:
     root().mkdir(parents=True, exist_ok=True)
     nd.mkdir()
     run_dir(args.name).mkdir()
-    user = other_user()
     if user is not None:
         subprocess.run(
             ["setfacl", "-m", f"u:{user}:rwx", str(nd), str(run_dir(args.name))], check=True
         )
+        # Sticky, so the clean user can add files but never rename or replace the caller's entries.
+        os.chmod(nd, 0o1775)
+        os.chmod(run_dir(args.name), 0o1775)
     run_child(args.name, "home")
     canary = init_canary()
     print(f"clean room {args.name}: {home_dir(args.name)}")

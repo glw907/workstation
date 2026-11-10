@@ -7,8 +7,11 @@
 A list line is `- WORD: `COMMAND``, or `- WORD [ARG]: `COMMAND`` for the words that take an
 argument. Any other line is prose.
 
-- denied: a read the sandbox must stop; passes only on denial evidence (a sandbox denial, EACCES,
-  EPERM, "Permission denied", "Operation not permitted"). "No such file" fails it.
+- denied: a read the sandbox must stop; passes on denial evidence (a sandbox denial, EACCES,
+  EPERM, "Permission denied", "Operation not permitted") or on masking: the sandbox hides a
+  denied path, so a "No such file" that names, as a whole path, one a denied item names and that
+  exists outside the sandbox before the session starts passes too, and so does an empty listing
+  of a directory that is non-empty outside. A "No such file" for any other path fails it.
 - fails: a non-zero exit is the pass.
 - prompt: a permission prompt is the pass; the probe answers it "No".
 - ok: exit 0.
