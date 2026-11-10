@@ -6,8 +6,13 @@ set -uo pipefail
 # review session in a fresh worktree from docs/model-review/prompt.txt.
 # --dry-run skips the pull and tells the session to commit locally and stop:
 # no push, no PR, no notification. Logs to the journal.
+#
+# Only pavilion runs the review. A run that cannot pull, or that finds the
+# month's branch on origin, stops before any session starts.
+# MODEL_REVIEW_PULL_DELAY sets the seconds between pull retries (default 60).
 
-export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/home/linuxbrew/.linuxbrew/bin:/usr/bin:$PATH"
+# Appended, so a caller's PATH (a test's stubs) wins over the real tools.
+export PATH="$PATH:$HOME/.local/bin:$HOME/.local/share/mise/shims:/home/linuxbrew/.linuxbrew/bin:/usr/bin"
 
 dry_run=0
 [[ "${1:-}" == "--dry-run" ]] && dry_run=1
@@ -16,11 +21,34 @@ repo=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../../.." && pwd)
 report=$(mktemp /tmp/model-review-audit.XXXXXX)
 trap 'rm -f "$report"' EXIT
 
+if (( ! dry_run )) && [[ "$(hostname -s)" != pavilion ]]; then
+    echo "not pavilion: the monthly review runs there only"
+    exit 0
+fi
+
 # worktree.baseRef is "head", and the session cannot pull the main checkout
-# after its own self-merge, so the pull happens here. A refused pull leaves
-# the checkout as is and the review runs from local HEAD.
+# after its own self-merge, so the pull happens here. A stale tree would spend
+# a full review on old rules, so a pull that keeps failing ends the run.
 if (( ! dry_run )); then
-    git -C "$repo" pull --ff-only || echo "pull refused; reviewing from local HEAD"
+    pulled=0
+    for try in 1 2 3 4 5; do
+        if git -C "$repo" pull --ff-only; then
+            pulled=1
+            break
+        fi
+        echo "pull failed (try $try of 5)"
+        (( try < 5 )) && sleep "${MODEL_REVIEW_PULL_DELAY:-60}"
+    done
+    if (( ! pulled )); then
+        notify-send -u normal "Model review: pull failed" \
+            "Rerun with: systemctl --user start model-review.service"
+        exit 1
+    fi
+    if git -C "$repo" ls-remote --exit-code origin \
+        "refs/heads/worktree-model-review-$(date +%Y-%m)" > /dev/null; then
+        echo "this month's review branch is already on origin; nothing to do"
+        exit 0
+    fi
 fi
 
 cd "$repo" || exit 1
