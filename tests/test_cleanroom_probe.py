@@ -214,7 +214,7 @@ def probe(tmp_path):
 
 def test_probe_list_parses_every_item():
     items = cr.parse_probe_list((SHARE / "probe-commands.md").read_text())
-    assert len(items) == 27
+    assert len(items) == 26
     assert {i["word"] for i in items} == {"denied", "fails", "prompt", "ok", "prints", "omits"}
     commands = [i["command"] for i in items]
     for want in ("cat @CANARY@", "sudo -n true", "id -un", "./bin/cairn",
@@ -244,6 +244,8 @@ def test_init_fills_the_probe_list(probe):
     assert not any(p in text for p in ("@CANARY@", "@SECRETS@", "@RUN_DIR@", "@NAME@", "@USER@"))
     assert f"cat {probe.state / 'canary'}" in text
     assert str(probe.root / "r0/run") in text
+    push = (probe.root / "r0/home/work/push.sh").read_text()
+    assert "@NAME@" not in push and "git push origin probe-r0" in push
 
 
 @live

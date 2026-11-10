@@ -51,6 +51,7 @@ URL_RE = re.compile(r"^https?://\S+$")
 TOOL = Path(os.path.realpath(__file__))
 TEMPLATE = TOOL.parent.parent / "share/cleanroom/settings.json"
 PROBE_LIST = TOOL.parent.parent / "share/cleanroom/probe-commands.md"
+PUSH_SCRIPT = TOOL.parent.parent / "share/cleanroom/probe-push.sh"
 MIN_SECRET_LENGTH = 8
 
 # Dollars per million tokens (input, output, cache read) from the claude-api skill's table of
@@ -285,10 +286,11 @@ def make_home(name: str) -> None:
     relay.chmod(0o755)
     write_private(name_dir(name) / "keyring-pass", secrets.token_urlsafe(24))
     (home / "work/probe-commands.md").write_text(fill_probe_list(name, home))
+    (home / "work/push.sh").write_text(fill_probe_list(name, home, PUSH_SCRIPT))
 
 
-def fill_probe_list(name: str, home: Path) -> str:
-    """Return the probe list with its absolute-path placeholders replaced."""
+def fill_probe_list(name: str, home: Path, source: Path = PROBE_LIST) -> str:
+    """Return a probe data file (the list by default) with its placeholders replaced."""
     fill = json.loads(
         os.environ.get("CLEANROOM_FILL")
         or json.dumps({"@CANARY@": str(state_dir() / "canary"), "@SECRETS@": str(secrets_file())})
@@ -299,7 +301,7 @@ def fill_probe_list(name: str, home: Path) -> str:
         "@NAME@": name,
         "@USER@": pwd.getpwuid(os.getuid()).pw_name,
     }
-    text = PROBE_LIST.read_text()
+    text = source.read_text()
     for key, value in fill.items():
         text = text.replace(key, value)
     return text
