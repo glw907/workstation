@@ -128,8 +128,8 @@ is small ... ask Claude to do it directly."
   executor reasoning moves the next pass to `high` (Sonnet 5.5 page: "start at medium for
   well-specified tasks and move to high for harder or longer ones").
 - Reserve `xhigh` and `max` for work where you've measured a quality gain (Opus 5.5 page). An
-  unsettled decision re-runs at `xhigh`, then `max` (one session-only adjudication), then one
-  `fable` dispatch, per dispatch and never a session switch or frontmatter pin. Reviewers take
+  unsettled decision re-runs at `xhigh`, then one
+  `fable` dispatch at `high`, per dispatch and never a session switch or frontmatter pin. Reviewers take
   `claude-opus-5-5` from agent frontmatter. `haiku` reads and copies, never decides, and stays under
   100k context. `low` effort suits mechanical subagents, never Fable.
 

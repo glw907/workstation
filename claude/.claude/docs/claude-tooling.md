@@ -34,7 +34,7 @@ Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; the 
 `pass-core` "Models"): every reviewer agent under `agents/` names `claude-opus-5-5` explicitly
 (`standards:diff-reviewer`, the four domain reviewers, `standards:go-architecture-reader`,
 `standards:figure-verifier`, `standards:visual-verifier`, `prose-voice-reviewer`, `cairn-register-editor`,
-`standards:plan-reviewer`). No agent pins Fable 5.1; it is reached only by a per-dispatch escalation.
+`standards:plan-reviewer`). No agent pins the `fable` alias; it is reached only by a per-dispatch escalation.
 Implementers stay on `sonnet` at effort `medium`. A frontmatter pin is read at session start, so a
 repin reaches a running session only through a per-dispatch `model`; verify a
 repin from a fresh headless session by grepping the subagent transcript's `"model"` field,
