@@ -92,6 +92,33 @@
 - [ ] **#57** Run an effort sweep on the 5.5 models before carrying effort settings forward `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
   For Opus 5.5 and Sonnet 5.5, the effort page says to "Run an effort sweep on your own evals rather than carrying settings over from an earlier model" (<https://platform.claude.com/docs/en/build-with-claude/effort>). The 2026-09-28 sweep filed this to the retired ROADMAP, and it fell out. It needs an eval this machine can't run yet: a fixed task set graded the same way at each level. Record: `docs/specs/2026-11-01-model-review-subagent-effort-design.md`.
 
+- [ ] **#58** Name mail moves as a standing chat exception in `approval-packet` `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+  `mail-tend:61, 88` sends a mail move or rule design to chat, and `approval-packet:29` forbids that. Add one clause to `approval-packet` that names mail moves as a standing chat exception, since they are small and reversible. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
+
+- [ ] **#59** Let forced asks exceed `approval-packet`'s three-ask cap `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+  `approval-packet:38` says "at most three asks", which can't hold when four PRs each carry a forced ask. Keep the cap and say in that line that forced asks may exceed it. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
+
+- [ ] **#60** Tighten `visual-verifier` to 4.5:1 for a CTA pair in glw907/standards `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+  `visual-verifier:30` flags a call-to-action pair under 3:1, while `daisyui-a11y-reviewer:72` uses 4.5:1 for text. Raise the verifier to 4.5:1, WCAG's floor for button labels. The agent lives in glw907/standards, so the edit lands there. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
+
+- [ ] **#61** Narrow `prose-voice-reviewer`'s docs-tier em dash flag `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+  `prose-voice-reviewer:50-51` flags a docs-tier em dash, and the writing-voice output style allows Google's no-space form in developer docs. Narrow the flag to overuse or a spaced dash. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
+
+- [ ] **#62** State who pushes and merges at `site-implementer:70` `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+  `site-implementer:15` says it never pushes, yet `:70` merges a cairn-cms docs branch by PR. Say at line 70 that the dispatching session pushes and merges. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
+
+- [ ] **#63** Add a no-argument `gate.sh` wrapper to the cairn-cms and site adapters `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+  `pass-core`, `cairn-pass:20`, and `site-pass:28` give the `cairn-run-gate '<string>'` form that `dotfiles-pass` says the worktree guard refuses, and a `-w` session's guard refused compound commands too. Add a no-argument `gate.sh` wrapper to each repo's adapter the next time that adapter changes. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
+
+- [ ] **#64** Add a cross-repo clause to `spec-plan-review`'s review records line in glw907/standards `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+  `spec-plan-review:55` sends review records to `docs/research/`, while `pass-core` sends cross-repo research to `initiatives/<id>/`. Keep repo-scoped records in `docs/research/` and add a clause for cross-repo work. The skill lives in glw907/standards. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
+
+- [ ] **#65** Narrow CLAUDE.md's "prefer dispatching reads" to reads across several files `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+  The best practices page retired "Use subagents to protect your context window" because each subagent "costs extra tokens" (<https://code.claude.com/docs/en/best-practices>). Keep the "Initiative-scoped sessions" rule, since it is about cache re-reads, and narrow it to reads across several files. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
+
+- [ ] **#66** Cut `writing-voice.md:64-65` and `:80-81` and re-test in glw907/survey `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+  `output-styles/writing-voice.md` is vendored from glw907/survey, so the cut of those two passages and the re-test of the style land there, not here. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
+
 - [ ] **#54** Clamp token counts and keep the first turn in `cleanroom`'s transcript cost `#bug` `#workstation` `#initiative:cairn-setup` *(2026-11-09)*
   `usage_cost` does not clamp negative token counts, and `transcript_totals` lets a later line that reuses a message id replace the real turn, so a transcript the agent can write could lower the dollar figure the cap reads. Both predate the cost-unknown change (glw907/workstation#218), and the agent already holds a simpler path through `cleanroom statusline`. Clamp each count at zero and keep the first line seen for an id.
   Placement: with the next `cleanroom` change.
