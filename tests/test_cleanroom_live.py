@@ -31,6 +31,10 @@ transcript() {
 case "$STUB_MODE" in
   cost21) report 21; sleep 60 ;;
   stale) report 1; for i in $(seq 1 100); do transcript "$i"; sleep 0.5; done ;;
+  unpriced)
+    report 1
+    mkdir -p "$HOME/.claude/projects/p"
+    for i in $(seq 1 100); do printf '{"type":"note"}\n' >> "$HOME/.claude/projects/p/s.jsonl"; sleep 0.5; done ;;
   corrupt) printf 'not json' > "$RUN/statusline.json"; sleep 60 ;;
   detached) setsid sleep 300 & sleep 60 ;;
   leak) echo "token is $ANTHROPIC_API_KEY"; sleep 60 ;;
@@ -181,8 +185,16 @@ def test_a_statusline_cost_of_21_ends_as_stopped_cost(lroom):
 
 
 @live
-def test_a_stale_statusline_ends_as_stopped_cost_unknown(lroom):
-    lroom.start("r1", "stale")
+def test_a_stale_statusline_with_a_priced_transcript_keeps_the_caps(lroom):
+    # The statusline never refreshes after one report, and the transcript prices every turn, so
+    # the cost is known from the transcript and the time cap still ends the run.
+    lroom.start("r1", "stale", "--cap-min", "0.1")
+    assert lroom.final("r1")["state"] == "stopped:time"
+
+
+@live
+def test_a_stale_statusline_and_an_unpriced_transcript_end_as_stopped_cost_unknown(lroom):
+    lroom.start("r1", "unpriced")
     assert lroom.final("r1")["state"] == "stopped:cost-unknown"
 
 

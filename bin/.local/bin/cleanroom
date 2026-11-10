@@ -739,7 +739,14 @@ def observe(name: str, meta: dict) -> dict:
 
 
 def verdict(meta: dict, obs: dict) -> str | None:
-    """Return the stop state the observation calls for, or None to keep going."""
+    """Return the stop state the observation calls for, or None to keep going.
+
+    The dollar cap reads the higher of the statusline's cost and the transcript's, so a stale
+    statusline leaves the cap enforced while the transcript carries priced turns, as it does while a
+    long background command keeps the transcript advancing and the statusline unrefreshed. The run
+    stops as cost-unknown only when the statusline is stale and the transcript advances with no priced
+    turn, which leaves no cost figure to hold the cap against.
+    """
     if obs["cost"] >= meta["cap_usd"]:
         return "stopped:cost"
     if obs["elapsed_min"] >= meta["cap_min"]:
@@ -747,7 +754,7 @@ def verdict(meta: dict, obs: dict) -> str | None:
     stale = seconds("CLEANROOM_STALE", 120)
     sl_age = obs["now"] - (obs["statusline_mtime"] or meta["start"])
     advancing = obs["transcript_mtime"] is not None and obs["now"] - obs["transcript_mtime"] < stale
-    if sl_age > stale and advancing:
+    if sl_age > stale and advancing and obs["cost_transcript"] <= 0:
         return "stopped:cost-unknown"
     return None
 
