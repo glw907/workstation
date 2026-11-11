@@ -24,7 +24,9 @@ scripts/check.sh'`; a worktree-isolated session's Bash guard refuses the wrapped
 the no-argument wrapper. The light lane fits: the
 gate launches no browser and its measured peak is 105 MB.
 
-**Fast lane**: The same command. It takes about 76 seconds, so no narrower lane exists.
+**Fast lane**: `bash scripts/gate.sh --scope-changed`, which runs only the legs the working tree's
+changes touch plus the legs that always run. Its receipt never stands for the whole gate. The gate
+at close stays `bash scripts/gate.sh`.
 
 **Worktree setup**: The launch's `.claude/worktrees/<name>`; no setup command.
 
