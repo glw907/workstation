@@ -16,11 +16,7 @@ filter out any agent `journal.jsonl` already marks complete, or every finished c
 reads as a stall, learned 2026-09-12), or any `agent-*.jsonl` past ~900KB and still
 growing (token runaway; ~3.5-4 chars/token; an implementer polling its own background
 gate run also inflates its transcript, so confirm with a tail sample before killing). The
-rule in one line: journal for completion, transcripts for idle and size. Arm it with
-`claude-wf-guard <transcript-dir> <tier> [run-id]` (`bin/.local/bin/claude-wf-guard`), which
-implements exactly this journal-then-transcript check against tiered, measured size limits
-(`implementer` 1.8MB, `writer` 4MB, `build` 5MB, `visual` 24MB) rather than hand-written
-thresholds.
+rule in one line: journal for completion, transcripts for idle and size.
 Intervention: TaskStop, relaunch with `resumeFromRunId` (done steps replay from cache;
 give the re-run task a note to review and keep-or-revert any partial uncommitted work).
 Prevention rides the prompts: memory-keeping agentTypes get an explicit "skip
@@ -102,7 +98,10 @@ workflow's completion or failure, or a background Bash task's exit, reaches the 
 task notification, and a notification that fires while the API link is down is not retried on a
 timer: the session sits until a human types. On 2026-09-20 an `EAI_AGAIN` drop killed a fold
 implementer at about 04:00, the chain halted, and the session sat unwoken until Geoff's 09:16
-message, with no suspend in `journalctl` and every inhibitor held. So any run left unattended arms
+message, with no suspend in `journalctl` and every inhibitor held. A session that only waits, on an
+`approval-queue packet` call or an idle notice, arms no wake-up and no Monitor, because the
+command's exit or the notice wakes it. Any working session left unattended (an executor, a
+workflow run) arms
 a scheduled wake-up as well: `/loop` with no interval (dynamic pacing), started as the executing
 session's first guard (`pass-core` "Execute") and, for a workflow, once it is launched. The
 notification is the primary signal and a 1200 to 1800 second fallback is the backstop. The
