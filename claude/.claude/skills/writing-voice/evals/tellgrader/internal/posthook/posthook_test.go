@@ -145,17 +145,25 @@ func TestWholeDocFindingsOnlyOnWrite(t *testing.T) {
 }
 
 func TestRunWarnsOnChangedLineOnly(t *testing.T) {
-	body := "The chip has no minimum of its, so tables budget.\n\nThe site sets its own roles.\n"
+	body := "The chip has no minimum of its, so tables budget. It delves into the tapestry.\n\nThe site sets its own roles. It delves into the tapestry.\n"
 	path := writeDoc(t, "warn.md", body)
-	out := Run(event(t, "Edit", path, "The site sets its own roles.", ""))
+	out := Run(event(t, "Edit", path, "The site sets its own roles. It delves into the tapestry.", ""))
 	if !strings.Contains(out, "warning empty-own") {
 		t.Errorf("Run() = %q, want an empty-own warning on the edited line", out)
 	}
 	if strings.Contains(out, "dangling-possessive") {
 		t.Errorf("Run() = %q, want no warning for the unchanged dangling line", out)
 	}
-	out = Run(event(t, "Edit", path, "The chip has no minimum of its, so tables budget.", ""))
+	out = Run(event(t, "Edit", path, "The chip has no minimum of its, so tables budget. It delves into the tapestry.", ""))
 	if !strings.Contains(out, "warning dangling-possessive") || strings.Contains(out, "empty-own") {
 		t.Errorf("Run() = %q, want only the dangling-possessive warning", out)
+	}
+}
+
+func TestRunSilentOnWarningsAlone(t *testing.T) {
+	body := "The site sets its own roles.\n"
+	path := writeDoc(t, "warn-only.md", body)
+	if out := Run(event(t, "Write", path, "", body)); out != "" {
+		t.Errorf("Run() = %q, want silence when only warnings fire", out)
 	}
 }

@@ -89,7 +89,7 @@ func Run(raw []byte) string {
 	text := string(saved)
 	report := tellscan.Scan(text, scanOptions(reg, path))
 	findings, warnings := keptFindings(report, text, &in)
-	if len(findings) == 0 && len(warnings) == 0 {
+	if len(findings) == 0 {
 		return ""
 	}
 	var b strings.Builder
