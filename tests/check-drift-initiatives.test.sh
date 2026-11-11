@@ -3,7 +3,7 @@
 # Each case runs `check-drift --initiatives-only` with INITIATIVES_DIR on a fixture and expects
 # its line and exit 0, because a missing, stale, or unreachable clone never fails the run.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 SCRIPT="$(pwd)/bin/.local/bin/check-drift"
 fail=0
 root="$(mktemp -d)"

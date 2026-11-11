@@ -84,6 +84,27 @@ check_bash_syntax() {
     return "$ok"
 }
 
+check_shellcheck() {
+    # Warning-level findings over the same files check_bash_syntax reads. bin/.local/bin/check-drift
+    # is excluded from SC2140 only: its line 173 carries a finding in an auth-data file this pass
+    # leaves alone (BACKLOG has the item). Any other finding there still fails.
+    if ! command -v shellcheck >/dev/null 2>&1; then
+        echo "shellcheck is not installed (brew install shellcheck)" >&2
+        return 1
+    fi
+    local f ok=0
+    while IFS= read -r f; do
+        if head -1 "$f" 2>/dev/null | grep -q '^#!.*bash'; then
+            if [ "$f" = bin/.local/bin/check-drift ]; then
+                shellcheck -S warning --exclude=SC2140 "$f" || ok=1
+            else
+                shellcheck -S warning "$f" || ok=1
+            fi
+        fi
+    done < <(git ls-files)
+    return "$ok"
+}
+
 check_no_old_names() {
     # The old app and hook names, and the old planning folder, stay gone from live files. The
     # brackets keep this pattern from matching its own line. git grep exits 1 when nothing
@@ -108,6 +129,7 @@ GUIDED='^(\.claude/skills/|claude/\.claude/(skills|agents)/|claude/\.claude/(set
 # "exec" pass it runs the selected ones. run NAME CLAIM DESCRIPTION COMMAND...
 legs() {
     run bash-n shebang-bash "bash -n over tracked shell scripts" check_bash_syntax
+    run shellcheck shebang-bash "shellcheck -S warning over tracked shell scripts" check_shellcheck
     run tellgrader '^claude/\.claude/skills/writing-voice/evals/tellgrader/' \
         "tellgrader go check" make -C claude/.claude/skills/writing-voice/evals/tellgrader check
     run py-comments '\.py$|^ruff\.toml$|^scripts/check-py-comments\.sh$|^bin/\.local/bin/' \

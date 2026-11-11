@@ -48,6 +48,11 @@ for f in scripts/check.sh scripts/gate.sh; do
     [ "$(plan "$f")" = "$all" ] && ok "$f selects every leg" || bad "$f did not select every leg"
 done
 
+# A change to a bash script selects the shellcheck leg; a doc change does not.
+script=$(plan tests/check-moves.test.sh)
+printf '%s\n' "$script" | grep -qx shellcheck && ok "a bash script change selects the shellcheck leg" || bad "a bash script change skipped the shellcheck leg"
+printf '%s\n' "$doc" | grep -qx shellcheck && bad "a doc change selected the shellcheck leg" || ok "a doc change skips the shellcheck leg"
+
 # --leg twice selects both; an unknown name exits 2 and lists the names.
 two=$(bash scripts/check.sh --plan --leg pass-count --leg check-moves | sort | tr '\n' ' ')
 [ "$two" = "check-moves pass-count " ] && ok "--leg twice selects both" || bad "--leg twice selected: $two"
