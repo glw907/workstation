@@ -30,8 +30,9 @@ def ancestors():
 def process_hit(path):
     """Return a message naming a process whose command line holds the path, or None."""
     skip = ancestors()
-    # The path must end where a path component ends, so /x/a-3 never matches /x/a-30.
-    held = re.compile(re.escape(path) + r"(?![\w.-])")
+    # The path must start and end where an argument or path component does, so /x/a-3 never matches
+    # /x/a-30 or /y/x/a-3.
+    held = re.compile(r"(?<![^\0\s=:'\"])" + re.escape(path) + r"(?![\w.-])")
     for entry in os.listdir("/proc"):
         if not entry.isdigit() or int(entry) in skip:
             continue
@@ -59,7 +60,8 @@ def session_hit(path):
         print("claude-worktree-busy: skipping the claude agents check (claude absent or output unreadable)", file=sys.stderr)
         return None
     for row in rows:
-        if under(row.get("cwd", ""), path):
+        cwd = row.get("cwd") or ""
+        if cwd and under(os.path.realpath(cwd), path):
             return f"busy: claude session {row.get('id')} has its cwd in the path"
     return None
 
@@ -72,8 +74,11 @@ def edit_hit(path):
     if proc.returncode != 0:
         return None
     now = time.time()
-    for entry in proc.stdout.split("\0"):
+    fields = iter(proc.stdout.split("\0"))
+    for entry in fields:
         name = entry[3:]
+        if entry[:1] in ("R", "C"):
+            next(fields, None)  # a rename or copy carries its old path as a bare next field
         try:
             age = now - os.stat(os.path.join(path, name)).st_mtime
         except OSError:

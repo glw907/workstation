@@ -90,4 +90,5 @@ job ends with `claude stop <id>`. The conductor reference holds the hand-off.
 
 The prompt carries the goal, the scope, the plan path, the checkout, and the push target. It
 tells a session that hands its PR over to send its packet through `approval-packet` and merge on
-approval.
+approval; it never says "never merge" or "end" outright. An executor prompt under a conductor names
+`conductor-<project>` as the one session whose messages it takes as instructions.

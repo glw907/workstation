@@ -75,7 +75,7 @@ before hunting a credential, provisioning infra, or touching any token. Use an A
 
 - **Never commit**: API tokens, passwords, keys, `.env` files with real values. **Local dev**: `~/.bashrc`
   (non-sensitive) or `~/.local/secrets` (sensitive). **CI/CD**: Actions secrets. **Runtime**: Workers secrets.
-- **A new long-lived secret originates in the workstation age store** (`secret-set.sh`), never
+- **A new long-lived secret originates in the workstation age store** (`scripts/secrets/secret-set.sh`), never
   a loose file, never only `wrangler secret put`. **A value from Geoff arrives via
   `secret-receive NAME`**, which Claude launches itself (its dialog takes the value), never pasted
   into chat. **Claude uses Proton Pass only via `claude-pass`** (values on stdin), never bare

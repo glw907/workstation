@@ -49,6 +49,13 @@ sleeper=$!
 check 0 "process holds only a prefix of the path" "$repo"
 kill "$sleeper"; wait "$sleeper" 2>/dev/null; sleeper=
 
+bash -c 'sleep 30; true' "/elsewhere$repo" &
+sleeper=$!
+check 0 "process holds a longer path that ends in the path" "$repo"
+kill "$sleeper"; wait "$sleeper" 2>/dev/null; sleeper=
+
+ln -s "$root" "$root/link"
+STUB_CWD="$root/link/refinement-3" check 1 "session cwd reaches the path through a symlink" "$repo"
 STUB_CWD="$repo/sub" check 1 "session cwd under path" "$repo"
 STUB_CWD="${repo}0" check 0 "session cwd shares only a prefix" "$repo"
 

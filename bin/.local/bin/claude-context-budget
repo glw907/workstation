@@ -28,7 +28,7 @@ RULE_BUDGET="${RULE_BUDGET:-1000}"
 SKILL_CAPS=(
   "pass-core/SKILL.md 1500"
   "pass-core/references/executor.md 900"
-  "pass-core/references/planner.md 900"
+  "pass-core/references/planner.md 940"
   "pass-core/references/conductor.md 560"
 )
 

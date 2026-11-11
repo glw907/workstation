@@ -56,7 +56,9 @@ peak fits its 3G cap; a browser leg runs alone on the heavy lane after them. Sha
 
 After each push the adapter's watch command runs as a background Bash task (`run_in_background`),
 which re-invokes the session on exit. No task waits for CI before the next, and a red stops the
-line. Where the full-suite home is local, there is no watch command.
+line. Where the full-suite home is local, there is no watch command. `RUN_GATE_IF_BUSY=defer`
+leaves a heavy leg to the push's CI (exit 76) when another run holds the lock; set it only where CI
+is the full-suite home, and never on an `auth-data` task.
 
 ## Score
 
