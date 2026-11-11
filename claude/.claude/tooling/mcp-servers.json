@@ -11,12 +11,12 @@
       "command": "npx",
       "args": [
         "-y",
-        "@playwright/mcp@latest",
+        "@playwright/mcp@0.0.85",
         "--executable-path",
         "/usr/bin/chromium-browser"
       ],
       "env": {},
-      "_why": "Microsoft's Playwright server: structured DOM inspection for reproducing an e2e failure; distinct from claude-in-chrome, which drives the desktop browser. It defaults to a Chrome build at /opt/google/chrome, which this workstation lacks, so it points at the layered Chromium."
+      "_why": "Microsoft's Playwright server: structured DOM inspection for reproducing an e2e failure; distinct from claude-in-chrome, which drives the desktop browser. It defaults to a Chrome build at /opt/google/chrome, which this workstation lacks, so it points at the layered Chromium. The version is pinned to 0.0.85, the one measured in the stack-pilots pass, so a new release changes nothing until a dependency upgrade moves it."
     }
   }
 }
