@@ -224,8 +224,12 @@ def test_template_keeps_the_invariants():
     sandbox = data["sandbox"]
     assert sandbox["enabled"] is True
     assert sandbox["failIfUnavailable"] is True
-    assert sandbox["allowUnsandboxedCommands"] is False
-    denied = {e["name"] for e in sandbox["credentials"]["envVars"] if e["mode"] == "deny"}
+    # The unsandboxed retry is on so a call that misses an exclusion raises the prompt a real owner
+    # sees. The allow list would otherwise approve that retry with the setup token in its
+    # environment, so the retry is allowed only behind an ask rule that prompts on every one.
+    assert sandbox["allowUnsandboxedCommands"] is True
+    assert data["permissions"]["ask"] == ["Bash(dangerouslyDisableSandbox:true)"]
+    denied ={e["name"] for e in sandbox["credentials"]["envVars"] if e["mode"] == "deny"}
     assert denied == {"CAIRN_CF_SETUP_TOKEN", "ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN"}
     assert set(PROTOTYPE_DENY) <= set(data["permissions"]["deny"])
     assert sandbox["excludedCommands"] == [

@@ -80,6 +80,9 @@
       "WebFetch(domain:cdn.playwright.dev)",
       "WebFetch(domain:playwright.download.prss.microsoft.com)"
     ],
+    "ask": [
+      "Bash(dangerouslyDisableSandbox:true)"
+    ],
     "deny": [
       "Read(//var/home/glw907/**)",
       "Read(//home/glw907/**)",
@@ -109,7 +112,7 @@
   "sandbox": {
     "enabled": true,
     "failIfUnavailable": true,
-    "allowUnsandboxedCommands": false,
+    "allowUnsandboxedCommands": true,
     "filesystem": {
       "denyRead": [
         "/var/home/glw907",
