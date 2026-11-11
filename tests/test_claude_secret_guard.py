@@ -51,3 +51,9 @@ def test_blocks_literal_values(line):
     result = run(line + "\n")
     assert result.returncode == 2
     assert "credential-shaped assignment" in result.stderr
+
+
+def test_block_message_leads_with_the_fixture_marker():
+    result = run("API_TOKEN=" + RANDOM + "\n")
+    after_finding = result.stderr.split("). ", 1)[1]
+    assert "secret-guard-allow" in after_finding.split(". ", 1)[0]
