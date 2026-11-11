@@ -61,6 +61,8 @@ FENCE = re.compile(r"^ {0,3}(```|~~~)")
 SPAN = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
 DESCRIPTION_CAP = 500
 _MISSING = object()
+AUTOMODE_KEY_LEN = 60
+INITIATIVE_PATH = re.compile(r"initiatives/([A-Za-z0-9][\w.-]*)/")
 FORK_CONTEXT = re.compile(r"""^context:\s*["']?fork["']?\s*$""")
 # A fork skill runs in a fresh context: it cannot see the conversation or put a question to the user.
 FORK_PHRASES = ("under discussion", "during the session", "delegated", "ask the user",
@@ -208,6 +210,44 @@ def check_settings(paths):
     return bool(stale)
 
 
+def initiative_status(projects_root, initiative):
+    """Return the `status:` of an initiative record by a line match, or None if unreadable."""
+    record = projects_root / "initiatives" / initiative / "initiative.yaml"
+    try:
+        text = record.read_text()
+    except OSError:
+        return None
+    match = re.search(r"^status:\s*[\"']?([\w-]+)", text, re.MULTILINE)
+    return match.group(1) if match else None
+
+
+def check_auto_mode(paths, projects_root):
+    """Print stale or unknown autoMode.allow entries; informational, never changes the exit."""
+    print("Auto-mode entries (settings.json autoMode.allow against initiative records):")
+    settings = load(paths.settings) if paths.settings.exists() else {}
+    entries = settings.get("autoMode", {}).get("allow", [])
+    map_path = paths.tooling / "automode-initiatives.json"
+    mapped = load(map_path) if map_path.exists() else {}
+    standing = live = 0
+    for n, entry in enumerate(entries):
+        if not isinstance(entry, str) or entry.startswith("$"):
+            continue
+        head = entry[:AUTOMODE_KEY_LEN]
+        found = INITIATIVE_PATH.search(entry)
+        initiative = found.group(1) if found else mapped.get(head)
+        if initiative == "standing":
+            standing += 1
+            continue
+        status = initiative_status(projects_root, initiative) if initiative else None
+        if status is None:
+            print(f"  ? entry {n} ({head}): unknown record")
+        elif status in ("done", "withdrawn"):
+            print(f"  ! entry {n} ({head}): initiative {initiative} is {status}")
+        else:
+            live += 1
+    print(f"  {standing} standing, {live} with a live record")
+
+
 def verify(paths, projects_root):
     """Report drift between the manifests, user scope, and installed plugins."""
     print("Live settings.json (generated from claude/.claude/settings.json):")
@@ -262,6 +302,7 @@ def verify(paths, projects_root):
     else:
         print("  + no personal skill shadows a project skill")
 
+    check_auto_mode(paths, projects_root)
     return 1 if fail else 0
 
 

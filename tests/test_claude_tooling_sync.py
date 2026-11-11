@@ -528,3 +528,63 @@ def test_update_skills_refuses_when_the_standards_clone_is_dirty(tmp_path):
     proc = run("update-skills", "go-conventions", "--home", str(home))
     assert proc.returncode != 0
     assert "dirty" in out(proc)
+
+
+# ---- verify: stale auto-mode entries ----
+
+
+def automode_verify(tmp_path, entries, statuses, mapping=None):
+    """Run verify against a fixture whose autoMode.allow holds `entries` and records `statuses`."""
+    home = fixture_home(tmp_path)
+    claude = home / ".dotfiles" / "claude" / ".claude"
+    (claude / "settings.json").write_text(
+        json.dumps({"enabledPlugins": {}, "autoMode": {"allow": entries}}))
+    (home / ".claude" / "settings.json").write_text(
+        json.dumps({"enabledPlugins": {}, "autoMode": {"allow": entries}}))
+    if mapping is not None:
+        (claude / "tooling" / "automode-initiatives.json").write_text(json.dumps(mapping))
+    for name, status in statuses.items():
+        record = tmp_path / "projects" / "initiatives" / name
+        record.mkdir(parents=True)
+        (record / "initiative.yaml").write_text(f"id: {name}\nstatus: {status}\n")
+    return sync("verify", home, tmp_path)
+
+
+def entry_text(initiative):
+    return f"label-{initiative}: edits under initiatives/{initiative}/plans/p.md are allowed"
+
+
+def test_automode_done_record_is_flagged_and_exit_unchanged(tmp_path):
+    proc = automode_verify(tmp_path, ["$defaults", entry_text("old")], {"old": "done"})
+    assert "Auto-mode entries" in out(proc)
+    assert "! entry 1 (label-old: edits under initiatives/old/plans/p.md are all" in out(proc)
+    assert "initiative old is done" in out(proc)
+    assert proc.returncode == 0
+
+
+def test_automode_withdrawn_record_is_flagged_and_exit_unchanged(tmp_path):
+    proc = automode_verify(tmp_path, [entry_text("gone")], {"gone": "withdrawn"})
+    assert "! entry 0 (" in out(proc) and "initiative gone is withdrawn" in out(proc)
+    assert proc.returncode == 0
+
+
+def test_automode_active_record_prints_only_a_count(tmp_path):
+    proc = automode_verify(tmp_path, [entry_text("live")], {"live": "active"})
+    assert "1 with a live record" in out(proc)
+    assert "! entry" not in out(proc) and "? entry" not in out(proc)
+    assert proc.returncode == 0
+
+
+def test_automode_mapped_standing_entry_prints_only_a_count(tmp_path):
+    text = "A standing rule with no initiative path in it, long enough to cut at sixty."
+    proc = automode_verify(tmp_path, [text], {}, mapping={text[:60]: "standing"})
+    assert "1 standing" in out(proc)
+    assert "! entry" not in out(proc) and "? entry" not in out(proc)
+    assert proc.returncode == 0
+
+
+def test_automode_unknown_entry_and_absent_record_print_unknown(tmp_path):
+    proc = automode_verify(tmp_path, ["No initiative named here.", entry_text("missing")], {})
+    assert "? entry 0 (No initiative named here.): unknown record" in out(proc)
+    assert "? entry 1 (" in out(proc)
+    assert proc.returncode == 0
