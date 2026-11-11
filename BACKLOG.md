@@ -30,8 +30,6 @@
 - [ ] **#42** Add two executor-permission checks to the plan-reviewer checklist `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-26)* *(swept 2026-11-03)*
   From the docs-as-code cutover's planning misses. A deletion target that is a symlink resolving outside the executor's `--add-dir` set raises an unanswerable prompt overnight, so the plan makes it a morning step. A STATUS or clock file under `.git/worktrees/` is written by a lone Bash command: Write and Edit are refused there in a worktree-isolated session, and a heredoc chained to another command raised a sensitive-file prompt. Record: `~/Projects/initiatives/docs-system/README.md` (2026-10-26 line).
 
-- [ ] **#40** Let a pass executor run its gate through cairn-run-gate from an isolated worktree `#bug` `#workstation` `#initiative:docs-system` *(2026-10-25)* *(swept 2026-11-03)*
-  The approval-queue batch 4 executor (glw907/approval-queue#10) was refused `cairn-run-gate '<cmd>'` and inline env-prefixed command lines in its `EnterWorktree` session, so it ran `bash scripts/gate.sh` bare and wrapped the plan's env-prefixed lines in scripts. pass-core "Gates" says every gate runs through `cairn-run-gate`. Either allow it from a pass worktree, or have `plan-reviewer` check that a plan's gate and env-prefix lines pass the isolated session's guard.
 - [ ] **#38** Catch an edit made only in a vendored skill's copy `#bug` `#workstation` *(2026-10-25)* *(swept 2026-11-03)*
   Three commits (`b01f85f`, `8a629f6`, `5296043`) edited `claude/.claude/skills/survey/writing/approval-brief.md` in place, so the next vendor from Survey would have reverted them; the Survey v1.5.0 release found it by hand and took the text back into Survey (glw907/survey#6). `claude-tooling-sync lint` checks manifest shape, licenses, and overlays, never content. Add a check that each vendored skill matches its source at the manifest's `commit`, overlays applied, and fails with the files that drifted. `bin/.local/bin/claude-tooling-sync` (`lint`).
 
@@ -67,9 +65,6 @@
 
 - [ ] **#2** Move the music-VPS spec, plan, and library design from dubplate to servers `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
   **Move the music-VPS spec, plan, and library design from dubplate to servers**: `~/Projects/dubplate/docs/plans/2026-08-30-music-vps-build.md`, `~/Projects/dubplate/docs/specs/2026-08-30-music-vps-build-design.md`, and `~/Projects/dubplate/docs/specs/2026-08-30-music-library-design.md` describe a Hetzner server, another machine's config. The servers repo now hosts the dubplate role, so they have a home there; coordinate with the music session that owns them.
-
-- [ ] **#3** claude-wf-guard alarms on a run that finished cleanly `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
-  **`claude-wf-guard` alarms on a run that finished cleanly.** Its idle alarm cannot tell a finished workflow from a stalled one (its own message says "a clean finish looks identical"), so every completed run ends with exit 2 and an ALARM, ten minutes after the run's real completion notification. Cairn Go tool pass A (2026-09-19/20) ran ten workflows and paid one session turn per run to confirm each alarm was false. The fix is not in `journal.jsonl`, which records only `launched`, `started`, and `result` and has no run-level completion event, and the guard already avoids journal idle on purpose. It needs a completion signal from outside the journal: the workflow task's own output file (`tasks/<task-id>.output` is written when the run completes) passed as an optional fourth argument, on whose appearance the guard exits 0 silently. Until then a session treats an idle ALARM that arrives AFTER the run's completion notification as expected, checks only that any live run still has a guard, and moves on.
 
 - [x] **#5** Document the brief's local field in cairn-docs-drafter.md `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-14)*
   **Document the brief's `local` field in `cairn-docs-drafter.md`** (PR #25, triage 2026-10-12). The chain's `draftPrompt` tells the drafter about the brief's top-level `"local"` array, but the agent definition does not, so a drafter dispatched outside the chain never sees it. PR #25 left the definition untouched because definitions load from the stowed main checkout. With #25 merged, add the field and its one-writer sentence to `claude/.claude/agents/cairn-docs-drafter.md`.
@@ -114,9 +109,6 @@
 
 - [ ] **#64** Add a cross-repo clause to `spec-plan-review`'s review records line in glw907/standards `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
   `spec-plan-review:55` sends review records to `docs/research/`, while `pass-core` sends cross-repo research to `initiatives/<id>/`. Keep repo-scoped records in `docs/research/` and add a clause for cross-repo work. The skill lives in glw907/standards. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
-
-- [ ] **#65** Narrow CLAUDE.md's "prefer dispatching reads" to reads across several files `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
-  The best practices page retired "Use subagents to protect your context window" because each subagent "costs extra tokens" (<https://code.claude.com/docs/en/best-practices>). Keep the "Initiative-scoped sessions" rule, since it is about cache re-reads, and narrow it to reads across several files. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
 
 - [ ] **#66** Cut `writing-voice.md:64-65` and `:80-81` and re-test in glw907/survey `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
   `output-styles/writing-voice.md` is vendored from glw907/survey, so the cut of those two passages and the re-test of the style land in glw907/survey. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
@@ -181,6 +173,12 @@
   **Three `internal/posthook` tests fail when the dotfiles checkout sits under `/tmp`** (`TestRunFlagsChangedLineOnly`, `TestRunSkipsUngovernedPaths`, `TestWholeDocFindingsOnlyOnWrite` return no advisory), so the gate goes red in a scratchpad worktree while the same tests pass in `~/.dotfiles` and in `.claude/worktrees/`. The hook likely treats a `/tmp` path as ungoverned. Make the tests use a path independent of where the checkout lives.
 
 ## Done
+- [x] **#3** claude-wf-guard alarms on a run that finished cleanly `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
+  done: `claude-wf-guard` and its sentence in `unattended-work-guards.md` are gone (`6db812d`).
+- [x] **#40** Let a pass executor run its gate through cairn-run-gate from an isolated worktree `#bug` `#workstation` `#initiative:docs-system` *(2026-10-25)* *(swept 2026-11-03)*
+  done: exact allow rules for `bash scripts/gate.sh` and the gate wrapper forms are in `settings.json` (`32113da`).
+- [x] **#65** Narrow CLAUDE.md's "prefer dispatching reads" to reads across several files `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+  done: CLAUDE.md "Pass-scoped sessions" now prefers dispatching reads that span several files (`6db812d`).
 - [x] **#52** Make the clean-room site-rebuild tool reusable and unattended `#feature` `#workstation` `#initiative:907-rebuild` `#initiative:cairn-setup` *(2026-11-08 → 2026-11-09)*
   done: `bin/.local/bin/cleanroom` (stdlib Python) has `init`, `run`, `shell`, `cost`, `capture`, `scan`, `stop`, and `probe`, with its settings template in `bin/.local/share/cleanroom/`; `signin` and `turn` were dropped and `teardown` becomes cairn's run sweep. The probe record is `~/Projects/initiatives/cairn-setup/research/cleanroom-probe-1.md` (glw907/workstation#215).
 - [x] **#45** Move the Proton Pass procedure into a workstation skill `#improvement` `#workstation` *(2026-10-28 → 2026-11-03)*
