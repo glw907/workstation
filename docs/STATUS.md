@@ -33,13 +33,21 @@ and ran the settings and plugin command, which dropped two deny rules, a retired
 and four user-scope plugins; `claude-tooling-sync verify` passes. Poplar's tracked settings still
 enable the four removed plugins, which waits for poplar's next pass.
 
-Pass 2b is PR-ready as glw907/workstation#227 with Survey 1.6.0 at glw907/survey#12. It makes
-`claude-merge-guard` deny every `gh pr merge`, adds the `approval-queue merge` allow rule and
-auto-mode entry, rewrites the `approval-packet` skill and the Survey packet writer's brief, points
-pass-core "Close" at the new commands, and retires the decision review. One open item for Geoff:
-the existing `Bash(approval-queue *)` allow rule already covers `land`, so the plan's "no allow
-rule for `land`" does not hold (PR body, "Decisions"). The conductor runs the cutover. Pass 3 is
-not planned yet. Pass 1 plan:
+Pass 2 merged on 2026-11-11: glw907/workstation#227 (`8021d10`), glw907/approval-queue#14
+(`1d2cbee`), and Survey 1.6.0 (glw907/survey#12, tag `v1.6.0`). `claude-merge-guard` denies every
+`gh pr merge` and names `approval-queue merge <id>` and `approval-queue land`. The allow rule and
+auto-mode entry for `approval-queue merge`, the rewritten `approval-packet` skill, and the Survey
+packet writer's brief are live on pavilion, and the decision-review timer is disabled. The
+existing `Bash(approval-queue *)` allow rule also covers `land` (Geoff left it as it is). Pass 3
+is not planned yet.
+
+**thinkpad-x1 owes one step.** `workstation-sync` brings it the guard, skill, settings, and
+register, but never rebuilds the queue app or disables the timer. Its first session after the sync
+runs `approval-queue pending` (empty, or collect what it lists with the old build first),
+`npm ci --prefix ~/Projects/approval-queue/approval-queue`, `npm run build --prefix
+~/Projects/approval-queue/approval-queue`, `pkill -f 'approval-queue/[b]uild'`, and `systemctl
+--user disable --now decision-review.timer`, then checks that `approval-queue merge` with no id
+exits 2. Pass 1 plan:
 `~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-1-workstation-plan.md`.
 
 ## Docs system
