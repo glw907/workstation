@@ -35,7 +35,7 @@ render read.
 
 Trimmed 2026-09-27: the wrangler command cheat sheet (`npx wrangler deploy` / `dev` / `secret
 put NAME` / `tail`) left CLAUDE.md as general knowledge. Token scopes and the account id live
-in `cloudflare-estate-inventory.md`.
+in `~/.claude/docs/cloudflare-estate/authorization.md`.
 
 ## Conducting a pass: model-selection detail
 

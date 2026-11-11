@@ -139,7 +139,7 @@ def child_user() -> str | None:
         pwd.getpwnam(user)
     except KeyError:
         raise Refusal(
-            f"no Unix user {user!r}: install the sysusers and sudoers files (bluefin-admin.md), or"
+            f"no Unix user {user!r}: install the sysusers and sudoers files (~/.claude/docs/bluefin-admin/etc-drift.md), or"
             " set CLEANROOM_USER= to run in-process without the isolation"
         ) from None
     return user

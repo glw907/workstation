@@ -7,7 +7,7 @@ description: Use for any work on Proton Pass vaults, items, grants, or credentia
 
 Proton Pass is the authoritative record of every credential (Geoff, 2026-10-27). Claude reaches it
 only through `claude-pass`, never bare `pass-cli` (`claude-block-pass` denies it). The facts on the
-agents and tokens are in `~/.claude/docs/bluefin-admin.md` "Secrets"; this skill holds the vault
+agents and tokens are in `~/.claude/docs/bluefin-admin/secrets.md`; this skill holds the vault
 map, the naming rules, and the procedures.
 
 ## The vaults

@@ -52,7 +52,7 @@ pull is what makes it live.
 `*.go`, and `standards:ts-conventions` for `*.{js,mjs,ts}`.
 
 **Close checklist**: Beyond `pass-core` "Close": every new install records itself in its tier's
-manifest (`~/.claude/docs/bluefin-admin.md`), and `claude-tooling-sync verify` passes. The gate's gitleaks step scans the working tree, so run
+manifest (`~/.claude/docs/bluefin-admin/software-tiers.md`), and `claude-tooling-sync verify` passes. The gate's gitleaks step scans the working tree, so run
 one `gitleaks git` branch-history scan at close. A merge to
 `main` is followed by `stow -R bin` when a script was added, and by `claude-tooling-sync apply` when it
 touched `claude/.claude/settings.json`, since the live file doesn't follow a pull. Prose follows the workstation writing
