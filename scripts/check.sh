@@ -85,6 +85,7 @@ run "maintain-projects cases" bash tests/maintain-projects.test.sh
 run "guidance citation (warning only)" bash scripts/check-guidance-cite.sh
 run "guidance citation test" bash tests/check-guidance-cite.test.sh
 run "claude-context-budget line cap" bash tests/claude-context-budget.test.sh
+run "claude-pass-load" bash tests/claude-pass-load.test.sh
 run "CLAUDE.md context budget" bash bin/.local/bin/claude-context-budget claude/.claude/CLAUDE.md
 run "claude refs and retired phrases" python3 scripts/check-claude-refs.py check --root .
 run "claude-tooling-sync lint" bin/.local/bin/claude-tooling-sync lint --root .
