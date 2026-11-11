@@ -59,4 +59,25 @@ head -c 3600 /dev/zero | tr '\0' 'x' >"$rule"
 RULE_BUDGET=1000 "$SCRIPT" "$rule" >/dev/null 2>&1; rc=$?
 assert_eq "$rc" "0" "900-token rule under a 1000 budget: exit"
 
+# --skill-caps: under every cap exits 0; one file over exits 1 naming it; an absent file exits 1.
+caps="$root/caps"
+for f in SKILL.md references/executor.md references/planner.md references/conductor.md; do
+  mkdir -p "$(dirname "$caps/claude/.claude/skills/pass-core/$f")"
+  seq 400 >"$caps/claude/.claude/skills/pass-core/$f"
+done
+"$SCRIPT" --skill-caps --root "$caps" >/dev/null 2>&1; rc=$?
+assert_eq "$rc" "0" "skill caps, all under: exit"
+seq 1501 >"$caps/claude/.claude/skills/pass-core/SKILL.md"
+err=$("$SCRIPT" --skill-caps --root "$caps" 2>&1 >/dev/null); rc=$?
+assert_eq "$rc" "1" "skill caps, SKILL.md over: exit"
+assert_eq "$err" "pass-core/SKILL.md has 1501 words (cap 1500)" "skill caps, SKILL.md over: message"
+seq 400 >"$caps/claude/.claude/skills/pass-core/SKILL.md"
+rm "$caps/claude/.claude/skills/pass-core/references/conductor.md"
+err=$("$SCRIPT" --skill-caps --root "$caps" 2>&1 >/dev/null); rc=$?
+assert_eq "$rc" "1" "skill caps, conductor.md absent: exit"
+case "$err" in
+  *"references/conductor.md is absent"*) ;;
+  *) echo "FAIL: skill caps, absent: message was '$err'"; fail=1 ;;
+esac
+
 exit "$fail"

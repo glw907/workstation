@@ -8,6 +8,8 @@
 # Modes:
 #   claude-context-budget --hook        PostToolUse hook: read tool JSON on stdin
 #   claude-context-budget FILE...       check the named files (manual audit)
+#   claude-context-budget --skill-caps [--root TREE]
+#                                       check the pass skill files against their word caps
 #
 # Exit 0: within budget, or not a budgeted file. Exit 2: over budget, message on
 # stderr (PostToolUse feeds exit-2 stderr back to the writing session as blocking
@@ -21,6 +23,35 @@ IMPORT_BUDGET="${IMPORT_BUDGET:-4000}"
 MEMORY_INDEX_BUDGET="${MEMORY_INDEX_BUDGET:-1500}"
 CLAUDE_MD_LINE_CAP="${CLAUDE_MD_LINE_CAP:-120}"
 RULE_BUDGET="${RULE_BUDGET:-1000}"
+
+# Word caps for the pass skill, by whole-file `wc -w`: path under claude/.claude/skills, then cap.
+SKILL_CAPS=(
+  "pass-core/SKILL.md 1500"
+  "pass-core/references/executor.md 900"
+  "pass-core/references/planner.md 900"
+  "pass-core/references/conductor.md 500"
+)
+
+# Prints one line for each capped file over its cap or absent, and exits 1 if any is.
+skill_caps() {
+  local root="$1" entry path cap f words rc=0
+  for entry in "${SKILL_CAPS[@]}"; do
+    path=${entry% *}
+    cap=${entry##* }
+    f="$root/claude/.claude/skills/$path"
+    if [ ! -f "$f" ]; then
+      echo "$path is absent (cap $cap)" >&2
+      rc=1
+      continue
+    fi
+    words=$(wc -w < "$f")
+    if [ "$words" -gt "$cap" ]; then
+      echo "$path has $words words (cap $cap)" >&2
+      rc=1
+    fi
+  done
+  return "$rc"
+}
 
 tokens_of() { echo $(( $(wc -c < "$1") / 4 )); }
 
@@ -78,6 +109,13 @@ check() {
   fi
   return 0
 }
+
+if [ "${1:-}" = "--skill-caps" ]; then
+  root="$HOME/.dotfiles"
+  [ "${2:-}" != "--root" ] || root="${3:?--root needs a tree}"
+  skill_caps "$root"
+  exit $?
+fi
 
 if [ "$1" = "--hook" ]; then
   file=$(jq -r '.tool_input.file_path // .tool_response.filePath // empty' 2>/dev/null)
