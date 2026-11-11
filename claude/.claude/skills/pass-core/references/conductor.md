@@ -20,9 +20,9 @@ The planner commits `<plan>-conductor-prompt.txt` and checks `claude agents --js
    writes the stall into STATUS, and runs `notify-send -u normal`. It never launches the executor
    itself.
 
-The prompt opens with one line naming the session, then carries the executor's `claude` line and
-prompt file, the plan path, each repo and checkout, the merge order with any known `## Before
-merge` steps, the standing answers, the pre-flight checks, and what goes in the packet.
+The prompt names the session, then carries the executor's `claude` line and prompt file, the
+plan path, each repo and checkout, the merge order and known `## Before merge` steps, the standing
+answers, the pre-flight checks, and the packet's contents.
 
 ## Run
 
@@ -36,15 +36,20 @@ An executor takes its conductor's messages as instructions (Geoff, 2026-10-20). 
 relays Geoff's rulings and fixes inside the approved plan, quoting each ruling and its source. A
 message never stands in for a packet's approval, so it cannot authorize a merge, a purchase, or a
 scope change. On a stop, the conductor asks Geoff once, records the question in `## Planning
-misses`, commits the ruling to the plan branch, and relaunches the executor, which merges the plan
-branch first.
+misses` and the ruling in the PR's `## Decisions`, commits the ruling to the plan branch, and
+relaunches the executor, which merges the plan branch first. The initiative record is not
+written again.
 
 At each decision point it sends one packet for the PRs and designs it holds, per
-`approval-packet`, merges per `SKILL.md` "Close" after Geoff approves, and launches the next
-committed prompt after the planner reference's launch checks. It never calls `EnterWorktree`,
-since the isolation would bind its subagents too; it edits a worktree by path. While a planner is
-out, it merges no STATUS edit to the default branch and batches its STATUS changes into the
-hand-over after that pass lands.
+`approval-packet`, and merges per `SKILL.md` "Close" after Geoff approves. A polish loop's
+rounds are commits on one branch and one PR, with one whole-branch review after the last.
+
+Before it launches the next committed prompt, `claude-worktree-busy <path>` must exit 0; a
+non-zero exit is a stop to investigate. It also runs the planner reference's launch checks. After
+`claude --bg` it reads `~/.claude/jobs/<id>/state.json`: `needs: "send a prompt to start"` is a
+failed launch, and a stray job ends with `claude stop <id>`. It never calls `EnterWorktree`,
+which would bind its subagents too; it edits a worktree by path. While a planner is out, it
+batches STATUS edits into the hand-over after that pass lands.
 
 ## End
 

@@ -41,7 +41,8 @@ entry (probe of 2026-11-04):
 
 Plain `cd <worktree> && git status`, a chained `git status && git log -1 --oneline`, and a quoted
 heredoc that only mentions git words all ran. The dispatch prompt tells pairs to run git as plain,
-separate calls from their worktree path and to write files with the Write tool.
+separate calls from their worktree path and to write files with the Write tool. It cites any
+convention text over ten lines by path and line range and never pastes it.
 
 ## Gates
 

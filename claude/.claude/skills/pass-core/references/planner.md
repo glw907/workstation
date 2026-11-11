@@ -37,7 +37,7 @@ The design's approval asks how to answer each stop the run can foresee, includin
 overrun up to a named ceiling, and records each answer as a standing approval. A stop with no
 standing answer still stops (Geoff, 2026-10-12).
 
-No count cap stops the line on its own (Geoff, 2026-10-19). Past one, the run goes on while each
+No count cap stops the line (Geoff, 2026-10-19). Past one, the run goes on while each
 retry fixes a traced cause inside the ceiling, each fix a reversible change listed in
 `## Decisions`. A cause that returns gets one structural fix that
 replaces the unit the patches kept missing; if it returns again, the session escalates the item
@@ -46,14 +46,14 @@ spend or path ceiling, an untraced cause, or an escalation the plan doesn't allo
 
 ## Pre-flight
 
-The plan opens with a `## Pre-flight` list, and every necessary permission is gathered there, up
-front (Geoff, 2026-11-01). It carries a `Permissions checked:` line and a `Reviewed:` line, which
-`claude-launch-guard` requires.
+The plan opens with a `## Pre-flight` list that gathers, up front, every permission and every
+step only Geoff can do (Geoff, 2026-11-01). It carries a `Permissions checked:` line and a
+`Reviewed:` line, which `claude-launch-guard` requires.
 
-- The list names every step only Geoff can do (a sign-in, a `secret-receive` value, a dialog, a
-  permission rule, a physical action) with the check that shows it done. The design's packet
-  carries the foreseen ones as `[you: ...]` steps for its sitting. An item the plan adds holds
-  the launch for a pre-launch packet and is a planning miss.
+- Each Geoff step (a sign-in, a `secret-receive` value, a dialog, a permission rule, a physical
+  action) names the check that shows it done. The design's packet carries the foreseen ones as
+  `[you: ...]` steps for its sitting. An item the plan adds holds the launch for a pre-launch
+  packet and is a planning miss.
 - Every value the run needs is looked up in the stores first.
 - Each task's writes are read against auto mode. A write to Claude's settings, a credential file,
   or new public surface gets a `[you]` item or a path a probe proved in a `claude --bg` session,
@@ -69,16 +69,16 @@ front (Geoff, 2026-11-01). It carries a `Permissions checked:` line and a `Revie
 
 ## Launch
 
-A design approved with unattended planning lets the planner run steps 2 to 4 and launch without
-Geoff. A plan over twice the estimate, or a finding that changes the design, stops it: STATUS
-carries one question, and `notify-send -u normal` tells Geoff. The planner writes the initiative
-record once, when it commits the design, plan, and prompts.
+With unattended planning approved, the planner runs steps 2 to 4 and launches without
+Geoff. An estimate overrun or a finding that changes the design stops it: STATUS carries one
+question, and `notify-send -u normal` tells Geoff. The planner writes the initiative record once,
+when it commits the design, plan, and prompts; a mid-run ruling goes in the PR's `## Decisions`.
 
-Before the launch, every `## Pre-flight` item is checked, and the main checkout is on its default
-branch with `git -C <repo> rev-list --count HEAD..origin/<default>` printing 0 after a fetch. Where
-`git -C <repo> check-ignore -q .claude/worktrees/x` fails, append `.claude/worktrees/` to the file
-`git -C <repo> rev-parse --path-format=absolute --git-path info/exclude` names. Launch from the
-main checkout:
+The executor launches only once every `## Pre-flight` item is done and checked and the main
+checkout is on its default branch with `git -C <repo> rev-list --count HEAD..origin/<default>`
+printing 0 after a fetch. Where `git -C <repo> check-ignore -q .claude/worktrees/x` fails,
+append `.claude/worktrees/` to the file `git -C <repo> rev-parse --path-format=absolute
+--git-path info/exclude` names. Launch from the main checkout:
 
 ```
 claude --bg --model sonnet --effort medium --name <project>-<pass> "$(cat <prompt file>)"
@@ -86,7 +86,7 @@ claude --bg --model sonnet --effort medium --name <project>-<pass> "$(cat <promp
 
 The prompt goes before any `--add-dir`, which is variadic. Then read
 `~/.claude/jobs/<id>/state.json`: `needs: "send a prompt to start"` is a failed launch. A stray
-job ends with `claude stop <id>`. A conductor's hand-off is in the conductor reference.
+job ends with `claude stop <id>`. The conductor reference holds the hand-off.
 
 The prompt carries the goal, the scope, the plan path, the checkout, and the push target. It
 tells a session that hands its PR over to send its packet through `approval-packet` and merge on
