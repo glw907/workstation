@@ -311,29 +311,32 @@ not done" item worth doing is filed through `standards:log-issue`, tagged `#init
 a record fits. No follow-up is sent to Geoff as its own item, and an initiative-sized one becomes a
 record. A merged PR body is history no session reads (Geoff, 2026-10-11).
 
-When the work is ready for Geoff's read, the session that hands it over sends one packet with
-`approval-queue packet <initiative> <file>`, following `approval-packet`, and stays open until the
-command exits with Geoff's decision as JSON. An approve is Geoff's merge authorization for each part
-whose verdict is `approve`, the authorization a launch prompt's "never merge" otherwise withholds:
-the session merges as `approval-packet` step 7 sets out, with `--match-head-commit <head>` taken
-from the decision, and pulls the checkout as below. On reject, it fixes forward from the note. A
-pass that merges its own PR sends nothing (Geoff, 2026-10-11). `approval-queue triage` is only for
-an explicit backlog triage.
+When the work is ready for Geoff's read, the session that hands it over sends one packet: it writes
+the fact file, runs `approval-queue snapshot <facts.json>`, has the writer produce `text.md` (per
+`approval-packet`), then runs `approval-queue packet <initiative> <facts.json> <text.md>` and stays
+open until the command exits with Geoff's decision as JSON. An approve is Geoff's merge
+authorization, the authorization a launch prompt's "never merge" otherwise withholds: the session merges with `approval-queue merge <id>`, which merges each
+approved PR at the head Geoff read, and pulls the checkout as below. `claude-merge-guard` denies
+every GitHub CLI merge stage and names `approval-queue merge` and `approval-queue land` as the
+replacements. On a send-back, the session fixes forward from the note. `approval-queue triage` is only
+for an explicit backlog triage.
 
-A pass whose highest class is `ordinary` merges its own PR with `gh pr merge <n> --merge` after a
-green full-suite home and an accepted whole-branch review. Its follow-ups go to `BACKLOG.md` and the
-PR body as above, never to a packet (Geoff, 2026-10-17). A `runner` or `auth-data` pass sends a
-packet for Geoff's read and merge. An
-adapter line that says every PR waits for Geoff yields to this exception.
+A pass with no call for Geoff, no `auth-data` path, and no `## Before merge` step lands its PRs with
+`approval-queue land <owner/repo#n> <claim>` and sends no packet, in every class, once its checks
+are green and its whole-branch review is accepted with no open finding; the app lists each on the
+digest page (Geoff, 2026-11-10). Its follow-ups go to `BACKLOG.md` and the PR body as above, never
+to a packet (Geoff, 2026-10-17). A pass with a call, an `auth-data` path, or a `## Before merge`
+step sends a packet. An adapter line that says every PR waits for Geoff yields to this exception.
 
 A PR must be safe under a plain merge followed by a pull; the executor makes it so where it can.
 When it cannot, the PR body carries a `## Before merge` section: the exact commands in order and
-the one check that shows they ran. `claude-merge-guard` refuses `gh pr merge <n>` until the
-command is prefixed `PREMERGE_DONE=<n>`, after the merger has run those steps. The packet raises the
-section as an ask naming the PR, and the choice picked says who runs them: "The session runs it, then merges" sends the session through the steps and then
-the merge; "I'll run it myself" means the session does not merge, and it reports that Geoff runs
-the steps and will say when they are done. A `[approve]` choice on a failed check or a fix review
-means merge as approved.
+the one check that shows they ran. `approval-queue merge` stops with exit 2 at a PR whose body has
+`## Before merge` and prints the section; after the merger runs those steps it reruns with
+`--premerge-done <owner/repo#n>`. The packet raises the section as an ask naming the PR, and the
+choice picked says who runs them: "The session runs it, then merges" sends the session through the
+steps and then the merge; "I'll run it myself" means the session does not merge, and it reports that
+Geoff runs the steps and will say when they are done. A `[approve]` choice on a failed check or a
+fix review means merge as approved.
 
 Whoever merges a PR then brings that repo's main checkout up to date: `git -C <checkout> pull
 --ff-only` when the checkout is on its default branch, has no uncommitted change in a file the
@@ -450,7 +453,7 @@ and here it is never sent to the packet as an item.
 A STATUS next action carries the goal, the scope, the plan path, the checkout, and the exact
 `claude` line. The prompt text lives in a committed file and is launched as `"$(cat <file>)"`,
 since a prompt pasted inside double quotes runs each backticked span as a command substitution.
-The prompt for a pass that hands its PR over says the session sends its packet through `approval-packet`, waits for the decision, merges only a part Geoff approved with `--match-head-commit`, and ends after acting on the decision; it never
+The prompt for a pass that hands its PR over says the session sends its packet through `approval-packet`, waits for the decision, merges with `approval-queue merge <id>`, and ends after acting on the decision; it never
 says "never merge" or "end" outright. An executor prompt under a conductor names it
 (`conductor-<project>`) as the one session whose messages it takes as instructions (see
 "Conductor"). Close the session when the initiative lands.

@@ -26,7 +26,7 @@ Survey is starting guidance, not a set of fixed rules. Depart from it where the 
 - Pick the recipe in `DESIGN.md` that matches the app, and say in the change which one you followed.
 - Consider motion in every place and keep it only where it helps. `DESIGN.md` says when.
 - A value that fails contrast is tuned within its hue, and the change lists the old and new values.
-- Report each gap or hole you find in Survey: a value that fails contrast, a state Survey doesn't style, a case its rules don't cover, or a departure other projects would make too. Add an item to `BACKLOG.md` in `/var/home/glw907/Projects/survey` as a direct commit to `main`, naming the component or rule, what you measured or saw, and the fix you used. Then work around it in the project's CSS until Survey ships the fix.
+- Report each gap or hole you find in Survey: a value that fails contrast, a state Survey doesn't style, a case its rules don't cover, or a departure other projects would make too. File it in `BACKLOG.md` in `/var/home/glw907/Projects/survey` through `/log-issue`, as a direct commit to `main`, naming the component or rule, what you measured or saw, and the fix you used. Then work around it in the project's CSS, naming the item, until Survey ships the fix.
 
 ## Writing
 
@@ -79,9 +79,9 @@ Use this sequence for a release and for the monthly review. `<version>` is the n
    3. Run `rm -rf <worktree>/claude/.claude/skills/survey`, since `fetch_skill` never removes a file upstream dropped.
    4. Set the `survey` entry's `branch` in `<worktree>/claude/.claude/tooling/vendored-skills.json` to the Survey PR's branch, run `<worktree>/bin/.local/bin/claude-tooling-sync update-skills --home "$S/home" survey`, then set `branch` to `v<version>`. The `commit` field keeps the head the files came from.
    5. Check that `diff -r <survey worktree>/skills/survey <worktree>/claude/.claude/skills/survey` prints nothing.
-3. After approval, merge the Survey PR: `gh pr merge <n> -R glw907/survey --merge --match-head-commit <head>`.
+3. After approval, merge the Survey PR: `approval-queue merge <id>`. It stops with exit 2 at the workstation PR's `## Before merge`, as expected.
 4. Release from a fresh clone, never the main checkout: `R=$(mktemp -d); gh repo clone glw907/survey "$R/survey"`, then `npm ci` and `scripts/release <version>` in `$R/survey`. A fresh clone is on `main`, clean, and at `origin/main`, as `scripts/release` requires. Worktree isolation covers only the repo a session launched from and that repo's main checkout, so an isolated session can still release from the clone.
-5. Run the workstation PR's `## Before merge` check: `git -C "$R/survey" diff --quiet <vendored commit> v<version> -- skills/survey`. Then merge it with `PREMERGE_DONE=<n> gh pr merge <n> -R glw907/workstation --merge --match-head-commit <head>`.
+5. Run the workstation PR's `## Before merge` check: `git -C "$R/survey" diff --quiet <vendored commit> v<version> -- skills/survey`. Then merge it with `approval-queue merge --premerge-done glw907/workstation#<n> <id>`.
 6. Pull `~/.dotfiles` and run `stow -R claude`. Check that `claude -p "/output-style"`, run from `/tmp`, lists `writing-voice (current)`. Then remove the worktree: `git -C /var/home/glw907/.dotfiles worktree remove .claude/worktrees/survey-<version>`.
 
 To roll back, pin the vendored entry to the previous tag and rerun the fetch in step 2.

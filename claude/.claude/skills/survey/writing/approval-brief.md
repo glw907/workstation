@@ -106,102 +106,30 @@ title. Never "Design & PR Approvals", "the desk", "review
 desk", or any retired name, in a brief or in a triage file. A real identifier that happens to
 carry a retired word is renamed, not quoted.
 
-## The packet contract
+## The packet writer's brief
 
-The command `approval-queue packet <initiative> <file>` refuses a packet that breaks the contract,
-exits 2, and names the defect with this register's path. The parser is
-`~/Projects/approval-queue/approval-queue/src/lib/packet.ts`. The skeleton below shows every part.
+A packet is written by a fresh agent from a fact file. This brief is its whole style brief, and
+nothing else in this file governs a packet. Its first part is the text block in "Make reports easy
+to follow" on Anthropic's page [Prompting Claude Fable 5.2](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-2#make-reports-easy-to-follow):
 
-- `# <title>` is a heading of at most 80 characters with no closing punctuation. The
-  description follows it: a background paragraph, then one or two summary paragraphs, so two or
-  three paragraphs in all.
-- The sections come in this order: `## What changed` (a revision only), `## If you approve`,
-  `## Not checked`, then zero to three `## Ask: <question>`, then an optional `## Routine`. No
-  other `##` heading is allowed outside a code fence. A packet has no `## Background` section; its
-  background is the description's first paragraph.
-- A packet is a revision when it resends a PR or design that Geoff sent back. The command reads the
-  decision log, marks the packet as "Revision N", and refuses it without `## What changed`. It
-  refuses the section on a packet that revises nothing. The section is a bulleted list of at least
-  one bullet and nothing else. Each bullet answers one call Geoff made on the earlier packet (a
-  verdict he set to send back, or an ask he answered) or one point of his note, and says what
-  the session did about it. The page shows his earlier note above the bullets, so a bullet does
-  not repeat it.
-- A plan step is `N. [session] <text>` (the session runs it and can revert it),
-  `[irreversible]` (it cannot be undone), or `[you: <label>]` (Geoff runs it; the label is the
-  "You'll need to" line on the page).
-- An ask carries `Rule`, `Part`, `Recommended`, `Reason`, and `Summary` lines, then a `Background:`
-  paragraph, a `Facts:` sentence with bullets each ending in a source in backticks inside
-  parentheses, and `Choices:` of at least two, each `- <label>: <consequence>`. The label holds
-  no colon. `Evidence:` with a fenced excerpt is optional.
-- `Rule` is one of seven: `irreversible`, `public-surface`, `cross-repo`, `owner-call`,
-  `low-confidence`, `gate-failed`, `contradicts-ruling`. A PR with a failing check or a `fix` or
-  `escalate` review verdict needs a `gate-failed` ask, and a PR whose body has `## Before merge`
-  needs an ask naming it.
-- `Part` is a canonical ref or `none`. A PR is `<owner>/<repo>#<n>`, a design is
-  `<owner>/<repo>:<path>`, and a step is `step:<n>`. Each part appears once, in one ask or one
-  routine row. When `Part` names a part, every choice ends in a verdict tag in brackets:
-  `[approve]`, `[hold]`, or `[send-back]` for a PR or design, and `[session]`, `[you]`, or `[skip]`
-  for a step. When `Part: none`, no choice has a tag.
-- `## Routine` is one table with the header `| Part | Verdict | Fact | Why |`. A PR or design
-  takes `approve`, `hold`, or `send-back`; a step takes `session`, `you`, or `skip`. The fact is
-  the one that changes the verdict.
-- A packet holds at least one PR or design.
-
-Because an ask can hold a three-backtick Evidence fence, a packet exemplar sits in a four-backtick
-fence below.
-
-### The packet skeleton
-
-The angle-bracket text is a slot.
-
-````markdown
-# <A title that names what is being decided>
-
-<The background: the initiative, where this packet sits, what came before, why it is here now,
-and a plain meaning for any term a reader would not know.>
-
-<The summary: what is proposed, what each part changes, what approving does, and the shape of the
-plan, with any open question and its recommendation.>
-
-<An optional second summary paragraph, when the first runs long.>
-
-## What changed
-- <A revision only: what the session did about one call or point of the note.>
-
-## If you approve
-1. [session] <A step the session runs that can be reverted.>
-2. [irreversible] <A step that cannot be undone.>
-3. [you: <label>] <A step you run yourself.>
-
-## Not checked
-<What was not verified. Never a fact an ask depends on.>
-
-## Ask: <the question>
-Rule: <one of the seven>
-Part: <a part ref, or none>
-Recommended: <the number of the recommended choice>
-Reason: <why, grounded in the facts>
-Summary: <one or two sentences carrying the background and the deciding fact>
-
-Background: <one paragraph defining every term and why the question exists>
-
-Facts: <one sentence stating the key fact>
-- <a fact> (`<its source>`)
-
-Choices:
-- <label>: <what happens, and whether it can be undone> [approve]
-- <label>: <what happens> [hold]
-
-Evidence: <one sentence stating what the excerpt shows>
 ```text
-<a short excerpt>
+# Communicating clearly
+Write for an intelligent but low-context reader. The person reading has not seen your tool calls, your reasoning or the files you opened, and may be switching in from other work. Messages should generally be self-contained: the reader should understand what you mean without having to dig for other context. Put the key points in the first few sentences. Practice progressive disclosure in your sentence order, and do not use undefined references and ideas in line 1 that won't make sense until the reader reaches line 12.
+
+Use plain words, and write in clear, understandable full sentences. Do not use a term or abbreviation that you made up during the work. Say what the thing is in a way any reader would understand. Write mostly in the style of ASD-STE100 Simplified Technical English: short sentences, one idea per sentence, active voice, and consistently using the same word for the same thing. Use a paragraph of flowing prose where ideas connect, and keep bullets for lists of separate items. Leave out unnecessary details unless the reader asks and practice concision, but do ensure that your messages have the key context. Aim to make your user-facing text as human-readable and clear as possible.
 ```
 
-## Routine
-| Part | Verdict | Fact | Why |
-|---|---|---|---|
-| <owner>/<repo>#<n> | approve | <the verdict-changing fact> | <one line> |
-````
+Five lines follow the block.
+
+- This is technical writing. Use literal terms and the real names of tools, files, and settings. No metaphor and no personification.
+- No filler. Every sentence states a fact or tells the reader what to do.
+- Name a thing by what it is. A project nickname is a term made up during the work.
+- Write the opening as paragraphs.
+- Keep session names, commit hashes, task numbers, and risk-class names out of the opening and the calls.
+
+The same page says the model follows style rules closely and that stacked rules make its prose
+choppy. The brief therefore stands alone: it replaces the packet rules this file once held, and
+nothing is added to it.
 
 ## The brief contract
 
@@ -267,8 +195,7 @@ Each exemplar is a fenced block. A block whose info string is `brief` is a Markd
 whose info string is `brief-triage` is a triage file, and a block whose info string is `packet` is
 a packet in a four-backtick fence; the approval-queue tests extract all three, close each at a
 fence of the opening width, and run the parser over them, so each one must satisfy its contract
-exactly. The four packet exemplars show a packet with two asks, a routine-only packet, a
-packet with a `gate-failed` ask, and a revision. A block
+exactly. A block
 tagged plain `markdown` is a counter-example or a skeleton and is never parsed.
 
 ### The brief skeleton
@@ -316,178 +243,6 @@ Source: <where the question came from>
 <The agent-facing sections: what landed, the review, the score.>
 ```
 
-### A packet with two asks (scribe link checker)
-
-The title names the thing, and the two summary paragraphs carry the decision: what ships, what
-cannot be undone, the weak spot, and both open questions with the recommendation. The first ask
-is bound to a PR and tagged, and the second is a call with no part. Each ask's `Summary:` carries
-the deciding fact, so the closed card decides.
-
-````packet
-# Scribe link checker and version 0.3.0
-
-The scribe initiative gives the docs writer a tool that checks a page before a person reads it. This packet carries the link checker, the third of four stages. A package registry keeps every published version for good, so a release can be replaced but never removed.
-
-The link checker reads every link on a docs page and reports each one that no longer resolves. It ships in two PRs: PR 51 adds the checker and publishes version 0.3.0, and PR 52 adds its changelog entry. Every check passes and the review verdict is accept. The checker has run only on the sample pages, where it found eleven broken links.
-
-Approving merges both PRs in order, and the merge of PR 51 publishes 0.3.0, which cannot be undone. Before it goes out, you choose whether a broken link warns or fails the build. The session recommends a warning first, so authors can clear the old links.
-
-## If you approve
-1. [session] Merge glw907/scribe#51, then glw907/scribe#52.
-2. [irreversible] Publishing version 0.3.0 to the package registry runs when #51 merges.
-3. [you: confirm the registry login] Check the version page once the publish ends.
-
-## Not checked
-The checker was run on the sample pages only, not on the full docs set.
-
-## Ask: Publish version 0.3.0 with the link checker on?
-Rule: irreversible
-Part: glw907/scribe#51
-Recommended: 1
-Reason: All checks pass and the review verdict is accept, and the package version is new.
-Summary: PR 51 publishes 0.3.0 to the registry, and a published version cannot be taken back. Every check passes.
-
-Background: The registry refuses a second upload of the same version number. A mistake in 0.3.0 would need a 0.3.1 to correct it.
-
-Facts: The version number is unused and the checks are green.
-- Version 0.3.0 is not in the registry list (`docs/releases.md`)
-- All four checks pass (`glw907/scribe#51`)
-
-Choices:
-- Publish: merges the PR and publishes 0.3.0; a later release can replace it but never remove it [approve]
-- Wait: leaves the PR open with nothing published [hold]
-- Send back: returns the PR to the session to change and send again [send-back]
-
-## Ask: Should the link checker fail the build by default?
-Rule: owner-call
-Part: none
-Recommended: 2
-Reason: Docs authors have not seen the checker yet, so a warning gives them time to fix old links.
-Summary: The checker can warn or fail the build on a broken link. Warning first lets authors fix the backlog of old links.
-
-Background: A failing build blocks every docs change until the broken link is fixed. A warning prints the link and lets the change through.
-
-Facts: The sample run found eleven broken links.
-- The sample run printed eleven broken links (`docs/link-check-sample.txt`)
-
-Choices:
-- Fail the build: a broken link blocks the change until it is fixed
-- Warn only: a broken link prints and the change goes through
-
-## Routine
-| Part | Verdict | Fact | Why |
-|---|---|---|---|
-| glw907/scribe#52 | approve | The change is a changelog entry and the checks pass. | Nothing in it needs a call. |
-| step:1 | session | A merge can be reverted. | The order is fixed by the plan. |
-````
-
-### A routine-only packet (scribe docs fixes)
-
-When the facts settle every part, the packet has no ask. The change is simple, so one short
-summary paragraph is enough, and the reader approves from the description and the table.
-
-````packet
-# Scribe guide corrections
-
-The scribe initiative keeps its guide current as the tool grows. This packet carries small corrections found while the link checker was built. A changelog is the list of changes a release made.
-
-PR 53 fixes a three-word typo in the guide, and PR 54 adds a missing changelog line for the last release. Both change text only and every check passes. Approving merges them, and nothing about how scribe runs changes.
-
-## If you approve
-1. [session] Merge glw907/scribe#53, then glw907/scribe#54.
-
-## Not checked
-The guide was not rebuilt on the live site; the build runs after the merge.
-
-## Routine
-| Part | Verdict | Fact | Why |
-|---|---|---|---|
-| glw907/scribe#53 | approve | The diff changes three words in the guide and the checks pass. | A typo fix. |
-| glw907/scribe#54 | approve | The diff adds one changelog line and the checks pass. | The line matches the merged release. |
-| step:1 | session | A merge can be reverted. | The order does not matter. |
-````
-
-### A packet with a gate-failed ask (scribe note template)
-
-A failing check is always an ask, and it names the PR. The evidence excerpt shows the failure
-itself, so the reader need not open the log.
-
-````packet
-# Scribe note template
-
-The scribe initiative replaces hand-written release notes with generated ones. This packet carries the template the notes are built from. A gate is the set of checks and the review a PR must pass.
-
-PR 61 adds the template and the notes file it generates, and PR 62 adds the template's tests. PR 62 passes its gate. PR 61 fails one lint check, on a long line in the generated file. The repo's style policy exempts generated files, but the check's config predates the policy.
-
-Approving merges both PRs in order. Merging PR 61 with the check red is your call, and the session recommends it because the failure sits only in the exempt file. A revert PR undoes either merge.
-
-## If you approve
-1. [session] Merge glw907/scribe#61, then glw907/scribe#62.
-
-## Not checked
-The generated notes were not read on the live project page.
-
-## Ask: Merge the note template with its lint check red?
-Rule: gate-failed
-Part: glw907/scribe#61
-Recommended: 1
-Reason: The only failure is in a generated file that the repo exempts from the style rule.
-Summary: PR 61 fails one lint check, and the failure is in a generated file. The repo waives that rule for generated files.
-
-Background: A lint check scans files for style rules. The repo's policy exempts generated files, but the check's config predates the policy and still scans them.
-
-Facts: The one error is in a generated file.
-- The lint check reports one error, in `notes.generated.ts` (`glw907/scribe#61`)
-- The style policy exempts generated files (`docs/style.md`)
-
-Choices:
-- Merge anyway: merges the PR with the lint check red; a revert PR undoes it [approve]
-- Hold: leaves the PR open with nothing done [hold]
-- Send back: returns the PR to the session to fix the check and send again [send-back]
-
-Evidence: The lint output names the generated file only.
-```text
-notes.generated.ts:12:1  error  line too long (max-len)
-```
-
-## Routine
-| Part | Verdict | Fact | Why |
-|---|---|---|---|
-| glw907/scribe#62 | approve | All checks pass and the review verdict is accept. | Nothing in it needs a call. |
-| step:1 | session | A merge can be reverted. | The order is fixed by the plan. |
-````
-
-### A revision (scribe note template, resent)
-
-A packet that resends a part Geoff sent back carries `## What changed`. Each bullet answers one
-call or one point of his note, in the order he made them. The page puts his note above the
-bullets, so the bullets say what the session did and never quote him.
-
-````packet
-# Scribe note template, revised
-
-The scribe initiative replaces hand-written release notes with generated ones. You sent the first packet back on PR 61, which adds the note template. You sent it back because the lint check still scanned the generated file, and you asked for the check's config to change instead of merging past the red.
-
-The session fixed the check, so PR 61 now passes its gate and the revised packet has no ask. PR 62, which adds the template's tests, gains a test of the skip and passes. Approving merges both PRs in order, and a revert PR undoes either merge.
-
-## What changed
-- You set PR 61 to send back: the lint config now skips generated files, so the check passes.
-- You asked for a test of the skip: PR 62 gains a case that lints a generated file and expects no error.
-
-## If you approve
-1. [session] Merge glw907/scribe#61, then glw907/scribe#62.
-
-## Not checked
-The generated notes were not read on the live project page.
-
-## Routine
-| Part | Verdict | Fact | Why |
-|---|---|---|---|
-| glw907/scribe#61 | approve | The lint check passes after the config change. | The failure you sent it back for is gone. |
-| glw907/scribe#62 | approve | All checks pass and the new test covers the skip. | Nothing in it needs a call. |
-| step:1 | session | A merge can be reverted. | The order is fixed by the plan. |
-````
-
 ### A PR with nothing to decide (PR #40)
 
 The headline names the change and its consequence, the lede names the problem, and the
@@ -521,7 +276,7 @@ Fires whenever a session opens a PR. A new hook, `claude-approval-queue-reminder
 
 ### The merge permission
 
-Only the exact commit you approved can merge. A permission rule allows `gh pr merge * --match-head-commit *`. GitHub refuses the merge if the branch moved after your approval.
+Only the exact commit you approved can merge. A permission rule allows `Bash(approval-queue merge *)`. The command merges the PR at the commit you approved, and GitHub refuses the merge if the branch moved after your approval.
 
 ### Testing
 
