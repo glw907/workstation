@@ -51,6 +51,7 @@ brew "xdotool"
 # Go toolchain (brief: "Go via Homebrew")
 brew "go"
 brew "gofumpt"
+brew "gopls"
 brew "golangci-lint"
 
 # Android tooling dependency

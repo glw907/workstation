@@ -193,6 +193,7 @@ gate_fingerprint() {
 append_record() {
   local line="$1" status
   mkdir -p "$records_dir" 2>/dev/null || { echo "cairn-run-gate: record not written (cannot create $records_dir)" >&2; return 0; }
+  # shellcheck disable=SC2188 # the bare redirect opens the subshell; removing it is not a no-op to prove here
   ( 2>/dev/null
     flock -w "${CAIRN_GATE_RECORDS_LOCK_WAIT:-10}" 9 || exit 3
     printf '%s\n' "$line" >>"$records_dir/runs.jsonl" || exit 4

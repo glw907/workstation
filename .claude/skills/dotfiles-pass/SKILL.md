@@ -24,7 +24,9 @@ scripts/check.sh'`; a worktree-isolated session's Bash guard refuses the wrapped
 the no-argument wrapper. The light lane fits: the
 gate launches no browser and its measured peak is 105 MB.
 
-**Fast lane**: The same command. It takes about 76 seconds, so no narrower lane exists.
+**Fast lane**: `bash scripts/gate.sh --scope-changed`, which runs only the legs the working tree's
+changes touch plus the legs that always run. Its receipt never stands for the whole gate. The gate
+at close stays `bash scripts/gate.sh`.
 
 **Worktree setup**: The launch's `.claude/worktrees/<name>`; no setup command.
 
@@ -52,7 +54,7 @@ pull is what makes it live.
 `*.go`, and `standards:ts-conventions` for `*.{js,mjs,ts}`.
 
 **Close checklist**: Beyond `pass-core` "Close": every new install records itself in its tier's
-manifest (`~/.claude/docs/bluefin-admin.md`), and `claude-tooling-sync verify` passes. The gate's gitleaks step scans the working tree, so run
+manifest (`~/.claude/docs/bluefin-admin/software-tiers.md`), and `claude-tooling-sync verify` passes. The gate's gitleaks step scans the working tree, so run
 one `gitleaks git` branch-history scan at close. A merge to
 `main` is followed by `stow -R bin` when a script was added, and by `claude-tooling-sync apply` when it
 touched `claude/.claude/settings.json`, since the live file doesn't follow a pull. Prose follows the workstation writing

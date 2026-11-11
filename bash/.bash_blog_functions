@@ -25,6 +25,7 @@ _get_blog_dir() {
 
     # Interactive selection
     echo "Available Hugo blogs:" >&2
+    # shellcheck disable=SC2207,SC2038 # splitting find output into the array is the existing behavior
     local blogs=($(find ~/Projects -maxdepth 2 -name "hugo.toml" -o -name "config.toml" -o -name "config.yaml" 2>/dev/null | xargs -I {} dirname {}))
 
     if [ ${#blogs[@]} -eq 0 ]; then
@@ -104,7 +105,8 @@ newpost() {
     fi
 
     # Build post path
-    local date_prefix=$(date +%Y-%m-%d)
+    local date_prefix
+    date_prefix=$(date +%Y-%m-%d)
     local post_path="posts/${date_prefix}"
 
     if [ -n "$post_slug" ]; then
@@ -179,8 +181,9 @@ blogbuild() {
 bloglist() {
     echo "Hugo blogs in ~/Projects:"
     find ~/Projects -maxdepth 2 \( -name "hugo.toml" -o -name "config.toml" -o -name "config.yaml" \) 2>/dev/null | while read config; do
-        local blog_dir=$(dirname "$config")
-        local blog_name=$(basename "$blog_dir")
+        local blog_dir blog_name
+        blog_dir=$(dirname "$config")
+        blog_name=$(basename "$blog_dir")
         echo "  - $blog_name ($blog_dir)"
     done
 }

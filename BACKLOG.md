@@ -9,11 +9,13 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
+- [ ] **#70** Fix the nested quotes at `check-drift:173` and drop the `shellcheck` leg's SC2140 exclusion `#improvement` `#workstation` `#initiative:workstation-refinement` *(2026-11-11)*
+  The warning string in `bin/.local/bin/check-drift` line 173 holds `bluefin-admin.md "Secrets"` inside a double-quoted word, so `shellcheck` reports SC2140. The file is an `auth-data` path, so the stack-pilots pass left it alone and `check_shellcheck` in `scripts/check.sh` excludes SC2140 for that one file. Escape the inner quotes (or point the text at `bluefin-admin/secrets.md`) in an `auth-data` pass, then remove the `--exclude=SC2140` branch and its comment.
 - [ ] **#69** Rebuild the session-start fast-forward of the shared checkouts `#feature` `#workstation` `#initiative:workstation-refinement` *(2026-11-11)*
   Closed pull request #166 (branch `fresh-checkouts`, kept on GitHub) made the SessionStart hook `claude/.claude/gather-dotfiles.sh` fetch the dotfiles, approval-queue, servers, and initiatives checkouts and fast-forward each one that is on its default branch with no other live session in it, with a test at `tests/gather-dotfiles-checkouts.test.sh`. It also edited `pass-core` and the `dotfiles-pass` path map, which #228 rewrote, so the diff no longer applies. Left alone, a session on a machine that has not pulled works from stale skills, tools, and secrets: #166 measured the dotfiles checkout 113 commits behind on one host. Rebuild the hook change and its test on current `main` once the freeze that follows the workstation refinement ends. The pull request's other half, direct landing of skill edits, is outside this item. Found at the Pass 3 close (#228).
 
 - [ ] **#68** Close the Low findings from the workstation refinement pass 1 review `#improvement` `#workstation` `#initiative:workstation-refinement` *(2026-11-10)*
-  Found, not done. `cairn-run-gate` takes any live ancestor as the `CAIRN_RUN_GATE_ACTIVE` marker, so a top-level `CAIRN_RUN_GATE_ACTIVE=$$ cairn-run-gate '...'` skips the lane lock; also require that `/proc/<pid>/cmdline` names `cairn-run-gate`. `claude-tail-guard` strips a redirect inside the tail stage (`npm test | tail > /tmp/x` becomes `npm test`), and no test pins `(npm test) | tail`. `tests/cairn-run-gate.test.sh` has no case for `gate.sh --fresh`. Plan: `~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-1-workstation-plan.md`.
+  Found, not done. `cairn-run-gate` takes any live ancestor as the `CAIRN_RUN_GATE_ACTIVE` marker, so a top-level `CAIRN_RUN_GATE_ACTIVE=$$ cairn-run-gate '...'` skips the lane lock; also require that `/proc/<pid>/cmdline` names `cairn-run-gate`. `claude-tail-guard` strips a redirect inside the tail stage (`npm test | tail > /tmp/x` becomes `npm test`), and no test pins `(npm test) | tail`. Plan: `~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-1-workstation-plan.md`.
 
 - [ ] **#51** Make `claude-block-pass` read shell words instead of matching text `#improvement` `#workstation` `#initiative:credential-hygiene` *(2026-11-07)* *(swept 2026-11-10)*
   The hook matches each Bash command against regex patterns, so each disguised spelling needs another pattern. Pass A's review rounds found 11 kinds of bypass (globs, ANSI-C quoting, fake heredocs, stdin feeds), and all are folded and tested (glw907/workstation#201). The third round's probes never ran, because a classifier stopped the reviewer, so the fixes in 4c951ef are unprobed. Geoff merged it as it stood ("Merge now", 2026-11-07). Parse the command into words (`shlex` with `punctuation_chars`, or `bashlex`) and decide on command-position words. Also settle whether a bare `proton-pass-cli` should count only after `cd` or `pushd`. It also gives false positives on quoted text: on 2026-11-07 it refused a `git commit -m` whose message held "(pass-cli docs", reading the `(` as a command start.
@@ -70,7 +72,7 @@
   **The plan read checks code before it asserts behavior** (cairn's 11-plan test, 2026-10-12). On debug-your-site, the plan-mode structural read said refusals log no event, but `section-action.ts:216` logs `auth.access.refused`. Tell the plan-mode `structurePrompt` in `docs-page-chain.js` to check the code before stating a behavior, and to mark such a finding as a lead. The same test suggests a cross-plan anchor check for the drafter pipeline's consistency read: a link's anchor against the target page's plan headings.
   Dropped: the docs-as-code cutover retired the system it served.
 
-- [ ] **#8** PR test CI for dotfiles `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-10)*
+- [ ] **#8** PR test CI for dotfiles `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-11)*
   **PR test CI for dotfiles.** Add a workflow that runs `bash scripts/check.sh` on `pull_request`. Until it lands, the full-suite home is the local close gate (ruling 11 of the lean pass process spec).
 
 ## Low
@@ -83,7 +85,7 @@
 - [ ] **#60** Tighten `visual-verifier` to 4.5:1 for a CTA pair in glw907/standards `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
   `visual-verifier:30` flags a call-to-action pair under 3:1, while `daisyui-a11y-reviewer:72` uses 4.5:1 for text. Raise the verifier to 4.5:1, WCAG's floor for button labels. The agent lives in glw907/standards, so the edit lands there. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
 
-- [ ] **#63** Add a no-argument `gate.sh` wrapper to the cairn-cms and site adapters `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
+- [ ] **#63** Add a no-argument `gate.sh` wrapper to the cairn-cms and site adapters `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-11)*
   `pass-core`, `cairn-pass:20`, and `site-pass:28` give the `cairn-run-gate '<string>'` form that `dotfiles-pass` says the worktree guard refuses, and a `-w` session's guard refused compound commands too. Add a no-argument `gate.sh` wrapper to each repo's adapter the next time that adapter changes. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
 
 - [ ] **#54** Clamp token counts and keep the first turn in `cleanroom`'s transcript cost `#bug` `#workstation` `#initiative:cairn-setup` *(2026-11-09)* *(swept 2026-11-10)*
@@ -107,7 +109,7 @@
   Record: `~/Projects/initiatives/docs-system/research/2026-10-22-extend-blueprints-pilot-friction.md`
   Batch 2: the agent hands back through `SubagentHandback`, so saving its array verbatim needs a transcript parser. Give the save a sanctioned path, or have the agent write its array to a named file (record 18).
   Done: PR #146 (the agent writes its array to the path the dispatch names).
-- [ ] **#10** Give cairn-run-gate per-leg timing in its run records `#improvement` `#workstation` `#initiative:dev-speed` *(2026-10-14)* *(swept 2026-11-10)*
+- [ ] **#10** Give cairn-run-gate per-leg timing in its run records `#improvement` `#workstation` `#initiative:dev-speed` *(2026-10-14)* *(swept 2026-11-11)*
   **Give `cairn-run-gate` per-leg timing in its run records**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11). The stale `gateMatches` comment went with `pass-execute.js`.
 
 - [ ] **#11** Move the CSP and queue items to the approval-queue backlog `#improvement` `#workstation` `#initiative:approval-queue` *(2026-10-14)* *(swept 2026-11-03)*

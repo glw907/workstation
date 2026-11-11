@@ -2,7 +2,7 @@
 # claude-context-budget.test.sh: prove the CLAUDE.md line cap and the rules budget against this worktree's own copy of
 # claude-context-budget. The cap binds only a file whose realpath ends /claude/.claude/CLAUDE.md.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 SCRIPT="$(pwd)/bin/.local/bin/claude-context-budget"
 fail=0
 root="$(mktemp -d)"

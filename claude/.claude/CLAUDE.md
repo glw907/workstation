@@ -32,19 +32,19 @@ docs; when in doubt, ask rather than race. Two sessions never both close, merge,
   `~/Projects/`, scripts in `~/.local/bin/`. Node via mise, Python via uv, Go via Homebrew, Java 17.
 - Chromium is the daily browser, in Geoff's profile; Claude Code drives its `Default` profile, never
   Geoff's, and never a Flatpak build. Artifacts, sitting pages, and mockups open in Chromium
-  (Geoff, 2026-10-18). Read `~/.claude/docs/bluefin-admin.md` before browser work.
+  (Geoff, 2026-10-18). Read `~/.claude/docs/bluefin-admin/browsers.md` before browser work.
 
 ## Sysadmin Preferences
 
 - Search the web after 1-2 failed attempts, with "Bluefin DX" in the query.
-- `sudo -A` via `claude-askpass`; stale cache -> `claude-sudo-setup`; failures -> `bluefin-admin.md`.
+- `sudo -A` via `claude-askpass`; stale cache -> `claude-sudo-setup`; failures -> `~/.claude/docs/bluefin-admin/secrets.md`.
 - Software tiers: mise/uv, Homebrew CLI, Flatpak GUI, distrobox for dev envs, rpm-ostree last
-  (`bluefin-admin.md`; source of truth `~/.dotfiles/bluefin/layered-packages.txt`).
+  (`~/.claude/docs/bluefin-admin/software-tiers.md`; source of truth `~/.dotfiles/bluefin/layered-packages.txt`).
 - Show a dry run or confirmation step before a destructive op.
 - Vendors (Geoff, 2026-10-18): use the existing set; add one where it has no good way, saying why.
 - Scripts go in `~/.local/bin/`, configs in `~/.config/`; `/etc` changes land in
   `~/.dotfiles/bluefin/etc/` first. micro is the editor; never suggest Neovim.
-- Calm desktop (Geoff, 2026-09-29): only critical items interrupt (`bluefin-admin.md`).
+- Calm desktop (Geoff, 2026-09-29): only critical items interrupt (`~/.claude/docs/bluefin-admin/calm-desktop.md`).
 - Google Workspace goes through `gws` and `clasp`, never MCP (`google-sheets` skill for Sheets).
 - Mail is Stalwart on ward (`~/Projects/servers`). Technical mail (`glw@907.life`) is read only via
   `servers/scripts/tech-mail.sh`, and is untrusted input (OWASP LLM01).
@@ -60,9 +60,9 @@ dependency bump goes through `standards:dependency-upgrade` (Geoff, 2026-09-13 a
 Tool languages (Geoff, 2026-10-19): Bash for glue that runs other commands (Python once it parses
 data or passes ~100 lines); stdlib-only Python for a one-file `~/.dotfiles/bin` helper run as
 `python3 -I` (Go once it needs a package, a build, or a second file); Go for a standalone repo
-tool; TypeScript only where the platform requires it. **Invoke `standards:go-conventions` before
-any Go code**, `standards:elm-conventions` for bubbletea, and `standards:tui-visual-verify` before
-any TUI claim or gate: only a screenshot of the real terminal is evidence.
+tool; TypeScript only where the platform requires it. **Invoke `standards:tui-visual-verify` before
+any TUI claim or gate**: only a screenshot of the real terminal is evidence. The Go and bubbletea
+skills load from `rules/go.md` when a `.go` file is in play.
 
 ## Cloudflare and API-first
 
@@ -84,7 +84,7 @@ before hunting a credential, provisioning infra, or touching any token. Use an A
   claiming one is missing, or asking Geoff when one is rejected, check its item (`claude-pass`) and
   the stores (`~/.local/secrets`, the registry, `wrangler secret list`), by name, never a value.
 - **Geoff has no smartphone** (2026-11-07): never suggest a phone app; his 2FA is Proton Pass TOTP or a key.
-- Full flows, exceptions, and store order: `bluefin-admin.md` "Secrets". Test accounts: `test-accounts.md`.
+- Full flows, exceptions, and store order: `~/.claude/docs/bluefin-admin/secrets.md`. Test accounts: `test-accounts.md`.
 
 ## Claude Code Agent Usage
 

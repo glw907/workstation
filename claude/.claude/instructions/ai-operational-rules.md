@@ -14,7 +14,7 @@ Always source manually before using any env var:
 
 ```bash
 # Correct
-# Token scopes are recorded centrally in ~/.claude/docs/cloudflare-estate-inventory.md -- consult it, never guess.
+# Token scopes are recorded centrally in ~/.claude/docs/cloudflare-estate/authorization.md -- consult it, never guess.
 CF_TOKEN=$(bash -c 'source ~/.local/secrets && echo -n $CLOUDFLARE_API_TOKEN')
 
 # Wrong: silently pipes empty string

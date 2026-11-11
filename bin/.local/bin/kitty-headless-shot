@@ -94,7 +94,7 @@ if [ "${1:-}" = "setup" ]; then
     esac
   done
   command -v distrobox >/dev/null 2>&1 || {
-    echo "kitty-headless-shot: distrobox not found (see ~/.claude/docs/bluefin-admin.md, tier 5)" >&2
+    echo "kitty-headless-shot: distrobox not found (see ~/.claude/docs/bluefin-admin/software-tiers.md, tier 5)" >&2
     exit 1
   }
   echo "kitty-headless-shot: creating (or confirming) distrobox '$box'..."
@@ -120,7 +120,7 @@ done
 shift $((OPTIND - 1))
 
 command -v distrobox >/dev/null 2>&1 || {
-  echo "kitty-headless-shot: distrobox not found; install it first (tier 5 in bluefin-admin.md)" >&2
+  echo "kitty-headless-shot: distrobox not found; install it first (tier 5 in ~/.claude/docs/bluefin-admin/software-tiers.md)" >&2
   exit 1
 }
 distrobox list 2>/dev/null | grep -qw "$box" || {

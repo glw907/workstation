@@ -58,6 +58,7 @@ trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/stub"
 printf '#!/bin/sh\nexit 0\n' >"$tmp/stub/nightly.sh"
 chmod 755 "$tmp/stub/nightly.sh"
+# shellcheck disable=SC2043 # a one-item loop kept so another pass can be added
 for pass in base; do
     dir="$tmp/$pass"
     mkdir -p "$dir"

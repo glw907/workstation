@@ -2,7 +2,7 @@
 # check-roadmap-refs.test.sh: prove scripts/check-roadmap-refs.sh fails on a planted ROADMAP
 # reference, passes on a clean tree, and passes on the real repo.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 CHECK="$(pwd)/scripts/check-roadmap-refs.sh"
 fail=0
 root="$(mktemp -d)"
