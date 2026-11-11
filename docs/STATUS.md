@@ -28,9 +28,18 @@ the cairn-cms checkout, tellgrader reinstalled, the Fastmail flatpak uninstalled
 worktrees removed with Geoff's approval, and `claude-tooling-sync verify` clean. The backlog sweep
 stamps landed in one commit on `main`.
 
-Geoff still runs three steps (the Cloudflare plugin sign-in, the four claude.ai connector
-removals, and the settings and plugin command in the PR's `## After merge`); the next action is
-those, then `claude-tooling-sync verify` again. Pass 2b branches from this `main`. Plan:
+Pass 1 is closed. Geoff signed in to the Cloudflare plugin, removed the four claude.ai connectors,
+and ran the settings and plugin command, which dropped two deny rules, a retired live-settings key,
+and four user-scope plugins; `claude-tooling-sync verify` passes. Poplar's tracked settings still
+enable the four removed plugins, which waits for poplar's next pass.
+
+Next: Pass 2, two passes planned by one session. The `approval-queue` pass comes first. The
+workstation pass (2b, adapter `dotfiles-pass`) branches from this `main` and changes
+`claude-merge-guard`, the `gh pr merge` allow rule, the `approval-packet` skill, and the
+`approval-brief.md` register. Launch the planner from
+`~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-2-planner-prompt.txt`; the
+record is a local, unpushed branch there. Launch nothing for 2b while a cairn-cms setup-tooling
+session is working. Pass 3 is not planned yet. Pass 1 plan:
 `~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-1-workstation-plan.md`.
 
 ## Docs system
