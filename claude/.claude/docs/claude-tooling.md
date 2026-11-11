@@ -19,7 +19,6 @@ machine.** The manifests record intent; the script reports what happened.
 | Workstation `CLAUDE.md` | `~/.dotfiles/claude/.claude/` (stowed) | the file itself | stow |
 | `settings.json` (hooks, plugins, env) | tracked at `~/.dotfiles/claude/.claude/settings.json`, generated into `~/.claude/settings.json` (a real file, never stowed) | the tracked file | `claude-tooling-sync apply` |
 | Plugin `standards` (craft skills, reviewer agents, `running-passes`; a skill or agent a second repository needs) | `~/Projects/standards`, public `glw907/standards`, `plugins/standards/`; names are `standards:<name>` | `.claude-plugin/marketplace.json`, validated in its CI; vendored entries carry `"home": "standards"` in `vendored-skills.json` | `claude plugin install standards@glw907-standards`; auto-updates from `main`; `update-skills` opens a pull request there |
-| Local plugin `svelte-lsp` (the Svelte language server for the `LSP` tool) | `claude/.claude/skills/svelte-lsp/` (`.claude-plugin/plugin.json`, `.lsp.json`); the server is `"npm:svelte-language-server"` in `mise/.config/mise/config.toml` | `"defaultEnabled": true` in its `plugin.json`; stowed under `~/.claude/skills`, it loads every session as `svelte-lsp@skills-dir`; the mise entry puts `svelteserver` on PATH | `stow -R claude` and `mise install`, then a new session |
 | Plugins | Claude Code's plugin cache | `settings.json` `enabledPlugins` + `extraKnownMarketplaces` | `claude plugin install` |
 | MCP servers, user scope | `~/.claude.json` (not in git; holds other state) | `~/.claude/tooling/mcp-servers.json` (stowed) | `claude-tooling-sync apply` |
 | MCP servers, project scope | a repo's `.mcp.json` | that repo | the repo's own CLAUDE.md names it |
@@ -151,8 +150,9 @@ the diff, point the agents that need it at the skill file, commit skills and man
   (`standards:brainstorming`, `standards:receiving-code-review`, MIT).
 - **Plugins:** frontend-design (Anthropic), cloudflare, tui-design, and standards (this
   workstation's portable skills and reviewers). The language servers are `typescript-lsp` and
-  `gopls-lsp` (both from `claude-plugins-official`, with `gopls` in the Brewfile) and the local
-  `svelte-lsp`. The code-review, code-simplifier, skill-creator,
+  `gopls-lsp` (both from `claude-plugins-official`, with `gopls` in the Brewfile). A local
+  `svelte-lsp` plugin was removed on 2026-11-11 (backlog #71). The code-review, code-simplifier,
+  skill-creator,
   and superpowers plugins are gone; the built-in `/code-review` and `/simplify` and
   `anthropic-skills:skill-creator` replaced them.
 

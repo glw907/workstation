@@ -48,12 +48,12 @@ past twice its estimate gets one line in the PR's `## Decisions`. Reviews follow
 class. The gate now checks the skill word caps and each role's load with `claude-pass-load`.
 Nothing is live until the merge and the after-merge steps in the PR body.
 
-The stack pilots, workstation part, are in review as glw907/workstation#229. The gate gains a
-changed-files lane (`bash scripts/gate.sh --scope-changed`), a timing line per leg, and a
-`shellcheck` leg with its findings fixed; `bluefin-admin.md` and the Cloudflare inventory split into
-topic files behind short indexes; `typescript-lsp`, `gopls-lsp`, and a local `svelte-lsp` give the
-`LSP` tool its servers; and `rules/go.md` loads the Go skills. The `check-drift` SC2140 finding is
-backlog #70. Nothing is live until the merge and its after-merge steps.
+The stack pilots, workstation part, merged as glw907/workstation#229 and are live on pavilion. The
+gate has a changed-files lane (`bash scripts/gate.sh --scope-changed`), a timing line per leg, and a
+`shellcheck` leg; `bluefin-admin.md` and the Cloudflare inventory are topic files behind short
+indexes; `typescript-lsp` and `gopls-lsp` give the `LSP` tool its servers; and `rules/go.md` loads
+the Go skills. The local `svelte-lsp` plugin is removed, since mise refuses its server (backlog
+#71). The `check-drift` SC2140 finding is backlog #70. thinkpad-x1 owes the after-merge command.
 
 **thinkpad-x1 owes one step.** `workstation-sync` brings it the guard, skill, settings, and
 register, but never rebuilds the queue app or disables the timer. Its first session after the sync

@@ -1,4 +1,3 @@
 [tools]
 node = "lts"
 "npm:@google/clasp" = "3"
-"npm:svelte-language-server" = "0.18"
