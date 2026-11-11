@@ -25,7 +25,7 @@ your task; a reference by old section name (`bluefin-admin.md "Secrets"`) finds 
 - gsettings: always /usr/bin/gsettings: `~/.claude/docs/bluefin-admin/gsettings.md`. Covers why Homebrew's gsettings has no dconf module and which binary to call.
 - Update cadence and rollback: `~/.claude/docs/bluefin-admin/update-cadence.md`. Covers the 6-hour update check, applying at reboot, and rollback.
 - /etc drift discipline: `~/.claude/docs/bluefin-admin/etc-drift.md`. Covers landing every `/etc` change in `bluefin/etc/` first, then installing it.
-- Browsers: `~/.claude/docs/bluefin-admin/browsers.md`. Covers Chromium profiles, policy files, extensions, and showing Geoff a visual.
+- Browsers: `~/.claude/docs/bluefin-admin/browsers.md`. Covers Chromium profiles, policy files, extensions, and showing a visual.
 - Headless real-terminal capture: `~/.claude/docs/bluefin-admin/terminal-capture.md`. Covers `kitty-headless-shot` and the `term-headless` distrobox.
 - SELinux for restored data: `~/.claude/docs/bluefin-admin/selinux.md`. Covers relabeling data restored into the home directory.
 - Secrets: installing, receiving, and Proton Pass: `~/.claude/docs/bluefin-admin/secrets.md`. Covers installing and receiving secrets, `claude-pass`, and the store-check order.

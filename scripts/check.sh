@@ -155,19 +155,19 @@ legs() {
         "secret-set.sh value quoting" bash tests/secret-set-quoting.test.sh
     run secret-store-flags '^tests/secret-store-flags\.test\.sh$|^scripts/secrets/|^bin/\.local/bin/(secret-receive|ws-pass-key)$|^secrets/' \
         "secret store flags, lock, and drop check" bash tests/secret-store-flags.test.sh
-    run ws-pass-key '^tests/ws-pass-key\.test\.sh$|^scripts/secrets/|^bin/\.local/bin/ws-pass-key$|^secrets/' \
+    run ws-pass-key '^tests/(ws-pass-key\.test\.sh$|fixtures/pass-cli$)|^scripts/secrets/|^bin/\.local/bin/ws-pass-key$|^secrets/' \
         "ws-pass-key agent-token read" bash tests/ws-pass-key.test.sh
-    run claude-pass '^tests/claude-pass\.test\.sh$|^bin/\.local/bin/claude-pass$' \
+    run claude-pass '^tests/(claude-pass\.test\.sh$|fixtures/pass-cli$)|^bin/\.local/bin/claude-pass$' \
         "claude-pass agent run" bash tests/claude-pass.test.sh
-    run secret-receive-pass '^tests/secret-receive-pass\.test\.sh$|^bin/\.local/bin/(secret-receive|claude-sudo-setup)$|^secrets/' \
+    run secret-receive-pass '^tests/(secret-receive-pass\.test\.sh$|fixtures/pass-cli$)|^bin/\.local/bin/(secret-receive|claude-sudo-setup)$|^scripts/secrets/|^secrets/' \
         "secret-receive --pass and the sudo dialog" bash tests/secret-receive-pass.test.sh
-    run pass-count '^tests/pass-count\.test\.sh$|^bin/\.local/bin/pass-count$' \
+    run pass-count '^tests/(pass-count\.test\.sh$|fixtures/pass-cli$)|^bin/\.local/bin/pass-count$' \
         "pass-count counts and hashes" bash tests/pass-count.test.sh
     run pass-access '^tests/(pass-access\.test\.sh$|fixtures/pass-access-capture\.tsv$)|^bin/\.local/bin/(claude-pass|pass-access|ws-pass-key)$' \
         "pass-access rows" bash tests/pass-access.test.sh
     run pass-sitting '^tests/(pass-sitting\.test\.sh$|fixtures/(pass-sitting/|pass-cli$))|^bin/\.local/bin/pass-sitting$' \
         "pass-sitting against the fake pass-cli" bash tests/pass-sitting.test.sh
-    run check-drift-proton '^tests/check-drift-proton\.test\.sh$|^bin/\.local/bin/(check-drift|claude-pass|pass-access|ws-pass-key)$|^secrets/proton-grants\.tsv$' \
+    run check-drift-proton '^tests/(check-drift-proton\.test\.sh$|fixtures/pass-access-capture\.tsv$)|^bin/\.local/bin/(check-drift|claude-pass|pass-access|ws-pass-key)$|^secrets/proton-grants\.tsv$' \
         "check-drift Proton Pass leg" bash tests/check-drift-proton.test.sh
     run workstation-sync '^tests/workstation-sync\.test\.sh$|^bin/\.local/bin/(check-drift|claude-tooling-sync|workstation-[a-z]+)$|^bluefin/|^bin/\.local/share/cleanroom/settings\.json$|^claude/\.claude/settings\.json$' \
         "workstation-sync, workstation-syncthing, and check-drift's work leg" bash tests/workstation-sync.test.sh
@@ -203,7 +203,7 @@ legs() {
         "CLAUDE.md context budget" bash bin/.local/bin/claude-context-budget claude/.claude/CLAUDE.md
     run skill-caps "^bin/\\.local/bin/claude-context-budget\$|$SKILLS" \
         "pass-core word caps" bin/.local/bin/claude-context-budget --skill-caps --root .
-    run pass-loads "^bin/\\.local/bin/claude-pass-load\$|^claude/\\.claude/CLAUDE\\.md\$|$SKILLS" \
+    run pass-loads "^bin/\\.local/bin/claude-pass-load\$|^claude/\\.claude/CLAUDE\\.md\$|^claude/\\.claude/docs/voice/approval-brief\\.md\$|$SKILLS" \
         "pass role loads" bin/.local/bin/claude-pass-load --check --root .
     run claude-refs '+^claude/\.claude/.*\.md$|^scripts/check-claude-refs\.py$|^claude/\.claude/tooling/retired-phrases\.txt$' \
         "claude refs and retired phrases" python3 scripts/check-claude-refs.py check --root .
