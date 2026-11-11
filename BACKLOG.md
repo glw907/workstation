@@ -9,6 +9,9 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
+- [ ] **#69** Rebuild the session-start fast-forward of the shared checkouts `#feature` `#workstation` `#initiative:workstation-refinement` *(2026-11-11)*
+  Closed pull request #166 (branch `fresh-checkouts`, kept on GitHub) made the SessionStart hook `claude/.claude/gather-dotfiles.sh` fetch the dotfiles, approval-queue, servers, and initiatives checkouts and fast-forward each one that is on its default branch with no other live session in it, with a test at `tests/gather-dotfiles-checkouts.test.sh`. It also edited `pass-core` and the `dotfiles-pass` path map, which #228 rewrote, so the diff no longer applies. Left alone, a session on a machine that has not pulled works from stale skills, tools, and secrets: #166 measured the dotfiles checkout 113 commits behind on one host. Rebuild the hook change and its test on current `main` once the freeze that follows the workstation refinement ends. The pull request's other half, direct landing of skill edits, is outside this item. Found at the Pass 3 close (#228).
+
 - [ ] **#68** Close the Low findings from the workstation refinement pass 1 review `#improvement` `#workstation` `#initiative:workstation-refinement` *(2026-11-10)*
   Found, not done. `cairn-run-gate` takes any live ancestor as the `CAIRN_RUN_GATE_ACTIVE` marker, so a top-level `CAIRN_RUN_GATE_ACTIVE=$$ cairn-run-gate '...'` skips the lane lock; also require that `/proc/<pid>/cmdline` names `cairn-run-gate`. `claude-tail-guard` strips a redirect inside the tail stage (`npm test | tail > /tmp/x` becomes `npm test`), and no test pins `(npm test) | tail`. `tests/cairn-run-gate.test.sh` has no case for `gate.sh --fresh`. Plan: `~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-1-workstation-plan.md`.
 
