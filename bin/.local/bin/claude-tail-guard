@@ -29,6 +29,7 @@ PREFILTER = re.compile(
 TAIL_HEAD = re.compile(r"\b(?:tail|head)\b")
 HEREDOC = re.compile(r"(?<!<)<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
+TRAILING_TAIL_HEAD = re.compile(r"(?:\s*\|\s*(?:tail|head)\b[^|;&\n]*)+$")
 PIPES = {"|", "|&"}
 MESSAGE = (
     "Blocked: nothing in this Bash call ran, including every command before and "
@@ -115,10 +116,12 @@ def is_guarded(words: list[str]) -> bool:
     if not words:
         return False
     first = words[0]
-    if os.path.basename(first) in ("cairn-run-gate", "ci-green"):
+    if os.path.basename(first) == "cairn-run-gate":
+        return not {"--records", "--receipt"} & set(words)
+    if os.path.basename(first) == "ci-green":
         return True
     if re.fullmatch(r"(?:.*/)?scripts/(?:check|gate)\.sh", first):
-        return True
+        return "--dry-run" not in words
     if first == "npm":
         return words[1:2] == ["test"] or (
             words[1:2] == ["run"]
@@ -128,11 +131,26 @@ def is_guarded(words: list[str]) -> bool:
     return words[:3] == ["gh", "pr", "checks"]
 
 
+def strip_trailing_stages(command: str) -> str | None:
+    """Return command minus its trailing tail and head stages, or None if unclean."""
+    stripped = TRAILING_TAIL_HEAD.sub("", command.rstrip())
+    if stripped == command.rstrip():
+        return None
+    try:
+        grouped = pipelines(tokenize(strip_heredocs(stripped)))
+    except ValueError:
+        return None
+    if [len(pipeline) for pipeline in grouped if pipeline != [[]]] != [1]:
+        return None
+    return stripped
+
+
 def main() -> int:
     """Read the hook input and return the exit code."""
     try:
         data = json.load(sys.stdin)
-        command = (data.get("tool_input") or {}).get("command")
+        tool_input = data.get("tool_input") or {}
+        command = tool_input.get("command")
     except (ValueError, AttributeError):
         return 0
     if not isinstance(command, str):
@@ -148,7 +166,18 @@ def main() -> int:
         for index, words in enumerate(stages):
             if not is_guarded(words):
                 continue
-            if any(later[:1] in (["tail"], ["head"]) for later in stages[index + 1 :]):
+            later = stages[index + 1 :]
+            if any(stage[:1] in (["tail"], ["head"]) for stage in later):
+                if index == 0 and len(grouped) == 1 and all(
+                    stage[:1] in (["tail"], ["head"]) for stage in later
+                ):
+                    stripped = strip_trailing_stages(command)
+                    if stripped is not None:
+                        print(json.dumps({"hookSpecificOutput": {
+                            "hookEventName": "PreToolUse",
+                            "updatedInput": {**tool_input, "command": stripped},
+                        }}))
+                        return 0
                 print(MESSAGE, file=sys.stderr)
                 return 2
     return 0

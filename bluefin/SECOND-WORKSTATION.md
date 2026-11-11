@@ -350,8 +350,8 @@ the rest unless the step says it is a hard stop.
 
     Running the repo gate (`bash scripts/gate.sh`) on a fresh machine fails
     for a reason unrelated to any change. The
-    ratchet flags documented paths that don't exist yet, such as `~/Android`
-    and the laptop-only lid folder. A path that belongs on only one host
+    dead-reference check flags documented paths that don't exist yet, such as
+    `~/Android` and the laptop-only lid folder. A path that belongs on only one host
     carries a `host-ok` marker on its line. `~/.contacts/` is not one of
     those: it appears after the first contacts sync, which needs the DAV
     token above.
@@ -373,9 +373,9 @@ the rest unless the step says it is a hard stop.
    neither does `/chrome` inside a session that started before setup.
    Start a fresh `claude --chrome` and quit it. Don't use `--continue`
    while another session on the same conversation is open.
-3. Add the Fastmail CalDAV/CardDAV account in Settings > Online Accounts
-   (GNOME Contacts and Calendar read it), then launch Hylki and sign in to
-   Fastmail.
+3. Add the ward account (Calendar and Contacts on `mail.907.life`) in
+   Settings > Online Accounts (GNOME Contacts and Calendar read it), then
+   launch Hylki and sign in over JMAP at `https://mail.907.life`.
 4. Set the desktop background to `01-bluefin.xml`, the winter dinosaur in
    Nord tones:
    ```bash
@@ -494,6 +494,14 @@ On 2026-11-01, `workstation-sync` took over this section's job: its daily timer 
 1. Pull `~/.dotfiles`, then run `stow -R bin upkeep` and `systemctl --user enable --now workstation-sync.timer`.
 2. Run `workstation-syncthing`. On a host missing from `bluefin/syncthing-devices.txt`, it prints the line to add. Commit that line to `main` and push. The other host pairs on its next run.
 3. Run `workstation-sync`, then `workstation-sync --status`, and expect `ok`.
+
+On 2026-11-10, the workstation refinement pass (pass 1) landed on pavilion. `workstation-sync` carries its stow links and `claude-tooling-sync apply`, but not the rest, so thinkpad-x1 needs these from Geoff's next session on the laptop:
+
+1. Run the live-file and plugin lines from the pass's after-merge command: delete `skipDangerousModePermissionPrompt` from `~/.claude/settings.json` (`apply` never deletes a key), and uninstall the `code-review`, `code-simplifier`, `skill-creator`, and `superpowers` plugins at user scope.
+2. Remove the user-scope `daisyui-blueprint` server (`claude mcp remove -s user daisyui-blueprint`). It now lives at local scope in the cairn-cms checkout.
+3. Run `make -C ~/.dotfiles/claude/.claude/skills/writing-voice/evals/tellgrader install`, so the laptop's `tellgrader` binary stops printing warning-only output.
+4. Uninstall the retired mail client's flatpak, the one `check-drift` flags. Until then it flags that flatpak and the Blueprint server, and those lines are expected.
+5. Sign in to the Cloudflare plugin again. The sign-in is per host, so `workstation-sync` cannot carry it.
 
 ## After pavilion is up
 

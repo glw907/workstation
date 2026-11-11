@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # gather-dotfiles-initiatives.test.sh: prove the initiatives section of the SessionStart hook
 # (claude/.claude/gather-dotfiles.sh). Each case runs the hook from a temporary repo against the
-# fixture initiatives tree. The hook also prints bashrc exports, so assertions grep for lines.
+# fixture initiatives tree. Assertions grep for lines.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 SCRIPT="$(pwd)/claude/.claude/gather-dotfiles.sh"
@@ -41,13 +41,12 @@ has "$out" "- beta-plan: Plans the beta work." "match: proposed"
 lacks "$out" "gamma-hold" "match: paused hidden"
 lacks "$out" "delta-ship" "match: done hidden"
 lacks "$out" "epsilon-other" "match: other repo hidden"
-has "$out" "## Shell Environment (drift check; canonical inventory is CLAUDE.md)" "match: existing output kept"
+lacks "$out" "## Shell Environment" "match: no shell environment block"
 
 # no clone
 run "$root/ws" "$root/missing"
 assert_eq "$rc" "0" "no clone: exit 0"
 has "$out" "initiatives: no clone at ~/Projects/initiatives" "no clone: line"
-has "$out" "## Shell Environment (drift check; canonical inventory is CLAUDE.md)" "no clone: existing output kept"
 
 # unreadable record: reported, and the valid records still print.
 cp -r "$FIXTURES" "$root/bad"
@@ -97,6 +96,5 @@ out=$(cd "$root/ws" && PATH="$root/bin" INITIATIVES_DIR="$FIXTURES" "$(command -
 rc=$?
 assert_eq "$rc" "0" "no yq: exit 0"
 has "$out" "initiatives: yq not found" "no yq: line"
-has "$out" "## Shell Environment (drift check; canonical inventory is CLAUDE.md)" "no yq: existing output kept"
 
 exit "$fail"

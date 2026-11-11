@@ -30,8 +30,7 @@ and "Direct changes" replaces the `running-passes` skip for a one-sentence diff.
 A design that `standards:brainstorming` produces enters this lifecycle. Geoff approves it as a
 design part in an approval-queue packet (`approval-packet`), never through a question in chat: the
 queue shows the design in a browser and takes his feedback (Geoff, 2026-10-28). The spec and plan go
-where the repo's adapter or this skill puts them, the plan is authored per step 4, and
-`superpowers:writing-plans` is never invoked.
+where the repo's adapter or this skill puts them, and the plan is authored per step 4.
 
 1. **Design.** Opus at `high` brainstorms in chat. The design is the page or less
    `running-passes` "Design" sets out, plus every pre-flight item it can foresee (step 4). A design brought for approval goes to Geoff as a design part in a packet, per `approval-packet`.
@@ -122,8 +121,8 @@ is small ... ask Claude to do it directly."
 
 - Design and plan authorship: `claude-opus-5-5` at `high`, since planning may spend more for a
   better result. All other Opus work, reviewers included, runs at `medium`.
-- Conductor: `claude-opus-5-5` at `medium`. Its rare merge and relaunch calls carry the risk, and
-  it mostly waits.
+- Conductor: `sonnet` at `medium`. It mostly waits, and a merge or relaunch call it cannot settle
+  goes to Geoff as a packet.
 - Executing session and pair subagents: `sonnet` at `medium`. A clock stop or CI red traced to
   executor reasoning moves the next pass to `high` (Sonnet 5.5 page: "start at medium for
   well-specified tasks and move to high for harder or longer ones").
@@ -152,7 +151,7 @@ whose main checkout launches the executor. The planner commits `<plan>-conductor
 "Launch prompt") and checks `claude agents --json` for a live `conductor-<project>`:
 
 1. If none is listed, the planner launches it from that main checkout with `claude --bg --model
-   claude-opus-5-5 --effort medium --name conductor-<project> "$(cat <file>)"` and closes.
+   sonnet --effort medium --name conductor-<project> "$(cat <file>)"` and closes.
 2. If one is listed, the planner sends it the prompt file's absolute path with `SendMessage`, waits
    for its one-line reply naming the pass, and closes. A send that fails because the conductor
    just ended falls back to step 1.
@@ -266,12 +265,10 @@ cannot fire while the session waits on a pair.
 
 The conductor is the session that runs between passes. One runs per project, named
 `conductor-<project>` (see "Execute"), and it owns every PR its passes open, merged in the order its
-prompt names. Its first act is the API-drop wake-up (`/loop` with no interval) and, if the lid
-may close, the lid-switch hold, per `~/.claude/docs/unattended-work-guards.md`, as an executor's
-are (Geoff, 2026-10-12). It watches unattended passes with the Monitor tool over `claude agents
---json --all`, which keeps a background session listed after its process exits. The Monitor event
-is the primary signal; each fallback tick re-arms the Monitor and checks the pass's sessions and
-PRs, since an event lost to an API drop leaves the conductor asleep. At each decision point it sends one packet for the PRs and designs it holds, never one per
+prompt names. Its first act is no `/loop` wake-up, and it never watches with the Monitor
+tool. It waits on each executor with `SendMessage` `notify_when_idle: true`, which is one-shot, so
+it re-subscribes after each notice. On a notice it reads the executor's STATUS line and PR. If the
+lid may close, it takes the lid-switch hold per `~/.claude/docs/unattended-work-guards.md`. At each decision point it sends one packet for the PRs and designs it holds, never one per
 executor PR, per `approval-packet`. It merges and pulls the checkout per "Close" after he approves, and launches
 the next committed prompt from the main checkout after the "Execute" pre-launch checks. For a pass
 it owns, the conductor is the session that hands the packet over in "Close", so the executor's prompt
@@ -289,7 +286,6 @@ a cause the conductor can fix, the conductor sends the fix, or fixes it at the s
 branch, a merge from the default branch) and relaunches the stopped executor; otherwise Geoff
 attaches to it. The conductor never calls `EnterWorktree`, because the
 isolation would apply to its subagents too; it edits a worktree by path instead.
-A watch over `claude agents --json --all` reads each field with `.get`, since a row can lack `id`.
 While a planner is out, the conductor merges no STATUS edit to the default branch, because the
 executor's merge of the plan branch then conflicts in STATUS; it batches its STATUS changes into
 the hand-over after that pass lands.

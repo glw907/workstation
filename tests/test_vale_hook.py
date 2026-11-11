@@ -125,24 +125,21 @@ def _fixture_repo(tmp_path):
 def test_path_grading_resolves_the_microsoft_section(tmp_path, monkeypatch, capsys):
     root = _fixture_repo(tmp_path)
     page = root / "docs" / "admin" / "page.md"
-    _feed(monkeypatch, page, "# Admin\n\nIn order to save your work, click Save.\n")
-    assert vh.main() == 0
-    out = capsys.readouterr().out
-    assert f"(graded from config root {root}, as docs/admin/page.md)" in out
-    assert "Microsoft" in out
+    _feed(monkeypatch, page, "# Admin\n\nSave your work, e.g. with the Save button.\n")
+    assert vh.main() == 2
+    err = capsys.readouterr().err
+    assert f"(graded from config root {root}, as docs/admin/page.md)" in err
+    assert "Microsoft" in err
 
 
 def test_path_grading_resolves_the_google_section(tmp_path, monkeypatch, capsys):
     root = _fixture_repo(tmp_path)
     page = root / "docs" / "extend" / "page.md"
-    _feed(
-        monkeypatch, page,
-        "# Extend\n\nThe API was designed by us. It helps developers extend the site.\n",
-    )
-    assert vh.main() == 0
-    out = capsys.readouterr().out
-    assert f"(graded from config root {root}, as docs/extend/page.md)" in out
-    assert "Google" in out
+    _feed(monkeypatch, page, "# Extend\n\nExtend the site, e.g. with a plugin.\n")
+    assert vh.main() == 2
+    err = capsys.readouterr().err
+    assert f"(graded from config root {root}, as docs/extend/page.md)" in err
+    assert "Google" in err
 
 
 def test_path_grading_resolves_neither_section(tmp_path, monkeypatch, capsys):
@@ -157,3 +154,14 @@ def test_path_grading_resolves_neither_section(tmp_path, monkeypatch, capsys):
     err = capsys.readouterr().err
     assert f"(graded from config root {root}, as src/content/page.md)" in err
     assert "Vale.Spelling" in err
+
+
+def test_warnings_and_suggestions_alone_are_silent(tmp_path, monkeypatch, capsys):
+    """A save whose findings are all below error tier prints nothing and exits 0."""
+    root = _fixture_repo(tmp_path)
+    page = root / "docs" / "admin" / "page.md"
+    _feed(monkeypatch, page, "# Admin\n\nIn order to save your work, click Save.\n")
+    assert vh.main() == 0
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""

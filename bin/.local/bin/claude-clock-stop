@@ -10,7 +10,9 @@
 # The hook resolves both from the hook input's cwd, which follows a `cd` and is the worktree root
 # after EnterWorktree, so a cwd below the root finds the file too. Once elapsed time passes twice the
 # estimate, it prints one JSON object whose additionalContext tells the session to write STATUS,
-# notify, and wait. Every other case prints nothing: no file, under the threshold, a malformed
+# notify, and wait, once per task: a record under ${XDG_STATE_HOME:-$HOME/.local/state}/claude-clock-stop/,
+# keyed on the worktree root, task, and start, silences repeats, and nothing lands in the worktree.
+# Every other case prints nothing: no file, under the threshold, a malformed
 # file, a non-git cwd, a missing tool. It runs after every tool call, so it never exits non-zero.
 {
   input=$(cat)
@@ -28,6 +30,10 @@
   [[ "$estimate" =~ ^[0-9]+$ ]] && [ "$estimate" -gt 0 ] || exit 0
   elapsed=$(( ($(date +%s) - start) / 60 ))
   [ "$elapsed" -gt $((estimate * 2)) ] || exit 0
+  state="${XDG_STATE_HOME:-$HOME/.local/state}/claude-clock-stop"
+  key=$(printf '%s\n%s\n%s' "$root" "$task" "$start" | sha256sum | cut -d' ' -f1)
+  [ ! -e "$state/$key" ] || exit 0
+  mkdir -p "$state" && : >"$state/$key" || exit 0
   msg="Clock stop: task $task has run $elapsed minutes against a $estimate-minute estimate. Write STATUS, run \`notify-send -u normal\`, and wait for Geoff (ruling 13)."
   jq -nc --arg m "$msg" '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $m}}'
 } 2>/dev/null

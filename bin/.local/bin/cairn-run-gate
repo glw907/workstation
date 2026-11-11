@@ -5,7 +5,7 @@
 # The first call starts the gate detached (keyed by the gate string and the working
 # directory) and blocks up to CAIRN_GATE_WAIT seconds (default 540, under the shell
 # tool's ten-minute cap). If the gate finishes inside that window, the exit status and
-# the last 60 lines print. If not, the call prints "gate still running" and exits 75;
+# the last 40 lines print (none on a zero exit). If not, the call prints "gate still running" and exits 75;
 # the caller re-issues the SAME command, which reattaches to the running gate and waits
 # again. A finished run's status, log, and start fingerprint persist in its state directory. A
 # repeat call, or a second waiter that arrives after the finish, reprints that result (with
@@ -26,6 +26,13 @@
 # elapsed time with bash $SECONDS, so one call returns within CAIRN_GATE_WAIT plus one poll
 # interval even when a poll sleeps longer than asked. An argument that starts with "--" and is
 # not a known flag exits 2 with the usage line and starts nothing.
+#
+# Nesting: the detached run exports CAIRN_RUN_GATE_ACTIVE=<its pid>. A call whose marker names an
+# ancestor process (a walk up PPid) runs the gate in the foreground with no lock, state, record, or
+# receipt, so a gate that calls cairn-run-gate never queues behind itself. Any other value queues.
+# Lock contention: a run that exits non-zero with "parallel golangci-lint is running" in its log
+# keeps no replay state and no receipt, and says a re-issue reruns it; its record still writes exit.
+# Missing install: a toplevel with web/package.json and no web/node_modules exits 2 before queueing.
 #
 # Usage: cairn-run-gate [--fresh] '<gate string>' [log path]
 #        cairn-run-gate --receipt '<gate string>'
@@ -245,6 +252,24 @@ if [ "$mode" = receipt ]; then
   exit 0
 fi
 
+# A call made from inside a detached run's gate runs in the foreground, untracked.
+if [ -n "${CAIRN_RUN_GATE_ACTIVE:-}" ]; then
+  p=$$
+  while [ -n "$p" ] && [ "$p" -gt 1 ]; do
+    p=$(sed -n 's/^PPid:[[:space:]]*//p' "/proc/$p/status" 2>/dev/null)
+    if [ "$p" = "$CAIRN_RUN_GATE_ACTIVE" ]; then
+      bash -c "$gate"
+      exit $?
+    fi
+  done
+fi
+
+top=$(git rev-parse --show-toplevel 2>/dev/null) || top=""
+if [ -n "$top" ] && [ -f "$top/web/package.json" ] && [ ! -d "$top/web/node_modules" ]; then
+  echo "cairn-run-gate: web/node_modules is missing; run npm ci --prefix web, then re-issue"
+  exit 2
+fi
+
 wait_s="${CAIRN_GATE_WAIT:-540}"
 poll_s="${CAIRN_GATE_POLL_INTERVAL:-5}"
 grace_s="${CAIRN_GATE_GRACE:-15}"
@@ -336,7 +361,8 @@ if [ ! -e "$pidfile" ]; then
   # The exit record is written here, after the gate exits and before the status file: the caller
   # deletes the run's state once the status appears, and may have gone away entirely. Its warning
   # lands in a file the caller prints, since this process outlives the call that started it.
-  ( "${lock[@]}" "${scope[@]}" "${keep_awake[@]}" bash -c 'date +%s >"$1"; exec bash -c "$2"' _ "$state/acquired" "$gate" >"$log" 2>&1
+  ( export CAIRN_RUN_GATE_ACTIVE=$BASHPID
+    "${lock[@]}" "${scope[@]}" "${keep_awake[@]}" bash -c 'date +%s >"$1"; exec bash -c "$2"' _ "$state/acquired" "$gate" >"$log" 2>&1
     rc=$?
     queued_at=$(cat "$state/queued" 2>/dev/null || date +%s)
     acquired_at=$(cat "$state/acquired" 2>/dev/null || echo "$queued_at")
@@ -422,6 +448,15 @@ else
 fi
 rm -f "$vanishfile"
 
+# Another repo's golangci-lint held the shared lock: the run proves nothing, so keep nothing for
+# replay and write no receipt.
+if [ "$status" != 0 ] && grep -qF 'parallel golangci-lint is running' "$log" 2>/dev/null; then
+  [ -s "$state/record-warning" ] && cat "$state/record-warning" >&2
+  clear_state
+  echo "cairn-run-gate: another repo's golangci-lint held the lock; re-issue reruns it (log: $log)"
+  exit "$status"
+fi
+
 # Tell whoever ran this gate when it lost real time to the queue. The rule that a browserless
 # gate belongs on the light lane is easy to not know; the wait is where it costs, so say it here.
 hint_after="${CAIRN_GATE_HINT_AFTER:-120}"
@@ -441,6 +476,8 @@ if [ ! -e "$state/reported" ]; then
 fi
 [ "$reprinted" = 1 ] && echo "NOTE: reprinted from a finished run on this unchanged tree; re-issue with --fresh to rerun it."
 echo "gate exit: $status (log: $log, $(wc -l <"$log") lines)"
-echo "--- last 60 lines ---"
-tail -60 "$log"
+if [ "$status" != 0 ]; then
+  echo "--- last 40 lines ---"
+  tail -40 "$log"
+fi
 exit $status

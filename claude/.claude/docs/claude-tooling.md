@@ -104,8 +104,9 @@ the diff, point the agents that need it at the skill file, commit skills and man
 
 ## Inventory of third-party pieces (2026-09-13)
 
-- **DaisyUI:** the official skill (vendored) and the licensed Blueprint server (user scope).
-  The server entry runs `daisyui-blueprint-mcp` (dotfiles bin), which sources `~/.local/secrets`
+- **DaisyUI:** the official skill (vendored) and the licensed Blueprint server. It lives at local scope in the
+  cairn-cms checkout, reachable from its worktrees, and the standing site-admin audit runs from
+  that checkout; no user-scope entry remains in `mcp-servers.json`. The server runs `daisyui-blueprint-mcp` (dotfiles bin), which sources `~/.local/secrets`
   at spawn and maps the license pair to `LICENSE` and `EMAIL`; a `${VAR}` env entry resolves from
   the launching shell, and a terminal older than the secret leaves it empty (born 2026-09-14).
   The license serves DaisyUI work in every project on this workstation (Geoff, 2026-09-13).
@@ -143,11 +144,12 @@ the diff, point the agents that need it at the skill file, commit skills and man
   `standards:tui-visual-verify`), then Charm's agent guide for the Crush UI (pinned in `standards:elm-conventions`),
   then the `tui-design` plugin. `tui-design` (gfargo, MIT) is consulted for layout and
   discoverability patterns; the house skills win on any conflict.
-- **Superpowers:** two skills vendored (`standards:brainstorming`, `standards:receiving-code-review`, MIT); the
-  plugin stays disabled, since its session-start hook injects a skill-routing prompt into every
-  session and Claude Code has no per-plugin hook switch (2026-10-19).
-- **Plugins:** code-review, code-simplifier, frontend-design, skill-creator (Anthropic);
-  cloudflare; tui-design; standards (this workstation's portable skills and reviewers).
+- **Superpowers:** gone as a plugin (2026-11-10); two of its skills stay vendored
+  (`standards:brainstorming`, `standards:receiving-code-review`, MIT).
+- **Plugins:** frontend-design (Anthropic), cloudflare, tui-design, and standards (this
+  workstation's portable skills and reviewers). The code-review, code-simplifier, skill-creator,
+  and superpowers plugins are gone; the built-in `/code-review` and `/simplify` and
+  `anthropic-skills:skill-creator` replaced them.
 
 The placement rule for a skill or agent (Geoff, 2026-10-31): plugin when a second repository needs
 it; the repo when only that repo needs it, since committed files reach cloud sessions; personal

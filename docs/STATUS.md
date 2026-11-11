@@ -18,16 +18,15 @@ holds the fresh-machine provisioning artifacts. github.com/glw907/workstation.
 - **Secrets**: age-encrypted in `secrets/values.age`, synced by
   `scripts/secrets/sync.sh`; inventory in `secrets/registry.md`.
 - **Gate**: `scripts/check.sh`, run as `bash scripts/gate.sh`.
-- **The lean pass process is fully in place.** Rollout steps 1 to 5 merged; step 5, engine pass B
-  (cairn-cms #113), took 6.1 hours of clock against the 9-hour test. Plan and spec:
-  `docs/plans/2026-10-10-lean-pass-cutover.md`,
-  `docs/specs/2026-10-10-lean-pass-process-design.md`.
+- **The lean pass process is in place** (spec: `docs/specs/2026-10-10-lean-pass-process-design.md`).
 
-## Conductor
+## Workstation refinement
 
-Conductor `4bea6e68` closed the 2026-10-11 infrastructure initiative; its PRs (#11 to #23) carry
-the record. Each later initiative runs its own `conductor-<project>`, and the next one starts from
-the repos' ROADMAPs and the initiative records.
+PR-ready: pass 1 of `workstation-refinement` is PR #225 (branch `worktree-refinement-1`, session
+`dotfiles-refinement-1`, conductor `conductor-dotfiles`). Gate green, review fixed. Plan:
+`~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-1-workstation-plan.md`.
+Next action: the conductor sends the packet and merges in its window; its after-merge steps
+include deleting `claude/.claude/tooling/ratchet-baseline.json` on `main`.
 
 ## Docs system
 

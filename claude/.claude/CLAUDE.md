@@ -142,10 +142,10 @@ audit; the admin design system wins over both on conflict).
 
 ## Claude Code Agent Usage
 
-No human-scale time estimates in conversation; describe relative complexity ("quick", "multi-step")
-and focus on sequencing, dependencies, and testing. Plan tasks carry clock estimates in minutes, per
-`pass-core`. Every dispatch names a model and an effort, and subagents start with zero context:
-pre-extract what they need. Run gates and CI watches bare, never piped into `tail` or `head`.
+No human-scale time estimates in conversation; describe relative complexity and sequencing. Plan
+tasks carry clock estimates in minutes, per `pass-core`. Every dispatch names a model and an effort
+(Sonnet for reads, searches, and mechanical edits; Opus for judgment), and subagents start with
+zero context: pre-extract what they need. Run gates and CI watches bare, never piped to `tail`.
 
 ## A rule lives where it executes (Geoff, 2026-09-20)
 
@@ -161,13 +161,13 @@ output, diffs, and agent transcripts.
 
 The Workflow tool runs only on Geoff's explicit opt-in ("use a workflow"); when a task would
 clearly benefit, suggest it in one sentence with shape and scale. Past ~30 minutes of unattended
-work, arm the wake-up and guards `~/.claude/docs/unattended-work-guards.md` names.
+work, arm `~/.claude/docs/unattended-work-guards.md`'s guards; a session that only waits arms none.
 
-## Initiative-scoped sessions
+## Pass-scoped sessions
 
-One session per initiative: every turn re-reads the whole cached conversation. Close the session
-when an initiative lands, and prefer dispatching reads. Cross-repo initiatives are records in
-`~/Projects/initiatives`; its README holds the placement rule.
+One session per pass or hand-over, its state in the repo's STATUS so a fresh one picks it up. Close
+it when the pass or hand-over lands, and dispatch reads that span several files. Cross-repo
+initiatives are records in `~/Projects/initiatives`; its README holds the placement rule.
 
 ## Process proportionality
 

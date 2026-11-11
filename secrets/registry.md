@@ -558,7 +558,7 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotate at**: Cloudflare Access > Service Tokens dashboard
 
 ### DAISYUI_BLUEPRINT_LICENSE
-- **Grants**: the daisyUI Blueprint MCP server (official, paid) for Claude Code; read by the user-scope MCP entry `daisyui-blueprint` through the `daisyui-blueprint-mcp` launcher (dotfiles bin), which sources `~/.local/secrets` at spawn and exports the pair as `LICENSE` and `EMAIL`
+- **Grants**: the daisyUI Blueprint MCP server (official, paid) for Claude Code; read by the `daisyui-blueprint` MCP entry (cairn-cms's local scope, not user scope) through the `daisyui-blueprint-mcp` launcher (dotfiles bin), which sources `~/.local/secrets` at spawn and exports the pair as `LICENSE` and `EMAIL`
 - **Used by**: Claude Code on this workstation only (never a worker, never the cairn repo's committed `.mcp.json`)
 - **Rotate at**: https://daisyui.com/blueprint/ (account page); purchased 2026-09-13
 

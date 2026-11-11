@@ -1,9 +1,8 @@
-"""Fixtures for scripts/check-claude-refs.py: the self-mode dead-reference and retired-phrase
-checks (rows F1 to F8).
+"""Fixtures for scripts/check-claude-refs.py: the self-mode dead-reference, relative-link, and
+retired-phrase checks (rows F1 to F8).
 
-Every row runs the real claude/.claude/tooling/ratchet.py "check" mode, the way check.sh does,
-with scripts/check-claude-refs.py registered as the tool for both check ids, over a fixture
-tree holding only the files each row needs.
+Every row runs the real script's "check" command, the way check.sh does, over a fixture tree
+holding only the files each row needs.
 """
 import json
 import os
@@ -15,21 +14,15 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parent.parent
-RATCHET = REPO / "claude" / ".claude" / "tooling" / "ratchet.py"
 REFS = REPO / "scripts" / "check-claude-refs.py"
-BASELINE = "claude/.claude/tooling/ratchet-baseline.json"
 PY = shutil.which("python3") or sys.executable
 
-CHECKS = {"dead-reference": {"tool": "scripts/check-claude-refs.py"},
-          "retired-phrase": {"tool": "scripts/check-claude-refs.py"},
-          "relative-link": {"tool": "scripts/check-claude-refs.py"}}
-
 # Runs a script under an audit hook that records every path it opens, lists, or hands to a
-# subprocess, minus the interpreter's own install tree. Mirrors tests/test_ratchet.py's
-# AUDIT_WRAPPER (M2's pattern), reused here for check-claude-refs.py directly.
+# subprocess, minus the interpreter's own install tree. Proves self mode reads nothing
+# outside the fixture root.
 AUDIT_WRAPPER = r"""
 import atexit, json, os, runpy, sys, sysconfig
-log = os.environ["RATCHET_AUDIT_LOG"]
+log = os.environ["CHECK_AUDIT_LOG"]
 own = {os.path.realpath(sysconfig.get_paths()[k])
        for k in ("stdlib", "platstdlib", "purelib", "platlib")}
 # A layered environment (uv run --with) puts more site-packages on sys.path than sysconfig
@@ -68,14 +61,8 @@ def outside_reads(log, allowed):
                    if not any(p == a or p.startswith(a + os.sep) for a in allowed)})
 
 
-def entry(check, file, fingerprint, finding="GA-01", label="C", defect="an example defect"):
-    """Build one baseline entry for the given check, file, and fingerprint."""
-    return {"check": check, "file": file, "fingerprint": fingerprint,
-            "finding": finding, "pass": label, "defect": defect}
-
-
 class Fixture:
-    """A fixture tree carrying its own copy of ratchet.py and check-claude-refs.py."""
+    """A fixture tree carrying its own copy of check-claude-refs.py."""
 
     def __init__(self, tmp):
         self.tmp = tmp
@@ -89,9 +76,6 @@ class Fixture:
                        cwd=self.root, env=env, check=True)
         subprocess.run(["git", "config", "user.name", "Fixture"], cwd=self.root, env=env,
                        check=True)
-        tooling = self.root / "claude" / ".claude" / "tooling"
-        tooling.mkdir(parents=True)
-        shutil.copy(RATCHET, tooling / "ratchet.py")
         scripts = self.root / "scripts"
         scripts.mkdir()
         shutil.copy(REFS, scripts / "check-claude-refs.py")
@@ -116,32 +100,25 @@ class Fixture:
     def phrases(self, text):
         self.write("claude/.claude/tooling/retired-phrases.txt", text)
 
-    def baseline(self, entries):
-        self.write(BASELINE, json.dumps({"checks": CHECKS, "entries": entries}, indent=2))
-
     def check(self):
-        """Run ratchet.py check --root <fixture root> --home <fixture home>."""
-        env = {k: v for k, v in os.environ.items()}
+        """Run check-claude-refs.py check --root <fixture root> --home <fixture home>."""
         return subprocess.run(
-            [PY, str(RATCHET), "check", "--root", str(self.root), "--home", str(self.home)],
-            capture_output=True, text=True, env=env)
+            [PY, str(REFS), "check", "--root", str(self.root), "--home", str(self.home)],
+            capture_output=True, text=True, env=dict(os.environ))
 
     def audited_check(self):
-        """Run the fixture's own check-claude-refs.py ratchet-report under the audit wrapper.
+        """Run the fixture's own check-claude-refs.py under the audit wrapper.
 
-        Passes --projects-root and --memory-root (M2's roots contract) and asserts every path
-        the run opens, lists, or hands to a subprocess sits under the fixture root, proving self
-        mode reaches nothing outside it even with those extra roots injected.
+        Asserts every path the run opens, lists, or hands to a subprocess sits under the
+        fixture root.
         """
         log = self.tmp / "audit.json"
-        projects, memory = self.tmp / "projects", self.tmp / "memory"
         module = self.root / "scripts" / "check-claude-refs.py"
         env = {**os.environ, "HOME": str(self.home), "GIT_CONFIG_NOSYSTEM": "1",
-               "RATCHET_AUDIT_LOG": str(log)}
+               "CHECK_AUDIT_LOG": str(log)}
         proc = subprocess.run(
-            [PY, "-c", AUDIT_WRAPPER, str(module), "ratchet-report",
-             "--root", str(self.root), "--home", str(self.home),
-             "--projects-root", str(projects), "--memory-root", str(memory)],
+            [PY, "-c", AUDIT_WRAPPER, str(module), "check",
+             "--root", str(self.root), "--home", str(self.home)],
             capture_output=True, text=True, env=env)
         stray = outside_reads(log, [self.tmp])
         assert not stray, f"read outside the fixture root: {stray}"
@@ -171,10 +148,8 @@ def test_f1_doc_deleted_only_in_the_fixture_tree_is_a_dead_path(fx):
     fx.write_in_home(".claude/docs/gone.md", "still present via a literal ~/.claude/... home\n")
     fx.write_in_home(".dotfiles/claude/.claude/docs/gone.md",
                      "still present via the dotfiles checkout under home\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 1
-    assert "new violation" in out(proc)
     assert "~/.claude/docs/gone.md" in out(proc)
 
 
@@ -184,7 +159,6 @@ def test_a_dotfiles_span_resolves_against_the_tree_not_the_home_checkout(fx):
              "Spec: `~/.dotfiles/docs/specs/new.md`.\nOld: `~/.dotfiles/docs/old/gone.md`.\n")
     fx.write("docs/specs/new.md", "moved here\n")
     fx.write_in_home(".dotfiles/docs/old/gone.md", "still in the home checkout\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 1
     assert "~/.dotfiles/docs/old/gone.md" in out(proc)
@@ -195,7 +169,6 @@ def test_a_host_only_span_on_a_host_ok_line_passes_and_its_twin_fails(fx):
     fx.write("claude/.claude/docs/a.md",
              "Laptop only: `/etc/nothing-here.d/` <!-- host-ok -->\n"
              "Everywhere: `~/nothing-here/`\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 1
     assert "~/nothing-here/" in out(proc)
@@ -205,7 +178,6 @@ def test_a_host_only_span_on_a_host_ok_line_passes_and_its_twin_fails(fx):
 def test_f2_local_bin_cited_present_in_the_fixtures_bin_passes(fx):
     fx.write("claude/.claude/docs/a.md", "Run `~/.local/bin/example-tool` to apply it.\n")
     fx.write_bin("example-tool")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 0, out(proc)
 
@@ -218,7 +190,6 @@ def test_local_bin_stow_link_in_home_with_the_bin_deleted_from_the_tree_is_dead(
     link = fx.home / ".local" / "bin" / "foo"
     link.parent.mkdir(parents=True)
     link.symlink_to(stowed)
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 1
     assert "~/.local/bin/foo" in out(proc)
@@ -230,7 +201,6 @@ def test_local_bin_folded_dangling_stow_link_is_dead(fx):
     stow_bin.mkdir(parents=True)
     (fx.home / ".local").mkdir()
     (fx.home / ".local" / "bin").symlink_to(stow_bin)
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 1
     assert "~/.local/bin/foo" in out(proc)
@@ -239,14 +209,12 @@ def test_local_bin_folded_dangling_stow_link_is_dead(fx):
 def test_local_bin_regular_file_in_home_absent_from_the_tree_passes(fx):
     fx.write("claude/.claude/docs/a.md", "Run `~/.local/bin/foo` to apply it.\n")
     fx.write_in_home(".local/bin/foo", "#!/bin/sh\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 0, out(proc)
 
 
 def test_local_bin_span_absent_from_tree_and_home_is_dead(fx):
     fx.write("claude/.claude/docs/a.md", "Run `~/.local/bin/foo` to apply it.\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 1
     assert "~/.local/bin/foo" in out(proc)
@@ -257,18 +225,10 @@ def test_local_bin_span_absent_from_tree_and_home_is_dead(fx):
 
 def test_a_dead_relative_link_fails(fx):
     fx.write("claude/.claude/docs/a.md", "See [the note](gone.md) here.\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 1
     assert "relative-link" in out(proc)
     assert "gone.md" in out(proc)
-
-
-def test_one_dead_target_twice_in_a_file_matches_one_entry_with_count_two(fx):
-    fx.write("claude/.claude/docs/a.md", "See [a](gone.md#x).\n\nAnd [b](gone.md) again.\n")
-    fx.baseline([{**entry("relative-link", "claude/.claude/docs/a.md", "gone.md"), "count": 2}])
-    proc = fx.check()
-    assert proc.returncode == 0, out(proc)
 
 
 def test_live_and_exempt_relative_links_are_not_reported(fx):
@@ -277,7 +237,6 @@ def test_live_and_exempt_relative_links_are_not_reported(fx):
              "[live](exists.md) [anchored](exists.md#section) [web](http://example.invalid/x)\n"
              "[here](#anchor) [abs](/etc/nothing-here) [tilde](~/nothing-here)\n"
              "[dead](gone.md) <!-- link-ok -->\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 0, out(proc)
 
@@ -289,7 +248,6 @@ def test_a_vendored_skills_dead_relative_link_is_not_scanned(fx):
                  "commit": "abc123def456", "license": "MIT"}}}))
     fx.write("claude/.claude/skills/vendored-example/SKILL.md",
              "---\nname: vendored-example\n---\n\nSee [x](gone.md).\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 0, out(proc)
 
@@ -300,10 +258,8 @@ def test_a_vendored_skills_dead_relative_link_is_not_scanned(fx):
 def test_f3_retired_phrase_in_an_authored_file_fails(fx):
     fx.phrases("sleep 30\n")
     fx.write("claude/.claude/docs/a.md", "Poll it with `sleep 30` between checks.\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 1
-    assert "new violation" in out(proc)
     assert "claude/.claude/docs/a.md" in out(proc)
     assert "sleep 30" in out(proc)
 
@@ -312,7 +268,6 @@ def test_f4_retired_phrase_on_a_retired_ok_line_passes(fx):
     fx.phrases("sleep 30\n")
     fx.write("claude/.claude/docs/a.md",
              "Poll it with `sleep 30` between checks. <!-- retired-ok: quoting the old form -->\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 0, out(proc)
 
@@ -323,7 +278,6 @@ def test_f4_retired_phrase_on_a_retired_ok_line_passes(fx):
 def test_f5_phrase_list_absent_is_a_config_error(fx):
     (fx.root / "claude" / ".claude" / "tooling" / "retired-phrases.txt").unlink()
     fx.write("claude/.claude/docs/a.md", "nothing to see\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 2
     assert "configuration error" in out(proc)
@@ -333,7 +287,6 @@ def test_f5_phrase_list_absent_is_a_config_error(fx):
 def test_f6_phrase_list_with_only_comments_is_vacuous(fx):
     fx.phrases("# nothing retired yet\n# still nothing\n")
     fx.write("claude/.claude/docs/a.md", "nothing to see\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 2
     assert "configuration error" in out(proc)
@@ -352,7 +305,6 @@ def test_f7_vendored_skill_with_a_retired_phrase_and_a_dead_path_reports_the_phr
     fx.write("claude/.claude/skills/vendored-example/SKILL.md",
              "---\nname: vendored-example\n---\n\n"
              "Poll it with `sleep 30`, and see `~/.claude/docs/gone.md`.\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 1
     text = out(proc)
@@ -369,7 +321,6 @@ def test_f8_retired_phrase_under_skills_synced_and_dead_path_under_docs_record_b
     # docs/record exclusion broke.
     fx.write("claude/.claude/docs/record/old-note.md",
              "See `~/.claude/docs/gone.md` for the old plan.\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 0, out(proc)
 
@@ -380,32 +331,21 @@ def test_f8_retired_phrase_under_skills_synced_and_dead_path_under_docs_record_b
 def test_a_non_stowed_claude_projects_path_is_out_of_self_mode_reach(fx):
     fx.write("claude/.claude/docs/a.md",
              "See `~/.claude/projects/some-session.jsonl` for the transcript.\n")
-    fx.baseline([])
     proc = fx.check()
     assert proc.returncode == 0, out(proc)
 
 
-def test_audited_run_with_injected_roots_reads_nothing_outside_the_fixture_root(fx):
+def test_audited_run_reads_nothing_outside_the_fixture_root(fx):
     fx.write("claude/.claude/docs/a.md", "nothing to see\n")
-    fx.baseline([])
     proc = fx.audited_check()
     assert proc.returncode == 0, out(proc)
 
 
-# ---- Matching a seeded baseline (exercises the growth rules against real findings) ----
+# ---- Acceptance: a planted dead ~/.dotfiles span fails the leg ----
 
 
-def test_seeded_entries_matching_current_violations_pass(fx):
-    fx.write("claude/.claude/CLAUDE.md", "Watch `~/.local/bin/missing-tool` here.\n")
-    fx.phrases("sleep 30\n")
-    fx.baseline([entry("dead-reference", "claude/.claude/CLAUDE.md", "~/.local/bin/missing-tool")])
-    proc = fx.check()
-    assert proc.returncode == 0, out(proc)
-
-
-def test_a_stale_baseline_entry_asks_for_its_removal(fx):
-    fx.write("claude/.claude/docs/a.md", "nothing dead here\n")
-    fx.baseline([entry("dead-reference", "claude/.claude/docs/gone.md", "~/.claude/docs/x.md")])
+def test_a_planted_dead_dotfiles_span_fails_the_leg_and_names_it(fx):
+    fx.write("claude/.claude/docs/a.md", "Run it from `~/.dotfiles/nope`.\n")
     proc = fx.check()
     assert proc.returncode == 1
-    assert "remove this baseline entry" in out(proc)
+    assert "dead-reference: claude/.claude/docs/a.md: ~/.dotfiles/nope" in out(proc)
