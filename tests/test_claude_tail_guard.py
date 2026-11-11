@@ -10,23 +10,28 @@ import pytest
 SCRIPT = Path(__file__).resolve().parent.parent / "bin/.local/bin/claude-tail-guard"
 
 DENIED = [
-    "cairn-run-gate 'bash scripts/check.sh' | tail -5",
-    "bash scripts/gate.sh 2>&1 | head -40",
-    "ci-green 12 | tail -1",
-    "npm test | tail -20",
-    "npm run check:cairn 2>&1 | tail",
-    "gh pr checks 7 --watch | tail -3",
     "bash scripts/check.sh | tee out.log | tail",
     "bash scripts/gate.sh |& tail -5",
-    "timeout 600 cairn-run-gate 'bash scripts/check.sh' | tail",
-    "CI=1 npm test | head",
     "git status\nnpm test | tail",
+    "echo x && cairn-run-gate 'y' | tail -3",
     "npm run check:cairn|&tail",
     "npm test | tail&",
-    "(npm test) | tail",
-    "timeout -k 5 600 npm test | tail",
-    "env CI=1 npm test | tail",
-    "time npm test | head",
+]
+
+# A lone guarded pipeline ending in tail or head is rewritten, not denied.
+REWRITTEN = [
+    ("cairn-run-gate 'bash scripts/check.sh' | tail -5", "cairn-run-gate 'bash scripts/check.sh'"),
+    ("bash scripts/gate.sh 2>&1 | head -40", "bash scripts/gate.sh 2>&1"),
+    ("ci-green 12 | tail -1", "ci-green 12"),
+    ("npm test | tail -20", "npm test"),
+    ("npm run check:cairn 2>&1 | tail", "npm run check:cairn 2>&1"),
+    ("gh pr checks 7 --watch | tail -3", "gh pr checks 7 --watch"),
+    ("timeout 600 cairn-run-gate 'bash scripts/check.sh' | tail", "timeout 600 cairn-run-gate 'bash scripts/check.sh'"),
+    ("CI=1 npm test | head", "CI=1 npm test"),
+    ("timeout -k 5 600 npm test | tail", "timeout -k 5 600 npm test"),
+    ("env CI=1 npm test | tail", "env CI=1 npm test"),
+    ("time npm test | head", "time npm test"),
+    ("npm test | tail | head -2", "npm test"),
 ]
 
 HEREDOC_NO_APOSTROPHE = "git commit -F - <<'EOF'\nNotes on npm test | tail\nEOF"
@@ -52,6 +57,9 @@ ALLOWED = [
     HEREDOC_APOSTROPHE,
     HEREDOC_SUBSTITUTION,
     MULTILINE_MESSAGE,
+    "cairn-run-gate --records | tail -5",
+    "cairn-run-gate --receipt 2>&1 | head -40",
+    "bash scripts/gate.sh --dry-run | tail",
 ]
 
 
@@ -104,3 +112,43 @@ def test_invalid_json_exits_zero():
         check=False,
     )
     assert result.returncode == 0
+
+
+@pytest.mark.parametrize(("command", "expected"), REWRITTEN)
+def test_rewritten(command, expected):
+    result = run_hook({"tool_input": {"command": command}})
+    assert result.returncode == 0
+    assert result.stderr == ""
+    updated = json.loads(result.stdout)["hookSpecificOutput"]["updatedInput"]
+    assert updated == {"command": expected}
+
+
+def test_unclean_strip_is_denied():
+    result = run_hook({"tool_input": {"command": "cairn-run-gate 'a | tail' | tail"}})
+    assert result.returncode == 2
+
+
+def test_lone_tail_is_rewritten_with_input_preserved():
+    tool_input = {
+        "command": "cairn-run-gate 'npm run check' 2>&1 | tail -5",
+        "timeout": 600000,
+        "description": "Run the gate",
+    }
+    result = run_hook({"tool_input": tool_input})
+    assert result.returncode == 0
+    output = json.loads(result.stdout)["hookSpecificOutput"]
+    assert output["hookEventName"] == "PreToolUse"
+    assert "permissionDecision" not in output
+    assert output["updatedInput"] == {
+        "command": "cairn-run-gate 'npm run check' 2>&1",
+        "timeout": 600000,
+        "description": "Run the gate",
+    }
+
+
+def test_rewrite_keeps_quoted_expansion_byte_for_byte():
+    command = 'cairn-run-gate "$X" 2>&1 | head -40'
+    result = run_hook({"tool_input": {"command": command}})
+    assert result.returncode == 0
+    updated = json.loads(result.stdout)["hookSpecificOutput"]["updatedInput"]
+    assert updated["command"] == 'cairn-run-gate "$X" 2>&1'
