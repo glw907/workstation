@@ -25,7 +25,8 @@ register's old packet rules are replaced by the writer's brief.
    (`owner/repo#n` in merge order), `design` and `plan` (`{repo, path}`, design only), `held`,
    `calls`, `decidedForYou`, `steps`, `notChecked`, and `reviews`. The initiative is the command's
    argument: a record id in `~/Projects/initiatives`, or `none`. A call is `{question, rule,
-   forced, options: [{label, consequence}], recommended, evidence: [{text, source}]}`. A
+   forced, options: [{label, consequence}], recommended, evidence: [{text, source}]}`, with
+   `recommended` the number of the option, counting from 1. A
    `decidedForYou` entry is a call with `applied` set to the option taken. A step is `{text, who}`, `who` being `session` or `you`. A `notChecked` or `reviews` entry is
    `{text, source}`.
 3. **Count the calls.** A call is one of seven rules: `irreversible`, `public-surface`,
