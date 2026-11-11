@@ -22,8 +22,12 @@ gitdir=$(git -C "$root/wt" rev-parse --absolute-git-dir)
 clock="$root/wt/.pass-task-clock"
 old_clock="$gitdir/pass-task-clock"
 
-# run <cwd>: feeds the hook input, prints stdout, leaves the exit code in $rc and the time in $secs.
-run() {
+export XDG_STATE_HOME="$root/state"
+
+# run_keep <cwd>: feeds the hook input, prints stdout, leaves the exit code in $rc and the time in $ms.
+# run <cwd> does the same from a clean state directory, so each case sees a first stop.
+run() { rm -rf "$XDG_STATE_HOME"; run_keep "$1"; }
+run_keep() {
   local t0 t1
   t0=$(date +%s%N)
   out=$(jq -nc --arg cwd "$1" '{hook_event_name: "PostToolUse", tool_name: "Bash", cwd: $cwd}' | "$SCRIPT")
@@ -77,6 +81,16 @@ case "$out" in *OLD*) ;; *) echo "FAIL: the old git-dir home still stops: $out";
 write_clock NEW "$(date +%s)" 60
 run "$root/wt"; assert_eq "$out" "" "the worktree-root file wins over the old home"
 rm -f "$old_clock"
+
+# Once per task: a repeat past the threshold is silent, a new start prints again, state stays out of the worktree.
+write_clock S9-T2 "$(( $(date +%s) - 130 * 60 ))" 60
+rm -rf "$XDG_STATE_HOME"
+run_keep "$root/wt"; [ -n "$out" ] || { echo "FAIL: once: first run prints"; fail=1; }
+run_keep "$root/wt"; assert_eq "$out" "" "once: second run silent"
+write_clock S9-T2 "$(( $(date +%s) - 140 * 60 ))" 60
+run_keep "$root/wt"; [ -n "$out" ] || { echo "FAIL: once: a new start prints again"; fail=1; }
+[ -d "$XDG_STATE_HOME/claude-clock-stop" ] || { echo "FAIL: once: no record under the state dir"; fail=1; }
+assert_eq "$(git -C "$root/wt" status --porcelain)" "" "once: nothing new in the worktree"
 
 # The file must stay out of `git add -A`, or each clock write would change the gate fingerprint.
 excludes="$(pwd)/bluefin/git-excludes"
