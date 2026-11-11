@@ -22,6 +22,9 @@ export TMPDIR="$fixture_root"
 export CAIRN_GATE_RECEIPT_DIR="$fixture_root/receipts"
 # A caller that exports a lane would change every fingerprint and the lane cases below.
 unset CAIRN_GATE_LANE
+# The gate runs this suite inside a detached run that exports the foreground marker; each case
+# that needs it sets it per call.
+unset CAIRN_RUN_GATE_ACTIVE
 gatedir="$TMPDIR/cairn-gate-$(id -u)"
 # Run records go to the fixture root too, never ~/.local/state; a case that reads them points the
 # variable at a directory of its own.
@@ -41,7 +44,7 @@ dead_pid() {
 
 assert_contains() {
   local haystack="$1" needle="$2" label="$3"
-  if ! grep -qF "$needle" <<<"$haystack"; then
+  if ! grep -qF -- "$needle" <<<"$haystack"; then
     echo "FAIL: $label: expected output to contain: $needle"
     fail=1
   fi
@@ -49,7 +52,7 @@ assert_contains() {
 
 assert_not_contains() {
   local haystack="$1" needle="$2" label="$3"
-  if grep -qF "$needle" <<<"$haystack"; then
+  if grep -qF -- "$needle" <<<"$haystack"; then
     echo "FAIL: $label: expected output NOT to contain: $needle"
     fail=1
   fi
@@ -142,7 +145,7 @@ out=$(cd "$work_dir" && "$SCRIPT" "$gate5")
 rc=$?
 assert_eq "$rc" "0" "old-format finished run: exit code from the existing status"
 assert_contains "$out" "gate exit: 0" "old-format finished run: terminal line"
-assert_contains "$out" "finished-run-marker" "old-format finished run: reports the existing log"
+assert_contains "$out" "$state5/gate.log" "old-format finished run: the terminal line names the existing log"
 
 # --- receipts: a finished run writes a receipt that --receipt finds for the exact gate string on
 # the same tree; an untracked file, another lane, or another gate string misses; a failing run's
@@ -442,6 +445,57 @@ for i in 1 2 3 4 5 6; do
   [ "$?" -ne 75 ] && break
 done
 assert_contains "$out" "gate exit: 0" "defer: the own run finishes"
+
+# --- the foreground marker: a call whose CAIRN_RUN_GATE_ACTIVE names an ancestor runs in the
+# foreground with no lock; a dead pid queues as before.
+recM="$fixture_root/rec-marker"
+marker() { (cd "$lrepo" && CAIRN_GATE_RECORDS_DIR="$recM" CAIRN_GATE_LANE=light CAIRN_GATE_POLL_INTERVAL=1 "$@"); }
+flock "$gatedir/machine-light.lock" "$real_sleep" 8 &
+holder=$!
+sleep 0.5
+SECONDS=0
+out=$(marker env CAIRN_RUN_GATE_ACTIVE=$$ CAIRN_GATE_WAIT=5 "$SCRIPT" 'echo ok' 2>&1)
+assert_eq "$?" "0" "marker: an ancestor marker runs past a held lock"
+assert_contains "$out" "ok" "marker: the gate's output prints"
+[ "$SECONDS" -lt 5 ] || { echo "FAIL: marker: took ${SECONDS}s"; fail=1; }
+assert_not_contains "$out" "gate started" "marker: no run is queued"
+out=$(marker env CAIRN_RUN_GATE_ACTIVE="$(dead_pid)" CAIRN_GATE_WAIT=2 "$SCRIPT" 'echo ok2' 2>&1)
+assert_eq "$?" "75" "marker: a dead pid queues behind the lock"
+wait "$holder" 2>/dev/null
+
+# --- lock contention: a run whose log holds the golangci-lint lock message keeps no state and
+# no receipt, and a re-issue reruns it.
+cnt="$fixture_root/lint-count"
+gateLint="echo x >>$cnt; echo 'parallel golangci-lint is running'; exit 1"
+out=$(lean "$gateLint" 2>&1)
+assert_eq "$?" "1" "lint: the run exits with the gate's status"
+assert_contains "$out" "re-issue" "lint: the one line says a re-issue reruns it"
+out=$(lean "$gateLint" 2>&1)
+assert_eq "$(wc -l <"$cnt")" "2" "lint: a re-issue runs the gate again"
+assert_eq "$(grep -rl "golangci-lint is running" "$CAIRN_GATE_RECEIPT_DIR" 2>/dev/null | wc -l)" "0" "lint: no receipt is written"
+assert_eq "$(grep -c "golangci-lint is running" "$recL/runs.jsonl")" "2" "lint: both runs recorded an exit"
+
+# --- a web/package.json with no web/node_modules exits 2 before anything queues.
+nrepo="$work_dir/node-repo"
+mkdir -p "$nrepo/web"
+git -C "$nrepo" init -q
+echo '{}' >"$nrepo/web/package.json"
+before=$(ls "$gatedir" | wc -l)
+out=$(cd "$nrepo" && CAIRN_GATE_LANE=light "$SCRIPT" 'echo node1' 2>&1)
+assert_eq "$?" "2" "node_modules: a missing install exits 2"
+assert_contains "$out" "cairn-run-gate: web/node_modules is missing; run npm ci --prefix web, then re-issue" "node_modules: the line prints"
+assert_eq "$(ls "$gatedir" | wc -l)" "$before" "node_modules: no state is created"
+
+# --- the finish prints no tail on exit 0 and at most 40 lines otherwise.
+out=$(lean 'seq 1 100' 2>&1)
+assert_not_contains "$out" "--- last" "tail: an exit-0 run prints no tail"
+out=$(lean 'seq 1 100; exit 1' 2>&1)
+assert_eq "$(grep -c '^[0-9]*$' <<<"$out")" "40" "tail: an exit-1 run prints 40 log lines"
+
+# --- gate.sh passes --fresh and refuses anything else.
+out=$(bash "$REPO_ROOT/scripts/gate.sh" --bogus 2>&1)
+assert_eq "$?" "2" "gate.sh: an unknown argument exits 2"
+assert_contains "$out" "usage:" "gate.sh: the usage line prints"
 
 # --- no implementer file carries a vanished clause: the protocol lives only in
 # cairn-run-gate's own output now.
