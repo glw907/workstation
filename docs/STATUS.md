@@ -22,11 +22,16 @@ holds the fresh-machine provisioning artifacts. github.com/glw907/workstation.
 
 ## Workstation refinement
 
-PR-ready: pass 1 of `workstation-refinement` is PR #225 (branch `worktree-refinement-1`, session
-`dotfiles-refinement-1`, conductor `conductor-dotfiles`). Gate green, review fixed. Plan:
+Pass 1 of `workstation-refinement` merged as #225 (`c9d3cfa`) on 2026-11-10, and the after-merge
+steps ran: relink and apply, the empty ratchet baseline removed, Blueprint moved to local scope in
+the cairn-cms checkout, tellgrader reinstalled, the Fastmail flatpak uninstalled, 169 finished
+worktrees removed with Geoff's approval, and `claude-tooling-sync verify` clean. The backlog sweep
+stamps landed in one commit on `main`.
+
+Geoff still runs three steps (the Cloudflare plugin sign-in, the four claude.ai connector
+removals, and the settings and plugin command in the PR's `## After merge`); the next action is
+those, then `claude-tooling-sync verify` again. Pass 2b branches from this `main`. Plan:
 `~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-1-workstation-plan.md`.
-Next action: the conductor sends the packet and merges in its window; its after-merge steps
-include deleting `claude/.claude/tooling/ratchet-baseline.json` on `main`.
 
 ## Docs system
 
