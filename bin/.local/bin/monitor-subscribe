@@ -115,7 +115,6 @@ check_tick() {
 show_conditions() {
   local id severity opened title message key t last
   declare -A shown=()
-  local line
   while IFS=$'\t' read -r key last; do
     [ -n "$key" ] && [[ $last =~ $int ]] && shown[$key]=$last
   done < <(cat "$state/shown" 2>/dev/null)
@@ -126,6 +125,7 @@ show_conditions() {
     [[ $opened =~ $int ]] || continue
     [ "$severity" = urgent ] || [ "$severity" = routine ] || continue
     key="$id|$opened|$severity"
+    # shellcheck disable=SC2034 # open is read by name through record
     open[$key]=1
     last=${shown[$key]:-0}
     if [ "$last" -eq 0 ] || [ $((t - last)) -ge "$repeat" ]; then

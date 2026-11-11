@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # claude-worktree-busy.test.sh: prove each check of claude-worktree-busy against a temp git repo and a stub claude.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 SCRIPT="$(pwd)/bin/.local/bin/claude-worktree-busy"
 fail=0
 root="$(realpath "$(mktemp -d)")"

@@ -87,6 +87,7 @@ assert_eq "$?" "0" "claude-sudo-setup exits 0 ($out)"
 assert_eq "$(cat "$root/run/sudo-cache" 2>/dev/null)" "hunter2-sudo" "the dialog's password is cached"
 assert_eq "$(stat -c %a "$root/run/sudo-cache" 2>/dev/null)" "600" "the sudo cache is mode 600"
 grep -q -- '--hide-text' "$root/zenity.log" || { echo "FAIL: the sudo dialog does not hide its text"; fail=1; }
+# shellcheck disable=SC2034 # only the exit status on the next line is checked
 out2=$(env HOME="$home" PATH="$root/bin:$PATH" XDG_RUNTIME_DIR="$root/run" CLAUDE_SUDO_CACHE="$root/disk-cache" bash "$SUDO_SETUP" 2>&1)
 [ "$?" -ne 0 ] || { echo "FAIL: a cache path off tmpfs exited 0"; fail=1; }
 [ ! -e "$root/disk-cache" ] || { echo "FAIL: the password was cached off tmpfs"; fail=1; }

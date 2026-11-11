@@ -3,7 +3,7 @@
 # workstation-install's plugin step, the MEMORY.md union in workstation-syncthing, its pairing
 # calls, and check-drift's work leg, on temporary repos with every outside command stubbed.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 bin="$(pwd)/bin/.local/bin"
 fail=0
 tmp="$(mktemp -d)"

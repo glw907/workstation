@@ -6,7 +6,7 @@
 # config is generated here against the live path. Vale exits non-zero
 # whenever it finds alerts, so capture its output before grepping.
 set -uo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit 1
 fail=0
 
 ini="$(mktemp)"

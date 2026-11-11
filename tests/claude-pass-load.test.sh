@@ -2,7 +2,7 @@
 # claude-pass-load.test.sh: prove claude-pass-load's limit, its outside-file figures, its
 # presence check, and its fence-aware heading count against a temp tree and a temp HOME.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 SCRIPT="$(pwd)/bin/.local/bin/claude-pass-load"
 fail=0
 tmp="$(mktemp -d)"
