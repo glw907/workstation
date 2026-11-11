@@ -499,8 +499,9 @@ On 2026-11-10, the workstation refinement pass (pass 1) landed on pavilion. `wor
 
 1. Run the live-file and plugin lines from the pass's after-merge command: delete `skipDangerousModePermissionPrompt` from `~/.claude/settings.json` (`apply` never deletes a key), and uninstall the `code-review`, `code-simplifier`, `skill-creator`, and `superpowers` plugins at user scope.
 2. Remove the user-scope `daisyui-blueprint` server (`claude mcp remove -s user daisyui-blueprint`). It now lives at local scope in the cairn-cms checkout.
-3. Uninstall the retired mail client's flatpak, the one `check-drift` flags. Until then it flags that flatpak and the Blueprint server, and those lines are expected.
-4. Sign in to the Cloudflare plugin again. The sign-in is per host, so `workstation-sync` cannot carry it.
+3. Run `make -C ~/.dotfiles/claude/.claude/skills/writing-voice/evals/tellgrader install`, so the laptop's `tellgrader` binary stops printing warning-only output.
+4. Uninstall the retired mail client's flatpak, the one `check-drift` flags. Until then it flags that flatpak and the Blueprint server, and those lines are expected.
+5. Sign in to the Cloudflare plugin again. The sign-in is per host, so `workstation-sync` cannot carry it.
 
 ## After pavilion is up
 
