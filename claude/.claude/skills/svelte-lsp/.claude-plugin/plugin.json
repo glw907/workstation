@@ -1,0 +1,6 @@
+{
+  "name": "svelte-lsp",
+  "version": "0.1.0",
+  "description": "Svelte language server (svelteserver) for the Claude Code LSP tool",
+  "defaultEnabled": true
+}
