@@ -44,6 +44,11 @@ sleeper=$!
 check 1 "process holds path" "$repo"
 kill "$sleeper"; wait "$sleeper" 2>/dev/null; sleeper=
 
+bash -c 'sleep 30; true' "${repo}0" &
+sleeper=$!
+check 0 "process holds only a prefix of the path" "$repo"
+kill "$sleeper"; wait "$sleeper" 2>/dev/null; sleeper=
+
 STUB_CWD="$repo/sub" check 1 "session cwd under path" "$repo"
 STUB_CWD="${repo}0" check 0 "session cwd shares only a prefix" "$repo"
 

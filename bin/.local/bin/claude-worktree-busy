@@ -7,6 +7,7 @@ cwd is the path or under it, and an uncommitted file edited in the last 60 minut
 
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -29,6 +30,8 @@ def ancestors():
 def process_hit(path):
     """Return a message naming a process whose command line holds the path, or None."""
     skip = ancestors()
+    # The path must end where a path component ends, so /x/a-3 never matches /x/a-30.
+    held = re.compile(re.escape(path) + r"(?![\w.-])")
     for entry in os.listdir("/proc"):
         if not entry.isdigit() or int(entry) in skip:
             continue
@@ -37,7 +40,7 @@ def process_hit(path):
                 cmdline = f.read().decode(errors="replace")
         except OSError:
             continue
-        if path in cmdline:
+        if held.search(cmdline):
             return f"busy: process {entry} has the path in its command line"
     return None
 
