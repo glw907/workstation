@@ -33,13 +33,13 @@ and ran the settings and plugin command, which dropped two deny rules, a retired
 and four user-scope plugins; `claude-tooling-sync verify` passes. Poplar's tracked settings still
 enable the four removed plugins, which waits for poplar's next pass.
 
-Next: Pass 2, two passes planned by one session. The `approval-queue` pass comes first. The
-workstation pass (2b, adapter `dotfiles-pass`) branches from this `main` and changes
-`claude-merge-guard`, the `gh pr merge` allow rule, the `approval-packet` skill, and the
-`approval-brief.md` register. Launch the planner from
-`~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-2-planner-prompt.txt`; the
-record is a local, unpushed branch there. Launch nothing for 2b while a cairn-cms setup-tooling
-session is working. Pass 3 is not planned yet. Pass 1 plan:
+Pass 2b is PR-ready as glw907/workstation#227 with Survey 1.6.0 at glw907/survey#12. It makes
+`claude-merge-guard` deny every `gh pr merge`, adds the `approval-queue merge` allow rule and
+auto-mode entry, rewrites the `approval-packet` skill and the Survey packet writer's brief, points
+pass-core "Close" at the new commands, and retires the decision review. One open item for Geoff:
+the existing `Bash(approval-queue *)` allow rule already covers `land`, so the plan's "no allow
+rule for `land`" does not hold (PR body, "Decisions"). The conductor runs the cutover. Pass 3 is
+not planned yet. Pass 1 plan:
 `~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-1-workstation-plan.md`.
 
 ## Docs system
