@@ -2,9 +2,9 @@
 """Vale PostToolUse feedback hook for Claude-drafted prose.
 
 Run Vale on a saved Markdown file after a Write or Edit, scope the findings to the
-lines that just changed, and report them to Claude. An error-tier finding exits 2
-with the finding on stderr, the channel Claude reads back, so Claude can self-correct.
-Warnings and suggestions ride along as advisory additionalContext. The hook never
+lines that just changed, and report error-tier findings to Claude: exit 2 with the
+findings on stderr, the channel Claude reads back, so Claude can self-correct. Warnings
+and suggestions are not reported, so a save with only those prints nothing. The hook never
 blocks a write (the tool has already run) and fails open: any internal problem, a
 missing Vale, or a file under no .vale.ini exits 0 in silence.
 
@@ -88,8 +88,11 @@ def run_vale(root, rel_path):
 
 
 def kept_findings(report, span):
-    """Return the findings whose line falls in span."""
-    return [item for items in report.values() for item in items if item.get("Line") in span]
+    """Return the error-tier findings whose line falls in span."""
+    return [
+        item for items in report.values() for item in items
+        if item.get("Line") in span and item.get("Severity") == "error"
+    ]
 
 
 def _format(findings, path):
@@ -135,25 +138,14 @@ def main():
     if not findings:
         return 0
     body = _format(findings, path)
-    if any(f.get("Severity") == "error" for f in findings):
-        sys.stderr.write(
-            f"Vale found {len(findings)} issue(s) on the lines just edited in {path}\n"
-            f"(graded from config root {root}, as {rel_path}).\n"
-            f"{body}\n"
-            "These are facts from the Vale check on the changed lines; pre-existing text "
-            "was not scanned.\n"
-        )
-        return 2
-    note = (
-        f"Vale advisory: {len(findings)} style finding(s) on the lines just edited in {path}\n"
-        f"(graded from config root {root}, as {rel_path}). "
-        "Nothing is blocked; revise if these sit in prose just written.\n"
+    sys.stderr.write(
+        f"Vale found {len(findings)} issue(s) on the lines just edited in {path}\n"
+        f"(graded from config root {root}, as {rel_path}).\n"
+        f"{body}\n"
+        "These are facts from the Vale check on the changed lines; pre-existing text "
+        "was not scanned.\n"
     )
-    sys.stdout.write(json.dumps({"hookSpecificOutput": {
-        "hookEventName": "PostToolUse",
-        "additionalContext": note + body,
-    }}))
-    return 0
+    return 2
 
 
 if __name__ == "__main__":
