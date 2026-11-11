@@ -65,7 +65,7 @@ Geoff's aliases are on `m.907.life`; `me.907.life` is Oliver's. Neither is a tes
 ## Cloudflare
 
 - Token: `ws-cairn-gate`, user-owned (Workers Builds accepts only user tokens), store name
-  `CF_WS_CAIRN_GATE_TOKEN`. Scopes and the ownership exception: `cloudflare-estate-inventory.md`.
+  `CF_WS_CAIRN_GATE_TOKEN`. Scopes and the ownership exception: `~/.claude/docs/cloudflare-estate/api-tokens.md`.
 - Domain: `carin-test.org`, the test zone for site installs, with Email Sending on.
 - Workers Builds: `glw907-test` is connected (the Cloudflare Workers and Pages GitHub App,
   All repositories). This was verified on 2026-11-03 by connecting a throwaway repo through
@@ -85,7 +85,7 @@ rebuilds. The tool is `bin/.local/bin/cleanroom`; `cleanroom --help` and its mod
 its doc.
 
 - Cloudflare token: `ws-cairn-cleanroom`, store name `CF_WS_CAIRN_CLEANROOM_TOKEN`. Scopes, owner,
-  and the production exposure: `cloudflare-estate-inventory.md`. Geoff deletes it when the
+  and the production exposure: `~/.claude/docs/cloudflare-estate/api-tokens.md`. Geoff deletes it when the
   setup-tooling loop ends (end date 2026-12-09), through a step in the end packet.
 - Claude credential: the subscription token from `claude setup-token`, store name
   `CLAUDE_CLEANROOM_OAUTH_TOKEN`, handed to a run as `CLAUDE_CODE_OAUTH_TOKEN`. An API key would

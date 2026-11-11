@@ -10,7 +10,7 @@ formatting, and structure through the Sheets API. `clasp` pushes Apps Script cod
 and reads logs. No Google identity is signed in to Claude's Chromium profile, because creating one
 needs a phone (Geoff, 2026-10-29), so Claude sees a sheet in a browser only after Geoff shares it by
 link. Then claude-in-chrome opens the real Sheets interface. Tokens, scopes, and the Cloud project
-are in `~/.claude/docs/bluefin-admin.md` "Google Workspace (gws, clasp)".
+are in `~/.claude/docs/bluefin-admin/google-workspace.md`.
 
 Sheets API behavior (A1 ranges, `batchUpdate` requests, validation rules, reading raw JSON) is in
 the `anthropic-skills:google-workspace` skill's `references/sheets.md` and
@@ -27,7 +27,7 @@ review (Geoff, 2026-11-02). The 2026-11-02 attendance mockup skipped this and ca
 ## Sign-ins
 
 A sign-in is Geoff's grant. When a call answers `invalid_grant` or an expired token, start the
-login in the background with the command in `bluefin-admin.md`, read the URL from its output, fix
+login in the background with the command in `~/.claude/docs/bluefin-admin/google-workspace.md`, read the URL from its output, fix
 `&amp;` to `&`, and hand it over. Never run a login through `!`, which blocks. Never add a scope
 without saying which and why.
 

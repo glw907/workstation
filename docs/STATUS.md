@@ -76,8 +76,7 @@ without a new sign-in; if it asks, move the `gws-personal` consent screen back t
 
 ## Workstation sync
 
-`workstation-sync` keeps each host current on a daily timer (`bluefin-admin.md` "Update cadence and
-rollback"). Pavilion owes its first start, and pairing waits on it: `bluefin/SECOND-WORKSTATION.md`
+`workstation-sync` keeps each host current on a daily timer (`~/.claude/docs/bluefin-admin/update-cadence.md`). Pavilion owes its first start, and pairing waits on it: `bluefin/SECOND-WORKSTATION.md`
 "Changes to carry to thinkpad-x1", the 2026-11-01 entry.
 
 ## Open items

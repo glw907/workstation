@@ -445,7 +445,7 @@ print_checklist() {
 Proton Pass (the age key's only scripted path):
   - `pass-cli --version` works (Brewfile).
   - `ws-pass-key --status` prints path=proton once the host's agent token is
-    stored (`ws-pass-key --store`); see bluefin-admin.md "Secrets".
+    stored (`ws-pass-key --store`); see ~/.claude/docs/bluefin-admin/secrets.md.
 
 SELinux (brief: skipping this is a documented cause of broken logins):
   - After restoring anything into /var/home, run:

@@ -3,7 +3,7 @@
 Research report, 2026-09-03, investigated on thinkpad-x1 and produced after two kernel-OOM incidents killed whole
 Ptyxis scopes (and the Claude Code sessions inside them) during browser-based test
 gates. Staged configs live in `~/.dotfiles/bluefin/etc/systemd/`. Deployment status
-is tracked in the dotfiles commits; read `bluefin-admin.md` for the /etc install
+is tracked in the dotfiles commits; read `~/.claude/docs/bluefin-admin/etc-drift.md` for the /etc install
 convention.
 
 ## Recommendation Report: Memory-Pressure Defense for This Workstation
