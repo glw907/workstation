@@ -18,16 +18,15 @@ holds the fresh-machine provisioning artifacts. github.com/glw907/workstation.
 - **Secrets**: age-encrypted in `secrets/values.age`, synced by
   `scripts/secrets/sync.sh`; inventory in `secrets/registry.md`.
 - **Gate**: `scripts/check.sh`, run as `bash scripts/gate.sh`.
-- **The lean pass process is fully in place.** Rollout steps 1 to 5 merged; step 5, engine pass B
-  (cairn-cms #113), took 6.1 hours of clock against the 9-hour test. Plan and spec:
-  `docs/plans/2026-10-10-lean-pass-cutover.md`,
-  `docs/specs/2026-10-10-lean-pass-process-design.md`.
+- **The lean pass process is in place** (spec: `docs/specs/2026-10-10-lean-pass-process-design.md`).
 
-## Conductor
+## Workstation refinement
 
-Conductor `4bea6e68` closed the 2026-10-11 infrastructure initiative; its PRs (#11 to #23) carry
-the record. Each later initiative runs its own `conductor-<project>`, and the next one starts from
-the repos' ROADMAPs and the initiative records.
+Pass 1 of the `workstation-refinement` initiative is in progress on branch `worktree-refinement-1`
+(session `dotfiles-refinement-1`, conductor `conductor-dotfiles`). Plan:
+`~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-1-workstation-plan.md`.
+Next action: tasks T0 to T9 in the plan's order, then the PR-ready line here. Merge waits on the
+conductor.
 
 ## Docs system
 
