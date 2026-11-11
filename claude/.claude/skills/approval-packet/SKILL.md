@@ -64,7 +64,8 @@ register's old packet rules are replaced by the writer's brief.
      the approve is the authorization. If
      it stops with exit 2 and prints a `## Before merge` section, run those steps, then rerun
      with `--premerge-done <owner/repo#n>`. Where Geoff chose to run them himself, do not merge;
-     report. Run each `session` step in order, stopping at the first failure.
+     report. A `[approve]` choice on a failed check or a fix review means merge as
+     approved. Run each `session` step in order, stopping at the first failure.
    - **Send back:** fix forward from each note and call, then resend with
      `approval-queue packet --replies <replies.json> <initiative> <facts.json> <text.md>`. The
      command refuses a resend that leaves a note unanswered.
@@ -72,4 +73,5 @@ register's old packet rules are replaced by the writer's brief.
    each note it lists for your repos (`reply digest <replies.json>` for a digest note).
 10. **File follow-ups.** A "Found, not done" item worth doing goes through `standards:log-issue`
     into its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits, and into the PR
-    body with its number.
+    body with its number (Geoff, 2026-10-11). An initiative-sized one becomes a record
+    (`log-project`).

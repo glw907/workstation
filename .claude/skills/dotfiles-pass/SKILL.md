@@ -13,6 +13,12 @@ Load `pass-core` first; it holds the lifecycle and the rules this adapter fills 
 GNU Stow repo: `~/.claude` and `~/.local/bin` link into the main checkout, so a merge there is live
 on the machine at once, and a new `bin` script needs `stow -R bin`.
 
+## Pair dispatch
+
+A pair dispatch prompt cites this heading and `pass-core` `references/executor.md` "Pairs", which
+holds the isolation, the `description`, and the git forms a pair avoids. The pair runs these from
+its own worktree, commits its task, and never pushes.
+
 **Gate**: `bash scripts/gate.sh`, which runs `CAIRN_GATE_LANE=light cairn-run-gate 'bash
 scripts/check.sh'`; a worktree-isolated session's Bash guard refuses the wrapped string and accepts
 the no-argument wrapper. The light lane fits: the
@@ -20,18 +26,20 @@ gate launches no browser and its measured peak is 105 MB.
 
 **Fast lane**: The same command. It takes about 76 seconds, so no narrower lane exists.
 
+**Worktree setup**: The launch's `.claude/worktrees/<name>`; no setup command.
+
+## Pass session
+
 **Full-suite home**: That same command, once on the close head. Dotfiles has no PR test CI (ruling
 11; BACKLOG carries the item), so the local close run is the only full run.
 
 **Cross-repo docs**: Specs, plans, and research that span repos live in `~/Projects/initiatives/<id>/`.
 
-**Worktree setup**: The launch's `.claude/worktrees/<name>`; no setup command.
-
 **CI watch**: None.
 
 **Risk-class path map**: `runner`: `claude/.claude/{skills,agents,workflows}/**`,
 `claude/.claude/settings.json`, `claude/.claude/tooling/**`, `.claude/skills/**`,
-`bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-clock-stop,claude-context-budget,claude-tooling-sync}`,
+`bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-context-budget,claude-pass-load,claude-tooling-sync,claude-worktree-busy}`,
 `scripts/**`, `tests/**`. `auth-data`: `secrets/**`, `scripts/secrets/**`, `bash/.bashrc` (it sources the
 secrets), and `bin/.local/bin/{claude-block-pass,claude-pass,ws-pass-key,pass-count,pass-access,pass-sitting,check-drift,claude-secret-guard,claude-tierguard,claude-askpass,
 claude-sudo-setup,claude-sudo-clear,secret-receive}`.

@@ -75,6 +75,8 @@ a tool's NOTE before the next dispatch.
 - Credentials come from the age store. A server's env values stay in `${VAR}` form in
   the manifest and resolve from `~/.local/secrets` at session start; launch Claude Code from
   a shell that sourced them. Never a value in `.mcp.json`, a manifest, or a transcript.
+- Prose review goes by kind. Plans, pull request bodies, and skills are checked by the two save
+  hooks only (`vale-hook` and `tellgrader`), and `prose-voice-reviewer` runs on published pages.
 - Read a third-party skill before vendoring it. It is instructions injected into every
   future session. Check the license, the maintainer, and the text.
 - Every addition gets the manifest entry and, when a rule of use came with it,

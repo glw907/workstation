@@ -1,0 +1,136 @@
+#!/usr/bin/env -S python3 -I
+"""Print how many words each pass role loads, and check the executor's load against its limit.
+
+A pass session loads the global CLAUDE.md, pass-core, its role's reference, and the files its
+repo's pass guides name. The table below follows the Pass 3 design's "What each role loads",
+with cairn-cms as the case, since it is the largest. Paths starting with ``~/`` sit outside the
+workstation repo; every other path is relative to ``--root``.
+
+With no flag the script prints each role's files, their word counts, and the total. With
+``--check`` it exits 1 when the executor's total passes the limit, when a file inside the tree is
+absent, or when a register heading it counts no longer exists.
+"""
+
+import argparse
+import os
+import re
+import sys
+
+LIMIT = 9000
+REGISTER = "claude/.claude/docs/voice/approval-brief.md"
+
+# Each entry is (path, heading or None, recorded figure for an absent outside file).
+SHARED = [
+    ("claude/.claude/CLAUDE.md", None, None),
+    ("claude/.claude/skills/pass-core/SKILL.md", None, None),
+]
+ROLES = {
+    "executor": SHARED + [
+        ("claude/.claude/skills/pass-core/references/executor.md", None, None),
+        ("claude/.claude/skills/cairn-pass/SKILL.md", None, None),
+        (REGISTER, "The brief skeleton", None),
+        (REGISTER, "A PR with nothing to decide (PR #40)", None),
+        ("~/Projects/cairn-cms/CLAUDE.md", None, 1091),
+        ("~/Projects/cairn-cms/.claude/skills/cairn-running-passes/SKILL.md", None, 980),
+        ("~/Projects/standards/plugins/standards/skills/running-passes/SKILL.md", None, 937),
+    ],
+    "planner": SHARED + [
+        ("claude/.claude/skills/pass-core/references/planner.md", None, None),
+        ("~/Projects/standards/plugins/standards/skills/brainstorming/SKILL.md", None, 1778),
+        ("~/Projects/standards/plugins/standards/skills/backlog-sweep/SKILL.md", None, 770),
+        ("~/Projects/standards/plugins/standards/skills/spec-plan-review/SKILL.md", None, 1200),
+        ("claude/.claude/skills/approval-packet/SKILL.md", None, None),
+        (REGISTER, "The four rules", None),
+        (REGISTER, "The brief contract", None),
+    ],
+    "conductor": SHARED + [
+        ("claude/.claude/skills/pass-core/references/conductor.md", None, None),
+    ],
+}
+
+HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*$")
+FENCE = re.compile(r"^\s*(```|~~~)")
+
+
+def section(text, heading):
+    """Return the lines of ``heading``'s section, or None when no such heading exists.
+
+    A section runs from its heading line to the next heading of the same or a higher level.
+    A line inside a fenced block is never a heading.
+    """
+    lines = text.splitlines()
+    start = level = None
+    fenced = False
+    for i, line in enumerate(lines):
+        if FENCE.match(line):
+            fenced = not fenced
+            continue
+        if fenced:
+            continue
+        m = HEADING.match(line)
+        if not m:
+            continue
+        if start is None:
+            if m.group(2) == heading:
+                start, level = i, len(m.group(1))
+        elif len(m.group(1)) <= level:
+            return "\n".join(lines[start:i])
+    return None if start is None else "\n".join(lines[start:])
+
+
+def count(root, path, heading, recorded):
+    """Return (words, note, problem) for one table row.
+
+    ``problem`` is a message when the row fails ``--check``, else None.
+    """
+    outside = path.startswith("~/")
+    full = os.path.expanduser(path) if outside else os.path.join(root, path)
+    label = path if heading is None else f'{path} "{heading}"'
+    if not os.path.isfile(full):
+        if outside:
+            return recorded, f"(not found, counted at {recorded})", None
+        note = "(not yet present)" if "/references/" in path else "(not found)"
+        return 0, note, f"claude-pass-load: {label} is absent"
+    with open(full, encoding="utf-8") as fh:
+        text = fh.read()
+    if heading is not None:
+        text = section(text, heading)
+        if text is None:
+            return 0, "(heading not found)", f"claude-pass-load: {label} has no such heading"
+    return len(text.split()), "", None
+
+
+def main():
+    """Print the table and, under ``--check``, apply the limit and the presence checks."""
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--check", action="store_true", help="exit 1 past the limit or on a missing file")
+    ap.add_argument("--root", default=os.path.expanduser("~/.dotfiles"), help="workstation tree to read")
+    args = ap.parse_args()
+
+    problems = []
+    totals = {}
+    for role, rows in ROLES.items():
+        print(role)
+        total = 0
+        for path, heading, recorded in rows:
+            words, note, problem = count(args.root, path, heading, recorded)
+            total += words
+            label = path if heading is None else f'{path} "{heading}"'
+            print(f"  {words:6d}  {label} {note}".rstrip())
+            if problem and problem not in problems:
+                problems.append(problem)
+        print(f"  {total:6d}  total")
+        totals[role] = total
+
+    if not args.check:
+        return 0
+    for problem in problems:
+        print(problem, file=sys.stderr)
+    if totals["executor"] > LIMIT:
+        print(f"claude-pass-load: executor loads {totals['executor']} words (limit {LIMIT})", file=sys.stderr)
+        return 1
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

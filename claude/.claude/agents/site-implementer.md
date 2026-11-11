@@ -66,10 +66,10 @@ When `svelte-check` complains, fix the cause. A targeted, explained cast is fine
 ## Documentation
 
 A task that changes documented behavior fixes the page in the same commit. For a cairn-cms page,
-follow cairn's fix rule in its `CLAUDE.md`: edit on a branch `site-docs/<site>-<pass>` off cairn-cms
-`main`, and merge by PR under the docs gate before the site pass closes. Before opening a cairn-cms
-worktree, run the one-executor check: `pgrep -f` the worktree path, and `git status` for warm
-changes you did not author.
+follow cairn's fix rule in its `CLAUDE.md`: edit and commit on a branch `site-docs/<site>-<pass>`
+off cairn-cms `main`. The dispatching session pushes that branch and merges it by PR under the docs
+gate before the site pass closes. Before opening a cairn-cms worktree, run
+`claude-worktree-busy <worktree path>`.
 
 ## Escalation and memory
 

@@ -108,9 +108,8 @@ threshold are the same line.
 
 A site-launched session does not auto-load cairn's context. In order:
 
-1. **One-executor check** before touching cairn: `pgrep -f` on the worktree path, a
-   `git status` check for warm uncommitted changes you did not author, and a read of
-   `~/Projects/cairn-cms/docs/STATUS.md` for a claim on the work.
+1. **One-executor check** before touching cairn: `claude-worktree-busy <worktree path>`, then a
+   read of `~/Projects/cairn-cms/docs/STATUS.md` for a claim on the work.
 2. **Fresh worktree off cairn `main`**, and register it in cairn `docs/STATUS.md`'s
    active-worktree list before the first commit, so a second session's STATUS read sees
    the claim.

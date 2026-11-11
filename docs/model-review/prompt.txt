@@ -34,6 +34,13 @@ Steps, in order:
    Also run the skill-listing probe: `claude -p --debug-file <a temp path> "hi"`, then search the
    debug file for "Skill listing over budget". That warning is a gap: write a design for it.
 
+   Then prune the planning misses. Collect the month's `## Planning misses` entries from the
+   pull requests merged across glw907's repos since the last review (`gh search prs --owner
+   glw907 --merged-at ">=<last review date>"`, then each body). Each entry worth a rule is a gap,
+   and its design proposes an edit to claude/.claude/skills/pass-core/references/planner.md or
+   to the standards `plan-reviewer` agent in its proposed diff. Both files sit at their word
+   caps, so each proposed addition names the line it removes. A one-off entry needs no design.
+
 5. Run the item-title lint: `check-drift --titles`, with the Bash tool's `run_in_background` (it
    makes five Proton sign-ins 150 seconds apart, past the foreground limit) and never with
    PASS_ACCESS_SKIP. Wait for it to exit. Put only the finding count in your hand-over: the titles

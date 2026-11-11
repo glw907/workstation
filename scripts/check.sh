@@ -75,7 +75,6 @@ run "workstation-sync, workstation-syncthing, and check-drift's work leg" bash t
 run "check-moves draft check" bash tests/check-moves.test.sh
 run "ci-green test" node tests/ci-green.test.mjs
 run "cairn-run-gate vanish handling" bash tests/cairn-run-gate.test.sh
-run "claude-clock-stop hook" bash tests/claude-clock-stop.test.sh
 run "claude-denied-log hook" bash tests/claude-denied-log.test.sh
 run "cairn-docs-cycle argument guard" bash tests/cairn-docs-cycle.test.sh
 run "model-review-notify gates" bash tests/model-review-notify.test.sh
@@ -85,7 +84,11 @@ run "maintain-projects cases" bash tests/maintain-projects.test.sh
 run "guidance citation (warning only)" bash scripts/check-guidance-cite.sh
 run "guidance citation test" bash tests/check-guidance-cite.test.sh
 run "claude-context-budget line cap" bash tests/claude-context-budget.test.sh
+run "claude-pass-load" bash tests/claude-pass-load.test.sh
+run "claude-worktree-busy" bash tests/claude-worktree-busy.test.sh
 run "CLAUDE.md context budget" bash bin/.local/bin/claude-context-budget claude/.claude/CLAUDE.md
+run "pass-core word caps" bin/.local/bin/claude-context-budget --skill-caps --root .
+run "pass role loads" bin/.local/bin/claude-pass-load --check --root .
 run "claude refs and retired phrases" python3 scripts/check-claude-refs.py check --root .
 run "claude-tooling-sync lint" bin/.local/bin/claude-tooling-sync lint --root .
 run "gitleaks working-tree scan" gitleaks dir . --no-banner --redact

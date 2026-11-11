@@ -167,6 +167,10 @@ which stops logind from acting on the lid at all. Neither the lease holder nor `
 hold it by hand whenever thinkpad-x1 may be closed or carried (pavilion has no lid); `journalctl | grep "time jump detected"` shows the gap if it
 happens anyway.
 
+A session that took this hold releases it before it ends, so the hold never outlives its run
+until `NNN` runs out. Stop the `systemd-inhibit` process it started, found by its `--who` name in
+`systemd-inhibit --list`, and leave any other session's hold alone.
+
 ## Shared gate lanes
 
 Gates queue on one machine-wide lock per lane, and every gate runs in a memory-capped scope

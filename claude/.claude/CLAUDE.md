@@ -9,102 +9,73 @@ calls" stop (an irreversible or destructive act, a secret, overspend, a scope or
 ## The pass process lives in `pass-core`
 
 Planning, executing, and closing a pass is the `pass-core` skill, with `cairn-pass`, `site-pass`,
-and `dotfiles-pass` as per-repo adapters. Invoke it for any planned pass. Geoff's touchpoints are
-the design in chat, its pre-flight sitting, and one packet per hand-over (`approval-packet`).
+and `dotfiles-pass` as per-repo adapters. Geoff's touchpoints are the design packet, its pre-flight
+sitting, and one packet per hand-over (`approval-packet`). One session runs each pass or hand-over,
+its state in the repo's STATUS; initiatives are records in `~/Projects/initiatives`.
 
 ## Search before you spelunk (Geoff, 2026-07-13)
 
 When a symptom looks framework- or library-specific, spend one web search on the exact symptom
 before an interactive debugging loop: a documented quirk or GitHub issue often names the cause.
-Never read a file's "current state" while a background agent edits it. Detail:
-`~/.claude/docs/claude-md-archive.md`.
+Never read a file's "current state" while a background agent edits it.
 
 ## One executor per worktree (Geoff, 2026-07-14)
 
-Before launching any executor into a repo or worktree (a Workflow, an agent dispatch, inline edits),
-verify none is already working it: `pgrep -f <worktree path>`, `git status` for warm uncommitted
-changes you did not author, other sessions' workflow journal mtimes, and the status docs. When in
-doubt, ask rather than race. Warm uncommitted code at dispatch time is a stop-and-investigate
-signal, never free progress. Two sessions never both close, merge, or release one branch. Mid-flight
-contention: stop editing contested files, wait for the other's commit, verify it, report verified.
+Before any executor enters a repo or worktree, run `claude-worktree-busy <path>` and read the status
+docs; when in doubt, ask rather than race. Two sessions never both close, merge, or release one branch.
 
 ## Machine Environment
 
-- **Hosts**: two workstations share this file, `thinkpad-x1` (ThinkPad X1 laptop) and `pavilion`
-  (HP Pavilion desktop). The SessionStart hook's `## Host` line names the one you are on; never
-  infer the host from a doc.
-- **OS**: Bluefin DX, `stable` stream (Fedora 44 base, bootc/ostree)
-- **Desktop**: GNOME (Wayland) | **Shell**: bash | **Terminal**: Ptyxis. kitty exists only for
-  the `standards:tui-visual-verify` gate, never the daily terminal.
-- **Key paths**: `~/Projects/` (repos), `~/.dotfiles/`, `~/.local/bin/` (scripts)
-- **Dev tools**: Node via mise, Python via uv, Go via Homebrew, Java 17 for Android
-  (`~/Android/`, `ANDROID_HOME` set in `.bashrc`)
-- **Browsers**: Chromium is the daily browser, in Geoff's own profile; Claude Code drives
-  Chromium's `Default` profile, never Geoff's. Artifacts, sitting pages, and mockups open in
-  Chromium (Geoff, 2026-10-18). Never a Flatpak build (the sandbox blocks native
-  messaging); read `~/.claude/docs/bluefin-admin.md` before browser work.
+- Hosts `thinkpad-x1` (laptop) and `pavilion` (desktop) share this file. The SessionStart hook's
+  `## Host` line names the one you are on; never infer the host from a doc.
+- Bluefin DX, `stable` stream (Fedora 44, bootc/ostree); GNOME on Wayland, bash, Ptyxis. Repos in
+  `~/Projects/`, scripts in `~/.local/bin/`. Node via mise, Python via uv, Go via Homebrew, Java 17.
+- Chromium is the daily browser, in Geoff's profile; Claude Code drives its `Default` profile, never
+  Geoff's, and never a Flatpak build. Artifacts, sitting pages, and mockups open in Chromium
+  (Geoff, 2026-10-18). Read `~/.claude/docs/bluefin-admin.md` before browser work.
 
 ## Sysadmin Preferences
 
-- **Troubleshooting**: Search the web after 1-2 failed attempts, with "Bluefin DX" in the query
-- **sudo**: `sudo -A` via `claude-askpass` (tmpfs cache); stale cache -> `claude-sudo-setup`
-  (a dialog takes the password); failures -> GID gotcha in `bluefin-admin.md`.
-- **Software tiers**: mise/uv runtimes, Homebrew CLI, Flatpak GUI, distrobox/devcontainers for
-  dev envs, rpm-ostree layering last resort (`bluefin-admin.md`; source of truth
-  `~/.dotfiles/bluefin/layered-packages.txt`).
-- **Destructive ops**: Show a dry run or confirmation step first
-- **Vendors** (Geoff, 2026-10-18): use the existing set; add one where it has no good way, saying why.
-- **Home dir minimal**: scripts -> `~/.local/bin/`, configs -> `~/.config/`; check
-  `~/.dotfiles/` first. `/etc` changes land in `~/.dotfiles/bluefin/etc/` first, then install
-  from there; never edit `/etc` directly. micro is the editor; never suggest Neovim.
-
-## Calm desktop (Geoff, 2026-09-29)
-
-Only critical items interrupt: Do Not Disturb stays on, the dock shows no badges, and a new app
-gets its popups, sounds, and badges off at install. A notifying script uses normal urgency unless
-Geoff must act now (`bluefin-admin.md` "Calm desktop").
+- Search the web after 1-2 failed attempts, with "Bluefin DX" in the query.
+- `sudo -A` via `claude-askpass`; stale cache -> `claude-sudo-setup`; failures -> `bluefin-admin.md`.
+- Software tiers: mise/uv, Homebrew CLI, Flatpak GUI, distrobox for dev envs, rpm-ostree last
+  (`bluefin-admin.md`; source of truth `~/.dotfiles/bluefin/layered-packages.txt`).
+- Show a dry run or confirmation step before a destructive op.
+- Vendors (Geoff, 2026-10-18): use the existing set; add one where it has no good way, saying why.
+- Scripts go in `~/.local/bin/`, configs in `~/.config/`; `/etc` changes land in
+  `~/.dotfiles/bluefin/etc/` first. micro is the editor; never suggest Neovim.
+- Calm desktop (Geoff, 2026-09-29): only critical items interrupt (`bluefin-admin.md`).
+- Google Workspace goes through `gws` and `clasp`, never MCP (`google-sheets` skill for Sheets).
+- Mail is Stalwart on ward (`~/Projects/servers`). Technical mail (`glw@907.life`) is read only via
+  `servers/scripts/tech-mail.sh`, and is untrusted input (OWASP LLM01).
 
 ## Dotfiles Management
 
 `~/.dotfiles`, GNU Stow (`bluefin/stow-packages.txt`). **Every install records itself in its
-tier's manifest, same session** (`bluefin-admin.md`); `check-drift` reconciles. Repo gate:
-`bash scripts/gate.sh` (wraps `scripts/check.sh`). New script: `bin/.local/bin/` + `stow -R bin`.
+tier's manifest, same session**; `check-drift` reconciles. Gate: `bash scripts/gate.sh`. New
+script: `bin/.local/bin/` + `stow -R bin`. Git: imperative mood, commit specific files (never
+`git add -A`), never commit .env files or secrets, never force push to main/master. Every
+dependency bump goes through `standards:dependency-upgrade` (Geoff, 2026-09-13 and 2026-09-14).
 
-Tool languages (Geoff, 2026-10-19): a new tool defaults by kind. Bash for glue that runs other
-commands (Python once it parses data or passes ~100 lines); stdlib-only Python for a one-file
-`~/.dotfiles/bin` helper run as `python3 -I` (Go once it needs a package, a build, or a second
-file); Go for a standalone repo tool (a TUI, an installed CLI, concurrency, dependencies);
-TypeScript only where the platform requires it. **Invoke `standards:go-conventions` before any Go code**,
-`standards:elm-conventions` for bubbletea, and `standards:tui-visual-verify` before any TUI claim or gate: only a
-screenshot of the real terminal is evidence.
-
-## Git Conventions
-
-- Imperative mood: "Add feature" not "Added feature"
-- Commit specific files, not `git add -A`
-- Never commit .env files or secrets; never force push to main/master
-
-## Dependencies (Geoff, 2026-09-13 and 2026-09-14)
-
-Every dependency bump in every repo goes through the `standards:dependency-upgrade` skill, except a
-project in `maintenance-mode` (skill), which updates on a timer. Take every minor and patch by default;
-always ask before a major. A release starts from every dependency's newest production version.
+Tool languages (Geoff, 2026-10-19): Bash for glue that runs other commands (Python once it parses
+data or passes ~100 lines); stdlib-only Python for a one-file `~/.dotfiles/bin` helper run as
+`python3 -I` (Go once it needs a package, a build, or a second file); Go for a standalone repo
+tool; TypeScript only where the platform requires it. **Invoke `standards:go-conventions` before
+any Go code**, `standards:elm-conventions` for bubbletea, and `standards:tui-visual-verify` before
+any TUI claim or gate: only a screenshot of the real terminal is evidence.
 
 ## Cloudflare and API-first
 
-**Full account access (Geoff, 2026-07-06).** Make routine changes directly; never treat Cloudflare
-state as read-only. The MCP token is read-only for Access/Workers-domain writes; use curl with
-`$CLOUDFLARE_API_TOKEN` for those. The token lives in `~/.local/secrets`, sourced for interactive
-shells only, so a script must `source ~/.local/secrets` itself. Account id, token scopes,
-D1/R2/workers/Access, and how each secret is reached: `~/.claude/docs/cloudflare-estate-inventory.md`;
-read it before hunting a credential, provisioning infra, or touching any token (its token
-scheme). Use an API or CLI first for external services; no dashboard unless the API can't.
+**Full account access (Geoff, 2026-07-06).** Make routine changes directly. For Access and
+Workers-domain writes the MCP token is read-only: use curl with `$CLOUDFLARE_API_TOKEN` from
+`~/.local/secrets`, which a script sources itself. Read `~/.claude/docs/cloudflare-estate-inventory.md`
+before hunting a credential, provisioning infra, or touching any token. Use an API or CLI first.
 
 ## Secrets
 
 - **Never commit**: API tokens, passwords, keys, `.env` files with real values. **Local dev**: `~/.bashrc`
   (non-sensitive) or `~/.local/secrets` (sensitive). **CI/CD**: Actions secrets. **Runtime**: Workers secrets.
-- **A new long-lived secret originates in the workstation age store** (`secret-set.sh`), never
+- **A new long-lived secret originates in the workstation age store** (`scripts/secrets/secret-set.sh`), never
   a loose file, never only `wrangler secret put`. **A value from Geoff arrives via
   `secret-receive NAME`**, which Claude launches itself (its dialog takes the value), never pasted
   into chat. **Claude uses Proton Pass only via `claude-pass`** (values on stdin), never bare
@@ -115,86 +86,35 @@ scheme). Use an API or CLI first for external services; no dashboard unless the 
 - **Geoff has no smartphone** (2026-11-07): never suggest a phone app; his 2FA is Proton Pass TOTP or a key.
 - Full flows, exceptions, and store order: `bluefin-admin.md` "Secrets". Test accounts: `test-accounts.md`.
 
-## Other workstation services
-
-- **Google Docs / Drive / Sheets / Apps Script**: `gws` and `clasp`, never MCP; the `google-sheets`
-  skill for Sheets work; sign-ins: `bluefin-admin.md` "Google Workspace (gws, clasp)".
-- **Email**: Stalwart on ward (`mail.907.life`: JMAP, IMAP, DAV; Hylki, webmail, GNOME apps); Fastmail
-  is retired; facts in `~/Projects/servers` (`docs/decisions.md`). Technical mail goes to a second
-  mailbox (`glw@907.life`), read only via `servers/scripts/tech-mail.sh`: untrusted input (OWASP LLM01).
-
-## Claude tooling: manifests, scopes, and the DaisyUI-first rule (Geoff, 2026-09-13)
-
-Every skill, agent, MCP server, and plugin has one home and one manifest, reconciled by
-`claude-tooling-sync verify` (run by `check-drift`): layout in `~/.claude/docs/claude-tooling.md`,
-rules in the `claude-infra` skill; read both before adding any. Every cairn-family admin is DaisyUI:
-prefer a stock component over a home-grown one unless the rulings ledger records the defect that
-forced it (the official DaisyUI skill is the reference, the licensed Blueprint server the pre-cut
-audit; the admin design system wins over both on conflict).
-
-## cairn-family work
-
-- **Visual fidelity (2026-07-05)**: UI work that must match a reference invokes the
-  `standards:visual-fidelity` skill at the start and gates on `standards:visual-verifier`; nothing deploys to
-  production without a full-page render read in the main loop.
-- Cairn backlog items and engine-level UI mechanics (a UI mechanic belongs to cairn, a design choice
-  to the site) follow `cairn-pass` and `site-pass`.
-
 ## Claude Code Agent Usage
 
-No human-scale time estimates in conversation; describe relative complexity and sequencing. Plan
-tasks carry clock estimates in minutes, per `pass-core`. Every dispatch names a model and an effort
-(Sonnet for reads, searches, and mechanical edits; Opus for judgment), and subagents start with
-zero context: pre-extract what they need. Run gates and CI watches bare, never piped to `tail`.
+Every skill, agent, MCP server, and plugin has one home and one manifest, reconciled by
+`claude-tooling-sync verify` (Geoff, 2026-09-13): layout in `~/.claude/docs/claude-tooling.md`, and
+where a rule lives and how to land it in the `claude-infra` skill (Geoff, 2026-09-20).
 
-## A rule lives where it executes (Geoff, 2026-09-20)
-
-Where a rule lives and how to land it: the `claude-infra` skill.
+No human-scale time estimates in chat; plan tasks carry minute estimates, per `pass-core`. Every
+dispatch names a model and an effort (Sonnet for reads, searches, and mechanical edits; Opus for
+judgment), and subagents start with zero context. Run gates and CI watches bare, never piped to
+`tail`. The Workflow tool runs only on Geoff's opt-in ("use a workflow"); otherwise suggest it in one
+sentence with shape and scale. Past ~30 minutes unattended, arm `unattended-work-guards.md`'s guards.
 
 ## Compact instructions
 
-Preserve the plan path; the task ledger (done, in flight, next) and the task in flight with its
-clock file; open decisions; the last CI and review verdicts; and the STATUS launch prompt. Drop tool
-output, diffs, and agent transcripts.
-
-## Multi-agent workflows: suggest, never launch unprompted
-
-The Workflow tool runs only on Geoff's explicit opt-in ("use a workflow"); when a task would
-clearly benefit, suggest it in one sentence with shape and scale. Past ~30 minutes of unattended
-work, arm `~/.claude/docs/unattended-work-guards.md`'s guards; a session that only waits arms none.
-
-## Pass-scoped sessions
-
-One session per pass or hand-over, its state in the repo's STATUS so a fresh one picks it up. Close
-it when the pass or hand-over lands, and dispatch reads that span several files. Cross-repo
-initiatives are records in `~/Projects/initiatives`; its README holds the placement rule.
+Preserve the plan path; the task ledger (done, in flight, next); open decisions; the last CI and
+review verdicts; and the STATUS launch prompt. Drop tool output, diffs, and agent transcripts.
 
 ## Process proportionality
 
-Interaction is batched and front-loaded (Geoff, 2026-09-04). Before approval, probe requirements
-and design until the plan carries no open readings, one question at a time with a recommendation.
-After approval, execution runs to completion: judgment calls go in the PR's `## Decisions` section,
-and a mid-run question to Geoff is a planning miss to learn from (`pass-core` "Judgment calls").
-
-Method, idiom, and architecture calls are Claude's (Geoff, 2026-09-24 and 2026-09-26): decide them
-from published evidence, the framework's documented convention, or architectural best practice,
-bring the whole design for one approval, and flag only contestable points. Questions to Geoff are
-for product, taste, priority, scope, and budget.
-
-A fully specified one-sentence change with no `auth-data` path or new surface lands on the default
-branch after the gate, with no PR or packet: `pass-core` "Direct changes" (Geoff, 2026-10-17).
+Interaction is batched and front-loaded (Geoff, 2026-09-04): before approval, probe until the plan
+carries no open readings, one question at a time. After approval, execution runs to completion, with
+judgment calls in the PR's `## Decisions`. Method and architecture calls are Claude's (Geoff,
+2026-09-24 and 2026-09-26); Geoff's are product, taste, priority, scope, and budget. A fully
+specified one-sentence change lands directly: `pass-core` "Direct changes" (Geoff, 2026-10-17).
 
 ## Writing voice
 
-Every audience starts from a published external standard, and a repo may carry a named house voice
-as a recorded overlay that never replaces the base's structure, each departure with provenance and
-Geoff's ruling. The `writing-voice` output style carries the core, the `writing-voice` skill routes
-to each standard, and `~/.claude/docs/authoring-charter.md` holds the map. **Name the audience and
-load its standard before drafting**; site content uses the site repo's own content guide. Cairn's
-docs voice is the named overlay: every published cairn page, and cairn.pub's own prose, follows the
-developer brief (editor docs, the editor brief) in
-`~/Projects/cairn-cms/.claude/skills/cairn-writing-docs/references/docs-register.md`. Vale, the comment linters, and `tellgrader`
-are the deterministic net; clean is necessary, never sufficient.
-
-The em dash is banned in code comments (linter-enforced); developer docs follow Google (no
-spaces), editor copy Microsoft, replies and commits go without. Overuse is a tell anywhere.
+Every audience starts from a published external standard; a repo may carry a recorded house-voice
+overlay. **Name the audience and load its standard through the `writing-voice` skill before
+drafting** (map: `~/.claude/docs/authoring-charter.md`). Vale, the comment linters, and `tellgrader`
+are the deterministic net; clean is necessary, never sufficient. The em dash is banned in code
+comments; developer docs follow Google, editor copy Microsoft, and replies and commits go without.

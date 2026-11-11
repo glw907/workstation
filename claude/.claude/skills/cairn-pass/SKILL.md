@@ -17,6 +17,12 @@ checklist. This skill adds only Geoff's operation. Cross-repo specs, plans, and 
 `docs/internal/consultations/` for briefs with unrecorded verdicts first (`engine-consult` carries
 the protocol).
 
+## Pair dispatch
+
+A pair dispatch prompt cites this heading and `pass-core` `references/executor.md` "Pairs", which
+holds the isolation, the `description`, and the git forms a pair avoids. The pair runs these from
+its own worktree, commits its task, and never pushes.
+
 **Gate**: `cairn-run-gate '<string>'` from the pass worktree, per `pass-core` "Gates". It wraps the
 committed fast lane with the shared lanes.
 
@@ -26,6 +32,11 @@ the call (`CAIRN_GATE_LANE=light cairn-run-gate '<rest>'`), since the tool reads
 own environment. The `tool` class gate is `make -C tool check` on the light lane; a Node-only
 workspace suite such as `npm test -w packages/create-cairn-site` is light, and the engine's root
 `npm test` drives Chromium and is never light.
+
+**Worktree setup**: The launch's `.claude/worktrees/<name>`, then the setup command the repo's
+`cairn-running-passes` skill names.
+
+## Pass session
 
 **Full-suite home**: CI on the draft PR. Local `TIER_GATES.full` runs only on `ci-green` exit 3. The
 gate runs no gitleaks scan, so there is no branch-history scan to owe.

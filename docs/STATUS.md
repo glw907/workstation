@@ -38,8 +38,15 @@ Pass 2 merged on 2026-11-11: glw907/workstation#227 (`8021d10`), glw907/approval
 `gh pr merge` and names `approval-queue merge <id>` and `approval-queue land`. The allow rule and
 auto-mode entry for `approval-queue merge`, the rewritten `approval-packet` skill, and the Survey
 packet writer's brief are live on pavilion, and the decision-review timer is disabled. The
-existing `Bash(approval-queue *)` allow rule also covers `land` (Geoff left it as it is). Pass 3
-is not planned yet.
+existing `Bash(approval-queue *)` allow rule also covers `land` (Geoff left it as it is).
+
+Pass 3 is in review as glw907/workstation#228, with glw907/standards#18 and Survey 1.7.0
+(glw907/survey#11). It splits `pass-core` into a core skill and three role references (planner,
+executor, conductor), so an executing session loads about 7,100 words where it loaded about
+18,300. The global `CLAUDE.md` drops to 120 lines, and the `claude-clock-stop` hook is gone: a task
+past twice its estimate gets one line in the PR's `## Decisions`. Reviews follow the pass's risk
+class. The gate now checks the skill word caps and each role's load with `claude-pass-load`.
+Nothing is live until the merge and the after-merge steps in the PR body.
 
 **thinkpad-x1 owes one step.** `workstation-sync` brings it the guard, skill, settings, and
 register, but never rebuilds the queue app or disables the timer. Its first session after the sync
