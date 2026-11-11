@@ -61,7 +61,6 @@ Workers by `scripts/secrets/sync.sh`. Architecture, inventory, and rotation:
 | `workstation-update` | Update the tiers uupd does not cover: Claude Code, mise, uv tools, kitty, Android SDK. Run `ujust update` itself separately and interactively |
 | `scripts/check.sh` | The repo gate: shell syntax, ruff docstring rules, the test suite, vale fixtures, gitleaks |
 | `check-drift.timer` | Weekly systemd user timer (the `upkeep` package) running check-drift; desktop notification only when drift exists |
-| `decision-review.timer` | Monthly systemd user timer (the `upkeep` package) running `decision-review-notify`, which only raises a notification to start the approval-packet decision review |
 | `maintain-projects.timer` | Monthly system timer (`bluefin/etc/systemd/system`) on pavilion running `maintain-projects`, which updates and deploys the repos in `bluefin/maintenance-projects.txt`; a normal notification only on failure |
 | `update-widevine` | Copy Google's Widevine module out of the Chrome stable RPM into Chromium's profile so DRM sites play; `widevine-update.timer` (the `upkeep` package) runs it weekly and skips the download when the RPM is unchanged |
 | `claude-launch-guard` | PreToolUse hook: refuse a `claude --bg` pass launch until the plan records its permission check and review and the session has the `standards` plugin |

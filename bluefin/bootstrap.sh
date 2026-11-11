@@ -332,14 +332,13 @@ setup_vale_styles() {
 }
 
 setup_upkeep_timer() {
-    echo "== setup: upkeep timers (weekly drift, monthly model and decision reviews) =="
+    echo "== setup: upkeep timers (weekly drift, monthly model review) =="
     # check-drift.timer arrives via the upkeep stow package; it notifies
     # only when the repo and the live machine disagree.
     systemctl --user daemon-reload || return 1
     systemctl --user enable --now check-drift.timer
     systemctl --user enable --now workstation-sync.timer
     systemctl --user enable --now model-review.timer
-    systemctl --user enable --now decision-review.timer
     # Fedora's chromium ships without Widevine; the weekly updater installs and refreshes it.
     systemctl --user enable --now widevine-update.timer
     # Lingering keeps the user manager up with no login session, so user
