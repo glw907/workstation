@@ -41,6 +41,18 @@ def run_hook(command):
         "echo $(gh pr merge 5)",
         "echo `gh pr merge 5`",
         "(gh pr merge 5)",
+        "for n in 1 2; do gh pr merge $n --merge; done",
+        "if true; then gh pr merge 5; fi",
+        "while read n; do gh pr merge \"$n\"; done < prs",
+        "{ gh pr merge 5; }",
+        "! gh pr merge 5",
+        "sudo gh pr merge 5",
+        "echo 5 | xargs gh pr merge",
+        "timeout -s KILL 60 gh pr merge 5",
+        "2>/dev/null gh pr merge 5",
+        "/usr/bin/gh pr merge 5",
+        'out="$(gh pr merge 5 --merge 2>&1)"; echo "$out"',
+        'echo "`gh pr merge 5`"',
     ],
 )
 def test_denies_every_merge_stage(command):
@@ -74,6 +86,9 @@ def test_deny_message_names_replacements():
         "git status",
         "python3 -I - <<'EOF'\nnote = 'gh pr merge 5 later'\ngh pr merge 7\nEOF\ngit status",
         "git commit -F - <<EOF\nRun gh pr merge 5\nEOF",
+        'echo "$(git status) gh pr merge"',
+        'echo "run `git log` then gh pr merge"',
+        "sudo systemctl restart foo",
     ],
 )
 def test_allows_other_commands(command):

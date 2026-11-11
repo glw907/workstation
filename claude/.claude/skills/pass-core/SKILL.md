@@ -315,11 +315,10 @@ When the work is ready for Geoff's read, the session that hands it over sends on
 the fact file, runs `approval-queue snapshot <facts.json>`, has the writer produce `text.md` (per
 `approval-packet`), then runs `approval-queue packet <initiative> <facts.json> <text.md>` and stays
 open until the command exits with Geoff's decision as JSON. An approve is Geoff's merge
-authorization for each part whose verdict is `approve`, the authorization a launch prompt's "never
-merge" otherwise withholds: the session merges with `approval-queue merge <id>`, which merges each
+authorization, the authorization a launch prompt's "never merge" otherwise withholds: the session merges with `approval-queue merge <id>`, which merges each
 approved PR at the head Geoff read, and pulls the checkout as below. `claude-merge-guard` denies
 every GitHub CLI merge stage and names `approval-queue merge` and `approval-queue land` as the
-replacements. On reject, the session fixes forward from the note. `approval-queue triage` is only
+replacements. On a send-back, the session fixes forward from the note. `approval-queue triage` is only
 for an explicit backlog triage.
 
 A pass with no call for Geoff, no `auth-data` path, and no `## Before merge` step lands its PRs with

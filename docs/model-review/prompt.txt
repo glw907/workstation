@@ -53,7 +53,8 @@ Steps, in order:
      and the audit findings it takes, and run `notify-send -u normal "Model review: design ready"
      "<the PR URL>"`. Do not merge; Geoff approves.
    - Quiet month: the commit is a hand-over that changes no behavior. Push the branch, open a PR,
-     and merge it yourself with `gh pr merge <n> --merge`. Send no notification.
+     and land it with `approval-queue land glw907/workstation#<n> "quiet month, no behavior change"`.
+     Send no notification.
 
 9. After step 8, in this same session, run the servers monthly review: if
    /var/home/glw907/Projects/servers/docs/monthly-review/prompt.txt exists, read it and follow it.

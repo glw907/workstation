@@ -16,7 +16,7 @@ register's old packet rules are replaced by the writer's brief.
 1. **Decide whether to send.** Send one packet per hand-over, of one of three kinds. A `design`
    packet brings a design for approval. A `close` packet hands over the PRs a pass or a
    conductor's sweep holds. A `stop` packet reports a pass that paused,
-   with the cause in `reason`. A pass with
+   with the cause in `reason` (`{text, source}`). A pass with
    no call, no `auth-data` path, and no `## Before merge` section sends no packet in any class:
    land each PR with `approval-queue land <owner/repo#n> <claim>` (Geoff's ruling D1, 2026-11-10).
    Anything else needing his approval goes to the queue, never a chat question. A move of mail between folders is the
@@ -27,7 +27,7 @@ register's old packet rules are replaced by the writer's brief.
    argument: a record id in `~/Projects/initiatives`, or `none`. A call is `{question, rule,
    forced, options: [{label, consequence}], recommended, evidence: [{text, source}]}`, with
    `recommended` the number of the option, counting from 1. A
-   `decidedForYou` entry is a call with `applied` set to the option taken. A step is `{text, who}`, `who` being `session` or `you`. A `notChecked` or `reviews` entry is
+   `decidedForYou` entry is a call with `applied` set to the label of the option taken. A step is `{text, who}`, `who` being `session` or `you`. A `notChecked` or `reviews` entry is
    `{text, source}`.
 3. **Count the calls.** A call is one of seven rules: `irreversible`, `public-surface`,
    `cross-repo`, `owner-call`, `low-confidence`, `gate-failed`, `contradicts-ruling`. Allow at most
@@ -52,17 +52,20 @@ register's old packet rules are replaced by the writer's brief.
    It reports pending checks and does not wait. Fix each defect and rerun until it accepts. Then
    run `approval-queue packet <initiative> <facts.json> <text.md>` as a background Bash command;
    it waits for the decision and prints it as JSON. Take an item back with
-   `approval-queue withdraw <id>`, never by killing the command.
+   `approval-queue withdraw <id>`, never by killing the command. If the command is gone, for
+   instance after a reboot, `approval-queue collect <id>` recovers the decision.
 8. **Read the notes, then act.** Answer each of Geoff's notes in `replies.json`, an array of
    `{note, outcome, text, ref}`, `outcome` being `fixed`, `filed`, or `answered`, and `ref` (a
    commit or a backlog item) required for the first two. Store it with `approval-queue reply <id>
-   <replies.json>`.
-   - **Approve:** run `approval-queue merge [--skip <owner/repo#n>]... [--premerge-done
-     <owner/repo#n>]... <id>`. Merging is a `session` step; the approve is the authorization. If
+   <replies.json>`, after the action the notes call for, since a `fixed` reply cites its commit.
+   - **Approve:** a note that objects to merging a PR means that PR is skipped: pass
+     `--skip <owner/repo#n>` for it and report it. Run `approval-queue merge [--skip
+     <owner/repo#n>]... [--premerge-done <owner/repo#n>]... <id>`. Merging is a `session` step;
+     the approve is the authorization. If
      it stops with exit 2 and prints a `## Before merge` section, run those steps, then rerun
      with `--premerge-done <owner/repo#n>`. Where Geoff chose to run them himself, do not merge;
      report. Run each `session` step in order, stopping at the first failure.
-   - **Reject or send-back:** fix forward from each note and call, then resend with
+   - **Send back:** fix forward from each note and call, then resend with
      `approval-queue packet --replies <replies.json> <initiative> <facts.json> <text.md>`. The
      command refuses a resend that leaves a note unanswered.
 9. **Clear the queue before handing over.** Run `approval-queue pending` and answer with `reply`
