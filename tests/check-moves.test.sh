@@ -3,7 +3,7 @@
 # repo and a fixture destination tree. A clean move passes. An edited moved file, a missing
 # destination, an edited code row, and a destination that differs from the source each fail.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 SCRIPT="$(pwd)/scripts/check-moves.sh"
 fail=0
 root="$(mktemp -d)"

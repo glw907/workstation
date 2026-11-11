@@ -5,7 +5,7 @@
 # fixture main store must stay byte-identical, and the real ~/.local/secrets and the real
 # /dev/shm key cache must keep their mtimes.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 SCRIPT="$(pwd)/scripts/secrets/secret-set.sh"
 fail=0
 root="$(mktemp -d)"

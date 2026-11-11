@@ -6,7 +6,7 @@
 # state directory the script will read. CAIRN_GATE_POLL_INTERVAL and CAIRN_GATE_GRACE are set
 # short throughout, so a dead-pid case resolves in about a second instead of the 5s/15s default.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 REPO_ROOT="$(pwd)"
 SCRIPT="$REPO_ROOT/bin/.local/bin/cairn-run-gate"
 fail=0

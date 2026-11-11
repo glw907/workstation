@@ -3,7 +3,7 @@
 # value back byte-exact when a shell sources it, including spaces, $, backticks, quotes, a
 # backslash, and trailing "=". The run uses a generated age key and fake values only.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 SCRIPT="$(pwd)/scripts/secrets/secret-set.sh"
 fail=0
 root="$(mktemp -d)"

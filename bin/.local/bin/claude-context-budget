@@ -73,6 +73,7 @@ budget_for() {
     if [ -f "$cm" ]; then
       while read -r ref; do
         [ -n "$ref" ] || continue
+        # shellcheck disable=SC2088 # a literal "~/" prefix is matched in the text of a reference, not expanded
         case "$ref" in
           /*) target="$ref" ;;
           "~/"*) target="$HOME/${ref#\~/}" ;;

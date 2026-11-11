@@ -3,7 +3,7 @@
 # (claude/.claude/gather-dotfiles.sh). Each case runs the hook from a temporary repo against the
 # fixture initiatives tree. Assertions grep for lines.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 SCRIPT="$(pwd)/claude/.claude/gather-dotfiles.sh"
 FIXTURES="$(pwd)/tests/fixtures/initiatives"
 fail=0

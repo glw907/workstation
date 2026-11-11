@@ -2,7 +2,7 @@
 # check-guidance-cite.test.sh: prove scripts/check-guidance-cite.sh against this worktree's own
 # copy, using temporary repos whose `main` branch stands in as the base.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 SCRIPT="$(pwd)/scripts/check-guidance-cite.sh"
 fail=0
 root="$(mktemp -d)"

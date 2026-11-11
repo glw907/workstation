@@ -2,7 +2,7 @@
 # claude-memory-write-check.test.sh: prove the memory-write hook fires on a memory file, stays
 # silent elsewhere, and no longer routes initiative state to ROADMAP.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 SCRIPT="$(pwd)/bin/.local/bin/claude-memory-write-check"
 fail=0
 

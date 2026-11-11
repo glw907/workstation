@@ -3,7 +3,7 @@
 # settings.json, CLAUDE.md) and no commit message cites an Anthropic page. Warning only: always
 # exits 0, and a base that does not resolve is skipped, so check.sh's `run` never fails on it.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 base="${1:-origin/main}"
 
 skip() { echo "guidance citation check skipped: $1"; exit 0; }
