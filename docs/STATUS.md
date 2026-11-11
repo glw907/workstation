@@ -22,11 +22,11 @@ holds the fresh-machine provisioning artifacts. github.com/glw907/workstation.
 
 ## Workstation refinement
 
-Pass 1 of the `workstation-refinement` initiative is in progress on branch `worktree-refinement-1`
-(session `dotfiles-refinement-1`, conductor `conductor-dotfiles`). Plan:
+PR-ready: pass 1 of `workstation-refinement` is PR #225 (branch `worktree-refinement-1`, session
+`dotfiles-refinement-1`, conductor `conductor-dotfiles`). Gate green, review fixed. Plan:
 `~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-1-workstation-plan.md`.
-Next action: tasks T0 to T9 in the plan's order, then the PR-ready line here. Merge waits on the
-conductor.
+Next action: the conductor sends the packet and merges in its window; its after-merge steps
+include deleting `claude/.claude/tooling/ratchet-baseline.json` on `main`.
 
 ## Docs system
 
