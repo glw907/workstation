@@ -60,9 +60,9 @@ dependency bump goes through `standards:dependency-upgrade` (Geoff, 2026-09-13 a
 Tool languages (Geoff, 2026-10-19): Bash for glue that runs other commands (Python once it parses
 data or passes ~100 lines); stdlib-only Python for a one-file `~/.dotfiles/bin` helper run as
 `python3 -I` (Go once it needs a package, a build, or a second file); Go for a standalone repo
-tool; TypeScript only where the platform requires it. **Invoke `standards:go-conventions` before
-any Go code**, `standards:elm-conventions` for bubbletea, and `standards:tui-visual-verify` before
-any TUI claim or gate: only a screenshot of the real terminal is evidence.
+tool; TypeScript only where the platform requires it. **Invoke `standards:tui-visual-verify` before
+any TUI claim or gate**: only a screenshot of the real terminal is evidence. The Go and bubbletea
+skills load from `rules/go.md` when a `.go` file is in play.
 
 ## Cloudflare and API-first
 
