@@ -10,7 +10,6 @@
 # upstream Brewfile. Check both files before adding or removing an entry.
 com.belmoussaoui.Authenticator
 com.discordapp.Discord
-com.fastmail.Fastmail
 com.plexamp.Plexamp
 im.dino.Dino
 org.gajim.Gajim

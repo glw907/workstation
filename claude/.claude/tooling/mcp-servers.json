@@ -1,13 +1,6 @@
 {
   "_doc": "User-scope MCP servers for every project on this workstation. Applied by `claude-tooling-sync apply`, checked by `claude-tooling-sync verify` (also run by check-drift). Env values in ${VAR} form resolve from the session environment; secrets come from ~/.local/secrets (the age store), never from this file. Record every server here in the same session it is added; see ~/.claude/docs/claude-tooling.md.",
   "servers": {
-    "daisyui-blueprint": {
-      "type": "stdio",
-      "command": "daisyui-blueprint-mcp",
-      "args": [],
-      "env": {},
-      "_why": "Official daisyUI Blueprint (licensed 2026-09-13): rules enforcer and read-only quality inspector as the pre-cut admin audit, component syntax expert for plan authorship. Credentials: registry entries DAISYUI_BLUEPRINT_LICENSE and DAISYUI_BLUEPRINT_EMAIL. The launcher (dotfiles bin) sources ~/.local/secrets at spawn and maps the two variables to LICENSE and EMAIL, so a stale login shell cannot starve the server of its key (2026-09-14)."
-    },
     "svelte": {
       "type": "http",
       "url": "https://mcp.svelte.dev/mcp",
