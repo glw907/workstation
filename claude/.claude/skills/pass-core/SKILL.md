@@ -1,102 +1,46 @@
 ---
 name: pass-core
 description: >
-  The lean pass process every repo shares: the six-step lifecycle from design to close, risk
-  classes, one executing session with pair subagents, the fast gate with CI carrying the whole
-  suites, the clock stop, the whole-branch close review, and the score. Use when a repo adapter
-  (cairn-pass, site-pass, dotfiles-pass) points here, or when planning, executing, or closing a
-  pass.
+  The pass process every repo shares, with one reference per role. Use when an adapter
+  (cairn-pass, site-pass, dotfiles-pass) points here, or to plan, execute, or close a pass.
 ---
 
 # Pass core
 
 Spec: `~/.dotfiles/docs/specs/2026-10-10-lean-pass-process-design.md`. The repo adapter
-supplies the gate, fast lane, full-suite home, worktree setup, CI watch, risk-class path map,
-checklist globs, and close checklist, and wins where it disagrees with this skill.
+supplies the gate, lanes, CI watch, worktree setup, path map, and close checklist, and wins where
+it disagrees with this skill.
 
-Load `standards:running-passes` first. It holds the portable lifecycle any repo can follow: risk
-classes, the design, plan, execute, and close steps, pairs, gates, judgment calls, and the close
-review. This skill adds only Geoff's operation on top: the Approval Queue, the conductor, the lanes,
-the models, the clock stop, the score, and his rulings. A rule stated in `running-passes` is not
-repeated here.
+Load `standards:running-passes` first; this skill adds Geoff's operation to it. Then read the one reference for your role:
+`references/planner.md` to design or plan, `references/executor.md` to execute, or
+`references/conductor.md` to conduct. A planning dispatch cites `references/planning-samples.md`.
 
 ## Lifecycle
 
-Risk classes are `running-passes` "Risk classes". Here `runner` covers skills, agents, workflows,
-the gate tools, `.github/workflows`, and `scripts/checks`, and Geoff's ruling that raises a class
-is stated in the design in one sentence. A change that meets "Direct changes" skips this lifecycle,
-and "Direct changes" replaces the `running-passes` skip for a one-sentence diff.
+Geoff approves a design as a design part in an approval-queue packet
+(`approval-packet`), never through a question in chat (Geoff, 2026-10-28).
 
-A design that `standards:brainstorming` produces enters this lifecycle. Geoff approves it as a
-design part in an approval-queue packet (`approval-packet`), never through a question in chat: the
-queue shows the design in a browser and takes his feedback (Geoff, 2026-10-28). The spec and plan go
-where the repo's adapter or this skill puts them, and the plan is authored per step 4.
-
-1. **Design.** Opus at `high` brainstorms in chat. The design is the page or less
-   `running-passes` "Design" sets out, plus every pre-flight item it can foresee (step 4). A design brought for approval goes to Geoff as a design part in a packet, per `approval-packet`.
-   An owner fork in the design is a `### Decide:` block in its brief. A design doc opens with `## Brief` after its title, per
-   `~/.claude/docs/voice/approval-brief.md`. The design names its initiative (a record in `~/Projects/initiatives`) or says none applies; cross-repo specs, plans, and research go in `initiatives/<id>/`, and the plan header carries an `Initiative: <id>` line. A design that adds a project, a service, or running infrastructure names where it runs and why, after weighing Cloudflare (Workers, D1, R2) against the Hetzner servers orpheus and ward: what fails together, what the host already carries, cost, and how backup and restore cover it. It never defaults to the host at hand (Geoff, 2026-10-22). Every design runs the `standards:backlog-sweep` skill's scoped sweep before approval, and its full sweep when one is due; the design lists the verdicts, and approving it approves the backlog edits (Geoff, 2026-10-27). A design that clears filed backlog items, such as a backlog round, takes its scope from the sweep's verdicts and lists each dropped item with its reason (Geoff, 2026-10-25). Best practices for Claude Code (<https://code.claude.com/docs/en/best-practices>): once the spec is written, "start a fresh session to build from it, so the build begins with a clean context and a written definition of done." If the diff fits in one sentence, skip steps 2 to 4. Every planning dispatch prompt
-   carries these two samples:
-   > "Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
-   > Keep solutions simple and focused: - Scope: Don't add features, refactor code, or make
-   > "improvements" beyond what was asked. A bug fix doesn't need surrounding code cleaned up. A
-   > simple feature doesn't need extra configurability. ... - Defensive coding: Don't add error
-   > handling, fallbacks, or validation for scenarios that can't happen. Trust internal code and
-   > framework guarantees. Only validate at system boundaries (user input, external APIs). -
-   > Abstractions: Don't create helpers, utilities, or abstractions for one-time operations. Don't
-   > design for hypothetical future requirements. The right amount of complexity is the minimum
-   > needed for the current task."
-   > (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>)
-   >
-   > "Deliver what was asked, at the scope intended. Make routine judgment calls yourself, and check
-   > in only when different readings of the request would lead to materially different work. If the
-   > request seems mistaken or a better approach exists, say so in a sentence and continue with the
-   > task as asked rather than quietly narrowing, widening, or transforming it. Finish the whole
-   > task, and stop short of actions that are clearly beyond what was asked."
-   > (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>)
-
-   A design Geoff approves ahead of its pass, with unattended planning approved, lets the planning
-   session run steps 2 to 4, write the executor's launch prompt, and launch the executor or hand it
-   to the project's conductor (see "Execute") after the "Execute" pre-launch checks, without him. A plan over twice the design's estimate, or a finding
-   that changes the design, stops it: STATUS carries one question and `notify-send -u normal`
-   tells Geoff. Before Geoff leaves the run, the approval batch asks how to answer each stop the
-   run can foresee, an estimate overrun up to a named ceiling among them, and the design records
-   each answer as a standing approval the planner applies in place of stopping. A stop with no
-   standing answer still stops (Geoff, 2026-10-12). Past a count cap
-   (`running-passes` "Plan"), the run goes on
-   while each retry fixes a cause the session has traced and spend stays inside the ceiling, and
-   each fix is a reversible change listed in the PR's `## Decisions`. A cause that returns after
-   its fix gets one structural fix: the session replaces the unit the patches kept missing instead
-   of patching it again. If the cause returns after that, the session escalates the item in the PR
-   and goes on with the rest. The plan names which items it can escalate without breaking its
-   outcome. The run stops only on the spend or path ceiling, a cause it cannot trace, or an
-   escalation the plan doesn't allow, which would change the design (Geoff, 2026-10-19).
-2. **Spec.** An agent writes the approved design at the length precision needs, only if
-   `standards:spec-plan-review`'s depth calls for one. Every mechanism it states is quoted from source or
-   probed.
-3. **Spec review.** `standards:spec-plan-review` sets spec and plan review depth. A finding that changes
-   the approved design returns to Geoff as one batched question; every other finding is folded
-   without him.
-4. **Plan.** The task list is `running-passes` "Plan". A plan whose path minutes exceed twice its
-   design's estimate goes back to Geoff with the reason before launch. The sum over every task
-   counts pairs twice and never sets the stop (Geoff, 2026-10-12). The design states its estimate in path minutes,
-   set from the actual-against-planned path in recent passes' scores, never from a share of a spec's
-   figure.
-
-   The plan opens with a `## Pre-flight` list, and every necessary permission is gathered there, up front (Geoff, 2026-11-01). The list carries a `Permissions checked:` line, saying how each task's credentials and writes were read against auto mode, and a `Reviewed:` line naming the plan review; `claude-launch-guard` refuses a `claude --bg` launch of a plan without them. The list holds every step only Geoff can do, such as a sign-in, a
-   value through `secret-receive`, a dialog, a permission rule, a browser or app action, or a
-   physical touch. The design's packet carries the items it foresaw as `[you: ...]` steps
-   (`approval-packet`), and Geoff runs them in the sitting where he approves the design, since a
-   planner that runs unattended has no sitting of its own. An item the plan adds holds the launch:
-   the planner sends it to Geoff as a pre-launch packet and records a planning miss at the design
-   stage. The executor launches only once each item is done and checked (a sign-in that
-   answers, a store name present, a rule in `settings.json`). A step that needs the pass's own
-   output is moved earlier or given a path without Geoff where it can be. Whatever remains goes
-   into one named sitting at a set point in the plan, and the design approval says when. A run
-   that waits on Geoff for a step the list left out is a planning miss.
+1. **Design.** Opus at `high` brainstorms (`standards:brainstorming`); the planner reference holds
+   what a design carries. If the diff fits in one sentence, skip steps 2 to 4.
+2. **Spec.** Written only if `standards:spec-plan-review`'s depth calls for one, with every
+   mechanism quoted from source or probed.
+3. **Review.** By class (see "Plan review lens"). A finding that changes the approved design
+   returns to Geoff as one batched question; the rest are folded.
+4. **Plan.** `running-passes` "Plan", opening with a `## Pre-flight` list (planner reference).
 5. **Execute.** See "Execute".
-6. **Close.** See "Close". Geoff decides the packet in the Approval Queue, except that a pass whose highest
-   class is `ordinary` merges its own PR (see "Close").
+6. **Close.** See "Close".
+
+## Plan review lens
+
+`standards:spec-plan-review` holds the method; the class sets the reads.
+
+| Class | Before code | At close |
+| --- | --- | --- |
+| `ordinary` | None; the plan's `Reviewed:` line says so | One whole-branch `standards:diff-reviewer` |
+| `runner` | One `standards:plan-reviewer` read | The same |
+| `auth-data` | One `standards:plan-reviewer` read | The same, and one `standards:web-auth-security-reviewer` read |
+
+No review runs on a commit while CI runs.
 
 ## Direct changes
 
@@ -108,208 +52,68 @@ of these hold (Geoff, 2026-10-17):
 - In a `runner` path it changes wording only: the skill or agent tells a session the same thing,
   and no step, rule, trigger, or tool list changes.
 
+At Geoff's request naming the command, a direct change may add one
+`permissions.allow` rule for a gate, fast-lane, or test command the repo's adapter names, and the
+reply quotes the rule. A second rule, an `autoMode` entry, or any change to a deny rule is a pass.
+
 The session runs the adapter's gate, commits the named files, pushes to the default branch, and
 names the commit in its reply. When another session is live in the main checkout, it commits in a
 worktree cut from `origin/<default>`, pushes with `git push origin HEAD:<default>`, and brings the
-checkout up to date as "Close" sets out. Where a push to the default branch deploys, as on the
-sites, the change also passes what the repo requires before a deploy: the full-page render read of
-each touched page. A finding past the one sentence makes it a pass. Best practices for Claude Code
-(<https://code.claude.com/docs/en/best-practices>): "For tasks where the scope is clear and the fix
-is small ... ask Claude to do it directly."
+checkout up to date as "Close" sets out. Where a push deploys, as on the sites, the change also
+passes the full-page render read of each touched page. A finding past the
+one sentence makes it a pass.
 
 ## Models
 
-- Design and plan authorship: `claude-opus-5-5` at `high`, since planning may spend more for a
-  better result. All other Opus work, reviewers included, runs at `medium`.
-- Conductor: `sonnet` at `medium`. It mostly waits, and a merge or relaunch call it cannot settle
-  goes to Geoff as a packet.
-- Executing session and pair subagents: `sonnet` at `medium`. A clock stop or CI red traced to
-  executor reasoning moves the next pass to `high` (Sonnet 5.5 page: "start at medium for
-  well-specified tasks and move to high for harder or longer ones").
-- Reserve `xhigh` and `max` for work where you've measured a quality gain (Opus 5.5 page). An
-  unsettled decision re-runs at `xhigh`, then one
-  `fable` dispatch at `high`, per dispatch and never a session switch or frontmatter pin. Reviewers take
-  `claude-opus-5-5` from agent frontmatter. `haiku` reads and copies, never decides, and stays under
-  100k context. `low` effort suits mechanical subagents, never Fable.
+- Design and plan authorship: `claude-opus-5-5` at `high`; other Opus work, reviewers included,
+  at `medium`. Reviewers take the model from agent frontmatter.
+- Conductor, executor, and pairs: `sonnet` at `medium`, or Opus where the design calls the work
+  judgment. A red traced to executor reasoning moves the next pass to `high`.
+- `xhigh` and `max` only where a quality gain is measured: an unsettled decision re-runs at
+  `xhigh`, then one `fable` dispatch at `high`, never a session switch or frontmatter pin. `haiku`
+  reads and copies, never decides; `low` suits mechanical subagents, never Fable.
 
 ## Execute
 
-One session executes. For an `ordinary` pass, the planning session starts it from the repo's main
-checkout with `claude --bg --model sonnet --effort medium --name <project>-<pass> "$(cat <prompt
-file>)"`, so Geoff pastes nothing.
-
-Every executor is named `<project>-<pass>`, whoever launches it. `<project>` is the repo basename
-the conductor's name uses, and `<pass>` is the plan's slug: `dubplate-intake-1`,
-`cairn-cms-draft-docs-2b-part2`. Geoff finds a session in `claude agents` by that name and attaches
-or sends to it, so a relaunch keeps the name (Geoff, 2026-10-12).
-
-A `runner` or `auth-data` pass goes to Geoff for approval, so its planner hands it to the project's
-conductor and closes instead of watching it (Geoff, 2026-10-12). Best practices for Claude Code
-(<https://code.claude.com/docs/en/best-practices>): "Once the spec is complete, start a fresh session
-to execute it." The conductor is `conductor-<project>`, where `<project>` is the basename of the repo
-whose main checkout launches the executor. The planner commits `<plan>-conductor-prompt.txt` (see
-"Launch prompt") and checks `claude agents --json` for a live `conductor-<project>`:
-
-1. If none is listed, the planner launches it from that main checkout with `claude --bg --model
-   sonnet --effort medium --name conductor-<project> "$(cat <file>)"` and closes.
-2. If one is listed, the planner sends it the prompt file's absolute path with `SendMessage`, waits
-   for its one-line reply naming the pass, and closes. A send that fails because the conductor
-   just ended falls back to step 1.
-3. If the conductor holds or refuses the message, or no reply comes within 10 minutes, the planner
-   stays open, writes the stall into STATUS, and runs `notify-send -u normal`. It never launches
-   the executor itself, which would put two watchers on one pass. Cross-session messaging
-   (<https://code.claude.com/docs/en/cross-session-messaging>): a message is "Delivered", "Held", or
-   "Refused", and a held one can expire unread.
-
-Before the launch, every `## Pre-flight` item is done and checked (see "Lifecycle" step 4). Run
-`git -C <repo> fetch origin` and check that the main checkout is on its
-default branch and `git -C <repo> rev-list --count HEAD..origin/<default>` prints 0, since
-`worktree.baseRef: "head"` branches from local `HEAD`. Where `git -C <repo> check-ignore -q
-.claude/worktrees/x` fails, append `.claude/worktrees/` to the file `git -C <repo> rev-parse
---path-format=absolute --git-path info/exclude` names.
-
-The session's first act is `EnterWorktree`, then the adapter's setup command in the new worktree.
-It calls `EnterWorktree` only that once. Work in another repo or worktree goes by absolute path
-and `git -C`, because an `EnterWorktree` made from another repo's worktree raises a permission
-prompt that stalls the run (servers-foundation, 2026-10-19).
-It commits without asking, pushes the branch it created, and opens the PR from it. A pass that
-continues an existing branch merges or cherry-picks that branch into the new one first. STATUS
-records the session's name and id. The launch prompt names the push target as `glw907/<repo>`, since
-auto mode blocks a push to a repository the user did not name. The session arms the API-drop
-wake-up (`/loop` with no interval) and, if the lid may close, the lid-switch hold, per
-`~/.claude/docs/unattended-work-guards.md`, then reads, edits, writes the tests, and commits.
+One session executes, named `<project>-<pass>` (repo basename and plan slug, as in
+`dubplate-intake-1`) whoever launches it, and a relaunch keeps the name (Geoff, 2026-10-12).
 
 ## Judgment calls
 
-The calls and the `## Decisions` format are `running-passes` "Execute". Here the session also stops
-for a stop the plan writes once its standing answer runs out (see "Lifecycle" step 1), and for a
-clock stop. Prompting Claude Opus 5
-(<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
-"Make routine judgment calls yourself, and check in only when different readings of the request
-would lead to materially different work."
+Beyond `running-passes` "Execute", the session stops for a stop the plan writes once its standing
+answer runs out.
 
-A mid-run question to Geoff is a planning miss, even when the session had to ask. Some will
-happen, and each one improves the planning step that missed it. The session that asked records
-the miss in the PR body's `## Planning misses` section: the question, Geoff's answer, and the plan
-item that should have answered it. Under a conductor, the conductor is that session: it adds the
-entry and the fix after the executor reports PR-ready and before its packet. Before the hand-over
-the session lands the fix where planning executes,
-usually a new item in the `standards:plan-reviewer` checklist, else the adapter or this skill. The fix goes
-in the same PR when it is in this repo, and otherwise in a dotfiles PR the packet names. A miss
-the fix cannot generalize stays in the PR body, marked one-off.
-
-A stop has one asker. An executor whose pass has a conductor never asks Geoff itself: it writes
-the stop to STATUS and waits, with no `notify-send`. The conductor asks once, commits the ruling
-to the plan branch, then stops and relaunches the executor per "Conductor", which merges the plan
-branch first.
+A mid-run question to Geoff is a planning miss, recorded in the PR's `## Planning misses`: the
+question, his answer, and the plan item that should have answered it. The fix waits for the monthly
+prune. Under a conductor, the executor writes a stop to STATUS and waits, and the conductor asks.
 
 ## Pairs
 
-Pairs run as `running-passes` sets out. On this workstation, the two Agent-tool subagents take
-`isolation: "worktree"` after the session commits, each with the `description` `<pass> task <n>`
-so the session's agent list shows which task each runs; `worktree.baseRef: "head"` branches them
-from that commit. A shared port is an environment variable.
-
-In a worktree-isolated subagent, Claude Code's built-in isolation refused `git` inside a command
-substitution (`echo "$(git rev-parse HEAD)"`) and `git -C <another worktree of the same repo>`.
-The messages said the form was too complex to verify, or that it redirected git via `-C`. They
-named no hook and left no entry in the denials log (probe of 2026-11-04, cairn-cms pass
-release-process-b). Dispatch prompts tell pairs to run git as plain, separate calls from their
-worktree path, without `-C` into the shared checkout. Plain `cd <worktree> && git status`, a chained
-`git status && git log -1 --oneline`, and a quoted heredoc that only mentions git words all ran.
+Pairs run as `running-passes` sets out; the executor reference holds the dispatch.
 
 ## Gates
 
-The adapter's classifier selects the fast lane's legs: type check, the selected unit and component
-tests, the static checks the diff touches, and the docs gate when docs changed. Run each through
-`cairn-run-gate '<string>'` with the Bash tool's `timeout: 600000`, re-issued on exit 75 until it
-prints `gate exit:`; never poll a log. An unchanged tree needs no rerun (`cairn-run-gate --receipt
-'<string>'`). Non-browser legs may run concurrently on the light lane only where their measured peak
-fits its 3G cap; a browser leg runs alone on the heavy lane after them. Shared lanes:
-`~/.claude/docs/unattended-work-guards.md` "Shared gate lanes".
-
-CI carries the whole suites off the critical path, where it runs on PRs. The first push opens a
-draft PR, and after each push the adapter's watch command runs as a background Bash task
-(`run_in_background`), which re-invokes the session on exit. No task waits for CI before the next; a
-red stops the line, as `running-passes` "Execute" sets out. Where the full-suite home is
-local, there is no watch command. On an `auth-data` task, `standards:diff-reviewer` reads the commit while CI
-runs, and a `fix` or `escalate` verdict stops the line like a red. `RUN_GATE_IF_BUSY=defer` leaves
-a heavy leg to the push's CI (exit 76) when another run holds the lock; set it only where CI is the
-full-suite home, and never on an `auth-data` task.
-
-A test never cuts a release candidate (Geoff, 2026-11-09). A run that needs a published build to
-prove something, such as a proving round or a probe, publishes a snapshot test build: a `dev`
-prerelease version under a test dist-tag such as `gate`, with no GitHub release, no rc tag, and no
-changelog release heading. An rc is cut only for an actual release candidate, once its install
-process is effective and tested; otherwise a polish loop publishes ten or twenty of them.
-This is the split changesets draws between a snapshot release, made "for testing without updating
-the versions" under its own dist-tag, and pre-release mode for a planned beta or RC cycle
-(<https://github.com/changesets/changesets/blob/main/docs/snapshot-releases.md>).
+Gates run through `cairn-run-gate`, and CI carries the whole suites off the critical path; the
+executor reference holds the rules.
 
 ## Clock stop
 
-At each task start the session writes `.pass-task-clock` at the pass worktree's root, by the Write
-tool or one plain `printf` in its own Bash call, with three lines: `task=<id>`,
-`start=<epoch seconds>`, `estimate=<minutes>`. The global git excludes (`bluefin/git-excludes`) hide
-the file, so it never changes the gate fingerprint. The git dir is no longer the home: a
-worktree-isolated session's guard refuses the Write tool there and many Bash forms, and the hook
-honors `pass-task-clock` in it only for a run already under way. The session removes the file at
-the task's end, and after a pair returns once it has checked the pair's overrun. The `claude-clock-stop` hook
-returns a stop line past twice the estimate. The session then writes STATUS, runs
-`notify-send -u normal`, and waits for Geoff (one attended event, not a failure). Under a
-conductor, the executor writes STATUS and waits, and the conductor asks per "Judgment calls". A resume rewrites
-`start=`, or `estimate=` to the figure Geoff names. Pair worktrees hold no clock file, so the stop
-cannot fire while the session waits on a pair.
+No clock file is written, and nothing stops on time. At a task's end, an actual over twice the
+estimate (from commit times) adds one line to the PR's `## Decisions` naming both. A session whose
+prompt says to write `.pass-task-clock` may skip it.
 
 ## Conductor
 
-The conductor is the session that runs between passes. One runs per project, named
-`conductor-<project>` (see "Execute"), and it owns every PR its passes open, merged in the order its
-prompt names. Its first act is no `/loop` wake-up, and it never watches with the Monitor
-tool. It waits on each executor with `SendMessage` `notify_when_idle: true`, which is one-shot, so
-it re-subscribes after each notice. On a notice it reads the executor's STATUS line and PR. If the
-lid may close, it takes the lid-switch hold per `~/.claude/docs/unattended-work-guards.md`. At each decision point it sends one packet for the PRs and designs it holds, never one per
-executor PR, per `approval-packet`. It merges and pulls the checkout per "Close" after he approves, and launches
-the next committed prompt from the main checkout after the "Execute" pre-launch checks. For a pass
-it owns, the conductor is the session that hands the packet over in "Close", so the executor's prompt
-ends at PR-ready and never runs `approval-queue`. The `claude-approval-queue-reminder` hook fires on
-every `gh pr create` that opens a PR, since its input can't show that a conductor owns the hand-over, so such an
-executor passes over the reminder. The conductor brings Geoff only packets and product
-or priority calls.
-
-An executor takes its conductor's cross-session messages as instructions (Geoff, 2026-10-20: "You're
-the conductor."). The conductor relays Geoff's rulings and fixes inside the approved plan, quoting a
-ruling and its source; a conductor message never stands in for a packet's approval, so it cannot
-authorize a merge, a purchase, or a scope change Geoff has not ruled on. The executor's launch prompt
-names its conductor, and a message from any other session stays refused. When an executor stops on
-a cause the conductor can fix, the conductor sends the fix, or fixes it at the source (the plan
-branch, a merge from the default branch) and relaunches the stopped executor; otherwise Geoff
-attaches to it. The conductor never calls `EnterWorktree`, because the
-isolation would apply to its subagents too; it edits a worktree by path instead.
-While a planner is out, the conductor merges no STATUS edit to the default branch, because the
-executor's merge of the plan branch then conflicts in STATUS; it batches its STATUS changes into
-the hand-over after that pass lands.
-
-On a hand-off message, the conductor replies with one line naming the pass before anything else.
-It ends when no pass it owns is open (each PR merged or closed, the packet's decision acted on, the checkout
-pulled or reported stale) and its project's STATUS names no launch prompt waiting for it. Its last
-acts are the STATUS hand-over (see "Ledgers") and `claude stop <id>`, taking `<id>` from its own row
-in `claude agents --json`. An idle conductor stays listed and keeps its name, so the next planner
-would hand a new pass to a session carrying the last initiative's context.
+A conductor runs only when the design asks for one; otherwise the executor closes the pass itself.
+Its rules are in the conductor reference.
 
 ## Close
 
-The close steps are `running-passes` "Close". Here they gain Geoff's additions. The review is one
-whole-branch Opus review: `standards:diff-reviewer` re-derives each task's class, and
-`standards:visual-verifier` runs on rendered UI in a site or the cairn admin. In dubplate, verbatim
-fix criteria landed at zero fix rounds and paraphrased ones averaged one. A correctness-critical
-overrule re-runs the review at `xhigh`. The adapter's close checklist runs (the auth smoke on
-`auth-data`), and STATUS is updated. The PR body opens with a `## Brief` per
-`~/.claude/docs/voice/approval-brief.md`, then carries what landed, each `auth-data` verdict, the
-`## Decisions` and `## Planning misses` sections (see "Judgment calls"), and the score. A "Found,
-not done" item worth doing is filed through `standards:log-issue`, tagged `#initiative:<id>` when
-a record fits. No follow-up is sent to Geoff as its own item, and an initiative-sized one becomes a
-record. A merged PR body is history no session reads (Geoff, 2026-10-11).
+The close steps are `running-passes` "Close", with `standards:visual-verifier` on rendered UI in
+a site or the cairn admin. The adapter's close checklist runs, and STATUS is updated. The PR body opens with a `## Brief` per
+`~/.claude/docs/voice/approval-brief.md`, then carries what landed, each `auth-data` verdict,
+`## Decisions`, `## Planning misses`, and the score. Follow-ups go through `approval-packet`
+"File follow-ups".
 
 When the work is ready for Geoff's read, the session that hands it over sends one packet: it writes
 the fact file, runs `approval-queue snapshot <facts.json>`, has the writer produce `text.md` (per
@@ -332,136 +136,44 @@ A PR must be safe under a plain merge followed by a pull; the executor makes it 
 When it cannot, the PR body carries a `## Before merge` section: the exact commands in order and
 the one check that shows they ran. `approval-queue merge` stops with exit 2 at a PR whose body has
 `## Before merge` and prints the section; after the merger runs those steps it reruns with
-`--premerge-done <owner/repo#n>`. The packet raises the section as an ask naming the PR, and the
-choice picked says who runs them: "The session runs it, then merges" sends the session through the
-steps and then the merge; "I'll run it myself" means the session does not merge, and it reports that
-Geoff runs the steps and will say when they are done. A `[approve]` choice on a failed check or a
-fix review means merge as approved.
+`--premerge-done <owner/repo#n>`. The packet raises the section as a call, and `approval-packet`
+says who runs the steps for each choice.
 
 Whoever merges a PR then brings that repo's main checkout up to date: `git -C <checkout> pull
 --ff-only` when the checkout is on its default branch, has no uncommitted change in a file the
 merge touches, and has no live session (`claude agents --json`). Otherwise it reports the checkout
-as stale and never forces it. A stale checkout loads the old CLAUDE.md and skills into the next
-session there.
+as stale and never forces it.
 
-## Plan review lens
-
-The `standards:plan-reviewer` agent keeps the portable lens. These items are Geoff's operation: his
-stores, sign-ins, hosts, and queue. A plan review dispatched on this workstation adds them to the
-agent's prompt; each was added from a past pass's planning miss.
-
-## Judgment calls and standing answers
-
-- Every stop the plan writes (a cap, a line stop, a ceiling) has a standing answer for its cheap
-  case, and each judgment call the run can plausibly meet is named with its answer, so the run
-  asks Geoff only what the plan could not foresee ("Lifecycle" step 1 and "Judgment calls").
-
-- No count cap (reads, retries, rounds, reruns) and no list of fixable causes stops the line on
-  its own. Each carries the traced-cause standing answer in "Lifecycle" step 1, so only
-  a ceiling, an untraced cause, or an escalation the plan doesn't allow stops it. The plan names
-  which items the run may escalate without breaking its outcome, for a cause that returns after
-  its structural fix.
-
-## Pre-flight and owner-only steps
-
-- A bulk edit of Proton Pass vaults (moves, renames, notes, trashes, grants, revokes) is a
-  `[you]` step: the session writes a `pass-sitting` file and Geoff runs `pass-sitting FILE`, then
-  `--apply`, in a Ptyxis terminal. The hook refuses `pass-sitting` to Claude (`proton-pass` skill).
-
-- A `[you]` pre-flight item still open when an unattended launch is armed is checked at arm time,
-  and the launch's standing answer says what a proof step does after the run has moved live state.
-  A token proof that deploys `origin/main` can't run once a phone depends on the pass's version
-  (Pass 5, 2026-10-31: the armed timer fired with `tmp-account-tokens` never made).
-
-- Every value the run needs from Geoff is looked up in the stores and records first, and only a
-  value no file holds is asked at design time.
-- The `## Pre-flight` list names every step only Geoff can do (sign-ins, `secret-receive` values,
-  dialogs, permission rules, app or physical actions), each with the check that shows it done.
-  Read every task for a hidden one, and move a step that waits on the pass's output earlier where
-  it can go, and flag any item the design did not foresee, since it holds the launch for a
-  pre-launch packet.
-  Read every task's writes against auto mode too: a write to Claude's settings, a credential file, or new public surface can be refused however the allow rules read, so each gets a `[you]` item or a path a probe proved in a `claude --bg` session, since an interactive session's auto mode can pass an edit a background executor's refuses.
-- A task that creates or uses a credential with Geoff's own login is a `[you]` item with a tested script, because the classifier refuses it however the plan reads.
-- A standing answer that sends a sourced-secret command to Geoff, or to the conductor to run, is a pre-flight `[you]` item with the exact command, or the plan proves a path inside a harness that sources its own secrets. Auto mode refuses the session's sourced-secret read, and a peer cannot run a refused command for it.
-- A step a run or its merges will need refused by auto mode is settled before launch: Geoff grants
-  the narrow permission in the design's sitting, or runs what can already run. A `[you]` item never
-  sits between a pass's merges when a permission asked up front would let the session run it. Only
-  a step that truly needs Geoff at that moment, such as a sign-in or a reader's sitting, keeps a
-  set point. A conductor reads each pass for these before launching it and brings them as one list
-  (Geoff, 2026-10-31: agent-first pass 1's plugin install held five merges for over an hour:
-  "You should have asked for the necessary permission up front.").
-- A pass that launches `claude --bg` in a directory no session has opened (a new repo,
-  checkout, or worktree the conductor cuts) lists the workspace trust prompt as a pre-flight item:
-  Geoff runs `claude` there once and accepts it, checked by a launch that doesn't print "Workspace
-  not trusted". A trusted parent directory doesn't cover the new path (November model review,
-  2026-11-10: `~/Projects` was trusted, and the pass P worktree still refused the launch).
-
-## Hosts and workstation config
-
-- A pass that changes workstation config states what each host (`pavilion`, `thinkpad-x1`)
-  gets, including a host that lacks a prerequisite.
-
-- A pass that ends in a reboot or a `check-drift` run has a standing answer for reversible drift
-  cleanup.
+After the pull, the merging session removes the pass's worktree with `git worktree remove <path>`
+and its branch with `git branch -d <branch>`, with no force flag. A dirty tree, an unmerged branch,
+or a live session in the worktree leaves it in place with one report line. An executor that merges
+its own PR leaves through `ExitWorktree` with removal.
 
 ## Score
 
-The PR body carries the spec's price table rows: Gates on the critical path, Work and review, CI
-waits on the path, Fix rounds and reds, Close, and Total. Gate and lock time come from
-`cairn-run-gate --records <toplevel> <branch>`; the clock runs from the first execution commit to
-PR-ready.
-
-Below the table, the PR body carries one HTML comment that `pass-report` reads:
-`<!-- pass-score {"planPathMin": 170, "actualPathMin": 140, "fixRounds": 1, "reds": 0, "attended": 2, "escapes": 0} -->`.
-`planPathMin` and `actualPathMin` are the plan's path minutes and the measured ones, `fixRounds` counts
-review and fix rounds, `reds` counts failed CI runs on the PR, `attended` counts attended events, and
-`escapes` counts escaped defects. Each is an integer or `null`. Only figures no machine records go in
-it: gate, lock, and CI times come from the run records and `gh`.
-
-The Work and review row names the plan's path minutes beside the actual, the figure the
-next design's estimate is set from. It lists the attended events (the design, the packet read, one per clock stop, and one per
-mid-run question, which names the plan item that should have answered it) and any escape,
-a behavioral, security, or contract defect that surfaces through the next pass's close, CI on
-`main`, or Geoff's use; an escape also goes into STATUS with its commit. A miss names its row, or
-the step that should have caught the escape, and only that changes.
+The executor reference sets out the score and its `pass-score` comment.
 
 ## Ledgers
 
 `docs/STATUS.md` is present tense and 60 lines or fewer: current state, next action, open
-decisions. Initiatives are records in the initiatives repo, managed by `/log-project`; a repo's own backlog is `BACKLOG.md`. A commit id cited in a ledger is one that survives a merge: a merge commit, or an
-id on the default branch, since a squash or rebase rewrites ids. Git and PR bodies are the history;
-nothing is appended to a repo's history file or to a post-mortem. A lesson lands where it executes: a skill, agent, tool, or repo doc. Memory holds only a
-preference or a ruling's why that no file can.
+decisions. Initiatives are records managed by `/log-project`, and a repo's backlog is
+`BACKLOG.md`. A commit id cited in a ledger survives a merge. Git and PR bodies are the history.
 
 A hand-over (the STATUS update, the next session's launch prompt, and the research records it
 carries) changes no behavior, so it takes no PR and no packet (Geoff, 2026-10-11 and 2026-10-31).
-The handing-over session runs the gate, commits it to the default branch, and pushes, committing
-from a worktree when another session is live in the main checkout, as "Direct changes" sets out.
-Where a push to the default branch deploys, as on the sites, it also passes what the repo requires
-before a deploy. Best practices for Claude Code
-(<https://code.claude.com/docs/en/best-practices>): "For tasks where the scope is clear and the fix
-is small ... ask Claude to do it directly."
+The session runs the gate and commits it to the default branch as "Direct changes" sets out.
 
 ## Scope
 
-A grant authorizes a mechanism or a boundary, never more work. Work found mid-task follows
-`running-passes` "Execute": it is filed in BACKLOG through `standards:log-issue` and listed in the PR body,
-and here it is never sent to the packet as an item.
+A grant authorizes a mechanism or a boundary, never more work. Work found mid-task is filed
+through `standards:log-issue` and listed in the PR body, never sent as a packet item.
 
 ## Launch prompt
 
-A STATUS next action carries the goal, the scope, the plan path, the checkout, and the exact
-`claude` line. The prompt text lives in a committed file and is launched as `"$(cat <file>)"`,
-since a prompt pasted inside double quotes runs each backticked span as a command substitution.
-The prompt for a pass that hands its PR over says the session sends its packet through `approval-packet`, waits for the decision, merges with `approval-queue merge <id>`, and ends after acting on the decision; it never
-says "never merge" or "end" outright. An executor prompt under a conductor names it
-(`conductor-<project>`) as the one session whose messages it takes as instructions (see
-"Conductor"). Close the session when the initiative lands.
+A launch prompt lives in a committed file, launched as `"$(cat <file>)"`; the planner reference
+holds what it carries.
 
-A conductor prompt opens with one line naming the session `conductor-<project>`, then carries the
-executor's `claude` line and its prompt file; the plan path and each repo and checkout the pass
-touches; the merge order across its PRs, with any `## Before merge` steps known at plan time; the
-standing answers from the design; the `## Pre-flight` checks it runs before each launch; and what goes in its packet to the Approval Queue. It restates nothing this skill
-already says. Prompting Claude Opus 5
-(<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
-the model "performs best when given the complete task specification up front and left to run".
+## Pre-flight and owner-only steps
+
+The plan's `## Pre-flight` list holds every step only Geoff can do and every permission the run
+needs; the planner reference holds the rules.

@@ -87,6 +87,8 @@ run "claude-context-budget line cap" bash tests/claude-context-budget.test.sh
 run "claude-pass-load" bash tests/claude-pass-load.test.sh
 run "claude-worktree-busy" bash tests/claude-worktree-busy.test.sh
 run "CLAUDE.md context budget" bash bin/.local/bin/claude-context-budget claude/.claude/CLAUDE.md
+run "pass-core word caps" bin/.local/bin/claude-context-budget --skill-caps --root .
+run "pass role loads" bin/.local/bin/claude-pass-load --check --root .
 run "claude refs and retired phrases" python3 scripts/check-claude-refs.py check --root .
 run "claude-tooling-sync lint" bin/.local/bin/claude-tooling-sync lint --root .
 run "gitleaks working-tree scan" gitleaks dir . --no-banner --redact

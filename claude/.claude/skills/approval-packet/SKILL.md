@@ -72,4 +72,4 @@ register's old packet rules are replaced by the writer's brief.
    each note it lists for your repos (`reply digest <replies.json>` for a digest note).
 10. **File follow-ups.** A "Found, not done" item worth doing goes through `standards:log-issue`
     into its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits, and into the PR
-    body with its number.
+    body with its number (Geoff, 2026-10-11).
