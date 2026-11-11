@@ -26,10 +26,10 @@
     "survey": {
       "repo": "glw907/survey",
       "path": "skills/survey",
-      "branch": "v1.6.0",
-      "commit": "1ad135bf9408",
+      "branch": "v1.7.0",
+      "commit": "cab258deb7df",
       "license": "none",
-      "installed": "2026-10-22",
+      "installed": "2026-11-11",
       "_why": "The house style skill. Its writing/ directory is the source of the writing-voice output style, the voice registers, and the authoring charter, which link into it; edit them in the Survey repo only."
     },
     "vale-ci": {
@@ -82,17 +82,6 @@
       "commit": "5e8704f5c07a",
       "license": "MIT",
       "installed": "2026-09-13",
-      "home": "standards"
-    },
-    "vhs-cli-demos": {
-      "repo": "gfargo/skills",
-      "path": "plugins/terminal/skills/vhs-cli-demos",
-      "branch": "main",
-      "commit": "81d33466f7c4",
-      "license": "MIT",
-      "installed": "2026-08-18",
-      "description": "Generate deterministic screenshots and demo GIFs of CLI and TUI apps with Charm VHS, for READMEs, docs, and visual regression tests. Use when asked to record, screenshot, or GIF a terminal app, or to shrink a captured GIF.",
-      "_why": "Deterministic VHS tape authoring and gifsicle optimization for TUI screenshots and demo GIFs; vendored since the parent terminal plugin duplicates the already-installed tui-design skill.",
       "home": "standards"
     },
     "brainstorming": {
