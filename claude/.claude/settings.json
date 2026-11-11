@@ -167,10 +167,8 @@
       "Bash(npx wrangler r2 bucket lock set *)",
       "Bash(vandelay * --prune)",
       "Bash(vandelay * --prune *)",
-      "Bash(imapsync)",
       "Bash(imapsync *)",
       "Bash(scripts/dry-run.sh)",
-      "Bash(clasp delete-script)",
       "Bash(clasp delete-script *)"
     ],
     "defaultMode": "auto",
