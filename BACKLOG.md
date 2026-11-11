@@ -9,16 +9,16 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
-- [ ] **#67** Make `claude-merge-guard` read the PR from the repo the command runs in `#bug` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+- [ ] **#67** Make `claude-merge-guard` read the PR from the repo the command runs in `#bug` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
   The hook runs `gh pr view <n>` from the session's working directory, not from the directory the command `cd`s into. On 2026-11-10 a session in `~/Projects/initiatives` ran `cd ~/Projects/workstation && gh pr merge 184 --merge --match-head-commit ...`, and the hook refused it with "could not read the body of 184 to check for a Before merge section", because it looked for PR 184 in `glw907/initiatives`. Adding `-R glw907/workstation` got past it. Fix: when the command has no `-R`, take a leading `cd <dir>` (or `git -C <dir>`) as the directory for `gh pr view`. Add a test case for a `cd` into another repo. The fix touches the same `stages` code as #49, so land the two together.
 - [ ] **#68** Close the Low findings from the workstation refinement pass 1 review `#improvement` `#workstation` `#initiative:workstation-refinement` *(2026-11-10)*
   Found, not done. `cairn-run-gate` takes any live ancestor as the `CAIRN_RUN_GATE_ACTIVE` marker, so a top-level `CAIRN_RUN_GATE_ACTIVE=$$ cairn-run-gate '...'` skips the lane lock; also require that `/proc/<pid>/cmdline` names `cairn-run-gate`. `claude-tail-guard` strips a redirect inside the tail stage (`npm test | tail > /tmp/x` becomes `npm test`), and no test pins `(npm test) | tail`. `tests/cairn-run-gate.test.sh` has no case for `gate.sh --fresh`. `claude-clock-stop` never prunes its per-task records. Plan: `~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-1-workstation-plan.md`.
 
-- [ ] **#51** Make `claude-block-pass` read shell words instead of matching text `#improvement` `#workstation` `#initiative:credential-hygiene` *(2026-11-07)*
+- [ ] **#51** Make `claude-block-pass` read shell words instead of matching text `#improvement` `#workstation` `#initiative:credential-hygiene` *(2026-11-07)* *(swept 2026-11-10)*
   The hook matches each Bash command against regex patterns, so each disguised spelling needs another pattern. Pass A's review rounds found 11 kinds of bypass (globs, ANSI-C quoting, fake heredocs, stdin feeds), and all are folded and tested (glw907/workstation#201). The third round's probes never ran, because a classifier stopped the reviewer, so the fixes in 4c951ef are unprobed. Geoff merged it as it stood ("Merge now", 2026-11-07). Parse the command into words (`shlex` with `punctuation_chars`, or `bashlex`) and decide on command-position words. Also settle whether a bare `proton-pass-cli` should count only after `cd` or `pushd`. It also gives false positives on quoted text: on 2026-11-07 it refused a `git commit -m` whose message held "(pass-cli docs", reading the `(` as a command start.
   False positive (2026-11-08, cairn-setup design session): the read-only `grep -rhoE "from '(remark|rehype|micromark|mdast)[a-z0-9-]*'" src/lib | sort | uniq -c` in ~/Projects/cairn-cms was refused three times with "pass-sitting denied". The bars and the `(` sit inside a quoted grep pattern, which the text matcher reads as command separators. Word parsing would fix this as well; add the command to the tests.
   Second false positive, same session: a `pgrep -fa 'cairn-cms-cairn-new-1|cairn-pub-cairn-pub-docs-md' | grep -v ...` wait loop was refused as "Proton Pass access denied", most likely on the `pub-` or the quoted `|`.
-- [ ] **#50** Let an Approval Queue decision reach the auto-mode classifier `#bug` `#workstation` *(2026-11-02)* *(swept 2026-11-03)*
+- [ ] **#50** Let an Approval Queue decision reach the auto-mode classifier `#bug` `#workstation` *(2026-11-02)* *(swept 2026-11-10)*
   On 2026-11-02 the classifier refused `gh pr merge 197 --match-head-commit` as "Merge Without Review" after Geoff approved the PR in the queue, and passed once he typed the instruction. It sees only typed messages, so a queue approval is invisible to it; PR glw907/sportsyou-notify#2 merged under the same command, so the refusal isn't consistent. Find a path that doesn't need a typed repeat.
 - [ ] **#49** Stop inline comments and quoted operators fooling `claude-merge-guard` `#bug` `#workstation` *(2026-11-01)* *(swept 2026-11-03)*
   Its `stages` copies the two flaws the launch guard review found: `shlex` keeps its `#` commenter, so a comment on the line before `gh pr merge` can merge the stages, and quoted text can pass as an operator. Found by reading only. `claude-launch-guard`'s `mask` is the fix to reuse.
@@ -26,14 +26,14 @@
   Do Not Disturb was off on thinkpad-x1 (`org.gnome.desktop.notifications show-banners` is true), against the calm desktop rule. `check-drift` already reconciles the key (`bluefin/gnome-settings.txt:16`), so find why it did not flag the drift there. Found in the sportsyou-notify design.
 - [ ] **#46** Add Email Sending to `retire-project`'s teardown `#improvement` `#workstation` *(2026-11-01)* *(swept 2026-11-03)*
   Found retiring xcathletes-org. Step 4 names Email Routing, but a domain onboarded to Email Sending keeps locked `cf-bounce` records that answer "managed by Email Routing" even with routing off. Disabling the domain under Email Sending removed them. Both are dashboard steps, so the inventory and the packet should name them up front.
-- [ ] **#44** Make a conductor's session name match the name its executor trusts `#bug` `#workstation` `#initiative:docs-system` *(2026-10-27)* *(swept 2026-11-03)*
+- [ ] **#44** Make a conductor's session name match the name its executor trusts `#bug` `#workstation` `#initiative:docs-system` *(2026-10-27)* *(swept 2026-11-10)*
   The docs eval trust conductor prompt opens "You are conductor-cairn-cms", but nothing set that name: the session ran as `initiatives-b1`. The executor takes cross-session messages only from `conductor-cairn-cms`, so it refused Geoff's relayed pause on 2026-10-27, and the pause took a hard `claude stop` instead (glw907/cairn-cms#154, Planning misses). Fix in `pass-core` "Launch prompt": a conductor hand-over carries the exact `claude --name <conductor>` line, and the conductor prompt's first step checks its own row in `claude agents --json` and stops on a mismatch.
 
 
 - [ ] **#42** Add two executor-permission checks to the plan-reviewer checklist `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-26)* *(swept 2026-11-03)*
   From the docs-as-code cutover's planning misses. A deletion target that is a symlink resolving outside the executor's `--add-dir` set raises an unanswerable prompt overnight, so the plan makes it a morning step. A STATUS or clock file under `.git/worktrees/` is written by a lone Bash command: Write and Edit are refused there in a worktree-isolated session, and a heredoc chained to another command raised a sensitive-file prompt. Record: `~/Projects/initiatives/docs-system/README.md` (2026-10-26 line).
 
-- [ ] **#38** Catch an edit made only in a vendored skill's copy `#bug` `#workstation` *(2026-10-25)* *(swept 2026-11-03)*
+- [ ] **#38** Catch an edit made only in a vendored skill's copy `#bug` `#workstation` *(2026-10-25)* *(swept 2026-11-10)*
   Three commits (`b01f85f`, `8a629f6`, `5296043`) edited `claude/.claude/skills/survey/writing/approval-brief.md` in place, so the next vendor from Survey would have reverted them; the Survey v1.5.0 release found it by hand and took the text back into Survey (glw907/survey#6). `claude-tooling-sync lint` checks manifest shape, licenses, and overlays, never content. Add a check that each vendored skill matches its source at the manifest's `commit`, overlays applied, and fails with the files that drifted. `bin/.local/bin/claude-tooling-sync` (`lint`).
 
 - [ ] **#37** Name the framework version in the register editor's and docs fact-checker's briefs `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-25)* *(swept 2026-11-03)*
@@ -48,23 +48,24 @@
 - [ ] **#33** Keep the workstation secrets out of apps a Claude session launches `#bug` `#security` `#initiative:self-hosting` *(2026-10-24)* *(swept 2026-11-03)*
   On thinkpad-x1 the running Hylki Flatpak carried every `~/.local/secrets` value in its environment, along with `CLAUDE_CODE_SESSION_ID=82707928-…`, so a Claude session launched it and it inherited that session's exported secrets. Any process listing shows them: a `pgrep -af claude` on 2026-10-24 matched Hylki's web process and printed them all into a session transcript. A GUI app started from a session should get a clean environment (`env -i` with the display variables, or `systemd-run --user`/`gio launch`), and Hylki should be restarted from the desktop. Source: servers session of 2026-10-24.
 
-- [ ] **#27** pass-core's launch checks read the job state after a `claude --bg` launch `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-20)* *(swept 2026-11-03)*
+- [ ] **#27** pass-core's launch checks read the job state after a `claude --bg` launch `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-20)* *(swept 2026-11-10)*
   After "Execute" or "Conductor" launches a session, read `~/.claude/jobs/<id>/state.json`: `needs: "send a prompt to start"` is a failed launch. A listed session, or the TUI banner in `claude logs`, proves only that the process is up. Two notes for the same lines: `--add-dir` is variadic, so the prompt goes before it; a stray job is stopped with `claude stop <id>`, since the daemon respawns a bare kill. On 2026-10-20 the blueprint-first planner sat idle 80 minutes after a launch with the prompt after `--add-dir`. `claude/.claude/skills/pass-core/SKILL.md`
+  Placement: the workstation refinement's Pass 3 design, which decides whether the step survives the `pass-core` cut.
 
 - [ ] **#26** Get API access to the house router once its local admin password exists `#improvement` `#workstation` *(2026-10-20)* *(swept 2026-11-03)*
   The TP-Link Archer C4000 v3.0 at 192.168.1.1 is bound to a TP-Link ID, and its local admin password is unknown; TP-Link's forum says a bound router can't change or reset it short of a factory reset. The `tplinkrouterc6u` client (auto-detects its C1200-family driver on this firmware; test script in the 2026-10-20 session) needs the local password and rejects TP-Link ID login. `TPLINK_ROUTER_PASSWORD` in the age store currently holds the TP-Link ID password by mistake, registry marked pending. To finish: factory-reset and re-set-up the router, record the local password in Proton Pass, `secret-receive TPLINK_ROUTER_PASSWORD --pass <ref>`, run a read-only status call, flip the registry checkmark. Until then, router changes go through the browser in the Claude Chromium profile with a TP-Link ID sign-in. Side note: the router's login page carries TP-Link's leftover weinre debug script tag pointing at 192.168.1.101:1070; nothing answered there on 2026-10-20. `secrets/registry.md`
 
-- [ ] **#25** pass-core's design step says what a session does after a pass misses its bar `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-19)* *(swept 2026-11-03)*
+- [ ] **#25** pass-core's design step says what a session does after a pass misses its bar `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-19)* *(swept 2026-11-10)*
   Read the pass's final artifacts, not the record's table; compare by word count, since live pages are hard-wrapped; dispatch one fact-check agent per artifact against the code with a file:line evidence bar; trace each wrong claim to its source (draft, page, code comment) before designing the next pass. This turned B3c's 0 of 8 into a diagnosis of the acceptance machinery: `~/Projects/initiatives/docs-system/research/2026-10-19-drafter-b3c-draft-review.md`. `claude/.claude/skills/pass-core/SKILL.md`
 
-- [ ] **#23** Vale lints no file of `docs/voice/` `#improvement` `#workstation` `#initiative:approval-packets` *(2026-10-17)* *(swept 2026-11-03)*
+- [ ] **#23** Vale lints no file of `docs/voice/` `#improvement` `#workstation` `#initiative:approval-packets` *(2026-10-17)* *(swept 2026-11-10)*
   `vale claude/.claude/docs/voice/approval-brief.md` scopes the register out (0 files linted), so only the `tellgrader` register gate reads it. Decide whether the register belongs in `.vale.ini`'s scope.
 
 - [ ] **#22** `ci-green` cannot watch a `master` repo `#improvement` `#workstation` `#initiative:approval-packets` *(2026-10-17)* *(swept 2026-11-03)*
   `bin/.local/bin/ci-green` merge-bases against `origin/main`, so `ci-green <sha> --pr <n> --wait` exits 3 ("couldn't find remote ref main") in poplar and dubplate, whose default branch is `master`. Read the default branch from the repo. The pass watched poplar PR 3 with `gh pr checks --watch` instead.
 
-- [ ] **#1** Check the pavilion gate baseline on Homebrew Python 3.15 `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
-  **Check the pavilion gate baseline on Homebrew Python 3.15** (Geoff, 2026-10-13, triage of PR #49): the gate's baseline on pavilion has four ratchet lines and 22 pytest failures that read Homebrew's Python 3.15 paths (a `runner` pass). The Thunderbird items left with PR #93.
+- [ ] **#1** Fix the 22 pytest failures that read Homebrew Python 3.15 paths on pavilion `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-10)*
+  **Check the pavilion gate baseline on Homebrew Python 3.15** (Geoff, 2026-10-13, triage of PR #49): the gate's baseline on pavilion has 22 pytest failures that read Homebrew's Python 3.15 paths (a `runner` pass). The ratchet lines went with the ratchet (workstation#225), and the Thunderbird items left with PR #93.
 
 - [ ] **#2** Move the music-VPS spec, plan, and library design from dubplate to servers `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
   **Move the music-VPS spec, plan, and library design from dubplate to servers**: `~/Projects/dubplate/docs/plans/2026-08-30-music-vps-build.md`, `~/Projects/dubplate/docs/specs/2026-08-30-music-vps-build-design.md`, and `~/Projects/dubplate/docs/specs/2026-08-30-music-library-design.md` describe a Hetzner server, another machine's config. The servers repo now hosts the dubplate role, so they have a home there; coordinate with the music session that owns them.
@@ -81,54 +82,52 @@
   **The plan read checks code before it asserts behavior** (cairn's 11-plan test, 2026-10-12). On debug-your-site, the plan-mode structural read said refusals log no event, but `section-action.ts:216` logs `auth.access.refused`. Tell the plan-mode `structurePrompt` in `docs-page-chain.js` to check the code before stating a behavior, and to mark such a finding as a lead. The same test suggests a cross-plan anchor check for the drafter pipeline's consistency read: a link's anchor against the target page's plan headings.
   Dropped: the docs-as-code cutover retired the system it served.
 
-- [ ] **#8** PR test CI for dotfiles `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
+- [ ] **#8** PR test CI for dotfiles `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-10)*
   **PR test CI for dotfiles.** Add a workflow that runs `bash scripts/check.sh` on `pull_request`. Until it lands, the full-suite home is the local close gate (ruling 11 of the lean pass process spec).
 
-- [ ] **#9** Release the lid-switch hold when a session ends `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
+- [ ] **#9** Release the lid-switch hold when a session ends `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-10)*
   **Release the lid-switch hold when a session ends** (PR #34 triage, 2026-10-12). Neither an executor nor a conductor releases a running `systemd-inhibit ... sleep NNN` lid hold before it ends, so the hold can outlive its session until NNN runs out. Add the release step to `~/.claude/docs/unattended-work-guards.md` and to the ending of `pass-core`'s "Execute" and "Conductor".
+  Placement: the workstation refinement's Pass 3 design, which decides whether the step survives the `pass-core` cut.
 
 ## Low
 
-- [ ] **#57** Run an effort sweep on the 5.5 models before carrying effort settings forward `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+- [ ] **#57** Run an effort sweep on the 5.5 models before carrying effort settings forward `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
   For Opus 5.5 and Sonnet 5.5, the effort page says to "Run an effort sweep on your own evals rather than carrying settings over from an earlier model" (<https://platform.claude.com/docs/en/build-with-claude/effort>). The 2026-09-28 sweep filed this to the retired ROADMAP, and it fell out. It needs an eval this machine can't run yet: a fixed task set graded the same way at each level. Record: `docs/specs/2026-11-01-model-review-subagent-effort-design.md`.
 
-- [ ] **#58** Name mail moves as a standing chat exception in `approval-packet` `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
-  `mail-tend:61, 88` sends a mail move or rule design to chat, and `approval-packet:29` forbids that. Add one clause to `approval-packet` that names mail moves as a standing chat exception, since they are small and reversible. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
+- [ ] **#58** Name mail moves as a standing chat exception in `approval-packet` `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
+  `mail-tend:67, 95` sends a mail move or rule design to chat, and `approval-packet:29` forbids that. Add one clause to `approval-packet` that names mail moves as a standing chat exception, since they are small and reversible. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
 
-- [ ] **#59** Let forced asks exceed `approval-packet`'s three-ask cap `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+- [ ] **#59** Let forced asks exceed `approval-packet`'s three-ask cap `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
   `approval-packet:38` says "at most three asks", which can't hold when four PRs each carry a forced ask. Keep the cap and say in that line that forced asks may exceed it. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
 
-- [ ] **#60** Tighten `visual-verifier` to 4.5:1 for a CTA pair in glw907/standards `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+- [ ] **#60** Tighten `visual-verifier` to 4.5:1 for a CTA pair in glw907/standards `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
   `visual-verifier:30` flags a call-to-action pair under 3:1, while `daisyui-a11y-reviewer:72` uses 4.5:1 for text. Raise the verifier to 4.5:1, WCAG's floor for button labels. The agent lives in glw907/standards, so the edit lands there. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
 
-- [ ] **#61** Narrow `prose-voice-reviewer`'s docs-tier em dash flag `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+- [ ] **#61** Narrow `prose-voice-reviewer`'s docs-tier em dash flag `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
   `prose-voice-reviewer:50-51` flags a docs-tier em dash, and the writing-voice output style allows Google's no-space form in developer docs. Narrow the flag to overuse or a spaced dash. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
 
-- [ ] **#62** State who pushes and merges at `site-implementer:70` `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+- [ ] **#62** State who pushes and merges at `site-implementer:70` `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
   `site-implementer:15` says it never pushes, yet `:70` merges a cairn-cms docs branch by PR. Say at line 70 that the dispatching session pushes and merges. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
 
-- [ ] **#63** Add a no-argument `gate.sh` wrapper to the cairn-cms and site adapters `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+- [ ] **#63** Add a no-argument `gate.sh` wrapper to the cairn-cms and site adapters `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
   `pass-core`, `cairn-pass:20`, and `site-pass:28` give the `cairn-run-gate '<string>'` form that `dotfiles-pass` says the worktree guard refuses, and a `-w` session's guard refused compound commands too. Add a no-argument `gate.sh` wrapper to each repo's adapter the next time that adapter changes. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
 
-- [ ] **#64** Add a cross-repo clause to `spec-plan-review`'s review records line in glw907/standards `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
-  `spec-plan-review:55` sends review records to `docs/research/`, while `pass-core` sends cross-repo research to `initiatives/<id>/`. Keep repo-scoped records in `docs/research/` and add a clause for cross-repo work. The skill lives in glw907/standards. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
-
-- [ ] **#66** Cut `writing-voice.md:64-65` and `:80-81` and re-test in glw907/survey `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+- [ ] **#66** Cut `writing-voice.md:64-65` and `:80-81` and re-test in glw907/survey `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
   `output-styles/writing-voice.md` is vendored from glw907/survey, so the cut of those two passages and the re-test of the style land in glw907/survey. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
 
-- [ ] **#54** Clamp token counts and keep the first turn in `cleanroom`'s transcript cost `#bug` `#workstation` `#initiative:cairn-setup` *(2026-11-09)*
+- [ ] **#54** Clamp token counts and keep the first turn in `cleanroom`'s transcript cost `#bug` `#workstation` `#initiative:cairn-setup` *(2026-11-09)* *(swept 2026-11-10)*
   `usage_cost` does not clamp negative token counts, and `transcript_totals` lets a later line that reuses a message id replace the real turn, so a transcript the agent can write could lower the dollar figure the cap reads. Both predate the cost-unknown change (glw907/workstation#218), and the agent already holds a simpler path through `cleanroom statusline`. Clamp each count at zero and keep the first line seen for an id.
   Placement: with the next `cleanroom` change.
-- [ ] **#55** Unit-test `cleanroom`'s `verdict()` directly `#improvement` `#workstation` `#initiative:cairn-setup` *(2026-11-09)*
+- [ ] **#55** Unit-test `cleanroom`'s `verdict()` directly `#improvement` `#workstation` `#initiative:cairn-setup` *(2026-11-09)* *(swept 2026-11-10)*
   `verdict()` decides when a run stops, and only the live tests in `tests/test_cleanroom_live.py` cover it, which skip when tmux, dbus, the keyring, or `script` is missing. A table-driven test of the four combinations (statusline stale or fresh, transcript advancing or not, priced or not), plus the two caps, would run on every gate.
   Placement: with #54.
-- [ ] **#56** Prove the dollar cap fires from the transcript alone with a stale statusline `#improvement` `#workstation` `#initiative:cairn-setup` *(2026-11-09)*
+- [ ] **#56** Prove the dollar cap fires from the transcript alone with a stale statusline `#improvement` `#workstation` `#initiative:cairn-setup` *(2026-11-09)* *(swept 2026-11-10)*
   The live test for a stale statusline with a priced transcript shows the time cap fires, and the dollar cap's behavior in that case rests on reading `observe()`: `cost` is the max of both figures. A live case where the transcript's cost passes `cap_usd` while the statusline is stale would prove it.
   Placement: with #54.
-- [ ] **#53** Tighten `cleanroom`'s trust edges `#improvement` `#workstation` `#initiative:cairn-setup` *(2026-11-09)*
+- [ ] **#53** Tighten `cleanroom`'s trust edges `#improvement` `#workstation` `#initiative:cairn-setup` *(2026-11-09)* *(swept 2026-11-10)*
   Found in pass 1's whole-branch review (glw907/workstation#215). (1) The sudoers rule's `*` after `~/.dotfiles/` also matches `/` and spaces, so glw907 can run any script under `~/.dotfiles` as `cleanroom`, wider than the "only `_child`" in `bluefin-admin.md`; it adds no privilege, since glw907 owns those files. (2) The probe's `env | cut -d= -f1` item is a six-name denylist; an allowlist of the expected names would test "no workstation variable" directly. (3) The statusline and transcript costs differed by 55% in the last probe ($0.2067 against $0.3209); the cause is untraced, and the caps use the higher figure. (4) `run_child` and `launch` build the same sudo argument list, and `cmd_shell` builds its plan twice. (5) The re-review's notes, all fail-closed: a failed write at a cost stop makes the watcher's `except` call `end_run` a second time and overwrite the ledger cause with `stopped:watcher`; `trusted_dir` does not check the sticky bit, so a room built before pass 1's fixes needs `init --fresh`; `CLEANROOM_USER` is not in `--preserve-env`, so a non-default user breaks `@USER@`; and `probes.jsonl` does not record whether a probe ran isolated or in-process. (6) `cleanroom shell` leaves its `gnome-keyring-daemon` running after the command exits (it daemonizes out of `dbus-run-session`); `stop` kills it, so a `run` or `probe` is clean, but a bare `shell` is not. Do (1) with the next change to the sudoers file; the rest when a later pass touches `cleanroom`.
   Record: `~/Projects/initiatives/cairn-setup/research/cleanroom-probe-1.md`
-- [ ] **#47** Require a prior-art and vendor-guidance check at the design step `#improvement` `#workstation` *(2026-11-01)* *(swept 2026-11-03)*
+- [ ] **#47** Require a prior-art and vendor-guidance check at the design step `#improvement` `#workstation` *(2026-11-01)* *(swept 2026-11-10)*
   The workstation-sync design reached approval before anyone checked published practice or Anthropic's docs, and Geoff had to ask for both mid-build (2026-11-01). That check caught a real data-loss case in `MEMORY.md` and two gaps. Add the check to the `pass-core` design step or `brainstorming`, so a design names what it took from each source. `claude/.claude/skills/pass-core/SKILL.md`
 
 - [x] **#32** Have `ci-green` report `action_required` as held, not red `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-24)*
@@ -139,13 +138,13 @@
   Record: `~/Projects/initiatives/docs-system/research/2026-10-22-extend-blueprints-pilot-friction.md`
   Batch 2: the agent hands back through `SubagentHandback`, so saving its array verbatim needs a transcript parser. Give the save a sanctioned path, or have the agent write its array to a named file (record 18).
   Done: PR #146 (the agent writes its array to the path the dispatch names).
-- [ ] **#10** Give cairn-run-gate per-leg timing in its run records `#improvement` `#workstation` `#initiative:dev-speed` *(2026-10-14)* *(swept 2026-11-03)*
+- [ ] **#10** Give cairn-run-gate per-leg timing in its run records `#improvement` `#workstation` `#initiative:dev-speed` *(2026-10-14)* *(swept 2026-11-10)*
   **Give `cairn-run-gate` per-leg timing in its run records**, deferred by Geoff's triage of cairn-cms PR #114 (2026-10-11). The stale `gateMatches` comment went with `pass-execute.js`.
 
 - [ ] **#11** Move the CSP and queue items to the approval-queue backlog `#improvement` `#workstation` `#initiative:approval-queue` *(2026-10-14)* *(swept 2026-11-03)*
   **Move to the approval-queue backlog**, where the code lives (`~/Projects/approval-queue`), deferred by Geoff's triage of workstation PR #13 (2026-10-11). A running app keeps serving its old build after a merge changes `~/Projects/approval-queue/approval-queue/`. Nothing prunes decided items from the state directory. A SIGKILL or power loss leaves the item on the index. The CSP limits only `script-src`, so a remote image in a PR body loads at view time (`img-src 'self' data:` closes it). `~/Projects/approval-queue/tests/approval-queue.test.sh` never runs the 10-second "did not answer" exit or the lock release.
 
-- [ ] **#12** Infra-sweep 2 leftovers `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-10-14)* *(swept 2026-11-03)*
+- [ ] **#12** Infra-sweep 2 leftovers `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-10-14)* *(swept 2026-11-10)*
   **Infra-sweep 2 leftovers**, deferred by Geoff's triage of workstation PR #16 (2026-10-11). The model review's nine design topics (guard-fail-closed, saved-effort, dispatch-effort, superpowers-pressure, agent-definitions, claude-md-style, convention-skills, vendored-overlays, process-skills); re-run the review after the merge. Each monthly review worktree keeps its lock under the main checkout, so `prompt.txt` or the script should unlock and remove it after the merge. Stale "kitty-shot harness" wording at `bootstrap.sh`, `Brewfile`, the `kitty-headless-shot` header comments, and the `tui-visual-verify` intro. `engine-consult` hand-lists the `check:close` set, and `cairn-figure` and `figure-verifier` copy the register's `repro` caption and diagram exemption text. A `verify` skill could carry the repo gate; three skills dispatch without `effort`; `register-check` has no `argument-hint`. Poplar's icon-width and JoinHorizontal rules from the deleted `bubbletea-conventions.md` (poplar's refactor pass re-homes them).
 
 - [ ] **#13** Move the UI leftovers to the approval-queue backlog `#improvement` `#workstation` `#initiative:approval-queue` *(2026-10-14)* *(swept 2026-11-03)*
@@ -169,13 +168,16 @@
 - [ ] **#19** Custom uBlue image `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
   **Custom uBlue image** for the second workstation: bakes the devmode rebase and Flatpak set into the image instead of undoing defaults per machine. An explicit later decision, not assumed.
 
-- [ ] **#20** Decide whether bootstrap.sh restore retires or splits out `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
+- [ ] **#20** Decide whether bootstrap.sh restore retires or splits out `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-10)*
   **Decide whether `bootstrap.sh restore` retires or splits out**: the restore phase is two-thirds of the file and a different risk class (destructive, run cold). It now serves no machine, since `SECOND-WORKSTATION.md` says never to run it there. Retire it, or split it into `bluefin/restore.sh` with shared helpers.
 
-- [ ] **#29** tellgrader posthook tests fail in a worktree under /tmp `#bug` `#workstation` *(2026-10-22)* *(swept 2026-11-03)*
+- [ ] **#29** tellgrader posthook tests fail in a worktree under /tmp `#bug` `#workstation` *(2026-10-22)* *(swept 2026-11-10)*
   **Three `internal/posthook` tests fail when the dotfiles checkout sits under `/tmp`** (`TestRunFlagsChangedLineOnly`, `TestRunSkipsUngovernedPaths`, `TestWholeDocFindingsOnlyOnWrite` return no advisory), so the gate goes red in a scratchpad worktree while the same tests pass in `~/.dotfiles` and in `.claude/worktrees/`. The hook likely treats a `/tmp` path as ungoverned. Make the tests use a path independent of where the checkout lives.
 
 ## Done
+- [x] **#64** Add a cross-repo clause to `spec-plan-review`'s review records line in glw907/standards `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)*
+  `spec-plan-review:55` sends review records to `docs/research/`, while `pass-core` sends cross-repo research to `initiatives/<id>/`. Keep repo-scoped records in `docs/research/` and add a clause for cross-repo work. The skill lives in glw907/standards. Record: `docs/specs/2026-11-01-model-review-open-flags-design.md`.
+  done: `spec-plan-review/SKILL.md:54-55` now saves a review beside its plan, so the clause is not needed.
 - [x] **#3** claude-wf-guard alarms on a run that finished cleanly `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
   done: `claude-wf-guard` and its sentence in `unattended-work-guards.md` are gone (`6db812d`).
 - [x] **#40** Let a pass executor run its gate through cairn-run-gate from an isolated worktree `#bug` `#workstation` `#initiative:docs-system` *(2026-10-25)* *(swept 2026-11-03)*
