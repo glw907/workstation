@@ -25,20 +25,28 @@ the first task. Read the plan and spec paths from the site's `CLAUDE.md` or STAT
 | aksailingclub-org | `npm run check` | check, plus `npx vitest run <touched test files>` | CI on the PR | `npm ci`, then `npx svelte-kit sync` |
 | cairn-pub | `npm run check` | check, plus `npx vitest run <touched test files>` | local, once at close: `npm run check && npm test && npm run build` | `npm ci`, then `npx svelte-kit sync` |
 
+## Pair dispatch
+
+A pair dispatch prompt cites this heading and `pass-core` `references/executor.md` "Pairs", which
+holds the isolation, the `description`, and the git forms a pair avoids. The pair runs these from
+its own worktree, commits its task, and never pushes.
+
 **Gate**: `cairn-run-gate '<string>'` on the light lane (`CAIRN_GATE_LANE=light`), since no site gate
 launches a browser. `npm run check` must report 0 errors and 0 warnings.
 
 **Fast lane**: The table's column: `npm run check` plus the unit test files the diff touches. A task
 that touches no engine source runs the site's own unit suite and nothing from cairn-cms.
 
+**Worktree setup**: The launch's `.claude/worktrees/<name>`, then `npm ci` and `npx svelte-kit
+sync`. The sync writes `.svelte-kit/tsconfig.json`, which `npm run check` needs, so a fresh
+worktree's first gate fails without it.
+
+## Pass session
+
 **Full-suite home**: The table's column. No site except aksailingclub-org has PR test CI (ruling
 11), so the local close run is the only full run; each site's BACKLOG carries an item for it.
 Run the local close once, on the close head. Cross-repo specs, plans, and research live in
 `~/Projects/initiatives/<id>/`, not in the site repo.
-
-**Worktree setup**: The launch's `.claude/worktrees/<name>`, then `npm ci` and `npx svelte-kit
-sync`. The sync writes `.svelte-kit/tsconfig.json`, which `npm run check` needs, so a fresh
-worktree's first gate fails without it.
 
 **CI watch**: Only aksailingclub-org: `gh pr checks <n> --watch --fail-fast` as a background Bash
 task after each push. The other three sites have no watch command.

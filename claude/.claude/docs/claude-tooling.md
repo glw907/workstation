@@ -27,7 +27,9 @@ machine.** The manifests record intent; the script reports what happened.
 
 ## Rules
 
-The rules for adding or changing any piece live in the `claude-infra` skill.
+The rules for adding or changing any piece live in the `claude-infra` skill. Prose review goes
+by kind. Plans, pull request bodies, and skills are checked by the two save hooks only
+(`vale-hook` and `tellgrader`), and `prose-voice-reviewer` runs on published pages.
 
 ## Model pins
 
