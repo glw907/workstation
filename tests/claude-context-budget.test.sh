@@ -21,17 +21,17 @@ lines_file() {
 tree="$root/claude/.claude/CLAUDE.md"
 other="$root/other/CLAUDE.md"
 
-lines_file "$tree" 201
+lines_file "$tree" 121
 err=$("$SCRIPT" "$tree" 2>&1 >/dev/null); rc=$?
-assert_eq "$rc" "2" "201 lines under claude/.claude: exit"
+assert_eq "$rc" "2" "121 lines under claude/.claude: exit"
 case "$err" in
-  *"201 lines"*"200-line cap"*"claude-md-archive.md"*) ;;
-  *) echo "FAIL: 201 lines: message was '$err'"; fail=1 ;;
+  *"121 lines"*"120-line cap"*"claude-md-archive.md"*) ;;
+  *) echo "FAIL: 121 lines: message was '$err'"; fail=1 ;;
 esac
 
-lines_file "$tree" 200
+lines_file "$tree" 120
 "$SCRIPT" "$tree" >/dev/null 2>&1; rc=$?
-assert_eq "$rc" "0" "200 lines under claude/.claude: exit"
+assert_eq "$rc" "0" "120 lines under claude/.claude: exit"
 
 lines_file "$other" 250
 "$SCRIPT" "$other" >/dev/null 2>&1; rc=$?
@@ -39,15 +39,15 @@ assert_eq "$rc" "0" "250 lines elsewhere, file mode: exit"
 jq -nc --arg f "$other" '{tool_input: {file_path: $f}}' | "$SCRIPT" --hook >/dev/null 2>&1; rc=$?
 assert_eq "$rc" "0" "250 lines elsewhere, hook mode: exit"
 
-lines_file "$tree" 201
+lines_file "$tree" 121
 jq -nc --arg f "$tree" '{tool_input: {file_path: $f}}' | "$SCRIPT" --hook >/dev/null 2>&1; rc=$?
-assert_eq "$rc" "2" "201 lines under claude/.claude, hook mode: exit"
+assert_eq "$rc" "2" "121 lines under claude/.claude, hook mode: exit"
 
 # A stow-style link reaches the cap through its realpath.
 mkdir -p "$root/home/.claude"
 ln -s "$tree" "$root/home/.claude/CLAUDE.md"
 "$SCRIPT" "$root/home/.claude/CLAUDE.md" >/dev/null 2>&1; rc=$?
-assert_eq "$rc" "2" "201 lines through a stow link: exit"
+assert_eq "$rc" "2" "121 lines through a stow link: exit"
 
 # A rule file under .claude/rules is budgeted: over RULE_BUDGET tokens exits 2, under it exits 0.
 rule="$root/claude/.claude/rules/big.md"
