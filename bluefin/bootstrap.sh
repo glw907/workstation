@@ -467,10 +467,10 @@ Browsers:
 
 Hylki (desktop mail client) and GNOME Online Accounts:
   - `flatpak list | grep -i thunderbird` returns nothing.
-  - Add the Fastmail CalDAV/CardDAV account in Settings > Online Accounts;
-    GNOME Contacts and GNOME Calendar read it, and Hylki uses those address
-    books and calendars.
-  - Launch Hylki once and sign in to Fastmail (geoff@907.life).
+  - Add the ward account (Calendar and Contacts on mail.907.life) in
+    Settings > Online Accounts; GNOME Contacts and GNOME Calendar read it,
+    and Hylki uses those address books and calendars.
+  - Launch Hylki once and sign in over JMAP at https://mail.907.life.
 
 Android:
   - `adb devices` sees a plugged-in device (uaccess tagging applies

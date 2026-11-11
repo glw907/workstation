@@ -252,22 +252,26 @@ def test_lint_passes_on_a_clean_overlaid_tree(tmp_path):
     assert proc.returncode == 0, out(proc)
 
 
-# ---- ratchet-report: description-cap and fork-skill ----
+# ---- lint: description-cap and fork-skill ----
 
 
 def cap_skill(root, name, description, extra=""):
     put_skill(root, name, f"---\nname: {name}\ndescription: {description}\n{extra}---\n\nBody.\n")
 
 
-def report(root, *flags):
-    proc = run("ratchet-report", "--root", str(root), *flags)
-    assert proc.returncode == 0, out(proc)
-    return json.loads(proc.stdout)
+def lint_proc(root):
+    write_manifest(root, {})
+    return run("lint", "--root", str(root))
 
 
-def hits(data, check):
-    return sorted((v["file"].split("/")[-2], v["fingerprint"]) for v in data["violations"]
-                  if v["check"] == check)
+def hits(proc, check):
+    """Return (skill dir, fingerprint) for each `x file: check: fingerprint` line lint printed."""
+    found = []
+    for line in proc.stdout.splitlines():
+        parts = line.strip().removeprefix("x ").split(": ")
+        if len(parts) == 3 and parts[1] == check:
+            found.append((parts[0].split("/")[-2], parts[2]))
+    return sorted(found)
 
 
 def test_description_cap_counts_code_points_after_collapse(tmp_path):
@@ -277,8 +281,9 @@ def test_description_cap_counts_code_points_after_collapse(tmp_path):
     put_skill(tmp_path, "block",
               "---\nname: block\ndescription: >-\n  " + "word " * 60 + "\n  " + "more " * 41 + "\n---\n")
     cap_skill(tmp_path, "colon", "Use when: " + "z" * 495)
-    data = report(tmp_path)
-    assert hits(data, "description-cap") == [("block", "description"), ("colon", "description"),
+    proc = lint_proc(tmp_path)
+    assert proc.returncode == 1
+    assert hits(proc, "description-cap") == [("block", "description"), ("colon", "description"),
                                              ("over", "description")]
 
 
@@ -288,14 +293,16 @@ def test_description_cap_scopes_to_skill_dirs_without_synced(tmp_path):
     d = tmp_path / "claude" / ".claude" / "skills" / "synced" / "inner"
     d.mkdir(parents=True)
     (d / "SKILL.md").write_text("---\nname: inner\ndescription: " + "i" * 501 + "\n---\n")
-    assert hits(report(tmp_path), "description-cap") == [("vendored", "description")]
+    assert hits(lint_proc(tmp_path), "description-cap") == [("vendored", "description")]
 
 
 def test_missing_description_is_clean_and_unterminated_frontmatter_exits_2(tmp_path):
     put_skill(tmp_path, "bare", "---\nname: bare\n---\n")
-    assert hits(report(tmp_path), "description-cap") == []
+    proc = lint_proc(tmp_path)
+    assert proc.returncode == 0, out(proc)
+    assert hits(proc, "description-cap") == []
     put_skill(tmp_path, "broken", "---\nname: broken\ndescription: x\n")
-    proc = run("ratchet-report", "--root", str(tmp_path))
+    proc = lint_proc(tmp_path)
     assert proc.returncode == 2
     assert "unterminated frontmatter" in out(proc)
 
@@ -310,21 +317,24 @@ def test_fork_skill_phrases_fail_only_under_context_fork(tmp_path):
     fork_skill(tmp_path, "clean", "Apply the rule to the diff.")
     fork_skill(tmp_path, "wrapped", "Apply the rule Under\n  Discussion now.")
     fork_skill(tmp_path, "quote", 'Then ask "which page?" of the owner.')
-    data = report(tmp_path)
-    assert hits(data, "fork-skill") == [("bad", "ask the user"), ("bad", "under discussion"),
+    proc = lint_proc(tmp_path)
+    assert proc.returncode == 1
+    assert hits(proc, "fork-skill") == [("bad", "ask the user"), ("bad", "under discussion"),
                                         ("quote", 'ask "'), ("wrapped", "under discussion")]
 
 
 def test_fork_skill_repeats_report_one_violation_each(tmp_path):
     fork_skill(tmp_path, "twice", "It was delegated. Then delegated again.")
-    assert hits(report(tmp_path), "fork-skill") == [("twice", "delegated"), ("twice", "delegated")]
+    assert hits(lint_proc(tmp_path), "fork-skill") == [("twice", "delegated"), ("twice", "delegated")]
 
 
-def test_ratchet_report_accepts_the_forwarded_flags_and_names_both_ids(tmp_path):
-    data = report(tmp_path, "--home", str(tmp_path), "--projects-root", str(tmp_path),
-                  "--memory-root", str(tmp_path))
-    assert data["implements"] == ["description-cap", "fork-skill"]
-    assert data["violations"] == []
+def test_an_over_cap_description_fails_lint_and_a_trimmed_one_passes(tmp_path):
+    cap_skill(tmp_path, "long", "x" * 501)
+    proc = lint_proc(tmp_path)
+    assert proc.returncode == 1
+    assert "long/SKILL.md: description-cap: description" in out(proc)
+    cap_skill(tmp_path, "long", "x" * 500)
+    assert lint_proc(tmp_path).returncode == 0
 
 
 # ---- the generated live settings.json ----

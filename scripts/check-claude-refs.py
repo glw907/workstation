@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Self-mode reference and retired-phrase checks over a Claude Code tree.
 
-Three ratchet checks, all scoped to the scan set below: ``claude/.claude/agents``, authored
+Three checks, all scoped to the scan set below: ``claude/.claude/agents``, authored
 ``skills`` (a directory named in ``vendored-skills.json``, or ``skills/synced``, is
 third-party), ``workflows``, ``docs`` (excluding ``docs/record``), ``output-styles``,
 ``instructions``, and ``CLAUDE.md``. Excluded everywhere: any ``evals/research`` path segment,
@@ -34,7 +34,7 @@ on another host is not a dead reference.
 ``relative-link``: every markdown link ``[text](target)`` in a scanned ``.md`` file whose
 target is relative (no scheme, no leading ``/``, ``~``, or ``#``) must resolve from the file's
 directory once any ``#anchor`` is stripped. The fingerprint is the target as written, anchor
-stripped, so repeated dead links to one target in one file add up to one entry's ``count``. A
+stripped. A
 line carrying the literal marker ``link-ok`` is exempt.
 
 ``retired-phrase``: a phrase from ``claude/.claude/tooling/retired-phrases.txt`` (one literal
@@ -45,17 +45,11 @@ alone also reaches vendored skills (only ``skills/synced`` stays excluded), so a
 phrase is caught wherever it was copied, not only in workstation-authored prose. An absent or
 comment-only phrase list is a configuration error (exit 2): a vacuous list is a silent tripwire.
 
-Protocol: ``check-claude-refs.py ratchet-report --root ROOT [--home HOME]
-[--projects-root PROJECTS_ROOT] [--memory-root MEMORY_ROOT]`` prints the JSON
-``claude/.claude/tooling/ratchet.py``'s ``emit_report`` writes. ``--projects-root`` and
-``--memory-root`` are accepted for protocol parity with the shared roots contract; self mode
-does not read them. The module imports the shared ratchet baseline module from
-``Path(__file__).resolve()``, never through ``~/.claude``, with ``sys.dont_write_bytecode`` set
-first, per that module's own tool contract.
+Usage: ``check-claude-refs.py check --root ROOT [--home HOME]`` prints one line per violation
+(``check: file: fingerprint``) and exits 1 on any.
 
-Exit codes, shared with the ratchet: 0 on a clean ``ratchet-report``, 2 on a configuration
-error (an absent or vacuous retired-phrase list). ``ratchet-report`` itself never exits 1; the
-shared ratchet module turns its violations into the gate's exit 1.
+Exit codes: 0 clean, 1 on any violation, 2 on a configuration error (an absent or vacuous
+retired-phrase list).
 """
 from __future__ import annotations
 
@@ -67,16 +61,19 @@ import sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True
-_HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(_HERE.parent / "claude" / ".claude" / "tooling"))
-import ratchet  # noqa: E402
 
-ConfigError = ratchet.ConfigError
+
+class ConfigError(Exception):
+    """A missing or vacuous retired-phrase list: exit 2."""
+
+    def __init__(self, problems):
+        super().__init__("\n".join(problems))
+        self.problems = problems
+
 
 DEAD_REFERENCE = "dead-reference"
 RETIRED_PHRASE = "retired-phrase"
 RELATIVE_LINK = "relative-link"
-IMPLEMENTS = (DEAD_REFERENCE, RETIRED_PHRASE, RELATIVE_LINK)
 
 RETIRED_PHRASES_PATH = "claude/.claude/tooling/retired-phrases.txt"
 CLAUDE_DIR = ("agents", "skills", "workflows", "docs", "output-styles", "instructions")
@@ -300,13 +297,14 @@ def _line_index(offsets, pos):
     return lo
 
 
-def cmd_ratchet_report(root, home):
-    """Print the ratchet report for every check; raise ConfigError on a bad phrase list."""
+def cmd_check(root, home):
+    """Print each violation of every check; return 1 when any is found."""
     violations = list(dead_reference_violations(root, home))
     violations += list(retired_phrase_violations(root))
     violations += list(relative_link_violations(root))
-    ratchet.emit_report(IMPLEMENTS, violations)
-    return 0
+    for v in violations:
+        print(f"{v['check']}: {v['file']}: {v['fingerprint']}")
+    return 1 if violations else 0
 
 
 def main(argv=None):
@@ -314,14 +312,12 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog="check-claude-refs",
                                      description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
-    report = sub.add_parser("ratchet-report", help="print the ratchet report for every check")
-    report.add_argument("--root", required=True, type=Path)
-    report.add_argument("--home", type=Path, default=Path.home())
-    report.add_argument("--projects-root", type=Path, default=None)
-    report.add_argument("--memory-root", type=Path, default=None)
+    check = sub.add_parser("check", help="print each violation and exit 1 on any")
+    check.add_argument("--root", required=True, type=Path)
+    check.add_argument("--home", type=Path, default=Path.home())
     args = parser.parse_args(argv)
     try:
-        return cmd_ratchet_report(args.root.resolve(), args.home.resolve())
+        return cmd_check(args.root.resolve(), args.home.resolve())
     except ConfigError as err:
         print(f"{args.command}: configuration error", file=sys.stderr)
         for problem in err.problems:
