@@ -1,5 +1,29 @@
 # Status
 
+<!-- round-report ur-ws -->
+Report: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/reports/ur-ws-report.md
+
+# Round ur-ws, glw907/workstation, written 2026-11-11 (conductor-dotfiles start)
+Round state: running
+
+| Pass | State | PR | Planned min | Actual min | Usage before | Usage after |
+| --- | --- | --- | --- | --- | --- | --- |
+| W1 | planning | none | 45 | | week 68%, Fable 15% | |
+| W2 | not started | none | 60 | | | |
+| W4 | not started | none | 150 | | | |
+| W5 | not started | none | 100 | | | |
+| W3 | not started | none | 75 | | | |
+
+Stops: 0. Refusals: 0. Calls sent to Geoff: 0.
+Planning misses: none yet.
+Trials: Fable 5.2 planned 0 passes; 0 sessions under /goal; 0 idle before an end line.
+Opus seats under rule 6: none.
+Waiting for Geoff: nothing. Landed: nothing.
+Busy check note: claude-worktree-busy exit 1 named only this conductor's own session (bb055eee, conductor-dotfiles); processes none, files clean.
+STATUS copy: not yet done.
+Resume from: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/plans/ur-ws-conductor-prompt.txt
+<!-- /round-report -->
+
 Dotfiles and machine configuration for two Bluefin DX workstations, the
 `thinkpad-x1` laptop and the `pavilion` desktop (Fedora 44 base,
 `bootc`/`ostree`). GNU Stow links tracked config into `$HOME`; `bluefin/`
