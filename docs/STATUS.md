@@ -97,8 +97,9 @@ Pass W4 of round `ur-ws` is on branch `ur-w4`: `pass-core` gains `references/rou
 Pass W5 is on branch `ur-w5`, cut from `ur-w4`: `approval-packet` and the packet writer's brief
 learn the `round` key and the stop packet, `cairn-pass` "Packet" states ruling D1, and
 `unattended-work-guards.md` gains the weekly usage ceiling. The brief is a vendored Survey file
-edited ahead of its pin, which is the pass's one call for Geoff. The pass is parked on its
-end-to-end check: see "Stop" at the end of this file.
+edited ahead of its pin, which is the pass's one call for Geoff (backlog #79). Its end-to-end
+check passed on `docs/plans/2026-11-11-ur-w5-outline.md` after Geoff's ruling on the check's
+search. The PR is glw907/workstation#233, and it joins the round's close packet behind #232.
 
 ## Docs system
 
@@ -129,41 +130,3 @@ done" go to `BACKLOG.md` through `standards:log-issue`.
 
 Neither `<host>-claude` agent has an expiry entry, so `check-drift` will not warn before
 `pavilion-claude` lapses around 2027-01-20 or `thinkpad-claude` around 2027-02-01.
-
-## Stop
-
-Pass W5 of round `ur-ws` is parked at task T3, the end-to-end check (acceptance item 5), under
-standing answer 12. Tasks T1 and T2 are committed (`81449be`, `cad197c`), every wording check
-prints its "after" value, and the fast lane is green. T4 has not run: no backlog item is filed,
-and the full gate and the closing review are still owed.
-
-**The question.** May an end-to-end outline name the initiative id `workstation-refinement`?
-The plan's search before any commit counts that string as a miss, and a second miss is a stop.
-Backlog items #69 and #70, which the acceptance item names as the sample work, each carry the
-tag `#initiative:workstation-refinement` in `BACKLOG.md`, a file already public in this repo.
-Both outlines named the round's initiative from that tag, and nothing in them came from the
-initiative's record.
-
-**What was tried.** Two fresh Sonnet subagents got the plan's prompt, word for word.
-
-- The first outline (268 lines) held the string on three lines: its question on which initiative
-  owns the round, its initiative line, and its backlog sweep scope.
-- The second outline (262 lines) held it on two lines: the same question and the initiative line.
-  Its headings showed the ten contents the acceptance item asks for, among them the round id
-  `ws-hygiene`, a pass table, an acceptance list for each pass, the shared assumptions, the merge
-  order, the denial-log read, the standing answers, and `main` as each PR's base. It was not
-  read line by line against the ten, since the search failed first.
-
-Neither outline held `/var/home`. Both files were deleted uncommitted, as the plan directs, so
-neither is on the branch.
-
-**The choices.**
-
-1. Narrow the search to `/var/home` and to text copied from the initiative's record, and let an
-   outline name the id as a backlog tag. The executor relaunches and runs T3 once more with the
-   same prompt. This reads the rule as the overhaul's rules state it ("Copy nothing from" the
-   record), and it is the choice this session would take.
-2. Keep the search as written and add one sentence to T3's prompt telling the subagent to name
-   no initiative. The prompt then says more than the plan allows it to say today.
-3. Keep both as written and run T3 again. The tag is on two of the three items, so a third
-   outline is likely to hold the string too.
