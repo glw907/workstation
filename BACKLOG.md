@@ -9,6 +9,8 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
+- [ ] **#74** Add an eval suite for the `brainstorming` skill in glw907/standards `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-11)*
+  `plugins/standards/evals/` holds suites for `go-conventions`, `running-passes`, and `ts-conventions` and none for `brainstorming`, and no test in that repo names the skill. A change to it ships with no measure of whether the designs it produces got better or worse. Write a suite before the next change after the `unattended-rounds` overhaul. Found by the read of the skill against Anthropic's guidance on 2026-11-11; Geoff approved filing it in Approval Queue packet `20261111T161236-2074074`. The skill lives in glw907/standards, which keeps no backlog.
 - [ ] **#73** Cut `docs/STATUS.md` back under its 60-line cap `#improvement` `#workstation` `#initiative:workstation-refinement` *(2026-11-11)*
   `pass-core` (`claude/.claude/skills/pass-core/SKILL.md` line 158) says `docs/STATUS.md` is present tense and 60 lines or fewer. The file is 95 lines at `f87a952`, and no check counts it. Left alone, every session that starts a pass in this repo reads the extra lines, and the file keeps growing with each close. Move finished passes' paragraphs out (the git log and the pull requests hold them) and keep current state, the next action, and open steps such as the laptop's. Found at the Pass 3 close (#228).
 - [ ] **#72** Make `claude-launch-guard` find a plan that lives outside `docs/plans/` `#bug` `#workstation` `#initiative:workstation-refinement` *(2026-11-11)*
