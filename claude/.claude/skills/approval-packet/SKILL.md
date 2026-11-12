@@ -21,10 +21,13 @@ register's old packet rules are replaced by the writer's brief.
    land each PR with `approval-queue land <owner/repo#n> <claim>` (Geoff's ruling D1, 2026-11-10).
    Anything else needing his approval goes to the queue, never a chat question. A move of mail between folders is the
    exception: it is decided in chat, never a packet (backlog #58).
-2. **Write the fact file.** `facts.json` keys: `kind`, `title`, `reason` (stop only), `prs`
+2. **Write the fact file.** `facts.json` keys: `kind`, `title`, `round`, `reason` (stop only), `prs`
    (`owner/repo#n` in merge order), `design` and `plan` (`{repo, path}`, design only), `held`,
    `calls`, `decidedForYou`, `steps`, `notChecked`, and `reviews`. The initiative is the command's
-   argument: a record id in `~/Projects/initiatives`, or `none`. A call is `{question, rule,
+   argument: a record id in `~/Projects/initiatives`, or `none`. `round` is optional. It is the
+   round id: lowercase letters, digits, and hyphens, starting with a letter, 12 characters at
+   most. Every fact file of a round of two or more passes carries it, and a one-pass round has
+   none. A call is `{question, rule,
    forced, options: [{label, consequence}], recommended, evidence: [{text, source}]}`, with
    `recommended` the number of the option, counting from 1. A
    `decidedForYou` entry is a call with `applied` set to the label of the option taken. A step is `{text, who}`, `who` being `session` or `you`. A `notChecked` or `reviews` entry is
@@ -58,7 +61,7 @@ register's old packet rules are replaced by the writer's brief.
    `{note, outcome, text, ref}`, `outcome` being `fixed`, `filed`, or `answered`, and `ref` (a
    commit or a backlog item) required for the first two. Store it with `approval-queue reply <id>
    <replies.json>`, after the action the notes call for, since a `fixed` reply cites its commit.
-   - **Approve:** a note that objects to merging a PR means that PR is skipped: pass
+   - **Approve, on any packet but a `stop` packet:** a note that objects to merging a PR means that PR is skipped: pass
      `--skip <owner/repo#n>` for it and report it. Run `approval-queue merge [--skip
      <owner/repo#n>]... [--premerge-done <owner/repo#n>]... <id>`. Merging is a `session` step;
      the approve is the authorization. If
@@ -69,9 +72,18 @@ register's old packet rules are replaced by the writer's brief.
    - **Send back:** fix forward from each note and call, then resend with
      `approval-queue packet --replies <replies.json> <initiative> <facts.json> <text.md>`. The
      command refuses a resend that leaves a note unanswered.
+   - **Approve on a `stop` packet:** the approve answers the question and merges nothing. Run
+     the packet's `session` steps in order, stopping at the first failure, then resume the pass.
+     Never run `approval-queue merge` on it: the queue refuses a stop packet. A conductor takes
+     the order of its steps from `pass-core` `references/round-run.md`.
 9. **Clear the queue before handing over.** Run `approval-queue pending` and answer with `reply`
    each note it lists for your repos (`reply digest <replies.json>` for a digest note).
 10. **File follow-ups.** A "Found, not done" item worth doing goes through `standards:log-issue`
     into its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits, and into the PR
     body with its number (Geoff, 2026-10-11). An initiative-sized one becomes a record
     (`log-project`).
+
+A conductor's round report is no packet. `approval-queue report <initiative> <round> <report.md>`
+stores it in the queue as an item of kind `report`, prints its id, and exits. It sends no packet
+and waits for nothing. `pass-core` `references/round-run.md` "Report" says when a conductor runs
+it.
