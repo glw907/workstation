@@ -3,22 +3,22 @@
 <!-- round-report ur-ws -->
 Report: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/reports/ur-ws-report.md
 
-# Round ur-ws, glw907/workstation, written 2026-11-11 (conductor-dotfiles start)
+# Round ur-ws, glw907/workstation, written 2026-11-11 (W2 planner launching)
 Round state: running
 
 | Pass | State | PR | Planned min | Actual min | Usage before | Usage after |
 | --- | --- | --- | --- | --- | --- | --- |
-| W1 | planning | none | 45 | | week 68%, Fable 15% | |
-| W2 | not started | none | 60 | | | |
+| W1 | waiting (close packet) | glw907/workstation#230 | 45 | ~50 plan path | week 68%, Fable 15% | week 72%, Fable 22% |
+| W2 | planning | none | 60 | | week 72%, Fable 22% | |
 | W4 | not started | none | 150 | | | |
 | W5 | not started | none | 100 | | | |
 | W3 | not started | none | 75 | | | |
 
 Stops: 0. Refusals: 0. Calls sent to Geoff: 0.
 Planning misses: none yet.
-Trials: Fable 5.2 planned 0 passes; 0 sessions under /goal; 0 idle before an end line.
+Trials: Fable 5.2 planned 1 pass (W2 launching); 2 sessions under /goal; 0 idle before an end line.
 Opus seats under rule 6: none.
-Waiting for Geoff: nothing. Landed: nothing.
+Waiting for Geoff: nothing sent yet. W1 PR #230 is ready with Calls: 1 and one open finding (the pkill-free sleep-child cleanup in its tests), so it joins the close packet after the last pass ends. W2 is cut from ur-w1. Landed: nothing.
 Busy check note: claude-worktree-busy exit 1 named only this conductor's own session (bb055eee, conductor-dotfiles); processes none, files clean.
 STATUS copy: not yet done.
 Resume from: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/plans/ur-ws-conductor-prompt.txt
