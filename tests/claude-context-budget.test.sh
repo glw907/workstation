@@ -61,7 +61,8 @@ assert_eq "$rc" "0" "900-token rule under a 1000 budget: exit"
 
 # --skill-caps: under every cap exits 0; one file over exits 1 naming it; an absent file exits 1.
 caps="$root/caps"
-for f in SKILL.md references/executor.md references/planner.md references/conductor.md; do
+for f in SKILL.md references/executor.md references/planner.md references/conductor.md \
+  references/round.md references/round-run.md; do
   mkdir -p "$(dirname "$caps/claude/.claude/skills/pass-core/$f")"
   seq 400 >"$caps/claude/.claude/skills/pass-core/$f"
 done
@@ -78,6 +79,23 @@ assert_eq "$rc" "1" "skill caps, conductor.md absent: exit"
 case "$err" in
   *"references/conductor.md is absent"*) ;;
   *) echo "FAIL: skill caps, absent: message was '$err'"; fail=1 ;;
+esac
+seq 400 >"$caps/claude/.claude/skills/pass-core/references/conductor.md"
+
+# The two round files are capped at 1500 words each, and an absent one exits 1.
+for f in round.md round-run.md; do
+  seq 1501 >"$caps/claude/.claude/skills/pass-core/references/$f"
+  err=$("$SCRIPT" --skill-caps --root "$caps" 2>&1 >/dev/null); rc=$?
+  assert_eq "$rc" "1" "skill caps, $f over: exit"
+  assert_eq "$err" "pass-core/references/$f has 1501 words (cap 1500)" "skill caps, $f over: message"
+  seq 400 >"$caps/claude/.claude/skills/pass-core/references/$f"
+done
+rm "$caps/claude/.claude/skills/pass-core/references/round-run.md"
+err=$("$SCRIPT" --skill-caps --root "$caps" 2>&1 >/dev/null); rc=$?
+assert_eq "$rc" "1" "skill caps, round-run.md absent: exit"
+case "$err" in
+  *"references/round-run.md is absent"*) ;;
+  *) echo "FAIL: skill caps, round-run.md absent: message was '$err'"; fail=1 ;;
 esac
 
 # The round rules: each counted list in the real tree holds the number of rules its heading
