@@ -1,5 +1,5 @@
 #!/usr/bin/env -S python3 -I
-"""Print a Markdown report of how long passes took, from GitHub, gate records, and the approval queue.
+"""Print a Markdown report of how long passes took and what their plans missed, from GitHub, gate records, and the approval queue.
 
 Environment seams: PASS_REPORT_GH names the gh binary, PASS_REPORT_HOME replaces $HOME for the
 toplevel mapping and the default state paths, XDG_CACHE_HOME moves the cache.
@@ -27,6 +27,14 @@ HOUR = 3600
 DEFAULT_BRANCHES = {"main", "master"}
 SCORE_KEYS = ("planPathMin", "actualPathMin", "fixRounds", "reds", "attended", "escapes")
 SCORE_RE = re.compile(r"<!--\s*pass-score\s+(\{.*?\})\s*-->")
+MISS_TAGS = (
+    "mechanism", "file-list", "permission", "design-gap", "stale-fact",
+    "owner-call", "no-answer", "conflict", "estimate", "ambiguous",
+)
+MISS_HEADING_RE = re.compile(r"## Planning misses[ \t]*$")
+SECTION_END_RE = re.compile(r"#{1,2} ")
+LIST_ITEM_RE = re.compile(r"(?:[-*+]|\d+[.)]) ")
+MISS_TAG_RE = re.compile(r"(?:\[({0})\]|`\[({0})\]`)".format("|".join(MISS_TAGS)))
 
 
 def ts(text):
@@ -260,6 +268,47 @@ def _score_values(obj):
     return out
 
 
+def miss_classes(body):
+    """Return the class of each miss line in a PR body's `## Planning misses` section."""
+    classes = []
+    inside = False
+    for line in body.splitlines():
+        if not inside:
+            inside = bool(MISS_HEADING_RE.match(line))
+        elif SECTION_END_RE.match(line):
+            break
+        else:
+            item = LIST_ITEM_RE.match(line)
+            text = line[item.end():].lstrip() if item else line
+            bare = text.strip().lower()
+            if item and (bare in ("none", "none.") or set(bare) <= set("-* ")):
+                continue
+            tag = MISS_TAG_RE.match(text)
+            if item or tag:
+                classes.append((tag.group(1) or tag.group(2)) if tag else "untagged")
+    return classes
+
+
+def misses_section(prs):
+    """Return the `## Planning misses` section: a count of miss lines by class for the given PRs."""
+    counts = Counter()
+    hit_prs = 0
+    for pr in prs:
+        classes = miss_classes(pr["body"])
+        counts.update(classes)
+        hit_prs += bool(classes)
+    total = sum(counts.values())
+    if not total:
+        return "## Planning misses\n\nNo miss lines in the window.\n"
+    rows = [f"| {name} | {counts[name]} | {fmt(100 * counts[name] / len(prs))} |" for name in (*MISS_TAGS, "untagged")]
+    return "\n".join([
+        "## Planning misses", "",
+        f"Miss lines: {total}, in {hit_prs} of {len(prs)} merged PRs.", "",
+        "| Class | Misses | Per 100 merged PRs |", "|---|---|---|", *rows,
+        f"| Total | {total} | {fmt(100 * total / len(prs))} |", "",
+    ])
+
+
 def decision_wait(line):
     """Return (repo, wait minutes) for a pr or design decision line, None for other kinds."""
     obj = json.loads(line)
@@ -407,7 +456,7 @@ def repo_section(repo, prs, runs, joined, waits, scores, gh):
 
 
 def parse_args(argv):
-    ap = argparse.ArgumentParser(prog="pass-report", description="Report pass timing as Markdown.")
+    ap = argparse.ArgumentParser(prog="pass-report", description="Report pass timing and planning misses as Markdown.")
     ap.add_argument("--since", help="window start, YYYY-MM-DD (default: 30 days ago)")
     ap.add_argument("--repo", action="append", default=[], help="limit to a repo name; repeatable")
     ap.add_argument("--records", action="append", default=[], help="extra gate records file; repeatable")
@@ -514,7 +563,7 @@ def main(argv):
     except GhError as err:
         print(f"pass-report: gh failed: {err}", file=sys.stderr)
         return 1
-    out += ["## Notes", ""]
+    out += [misses_section(all_prs), "## Notes", ""]
     out.append("- Gate records read: " + ", ".join(str(p) for p in record_files))
     out += [f"- Not found: {m}" for m in missing]
     out.append(f"- Dropped gate records: {dropped}")
