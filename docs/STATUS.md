@@ -104,6 +104,11 @@ review accepted the branch and left ten findings open on the outline, each a cal
 (backlog #81). The PR is glw907/workstation#233, and it joins the round's close packet behind
 #232.
 
+Pass W3 is on branch `ur-w3`, cut from `ur-w5`: `claude-launch-guard` reads a `<slug>-plan.md`
+sibling and denies a plan whose `## Pre-flight` lacks an `Evidence:` line, and the `CLAUDE.md`
+pass section names the round's five touchpoints. The guard change is not live until Geoff
+approves PR #234 and `~/.dotfiles` is pulled.
+
 ## Docs system
 
 Docs are code: cairn-cms pages change with the code, and a `docs` review in the Approval Queue puts them before Geoff. The initiative record (`~/Projects/initiatives/docs-system`) holds the current status and the next launch prompt.

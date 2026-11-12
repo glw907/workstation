@@ -8,10 +8,10 @@ calls" stop (an irreversible or destructive act, a secret, overspend, a scope or
 
 ## The pass process lives in `pass-core`
 
-Planning, executing, and closing a pass is the `pass-core` skill, with `cairn-pass`, `site-pass`,
-and `dotfiles-pass` as per-repo adapters. Geoff's touchpoints are the design packet, its pre-flight
-sitting, and one packet per hand-over (`approval-packet`). One session runs each pass or hand-over,
-its state in the repo's STATUS; initiatives are records in `~/Projects/initiatives`.
+Planning, executing, and closing a pass is the `pass-core` skill, with `cairn-pass`, `site-pass`, and
+`dotfiles-pass` as per-repo adapters. Geoff's touchpoints are the round design, its pre-flight sitting, a close
+packet where a call remains, a stop packet for a parked pass, and the round report (`approval-packet`). One session
+runs each pass or hand-over, its state in the repo's STATUS; initiatives are records in `~/Projects/initiatives`.
 
 ## Search before you spelunk (Geoff, 2026-07-13)
 
