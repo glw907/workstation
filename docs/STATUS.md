@@ -3,25 +3,26 @@
 <!-- round-report ur-ws -->
 Report: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/reports/ur-ws-report.md
 
-# Round ur-ws, glw907/workstation, written 2026-11-12 (W5 planner launching)
-Round state: running
+# Round ur-ws, glw907/workstation, written 2026-11-12 (W5 parked, stop packet sent)
+Round state: waiting for Geoff
 
 | Pass | State | PR | Planned min | Actual min | Usage before | Usage after |
 | --- | --- | --- | --- | --- | --- | --- |
 | W1 | waiting (close packet) | glw907/workstation#230 | 45 | ~50 plan path | week 68%, Fable 15% | week 72%, Fable 22% |
 | W2 | waiting (close packet) | glw907/workstation#231 | 60 | ~35 | week 72%, Fable 22% | week 74%, Fable 26% |
 | W4 | waiting (close packet) | glw907/workstation#232 | 150 | ~35 | week 81%, Fable 38% | week 83%, Fable 43% | |
-| W5 | planning | none | 100 | | week 83%, Fable 43% | |
+| W5 | parked | glw907/workstation#233 (draft) | 100 | ~110 so far | week 83%, Fable 43% | week 85%, Fable 46% (read before relaunch) | |
 | W3 | not started | none | 75 | | | |
 
-Stops: 0. Refusals: 0. Calls sent to Geoff: 0.
+Stops: 1. W5 parked at its end-to-end check: the plan's search for the initiative id counted two outlines as misses, and a second miss is a stop under standing answer 12. One stop packet sent, one unforced call (narrow the search, recommended). Refusals: 0. Calls sent to Geoff: 1.
 Planning misses: W1: 1 design-gap, 1 stale-fact. W2: 1 file-list, 1 design-gap. W4: read from PR #232 (stale-fact line named in its plan; not yet tallied).
 Trials: Fable 5.2 planned 4 passes (W5 launching); 6 sessions under /goal; 0 idle before an end line.
 Opus seats under rule 6: none.
-Waiting for Geoff: nothing sent yet. W1 #230 (Calls: 1, one open finding), W2 #231 (accept, 0 open, held because W1 waits), and W4 #232 (Calls: 2, one open finding) join the close packet after the last pass ends. W5 is cut from ur-w4. Landed: nothing.
+Waiting for Geoff: the W5 stop packet (queue id in the line below). W1 #230, W2 #231, and W4 #232 hold for the close packet after the last pass ends. W3 is not started: W5 holds it. Landed: nothing.
 Busy check note: claude-worktree-busy exit 1 named only this conductor's own session (bb055eee, conductor-dotfiles); processes none, files clean.
 STATUS copy: done, refreshed at each write.
 Resume from: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/plans/ur-ws-conductor-prompt.txt
+Open packets: W5 stop packet, id to follow in the next write of this report.
 <!-- /round-report -->
 
 Dotfiles and machine configuration for two Bluefin DX workstations, the
