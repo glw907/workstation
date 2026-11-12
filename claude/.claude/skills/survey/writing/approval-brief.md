@@ -119,17 +119,18 @@ Write for an intelligent but low-context reader. The person reading has not seen
 Use plain words, and write in clear, understandable full sentences. Do not use a term or abbreviation that you made up during the work. Say what the thing is in a way any reader would understand. Write mostly in the style of ASD-STE100 Simplified Technical English: short sentences, one idea per sentence, active voice, and consistently using the same word for the same thing. Use a paragraph of flowing prose where ideas connect, and keep bullets for lists of separate items. Leave out unnecessary details unless the reader asks and practice concision, but do ensure that your messages have the key context. Aim to make your user-facing text as human-readable and clear as possible.
 ```
 
-Five lines follow the block.
+Six lines follow the block.
 
 - This is technical writing. Use literal terms and the real names of tools, files, and settings. No metaphor and no personification.
 - No filler. Every sentence states a fact or tells the reader what to do.
 - Name a thing by what it is. A project nickname is a term made up during the work.
 - Write the opening as paragraphs.
 - Keep session names, commit hashes, task numbers, and risk-class names out of the opening and the calls.
+- Approving a stop packet answers its question. The session runs the listed steps and resumes the pass, and the approval merges nothing. Say so where the packet says what approving does.
 
 The same page says the model follows style rules closely and that stacked rules make its prose
 choppy. The brief therefore stands alone: it replaces the packet rules this file once held, and
-nothing is added to it.
+no style rule is added to it. The sixth line states a fact about the queue.
 
 ## The brief contract
 
@@ -165,6 +166,9 @@ below with this register's path, `~/.claude/docs/voice/approval-brief.md`. The p
   returns `{decision: 'approve', choices: [{title, choice}]}`, one entry per "Decide first" card:
   the app's own cards (a failed check, a review that asks for a fix, a `## Before merge` step)
   first, then each `### Decide:` block.
+- A packet's fact file may carry a `round` key, the id of the round the packet belongs to:
+  lowercase letters, digits, and hyphens, starting with a letter, 12 characters at most.
+  `approval-queue packet --check` refuses any other value and names the rule.
 
 ### The states
 
