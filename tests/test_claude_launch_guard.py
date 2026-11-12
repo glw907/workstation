@@ -8,9 +8,16 @@ from pathlib import Path
 import pytest
 
 SCRIPT = Path(__file__).resolve().parent.parent / "bin/.local/bin/claude-launch-guard"
-COMPLETE = "## Pre-flight\n\nPermissions checked: none needed.\nReviewed: plan-reviewer.\n\n## Tasks\n"
+COMPLETE = (
+    "## Pre-flight\n\nPermissions checked: none needed.\nReviewed: plan-reviewer.\n"
+    "Evidence: the mechanism table.\n\n## Tasks\n"
+)
 MISSING_REVIEW = "## Pre-flight\n\nPermissions checked: none needed.\n\n## Tasks\n"
-LINES_OUTSIDE = "## Pre-flight\n\n- item\n\n## Tasks\n\nPermissions checked: x\nReviewed: x\n"
+NO_EVIDENCE = "## Pre-flight\n\nPermissions checked: none needed.\nReviewed: plan-reviewer.\n\n## Tasks\n"
+LINES_OUTSIDE = "## Pre-flight\n\n- item\n\n## Tasks\n\nPermissions checked: x\nReviewed: x\nEvidence: x\n"
+EVIDENCE_OUTSIDE = (
+    "## Pre-flight\n\nPermissions checked: x\nReviewed: x\n\n## Tasks\n\nEvidence: x\n"
+)
 
 
 def run(command: str, cwd: Path, transcript: Path | None = None) -> str:
@@ -152,3 +159,89 @@ def test_design_prompt_ignores_a_sibling(repo, prompt_name, sibling):
     (repo / "docs/plans" / sibling).write_text(MISSING_REVIEW)
     (repo / "docs/plans" / prompt_name).write_text(f"Read docs/plans/{prompt_name[0]}-design.md.\n")
     assert run(f'claude --bg "$(cat docs/plans/{prompt_name})"', repo) == ""
+
+
+@pytest.fixture
+def record(tmp_path):
+    """Build a plans folder with no `docs` parent, as an initiative record keeps its plans."""
+    (tmp_path / "plans").mkdir()
+    return tmp_path
+
+
+def launch_of(name: str) -> str:
+    """Return a launch that reads `plans/<name>` as its prompt."""
+    return f'claude --bg --name x "$(cat plans/{name})"'
+
+
+def test_record_plan_beside_its_prompt_is_read(record):
+    (record / "plans/x-prompt.txt").write_text("Go.\n")
+    (record / "plans/x-plan.md").write_text("## Tasks\n")
+    out = run(launch_of("x-prompt.txt"), record)
+    assert "x-plan.md" in out
+    assert all(line in out for line in ("Permissions checked:", "Reviewed:", "Evidence:"))
+
+
+def test_complete_record_plan_passes(record):
+    (record / "plans/x-prompt.txt").write_text("Go.\n")
+    (record / "plans/x-plan.md").write_text(COMPLETE)
+    assert run(launch_of("x-prompt.txt"), record) == ""
+
+
+def test_plan_without_evidence_is_denied_by_name(repo):
+    (repo / "docs/plans/a.md").write_text(NO_EVIDENCE)
+    out = run(LAUNCH, repo)
+    assert "an `Evidence:` line" in out
+    assert "a `Permissions checked:` line" not in out
+    assert "a `Reviewed:` line" not in out
+
+
+def test_other_gaps_do_not_name_evidence(repo):
+    (repo / "docs/plans/a.md").write_text(
+        "## Pre-flight\n\nPermissions checked: x\nEvidence: x\n\n## Tasks\n")
+    out = run(LAUNCH, repo)
+    assert "a `Reviewed:` line" in out
+    assert "an `Evidence:` line" not in out
+
+
+def test_evidence_outside_pre_flight_is_denied(repo):
+    (repo / "docs/plans/a.md").write_text(EVIDENCE_OUTSIDE)
+    assert "an `Evidence:` line" in run(LAUNCH, repo)
+
+
+@pytest.mark.parametrize("first,second,denied", [(COMPLETE, "## Tasks\n", False), ("## Tasks\n", COMPLETE, True)])
+def test_the_older_sibling_wins(record, first, second, denied):
+    (record / "plans/x-prompt.txt").write_text("Go.\n")
+    (record / "plans/x.md").write_text(first)
+    (record / "plans/x-plan.md").write_text(second)
+    out = run(launch_of("x-prompt.txt"), record)
+    assert bool(out) is denied
+    if denied:
+        assert "x.md" in out and "x-plan.md" not in out
+
+
+def test_a_named_plan_wins_over_a_plan_sibling(repo):
+    (repo / "docs/plans/a.md").write_text(COMPLETE)
+    (repo / "docs/plans/a-plan.md").write_text("## Tasks\n")
+    assert run(LAUNCH, repo) == ""
+
+
+def test_a_rulings_file_is_not_read_as_the_plan(record):
+    (record / "rec/plans").mkdir(parents=True)
+    (record / "rec/plans/rulings.md").write_text("Answers only.\n")
+    (record / "plans/x-prompt.txt").write_text("Read rec/plans/rulings.md first.\n")
+    (record / "plans/x-plan.md").write_text(COMPLETE)
+    assert run(launch_of("x-prompt.txt"), record) == ""
+
+
+@pytest.mark.parametrize("name", ["x-planning-prompt.txt", "x-planner-prompt.txt"])
+def test_planner_prompts_read_no_sibling(record, name):
+    (record / "plans" / name).write_text("Plan it.\n")
+    for sibling in ("x-plan.md", "x-planning-plan.md", "x-planner-plan.md"):
+        (record / "plans" / sibling).write_text("## Tasks\n")
+    assert run(launch_of(name), record) == ""
+
+
+def test_a_launch_that_names_no_plan_passes(record):
+    (record / "plans/y-prompt.txt").write_text("Tidy the notes.\n")
+    assert run(launch_of("y-prompt.txt"), record) == ""
+    assert run('claude --bg --name x "Tidy the notes."', record) == ""

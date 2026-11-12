@@ -2,9 +2,11 @@
 """PreToolUse hook denying a `claude --bg` pass launch whose plan skipped its pre-launch checks.
 
 The hook finds the plan a launch runs: the prompt file named in `$(cat <file>)`, then the
-`docs/plans/*.md` path that file names, else its sibling with `-prompt.txt` swapped for `.md`. The
+`docs/plans/*.md` path that file names, else its sibling with `-prompt.txt` swapped for `.md`, else
+the sibling swapped for `-plan.md`, which is how an initiative record keeps a plan. The
 plan's `## Pre-flight` section must carry a `Permissions checked:` line, saying how each task's
-credentials and writes were read against auto mode, and a `Reviewed:` line naming the plan review.
+credentials and writes were read against auto mode, a `Reviewed:` line naming the plan review, and
+an `Evidence:` line naming the plan's mechanism table and its recorded searches.
 A launch with no plan, a planner launch (`*-planning-prompt.txt`, `*-planner-prompt.txt`), and a
 prompt naming only a `-design.md` are not executor passes and go through. A plan launch is also denied when the
 session's transcript never lists `standards:plan-reviewer`, because a session without the
@@ -31,7 +33,7 @@ CHDIR = re.compile(r"(?:^|[;&|(\n])\s*cd\s+[\"']?([^\"';&|)\s]+)")
 PROMPT_FILE = re.compile(r"\$\(\s*(?:cat\s+|<\s*)[\"']?([^\"')\s]+)")
 PLAN_PATH = re.compile(r"[\w./~-]*docs/plans/[\w./-]+\.md")
 PLANNER_PROMPT = re.compile(r"-plann(?:ing|er)-prompt\.txt$")
-REQUIRED = ("Permissions checked:", "Reviewed:")
+REQUIRED = ("Permissions checked:", "Reviewed:", "Evidence:")
 
 
 def blank_heredocs(command: str) -> str:
@@ -122,17 +124,21 @@ def plan_for(launch: str, base: Path) -> Path | None:
                 return plan
     if PLAN_PATH.search(text):
         return None
-    sibling = prompt.with_name(prompt.name.replace("-prompt.txt", ".md"))
-    return sibling if sibling != prompt and sibling.is_file() else None
+    for suffix in (".md", "-plan.md"):
+        sibling = prompt.with_name(prompt.name.replace("-prompt.txt", suffix))
+        if sibling != prompt and sibling.is_file():
+            return sibling
+    return None
 
 
 def missing(plan: Path) -> list[str]:
     """Return what the plan's `## Pre-flight` section lacks."""
     text = plan.read_text(errors="replace")
     section = re.search(r"^## Pre-flight\s*$(.*?)(?=^## |\Z)", text, re.M | re.S)
-    if not section:
-        return ["a `## Pre-flight` section", *(f"a `{line}` line" for line in REQUIRED)]
-    return [f"a `{line}` line" for line in REQUIRED if line not in section.group(1)]
+    absent = [line for line in REQUIRED if not section or line not in section.group(1)]
+    article = {"Evidence:": "an"}
+    gaps = [f"{article.get(line, 'a')} `{line}` line" for line in absent]
+    return ["a `## Pre-flight` section", *gaps] if not section else gaps
 
 
 def lacks_standards(transcript: str | None) -> bool:
@@ -166,7 +172,8 @@ def main() -> None:
     reason = (
         f"{'; '.join(denials)} before launch. Read every task for a credential, a remote write, "
         "a settings write, or new public surface; give each a `[you]` item or a probe that "
-        "proved it; and run the plan review (`pass-core`, Lifecycle step 4)."
+        "proved it; run the plan review (`pass-core`, Lifecycle step 4); and name the plan's "
+        "mechanism table and its recorded searches on the `Evidence:` line."
     )
     print(json.dumps({"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
