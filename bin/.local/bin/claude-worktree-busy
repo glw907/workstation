@@ -3,6 +3,10 @@
 
 Three checks run in order: a process whose command line holds the path, a `claude agents --json` row whose
 cwd is the path or under it, and an uncommitted file edited in the last 60 minutes.
+
+The process check skips two command lines: `claude daemon run` and the approval queue's server, `node
+<path>/approval-queue/build`. The session check skips a row whose state is done, stopped, or failed; a row with
+no state, as an interactive session's has, still counts.
 """
 
 import json
@@ -13,6 +17,7 @@ import sys
 import time
 
 RECENT_SECONDS = 60 * 60
+FINISHED_STATES = ("done", "stopped", "failed")
 
 
 def ancestors():
@@ -25,6 +30,15 @@ def ancestors():
             stat = f.read()
         pid = int(stat.rsplit(")", 1)[1].split()[1])
     return pids
+
+
+def background_service(cmdline):
+    """Report whether a NUL-separated command line is the Claude daemon or the approval queue's server."""
+    args = cmdline.split("\0")
+    prog = os.path.basename(args[0])
+    if prog == "claude":
+        return args[1:3] == ["daemon", "run"]
+    return prog == "node" and len(args) > 1 and args[1].endswith("/approval-queue/build")
 
 
 def process_hit(path):
@@ -41,7 +55,7 @@ def process_hit(path):
                 cmdline = f.read().decode(errors="replace")
         except OSError:
             continue
-        if held.search(cmdline):
+        if held.search(cmdline) and not background_service(cmdline):
             return f"busy: process {entry} has the path in its command line"
     return None
 
@@ -61,6 +75,8 @@ def session_hit(path):
         return None
     for row in rows:
         cwd = row.get("cwd") or ""
+        if row.get("state") in FINISHED_STATES:
+            continue
         if cwd and under(os.path.realpath(cwd), path):
             return f"busy: claude session {row.get('id')} has its cwd in the path"
     return None
