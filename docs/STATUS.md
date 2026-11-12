@@ -1,5 +1,24 @@
 # Status
 
+<!-- round-report ws-documents -->
+# Round ws-documents, glw907/workstation, written 2026-11-12 21:06 (D0 merged, waiting for queue pass A5)
+Round state: running
+
+| Pass | State | PR | Planned min | Actual min | Usage before | Usage after |
+| --- | --- | --- | --- | --- | --- | --- |
+| D0 | merged | glw907/workstation#235 | 30 | ~21 | week 63%, Fable 0% | week 63% |
+| D1 | not started | | 120 | | | |
+| D2 | not started | | 120 | | | |
+| D3 | not started | | 140 | | | |
+
+Stops: 0. Refusals: 0. Calls sent to Geoff: 0.
+Planning misses: none yet.
+Two-repo packet: `approval-queue packet --check` accepted a fact file naming a workstation and an approval-queue pull request (snapshot took both), so one close packet is planned.
+Waiting for Geoff: nothing. Landed: D0 #235 (the busy check skips its caller). Waiting on the queue round: pass A5 has not merged.
+Resume from: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/plans/ws-documents-conductor-prompt.txt
+Open packets: none.
+<!-- /round-report -->
+
 <!-- round-report ur-ws -->
 Report: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/reports/ur-ws-report.md
 
