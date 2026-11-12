@@ -80,4 +80,42 @@ case "$err" in
   *) echo "FAIL: skill caps, absent: message was '$err'"; fail=1 ;;
 esac
 
+# The round rules: each counted list in the real tree holds the number of rules its heading
+# promises. The cases pin structure only, so a reworded rule never fails them.
+
+# section_of <file> <heading>: prints the lines between "## <heading>" and the next "## " line.
+section_of() {
+  awk -v h="## $2" '$0 == h { on = 1; next } on && /^## / { on = 0 } on' "$1"
+}
+
+# item_numbers <file> <heading>: prints the numbers of that section's column-0 list items, joined by spaces.
+item_numbers() {
+  section_of "$1" "$2" | sed -n -E 's/^([0-9]+)\. .*/\1/p' | paste -s -d ' '
+}
+
+# count_items <file> <heading>: prints how many column-0 numbered items that section holds.
+count_items() {
+  section_of "$1" "$2" | grep -c -E '^[0-9]+\. '
+}
+
+fixture="$root/rules.md"
+printf '%s\n' '# Rules' '' '## First' '' '1. one' '   wrapped' '2. two' '3. three' '' \
+  '## Second' '' '1. other' '2. another' >"$fixture"
+assert_eq "$(count_items "$fixture" "First")" "3" "count helper: three items under the heading"
+assert_eq "$(count_items "$fixture" "Second")" "2" "count helper: a later heading's items are counted apart"
+assert_eq "$(item_numbers "$fixture" "First")" "1 2 3" "count helper: item numbers"
+
+refs="claude/.claude/skills/pass-core/references"
+assert_eq "$(count_items "$refs/round.md" "Planner rules" 2>/dev/null)" "4" "round.md: planner rules"
+assert_eq "$(count_items "$refs/round.md" "Design rules" 2>/dev/null)" "4" "round.md: design rules"
+assert_eq "$(item_numbers "$refs/round-run.md" "Standing answers" 2>/dev/null)" \
+  "1 2 3 4 5 6 7 8 9 10 11 12" "round-run.md: standing answers, numbered 1 to 12"
+tags=$(section_of "$refs/round-run.md" "Miss tags" 2>/dev/null)
+for tag in mechanism file-list permission design-gap stale-fact owner-call no-answer conflict estimate ambiguous; do
+  case "$tags" in
+    *"\`[$tag]\`"*) ;;
+    *) echo "FAIL: round-run.md: miss tag [$tag] is absent from its section"; fail=1 ;;
+  esac
+done
+
 exit "$fail"
