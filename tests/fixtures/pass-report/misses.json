@@ -1,0 +1,61 @@
+{
+ "repos": [
+  "alpha",
+  "beta"
+ ],
+ "prs": {
+  "alpha": [
+   {
+    "number": 1,
+    "headRefName": "br-1",
+    "createdAt": "2026-11-01T09:00:00Z",
+    "mergedAt": "2026-11-01T12:00:00Z",
+    "body": "## Brief\n\nA sentence.\n\n## Planning misses\n\n- [mechanism] one\n- [mechanism] two\n- [file-list] three\n- [permission] four\n- [design-gap] five\n- [stale-fact] six\n\n## Decisions\n\n- [mechanism] outside the section"
+   },
+   {
+    "number": 2,
+    "headRefName": "br-2",
+    "createdAt": "2026-11-02T09:00:00Z",
+    "mergedAt": "2026-11-02T12:00:00Z",
+    "body": "## Planning misses\n\nTwo things the plan missed:\n\n1. [owner-call] seven\n2. [no-answer] eight\n* [conflict] nine\n- `[estimate]` ten\n\n[ambiguous] eleven\n\n- [file-list] twelve\n  wraps here [mechanism]\n  - [mechanism] nested\n- [mechanism] thirteen\n\n<!-- pass-score {\"planPathMin\": 60, \"actualPathMin\": 50, \"fixRounds\": 0, \"reds\": 0, \"attended\": 0, \"escapes\": 0} -->\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+   },
+   {
+    "number": 3,
+    "headRefName": "br-3",
+    "createdAt": "2026-11-03T09:00:00Z",
+    "mergedAt": "2026-11-03T12:00:00Z",
+    "body": "## Planning misses\n\nNo question reached Geoff. Two plan gaps:\n\n- The file list left out a test.\n- [unknown-tag] A bracket outside the ten."
+   },
+   {
+    "number": 4,
+    "headRefName": "br-4",
+    "createdAt": "2026-11-04T09:00:00Z",
+    "mergedAt": "2026-11-04T12:00:00Z",
+    "body": "## Planning misses\n\n- None."
+   },
+   {
+    "number": 5,
+    "headRefName": "br-5",
+    "createdAt": "2026-11-05T09:00:00Z",
+    "mergedAt": "2026-11-05T12:00:00Z",
+    "body": "## Planning misses\n\nNone met."
+   },
+   {
+    "number": 6,
+    "headRefName": "br-6",
+    "createdAt": "2026-11-06T09:00:00Z",
+    "mergedAt": "2026-11-06T12:00:00Z",
+    "body": "Done."
+   }
+  ],
+  "beta": [
+   {
+    "number": 7,
+    "headRefName": "br-7",
+    "createdAt": "2026-11-07T09:00:00Z",
+    "mergedAt": "2026-11-07T12:00:00Z",
+    "body": "## Technical notes\n\n### Planning misses\n\n- [mechanism] under a level-3 heading"
+   }
+  ]
+ }
+}

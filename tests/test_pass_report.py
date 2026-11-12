@@ -198,3 +198,99 @@ def test_rate_limited_repo_is_marked_partial(tmp_path):
 def test_toplevel_mapping(top, want):
     home = Path("/h")
     assert pass_report.repo_of_toplevel(top.format(h=home), home) == want
+
+
+MISS_CLASSES = (
+    "mechanism", "file-list", "permission", "design-gap", "stale-fact",
+    "owner-call", "no-answer", "conflict", "estimate", "ambiguous",
+)
+
+MISS_TABLE = """\
+## Planning misses
+
+Miss lines: 15, in 3 of 7 merged PRs.
+
+| Class | Misses | Per 100 merged PRs |
+|---|---|---|
+| mechanism | 3 | 42.9 |
+| file-list | 2 | 28.6 |
+| permission | 1 | 14.3 |
+| design-gap | 1 | 14.3 |
+| stale-fact | 1 | 14.3 |
+| owner-call | 1 | 14.3 |
+| no-answer | 1 | 14.3 |
+| conflict | 1 | 14.3 |
+| estimate | 1 | 14.3 |
+| ambiguous | 1 | 14.3 |
+| untagged | 2 | 28.6 |
+| Total | 15 | 214.3 |"""
+
+# The misses.json report as it stood before the misses section, minus the Window line.
+OLD_REPORT = """\
+# Pass score report
+
+
+### alpha
+
+| Row | n | Median | p90 | Total |
+|---|---|---|---|---|
+| PR open to merge | 6 | 180.0 | 180.0 | 1080.0 |
+| Planned path (min) | 1 | 60.0 | 60.0 | 60.0 |
+| Actual path (min) | 1 | 50.0 | 50.0 | 50.0 |
+| Actual / planned | 1 | 0.8 | 0.8 | - |
+| Fix rounds | 1 | 0.0 | 0.0 | 0.0 |
+| Attended events | 1 | 0.0 | 0.0 | 0.0 |
+| Escapes | 1 | 0.0 | 0.0 | 0.0 |
+
+### beta
+
+| Row | n | Median | p90 | Total |
+|---|---|---|---|---|
+| PR open to merge | 1 | 180.0 | 180.0 | 180.0 |
+
+## Notes
+
+- Gate records read: ~/.local/state/cairn-run-gate/runs.jsonl
+- Not found: ~/.local/state/cairn-run-gate/runs.jsonl
+- Not found: ~/.local/state/approval-queue/decisions.jsonl
+- Not found: ~/Projects/initiatives/dev-speed/research/score-backfill.json
+- Dropped gate records: 0
+- Negative waits dropped: 0
+- Malformed lines or rows skipped: 0
+- PRs with no score: 6"""
+
+
+def test_miss_lines_are_counted_by_tag(tmp_path):
+    out = report(tmp_path, fixture("misses.json")).stdout
+    start = out.index("## Planning misses")
+    end = out.index("\n\n", out.index("| Total |", start))
+    assert out[start:end] == MISS_TABLE
+    assert out[end:].startswith("\n\n## Notes")
+
+
+def test_line_with_no_tag_counts_as_untagged(tmp_path):
+    data = {"repos": ["alpha"], "prs": {"alpha": [fixture("misses.json")["prs"]["alpha"][2]]}}
+    out = report(tmp_path, data).stdout
+    assert "Miss lines: 2, in 1 of 1 merged PRs." in out
+    assert "| untagged | 2 | 200.0 |" in out
+    for name in MISS_CLASSES:
+        assert f"| {name} | 0 | 0.0 |" in out
+    assert "| Total | 2 | 200.0 |" in out
+
+
+def test_pr_without_the_section_adds_nothing(tmp_path):
+    out = report(tmp_path, fixture("score_wins.json")).stdout
+    assert "## Planning misses\n\nNo miss lines in the window.\n" in out
+    assert "| Class |" not in out
+
+
+def test_other_tables_do_not_change(tmp_path):
+    run = report(tmp_path, fixture("misses.json"))
+    lines = [l for l in run.stdout.splitlines() if not l.startswith("Window:")]
+    text = "\n".join(lines).replace(str(run.home), "~")
+    start = text.find("## Planning misses")
+    if start != -1:
+        end = text.find("## Notes", start)
+        text = text[:start] + (text[end:] if end != -1 else "")
+    assert text == OLD_REPORT
+    assert "## Planning misses" in run.stdout
