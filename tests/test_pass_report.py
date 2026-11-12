@@ -294,3 +294,19 @@ def test_other_tables_do_not_change(tmp_path):
         text = text[:start] + (text[end:] if end != -1 else "")
     assert text == OLD_REPORT
     assert "## Planning misses" in run.stdout
+
+
+@pytest.mark.parametrize(
+    "body, want",
+    [
+        ("## Planning misses \t\n- [mechanism] a", ["mechanism"]),
+        ("## Planning misses\n+ [conflict] a\n1) [estimate] b\n`[ambiguous]` c", ["conflict", "estimate", "ambiguous"]),
+        ("## Planning misses\n-  [mechanism] spaced", ["mechanism"]),
+        ("## Planning misses\n- NONE.  \n- \n- - -\n\t- [mechanism] tabbed", []),
+        ("## Planning misses\n- [mechanism] a\n### Deeper\n- [conflict] b\n# Next\n- [estimate] c", ["mechanism", "conflict"]),
+        ("## Planning misses\n- [mechanism] a\n## Other\n## Planning misses\n- [conflict] b", ["mechanism"]),
+        ("## Planning misses:\n- [mechanism] a", []),
+    ],
+)
+def test_miss_classes_follow_the_section_rules(body, want):
+    assert pass_report.miss_classes(body) == want

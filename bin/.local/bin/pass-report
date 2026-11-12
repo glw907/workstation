@@ -273,14 +273,15 @@ def miss_classes(body):
     classes = []
     inside = False
     for line in body.splitlines():
-        if MISS_HEADING_RE.match(line):
-            inside = True
-        elif inside and SECTION_END_RE.match(line):
-            inside = False
-        elif inside:
+        if not inside:
+            inside = bool(MISS_HEADING_RE.match(line))
+        elif SECTION_END_RE.match(line):
+            break
+        else:
             item = LIST_ITEM_RE.match(line)
-            text = line[item.end():] if item else line
-            if item and text.strip().lower() in ("none", "none."):
+            text = line[item.end():].lstrip() if item else line
+            bare = text.strip().lower()
+            if item and (bare in ("none", "none.") or set(bare) <= set("-* ")):
                 continue
             tag = MISS_TAG_RE.match(text)
             if item or tag:
