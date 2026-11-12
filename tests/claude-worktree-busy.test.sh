@@ -51,7 +51,7 @@ check() {
 wait_cmd() {
   local c
   for _ in $(seq 40); do
-    c=$(tr '\0' ' ' <"/proc/$1/cmdline" 2>/dev/null)
+    c=$({ tr '\0' ' ' <"/proc/$1/cmdline"; } 2>/dev/null)
     case "$c" in "$2"*) return 0 ;; esac
     sleep 0.05
   done
@@ -94,6 +94,7 @@ stop_fixture
 sleeper=$!
 wait_cmd "$sleeper" "$root/bin/claude daemon run" "daemon process holds path"
 check 0 "daemon process holds path" "$repo"
+kill -0 "$sleeper" 2>/dev/null || { echo "FAIL: daemon process holds path: fixture ended early"; fail=1; }
 stop_fixture
 
 (cd "$root" && exec -a node bash "$aq/approval-queue/build") &
@@ -101,6 +102,7 @@ sleeper=$!
 wait_cmd "$sleeper" "node $aq/approval-queue/build" "queue server holds path"
 check 0 "queue server holds path" "$aq"
 STUB_CWD="$aq" STUB_STATE="done" check 0 "queue server and a finished row" "$aq"
+kill -0 "$sleeper" 2>/dev/null || { echo "FAIL: queue server cases: fixture ended early"; fail=1; }
 stop_fixture
 
 (cd "$root" && exec -a node bash -c 'sleep 6; true' "$repo/other.js") &
