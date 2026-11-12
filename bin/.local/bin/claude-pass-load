@@ -2,8 +2,9 @@
 """Print how many words each pass role loads, and check the executor's load against its limit.
 
 A pass session loads the global CLAUDE.md, pass-core, its role's reference and round file, and
-the files its repo's pass guides name. The table below follows the Pass 3 design's "What each role loads",
-with cairn-cms as the case, since it is the largest. Paths starting with ``~/`` sit outside the
+the files its repo's pass guides name. The table below starts from the Pass 3 design's "What each
+role loads" and adds the round files, with cairn-cms as the case, since it is the largest. Paths
+starting with ``~/`` sit outside the
 workstation repo; every other path is relative to ``--root``.
 
 With no flag the script prints each role's files, their word counts, and the total. With
