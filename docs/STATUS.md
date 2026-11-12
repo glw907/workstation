@@ -3,14 +3,14 @@
 <!-- round-report ur-ws -->
 Report: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/reports/ur-ws-report.md
 
-# Round ur-ws, glw907/workstation, written 2026-11-11 (round waits for the queue)
+# Round ur-ws, glw907/workstation, written 2026-11-11 (W4 planner launching)
 Round state: running
 
 | Pass | State | PR | Planned min | Actual min | Usage before | Usage after |
 | --- | --- | --- | --- | --- | --- | --- |
 | W1 | waiting (close packet) | glw907/workstation#230 | 45 | ~50 plan path | week 68%, Fable 15% | week 72%, Fable 22% |
 | W2 | waiting (close packet) | glw907/workstation#231 | 60 | ~35 | week 72%, Fable 22% | week 74%, Fable 26% |
-| W4 | not started | none | 150 | | | |
+| W4 | planning | none | 150 | | week 81%, Fable 38% | |
 | W5 | not started | none | 100 | | | |
 | W3 | not started | none | 75 | | | |
 
@@ -18,7 +18,7 @@ Stops: 0. Refusals: 0. Calls sent to Geoff: 0.
 Planning misses: W1: 1 design-gap, 1 stale-fact. W2: 1 file-list, 1 design-gap.
 Trials: Fable 5.2 planned 2 passes; 4 sessions under /goal; 0 idle before an end line.
 Opus seats under rule 6: none.
-Waiting for Geoff: nothing sent yet. W1 PR #230 (Calls: 1, one open finding) and W2 PR #231 (accept, 0 open, held only because W1 waits) join the close packet after the last pass ends. W4 is cut from ur-w2 when the queue is live through Q4. The round waits for the queue: ur-queue-report.md reads Queue live through: Q1. Landed: nothing.
+Waiting for Geoff: nothing sent yet. W1 PR #230 (Calls: 1, one open finding) and W2 PR #231 (accept, 0 open, held only because W1 waits) join the close packet after the last pass ends. The queue round ended with Queue live through: Q4 (Q4 PR #18 merged, pulled). W4 is cut from ur-w2. Landed: nothing.
 Busy check note: claude-worktree-busy exit 1 named only this conductor's own session (bb055eee, conductor-dotfiles); processes none, files clean.
 STATUS copy: done, refreshed at each write.
 Resume from: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/plans/ur-ws-conductor-prompt.txt
