@@ -5,13 +5,14 @@ order table win where they differ from this file.
 
 An executor under a conductor enters the pass's worktree with `EnterWorktree` and its `path`,
 once, and merges nothing: the branch holds the plan. In a one-pass round the executor sends the
-`stop` packet itself through `approval-packet`, and its PR carries no `Round:` line.
+`stop` packet itself through `approval-packet` in place of ending, and its PR carries no `Round:`
+line.
 
 ## Standing answers
 
 1. A pass stops on a question only Geoff can answer. The executor follows "Stops". The conductor
    waits for the PR's checks, sends one `stop` packet, ends the pass's sessions, and launches the
-   next pass that doesn't depend on the parked one.
+   next pass that doesn't depend on it.
 2. Auto mode refuses a command. The session uses the alternative its plan names, once. A second
    refusal is a stop. No session edits a setting to get past a refusal.
 3. A task needs a setting, hook, auto-mode entry, or permission rule changed. That is never an
@@ -30,12 +31,12 @@ once, and merges nothing: the branch holds the plan. In a one-pass round the exe
    `## Rulings` in the pass's plan, commits it by path, and pushes. It runs
    the packet's steps, then relaunches the pass once the pass in flight finishes. The PR
    takes the question under `## Planning misses` and the ruling under `## Decisions`. Passes that
-   depended on the parked pass follow in order.
+   depended on it follow in order.
 10. The conductor's session dies or the machine restarts. STATUS names
     the conductor prompt and each open packet, and any session can relaunch it.
 11. An executor goes idle with its pass unfinished and no stop in STATUS, or a planner goes idle
-    with no plan. The conductor relaunches it from its prompt, twice at most. A third idle parks
-    the pass.
+    with no executor and no draft PR. The conductor relaunches it from its prompt, twice at most.
+    A third idle parks the pass, or ends launches where no PR can be opened.
 12. An acceptance item can't be met as written, or a shared assumption proves false. The pass
     parks. No session rewrites the item or builds around it.
 
@@ -62,7 +63,7 @@ A pass that depends on another starts only after that pass's whole-branch review
 ## Reading a pass
 
 When the executor goes idle, read its PR, checks, and review verdict. A pass never counts
-as finished on the executor's last message.
+as finished on its last message.
 
 - **Land** when the PR is ready, `Review:` reads `accept, open findings 0`, `Calls:` reads `none`,
   the body has no `## Before merge` section, no check fails, the class isn't `auth-data`, every
@@ -78,7 +79,7 @@ as finished on the executor's last message.
 
 ## Queue rules
 
-- Every fact file carries the `round` key with the round id, and every landing takes `--round`.
+- Every fact file carries the `round` key, and every landing takes `--round`.
 - Every PR's base is the default branch. `packet`, `merge`, and `land` refuse any other base.
 - A `stop` packet names the parked pass's PR. If the branch has none, open a draft first,
   with the stop in its body. The packet carries a forced `gate-failed` call on a red
@@ -100,7 +101,7 @@ as finished on the executor's last message.
 
 A stop is a question only Geoff can answer, a second refusal, an unmet acceptance item, a false
 shared assumption, or a closing review that ends on `escalate` or a second read short of `accept`.
-The executor does four things and tries nothing else:
+The executor does only four things:
 
 - Commit and push the work.
 - Open the draft PR if none exists.
@@ -116,13 +117,12 @@ The PR body carries four lines, each on its own line: `Round: <id>`, `Pass: <nam
 `Review: <accept|fix|escalate>, open findings <n>`, and `Calls: none` or `Calls: <n>` with each
 call under `## Calls for Geoff`.
 
-`## Acceptance` lists every acceptance item verbatim, each followed by its evidence: the command
+`## Acceptance` lists every acceptance item verbatim, each with its evidence: the command
 and its output, or a screenshot.
 
 The closing `standards:diff-reviewer` dispatch names the acceptance list, and the
 reviewer checks each item against its evidence. A finding left unfixed after the fix chain becomes
-a call for Geoff, and a `fix` verdict gets one second read by a fresh reviewer. `Review:` holds
-the last verdict and the open findings.
+a call for Geoff, and a `fix` verdict gets one second read by a fresh reviewer.
 
 ## Miss tags
 
@@ -148,7 +148,7 @@ the end. Its fields, in order:
 
 After each write, copy the report into the main checkout's `docs/STATUS.md` under the title line,
 between `<!-- round-report <id> -->` and `<!-- /round-report -->`, only while the checkout is
-level with its remote. Commit that file by path and push. After a failed push, undo the commit,
-copy no more this round, and report it. Then run
+level with its remote. Commit that file by path and push. After a refused or failed push, undo the
+commit if it ran, copy no more this round, and report it. Then run
 `approval-queue report <initiative> <round> <report.md>`. An executor edits STATUS below that
 block only.

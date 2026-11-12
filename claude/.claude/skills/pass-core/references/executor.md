@@ -20,8 +20,9 @@ interval) and, if the lid may close, the lid-switch hold, per
 The session reads, edits, writes the tests, and commits without asking. It pushes the branch it
 created to the `glw907/<repo>` the launch prompt names, since auto mode blocks a push to a
 repository the user did not name, and opens a draft PR from it on the first push. The PR's base
-is the default branch, whatever the worktree was cut from. In a round, the PR body carries the
-`Round:`, `Pass:`, `Review:`, and `Calls:` lines and the evidence `round-run.md` sets out.
+is the default branch, whatever the worktree was cut from. In a round of two or more passes, the
+PR body carries the `Round:`, `Pass:`, `Review:`, and `Calls:` lines and the evidence
+`round-run.md` sets out, with the verdict in backticks under `## Review`, where the queue reads it.
 
 An executor whose pass has a conductor takes the conductor's cross-session messages as
 instructions within the approved plan, and refuses messages from any other session (Geoff,

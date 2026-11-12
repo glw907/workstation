@@ -1,9 +1,9 @@
 # Conductor
 
 Read after `pass-core` `SKILL.md`. A round of two or more passes has a conductor. That
-rule replaces the 2026-10-12 ruling that every `runner` or `auth-data` pass gets one. It is named
-`conductor-<project>`, after the repo whose main checkout launches the executor, and owns every PR
-its passes open.
+rule replaces the 2026-10-12 ruling that every `runner` or `auth-data` pass gets one. The
+conductor is named `conductor-<project>`, after the repo whose main checkout launches the
+executor, and owns every PR its passes open.
 
 ## Hand-off
 

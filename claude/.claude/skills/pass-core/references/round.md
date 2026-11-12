@@ -80,8 +80,8 @@ The `Evidence:` line of `## Pre-flight` names the mechanism table and the record
 ## A plan inside a round
 
 In a round of two or more passes, the planner starts at `SKILL.md` "Lifecycle" step 4, since the
-round design's section for the pass is the approved design. A one-pass round's plan follows
-`planner.md` alone.
+round design's section for the pass is the approved design. A one-pass round's plan skips
+this section.
 
 - Work in the pass's worktree by path. The conductor cut it, and `EnterWorktree` belongs to the
   executor.

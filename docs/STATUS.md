@@ -92,7 +92,7 @@ exits 2. Pass 1 plan:
 
 Pass W4 of round `ur-ws` is on branch `ur-w4`: `pass-core` gains `references/round.md` and
 `references/round-run.md`, which hold the round rules, and an executing session now loads about
-8,780 words. Nothing is live until the merge.
+8,800 words. Nothing is live until the merge.
 
 ## Docs system
 
