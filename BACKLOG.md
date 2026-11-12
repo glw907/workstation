@@ -87,6 +87,8 @@
 
 ## Low
 
+- [ ] **#76** Make `pass-report` note a repo whose PR listing hits the 300 cap `#bug` `#workstation` `#initiative:unattended-rounds` *(2026-11-11)*
+  `pass-report` lists a repo's merged PRs with `--limit 300` and prints no notice when the listing is full. A window long enough to pass 300 merged PRs in one repo drops the oldest from every table, and the misses table too. glw907/workstation merged 210 PRs in the 30 days to 2026-11-11, so a window near six weeks passes the cap. Add a `## Notes` line when a repo's listing returns 300 PRs, or page past it.
 - [ ] **#57** Run an effort sweep on the 5.5 models before carrying effort settings forward `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
   For Opus 5.5 and Sonnet 5.5, the effort page says to "Run an effort sweep on your own evals rather than carrying settings over from an earlier model" (<https://platform.claude.com/docs/en/build-with-claude/effort>). The 2026-09-28 sweep filed this to the retired ROADMAP, and it fell out. It needs an eval this machine can't run yet: a fixed task set graded the same way at each level. Record: `docs/specs/2026-11-01-model-review-subagent-effort-design.md`.
 
