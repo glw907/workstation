@@ -3,7 +3,7 @@
 <!-- round-report ur-ws -->
 Report: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/reports/ur-ws-report.md
 
-# Round ur-ws, glw907/workstation, written 2026-11-12 (W5 executor relaunched after the stop ruling)
+# Round ur-ws, glw907/workstation, written 2026-11-12 (W5 ended ready, W3 planner launching)
 Round state: running
 
 | Pass | State | PR | Planned min | Actual min | Usage before | Usage after |
@@ -11,14 +11,14 @@ Round state: running
 | W1 | waiting (close packet) | glw907/workstation#230 | 45 | ~50 plan path | week 68%, Fable 15% | week 72%, Fable 22% |
 | W2 | waiting (close packet) | glw907/workstation#231 | 60 | ~35 | week 72%, Fable 22% | week 74%, Fable 26% |
 | W4 | waiting (close packet) | glw907/workstation#232 | 150 | ~35 | week 81%, Fable 38% | week 83%, Fable 43% | |
-| W5 | running (relaunch 1) | glw907/workstation#233 (draft) | 100 | ~110 so far | week 83%, Fable 43% | week 85%, Fable 46% (read before relaunch) | |
-| W3 | not started | none | 75 | | | |
+| W5 | waiting (close packet) | glw907/workstation#233 | 100 | ~115 plus six hours parked | week 83%, Fable 43% | week 86%, Fable 48% | |
+| W3 | planning | none | 75 | | week 86%, Fable 48% | |
 
-Stops: 1 (answered). W5 parked at its end-to-end check: the plan's search for the initiative id counted two outlines as misses, and a second miss is a stop under standing answer 12. One stop packet sent, one unforced call (narrow the search, recommended). Refusals: 0. Calls sent to Geoff: 1.
-Planning misses: W1: 1 design-gap, 1 stale-fact. W2: 1 file-list, 1 design-gap. W4: read from PR #232 (stale-fact line named in its plan; not yet tallied).
-Trials: Fable 5.2 planned 4 passes (W5 launching); 6 sessions under /goal; 0 idle before an end line.
+Stops: 1 (answered). W5 parked at its end-to-end check, because the plan's search for the initiative id counted a backlog tag as a miss. Geoff chose to narrow the search. The relaunch ran clean and W5 ended ready (review accept, 10 open findings, 11 calls). Refusals: 0. Calls sent to Geoff: 1.
+Planning misses: W1: 1 design-gap, 1 stale-fact. W2: 1 file-list, 1 design-gap. W4: read from PR #232 (stale-fact line named in its plan; not yet tallied). W5: 1 mechanism, 1 stale-fact, 1 conflict, 2 design-gap (PR #233).
+Trials: Fable 5.2 planned 4 passes (W3 planning now); 9 sessions under /goal; 0 idle before an end line.
 Opus seats under rule 6: none.
-Waiting for Geoff: nothing open. The W5 stop packet (item 20261112T013106-2940020) was approved, choice 1; the ruling is in the W5 plan under Rulings. W1 #230, W2 #231, and W4 #232 hold for the close packet. Landed: nothing.
+Waiting for Geoff: nothing open. W1 #230, W2 #231, W4 #232, and W5 #233 hold for the close packet after W3 ends. W3 is planning. Landed: nothing.
 Busy check note: claude-worktree-busy exit 1 named only this conductor's own session (bb055eee, conductor-dotfiles); processes none, files clean.
 STATUS copy: done, refreshed at each write.
 Resume from: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/plans/ur-ws-conductor-prompt.txt
