@@ -87,6 +87,8 @@
 
 ## Low
 
+- [ ] **#77** Read the conductor hand-off's `notify-send` against the round rules `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-11)*
+  `claude/.claude/skills/pass-core/references/conductor.md:20` has a planner whose hand-off stalls write the stall into STATUS and run `notify-send -u normal`. `references/round.md` "Parking at planning" tells a planner never to run `notify-send`, so the two files disagree on a stalled hand-off, and an unattended planner that follows line 20 sends a desktop notice no one reads. Decide whether a stalled hand-off parks the pass, and rewrite or drop the step. Found in UR pass W4, which left the line alone.
 - [ ] **#76** Make `pass-report` note a repo whose PR listing hits the 300 cap `#bug` `#workstation` `#initiative:unattended-rounds` *(2026-11-11)*
   `pass-report` lists a repo's merged PRs with `--limit 300` and prints no notice when the listing is full. A window long enough to pass 300 merged PRs in one repo drops the oldest from every table, and the misses table too. glw907/workstation merged 210 PRs in the 30 days to 2026-11-11, so a window near six weeks passes the cap. Add a `## Notes` line when a repo's listing returns 300 PRs, or page past it.
 - [ ] **#57** Run an effort sweep on the 5.5 models before carrying effort settings forward `#improvement` `#workstation` `#initiative:monthly-model-review` *(2026-11-10)* *(swept 2026-11-10)*
