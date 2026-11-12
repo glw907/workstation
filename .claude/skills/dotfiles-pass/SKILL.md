@@ -41,7 +41,7 @@ at close stays `bash scripts/gate.sh`.
 
 **Risk-class path map**: `runner`: `claude/.claude/{skills,agents,workflows}/**`,
 `claude/.claude/settings.json`, `claude/.claude/tooling/**`, `.claude/skills/**`,
-`bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-context-budget,claude-pass-load,claude-tooling-sync,claude-worktree-busy}`,
+`bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-context-budget,claude-launch-guard,claude-pass-load,claude-tooling-sync,claude-worktree-busy}`,
 `scripts/**`, `tests/**`. `auth-data`: `secrets/**`, `scripts/secrets/**`, `bash/.bashrc` (it sources the
 secrets), and `bin/.local/bin/{claude-block-pass,claude-pass,ws-pass-key,pass-count,pass-access,pass-sitting,check-drift,claude-secret-guard,claude-tierguard,claude-askpass,
 claude-sudo-setup,claude-sudo-clear,secret-receive}`.
