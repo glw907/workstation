@@ -18,10 +18,9 @@ fails together, what the host already carries, cost, and how backup and restore 
 defaults to the host at hand (Geoff, 2026-10-22).
 
 Every design runs the `standards:backlog-sweep` scoped sweep, and its full sweep when one is due.
-The design lists the verdicts, and approving it approves the backlog edits; a backlog round takes
+The design lists the verdicts, and approving it approves the backlog edits; a backlog pass takes
 its scope from the verdicts and lists each drop with its reason (Geoff, 2026-10-27 and
-2026-10-25). A polish
-loop's rounds are commits on one branch and one PR, with one whole-branch review after the last.
+2026-10-25).
 
 The estimate is in path minutes, set from the actual-against-planned path in recent scores. A plan
 over twice the estimate returns to Geoff with the reason before launch; the path sets that
@@ -47,8 +46,8 @@ spend or path ceiling, an untraced cause, or an escalation the plan doesn't allo
 ## Pre-flight
 
 The plan opens with a `## Pre-flight` list that gathers, up front, every permission and every
-step only Geoff can do (Geoff, 2026-11-01). It carries a `Permissions checked:` line and a
-`Reviewed:` line, which `claude-launch-guard` requires.
+step only Geoff can do (Geoff, 2026-11-01). It carries three lines: `Permissions checked:`,
+`Reviewed:`, and `Evidence:`, which names the mechanism table and the recorded searches.
 
 - Each Geoff step (a sign-in, a `secret-receive` value, a dialog, a permission rule, a physical
   action) names the check that shows it done. The design's packet carries the foreseen ones as
@@ -70,8 +69,8 @@ step only Geoff can do (Geoff, 2026-11-01). It carries a `Permissions checked:` 
 ## Launch
 
 With unattended planning approved, the planner runs steps 2 to 4 and launches without
-Geoff. An estimate overrun or a finding that changes the design stops it: STATUS carries one
-question, and `notify-send -u normal` tells Geoff. The planner writes the initiative record once,
+Geoff. An estimate overrun or a finding that changes the design stops it: a planner that can't
+launch parks as `round.md` says. The planner writes the initiative record once,
 when it commits the design, plan, and prompts; a mid-run ruling goes in the PR's `## Decisions`.
 
 The executor launches only once every `## Pre-flight` item is done and checked and the main
