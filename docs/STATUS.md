@@ -18,11 +18,11 @@ Stops: 1 (answered). W5 parked at its end-to-end check, because the plan's searc
 Planning misses: W1: 1 design-gap, 1 stale-fact. W2: 1 file-list, 1 design-gap. W4: stale-fact (named in its plan). W5: 1 mechanism, 1 stale-fact, 1 conflict, 2 design-gap. W3: 2 stale-fact, 1 file-list, 2 design-gap, 1 mechanism.
 Trials: Fable 5.2 planned 5 passes; 11 sessions under /goal; 0 idle before an end line.
 Opus seats under rule 6: none.
-Waiting for Geoff: close packet 1 of 2 (W1 #230, W2 #231, W4 #232). Close packet 2 (W5 #233, W3 #234) follows its merge. All five passes have ended. Landed: nothing.
+Waiting for Geoff: close packet 1 of 2, item 20261112T081618-3270413 (W1 #230, W2 #231, W4 #232). Close packet 2 (W5 #233, W3 #234) follows its merge. All five passes have ended. Landed: nothing.
 Busy check note: claude-worktree-busy exit 1 named only this conductor's own session (bb055eee, conductor-dotfiles); processes none, files clean.
 STATUS copy: done, refreshed at each write.
 Resume from: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/plans/ur-ws-conductor-prompt.txt
-Open packets: close packet 1 of 2, queue id to follow.
+Open packets: close packet 1 of 2, queue item 20261112T081618-3270413.
 <!-- /round-report -->
 
 Dotfiles and machine configuration for two Bluefin DX workstations, the
