@@ -3,14 +3,14 @@
 <!-- round-report ur-ws -->
 Report: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/reports/ur-ws-report.md
 
-# Round ur-ws, glw907/workstation, written 2026-11-12 (all passes ended, close packet 1 sent)
+# Round ur-ws, glw907/workstation, written 2026-11-12 (close packet 1 merged, close packet 2 sent)
 Round state: waiting for Geoff
 
 | Pass | State | PR | Planned min | Actual min | Usage before | Usage after |
 | --- | --- | --- | --- | --- | --- | --- |
-| W1 | waiting (close packet) | glw907/workstation#230 | 45 | ~50 plan path | week 68%, Fable 15% | week 72%, Fable 22% |
-| W2 | waiting (close packet) | glw907/workstation#231 | 60 | ~35 | week 72%, Fable 22% | week 74%, Fable 26% |
-| W4 | waiting (close packet) | glw907/workstation#232 | 150 | ~35 | week 81%, Fable 38% | week 83%, Fable 43% | |
+| W1 | merged | glw907/workstation#230 | 45 | ~50 plan path | week 68%, Fable 15% | week 72%, Fable 22% |
+| W2 | merged | glw907/workstation#231 | 60 | ~35 | week 72%, Fable 22% | week 74%, Fable 26% |
+| W4 | merged | glw907/workstation#232 | 150 | ~35 | week 81%, Fable 38% | week 83%, Fable 43% | |
 | W5 | waiting (close packet) | glw907/workstation#233 | 100 | ~115 plus six hours parked | week 83%, Fable 43% | week 86%, Fable 48% | |
 | W3 | waiting (close packet) | glw907/workstation#234 | 75 | ~30 | week 86%, Fable 48% | week 86%, Fable 50% | |
 
@@ -18,11 +18,11 @@ Stops: 1 (answered). W5 parked at its end-to-end check, because the plan's searc
 Planning misses: W1: 1 design-gap, 1 stale-fact. W2: 1 file-list, 1 design-gap. W4: stale-fact (named in its plan). W5: 1 mechanism, 1 stale-fact, 1 conflict, 2 design-gap. W3: 2 stale-fact, 1 file-list, 2 design-gap, 1 mechanism.
 Trials: Fable 5.2 planned 5 passes; 11 sessions under /goal; 0 idle before an end line.
 Opus seats under rule 6: none.
-Waiting for Geoff: close packet 1 of 2, item 20261112T081618-3270413 (W1 #230, W2 #231, W4 #232). Close packet 2 (W5 #233, W3 #234) follows its merge. All five passes have ended. Landed: nothing.
+Waiting for Geoff: close packet 2 of 2 (W5 #233, W3 #234), queue id to follow. Landed: W1 #230, W2 #231, W4 #232, merged on close packet 1 (item 20261112T081618-3270413, approved with two notes, both answered) and pulled.
 Busy check note: claude-worktree-busy exit 1 named only this conductor's own session (bb055eee, conductor-dotfiles); processes none, files clean.
 STATUS copy: done, refreshed at each write.
 Resume from: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/plans/ur-ws-conductor-prompt.txt
-Open packets: close packet 1 of 2, queue item 20261112T081618-3270413.
+Open packets: close packet 2 of 2, queue id to follow.
 <!-- /round-report -->
 
 Dotfiles and machine configuration for two Bluefin DX workstations, the
