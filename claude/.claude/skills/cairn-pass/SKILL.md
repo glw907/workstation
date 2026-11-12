@@ -48,5 +48,6 @@ watch; any other actor's held run stops the line for Geoff. Run it from the pass
 line lands under the pass branch for `--records`. No task waits for CI before the next; a red stops
 the line.
 
-**Packet**: an `auth-data` or `runner` pass sends its packet through `approval-packet`; an
-`ordinary` pass merges its own PR per `pass-core` "Close".
+**Packet**: a pass with no call for Geoff, no `auth-data` path, and no `## Before merge` step
+lands its PR with `approval-queue land` in every class, per `pass-core` "Close". Any other pass
+sends its packet through `approval-packet`.

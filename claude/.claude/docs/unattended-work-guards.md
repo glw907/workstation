@@ -130,9 +130,25 @@ Facts that shape the launch form:
 
 `model-review-notify` launches the monthly review this way. Two probes on 2026-11-10 proved the
 form under `-p` with `--permission-mode auto`: a goal needing two steps ran both and cleared, and a
-goal met by stopping at once cleared with no extra work. The December run is the full test. That
+goal met by stopping at once cleared with no extra work. The December run is the full test. The
+December review also reads the trial results: the line that opens `Trials:` in each round report
+of the `unattended-rounds` initiative record, under `reports/`. That line counts the sessions
+that ran under a `/goal` line and how many of them went idle before their end line. That
 review says whether to extend `/goal` to executors and conductors, which keep the `/loop` wake-up
 for now.
+
+## The weekly usage ceiling
+
+A round's conductor reads the weekly usage before each launch. The command is
+`claude -p "/usage" --model haiku < /dev/null`, and the figure to note is the one on the line
+"Current week (all models)". That line also gives the time of the weekly reset.
+
+The ceiling is 85 percent of the weekly allowance, unless Geoff set another. A figure that can't
+be read counts as over the ceiling. At or over it, the conductor finishes the pass in flight,
+starts nothing new, writes the report, and waits for the reset.
+
+The rule's home is `pass-core` `references/round-run.md`: standing answer 4 and "The order
+table".
 
 ## Restart recovery re-arms the FULL set (born of a 7% near-miss, 2026-09-03)
 
