@@ -5,8 +5,9 @@ Three checks run in order: a process whose command line holds the path, a `claud
 cwd is the path or under it, and an uncommitted file edited in the last 60 minutes.
 
 The process check skips two command lines: `claude daemon run` and the approval queue's server, `node
-<path>/approval-queue/build`. The session check skips a row whose state is done, stopped, or failed; a row with
-no state, as an interactive session's has, still counts.
+<path>/approval-queue/build`. The session check skips a row whose state is done, stopped, or failed, and the row of the
+session that runs the check (a row whose pid is this process or an ancestor); a row with no state, as an
+interactive session's has, still counts.
 """
 
 import json
@@ -73,9 +74,10 @@ def session_hit(path):
     except (OSError, subprocess.CalledProcessError, ValueError):
         print("claude-worktree-busy: skipping the claude agents check (claude absent or output unreadable)", file=sys.stderr)
         return None
+    own = ancestors()
     for row in rows:
         cwd = row.get("cwd") or ""
-        if row.get("state") in FINISHED_STATES:
+        if row.get("state") in FINISHED_STATES or row.get("pid") in own:
             continue
         if cwd and under(os.path.realpath(cwd), path):
             return f"busy: claude session {row.get('id')} has its cwd in the path"
