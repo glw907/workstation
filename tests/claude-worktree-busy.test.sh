@@ -19,6 +19,7 @@ git -C "$repo" -c user.name=t -c user.email=t@t commit -q --allow-empty -m init
 
 # Stub claude: one row shaped like a real `claude agents --json` row, ids and paths replaced. STUB_CWD sets its
 # cwd, STUB_STATE its state (default working), and STUB_NOSTATE prints the interactive shape: no state, no id.
+# STUB_SELF_PID adds the caller's own row first, with that pid and the cwd STUB_SELF_CWD.
 cat >"$root/bin/claude" <<'STUB'
 #!/usr/bin/env bash
 if [ -n "${STUB_NOSTATE:-}" ]; then
@@ -28,8 +29,13 @@ cat <<JSON
 ]
 JSON
 else
+self=
+if [ -n "${STUB_SELF_PID:-}" ]; then
+  self="{\"pid\": ${STUB_SELF_PID}, \"id\": \"self0000\", \"cwd\": \"${STUB_SELF_CWD:-/nowhere}\", \"kind\": \"background\", \"status\": \"idle\", \"state\": \"working\"},"
+fi
 cat <<JSON
 [
+  ${self}
   {"pid": 4242, "id": "aaaa1111", "cwd": "${STUB_CWD:-/nowhere}", "kind": "background", "startedAt": 1794000000000,
    "sessionId": "aaaa1111-0000-0000-0000-000000000000", "name": "fake-session", "status": "idle", "state": "${STUB_STATE:-working}"}
 ]
@@ -131,6 +137,9 @@ STUB_CWD="$repo" STUB_STATE="done" check 0 "finished session row" "$repo"
 STUB_CWD="$repo" STUB_STATE=stopped check 0 "stopped session row" "$repo"
 STUB_CWD="$repo" STUB_STATE=failed check 0 "failed session row" "$repo"
 STUB_CWD="$repo" STUB_NOSTATE=1 check 1 "session row with no state" "$repo" "busy: claude session"
+
+STUB_SELF_PID="$$" STUB_SELF_CWD="$repo" check 0 "caller's own row in the path" "$repo"
+STUB_SELF_PID="$$" STUB_SELF_CWD="$repo" STUB_CWD="$repo" check 1 "caller's row and another session in the path" "$repo" "busy: claude session aaaa1111"
 
 echo x >"$repo/new.txt"
 check 1 "fresh uncommitted file" "$repo" "busy: uncommitted file"
