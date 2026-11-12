@@ -61,7 +61,7 @@ register's old packet rules are replaced by the writer's brief.
    `{note, outcome, text, ref}`, `outcome` being `fixed`, `filed`, or `answered`, and `ref` (a
    commit or a backlog item) required for the first two. Store it with `approval-queue reply <id>
    <replies.json>`, after the action the notes call for, since a `fixed` reply cites its commit.
-   - **Approve:** a note that objects to merging a PR means that PR is skipped: pass
+   - **Approve, on any packet but a `stop` packet:** a note that objects to merging a PR means that PR is skipped: pass
      `--skip <owner/repo#n>` for it and report it. Run `approval-queue merge [--skip
      <owner/repo#n>]... [--premerge-done <owner/repo#n>]... <id>`. Merging is a `session` step;
      the approve is the authorization. If

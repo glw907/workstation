@@ -133,7 +133,7 @@ form under `-p` with `--permission-mode auto`: a goal needing two steps ran both
 goal met by stopping at once cleared with no extra work. The December run is the full test. The
 December review also reads the trial results: the line that opens `Trials:` in each round report
 of the `unattended-rounds` initiative record, under `reports/`. That line counts the sessions
-that ran under a `/goal` line and how many of them went idle before their end line. That
+that ran under a `/goal` line and how many of them went idle before their end line. The December
 review says whether to extend `/goal` to executors and conductors, which keep the `/loop` wake-up
 for now.
 
@@ -148,7 +148,8 @@ be read counts as over the ceiling. At or over it, the conductor finishes the pa
 starts nothing new, writes the report, and waits for the reset.
 
 The rule's home is `pass-core` `references/round-run.md`: standing answer 4 and "The order
-table".
+table". A round design records another ceiling under `references/round.md` "What a round design
+adds".
 
 ## Restart recovery re-arms the FULL set (born of a 7% near-miss, 2026-09-03)
 

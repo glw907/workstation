@@ -97,9 +97,11 @@ Pass W4 of round `ur-ws` is on branch `ur-w4`: `pass-core` gains `references/rou
 Pass W5 is on branch `ur-w5`, cut from `ur-w4`: `approval-packet` and the packet writer's brief
 learn the `round` key and the stop packet, `cairn-pass` "Packet" states ruling D1, and
 `unattended-work-guards.md` gains the weekly usage ceiling. The brief is a vendored Survey file
-edited ahead of its pin, which is the pass's one call for Geoff (backlog #79). Its end-to-end
-check passed on `docs/plans/2026-11-11-ur-w5-outline.md` after Geoff's ruling on the check's
-search. The PR is glw907/workstation#233, and it joins the round's close packet behind #232.
+edited ahead of its pin, which is a call for Geoff (backlog #79). Its end-to-end check passed on
+`docs/plans/2026-11-11-ur-w5-outline.md` after Geoff's ruling on the check's search. The closing
+review accepted the branch and left ten findings open on the outline, each a call for Geoff
+(backlog #81). The PR is glw907/workstation#233, and it joins the round's close packet behind
+#232.
 
 ## Docs system
 
