@@ -89,6 +89,12 @@ runs `approval-queue pending` (empty, or collect what it lists with the old buil
 exits 2. Pass 1 plan:
 `~/Projects/initiatives/workstation-refinement/plans/2026-11-10-pass-1-workstation-plan.md`.
 
+## Unattended rounds
+
+Pass W4 of round `ur-ws` is on branch `ur-w4`: `pass-core` gains `references/round.md` and
+`references/round-run.md`, which hold the round rules, and an executing session now loads about
+8,800 words. Nothing is live until the merge.
+
 ## Docs system
 
 Docs are code: cairn-cms pages change with the code, and a `docs` review in the Approval Queue puts them before Geoff. The initiative record (`~/Projects/initiatives/docs-system`) holds the current status and the next launch prompt.

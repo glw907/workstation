@@ -48,6 +48,7 @@ build() {
   rm -rf "$root" "$home"
   for f in CLAUDE.md skills/pass-core/SKILL.md skills/pass-core/references/executor.md \
     skills/pass-core/references/planner.md skills/pass-core/references/conductor.md \
+    skills/pass-core/references/round.md skills/pass-core/references/round-run.md \
     skills/cairn-pass/SKILL.md skills/approval-packet/SKILL.md; do
     words_file "$root/claude/.claude/$f" 10
   done
@@ -108,6 +109,20 @@ case "$err" in
 esac
 run >/dev/null 2>&1; rc=$?
 assert_eq "$rc" "0" "absent inside file without --check: exit"
+
+# The round files count in the roles that load them: round-run.md for the executor and the
+# conductor, round.md for the planner.
+build
+out=$(run)
+assert_eq "$(printf '%s\n' "$out" | grep -c -F 'references/round-run.md')" "2" "round-run.md rows"
+assert_eq "$(printf '%s\n' "$out" | grep -c -F 'references/round.md')" "1" "round.md rows"
+rm "$root/claude/.claude/skills/pass-core/references/round-run.md"
+err=$(run --check 2>&1 >/dev/null); rc=$?
+assert_eq "$rc" "1" "absent round-run.md: exit"
+case "$err" in
+  *"references/round-run.md is absent"*) ;;
+  *) echo "FAIL: absent round-run.md: message was '$err'"; fail=1 ;;
+esac
 
 [ "$fail" -eq 0 ] && echo "claude-pass-load test OK"
 exit "$fail"

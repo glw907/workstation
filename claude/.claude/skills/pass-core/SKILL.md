@@ -18,7 +18,9 @@ Load `standards:running-passes` first; this skill adds Geoff's operation to it. 
 ## Lifecycle
 
 Geoff approves a design as a design part in an approval-queue packet
-(`approval-packet`), never through a question in chat (Geoff, 2026-10-28).
+(`approval-packet`), never through a question in chat (Geoff, 2026-10-28). Every design is a
+round design of one to six passes in one repo. A planner also reads `references/round.md`, and a
+conductor or an executor reads `references/round-run.md`.
 
 1. **Design.** Opus at `high` brainstorms (`standards:brainstorming`); the planner reference holds
    what a design carries. If the diff fits in one sentence, skip steps 2 to 4.
@@ -85,7 +87,8 @@ answer runs out.
 
 A mid-run question to Geoff is a planning miss, recorded in the PR's `## Planning misses`: the
 question, his answer, and the plan item that should have answered it. The fix waits for the monthly
-prune. Under a conductor, the executor writes a stop to STATUS and waits, and the conductor asks.
+prune. Under a conductor, the executor writes a stop to STATUS and ends, and the conductor sends a
+`stop` packet.
 
 ## Pairs
 
@@ -96,16 +99,10 @@ Pairs run as `running-passes` sets out; the executor reference holds the dispatc
 Gates run through `cairn-run-gate`, and CI carries the whole suites off the critical path; the
 executor reference holds the rules.
 
-## Clock stop
-
-No clock file is written, and nothing stops on time. At a task's end, an actual over twice the
-estimate (from commit times) adds one line to the PR's `## Decisions` naming both. A session whose
-prompt says to write `.pass-task-clock` may skip it.
-
 ## Conductor
 
-A conductor runs only when the design asks for one; otherwise the executor closes the pass itself.
-Its rules are in the conductor reference.
+A round of two or more passes has a conductor, whose rules are in the conductor reference. A
+one-pass round has none, and its executor closes the pass itself.
 
 ## Close
 

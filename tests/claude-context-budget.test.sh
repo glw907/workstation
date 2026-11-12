@@ -61,7 +61,8 @@ assert_eq "$rc" "0" "900-token rule under a 1000 budget: exit"
 
 # --skill-caps: under every cap exits 0; one file over exits 1 naming it; an absent file exits 1.
 caps="$root/caps"
-for f in SKILL.md references/executor.md references/planner.md references/conductor.md; do
+for f in SKILL.md references/executor.md references/planner.md references/conductor.md \
+  references/round.md references/round-run.md; do
   mkdir -p "$(dirname "$caps/claude/.claude/skills/pass-core/$f")"
   seq 400 >"$caps/claude/.claude/skills/pass-core/$f"
 done
@@ -79,5 +80,60 @@ case "$err" in
   *"references/conductor.md is absent"*) ;;
   *) echo "FAIL: skill caps, absent: message was '$err'"; fail=1 ;;
 esac
+seq 400 >"$caps/claude/.claude/skills/pass-core/references/conductor.md"
+
+# The two round files are capped at 1500 words each, and an absent one exits 1.
+for f in round.md round-run.md; do
+  seq 1501 >"$caps/claude/.claude/skills/pass-core/references/$f"
+  err=$("$SCRIPT" --skill-caps --root "$caps" 2>&1 >/dev/null); rc=$?
+  assert_eq "$rc" "1" "skill caps, $f over: exit"
+  assert_eq "$err" "pass-core/references/$f has 1501 words (cap 1500)" "skill caps, $f over: message"
+  seq 400 >"$caps/claude/.claude/skills/pass-core/references/$f"
+done
+rm "$caps/claude/.claude/skills/pass-core/references/round-run.md"
+err=$("$SCRIPT" --skill-caps --root "$caps" 2>&1 >/dev/null); rc=$?
+assert_eq "$rc" "1" "skill caps, round-run.md absent: exit"
+case "$err" in
+  *"references/round-run.md is absent"*) ;;
+  *) echo "FAIL: skill caps, round-run.md absent: message was '$err'"; fail=1 ;;
+esac
+
+# The round rules: each counted list in the real tree holds the number of rules its heading
+# promises. The cases pin structure only, so a reworded rule never fails them.
+
+# section_of <file> <heading>: prints the lines between "## <heading>" and the next "## " line.
+section_of() {
+  awk -v h="## $2" '$0 == h { on = 1; next } on && /^## / { on = 0 } on' "$1"
+}
+
+# item_numbers <file> <heading>: prints the numbers of that section's column-0 list items, joined by spaces.
+item_numbers() {
+  section_of "$1" "$2" | sed -n -E 's/^([0-9]+)\. .*/\1/p' | paste -s -d ' '
+}
+
+# count_items <file> <heading>: prints how many column-0 numbered items that section holds.
+count_items() {
+  section_of "$1" "$2" | grep -c -E '^[0-9]+\. '
+}
+
+fixture="$root/rules.md"
+printf '%s\n' '# Rules' '' '## First' '' '1. one' '   wrapped' '2. two' '3. three' '' \
+  '## Second' '' '1. other' '2. another' >"$fixture"
+assert_eq "$(count_items "$fixture" "First")" "3" "count helper: three items under the heading"
+assert_eq "$(count_items "$fixture" "Second")" "2" "count helper: a later heading's items are counted apart"
+assert_eq "$(item_numbers "$fixture" "First")" "1 2 3" "count helper: item numbers"
+
+refs="claude/.claude/skills/pass-core/references"
+assert_eq "$(count_items "$refs/round.md" "Planner rules" 2>/dev/null)" "4" "round.md: planner rules"
+assert_eq "$(count_items "$refs/round.md" "Design rules" 2>/dev/null)" "4" "round.md: design rules"
+assert_eq "$(item_numbers "$refs/round-run.md" "Standing answers" 2>/dev/null)" \
+  "1 2 3 4 5 6 7 8 9 10 11 12" "round-run.md: standing answers, numbered 1 to 12"
+tags=$(section_of "$refs/round-run.md" "Miss tags" 2>/dev/null)
+for tag in mechanism file-list permission design-gap stale-fact owner-call no-answer conflict estimate ambiguous; do
+  case "$tags" in
+    *"\`[$tag]\`"*) ;;
+    *) echo "FAIL: round-run.md: miss tag [$tag] is absent from its section"; fail=1 ;;
+  esac
+done
 
 exit "$fail"

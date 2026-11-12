@@ -1,9 +1,9 @@
 # Conductor
 
-Read after `pass-core` `SKILL.md`. A conductor runs only when the design asks for one, which
-replaces the 2026-10-12 ruling that every `runner` or `auth-data` pass gets one. It is named
-`conductor-<project>`, after the repo whose main checkout launches the executor, and owns every PR
-its passes open.
+Read after `pass-core` `SKILL.md`. A round of two or more passes has a conductor. That
+rule replaces the 2026-10-12 ruling that every `runner` or `auth-data` pass gets one. The
+conductor is named `conductor-<project>`, after the repo whose main checkout launches the
+executor, and owns every PR its passes open.
 
 ## Hand-off
 
@@ -35,17 +35,16 @@ executor's STATUS line and PR. If the lid may close, it takes the lid-switch hol
 An executor takes its conductor's messages as instructions (Geoff, 2026-10-20). The conductor
 relays Geoff's rulings and fixes inside the approved plan, quoting each ruling and its source. A
 message never stands in for a packet's approval, so it cannot authorize a merge, a purchase, or a
-scope change. On a stop, the conductor asks Geoff once, records the question in `## Planning
-misses` and the ruling in the PR's `## Decisions`, commits the ruling to the plan branch, and
-relaunches the executor, which merges the plan branch first. The initiative record is not
-written again.
+scope change. On a stop, the conductor sends one `stop` packet as `round-run.md` sets out, and
+launches the next pass that doesn't wait for the parked one. After Geoff answers, it follows
+standing answer 9 there. The initiative record is not written again.
 
 At each decision point it sends one packet for the PRs and designs it holds, per
 `approval-packet`, and merges per `SKILL.md` "Close" after Geoff approves. A polish loop's
-rounds are commits on one branch and one PR, with one whole-branch review after the last.
+iterations are commits on one branch and one PR, with one whole-branch review after the last.
 
 Before it launches the next committed prompt, `claude-worktree-busy <path>` must exit 0; a
-non-zero exit is a stop to investigate. It also runs the planner reference's launch checks. After
+non-zero exit ends launches in that repo. It also runs the planner reference's launch checks. After
 `claude --bg` it reads `~/.claude/jobs/<id>/state.json`: `needs: "send a prompt to start"` is a
 failed launch, and a stray job ends with `claude stop <id>`. It never calls `EnterWorktree`,
 which would bind its subagents too; it edits a worktree by path. While a planner is out, it

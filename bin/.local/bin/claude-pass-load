@@ -1,10 +1,10 @@
 #!/usr/bin/env -S python3 -I
 """Print how many words each pass role loads, and check the executor's load against its limit.
 
-A pass session loads the global CLAUDE.md, pass-core, its role's reference, and the files its
-repo's pass guides name. The table below follows the Pass 3 design's "What each role loads",
-with cairn-cms as the case, since it is the largest. Paths starting with ``~/`` sit outside the
-workstation repo; every other path is relative to ``--root``.
+A pass session loads the global CLAUDE.md, pass-core, its role's reference and round file, and
+the files its repo's pass guides name. The table below starts from the Pass 3 design's "What each
+role loads" and adds the round files, with cairn-cms as the case, since it is the largest. Paths
+starting with ``~/`` sit outside the workstation repo; every other path is relative to ``--root``.
 
 With no flag the script prints each role's files, their word counts, and the total. With
 ``--check`` it exits 1 when the executor's total passes the limit, when a file inside the tree is
@@ -27,6 +27,7 @@ SHARED = [
 ROLES = {
     "executor": SHARED + [
         ("claude/.claude/skills/pass-core/references/executor.md", None, None),
+        ("claude/.claude/skills/pass-core/references/round-run.md", None, None),
         ("claude/.claude/skills/cairn-pass/SKILL.md", None, None),
         (REGISTER, "The brief skeleton", None),
         (REGISTER, "A PR with nothing to decide (PR #40)", None),
@@ -36,6 +37,7 @@ ROLES = {
     ],
     "planner": SHARED + [
         ("claude/.claude/skills/pass-core/references/planner.md", None, None),
+        ("claude/.claude/skills/pass-core/references/round.md", None, None),
         ("~/Projects/standards/plugins/standards/skills/brainstorming/SKILL.md", None, 1778),
         ("~/Projects/standards/plugins/standards/skills/backlog-sweep/SKILL.md", None, 770),
         ("~/Projects/standards/plugins/standards/skills/spec-plan-review/SKILL.md", None, 1200),
@@ -45,6 +47,7 @@ ROLES = {
     ],
     "conductor": SHARED + [
         ("claude/.claude/skills/pass-core/references/conductor.md", None, None),
+        ("claude/.claude/skills/pass-core/references/round-run.md", None, None),
     ],
 }
 
