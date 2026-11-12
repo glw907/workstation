@@ -178,7 +178,9 @@ def test_record_plan_beside_its_prompt_is_read(record):
     (record / "plans/x-plan.md").write_text("## Tasks\n")
     out = run(launch_of("x-prompt.txt"), record)
     assert "x-plan.md" in out
-    assert all(line in out for line in ("Permissions checked:", "Reviewed:", "Evidence:"))
+    assert "a `Permissions checked:` line" in out
+    assert "a `Reviewed:` line" in out
+    assert "an `Evidence:` line" in out
 
 
 def test_complete_record_plan_passes(record):

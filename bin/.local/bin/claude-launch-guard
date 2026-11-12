@@ -3,8 +3,8 @@
 
 The hook finds the plan a launch runs: the prompt file named in `$(cat <file>)`, then the
 `docs/plans/*.md` path that file names, else its sibling with `-prompt.txt` swapped for `.md`, else
-the sibling swapped for `-plan.md`, which is how an initiative record keeps a plan. The
-plan's `## Pre-flight` section must carry a `Permissions checked:` line, saying how each task's
+the sibling swapped for `-plan.md`, which is how an initiative record keeps a plan.
+The plan's `## Pre-flight` section must carry a `Permissions checked:` line, saying how each task's
 credentials and writes were read against auto mode, a `Reviewed:` line naming the plan review, and
 an `Evidence:` line naming the plan's mechanism table and its recorded searches.
 A launch with no plan, a planner launch (`*-planning-prompt.txt`, `*-planner-prompt.txt`), and a
