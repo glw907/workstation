@@ -18,11 +18,11 @@ Stops: 1. W5 parked at its end-to-end check: the plan's search for the initiativ
 Planning misses: W1: 1 design-gap, 1 stale-fact. W2: 1 file-list, 1 design-gap. W4: read from PR #232 (stale-fact line named in its plan; not yet tallied).
 Trials: Fable 5.2 planned 4 passes (W5 launching); 6 sessions under /goal; 0 idle before an end line.
 Opus seats under rule 6: none.
-Waiting for Geoff: the W5 stop packet (queue id in the line below). W1 #230, W2 #231, and W4 #232 hold for the close packet after the last pass ends. W3 is not started: W5 holds it. Landed: nothing.
+Waiting for Geoff: the W5 stop packet (queue item 20261112T013106-2940020). W1 #230, W2 #231, and W4 #232 hold for the close packet after the last pass ends. W3 is not started: W5 holds it. Landed: nothing.
 Busy check note: claude-worktree-busy exit 1 named only this conductor's own session (bb055eee, conductor-dotfiles); processes none, files clean.
 STATUS copy: done, refreshed at each write.
 Resume from: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/plans/ur-ws-conductor-prompt.txt
-Open packets: W5 stop packet, id to follow in the next write of this report.
+Open packets: W5 stop packet, queue item 20261112T013106-2940020.
 <!-- /round-report -->
 
 Dotfiles and machine configuration for two Bluefin DX workstations, the
