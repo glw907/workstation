@@ -10,6 +10,9 @@
 
 ## Medium
 
+- [ ] **#88** Put a size limit on Node's compile cache in `/tmp` `#improvement` `#workstation` *(2026-11-13)*
+  `/tmp/node-compile-cache` has no size limit and had grown to 3.1G when pavilion's 13.0G per-user `/tmp` quota filled on 2026-11-13, which made every Claude session's Bash fail with EDQUOT (the larger share was cairn-cms backlog #465). `/tmp` is a RAM-backed tmpfs that also holds `/tmp/claude-1000`. Left alone the cache grows back. Options: point `NODE_COMPILE_CACHE` at a disk path outside `/tmp`, or prune it on a timer. Found by session `dotfiles-d8`.
+
 - [ ] **#87** Drop `--premerge-done` from the Survey release steps `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-13)*
   Vendored `claude/.claude/skills/survey/SKILL.md:88` has the release merge the workstation PR with `approval-queue merge --premerge-done`, and step 3 expects `merge` to stop with exit 2 at its `## Before merge`. The rewritten queue's `merge` reads no `## Before merge` section and has no such flag (D2 plan, M5), so the next Survey release that follows those steps fails at the merge. Rewrite steps 3 and 5 in the Survey repo so the merging session runs the section's commands and check before `approval-queue merge`, as `pass-core` "Close" says, and release it. Found in workstation PR #238.
 - [ ] **#86** Give a `## Before merge` step a place between the pull requests of one merge document `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-13)*
