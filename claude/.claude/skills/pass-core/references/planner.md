@@ -5,8 +5,8 @@ Read after `pass-core` `SKILL.md`. A plan review adds this file's "Stops" and
 
 ## Design
 
-The design is the page or less `running-passes` "Design" sets out, opening with `## Brief` per
-`~/.claude/docs/voice/approval-brief.md`, with an owner fork as a `### Decide:` block. It names its
+The design is the page or less `running-passes` "Design" sets out, which Geoff reads as a
+`design` document written per `approval-packet`, with each owner fork as a question. It names its
 initiative or says none applies; cross-repo specs, plans, and research go in
 `~/Projects/initiatives/<id>/`. It names the published practice and vendor docs it drew on.
 After a pass misses its bar, the next design reads that pass's final artifacts against the code
