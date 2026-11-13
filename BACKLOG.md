@@ -159,6 +159,9 @@
 - [ ] **#29** tellgrader posthook tests fail in a worktree under /tmp `#bug` `#workstation` *(2026-10-22)* *(swept 2026-11-10)*
   **Three `internal/posthook` tests fail when the dotfiles checkout sits under `/tmp`** (`TestRunFlagsChangedLineOnly`, `TestRunSkipsUngovernedPaths`, `TestWholeDocFindingsOnlyOnWrite` return no advisory), so the gate goes red in a scratchpad worktree while the same tests pass in `~/.dotfiles` and in `.claude/worktrees/`. The hook likely treats a `/tmp` path as ungoverned. Make the tests use a path independent of where the checkout lives.
 
+- [ ] **#89** Let a worktree-isolated session run compound shell commands that touch no git `#improvement` `#workstation` *(2026-11-13)*
+  Moved from cairn-cms #250 (Geoff, 2026-11-13). Claude Code's worktree guard refused `cmd && cat file`, `sed -i`, a heredoc script that mentioned git in its text, `cairn-run-gate 'bash <script>'`, and a write to the pass clock file under the git dir, in cairn-cms's `tool-gates` run and all four `cairn-implementer` dispatches, with "cannot be shown not to be git". Each recovered by splitting the command or using the Edit tool. The refusal names no token, so a session can't tell which part tripped it. Fix candidate: a settings or hook change that allows a command whose text carries no `git` word and no path under the git dir, or a feedback report asking the guard to name the matching token.
+
 ## Done
 - [x] **#76** Make `pass-report` note a repo whose PR listing hits the 300 cap `#bug` `#workstation` `#initiative:unattended-rounds` *(2026-11-11 → 2026-11-13)*
   `pass-report` lists a repo's merged PRs with `--limit 300` and prints no notice when the listing is full. A window long enough to pass 300 merged PRs in one repo drops the oldest from every table, and the misses table too.
