@@ -4,8 +4,10 @@ import importlib.machinery
 import importlib.util
 import json
 import os
+import io
 import subprocess
 import sys
+import tarfile
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -35,6 +37,18 @@ def materialize(tmp_path, data):
         (state / "approval-queue").mkdir(parents=True)
         lines = [json.dumps(d) for d in data["decisions"]]
         (state / "approval-queue/decisions.jsonl").write_text("\n".join(lines) + "\n")
+    if "archive" in data:
+        (state / "approval-queue").mkdir(parents=True, exist_ok=True)
+        body = "".join(json.dumps(d) + "\n" for d in data["archive"]).encode()
+        with tarfile.open(state / "approval-queue/archive-2026-11.tar.gz", "w:gz") as tar:
+            info = tarfile.TarInfo("decisions.jsonl")
+            info.size = len(body)
+            tar.addfile(info, io.BytesIO(body))
+    for doc, parts in data.get("store", {}).items():
+        folder = state / "approval-queue/store" / doc
+        folder.mkdir(parents=True)
+        for name, value in parts.items():
+            (folder / name).write_text(json.dumps(value))
     if "backfill" in data:
         back = home / "Projects/initiatives/dev-speed/research"
         back.mkdir(parents=True)
@@ -136,6 +150,82 @@ def test_decision_waits_use_anchorage_local_time(tmp_path):
     # offset would turn the October wait negative.
     assert "| Waiting on Geoff | 2 | 15.5 | 30.0 | 31.0 |" in run.stdout
     assert "Negative waits dropped: 1" in run.stdout
+    assert "Listing full" not in run.stdout
+
+
+def test_archive_alone_gives_the_same_waits(tmp_path):
+    data = fixture("waits.json")
+    data["archive"] = data.pop("decisions")
+    run = report(tmp_path, data)
+    assert "| Waiting on Geoff | 2 | 15.5 | 30.0 | 31.0 |" in run.stdout
+    assert "Negative waits dropped: 1" in run.stdout
+    assert "not counted" not in run.stdout
+
+
+def _decision(action, at):
+    return {"action": action, "at": at}
+
+
+STORE = {
+    "repos": ["alpha", "beta"],
+    "store": {
+        # Sent back at 10:20, returned at 10:30, approved at 11:00: one 30 minute wait per PR.
+        "20261110-100000-aaaaaa": {
+            "meta.json": {"id": "x", "kind": "merge", "title": "t", "created": "2026-11-10T10:00:00Z", "versions": 2},
+            "heads.json": [
+                {"repo": "glw907/alpha", "number": 1, "head": "h1"},
+                {"repo": "glw907/beta", "number": 2, "head": "h2"},
+            ],
+            "decision-1.json": _decision("sendback", "2026-11-10T10:20:00Z"),
+            "decision-2.json": _decision("returned", "2026-11-10T10:30:00Z"),
+            "decision-3.json": _decision("approve", "2026-11-10T11:00:00Z"),
+        },
+        # The undo cancels the approve, so the document stands undecided.
+        "20261110-120000-bbbbbb": {
+            "meta.json": {"id": "x", "kind": "merge", "title": "t", "created": "2026-11-10T12:00:00Z", "versions": 1},
+            "heads.json": [{"repo": "glw907/alpha", "number": 3, "head": "h3"}],
+            "decision-1.json": _decision("approve", "2026-11-10T12:10:00Z"),
+            "decision-2.json": _decision("undo", "2026-11-10T12:11:00Z"),
+        },
+        "20261110-130000-cccccc": {
+            "meta.json": {"id": "x", "kind": "merge", "title": "t", "created": "2026-11-10T13:00:00Z", "versions": 1},
+            "heads.json": [{"repo": "glw907/alpha", "number": 4, "head": "h4"}],
+            "decision-1.json": _decision("approve", "2026-11-10T13:10:00Z"),
+        },
+        "20261110-140000-dddddd": {
+            "meta.json": {"id": "x", "kind": "design", "title": "t", "created": "2026-11-10T14:00:00Z", "versions": 1},
+            "decision-1.json": _decision("approve", "2026-11-10T14:05:00Z"),
+        },
+        "20261110-150000-eeeeee": {
+            "meta.json": {"id": "x", "kind": "report", "title": "t", "created": "2026-11-10T15:00:00Z", "versions": 1},
+            "decision-1.json": _decision("read", "2026-11-10T15:05:00Z"),
+        },
+    },
+}
+
+
+def test_store_waits_run_from_creation_or_return_to_the_standing_decision(tmp_path):
+    out = report(tmp_path, STORE).stdout
+    assert "| Waiting on Geoff | 2 | 20.0 | 30.0 | 40.0 |" in out
+    assert "| Waiting on Geoff | 1 | 30.0 | 30.0 | 30.0 |" in out
+    assert "- Design and decide documents decided: 1" in out.splitlines()
+    assert "Negative waits dropped: 0" in out
+
+
+def test_store_beside_the_archive_adds_to_old_waits(tmp_path):
+    data = {**STORE, "archive": fixture("waits.json")["decisions"]}
+    out = report(tmp_path, data).stdout
+    assert "| Waiting on Geoff | 4 | 20.0 | 30.0 | 71.0 |" in out
+
+
+def test_listing_of_300_prs_is_named_as_full(tmp_path):
+    prs = [
+        {"number": n, "headRefName": f"b{n}", "createdAt": "2026-11-02T10:00:00Z",
+         "mergedAt": "2026-11-02T11:00:00Z", "body": ""}
+        for n in range(300)
+    ]
+    out = report(tmp_path, {"repos": ["alpha", "beta"], "prs": {"alpha": prs}}).stdout
+    assert "- Listing full at 300 (older merged PRs missed): alpha" in out.splitlines()
 
 
 def test_score_line_beats_backfill_row(tmp_path):
@@ -161,8 +251,14 @@ def test_repo_without_data_prints_one_line(tmp_path):
 
 def test_missing_state_files_are_named_in_the_footer(tmp_path):
     out = report(tmp_path, fixture("empty.json")).stdout
-    for name in ("runs.jsonl", "decisions.jsonl", "score-backfill.json"):
+    for name in ("runs.jsonl", "score-backfill.json"):
         assert any(l.startswith("- Not found: ") and l.endswith(name) for l in out.splitlines())
+    assert "Not found: " + "~" not in out
+    assert not any("decisions.jsonl" in l and l.startswith("- Not found") for l in out.splitlines())
+    assert (
+        "- Waits before the new queue: not counted (no decisions.jsonl and no archive-2026-11.tar.gz)"
+        in out.splitlines()
+    )
 
 
 def test_missing_records_file_exits_2(tmp_path):
@@ -252,7 +348,7 @@ OLD_REPORT = """\
 
 - Gate records read: ~/.local/state/cairn-run-gate/runs.jsonl
 - Not found: ~/.local/state/cairn-run-gate/runs.jsonl
-- Not found: ~/.local/state/approval-queue/decisions.jsonl
+- Waits before the new queue: not counted (no decisions.jsonl and no archive-2026-11.tar.gz)
 - Not found: ~/Projects/initiatives/dev-speed/research/score-backfill.json
 - Dropped gate records: 0
 - Negative waits dropped: 0
