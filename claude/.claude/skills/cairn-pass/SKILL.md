@@ -48,7 +48,5 @@ watch; any other actor's held run stops the line for Geoff. Run it from the pass
 line lands under the pass branch for `--records`. No task waits for CI before the next; a red stops
 the line.
 
-**Packet**: a pass with no call for Geoff, no `auth-data` path, and no `## Before merge` step
-lands its PR with `approval-queue land` in every class, once its checks are green and its
-whole-branch review is accepted with no open finding, per `pass-core` "Close". Any other pass
-sends its packet through `approval-packet`.
+**Packet**: `approval-packet` step 1 and `pass-core` "Close" say when a pass lands and when it
+sends a document.
