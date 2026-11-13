@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """PreToolUse hook denying every `gh pr merge`, so a merge goes through `approval-queue`.
 
-A merge lands through `approval-queue merge <id>` (a decided packet) or `approval-queue land`
-(a PR that needs no packet); the `## Before merge` check lives in
-`approval-queue merge --premerge-done`. Quoted text, escapes, comments, and heredoc bodies never
+A merge lands through `approval-queue merge <id>` (a document Geoff approved) or
+`approval-queue land <owner/repo#n> <sentence>` (a PR that needs no document). Quoted text, escapes, comments, and heredoc bodies never
 count as shell syntax, so a command that only mentions `gh pr merge` goes through. Per the hooks
 reference (https://code.claude.com/docs/en/hooks) a denial is `hookSpecificOutput.permissionDecision:
 "deny"` with a `permissionDecisionReason`, printed with exit 0. This is a slip guard, not a
@@ -26,9 +25,8 @@ SKIPPED = re.compile(r"-\S*|\d+[smhd]?|[A-Z]{3,}|\d*[<>]\S*")
 GH = re.compile(r"(\S*/)?gh")
 REASON = (
     "Blocked: merge through approval-queue, never `gh pr merge`. Use `approval-queue merge <id>` for a "
-    "decided packet (after an approve), or `approval-queue land <owner/repo#n> <claim>` for a PR that "
-    "needs no packet; the `approval-packet` skill has the procedure. The `## Before merge` check now "
-    "lives in `approval-queue merge --premerge-done <owner/repo#n> <id>`."
+    "document Geoff approved, or `approval-queue land <owner/repo#n> <sentence>` for a PR that "
+    "needs no document; the `approval-packet` skill has the procedure."
 )
 
 

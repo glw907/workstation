@@ -14,6 +14,7 @@ import re
 import statistics
 import subprocess
 import sys
+import tarfile
 import time
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -24,6 +25,8 @@ OWNER = "glw907"
 RUN_LIST_CAP = 1000
 RATE_WAIT_CAP = 900
 HOUR = 3600
+PR_LIST_CAP = 300
+ARCHIVE = "archive-2026-11.tar.gz"
 DEFAULT_BRANCHES = {"main", "master"}
 SCORE_KEYS = ("planPathMin", "actualPathMin", "fixRounds", "reds", "attended", "escapes")
 SCORE_RE = re.compile(r"<!--\s*pass-score\s+(\{.*?\})\s*-->")
@@ -47,6 +50,10 @@ def ts(text):
 
 def iso(when):
     return when.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+class Note(str):
+    """A footer line printed as written, not as a `Not found:` entry."""
 
 
 class GhError(Exception):
@@ -322,6 +329,71 @@ def decision_wait(line):
     return found.group(1), decided, (decided - queued).total_seconds() / 60
 
 
+def standing_decision(records, created):
+    """Return (decided, queued) datetimes for a document's standing decision, None when it has none.
+
+    Records are (number, record) pairs. An undo cancels the standing decision; the wait starts at
+    the last `returned` before the decision, else at the document's creation.
+    """
+    queued = created
+    standing = None
+    for _, rec in sorted(records, key=lambda pair: pair[0]):
+        action = rec.get("action")
+        if action == "returned":
+            queued = ts(rec["at"])
+        elif action in ("approve", "sendback"):
+            standing = (ts(rec["at"]), queued)
+        elif action == "undo":
+            standing = None
+    return standing
+
+
+def store_waits(root):
+    """Read the store under `root`; return ({repo: [(decided, minutes)]}, design/decide decisions, bad lines).
+
+    A merge document gives one wait per entry of its heads.json; a design or decide document
+    carries no repo and is counted by its decision time. Each design count is a decided datetime.
+    """
+    waits = {}
+    others = []
+    bad = 0
+    for doc in sorted(p for p in root.iterdir() if p.is_dir()):
+        try:
+            meta = json.loads((doc / "meta.json").read_text())
+            kind = meta["kind"]
+            if kind not in ("merge", "design", "decide"):
+                continue
+            records = []
+            for path in doc.glob("decision-*.json"):
+                number = re.fullmatch(r"decision-(\d+)\.json", path.name)
+                if number:
+                    records.append((int(number.group(1)), json.loads(path.read_text())))
+            got = standing_decision(records, ts(meta["created"]))
+            if not got:
+                continue
+            decided, queued = got
+            if kind != "merge":
+                others.append(decided)
+                continue
+            heads = json.loads((doc / "heads.json").read_text())
+            minutes = (decided - queued).total_seconds() / 60
+            for head in heads:
+                owner, _, name = head["repo"].partition("/")
+                waits.setdefault(name if owner == OWNER else head["repo"], []).append((decided, minutes))
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            bad += 1
+    return waits, others, bad
+
+
+def archived_decisions(archive):
+    """Return the lines of the archive's root decisions.jsonl, None when the archive lacks one."""
+    with tarfile.open(archive) as tar:
+        for member in tar:
+            if member.isfile() and member.name.removeprefix("./") == "decisions.jsonl":
+                return tar.extractfile(member).read().decode().splitlines()
+    return None
+
+
 def percentile(vals, frac):
     ordered = sorted(vals)
     return ordered[max(0, math.ceil(frac * len(ordered)) - 1)]
@@ -486,13 +558,16 @@ def main(argv):
         repo_names = {r["name"] for r in listed}
         repos = sorted(n for n in repo_names if not args.repo or n in args.repo)
         prs_by_repo = {}
+        full = []
         for repo in repos:
             raw = gh.json(
                 ["pr", "list", "-R", f"{OWNER}/{repo}", "--state", "merged", "--search", f"merged:>={since_day}",
-                 "--json", "number,headRefName,createdAt,mergedAt,body", "--limit", "300"],
+                 "--json", "number,headRefName,createdAt,mergedAt,body", "--limit", str(PR_LIST_CAP)],
                 repo, since_day,
             )
             prs_by_repo[repo] = [build_pr(repo, p) for p in raw or []]
+            if len(raw or []) >= PR_LIST_CAP:
+                full.append(repo)
         runs_by_repo = {}
         for repo in repos:
             lo = min([since] + [p["created"] for p in prs_by_repo[repo]])
@@ -523,15 +598,43 @@ def main(argv):
 
     waits = {}
     negative = 0
-    for line in read_lines(state / "approval-queue/decisions.jsonl", missing):
+    queue = state / "approval-queue"
+    unreadable = False
+    if (queue / "decisions.jsonl").exists():
+        old_lines = list(read_lines(queue / "decisions.jsonl", missing))
+    elif (queue / ARCHIVE).exists():
+        try:
+            old_lines = archived_decisions(queue / ARCHIVE)
+        except (OSError, tarfile.TarError):
+            old_lines = None
+            unreadable = True
+            malformed[0] += 1
+    else:
+        old_lines = None
+    if old_lines is None:
+        why = f"{ARCHIVE} could not be read" if unreadable else f"no decisions.jsonl and no {ARCHIVE}"
+        missing.append(Note(f"Waits before the new queue: not counted ({why})"))
+        old_lines = []
+    stamped = []
+    for line in old_lines:
+        if not line.strip():
+            continue
         try:
             got = decision_wait(line)
         except (ValueError, KeyError, TypeError):
             malformed[0] += 1
             continue
-        if not got or got[1] < since:
+        if got:
+            stamped.append((got[0], got[1], got[2]))
+    others = []
+    if (queue / "store").is_dir():
+        store, others, bad = store_waits(queue / "store")
+        malformed[0] += bad
+        stamped += [(name, decided, wait) for name, items in store.items() for decided, wait in items]
+        others = [d for d in others if d >= since]
+    for name, decided, wait in stamped:
+        if decided < since:
             continue
-        name, _, wait = got
         if wait < 0:
             negative += 1
         else:
@@ -565,11 +668,15 @@ def main(argv):
         return 1
     out += [misses_section(all_prs), "## Notes", ""]
     out.append("- Gate records read: " + ", ".join(str(p) for p in record_files))
-    out += [f"- Not found: {m}" for m in missing]
+    out += [f"- {m}" if isinstance(m, Note) else f"- Not found: {m}" for m in missing]
     out.append(f"- Dropped gate records: {dropped}")
     out.append(f"- Negative waits dropped: {negative}")
+    if (queue / "store").is_dir():
+        out.append(f"- Design and decide documents decided: {len(others)}")
     out.append(f"- Malformed lines or rows skipped: {malformed[0]}")
     out.append(f"- PRs with no score: {unscored}")
+    if full:
+        out.append(f"- Listing full at {PR_LIST_CAP} (older merged PRs missed): " + ", ".join(full))
     if gh.partial:
         out.append("- Partial data (gh rate limit, cache used): " + ", ".join(sorted(gh.partial)))
     print("\n".join(out))

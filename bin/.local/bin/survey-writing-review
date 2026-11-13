@@ -22,7 +22,7 @@ fi
 
 prompt="$(cat "$repo/docs/model-review/writing-prompt.txt")"
 if (( dry_run )); then
-    prompt+=$'\n\n'"Dry run: commit in survey-notes and stop. Do not push, open a PR, or send a packet."
+    prompt+=$'\n\n'"Dry run: commit in survey-notes and stop. Do not push, open a PR, or send anything to the Approval Queue."
 fi
 
 month=$(date +%Y-%m)

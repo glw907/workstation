@@ -3,7 +3,7 @@ survey-writing-<YYYY-MM>, running from /var/home/glw907/Projects/survey. Nobody 
 session, so finish every step below. The review measures how the daily model writes against the
 Survey registers and turns repeated problems into proposed Survey changes. You never change a
 register file outside the "Releasing a change" sequence, and you never merge without an approved
-packet.
+document.
 
 The samples. Draft each one fresh, as the daily model would, from the one-line task. The tasks
 stay the same every month so the counts compare. Read the register source before drafting. The
@@ -28,7 +28,7 @@ Source: agent-facing.md. Grade with `tellgrader --register agent`.
 08-ts-comment: a TypeScript doc comment for a function that parses a date range.
 Source: the ts-conventions skill. Grade with `tellgrader --register comments`.
 09-design-brief: a design brief opening a one-page design for approval.
-Source: approval-brief.md. Grade with `tellgrader --register docs`.
+Source: /var/home/glw907/.claude/docs/voice/written-for-people.md and the approval-packet skill. Grade with `tellgrader --register docs`.
 10-error-string: an error string with its help line for a missing config file.
 Source: the go-conventions skill. Grade with `tellgrader --register comments`.
 
@@ -67,14 +67,14 @@ Steps, in order:
    finding is the same rule or tell in two consecutive months, or in three or more samples in
    one month. A Survey file, a PR body, or CHANGELOG.md never quotes a correction file, its
    Context, a private repo's name, a path, or a person; write an example there fresh. The
-   packet may cite correction file names, since the queue is local.
+   document may cite correction file names, since the queue is local.
 
 6. With no proposal, end. With proposals, follow the survey skill's "Releasing a change" up to
-   the packet: the Survey PR (one commit per change, a minor CHANGELOG.md entry) and the
+   the approval: the Survey PR (one commit per change, a minor CHANGELOG.md entry) and the
    workstation vendoring PR, each titled `Monthly writing review <YYYY-MM>: ...`. Write both PR
-   numbers and the packet file's name under `## Proposals` in report.md, commit, and push with
-   the step 4 commands. Then send both PRs in one packet through the `approval-packet` skill,
-   initiative `survey-house-style`, wait for the decision, and on approve run the rest of
+   numbers and the name of the `.queue.md` document (the skill's step 2) under `## Proposals` in
+   report.md, commit, and push with the step 4 commands. Then send both PRs in one `merge`
+   document through the `approval-packet` skill, wait for the decision, and on approve run the rest of
    "Releasing a change". If the release is blocked or refused, write the block into report.md,
    commit and push it, run `notify-send -u normal "Writing review: release blocked" "<the PR
    URL>"`, and stop.

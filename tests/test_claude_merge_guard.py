@@ -66,9 +66,10 @@ def test_denies_every_merge_stage(command):
 def test_deny_message_names_replacements():
     reason = json.loads(run_hook("gh pr merge 5").stdout)["hookSpecificOutput"]["permissionDecisionReason"]
     assert "approval-queue merge <id>" in reason
-    assert "approval-queue land <owner/repo#n> <claim>" in reason
+    assert "approval-queue land <owner/repo#n> <sentence>" in reason
     assert "approval-packet" in reason
-    assert "--premerge-done" in reason
+    assert "--premerge-done" not in reason
+    assert "packet" not in reason.replace("approval-packet", "")
 
 
 @pytest.mark.parametrize(
