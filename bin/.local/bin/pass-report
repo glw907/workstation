@@ -599,6 +599,7 @@ def main(argv):
     waits = {}
     negative = 0
     queue = state / "approval-queue"
+    unreadable = False
     if (queue / "decisions.jsonl").exists():
         old_lines = list(read_lines(queue / "decisions.jsonl", missing))
     elif (queue / ARCHIVE).exists():
@@ -606,11 +607,13 @@ def main(argv):
             old_lines = archived_decisions(queue / ARCHIVE)
         except (OSError, tarfile.TarError):
             old_lines = None
+            unreadable = True
             malformed[0] += 1
     else:
         old_lines = None
     if old_lines is None:
-        missing.append(Note(f"Waits before the new queue: not counted (no decisions.jsonl and no {ARCHIVE})"))
+        why = f"{ARCHIVE} could not be read" if unreadable else f"no decisions.jsonl and no {ARCHIVE}"
+        missing.append(Note(f"Waits before the new queue: not counted ({why})"))
         old_lines = []
     stamped = []
     for line in old_lines:
