@@ -1,0 +1,8 @@
+Put the workstation pull request glw907/workstation#231 before Geoff for his merge decision, as a close document, following the skill at /var/home/glw907/.dotfiles/.claude/worktrees/ws-d1/claude/.claude/skills/approval-packet/SKILL.md.
+
+The pull request's diff is at /var/home/glw907/.claude/jobs/bbb155f3/tmp/e2e/pr-231.diff.
+
+- Use no skill through the Skill tool and not the writing router: the skill is the file at that path.
+- Read a ~/.claude/ path the skill names from /var/home/glw907/.dotfiles/.claude/worktrees/ws-d1/claude/.claude/ instead.
+- Run approval-queue as /var/home/glw907/.claude/jobs/bbb155f3/tmp/e2e/bin/approval-queue, and Vale as vale --config /var/home/glw907/.claude/jobs/bbb155f3/tmp/vale/.vale.ini
+- Write the document to /var/home/glw907/.claude/jobs/bbb155f3/tmp/e2e/close-1.queue.md, run any subagent as a blocking Agent call (never in the background), stop after check, and never send.
