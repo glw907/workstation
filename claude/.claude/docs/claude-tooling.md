@@ -43,6 +43,13 @@ repin reaches a running session only through a per-dispatch `model`; verify a
 repin from a fresh headless session by grepping the subagent transcript's `"model"` field,
 never from the agent's own answer.
 
+The advisor (2026-11-12, <https://code.claude.com/docs/en/advisor>): planners and executors launch
+with `--advisor fable`, and `pass-core` `references/advisor.md` says when they consult it. The
+flag carries it, never `advisorModel` in `settings.json`: the main model there is already `fable`,
+and the key would attach an advisor to every session. A background session that fails a pairing
+check starts without the advisor and prints no error, so prove it from a fresh session:
+`claude -p "/advisor" --model sonnet --advisor fable < /dev/null` prints `Advisor: Fable 5.2`.
+
 `worktree.baseRef: "head"` in the tracked `settings.json` applies in every repo, so subagent and
 `--worktree` branches start from the local `HEAD`, not the remote default (code.claude.com/docs/en/
 worktrees, "Choose the base branch").

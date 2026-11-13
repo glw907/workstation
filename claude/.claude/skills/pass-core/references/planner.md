@@ -80,7 +80,7 @@ append `.claude/worktrees/` to the file `git -C <repo> rev-parse --path-format=a
 --git-path info/exclude` names. Launch from the main checkout:
 
 ```
-claude --bg --model sonnet --effort medium --name <project>-<pass> "$(cat <prompt file>)"
+claude --bg --model sonnet --effort medium --advisor fable --name <project>-<pass> "$(cat <prompt file>)"
 ```
 
 The prompt goes before any `--add-dir`, which is variadic. Then read

@@ -11,7 +11,7 @@ Spec: `~/.dotfiles/docs/specs/2026-10-10-lean-pass-process-design.md`. The repo 
 supplies the gate, lanes, CI watch, worktree setup, path map, and close checklist, and wins where
 it disagrees with this skill.
 
-Load `standards:running-passes` first; this skill adds Geoff's operation to it. Then read the one reference for your role:
+Load `standards:running-passes` first; this skill adds Geoff's operation to it. Then read your role's reference:
 `references/planner.md` to design or plan, `references/executor.md` to execute, or
 `references/conductor.md` to conduct. A planning dispatch cites `references/planning-samples.md`.
 
@@ -87,8 +87,9 @@ answer runs out.
 
 A mid-run question to Geoff is a planning miss, recorded in the PR's `## Planning misses`: the
 question, his answer, and the plan item that should have answered it. The fix waits for the monthly
-prune. Under a conductor, the executor writes a stop to STATUS and ends, and the conductor sends a
-`stop` packet.
+prune. A question for Geoff first goes through `references/advisor.md`, which overrides `running-passes`
+on an open product or taste call. Under a conductor, the executor writes a stop to STATUS and
+ends; the conductor sends a `stop` packet.
 
 ## Pairs
 

@@ -1,7 +1,7 @@
 # Round run
 
 Read after `SKILL.md` and your role's reference. The round design and the conductor prompt's
-order table win where they differ from this file.
+order table win over this file.
 
 An executor under a conductor enters the pass's worktree with `EnterWorktree` and its `path`,
 once, and merges nothing: the branch holds the plan. In a one-pass round the executor sends the
@@ -10,7 +10,7 @@ line.
 
 ## Standing answers
 
-1. A pass stops on a question only Geoff can answer. The executor follows "Stops". The conductor
+1. A pass stops on a question `advisor.md` leaves for Geoff. The executor follows "Stops". The conductor
    waits for the PR's checks, sends one `stop` packet, ends the pass's sessions, and launches the
    next pass that doesn't depend on it.
 2. Auto mode refuses a command. The session uses the alternative its plan names, once. A second
@@ -42,7 +42,7 @@ line.
 
 ## The order table
 
-The conductor follows the table in its prompt and decides nothing. Passes run one at a time.
+The conductor follows the table in its prompt, and `advisor.md` where it is silent. Passes run one at a time.
 Before each launch, in this order:
 
 - Read usage with `claude -p "/usage" --model haiku < /dev/null` and note the "Current week (all
@@ -99,9 +99,9 @@ as finished on its last message.
 
 ## Stops
 
-A stop is a question only Geoff can answer, a second refusal, an unmet acceptance item, a false
+A stop is a question `advisor.md` leaves for Geoff, a second refusal, an unmet acceptance item, a false
 shared assumption, or a closing review that ends on `escalate` or a second read short of `accept`.
-The executor does only four things:
+The executor does four things:
 
 - Commit and push the work.
 - Open the draft PR if none exists.
@@ -141,7 +141,7 @@ the end. Its fields, in order:
   `Actual min`, `Usage before`, `Usage after`. `State` reads `not started`, `planning`, `running`,
   `merged`, `waiting`, `parked`, or `skipped`, exactly: the queue's headline counts the `merged`
   cells.
-- Stops, refusals, and calls sent to Geoff, each counted and listed.
+- Stops, refusals, `[advisor]` answers, and calls sent to Geoff, each counted and listed.
 - Planning misses by tag, read from the PR bodies.
 - What waits for Geoff, with the queue item id of each open packet, and what landed.
 - `Resume from:` with the conductor prompt's path.
