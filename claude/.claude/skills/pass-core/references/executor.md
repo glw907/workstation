@@ -1,7 +1,8 @@
 # Executor
 
 Read after `pass-core` `SKILL.md`. This file holds the executing session's steps; the close and
-the merge rules stay in `SKILL.md` "Close".
+the merge rules stay in `SKILL.md` "Close". Of `approval-packet`, the executor reads steps 5 to 7,
+between its `executor-load` marks.
 
 ## Start
 

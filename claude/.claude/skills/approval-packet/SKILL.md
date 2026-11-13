@@ -48,6 +48,7 @@ withdrawn.
    A document holds 30 questions at most and stays under 200 KB. The forms the queue can't show
    are listed in `written-for-people.md`.
 4. **Check the writing.** Follow `~/.claude/docs/voice/written-for-people.md`, all four steps.
+<!-- executor-load start -->
 5. **Check, then send.** Run `approval-queue check <doc>` and fix each fault it prints until it
    prints `no faults`. A check still running on a pull request is a line, never a fault, and
    `send` refuses until it finishes. Then run `approval-queue send <doc>` as a background Bash
@@ -69,6 +70,7 @@ withdrawn.
    into its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits, and into the PR
    body with its number (Geoff, 2026-10-11). An initiative-sized one becomes a record
    (`log-project`).
+<!-- executor-load end -->
 
 The command's forms are `check|send <doc.md>`, `send --returns <id> <doc.md>`,
 `collect|withdraw|merge <id>`, `notes <id>`, `reply <id> [thread] <text.md>`,
