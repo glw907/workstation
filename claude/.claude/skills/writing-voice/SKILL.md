@@ -29,12 +29,15 @@ authoring charter (`~/.claude/docs/authoring-charter.md`).
 | End-user and editor product copy, UI-only walkthroughs with no terminal step | Microsoft Writing Style Guide | `~/.claude/docs/voice/editor.md` |
 | CLAUDE.md, skills, agent definitions, hook text | Anthropic Claude Code best practices | `~/.claude/docs/voice/agent-facing.md` |
 | Commit messages and PR bodies | Conventional Commits and the git-commit canon | `~/.claude/docs/voice/commit-and-pr.md` |
-| Approval packet and PR-body brief (the packet file; the `## Brief` of a PR body or design doc); the triage file stays for a backlog triage | Inverted pyramid, Federal Plain Language Guidelines, Nielsen Norman Group on web writing and progressive disclosure | `~/.claude/docs/voice/approval-brief.md` |
+| Anything Geoff reads from a session | The Federal Plain Language Guidelines, Nielsen Norman Group on web writing, and Google's rules for headings | `~/.claude/docs/voice/written-for-people.md` |
 | Go code comments | Go Doc Comments, Effective Go | the standards:go-conventions skill |
 | TypeScript code comments | TSDoc | the standards:ts-conventions skill |
 | Svelte code comments | TSDoc plus the Svelte `@component` convention | the standards:svelte-conventions skill |
 | Python comments and docstrings | PEP 257, PEP 8 | the standards:python-conventions skill |
 | Site content (pages, posts, form copy) | the site's own content guide | the site repo's `docs/content-guide.md`, via the standards:content-draft skill |
+
+Every file in a public repo that a person reads also goes through steps 1 to 3 of
+`~/.claude/docs/voice/written-for-people.md`.
 
 Site content is the one personal voice, and it lives in the site repo, out of the workstation's
 scope. Every other audience starts from its external standard. The web dialect follows the repo's stack;

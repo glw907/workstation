@@ -1,89 +1,75 @@
 ---
 name: approval-packet
 description: >
-  The hand-over procedure for a session that puts work before Geoff: writing the fact file,
-  dispatching the writer, checking and sending one packet, and acting on the decision. Use
-  whenever a session hands a PR, a design, or a plan to Geoff for approval ("send this for
-  approval", a PR just opened by a pass, a conductor at a decision point), or when `pass-core`
-  or the approval-queue reminder hook points here.
+  The hand-over procedure for a session that puts work before Geoff: writing one document for
+  the Approval Queue, checking it, sending it, and acting on his answer. Use whenever a session
+  hands a PR, a design, or a plan to Geoff for approval ("send this for approval", a PR just
+  opened by a pass, a conductor at a decision point), or when `pass-core` or the approval-queue
+  reminder hook points here.
 ---
 
 # Approval packet
 
-A packet is a fact file the session writes and a text file a separate writer drafts from it. The
-register's old packet rules are replaced by the writer's brief.
+A packet is one Markdown document that the session which did the work writes for Geoff. The queue
+shows it as a page with buttons, and `approval-queue send` returns his answer. The opening puts
+the decision first, so the house departure of 2026-10-21 (background before the summary) is
+withdrawn.
 
-1. **Decide whether to send.** Send one packet per hand-over, of one of three kinds. A `design`
-   packet brings a design for approval. A `close` packet hands over the PRs a pass or a
-   conductor's sweep holds. A `stop` packet reports a pass that paused,
-   with the cause in `reason` (`{text, source}`). A pass with
-   no call, no `auth-data` path, and no `## Before merge` section sends no packet in any class:
-   land each PR with `approval-queue land <owner/repo#n> <claim>` (Geoff's ruling D1, 2026-11-10).
-   Anything else needing his approval goes to the queue, never a chat question. A move of mail between folders is the
-   exception: it is decided in chat, never a packet (backlog #58).
-2. **Write the fact file.** `facts.json` keys: `kind`, `title`, `round`, `reason` (stop only), `prs`
-   (`owner/repo#n` in merge order), `design` and `plan` (`{repo, path}`, design only), `held`,
-   `calls`, `decidedForYou`, `steps`, `notChecked`, and `reviews`. The initiative is the command's
-   argument: a record id in `~/Projects/initiatives`, or `none`. `round` is optional. It is the
-   round id: lowercase letters, digits, and hyphens, starting with a letter, 12 characters at
-   most. Every fact file of a round of two or more passes carries it, and a one-pass round has
-   none. A call is `{question, rule,
-   forced, options: [{label, consequence}], recommended, evidence: [{text, source}]}`, with
-   `recommended` the number of the option, counting from 1. A
-   `decidedForYou` entry is a call with `applied` set to the label of the option taken. A step is `{text, who}`, `who` being `session` or `you`. A `notChecked` or `reviews` entry is
-   `{text, source}`.
-3. **Count the calls.** A call is one of seven rules: `irreversible`, `public-surface`,
-   `cross-repo`, `owner-call`, `low-confidence`, `gate-failed`, `contradicts-ruling`. Allow at most
-   three unforced calls; settle with facts whatever the facts settle. Forced calls may exceed the
-   cap (backlog #59): a failing check or a `fix` or `escalate` verdict is a `gate-failed` call; a
-   `## Before merge` section is a call with the choices "The session runs it, then merges"
-   `[approve]` and "I'll run it myself" `[hold]`; a PR Geoff held before is `contradicts-ruling`.
-   Mark each `forced: true`.
-4. **Cite each fact's source.** Every `source` is a path with a line, a URL, or `owner/repo#n`.
-   Check a fact a call depends on, or raise it as `low-confidence`.
-5. **Take the snapshot.** `approval-queue snapshot <facts.json>` writes `snapshot/` beside the
-   fact file.
-6. **Dispatch the writer.** Make a fresh Agent call with `model: "fable"` (Fable 5.2,
-   `claude-fable-5-2`) at effort `medium`. Give it the fact file, the initiative record, and the
-   snapshot directory. Name the file `~/.claude/skills/survey/writing/approval-brief.md` and its
-   section "The packet writer's brief", and tell the writer that section is its whole style brief.
-   Tell it to write `text.md` beside the fact file, in the shape in `approval-queue`'s README
-   ("The text file"), and to report every fact it could not find. State that it has no pass
-   context and must not run commands that change anything. Fill each reported gap in the fact
-   file, or accept the omission, then rerun the snapshot and the writer if the facts changed.
-7. **Check, then send.** Run `approval-queue packet --check <initiative> <facts.json> <text.md>`.
-   It reports pending checks and does not wait. Fix each defect and rerun until it accepts. Then
-   run `approval-queue packet <initiative> <facts.json> <text.md>` as a background Bash command;
-   it waits for the decision and prints it as JSON. Take an item back with
-   `approval-queue withdraw <id>`, never by killing the command. If the command is gone, for
-   instance after a reboot, `approval-queue collect <id>` recovers the decision.
-8. **Read the notes, then act.** Answer each of Geoff's notes in `replies.json`, an array of
-   `{note, outcome, text, ref}`, `outcome` being `fixed`, `filed`, or `answered`, and `ref` (a
-   commit or a backlog item) required for the first two. Store it with `approval-queue reply <id>
-   <replies.json>`, after the action the notes call for, since a `fixed` reply cites its commit.
-   - **Approve, on any packet but a `stop` packet:** a note that objects to merging a PR means that PR is skipped: pass
-     `--skip <owner/repo#n>` for it and report it. Run `approval-queue merge [--skip
-     <owner/repo#n>]... [--premerge-done <owner/repo#n>]... <id>`. Merging is a `session` step;
-     the approve is the authorization. If
-     it stops with exit 2 and prints a `## Before merge` section, run those steps, then rerun
-     with `--premerge-done <owner/repo#n>`. Where Geoff chose to run them himself, do not merge;
-     report. A `[approve]` choice on a failed check or a fix review means merge as
-     approved. Run each `session` step in order, stopping at the first failure.
-   - **Send back:** fix forward from each note and call, then resend with
-     `approval-queue packet --replies <replies.json> <initiative> <facts.json> <text.md>`. The
-     command refuses a resend that leaves a note unanswered.
-   - **Approve on a `stop` packet:** the approve answers the question and merges nothing. Run
-     the packet's `session` steps in order, stopping at the first failure, then resume the pass.
-     Never run `approval-queue merge` on it: the queue refuses a stop packet. A conductor takes
-     the order of its steps from `pass-core` `references/round-run.md`.
-9. **Clear the queue before handing over.** Run `approval-queue pending` and answer with `reply`
-   each note it lists for your repos (`reply digest <replies.json>` for a digest note).
-10. **File follow-ups.** A "Found, not done" item worth doing goes through `standards:log-issue`
-    into its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits, and into the PR
-    body with its number (Geoff, 2026-10-11). An initiative-sized one becomes a record
-    (`log-project`).
+1. **Decide whether to send.** A pass with no call for Geoff, no `auth-data` path, and no
+   `## Before merge` section sends nothing: land each pull request with
+   `approval-queue land <owner/repo#n> <sentence>`, one plain sentence on what it does (Geoff,
+   2026-11-10). Anything that needs his decision is a document, and nothing that belongs in the
+   queue is asked in chat. A paused pass asks its question as a `decide` document; under a
+   conductor, the conductor sends it. A conductor's round report is a document of kind `report`.
+   A move of mail between folders is the one exception: it is decided in chat (backlog #58).
+2. **Write the document.** Name it `<name>.queue.md` and write it in the session's job tmp folder,
+   outside any repo, so the workstation's Vale config reaches it. The title names what changed or what
+   is asked, and never counts. The first paragraph is the whole page made small. Ask each question
+   where the reader meets it, with its options and a recommendation. Put the detail after, under
+   headings a reader can navigate by. Give reasons in the text. Use no id you made up, and name a
+   pull request by what it does.
+3. **Imitate the models.** `references/model-close-packet.md` and `references/model-report.md` are
+   two documents Geoff accepted. Copy their shape, their order, and their plainness, never their
+   facts. Each carries one `tellgrader` `empty-own` warning, kept because the words are his; a new
+   document fixes the warning. The queue reads this much beyond plain Markdown:
+   - A header between `---` lines. `kind` is `merge` (pull requests to merge), `design` (a design
+     to approve), `decide` (questions only), or `report` (nothing to decide).
+   - `prs`, required for `merge`: a list in merge order, each item `owner/repo#n | a few plain
+     words`.
+   - `approve` and `sendback`, required for every kind but `report`: one sentence each on what
+     the session does next. The page prints them on the two buttons, as inline Markdown.
+   - The title line, `# ` and the title, right after the header, then a paragraph.
+   - `:::question <label>` after the paragraph that asks the question, then two to six options as
+     `- ` lines, then a `:::` line. The label is a few plain words, unique in the
+     document. An option's bold text is its name, and one option at most ends `{recommended}`.
+   - `:::decide`, at most once, where the approve and send-back buttons go. Left out, they go at
+     the end.
 
-A conductor's round report is no packet. `approval-queue report <initiative> <round> <report.md>`
-stores it in the queue as an item of kind `report`, prints its id, and exits. It sends no packet
-and waits for nothing. `pass-core` `references/round-run.md` "Report" says when a conductor runs
-it.
+   A document holds 30 questions at most and stays under 200 KB. The forms the queue can't show
+   are listed in `written-for-people.md`.
+4. **Check the writing.** Follow `~/.claude/docs/voice/written-for-people.md`, all four steps.
+5. **Check, then send.** Run `approval-queue check <doc>` and fix each fault it prints until it
+   prints `no faults`. A check still running on a pull request is a line, never a fault, and
+   `send` refuses until it finishes. Then run `approval-queue send <doc>` as a background Bash
+   command. It stores the document, waits for the answer, and prints it on stdout; a `report`
+   prints its id and exits at once. Take a document back with `approval-queue withdraw <id>`,
+   never by killing the command. If the command is gone, as after a reboot,
+   `approval-queue collect <id>` recovers the answer.
+6. **Act on the answer.**
+   - On approve, run `approval-queue merge <id>`. It merges each pull request at the head Geoff
+     read, in the document's order; the approve is the authorization. Then pull the checkout as
+     `pass-core` "Close" describes. On a `decide` or `design` document, take the answers and carry
+     on with the work.
+   - On send-back, read the notes with `approval-queue notes <id>`, which prints each thread with
+     its id. Answer each note in its thread with `approval-queue reply <id> <thread> <text.md>`;
+     a file without a thread opens a new one and must start with a blockquote of the passage.
+     Fix forward, then return the revision with `approval-queue send --returns <id> <doc>`, which
+     keeps the kind. Write no change marks: the queue shows what changed between versions.
+7. **File follow-ups.** A "Found, not done" item worth doing goes through `standards:log-issue`
+   into its repo's `BACKLOG.md`, tagged `#initiative:<id>` when a record fits, and into the PR
+   body with its number (Geoff, 2026-10-11). An initiative-sized one becomes a record
+   (`log-project`).
+
+The command's forms are `check|send <doc.md>`, `send --returns <id> <doc.md>`,
+`collect|withdraw|merge <id>`, `notes <id>`, `reply <id> [thread] <text.md>`,
+`land <owner/repo#n> <sentence>`, and `restart`.
