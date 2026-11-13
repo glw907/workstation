@@ -37,8 +37,9 @@ failed or empty export. The file's sha256 goes in the retirement record.
 
 ## 3. Approval
 
-Send the inventory as a dry run through `approval-packet`, listing each delete by its id. Each
-irreversible step is an `[irreversible]` step in "If you approve". A domain's fate is Geoff's call.
+Send the dry run as a document through `approval-packet`, listing each delete by its id. Each
+irreversible step is a question in it, with the options and a recommendation. A domain's fate is
+Geoff's call.
 
 ## 4. Teardown, in this order
 
