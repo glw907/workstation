@@ -3,6 +3,10 @@ name: survey
 description: Use when building or styling any house tool's UI (a daisyUI theme, CSS variables, a recipe for the cairn admin, a cairn site, a plain app, or a theme-limited app), when asked where Survey's pieces live, or when Geoff corrects your wording. Survey is the house style; this skill says which file to read for the task.
 ---
 
+<!-- local-overlay -->
+On this workstation, writing for Geoff follows ~/.claude/docs/voice/written-for-people.md, and nothing reads writing/approval-brief.md.
+<!-- /local-overlay -->
+
 # Survey
 
 Survey is the house style for every house tool. The repo is `glw907/survey`; a project pins it by git tag.

@@ -30,7 +30,8 @@
       "commit": "cab258deb7df",
       "license": "none",
       "installed": "2026-11-11",
-      "_why": "The house style skill. Its writing/ directory is the source of the writing-voice output style, the voice registers, and the authoring charter, which link into it; edit them in the Survey repo only."
+      "_why": "The house style skill. Its writing/ directory is the source of the writing-voice output style, the voice registers, and the authoring charter, which link into it; edit them in the Survey repo only.",
+      "note": "On this workstation, writing for Geoff follows ~/.claude/docs/voice/written-for-people.md, and nothing reads writing/approval-brief.md."
     },
     "vale-ci": {
       "repo": "vale-cli/agent-tools",
