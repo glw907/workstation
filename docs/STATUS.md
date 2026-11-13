@@ -1,22 +1,9 @@
 # Status
 
 <!-- round-report ws-documents -->
-# Round ws-documents, glw907/workstation, written 2026-11-12 21:06 (D0 merged, waiting for queue pass A5)
-Round state: running
-
-| Pass | State | PR | Planned min | Actual min | Usage before | Usage after |
-| --- | --- | --- | --- | --- | --- | --- |
-| D0 | merged | glw907/workstation#235 | 30 | ~21 | week 63%, Fable 0% | week 63% |
-| D1 | not started | | 120 | | | |
-| D2 | not started | | 120 | | | |
-| D3 | not started | | 140 | | | |
-
-Stops: 0. Refusals: 0. Calls sent to Geoff: 0.
-Planning misses: none yet.
-Two-repo packet: `approval-queue packet --check` accepted a fact file naming a workstation and an approval-queue pull request (snapshot took both), so one close packet is planned.
-Waiting for Geoff: nothing. Landed: D0 #235 (the busy check skips its caller). Waiting on the queue round: pass A5 has not merged.
+# Round ws-documents, glw907/workstation, ended 2026-11-13 (all four pull requests merged, queue switched on pavilion)
+Waiting for Geoff: nothing. The round report is in the new queue.
 Resume from: ~/Projects/initiatives/.claude/worktrees/unattended-rounds/unattended-rounds/plans/ws-documents-conductor-prompt.txt
-Open packets: none.
 <!-- /round-report -->
 
 Dotfiles and machine configuration for two Bluefin DX workstations, the `thinkpad-x1` laptop and
@@ -34,8 +21,8 @@ the `pavilion` desktop (Fedora 44 base, `bootc`/`ostree`). GNU Stow links tracke
 
 ## Open steps
 
-- **thinkpad-x1 owes one step.** After `workstation-sync` brings it the new queue, its first session
-  runs `approval-queue restart` (it names any old item still undecided and archives the old files
+- **thinkpad-x1 owes one step.** Its first session pulls `~/.dotfiles` and `~/Projects/approval-queue`,
+  then runs `approval-queue restart` (it names any old item still undecided and archives the old files
   into `archive-2026-11.tar.gz`; see the queue's README, "Restart and the archive"), disables the
   old timer with `systemctl --user disable --now decision-review.timer`, and checks that
   `approval-queue merge` with no id exits 2.
