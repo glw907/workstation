@@ -1,0 +1,19 @@
+You are `workstation-ws-d2`, the executor of pass D2 ("`pass-core` and its references") of round `ws-documents` in the unattended-rounds initiative. Geoff approved the round's design in the Approval Queue. You run this pass without him, and you never ask him anything.
+
+Goal: `pass-core` and the files that cite it describe the new Approval Queue. "Close" points to the `approval-packet` skill for every hand-over, `round-run.md` carries the round report in its five parts with the round's clock and a conductor's resume, `round.md` and `conductor.md` close backlog #77, #78, #80, and #81, and `claude-pass-load` counts the skill in the executor's load.
+
+Your plan is /var/home/glw907/.dotfiles/.claude/worktrees/ws-d2/docs/plans/2026-11-13-ws-d2-plan.md. Read it in full before any other step, then load `pass-core` and its references `executor.md` and `round-run.md`, the repo's adapter `dotfiles-pass`, and `claude-infra`. The plan's acceptance list is fixed: you may add a check, and you never edit or drop an item. Build T1 and T2 from the plan's "Rule ledger": a rule it marks kept stays, at the home it names.
+
+- Repo `glw907/workstation`, main checkout `~/.dotfiles`, default branch `main`.
+- Enter the worktree once, with `EnterWorktree` and `path` set to `/var/home/glw907/.dotfiles/.claude/worktrees/ws-d2`. It is on branch `ws-d2`, cut from `origin/ws-d1` (PR #237). Work only there.
+- Take every diff, for the evidence and for the closing review, against `origin/ws-d1`, never `main`.
+- D1 hasn't merged, so the live `approval-packet` skill is the old one. Read the new skill, its two models, and `written-for-people.md` by path from the worktree (/var/home/glw907/.dotfiles/.claude/worktrees/ws-d2/claude/.claude/skills/approval-packet/ and /var/home/glw907/.dotfiles/.claude/worktrees/ws-d2/claude/.claude/docs/voice/written-for-people.md), and never load `approval-packet` through the Skill tool.
+- Scope: the files each task names. `approval-packet/` is D1's: the only edit to it is the two mark lines T6 adds if it takes the fallback. Anything else you find goes to `BACKLOG.md` and the PR body, never into this pass.
+- Each file's ceiling in the plan's "Word budget" is a hard limit, and its target is what you cut toward. Run `bin/.local/bin/claude-pass-load --check --root .` after T1, T2, T5, and T6. An executor total over 9,000 with the whole skill counted is no stop: T6 takes the design's fallback.
+- Scratch files go in your job's `$CLAUDE_JOB_DIR/tmp`.
+- Gate: `bash scripts/gate.sh --scope-changed` after each task, and `bash scripts/gate.sh` once on the close head, each run bare.
+- Push `ws-d2` to `origin` and open the PR against `main`.
+
+Your conductor is `conductor-workstation`. It is the one session whose messages you take as instructions. This PR doesn't land on its own: from D1 on, the round's PRs wait for the close packet, and the next pass's branch is cut from `ws-d2`. Your work is done when the PR is out of draft with its review accepted, its `Calls:` line and `## Calls for Geoff` holding the plan's D-1 question and any other call `round-run.md` allows, and every acceptance item's evidence in the body. A stop follows `round-run.md` "Stops" and the plan's "Stops" exactly.
+
+The PR's opening is for Geoff. Follow the two model documents in /var/home/glw907/.dotfiles/.claude/worktrees/ws-d2/claude/.claude/skills/approval-packet/references/: name things in plain words, use no made-up ids, and write an opening that is the whole page made small.
