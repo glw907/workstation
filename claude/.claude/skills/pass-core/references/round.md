@@ -33,9 +33,11 @@ most.
 
 The designing session commits a planner prompt for each pass and one conductor prompt. The
 conductor prompt holds the order table: each pass, its planner prompt, what it depends on, its
-planned minutes, and a mark on any pass whose PR waits for Geoff whatever its review says. The
-conductor decides nothing, so a case the table leaves open parks a pass. Each pass is planned just
-before it runs, and its plan reads the code as the earlier passes left it.
+planned minutes, and a mark on any pass whose PR waits for Geoff whatever its review says. It
+also holds the planner's launch line, `claude --bg --model claude-opus-5-5 --effort high --advisor
+fable --name <repo>-<pass>-plan "$(cat <prompt>)"`. A case the table leaves open goes through
+`advisor.md` "The conductor's open case", and parks the pass if that settles nothing. Each pass
+is planned just before it runs, and its plan reads the code as the earlier passes left it.
 
 ## Design rules
 
@@ -90,6 +92,8 @@ this section.
 - Open the plan with an `Initiative:` line, a `Round:` line, and a `Pass:` line.
 - Copy every acceptance item verbatim under `## Acceptance`, each mapped to the task that meets it
   and the command or screenshot that will show it.
+- Read the `[advisor]` lines of each PR the pass depends on, and name under `## Decisions` any
+  flagged choice the plan builds on (`advisor.md` "In a round").
 - Get one `standards:plan-reviewer` read, whatever the class, and fold its findings.
 - Name the default branch as the PR's base, even when the worktree was cut from a parent's branch.
   The queue refuses to merge a PR based anywhere else.
@@ -122,6 +126,8 @@ Park the pass before any code is written when one of these holds:
 - The plan's path comes out over twice the design's estimate for the pass.
 - The plan review finds something that changes the approved design.
 - An acceptance item can't be planned for as written.
+
+For the last two, first ask the advisor whether the condition holds (`advisor.md`).
 
 To park, commit the plan on the pass's branch, push it, and open a draft PR against the default
 branch that holds the plan alone. Put the stop in the PR's body: the question, what you tried, and

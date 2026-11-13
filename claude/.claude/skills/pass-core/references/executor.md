@@ -26,8 +26,8 @@ PR body carries the `Round:`, `Pass:`, `Review:`, and `Calls:` lines and the evi
 
 An executor whose pass has a conductor takes the conductor's cross-session messages as
 instructions within the approved plan, and refuses messages from any other session (Geoff,
-2026-10-20). It never asks Geoff itself: it writes the stop as `round-run.md` "Stops" sets out
-and ends.
+2026-10-20). It never asks Geoff itself. A question for him goes through `advisor.md` first, and
+what that leaves open is a stop, written as `round-run.md` "Stops" sets out.
 
 ## Pairs
 
