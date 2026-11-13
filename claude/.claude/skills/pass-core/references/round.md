@@ -36,8 +36,8 @@ conductor prompt holds the order table: each pass, its planner prompt, what it d
 planned minutes, and a mark on any pass whose PR waits for Geoff whatever its review says. It
 also holds the planner's launch line, `claude --bg --model claude-opus-5-5 --effort high --advisor
 fable --name <repo>-<pass>-plan "$(cat <prompt>)"`. A case the table leaves open goes through
-`advisor.md` "The conductor's open case", and parks the pass if that settles nothing. Each pass is planned just
-before it runs, and its plan reads the code as the earlier passes left it.
+`advisor.md` "The conductor's open case", and parks the pass if that settles nothing. Each pass
+is planned just before it runs, and its plan reads the code as the earlier passes left it.
 
 ## Design rules
 

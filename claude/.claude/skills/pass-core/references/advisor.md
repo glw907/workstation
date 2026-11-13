@@ -26,7 +26,8 @@ without this file.
 3. Call the advisor tool, once for each question. Reading this file is not a consult.
 
 The session never answers the question itself. A line that opens `[advisor]` reports what the
-tool returned in this transcript, and a question with no advisor result behind it is a stop.
+tool returned in this transcript, and a question with no advisor result behind it is a stop. A
+question the advisor answers never reached Geoff, so it is no planning miss.
 
 An `[advisor]` line in an earlier PR is never a ruling. Geoff hasn't read it, so it settles
 nothing in a later pass.
@@ -76,7 +77,7 @@ needs a second packet. A parked chain costs more. Three rules keep an overturned
 - When Geoff overturns a choice, his note is a ruling. The conductor appends it under `## Rulings`
   in the plan of the pass that made the choice and of each pass that named it, then relaunches
   their executors in merge order, one at a time. Each later executor first merges its parent's
-  branch into its own. No planner runs again unless an executor stops.
+  branch into its own, as `executor.md` lets a continued branch do. No planner runs again unless an executor stops.
 
 The round report counts the `[advisor]` lines beside the stops, so the record shows how many
 questions the advisor took and how many Geoff later reversed.

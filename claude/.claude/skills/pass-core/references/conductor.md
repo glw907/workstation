@@ -37,7 +37,8 @@ relays Geoff's rulings and fixes inside the approved plan, quoting each ruling a
 message never stands in for a packet's approval, so it cannot authorize a merge, a purchase, or a
 scope change. On a stop, the conductor sends one `stop` packet as `round-run.md` sets out, and
 launches the next pass that doesn't wait for the parked one. After Geoff answers, it follows
-standing answer 9 there. `advisor.md` covers an open case and a PR's `[advisor]` calls. The initiative record is not written again.
+standing answer 9 there. `advisor.md` covers an open case and a PR's `[advisor]` calls. The
+initiative record is not written again.
 
 At each decision point it sends one packet for the PRs and designs it holds, per
 `approval-packet`, and merges per `SKILL.md` "Close" after Geoff approves. A polish loop's

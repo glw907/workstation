@@ -87,9 +87,9 @@ answer runs out.
 
 A mid-run question to Geoff is a planning miss, recorded in the PR's `## Planning misses`: the
 question, his answer, and the plan item that should have answered it. The fix waits for the monthly
-prune. A question for Geoff first goes through `references/advisor.md`, which overrides `running-passes`
-on an open product or taste call. Under a conductor, the executor writes a stop to STATUS and
-ends; the conductor sends a `stop` packet.
+prune. A question for Geoff first goes through `references/advisor.md`, which overrides
+`running-passes` on an open product or taste call. Under a conductor, the executor writes a stop
+to STATUS and ends; the conductor sends a `stop` packet.
 
 ## Pairs
 

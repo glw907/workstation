@@ -10,8 +10,8 @@ line.
 
 ## Standing answers
 
-1. A pass stops on a question `advisor.md` leaves for Geoff. The executor follows "Stops". The conductor
-   waits for the PR's checks, sends one `stop` packet, ends the pass's sessions, and launches the
+1. A pass stops on a question `advisor.md` leaves for Geoff. The executor follows "Stops". The
+   conductor waits for the PR's checks, sends one `stop` packet, ends the pass's sessions, and launches the
    next pass that doesn't depend on it.
 2. Auto mode refuses a command. The session uses the alternative its plan names, once. A second
    refusal is a stop. No session edits a setting to get past a refusal.
@@ -42,8 +42,8 @@ line.
 
 ## The order table
 
-The conductor follows the table in its prompt, and `advisor.md` where it is silent. Passes run one at a time.
-Before each launch, in this order:
+The conductor follows the table in its prompt, and `advisor.md` where it is silent. Passes run
+one at a time. Before each launch, in this order:
 
 - Read usage with `claude -p "/usage" --model haiku < /dev/null` and note the "Current week (all
   models)" figure.
@@ -99,8 +99,8 @@ as finished on its last message.
 
 ## Stops
 
-A stop is a question `advisor.md` leaves for Geoff, a second refusal, an unmet acceptance item, a false
-shared assumption, or a closing review that ends on `escalate` or a second read short of `accept`.
+A stop is a question `advisor.md` leaves for Geoff, a second refusal, an unmet acceptance item, a
+false shared assumption, or a closing review that ends on `escalate` or a second read short of `accept`.
 The executor does four things:
 
 - Commit and push the work.
