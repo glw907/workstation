@@ -9,6 +9,15 @@
   Record: ~/Projects/initiatives/docs-system/research/2026-10-25-drafter-batch-4-friction-plan-review-mechanics.md (incident note)
 
 ## Medium
+
+- [ ] **#85** Add the `decidedForYou` line for `[advisor]` calls to the `approval-packet` skill `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-12)*
+  `pass-core/references/advisor.md` "In a round" tells a conductor to list each `[advisor]` call as decided for Geoff, and `approval-packet/SKILL.md` never mentions it, so a conductor that reads only the packet skill can raise the call as open or leave it out. Do it once `ws-documents` D1 has rewritten that skill. Found in glw907/workstation#236.
+
+- [ ] **#84** Add `--advisor fable` to the planner launch lines of rounds already designed `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-12)*
+  A planner's launch line sits in its round's committed conductor prompt, and `round.md` "What a round design adds" now gives it the flag only for new designs. Planners of live rounds (`ws-documents` among them) launch with no advisor and park at planning as before. Found in glw907/workstation#236.
+
+- [ ] **#83** Build one index of Geoff's rulings for the advisor consult `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-12)*
+  `advisor.md` "Before a stop" step 1 has a session read rulings from the plan, the round design, earlier PRs, and dated rules in CLAUDE.md and skills. A ruling outside those is never in the transcript, so the advisor can't cite it and the pass stops or flags a choice Geoff already made. Found in glw907/workstation#236.
 - [ ] **#82** Let `claude-launch-guard` tell a plan from the other files a prompt names `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-12)*
   The guard reads a plan only when it is the prompt's `<slug>.md` or `<slug>-plan.md` sibling, or a `docs/plans/*.md` path the prompt names. A prompt that names a plan outside `docs/plans/` that is not its sibling counts as naming no plan, and so does one that names a `docs/plans/` path that is no file. A wider `plans/` pattern would read `plans/ur-rulings.md`, the first `plans/` path in every overhaul prompt, as the plan and deny those launches. A fix has to tell a plan from the other files a prompt names, for example by requiring the named file to hold a `## Pre-flight` heading or to share the prompt's slug. Found by the W3 plan (workstation PR #234).
 - [ ] **#79** Carry the stop-packet line and the `round` bullet of `approval-brief.md` into glw907/survey `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-12)*
