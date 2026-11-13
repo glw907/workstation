@@ -7,7 +7,7 @@
   "worktree": {
     "baseRef": "head"
   },
-  "model": "fable",
+  "model": "opus",
   "permissions": {
     "allow": [
       "Bash(chromium-shot:*)",
@@ -440,7 +440,8 @@
   "voiceEnabled": true,
   "modelSettings": {
     "claude-opus-5-5": {
-      "autoCompactWindow": 200000
+      "autoCompactWindow": 200000,
+      "effortLevel": "high"
     },
     "claude-fable-5-2": {
       "autoCompactWindow": 200000,
