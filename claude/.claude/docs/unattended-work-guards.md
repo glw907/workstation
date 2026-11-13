@@ -99,7 +99,7 @@ task notification, and a notification that fires while the API link is down is n
 timer: the session sits until a human types. On 2026-09-20 an `EAI_AGAIN` drop killed a fold
 implementer at about 04:00, the chain halted, and the session sat unwoken until Geoff's 09:16
 message, with no suspend in `journalctl` and every inhibitor held. A session that only waits, on an
-`approval-queue packet` call or an idle notice, arms no wake-up and no Monitor, because the
+`approval-queue send` call or an idle notice, arms no wake-up and no Monitor, because the
 command's exit or the notice wakes it. Any working session left unattended (an executor, a
 workflow run) arms
 a scheduled wake-up as well: `/loop` with no interval (dynamic pacing), started as the executing

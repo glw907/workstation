@@ -17,8 +17,8 @@ Load `standards:running-passes` first; this skill adds Geoff's operation to it. 
 
 ## Lifecycle
 
-Geoff approves a design as a design part in an approval-queue packet
-(`approval-packet`), never through a question in chat (Geoff, 2026-10-28). Every design is a
+Geoff approves a design as a `design` document in the Approval Queue (`approval-packet`), never
+through a question in chat (Geoff, 2026-10-28). Every design is a
 round design of one to six passes in one repo. A planner also reads `references/round.md`, and a
 conductor or an executor reads `references/round-run.md`.
 
@@ -89,7 +89,7 @@ A mid-run question to Geoff is a planning miss, recorded in the PR's `## Plannin
 question, his answer, and the plan item that should have answered it. The fix waits for the monthly
 prune. A question for Geoff first goes through `references/advisor.md`, which overrides
 `running-passes` on an open product or taste call. Under a conductor, the executor writes a stop
-to STATUS and ends; the conductor sends a `stop` packet.
+to STATUS and ends; the conductor sends the question as a `decide` document.
 
 ## Pairs
 
@@ -108,34 +108,23 @@ one-pass round has none, and its executor closes the pass itself.
 ## Close
 
 The close steps are `running-passes` "Close", with `standards:visual-verifier` on rendered UI in
-a site or the cairn admin. The adapter's close checklist runs, and STATUS is updated. The PR body opens with a `## Brief` per
-`~/.claude/docs/voice/approval-brief.md`, then carries what landed, each `auth-data` verdict,
-`## Decisions`, `## Planning misses`, and the score. Follow-ups go through `approval-packet`
-"File follow-ups".
+a site or the cairn admin. The adapter's close checklist runs, and STATUS is updated. The PR body
+opens with a paragraph written per `~/.claude/docs/voice/written-for-people.md`, then carries what
+landed, each `auth-data` verdict, `## Decisions`, `## Planning misses`, and the score. Follow-ups
+go through `approval-packet` step 7.
 
-When the work is ready for Geoff's read, the session that hands it over sends one packet: it writes
-the fact file, runs `approval-queue snapshot <facts.json>`, has the writer produce `text.md` (per
-`approval-packet`), then runs `approval-queue packet <initiative> <facts.json> <text.md>` and stays
-open until the command exits with Geoff's decision as JSON. An approve is Geoff's merge
-authorization, the authorization a launch prompt's "never merge" otherwise withholds: the session merges with `approval-queue merge <id>`, which merges each
-approved PR at the head Geoff read, and pulls the checkout as below. `claude-merge-guard` denies
-every GitHub CLI merge stage and names `approval-queue merge` and `approval-queue land` as the
-replacements. On a send-back, the session fixes forward from the note. `approval-queue triage` is only
-for an explicit backlog triage.
+A pass's hand-over is the `approval-packet` skill. Its step 1 says when a pass sends nothing and
+lands, and its later steps say how a document is written, checked, and sent, and how to act on
+Geoff's answer. An adapter line that says every PR waits for Geoff yields to step 1.
 
-A pass with no call for Geoff, no `auth-data` path, and no `## Before merge` step lands its PRs with
-`approval-queue land <owner/repo#n> <claim>` and sends no packet, in every class, once its checks
-are green and its whole-branch review is accepted with no open finding; the app lists each on the
-digest page (Geoff, 2026-11-10). Its follow-ups go to `BACKLOG.md` and the PR body as above, never
-to a packet (Geoff, 2026-10-17). A pass with a call, an `auth-data` path, or a `## Before merge`
-step sends a packet. An adapter line that says every PR waits for Geoff yields to this exception.
+A PR merges only through the queue: on Geoff's approve, or by a landing step 1 allows. A landing
+holds in every class, once the PR's checks are green and its whole-branch review is accepted with
+no open finding. `claude-merge-guard` denies every GitHub CLI merge stage.
 
 A PR must be safe under a plain merge followed by a pull; the executor makes it so where it can.
 When it cannot, the PR body carries a `## Before merge` section: the exact commands in order and
-the one check that shows they ran. `approval-queue merge` stops with exit 2 at a PR whose body has
-`## Before merge` and prints the section; after the merger runs those steps it reruns with
-`--premerge-done <owner/repo#n>`. The packet raises the section as a call, and `approval-packet`
-says who runs the steps for each choice.
+the one check that shows they ran. The merging session runs the commands and the check before
+`approval-queue merge`.
 
 Whoever merges a PR then brings that repo's main checkout up to date: `git -C <checkout> pull
 --ff-only` when the checkout is on its default branch, has no uncommitted change in a file the

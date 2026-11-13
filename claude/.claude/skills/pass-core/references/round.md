@@ -14,30 +14,33 @@ it. The design and planner seats take the models `SKILL.md` "Models" names.
 A round design of two or more passes carries these on top of what `planner.md` "Design" asks:
 
 - **A round id.** Lowercase letters, digits, and hyphens, starting with a letter, 12 characters at
-  most, as in `site-forms`. The queue refuses any other form. Every PR body, packet fact file, and
-  landing of the round carries it.
+  most, as in `site-forms`. Every PR body and landing of the round carries it.
 - **A pass table.** Each row names a pass with its outcome, acceptance list, files, class, path
   minutes, the passes it depends on, and the passes it shares a file with.
 - **The shared assumptions.** Each assumption that more than one pass depends on, with a probe run
   and its output, or a quoted source.
+- **The order table**: each pass, its planner prompt, what it depends on, its planned minutes,
+  and a mark on any pass whose PR waits for Geoff whatever its review says.
 - **The merge order.**
 - **The usage ceiling.** 85 percent of the weekly allowance, unless Geoff set another.
 - **The standing answers.** The twelve in `round-run.md` hold in every round. The design adds one
   for each further stop it can foresee and says so where it replaces one of the twelve.
 
 Two rules set the order. A pass that shares a file with an unmerged pass counts as depending on
-it, because a pass cut from the default branch would conflict at merge. Where the dependencies
-allow, the pass that rests on the least-proven assumption runs first, so a wrong assumption costs
-one pass and never the round. The longest chain of passes holds about 600 planned path minutes at
-most.
+it, because a pass cut from the default branch would conflict at merge.
+`BACKLOG.md` and `docs/STATUS.md` count as shared files.
+Where the dependencies allow, the pass that rests on the least-proven assumption runs first, so a
+wrong assumption costs one pass and never the round. A pass that waits for a close packet
+holds every later landing of the round, so the merge order puts a pass with no call for Geoff
+ahead of one that waits wherever the dependencies allow. The longest chain holds about 600
+planned path minutes at most.
 
-The designing session commits a planner prompt for each pass and one conductor prompt. The
-conductor prompt holds the order table: each pass, its planner prompt, what it depends on, its
-planned minutes, and a mark on any pass whose PR waits for Geoff whatever its review says. It
-also holds the planner's launch line, `claude --bg --model claude-opus-5-5 --effort high --advisor
-fable --name <repo>-<pass>-plan "$(cat <prompt>)"`. A case the table leaves open goes through
-`advisor.md` "The conductor's open case", and parks the pass if that settles nothing. Each pass
-is planned just before it runs, and its plan reads the code as the earlier passes left it.
+The designing session commits a planner prompt for each pass and one conductor prompt, which
+holds the order table and the planner's launch line, `claude --bg --model claude-opus-5-5
+--effort high --advisor fable --name <repo>-<pass>-plan "$(cat <prompt>)"`. A case the table leaves open
+goes through `advisor.md` "The conductor's open case", and parks the pass if that settles
+nothing. Each pass is planned just before it runs, and its plan reads the code as the earlier
+passes left it.
 
 ## Design rules
 
@@ -73,8 +76,8 @@ can check, and each answers one of the largest classes of planning miss.
    or dismisses every hit with a reason.
 3. `Permissions checked:` cites your read of the last 30 days of
    `~/.local/state/claude-denials.jsonl` against each task's commands. It names the log's date
-   range and each class found, and the plan names an alternative for each command the log shows
-   refused.
+   range and every class found with its row count, and the plan names an alternative for each
+   command the log shows refused.
 4. Every stop the plan writes has a standing answer or parks the pass. No stop says "ask Geoff".
 
 The `Evidence:` line of `## Pre-flight` names the mechanism table and the recorded searches.
@@ -131,6 +134,7 @@ For the last two, first ask the advisor whether the condition holds (`advisor.md
 
 To park, commit the plan on the pass's branch, push it, and open a draft PR against the default
 branch that holds the plan alone. Put the stop in the PR's body: the question, what you tried, and
-the choices you see. Then end. The draft PR matters because the queue refuses a `stop` packet that
-names no PR. Never ask Geoff in chat and never run `notify-send`: the conductor sends the packet.
-In a one-pass round the planner sends the `stop` packet itself, through `approval-packet`.
+the choices you see. Then end. The draft PR matters because the conductor reads the stop from it
+and sends the question as a `decide` document. Never ask Geoff in chat and never run
+`notify-send`. In a one-pass round the planner sends that document itself, through
+`approval-packet`.

@@ -77,7 +77,7 @@ rendered pages.
   belongs to the engine follows `~/.claude/docs/engine-ui-mechanics.md`.
 - Commit specific files only, one commit per task with the task id first in the subject.
 
-## Following cairn-cms docs during the round
+## Following cairn-cms docs during the pass
 
 A divergence between a cairn-cms docs page and reality is fixed on the page in the same change, per
 cairn's fix rule in its `CLAUDE.md`: edit on a `site-docs/<site>-<pass>` branch off cairn-cms `main`,

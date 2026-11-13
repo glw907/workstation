@@ -66,18 +66,19 @@ holds parks the pass.
 
 A flagged choice makes the PR's `Calls:` line count one, so the pass waits for a close packet
 while its chain runs on from its branch (`round-run.md` "Reading a pass"). That has a price: no
-later pass of the round lands before the close packet, and a chain with more than three calls
-needs a second packet. A parked chain costs more. Three rules keep an overturned choice cheap:
+later pass of the round lands before the close packet. A parked chain costs more. Three rules
+keep an overturned choice cheap:
 
-- The conductor lists each `[advisor]` call in the close packet as decided for Geoff, with the
-  option applied (`decidedForYou`, rule `owner-call`).
+- The conductor makes each `[advisor]` call a question in the close document, whose recommended
+  option is the one applied.
 - A later pass's planner reads the `[advisor]` lines of every PR its pass depends on. A plan that
   builds on a flagged choice names it under `## Decisions`, so the packet shows what an overturn
   undoes.
 - When Geoff overturns a choice, his note is a ruling. The conductor appends it under `## Rulings`
   in the plan of the pass that made the choice and of each pass that named it, then relaunches
   their executors in merge order, one at a time. Each later executor first merges its parent's
-  branch into its own, as `executor.md` lets a continued branch do. No planner runs again unless an executor stops.
+  branch into its own, as `executor.md` lets a continued branch do. No planner runs again
+  unless an executor stops.
 
 The round report counts the `[advisor]` lines beside the stops, so the record shows how many
 questions the advisor took and how many Geoff later reversed.
