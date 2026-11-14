@@ -10,6 +10,8 @@
 
 ## Medium
 
+- [ ] **#94** Give a one-pass design the fresh reader's launch question `#improvement` `#workstation` *(2026-11-14)*
+  `pass-core` `references/round.md` "Design rules" exempts a one-pass round from rule 3, the fresh-reader check, so nothing outside the designing session checks a one-pass design against `references/ready.md`. The round-ready design of 2026-11-14 was a one-pass design and fell short of the new rule 2: it gave its launch checks in plain words with no command (glw907/workstation#243, "Acceptance" item 2). Add one short read by a Sonnet reader that asks only whether the round could launch the moment Geoff approves; the reader's other two questions stay out. Geoff approved filing this in Approval Queue document `20261114-185441-2b6635` ("Yes, as a later change"). It amends his ruling of 2026-11-11 on what a one-pass round takes from the round rules.
 - [ ] **#93** Move the due full sweep out of the design in `standards:backlog-sweep` (glw907/standards) `#improvement` `#workstation` *(2026-11-14)*
   `plugins/standards/skills/backlog-sweep/SKILL.md` lines 23 to 25 say the pass design's sweep "runs the full sweep beside the scoped one". Geoff ruled on 2026-11-14 that a due full sweep never rides a design: it runs as a separate session and reaches him as a separate document. `pass-core` `references/ready.md` "A due full sweep" already overrides the skill on this workstation. Reword the skill to match so the two stop disagreeing, and drop the override sentence from `ready.md` in the same change. The skill lives in glw907/standards, which keeps no backlog.
 - [ ] **#92** Drop the allow rule for `claude-mail.sh`, a script that never existed `#bug` `#workstation` *(2026-11-14)*
