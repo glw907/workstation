@@ -10,6 +10,8 @@
 
 ## Medium
 
+- [ ] **#92** Drop the allow rule for `claude-mail.sh`, a script that never existed `#bug` `#workstation` *(2026-11-14)*
+  `claude/.claude/settings.json` line 88 allows `Bash(/var/home/glw907/Projects/servers/scripts/claude-mail.sh *)`, and no repo of Geoff's has ever held that script (`git log --all` at `origin/main` finds no such path). The rule clears nothing, and a later script of that name would run with no prompt. Remove the line with the same `settings.json` edit that repoints lines 86 and 431, or in the next pass that touches the file. Found in workstation PR #242.
 - [ ] **#88** Put a size limit on Node's compile cache in `/tmp` `#improvement` `#workstation` *(2026-11-13)*
   `/tmp/node-compile-cache` has no size limit and had grown to 3.1G when pavilion's 13.0G per-user `/tmp` quota filled on 2026-11-13, which made every Claude session's Bash fail with EDQUOT (the larger share was cairn-cms backlog #465). `/tmp` is a RAM-backed tmpfs that also holds `/tmp/claude-1000`. Left alone the cache grows back. Options: point `NODE_COMPILE_CACHE` at a disk path outside `/tmp`, or prune it on a timer. Found by session `dotfiles-d8`.
 
@@ -74,8 +76,8 @@
 - [ ] **#1** Fix the 22 pytest failures that read Homebrew Python 3.15 paths on pavilion `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-10)*
   **Check the pavilion gate baseline on Homebrew Python 3.15** (Geoff, 2026-10-13, triage of PR #49): the gate's baseline on pavilion has 22 pytest failures that read Homebrew's Python 3.15 paths (a `runner` pass). The ratchet lines went with the ratchet (workstation#225), and the Thunderbird items left with PR #93.
 
-- [ ] **#2** Move the music-VPS spec, plan, and library design from dubplate to servers `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
-  **Move the music-VPS spec, plan, and library design from dubplate to servers**: `~/Projects/dubplate/docs/plans/2026-08-30-music-vps-build.md`, `~/Projects/dubplate/docs/specs/2026-08-30-music-vps-build-design.md`, and `~/Projects/dubplate/docs/specs/2026-08-30-music-library-design.md` describe a Hetzner server, another machine's config. The servers repo now hosts the dubplate role, so they have a home there; coordinate with the music session that owns them.
+- [ ] **#2** Move the music-VPS spec, plan, and library design from dubplate to household-it `#improvement` `#workstation` *(2026-10-14)* *(swept 2026-11-03)*
+  **Move the music-VPS spec, plan, and library design from dubplate to household-it**: `~/Projects/dubplate/docs/plans/2026-08-30-music-vps-build.md`, `~/Projects/dubplate/docs/specs/2026-08-30-music-vps-build-design.md`, and `~/Projects/dubplate/docs/specs/2026-08-30-music-library-design.md` describe a Hetzner server, another machine's config. The household-it repo now hosts the dubplate role, so they have a home there; coordinate with the music session that owns them.
 
 - [x] **#5** Document the brief's local field in cairn-docs-drafter.md `#improvement` `#workstation` `#initiative:docs-system` *(2026-10-14)*
   **Document the brief's `local` field in `cairn-docs-drafter.md`** (PR #25, triage 2026-10-12). The chain's `draftPrompt` tells the drafter about the brief's top-level `"local"` array, but the agent definition does not, so a drafter dispatched outside the chain never sees it. PR #25 left the definition untouched because definitions load from the stowed main checkout. With #25 merged, add the field and its one-writer sentence to `claude/.claude/agents/cairn-docs-drafter.md`.
