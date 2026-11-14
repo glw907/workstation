@@ -247,7 +247,7 @@ Test: the recorded search (item 1) prints only `settings.json` lines.
 2. Run it until it prints nothing. Put its text and its empty output in the PR.
 3. Rerun `grep -rniE 'runbook' claude bin systemd bluefin secrets docs/model-review/prompt.txt BACKLOG.md docs/STATUS.md`
    and put each line in the PR's "runbook" table with the page it now means. The table starts
-   from "Searches", S-3.
+   from "Searches", F-3.
 
 Test: item 7.
 
@@ -330,7 +330,8 @@ Test: item 4.
    grep -q '^  "model": "fable",$' claude/.claude/settings.json || { test "$(grep -c '^  "model": "opus",$' claude/.claude/settings.json)" = 1 && sed -i 's/^  "model": "opus",$/  "model": "fable",/' claude/.claude/settings.json; }
    git diff --quiet -- claude/.claude/settings.json || git commit -m "Point the household rules at household-it" claude/.claude/settings.json
    git push origin main
-   cd ~/Projects/initiatives && claude-worktree-busy ~/Projects/initiatives && git pull --ff-only
+   claude-worktree-busy ~/Projects/initiatives
+   cd ~/Projects/initiatives && git pull --ff-only
    sed -i '17s|github.com/glw907/servers|github.com/glw907/household-it|' 907-rebuild/tools/automode-allow.py
    git diff --quiet -- 907-rebuild/tools/automode-allow.py || git commit -m "Name household-it in the DNS auto-mode rule" 907-rebuild/tools/automode-allow.py
    git push origin main
@@ -388,7 +389,7 @@ Then T8 15 and T9 25. The path is 130, plus 15 for one T7 rerun: 145, under the 
 | M1 | The recorded search | On `3c9389a`: 42 lines in 12 files, as the design says. `settings.json` 86, 88, 418, 428, 431; `secrets/registry.md` 24 lines (321 to 768); `CLAUDE.md` 49 and 50; `email.md` 3 and 7; `mail-tend` 9 and 11; one each in `test-accounts.md` 57, `api-tokens.md` 65, `proton-pass` 92, `vps-conventions` 86, `prompt.txt` 67, `monitor-subscribe.service` 3, `Brewfile` 30. |
 | M2 | Lines 418 and 428 name the repo | Line 418: "built and run from the private repo github.com/glw907/servers ... through the servers repo's scripts". Line 428: "the servers repo's scripts that reach them". Line 431: "from a checkout or worktree of github.com/glw907/servers is routine". |
 | M3 | A session can't edit `settings.json` or link a skill | The denial rows under "Permissions checked", and `round-run.md` standing answer 3. |
-| M4 | A project skill in a scratch folder loads in a `claude -p` session | In a job tmp folder with a stub `.claude/skills/probe-house/SKILL.md`, `claude -p "<Q1>" --model sonnet --output-format stream-json --verbose --max-turns 8 < /dev/null` exited 0 in auto mode. The `init` event listed `probe-house`, the session called `Skill {"skill":"probe-house"}`, read household-it's `README.md` and `docs/systems/cloudflare.md` with no `--add-dir` and no trust prompt, and named "Zone records". Cost $0.13. The plan review's Sonnet `medium` probe on question 4 with a stub told to cite the page path took 11.1 seconds, 5 turns, and $0.158, and named `docs/systems/backups.md`. A round of 33 runs is about $5. A `-p` run that launches a background Agent exits with no `result` event (#73453). |
+| M4 | A project skill in a scratch folder loads in a `claude -p` session | In a job tmp folder with a stub `.claude/skills/probe-house/SKILL.md`, `claude -p "<Q1>" --model sonnet --output-format stream-json --verbose --max-turns 8 < /dev/null` exited 0 in auto mode. The `init` event listed `probe-house`, the session called `Skill {"skill":"probe-house"}`, read household-it's `README.md` and `docs/systems/cloudflare.md` with no `--add-dir` and no trust prompt, and named "Zone records". Cost $0.13. The plan review's Sonnet `medium` probe on question 4 with a stub told to cite the page path took 11.1 seconds, 5 turns, and $0.158, and named `docs/systems/backups.md`. A round of 33 runs is about $5. A `-p` run that launches a background Agent exits with no `result` event (#73453). The planner's rerun of question 4 with `--disallowedTools Bash` loaded the skill, read the README and `docs/systems/backups.md` through Read, and named both that page and `docs/reference/restore-drill-log.md`: 5 turns, $0.20. |
 | M5 | The household-it checkout is behind | `~/Projects/household-it` is at `8ad5d05`, 11 commits behind `origin/main` (`c5ba414`), with session `household-it-bd` live in it. Between the two, nine files differ: `BACKLOG.md`, `CLAUDE.md`, `README.md`, the new `docs/contributing.md`, `scripts/check-docs.{py,sh}`, `scripts/check.sh`, and two tests. No page under `docs/systems/` or `docs/reference/` differs, so the pages the finding test needs read the same. No session pulls it while the session lives. |
 | M6 | What `verify` reads | `claude-tooling-sync` `Paths`: the tracked settings and the skills under `~/.dotfiles/claude/.claude/`, the main checkout. It checks vendored skills against `vendored-skills.json` and name collisions against `~/Projects/*/.claude/skills`; no project has a `runbook` skill. `apply` merges `{**live, **tracked}`, so the tracked `model` wins. `verify` exits 1 today on the live `model` (`fable`) against the tracked `opus`. |
 | M7 | The link targets | At `origin/main`: `docs/systems/mail.md` has "Mail filters", "The quick lane", "Technical mailbox"; `cloudflare.md` "Zone records", "Deploy a Worker", "Rotating a Cloudflare token", "Vendor docs" (line 59 holds the Workers Paid line); `bookmarks.md` "Set up Floccus on a device", "Rotate a member's password"; `monitoring.md` "The alerts on the workstation"; `docs/reference/decisions.md` "Rulings and decisions from the mail filters pass" (fact 12), "Rulings of 2026-10-24" (the `me.907.life` line), "Rulings and decisions from the mail server pass"; `addresses.md` "Test account"; `docs/prompts/monthly-review.txt`; `docs/contributing.md`. Every path the registry cites exists. The README links as `cloudflare.md#zone-records`. |
@@ -400,37 +401,37 @@ Then T8 15 and T9 25. The path is 130, plus 15 for one T7 rerun: 145, under the 
 
 ## Searches
 
-- S-1. The recorded search (M1), rerun on `3c9389a`: 42 lines in 12 files.
-- S-2. Prose the pattern misses, all live, all in the tasks: `cloudflare-estate-inventory.md:6`,
+- F-1. The recorded search (M1), rerun on `3c9389a`: 42 lines in 12 files.
+- F-2. Prose the pattern misses, all live, all in the tasks: `cloudflare-estate-inventory.md:6`,
   `browsers.md:12`, `mail-tend:10`, `:86`, `:118`, `maintenance-mode:76`, `registry.md:395`,
   `:426`, `:636`, `prompt.txt:66`, `BACKLOG.md` #2, and the stale paths in `email.md:7`
   (`docs/decisions.md`) and `test-accounts.md:57` (`docs/addresses.md`). No `household-infra`
   reference exists.
-- S-3. "runbook" lines: `cloudflare-estate-inventory.md:6`, `browsers.md:12`, `mail-tend:9-10`,
+- F-3. "runbook" lines: `cloudflare-estate-inventory.md:6`, `browsers.md:12`, `mail-tend:9-10`,
   `monitor-subscribe.service:3`, `registry.md:395` and `:426` mean household-it pages (T2 to T5).
   `vps-conventions:61` means a VPS project's runbook (household-it has no presence gate).
   `written-for-people.md:53` and `writing-voice:25,59` use the word in general.
   `bluefin/README.md:105`, `SECOND-WORKSTATION.md`, and `bluefin/bootstrap.sh` mean the
   workstation's own runbooks. `BACKLOG.md:170` names the design as history. All stay.
-- S-4. Kept lines that say `servers` and mean something else: `mail-tend:99`,
+- F-4. Kept lines that say `servers` and mean something else: `mail-tend:99`,
   `monitor-subscribe.service:2`, `bin/monitor-subscribe:4`, `proton-pass:25`, `retire-project:35`,
   `pass-core` `planner.md:18` and `executor.md:10`, `BACKLOG.md:32`, MCP and language-server
   "servers", and the dated `docs/model-review/2026-11-01-*`.
-- S-5. Found, not done, for the PR: household-it's `docs/guides/phonebook-operations.md:166`
+- F-5. Found, not done, for the PR: household-it's `docs/guides/phonebook-operations.md:166`
   still says "runbook, "Cloudflare""; line 88's rule names `claude-mail.sh`, which never existed
   (M8). Each goes through `standards:log-issue`, the first into household-it's backlog by a
   worktree commit, the second into this repo's.
-- S-6. The design swept household-it's backlog, not this repo's. The planner grepped
+- F-6. The design swept household-it's backlog, not this repo's. The planner grepped
   `BACKLOG.md` for the repo, the path, and "runbook": only #2 bears on the pass, and T5 folds it.
 
 ## Refusals
 
 - R-1. An edit of a `SKILL.md`, `CLAUDE.md`, or a file under `claude/.claude/docs/` is refused.
-  Retry once with the Edit or Write tool if the refused call was a shell command. Auto mode's
-  allow entries cover a skill edit a plan Geoff approved names, and cover `CLAUDE.md` and the docs
-  only with Geoff's approval in the session, so T3 is the likely refusal. On a second refusal of
-  a T3 file, write its change as exact replacement pairs in the T8 block, as `settings.json` is,
-  and list it in the PR. A second refusal elsewhere is a stop under standing answer 2.
+  Retry once with the Edit or Write tool if the refused call was a shell command. A second
+  refusal is a stop under standing answer 2. Moving the edit into Geoff's block would leave the
+  recorded search printing more than `settings.json` lines, which item 1 forbids. Executors have
+  landed edits to both from a worktree: `eaea145` (pass D3, `CLAUDE.md`) and `194c1df` (the W5
+  close, `claude/.claude/docs/unattended-work-guards.md`).
 - R-2. A nested `claude -p` run is refused. Rerun it once without `--effort`; a second refusal
   stops T7, and T8 and T9 run on the other items, with the stop in the PR.
 
@@ -464,7 +465,7 @@ household-it `c5ba414`. It confirmed every anchor, line number, replacement stri
 - T4's count is 20 lines, plus 474, 481, and 488; `servers#21` is on 425 and stays.
 - The laptop's `worktree repair` names the moved worktrees.
 - T1 asks the session to name the page path, which T7 tests for.
-- R-1 covers T3's files, with the T8 block as the second-refusal route.
+- R-1 covers T3's files. A second refusal is a stop, since moving the edit into the T8 block would break item 1.
 - A negative passes only on a successful `result`.
 - T9 reruns the gate after its fix chain.
 - T7 records a failure traced to the pre-merge global text instead of fixing `SKILL.md` for it.
@@ -472,7 +473,7 @@ household-it `c5ba414`. It confirmed every anchor, line number, replacement stri
 Of its notes, these are folded: S-1 names what still runs, M4 carries the measured run, T7 runs
 with `--disallowedTools Bash`, M5 and M6 are corrected, the greps catch the prose lines, T1
 checks `test -f` and the 500-character cap, a second review's Low findings start no round, the
-model `sed` replaces the JSON round trip, the initiatives step has a busy check, and S-6 records
+model `sed` replaces the JSON round trip, the initiatives step has a busy check, and F-6 records
 this repo's backlog sweep.
 
 ## Decisions
