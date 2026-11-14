@@ -10,7 +10,7 @@ The design is the page or less `running-passes` "Design" sets out, which Geoff r
 initiative or says none applies; cross-repo specs, plans, and research go in
 `~/Projects/initiatives/<id>/`. It names the published practice and vendor docs it drew on.
 Each pass writing for a person lists `~/.claude/docs/voice/written-for-people.md`, or the repo's
-rules, in its acceptance.
+rules, in its acceptance, and its plan and each launch prompt name it too.
 After a pass misses its bar, the next design reads that pass's final artifacts against the code
 and traces each wrong claim to its source.
 

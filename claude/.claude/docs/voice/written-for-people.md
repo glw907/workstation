@@ -42,7 +42,7 @@ If `vale` or `tellgrader` isn't installed, stop and report it. Never skip the st
 ## What each kind of writing gets
 
 This guide is the default for everything a session writes for a person, in every repo, private
-or public. A repo's recorded rules replace it, and nothing else does (Geoff, 2026-11-13).
+or public. Only a repo's recorded rules replace it (Geoff, 2026-11-13).
 
 | Writing | Steps |
 | --- | --- |

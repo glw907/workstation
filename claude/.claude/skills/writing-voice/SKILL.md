@@ -37,7 +37,7 @@ authoring charter (`~/.claude/docs/authoring-charter.md`).
 | Python comments and docstrings | PEP 257, PEP 8 | the standards:python-conventions skill |
 | Site content (pages, posts, form copy) | the site's own content guide | the site repo's `docs/content-guide.md`, via the standards:content-draft skill |
 
-Every file a person reads, in any repo, also goes through steps 1 to 3 of
+Every other file a person reads, in any repo, also goes through steps 1 to 3 of
 `~/.claude/docs/voice/written-for-people.md`. That guide is the default, and only a repo's
 recorded rules replace it (Geoff, 2026-11-13).
 
