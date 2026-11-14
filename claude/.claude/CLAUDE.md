@@ -113,8 +113,8 @@ specified one-sentence change lands directly: `pass-core` "Direct changes" (Geof
 
 ## Writing voice
 
-Every audience starts from a published external standard; a repo may carry a recorded house-voice
-overlay. **Name the audience and load its standard through the `writing-voice` skill before
-drafting** (map: `~/.claude/docs/authoring-charter.md`). Vale, the comment linters, and `tellgrader`
-are the deterministic net; clean is necessary, never sufficient. The em dash is banned in code
-comments; developer docs follow Google, editor copy Microsoft, and replies and commits go without.
+Every audience starts from a published external standard; a repo may carry a recorded house-voice overlay. Anything a
+person reads follows `~/.claude/docs/voice/written-for-people.md` unless the repo records its own rules. **Name the
+audience and load its standard through the `writing-voice` skill before drafting** (map:
+`~/.claude/docs/authoring-charter.md`). A clean linter run is necessary, never sufficient. The em dash is banned in
+code comments; developer docs follow Google, editor copy Microsoft, and replies and commits go without.
