@@ -19,7 +19,7 @@ after weighing Cloudflare against the Hetzner servers orpheus and ward: what
 fails together, what the host already carries, cost, and how backup and restore cover it. It never
 defaults to the host at hand (Geoff, 2026-10-22).
 
-Every design runs the `standards:backlog-sweep` scoped sweep, and its full sweep when one is due.
+Every design runs the `standards:backlog-sweep` scoped sweep, never a due full sweep (`ready.md`).
 The design lists the verdicts, and approving it approves the backlog edits; a backlog pass takes
 its scope from the verdicts and lists each drop with its reason (Geoff, 2026-10-27 and
 2026-10-25).

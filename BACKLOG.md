@@ -10,6 +10,8 @@
 
 ## Medium
 
+- [ ] **#93** Move the due full sweep out of the design in `standards:backlog-sweep` (glw907/standards) `#improvement` `#workstation` *(2026-11-14)*
+  `plugins/standards/skills/backlog-sweep/SKILL.md` lines 23 to 25 say the pass design's sweep "runs the full sweep beside the scoped one". Geoff ruled on 2026-11-14 that a due full sweep never rides a design: it runs as a separate session and reaches him as a separate document. `pass-core` `references/ready.md` "A due full sweep" already overrides the skill on this workstation. Reword the skill to match so the two stop disagreeing, and drop the override sentence from `ready.md` in the same change. The skill lives in glw907/standards, which keeps no backlog.
 - [ ] **#92** Drop the allow rule for `claude-mail.sh`, a script that never existed `#bug` `#workstation` *(2026-11-14)*
   `claude/.claude/settings.json` line 88 allows `Bash(/var/home/glw907/Projects/servers/scripts/claude-mail.sh *)`, and no repo of Geoff's has ever held that script (`git log --all` at `origin/main` finds no such path). The rule clears nothing, and a later script of that name would run with no prompt. Remove the line with the same `settings.json` edit that repoints lines 86 and 431, or in the next pass that touches the file. Found in workstation PR #242.
 - [ ] **#88** Put a size limit on Node's compile cache in `/tmp` `#improvement` `#workstation` *(2026-11-13)*
