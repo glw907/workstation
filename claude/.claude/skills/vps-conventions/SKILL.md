@@ -83,7 +83,7 @@ reviewed script in the repo. The script takes its targets as arguments and print
 it acts, so the transcript shows exactly what changes. It refuses anything ambiguous, such as a
 leading-dash id, a folder, or a pattern, and does one thing. Give it an exact
 `permissions.allow` rule per invocation shape, and land the script and its rule through review
-together. The servers repo's `scripts/ward-mail-delete.sh` and `scripts/mx-switch.sh` are the
+together. household-it's `scripts/ward-mail-delete.sh` and `scripts/mx-switch.sh` are the
 models.
 
 ## Gate
