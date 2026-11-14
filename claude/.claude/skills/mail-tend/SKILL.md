@@ -9,8 +9,8 @@ Geoff's mailbox on ward is sorted by one Sieve script, rendered from data files 
 `~/Projects/household-it/roles/mail-filters/`. The reference is
 `~/Projects/household-it/docs/systems/mail.md#mail-filters`, and
 `~/Projects/household-it/docs/systems/mail.md#the-quick-lane` sets how a change lands (Geoff,
-2026-10-24). This skill is the loop from a complaint to a fixed mailbox. Work in a worktree cut
-from `origin/main` of the repo.
+2026-10-24). This skill is the loop from a complaint to a fixed mailbox. Work in a worktree
+of household-it, cut from its default branch.
 
 This skill sorts Geoff's mailbox, and its steps name his script, `data/geoff.sieve.in`. Ward's
 technical mailbox has a template of its own, `roles/mail-filters/data/<account name>.sieve.in`, and
