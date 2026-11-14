@@ -129,7 +129,7 @@ the one check that shows they ran. The merging session runs the commands and the
 Whoever merges a PR then brings that repo's main checkout up to date: `git -C <checkout> pull
 --ff-only` when the checkout is on its default branch, has no uncommitted change in a file the
 merge touches, and has no live session (`claude agents --json`). Otherwise it reports the checkout
-as stale and never forces it.
+as stale, offers to pull it once the blocker clears, and never forces it.
 
 After the pull, the merging session removes the pass's worktree with `git worktree remove <path>`
 and its branch with `git branch -d <branch>`, with no force flag. A dirty tree, an unmerged branch,

@@ -15,8 +15,8 @@ question itself as a `decide` document in place of ending, and its PR carries no
 2. Auto mode refuses a command. The session uses the alternative its plan names, once. A second
    refusal is a stop. No session edits a setting to get past one.
 3. A task needs a setting, hook, auto-mode entry, or permission rule changed. That is never an
-   executor task. The planner writes it as a command for Geoff in a close packet, and a pass that
-   can't finish without it parks.
+   executor task. The close packet carries the commands and their check, and Geoff's approve lets
+   the merging session run them (Geoff, 2026-11-14). A pass that can't finish without them parks.
 4. The weekly usage reads 85 percent or more before a launch, or the figure can't be read. The
    conductor finishes the pass in flight, starts nothing new, writes the report, and waits for the
    reset.

@@ -2,9 +2,9 @@
 
 ## Work Autonomously Until Done
 
-Do not ask for review or approval until the task is fully complete; keep working until every quality
-gate passes. Stop early only for information only the user can provide or a `pass-core` "Judgment
-calls" stop (an irreversible or destructive act, a secret, overspend, a scope or design change).
+Do not ask for review or approval until the task is done; keep working until every gate passes. Stop early only for
+what only Geoff can provide or a `pass-core` "Judgment calls" stop (an irreversible or destructive act, a secret,
+overspend, a scope or design change). Never hand Geoff a command to paste that Claude could run (2026-11-14): ask, then run it.
 
 ## The pass process lives in `pass-core`
 
