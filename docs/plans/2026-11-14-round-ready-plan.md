@@ -29,6 +29,27 @@ Reviewed: one `standards:plan-reviewer` read before code (class `runner`); its v
 under "Review" below.
 Evidence: the mechanism table and the "Searches" list below.
 
+## Start line
+
+The pass starts when Geoff's answer to design document `20261114-183833-107bf3` is `approve`
+(`approval-queue send` printed `"action":"approve"` at 2026-11-14T18:39:41Z) and
+`claude-worktree-busy` on the pass's worktree prints nothing. No other round is approved or running
+in the workstation repo: `docs/STATUS.md` line 4 reads "Round ws-documents, glw907/workstation,
+ended 2026-11-13", and line 5 reads "Waiting for Geoff: nothing."
+
+The launch checks, run in the worktree on 2026-11-14:
+
+| Command | Output |
+| --- | --- |
+| `claude-worktree-busy ~/.dotfiles/.claude/worktrees/round-ready` (before the first edit) | Nothing, exit 0 |
+| `git rev-list --count HEAD..origin/main` | `0` |
+| `git check-ignore -v .claude/worktrees/round-ready` | `.gitignore:55:.claude/worktrees/	.claude/worktrees/round-ready` |
+| `claude agents --json`, rows whose directory is the workstation repo | `workstation-runbook-agents idle /var/home/glw907/.dotfiles`, in the main checkout and not in this worktree |
+| `gh pr list -R glw907/workstation --json number,files`, filtered to this pass's files | #131, #86, and #85 are open and none touches a file this pass edits |
+
+The design, written before the rule existed, gives these results in plain words and shows no
+command. The fresh reader marked that down (see "Acceptance", item 2).
+
 ## Mechanism table
 
 | Mechanism | Probe or source |

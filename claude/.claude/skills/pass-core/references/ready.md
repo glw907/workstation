@@ -17,10 +17,10 @@ packet. This holds for a round of any size.
 2. **The launch checks, run early.** The designing session runs the checks that come before the
    first launch (`round-run.md` "The order table" and the checks in the conductor prompt, or
    `planner.md` "Launch" in a one-pass round) and records each command and its output under the
-   start line. It fixes a failed check before the packet goes. When a check waits for something outside the session, the
-   packet's first paragraph says the round won't start on approve, what it waits for, and who ends
-   that wait. The repo's STATUS then names the conductor prompt as the next launch, and the session
-   that ends the wait hands the round over (`conductor.md` "Hand-off").
+   start line. It fixes a failed check before the packet goes. When a check waits for something
+   outside the session, the packet's first paragraph says the round won't start on approve, what it
+   waits for, and who ends that wait. The repo's STATUS then names the conductor prompt as the next
+   launch, and the session that ends the wait hands the round over (`conductor.md` "Hand-off").
 3. **Prompts point at a skill.** A launch prompt names a tool's command by the skill section that
    owns it, as in "land as `approval-packet` step 1 says". It never copies a subcommand, a flag, or
    a `--help` list. A command line a prompt has to carry, such as a `claude --bg` launch, is run or
