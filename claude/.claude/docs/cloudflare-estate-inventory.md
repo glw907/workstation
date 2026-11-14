@@ -3,7 +3,7 @@
 Workstation-wide reference, loaded by any project. Account `120c269ad6d3dfbe6d63a0bb53758ca0`.
 **Plan: Workers Paid** (Geoff, 2026-10-25), so D1 allows 1,000 queries per Worker invocation (50 on
 free). No token can read the plan (`GET /accounts/{id}/subscriptions` answers code 10000), so
-this line and the servers runbook's "Cloudflare" section are the record.
+this line and household-it's `docs/systems/cloudflare.md#vendor-docs` are the record.
 **Values-free by rule** (this file is worth reading in any repo, some public): it records what
 EXISTS and HOW to reach it, never a secret's value. Regenerate the live lists with the commands
 at the foot; treat the snapshot below as orientation, verify before acting.

@@ -27,7 +27,7 @@ brew "socat"
 brew "ttyd"
 brew "rsync"
 brew "vale"
-# Self-hosting initiative (2026-10-17): the servers repo's gate and scripts.
+# Self-hosting initiative (2026-10-17): the household-it repo's gate and scripts.
 brew "hcloud"
 brew "shfmt"
 brew "yamllint"

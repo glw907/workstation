@@ -73,4 +73,4 @@ Remove the repo from `bluefin/maintenance-projects.txt` and say so in its `docs/
 `maintain-projects` handles npm repos only. The same rules apply elsewhere: a quiet routine update,
 a gate, and one notification on failure. A service with a different update path gets its own step
 when Geoff brings it in. Don't stretch the npm script to cover it. Stalwart and Bulwark on ward and
-orpheus are the likely next ones; their update carries a server deploy, so it starts in `servers`.
+orpheus are the likely next ones; their update carries a server deploy, so it starts in `household-it`.

@@ -89,5 +89,5 @@ json`. The owner's share id for the same vault is rejected by `agent access revo
 
 ## Aliases
 
-Masked and alias addresses use `m.907.life` (backlog #45, Geoff 2026-10-28). The servers repo's
-decisions file spells it `me.907.life`; this skill follows the ruling.
+Masked and alias addresses use `m.907.life` (backlog #45, Geoff 2026-10-28). household-it's decisions file
+(`~/Projects/household-it/docs/reference/decisions.md#rulings-of-2026-10-24`) spells it `me.907.life`; this skill follows the ruling.

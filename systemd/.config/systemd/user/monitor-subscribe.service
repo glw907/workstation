@@ -1,6 +1,6 @@
 [Unit]
 Description=Desktop notifications for the servers' alerts
-Documentation=file://%h/Projects/servers/docs/runbook.md
+Documentation=file://%h/Projects/household-it/docs/systems/monitoring.md#the-alerts-on-the-workstation
 After=graphical-session.target network-online.target
 PartOf=graphical-session.target
 Wants=network-online.target

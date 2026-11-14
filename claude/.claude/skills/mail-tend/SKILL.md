@@ -6,10 +6,11 @@ description: Use when Geoff says a message landed in the wrong folder ("this mad
 # Mail tend
 
 Geoff's mailbox on ward is sorted by one Sieve script, rendered from data files in
-`~/Projects/servers/roles/mail-filters/`. The runbook's "Mail filters" section is the reference
-(`docs/runbook.md`), and its "The quick lane" sets how a change lands (Geoff, 2026-10-24). This
-skill is the loop from a complaint to a fixed mailbox. Work in a worktree of the servers repo cut
-from `origin/main`.
+`~/Projects/household-it/roles/mail-filters/`. The reference is
+`~/Projects/household-it/docs/systems/mail.md#mail-filters`, and
+`~/Projects/household-it/docs/systems/mail.md#the-quick-lane` sets how a change lands (Geoff,
+2026-10-24). This skill is the loop from a complaint to a fixed mailbox. Work in a worktree
+of household-it, cut from its default branch.
 
 This skill sorts Geoff's mailbox, and its steps name his script, `data/geoff.sieve.in`. Ward's
 technical mailbox has a template of its own, `roles/mail-filters/data/<account name>.sieve.in`, and
@@ -83,7 +84,7 @@ A rule change merges first, then follows steps 2 and 3 from `main`.
 
 ## 4. Re-sort the stored mail
 
-`scripts/ward-mail-sort.sh` is the only path for a mailbox change. Run it from the servers checkout
+`scripts/ward-mail-sort.sh` is the only path for a mailbox change. Run it from the household-it checkout
 as written, since its allow rules are exact. Never call `mail-filters move`, `undo`, or
 `folders --prune` over ssh yourself; the classifier refuses them, and routing around a refusal is
 not allowed.
@@ -115,7 +116,7 @@ moves only when the current script files it somewhere else.
   and `cloudflare/mta-sts` for the workers leg.
 - A message in two folders never moves, and `move` never changes keywords.
 - In sieve-rs 0.7.3 a `string` test with a list of keys matches only its last key. Test a list of
-  senders with `address` or `header`, which match any key (servers `docs/decisions.md`, fact 12).
+  senders with `address` or `header`, which match any key (`~/Projects/household-it/docs/reference/decisions.md#rulings-and-decisions-from-the-mail-filters-pass`, fact 12).
 - The probe set can't test the spam step: Stalwart scores only unauthenticated mail. The sieve-run
   fixtures carry a `spam` field for that.
 - `mail-test-ids.sh add` needs the age key cached. Run

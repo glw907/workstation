@@ -318,7 +318,7 @@ tmpfs cache; no password manager holds it for scripts.
 ### HCLOUD_TOKEN_SERVERS
 - **Grants**: Hetzner Cloud API read/write, project `servers` only (self-hosting initiative)
 - **Token name at issuer**: servers-claude
-- **Used by**: the servers repo's `infra/provision.sh` and `scripts/dry-run.sh`, which pass it to
+- **Used by**: household-it's `infra/provision.sh` and `scripts/dry-run.sh`, which pass it to
   `hcloud` as `HCLOUD_TOKEN` through the environment. No `hcloud context` exists, because
   `hcloud context create` writes the token to `~/.config/hcloud/cli.toml`.
 - **Rotate at**: console.hetzner.cloud > project servers > Security > API tokens
@@ -387,18 +387,18 @@ tmpfs cache; no password manager holds it for scripts.
   only: DNS Write, Dynamic URL Redirects Write (Single Redirect), Workers Routes Write, Zone
   Read. Account: Workers Admin (the scripts create and delete Workers), D1 Write, Email Sending
   Write, Access: Apps and Policies Write, Cloudflare Tunnel Write, Access: Audit Logs Read.
-- **Used by**: the servers repo's `cloudflare/dns.sh`, `access.sh`, `deploy.sh`, and
+- **Used by**: household-it's `cloudflare/dns.sh`, `access.sh`, `deploy.sh`, and
   `scripts/dry-run.sh`.
 - **Minted 2026-10-18** through the API under the API token scheme
   (`~/.claude/docs/cloudflare-estate-inventory.md`); the value went from the response into the
   store unseen. Smoke-tested: 907.life DNS read 200, ecxc.ski DNS read 403, R2 403.
-- **Rotate**: the scheme's temporary token procedure (rule 6), then the servers runbook's
-  "Rotating a Cloudflare token".
+- **Rotate**: the scheme's temporary token procedure (rule 6), then
+  household-it's `docs/systems/cloudflare.md#rotating-a-cloudflare-token`.
 
 ### MONITOR_READ_TOKEN
 - **Grants**: read access to the monitor Worker's `/alerts` endpoint: the open conditions, their
   severity, and the time of the last completed check. It writes nothing and posts no heartbeat.
-- **Used by**: the servers repo's monitor Worker (a Worker secret, put by `cloudflare/deploy.sh
+- **Used by**: household-it's monitor Worker (a Worker secret, put by `cloudflare/deploy.sh
   monitor`) and the workstation's `monitor-subscribe` user service, which reads it from
   `~/.local/secrets`.
 - **Generated** on the workstation (32 random bytes, hex-encoded), distinct from both heartbeat
@@ -408,84 +408,84 @@ tmpfs cache; no password manager holds it for scripts.
 
 ### IMMICH_DB_PASSWORD
 - **Grants**: the password of orpheus's Immich Postgres role. Immich cannot start without it, and the restored database expects the role to exist with it.
-- **Used by**: the servers repo's `roles/immich` compose file, rendered to `/etc/immich/immich.env` on orpheus only.
+- **Used by**: household-it's `roles/immich` compose file, rendered to `/etc/immich/immich.env` on orpheus only.
 - **Generated 2026-10-19** on pavilion (40 random alphanumeric characters), in Pass 2 (M3).
 - **Rotate**: store a new value, re-render orpheus's secrets, and change the role's password inside Postgres.
 
 ### TUNNEL_TOKEN_ORPHEUS
 - **Grants**: the right to run the `servers-orpheus` Cloudflare Tunnel connector, which carries orpheus's Access browser terminal at `ssh-orpheus.907.life`. Anyone holding it can attach a connector to that tunnel. It replaced the media tunnel's token, which the rename pass retired.
-- **Used by**: the servers repo's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on orpheus only.
+- **Used by**: household-it's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on orpheus only.
 - **Generated 2026-10-20** by `cloudflare/access.sh --token orpheus` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in the rename pass (R6).
 - **Rotate**: rotate the tunnel's token in Cloudflare (or recreate the tunnel with `access.sh`), store the new value, and re-render orpheus's secrets.
 
 ### WEBDAV_PASSWORD_GEOFF / _OPERATOR2 / _MEMBERC
 - **Grants**: one household member's login to their own Floccus bookmark share at `https://dav.907.life/<name>/`, and nothing else. Each member's bookmarks file is also encrypted with a passphrase that member keeps, so the login alone doesn't reveal it.
-- **Used by**: the servers repo's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in Proton Pass in `Infrastructure` (Geoff's and each other member's), the members' for Geoff to share with that member (Geoff, 2026-10-24).
+- **Used by**: household-it's `roles/webdav`, in `/etc/webdav/<name>.env` on orpheus, and the member's Floccus. A copy of each is in Proton Pass in `Infrastructure` (Geoff's and each other member's), the members' for Geoff to share with that member (Geoff, 2026-10-24).
 - **Generated 2026-10-21** on pavilion (32 random bytes, base64url), in the bookmarks pass.
 - **Deleted 2026-10-24**: `_MEMBERA` and `_MEMBERB`, with their shares, after Geoff ruled that household members A and B were never people, only two unused Fastmail logins (servers#21).
-- **Rotate**: store a new value, update the Proton Pass item, re-render orpheus's `/etc/webdav/<name>.env`, restart `webdav@<name>`, and paste the new value into the member's Floccus on each device (servers `docs/runbook.md`, "Bookmark sync").
+- **Rotate**: store a new value, update the Proton Pass item, re-render orpheus's `/etc/webdav/<name>.env`, restart `webdav@<name>`, and paste the new value into the member's Floccus on each device (household-it's `docs/systems/bookmarks.md#rotate-a-members-password`).
 
 ### BULWARK_SESSION_SECRET
 - **Grants**: the key that seals Bulwark's session cookies, including the encrypted mailbox password a remembered sign-in carries. It opens no account by itself, and a leak lets the holder forge or read a webmail session cookie.
-- **Used by**: the servers repo's `roles/bulwark`, rendered to `/etc/bulwark/session-secret` on orpheus (0400, uid 1001) and read through `SESSION_SECRET_FILE`.
+- **Used by**: household-it's `roles/bulwark`, rendered to `/etc/bulwark/session-secret` on orpheus (0400, uid 1001) and read through `SESSION_SECRET_FILE`.
 - **Generated 2026-10-22** on pavilion (48 random bytes, base64url), in the Bulwark pass (T1).
 - **Rotate**: store a new value, re-render orpheus's secrets, and restart `bulwark.service`. Every member signs in again. It needs no emergency copy.
 
 ### RESTIC_PASSWORD_ORPHEUS
 - **Grants**: the right to open the orpheus restic repository in `servers-backup-orpheus`. Losing it makes every orpheus backup unreadable. It replaced the media server's restic password, which the rename pass retired.
-- **Used by**: the servers repo's `roles/backup` (rendered to `/etc/servers/restic-password` on orpheus) and the restore drill.
+- **Used by**: household-it's `roles/backup` (rendered to `/etc/servers/restic-password` on orpheus) and the restore drill.
 - **Generated 2026-10-20** on pavilion (32 random bytes, base64url), in the rename pass (R3), stored and pushed before `restic init`. The bucket's lock rules land only after this commit is on `origin/main`.
 - **Rotate**: changing a restic password removes the old key file, which the `keys/` lock rule refuses, so a rotation needs Geoff to lift the rule.
 
 ### RESTIC_PASSWORD_WARD
 - **Grants**: the right to open the ward restic repository in `servers-backup-ward`. Losing it makes every ward backup unreadable, and a regenerated value orphans the repository.
-- **Used by**: the servers repo's `roles/backup` (rendered to `/etc/servers/restic-password` on ward) and the restore drill.
+- **Used by**: household-it's `roles/backup` (rendered to `/etc/servers/restic-password` on ward) and the restore drill.
 - **Generated 2026-10-21** on pavilion (40 random alphanumerics), in the mail server pass (L3), stored and pushed before `restic init`. The bucket's lock rules land only after this commit is on `origin/main`.
 - **Rotate**: changing a restic password removes the old key file, which the `keys/` lock rule refuses, so a rotation needs Geoff to lift the rule.
 
 ### TUNNEL_TOKEN_WARD
 - **Grants**: the right to run the `servers-ward` Cloudflare Tunnel connector, which carries ward's Access browser terminal and the Stalwart admin page. Anyone holding it can attach a connector to that tunnel.
-- **Used by**: the servers repo's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on ward only.
+- **Used by**: household-it's `roles/cloudflared`, rendered to `/etc/cloudflared/token` on ward only.
 - **Generated 2026-10-21** by `cloudflare/access.sh --token ward` (the tunnel is created by `access.sh --apply`) and stored with `secret-set.sh`, in the mail server pass (L3).
 - **Rotate**: rotate the tunnel's token in Cloudflare (or recreate the tunnel with `access.sh`), store the new value, and re-render ward's secrets.
 
 ### STALWART_ADMIN_PASSWORD
 - **Grants**: the password of Stalwart's administrator account on ward. It manages every account, domain, and setting.
-- **Used by**: the servers repo's `roles/stalwart` (the plan application and the bootstrap) and `roles/health` (queue and mailbox counts), rendered to root-only files on ward.
+- **Used by**: household-it's `roles/stalwart` (the plan application and the bootstrap) and `roles/health` (queue and mailbox counts), rendered to root-only files on ward.
 - **Generated 2026-10-21** on pavilion (40 random alphanumerics), in the mail server pass (L3).
 - **Rotate**: store a new value and apply the Stalwart role again, which sets the account's password from the store.
 
 ### STALWART_PASSWORD_GEOFF / _OPERATOR2 / _TEST / _TEST2
 - **Grants**: the passwords of four Stalwart accounts on ward: Geoff's and the second operator's mailboxes, and the two rehearsal test accounts. The mailbox passwords let their holders read that mail.
-- **Used by**: the servers repo's `roles/stalwart` (the plan sets each account's password from the store) and the rehearsal scripts (`vandelay-run.sh`, L6's sends). The second operator's also goes into `Infrastructure` for him.
+- **Used by**: household-it's `roles/stalwart` (the plan sets each account's password from the store) and the rehearsal scripts (`vandelay-run.sh`, L6's sends). The second operator's also goes into `Infrastructure` for him.
 - **Generated 2026-10-21** on pavilion (40 random alphanumerics), in the mail server pass (L3). Each is shared with its owner in Pass 6; until then only the rehearsal uses them.
 - **Rotate**: store a new value and apply the Stalwart role again.
 
 ### STALWART_PASSWORD_PHONEBOOK
 - **Grants**: sign-in to the `phonebook` account on ward, which owns the household's Global Address Book and shares it read-only with each member. The account has no mail access: its permissions disable sending, receiving, IMAP, POP3, ManageSieve, and JMAP mail, so the password reads and writes contacts only.
-- **Used by**: the servers repo's `roles/stalwart` (the plan sets the account's password, and `stalwart-apply` signs in with it to name the book and set its grants) and, as `WARD_PASSWORD`, the phonebook Worker, which writes the book's cards.
+- **Used by**: household-it's `roles/stalwart` (the plan sets the account's password, and `stalwart-apply` signs in with it to name the book and set its grants) and, as `WARD_PASSWORD`, the phonebook Worker, which writes the book's cards.
 - **Generated 2026-10-25** on pavilion (40 random alphanumerics), in the ward address book pass (T3).
 - **Rotate**: ward first (store a new value, re-render ward's secrets, and apply the Stalwart role), then the phonebook Worker's `WARD_PASSWORD`, which also clears the Worker's sign-in stop.
 
 ### STALWART_PASSWORD_CAIRN_GATE
 - **Grants**: sign-in to the `cairn-gate@probe.907.life` test mailbox on ward, in the `probe.907.life` test domain. The account holds only test mail and is outside the household address book.
-- **Used by**: the servers repo's `roles/stalwart` (the plan sets the account's password) and cairn-cms's release gate, which reads the mailbox over JMAP to check a sign-in email and follow its link. The mailbox is also the email of the gate's GitHub test account.
+- **Used by**: household-it's `roles/stalwart` (the plan sets the account's password) and cairn-cms's release gate, which reads the mailbox over JMAP to check a sign-in email and follow its link. The mailbox is also the email of the gate's GitHub test account.
 - **Generated 2026-11-03** on pavilion (32 random bytes, base64url), for cairn-cms's setup-fix pass.
-- **Rotate**: store a new value, re-render ward's secrets and apply the Stalwart role (`scripts/apply.sh ward --apply` in the servers repo), then `secret-set.sh --sync` on each host.
+- **Rotate**: store a new value, re-render ward's secrets and apply the Stalwart role (`scripts/apply.sh ward --apply` in household-it), then `secret-set.sh --sync` on each host.
 
 ### STALWART_PASSWORD_TECH
 - **Grants**: sign-in to ward's technical mailbox with the account password. It opens the whole mailbox, which receives the reset mail for Geoff's technical accounts, so Claude never reads it as a credential and never signs in with it.
-- **Used by**: the servers repo's `roles/stalwart` (the plan sets the account's password) and `scripts/tech-mailbox-setup.sh`, which makes it. Claude's ward applies hold it in their process, as they hold every ward password.
+- **Used by**: household-it's `roles/stalwart` (the plan sets the account's password) and `scripts/tech-mailbox-setup.sh`, which makes it. Claude's ward applies hold it in their process, as they hold every ward password.
 - **Copy**: Proton Pass, in the `Private` vault, made by the setup script under Geoff's own login. Claude has no grant on that vault.
 - **Status**: set 2026-11-07 by the setup script's first run. The Proton Pass item is in `Private`.
-- **Rotate**: change the Proton Pass item and the store name together (`secret-set.sh`), then apply ward (`scripts/apply.sh ward --apply` in the servers repo).
+- **Rotate**: change the Proton Pass item and the store name together (`secret-set.sh`), then apply ward (`scripts/apply.sh ward --apply` in household-it).
 
 ### TECH_MAIL_APP_PASSWORD
 - **Grants**: a read-only Stalwart app password on the technical mailbox, described `claude-reader`. Its permissions are `authenticate`, `jmapEmailGet`, `jmapEmailQuery`, `jmapEmailChanges`, `jmapMailboxGet`, and `jmapMailboxQuery`: it reads and cannot send, delete, or change a filter. The setup script proves that on every run.
-- **Used by**: the servers repo's `scripts/tech-mail.sh`, which reads one `export` line of `~/.local/secrets`. Workstation only: it is never in the servers store.
+- **Used by**: household-it's `scripts/tech-mail.sh`, which reads one `export` line of `~/.local/secrets`. Workstation only: it is never in the servers store.
 - **Copy**: none. A rerun of the setup script replaces it.
 - **Status**: set 2026-11-07 by the setup script's first run, which proved it reads and is refused a send and a delete.
-- **Rotate**: `secret-set.sh TECH_MAIL_APP_PASSWORD --delete`, then rerun `scripts/tech-mailbox-setup.sh` in the servers repo.
+- **Rotate**: `secret-set.sh TECH_MAIL_APP_PASSWORD --delete`, then rerun `scripts/tech-mailbox-setup.sh` in household-it.
 
 ### SPORTSYOU_NOTIFY_JMAP_PASSWORD
 - **Grants**: a Stalwart app password on Geoff's account with seven permissions: `authenticate`, `jmapEmailGet`, `jmapEmailQuery`, `jmapEmailChanges`, `jmapEmailUpdate`, `jmapMailboxGet`, and `jmapMailboxQuery`. It reads and updates the whole mailbox, because Stalwart scopes a password by permission and never by folder. It cannot send mail or delete it permanently. The program touches only the SportsYou folder.
@@ -495,13 +495,13 @@ tmpfs cache; no password manager holds it for scripts.
 
 ### HEARTBEAT_TOKEN_ORPHEUS / HEARTBEAT_TOKEN_WARD
 - **Grants**: the right to post one server's health heartbeat to the monitor Worker. Each token writes only its own server's row. They replaced the media and mail keys, which the rename pass retired.
-- **Used by**: the monitor Worker (Worker secrets) and, rendered by the servers repo's `secrets/render.sh` as `HEARTBEAT_TOKEN`, that server's health timer only. Ward's health timer reads it from L3 of the mail server pass.
+- **Used by**: the monitor Worker (Worker secrets) and, rendered by household-it's `secrets/render.sh` as `HEARTBEAT_TOKEN`, that server's health timer only. Ward's health timer reads it from L3 of the mail server pass.
 - **Generated 2026-10-20** on pavilion (32 random bytes, base64url), in the rename pass (R3).
 - **Rotate**: store a new value, redeploy the monitor, and re-render the server's secrets.
 
 ### CF_ORPHEUS_R2_BACKUP_RW_* / CF_WARD_R2_BACKUP_RW_*
 - **Grants**: two account-owned R2 tokens, `orpheus-r2-backup-rw` and `ward-r2-backup-rw`, each stored as `_TOKEN` plus its S3 pair (`_KEY_ID` is the token id, `_SECRET` the SHA-256 of the value). Each reads and writes its own backup bucket, `servers-backup-orpheus` or `servers-backup-ward`, and nothing else. They replace the media and mail tokens.
-- **Used by**: orpheus's restic (ward's waits for Pass 5) and `scripts/dry-run.sh`. Readers per name: the servers repo's `secrets/registry.md`.
+- **Used by**: orpheus's restic (ward's waits for Pass 5) and `scripts/dry-run.sh`. Readers per name: household-it's `secrets/registry.md#secrets-registry`.
 - **Minted 2026-10-20** in the rename pass (R3) through a temporary token-management token, with the old tokens' policies and the bucket swapped. `ws-r2-backups-ro` was re-scoped in place to add both new buckets; its value did not change.
 - **Rotate**: as for `CF_WS_SERVERS_TOKEN`; a server's token also rotates when that server is rebuilt or compromised.
 
@@ -511,8 +511,7 @@ tmpfs cache; no password manager holds it for scripts.
   https://developers.cloudflare.com/r2/api/tokens/). `ws-r2-archive-rw` (`9ab3b968...`): object
   read and write on `servers-archive`. `ws-r2-backups-ro` (`d76af5a1...`): object read on
   `servers-backup-orpheus` and `servers-backup-ward` (the rename pass re-scoped it from the two old buckets).
-- **Used by**: workstation archive copies; restores, drills, and the restore kit. Readers per name: the servers repo's
-  `secrets/registry.md`.
+- **Used by**: workstation archive copies; restores, drills, and the restore kit. Readers per name: household-it's `secrets/registry.md#secrets-registry`.
 - **Minted 2026-10-18** as above. Smoke-tested over S3: each lists its own bucket (200) and is
   refused another (403); the read-only token lists both backup buckets.
 - **Rotate**: as for `CF_WS_SERVERS_TOKEN`; a server's token also rotates when that server is
@@ -603,7 +602,7 @@ tmpfs cache; no password manager holds it for scripts.
 ### FASTMAIL_DAV_PASSWORD
 - **Grants**: Fastmail app password with mail, calendar, and contacts access (IMAP, SMTP,
   CalDAV, CardDAV)
-- **Used by**: the servers repo's Fastmail reads (`scripts/vandelay-run.sh`, `scripts/imap-sweep.sh`,
+- **Used by**: household-it's Fastmail reads (`scripts/vandelay-run.sh`, `scripts/imap-sweep.sh`,
   `scripts/dry-run.sh`) until Fastmail closes; vdirsyncer and its `fastmail-dav-password` helper are
   retired (2026-10-22)
 - **Rotate at**: Fastmail > Settings > Privacy & Security > App Passwords
@@ -633,7 +632,7 @@ tmpfs cache; no password manager holds it for scripts.
 - **Grants**: queries to Spamhaus's free Data Query Service (the `zen` and `dbl` blocklists
   through `<key>.<zone>.dq.spamhaus.net`), for non-commercial use, renewing yearly
 - **Used by**: the self-hosting mail server ward (Stalwart's blocklist checks, a `File`
-  secret on the host) and the servers dry run's `spamhaus-dqs` row
+  secret on the host) and the household-it dry run's `spamhaus-dqs` row
 - **Rotate at**: the Spamhaus Customer Portal (login in Geoff's Proton Pass), Products >
   Blocklists via DNS Query > Generate a new Query key; then `secret-receive SPAMHAUS_DQS_KEY`.
   A new key takes several minutes to answer
@@ -765,7 +764,7 @@ tmpfs cache; no password manager holds it for scripts.
   re-set the same day.
 
 ### VOIPMS_RELAY_KEY
-- **Grants**: the `voipms.907.life` relay on orpheus (`~/Projects/servers`, `roles/caddy`), which
+- **Grants**: the `voipms.907.life` relay on orpheus (`~/Projects/household-it`, `roles/caddy`), which
   forwards a `POST` to `/api/v1/rest.php` carrying this key as a `Bearer` token to voip.ms from
   orpheus's fixed address. Every other request gets a 404. Generated 2026-10-31 as 32 random hex
   bytes by the voicemail and rings pass.

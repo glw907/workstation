@@ -63,8 +63,8 @@ Steps, in order:
      and land it with `approval-queue land glw907/workstation#<n> "quiet month, no behavior change"`.
      Send no notification.
 
-9. After step 8, in this same session, run the servers monthly review: if
-   /var/home/glw907/Projects/servers/docs/monthly-review/prompt.txt exists, read it and follow it.
+9. After step 8, in this same session, run the household-it monthly review: if
+   /var/home/glw907/Projects/household-it/docs/prompts/monthly-review.txt exists, read it and follow it.
    It has its own worktree, branch, and PR; name its result on one line in your final report to
    Geoff,    after the model review's own hand-over. The Survey writing review is a separate session that
    the launcher starts; do not run it here.
