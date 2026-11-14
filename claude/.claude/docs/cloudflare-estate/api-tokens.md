@@ -62,7 +62,7 @@ The scheme:
 | `ws-admin` | user | The scopes in the next section | `CLOUDFLARE_API_TOKEN` (wrangler's variable) | Interactive admin on the workstation |
 | `ws-cairn-read` | user | Seven Read groups, below | `CAIRN_CF_READ_TOKEN` (the cairn tool reads it) | The Go `cairn` operator tool |
 | `ws-r2-music-ro` | user | R2 object read, `music-library` | `MUSIC_R2_RO_ACCESS_KEY_ID` / `MUSIC_R2_RO_SECRET_ACCESS_KEY` (`music-pull` reads them) | `music-pull` |
-| `ws-servers` | account | 907.life DNS, Single Redirect, and Workers Routes edit; Workers Admin (its scripts create and delete Workers), D1, Email Sending; Access apps and policies, Tunnel, Access audit logs read | `CF_WS_SERVERS_TOKEN` | The servers repo's scripts |
+| `ws-servers` | account | 907.life DNS, Single Redirect, and Workers Routes edit; Workers Admin (its scripts create and delete Workers), D1, Email Sending; Access apps and policies, Tunnel, Access audit logs read | `CF_WS_SERVERS_TOKEN` | household-it's scripts |
 | `ws-r2-archive-rw` | account | R2 object read and write, `servers-archive` | `CF_WS_R2_ARCHIVE_RW_TOKEN` + pair | Workstation archive copies |
 | `ws-r2-backups-ro` | account | R2 object read, `servers-backup-orpheus` and `servers-backup-ward` | `CF_WS_R2_BACKUPS_RO_TOKEN` + pair | Restores and drills |
 | `orpheus-r2-backup-rw` | account | R2 object read and write, `servers-backup-orpheus` | `CF_ORPHEUS_R2_BACKUP_RW_TOKEN` + pair | Orpheus's restic |

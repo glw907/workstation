@@ -54,7 +54,7 @@ Settings > Developer settings. Lost TOTP: sign in with a recovery code and set u
 ## Mail: `cairn-gate@probe.907.life`
 
 A ward mailbox in the `probe.907.life` test domain. Its mail never touches a real 907.life
-mailbox (servers repo, `docs/addresses.md`). Password `STALWART_PASSWORD_CAIRN_GATE` in the age
+mailbox (`~/Projects/household-it/docs/reference/addresses.md#test-account`). Password `STALWART_PASSWORD_CAIRN_GATE` in the age
 store. Read it over JMAP: `GET https://ward.907.life/.well-known/jmap` (`907.life` answers 308 to it) with basic auth for the session,
 then `Email/query` and `Email/get` against its `apiUrl`. Select a message by sender, subject, and a
 received time after the request that caused it, never "the newest message". Ward logs every
