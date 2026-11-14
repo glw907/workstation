@@ -5,14 +5,14 @@ Goal: one `runbook` skill routes any workstation session to the household-it REA
 Your plan is /var/home/glw907/.dotfiles/.claude/worktrees/runbook-agents/docs/plans/2026-11-13-runbook-agents-plan.md. Read it in full before any other step, its "Rulings" first, then load `pass-core` and its references `executor.md` and `round-run.md`, the repo's adapter `dotfiles-pass`, and `claude-infra`. The plan's acceptance list is fixed: you may add a check, and you never edit or drop an item. Where a ruling says how an item reads, the plan says so.
 
 - Repo `glw907/workstation`, main checkout `~/.dotfiles`, default branch `main`.
-- Enter the worktree once, with `EnterWorktree` and `path` set to `/var/home/glw907/.dotfiles/.claude/worktrees/runbook-agents`. It is on branch `runbook-agents`, cut from `origin/main`. Work only there, except T7's scratch folders and transcripts and T6's script, which the plan places, and the one household-it backlog item S-5 names.
+- Enter the worktree once, with `EnterWorktree` and `path` set to `/var/home/glw907/.dotfiles/.claude/worktrees/runbook-agents`. It is on branch `runbook-agents`, cut from `origin/main`. Work only there, except T7's scratch folders and transcripts and T6's script, which the plan places, and the one household-it backlog item "Searches" F-5 names.
 - Read household-it only at `origin/main` (`git -C ~/Projects/household-it show origin/main:<path>`). Its checkout is behind and has a live session: never pull it, edit it, or switch its branch.
 - Scope: the files each task names. Anything else you find goes to `BACKLOG.md` through `standards:log-issue` and into the PR's "Found, not done", never into this pass.
 - You never edit `claude/.claude/settings.json`, run `claude-tooling-sync apply`, or run `stow`. Add no `permissions.allow` rule and change no deny rule. A refused command takes the plan's "Refusals" once; a second refusal is a stop. Never retry a refused edit through `sed` or `python3`, and end a background command with `TaskStop`, never `kill`.
 - `secrets/registry.md` (T4) is `auth-data`: wording only, and no value is read from any store.
 - Scratch files go in your job's `$CLAUDE_JOB_DIR/tmp`. T7's transcripts go in `~/.local/state/runbook-trigger-test/2026-11-13/`.
 - Gate: `bash scripts/gate.sh --scope-changed` after each task, and `bash scripts/gate.sh` and `claude-tooling-sync verify` once on the close head, each run bare.
-- Push `runbook-agents` to `origin` and open the PR against `main`.
+- Push `runbook-agents` to `origin`. Draft PR #242 against `main` already holds the plan: rewrite its body at close with `gh pr edit 242 --body-file`, and open no second PR.
 
 This is a one-pass round with no conductor. You close the pass yourself and send the `merge` packet through `approval-packet`, carrying the plan's T8 command block and its check. The PR waits for Geoff's approve: it changes the global `CLAUDE.md`, and the block is his to run. Your work is done when the PR is out of draft with its review accepted, every acceptance item's evidence is in the body, and the packet is sent. On his approve, merge it as T9 says. A stop follows `round-run.md` "Stops" and the plan's "Stops" exactly, sent as a `decide` document through `approval-packet`.
 

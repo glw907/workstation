@@ -23,7 +23,15 @@ only he can run. The executor sends that packet through `approval-packet` and me
 
 ## Rulings
 
-None yet. The planner parked this plan on two questions ("Park") and appends Geoff's answers here.
+Geoff answered the `decide` document `20261114-084126-67677a` on 2026-11-14 at 08:47 UTC,
+approving with both recommended options.
+
+- **Q1: five lines.** The T8 block edits lines 86, 88, 418, 428, and 431 of
+  `claude/.claude/settings.json`. Acceptance item 1 reads "the five lines of
+  `claude/.claude/settings.json` that the packet's command changes" in place of "the three lines".
+  T8 keeps all five replacement pairs.
+- **Q2: keep fable.** The T8 block sets the tracked `model` to `fable` with the guarded `sed`,
+  in the same commit, before `claude-tooling-sync apply`. T8 keeps the `model` step.
 
 ## Pre-flight
 
