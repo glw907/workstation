@@ -39,6 +39,7 @@ build() {
   for f in CLAUDE.md skills/pass-core/SKILL.md skills/pass-core/references/executor.md \
     skills/pass-core/references/planner.md skills/pass-core/references/conductor.md \
     skills/pass-core/references/round.md skills/pass-core/references/round-run.md \
+    skills/pass-core/references/ready.md \
     skills/cairn-pass/SKILL.md; do
     words_file "$root/claude/.claude/$f" 10
   done
@@ -133,6 +134,18 @@ assert_eq "$rc" "1" "absent round-run.md: exit"
 case "$err" in
   *"references/round-run.md is absent"*) ;;
   *) echo "FAIL: absent round-run.md: message was '$err'"; fail=1 ;;
+esac
+
+# ready.md counts in the planner's load, and an absent one fails --check.
+build
+out=$(run)
+assert_eq "$(printf '%s\n' "$out" | grep -c -F 'references/ready.md')" "1" "ready.md rows"
+rm "$root/claude/.claude/skills/pass-core/references/ready.md"
+err=$(run --check 2>&1 >/dev/null); rc=$?
+assert_eq "$rc" "1" "absent ready.md: exit"
+case "$err" in
+  *"references/ready.md is absent"*) ;;
+  *) echo "FAIL: absent ready.md: message was '$err'"; fail=1 ;;
 esac
 
 [ "$fail" -eq 0 ] && echo "claude-pass-load test OK"

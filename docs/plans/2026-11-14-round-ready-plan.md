@@ -56,11 +56,14 @@ Evidence: the mechanism table and the "Searches" list below.
 ## Decisions
 
 - D-1. The "Ready to run" section goes in a new file, `pass-core/references/ready.md`, with a
-  pointer from `round.md`, since the word cap leaves no room in `round.md`. The alternative was to
-  raise the cap, which loads every planner with more words for a rule only a designer needs. The
-  approved words are unchanged.
+  pointer from `round.md`'s opening and from `SKILL.md` "Lifecycle", since the word cap leaves no
+  room in `round.md`. The alternative was to raise the cap. A file with a cap of its own keeps
+  `round.md` at its size and gives the designer's rules one place. The approved words are
+  unchanged.
 - D-2. The search rule and the full-sweep rule sit in `ready.md` too, each behind a pointer from
-  the sentence the design named (`round.md` planner rule 2, `planner.md` "Design").
+  the sentence the design named (`round.md` planner rule 2, `planner.md` "Design"). `planner.md`
+  has one spare word, so its sentence becomes "Every design runs the `standards:backlog-sweep`
+  scoped sweep, never a due full sweep (`ready.md`)."
 - D-3. `ready.md` gets a cap of 500 words and a row in the planner's load, so the tools that guard
   the pass skill's size see it.
 
@@ -87,31 +90,39 @@ Copied from the design, each with its task and evidence.
 ## Tasks
 
 1. **Write the rules** (`runner`, 25 min). Files: new `claude/.claude/skills/pass-core/references/ready.md`;
-   `references/round.md`; `references/planner.md`. `ready.md` holds the design's four numbered rules
+   `references/round.md`; `references/planner.md`; `pass-core/SKILL.md`;
+   `claude/.claude/tooling/retired-phrases.txt` (the superseded phrase "and its full sweep when one
+   is due", as that file's opening comment requires). `ready.md` holds the design's four numbered rules
    under `## Ready to run`, the search rule under `## A retired form`, and the full-sweep rule under
    `## A due full sweep`. `round.md` gains a pointer to it, the builder check's third question in
    design rule 3, and a pointer in planner rule 2. `planner.md`'s full-sweep sentence points at it.
-   Acceptance: `claude-context-budget --skill-caps --root .` exits 0, and
-   `bash tests/claude-context-budget.test.sh` passes with both lists still at four.
+   Acceptance: `grep -l "ready.md"` names `round.md`, `planner.md`, and `SKILL.md`; each of the
+   design's rule sentences is found in `ready.md` once line wraps are joined; and
+   `claude-context-budget --skill-caps --root .` exits 0. The first two fail on today's tree.
 2. **Teach the size tools the new file** (`runner`, 15 min). Files: `bin/.local/bin/claude-context-budget`
    (cap `pass-core/references/ready.md 500`), `bin/.local/bin/claude-pass-load` (planner row),
    `tests/claude-context-budget.test.sh` (the fixture loop, and a pin of four items under "Ready to
-   run"), `tests/claude-pass-load.test.sh` (the fixture's file list). Acceptance: both test files
-   pass, and `claude-pass-load --check --root .` exits 0. Test: the two test files.
+   run"), `tests/claude-pass-load.test.sh` (the fixture's file list, and a case where an absent
+   `ready.md` makes `--check` exit 1). Acceptance: both test files pass, and
+   `claude-pass-load --check --root .` exits 0. Test: the two test files.
 3. **Run the fresh reader** (`runner`, 15 min). One Sonnet reader at `medium` gets the three changed
    rule files from this worktree and the design, conductor prompt, and start prompt from
-   `initiatives` at `68bd8e1`, by path to a scratch copy, and the question in acceptance item 1; then
-   this pass's design for item 2. A miss on any of the three faults is a red: fix the rule's words
-   and rerun, twice at most, then stop as below.
+   `initiatives` at `68bd8e1`, by path to a scratch copy. Its whole question is "Read the rules,
+   then the design and its prompts. What must change before this design is sent to its owner?" The
+   prompt names no fault. Then it gets this pass's design for item 2. A miss on any of the three
+   faults is a red. The rule words are approved and stay as they are: the session may correct the
+   reader's inputs or prompt once, never by naming a fault, then stops as below.
 4. **Close** (10 min). The gate, `claude-tooling-sync verify`, one `gitleaks git` scan of the
    branch, the whole-branch `standards:diff-reviewer`, a backlog item in the `standards` repo for
-   its full-sweep sentence, an entry in the round log, the PR, and the landing.
+   its full-sweep sentence (`standards:log-issue`, after `claude-worktree-busy ~/Projects/standards`
+   prints nothing), an entry in the round log in `initiatives` (this session's checkout, committed
+   as a hand-over), the PR, and the landing.
 
 Path: 25 + 15 + 15 + 10 = 65 minutes. No pairs: tasks 1 and 2 share the test files' expectations.
 
 ## Stops
 
-- The reader still misses a fault after two rewordings. Standing answer: the PR waits for Geoff as
+- The reader still misses a fault after one corrected run. Standing answer: the PR waits for Geoff as
   a `merge` document that quotes the reader's answers, since acceptance item 1 can't be met as
   written.
 - The closing review ends on `escalate`, or a second read is short of `accept`. Standing answer:
@@ -121,4 +132,14 @@ Path: 25 + 15 + 15 + 10 = 65 minutes. No pairs: tasks 1 and 2 share the test fil
 
 ## Review
 
-Pending.
+One `standards:plan-reviewer` read on 2026-11-14, at `a161873`. Verdict: sound with folds. It
+confirmed every mechanism row and found one blocker and five fixes, all folded above:
+
+- Blocker: task 3 let a red reword the approved rules. It now allows one corrected run of the
+  reader and no change to the rule words.
+- The reader's prompt would have named the faults. The plan now quotes the prompt.
+- A one-pass designer would have skipped a pointer under "Design rules". The pointer sits in
+  `round.md`'s opening and in `SKILL.md`.
+- `planner.md` has one spare word. D-2 pins a sentence that fits.
+- `retired-phrases.txt` takes the superseded phrase.
+- Tasks 1 and 2 gained checks that fail on today's tree.

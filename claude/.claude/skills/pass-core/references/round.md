@@ -1,7 +1,8 @@
 # Round
 
 Read after `pass-core` `SKILL.md` and `references/planner.md`, to design a round or to plan one of
-its passes. A conductor and an executor read `references/round-run.md` in its place.
+its passes. A designer then reads `references/ready.md`. A conductor and an executor read
+`references/round-run.md` in its place.
 
 A round is one approved design that covers one to six passes in one repo. Its passes run one at a
 time while Geoff is away, and rounds run one at a time unless a design says otherwise. A pass stays
@@ -55,8 +56,8 @@ reads anything. A round design of two or more passes follows four rules.
    assumption with neither is an open reading, and the design isn't ready for the packet.
 3. One fresh reader checks the design before it reaches Geoff, whatever its class: the
    `standards:brainstorming` builder check, run by one Opus reader with no context. It asks whether
-   a builder could plan every pass from the design, and whether any acceptance item could pass on
-   a wrong result.
+   a builder could plan every pass from the design, whether any acceptance item could pass on a
+   wrong result, and whether the round could launch the moment Geoff approves.
 4. Each PR shows evidence for every acceptance item: the command and its output, or a screenshot.
    The closing reviewer checks each item against that evidence. An item that can't be met as
    written parks the pass.
@@ -73,7 +74,8 @@ can check, and each answers one of the largest classes of planning miss.
 1. The plan carries a mechanism table. Each row names a probe you ran with its output, or a quoted
    source with its line or URL. No row says "expected" or cites nothing.
 2. The file list comes from searches. The plan records each search with its hit count, and lists
-   or dismisses every hit with a reason.
+   or dismisses every hit with a reason. A pass that retires a command or a form also runs the
+   search in `ready.md` "A retired form".
 3. `Permissions checked:` cites your read of the last 30 days of
    `~/.local/state/claude-denials.jsonl` against each task's commands. It names the log's date
    range and every class found with its row count, and the plan names an alternative for each

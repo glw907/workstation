@@ -125,3 +125,8 @@ thin conductor
 code-simplifier runs once per pass
 Pass class:
 go-architecture-reader per touched
+
+# Round ready (Geoff, 2026-11-14): a due full backlog sweep never rides a design; it runs as a
+# separate session and document (pass-core references/ready.md). Supersedes the 2026-10-25 and
+# 2026-10-27 placement of the full sweep inside the design.
+and its full sweep when one is due

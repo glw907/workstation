@@ -39,6 +39,7 @@ ROLES = {
     "planner": SHARED + [
         ("claude/.claude/skills/pass-core/references/planner.md", None, None),
         ("claude/.claude/skills/pass-core/references/round.md", None, None),
+        ("claude/.claude/skills/pass-core/references/ready.md", None, None),
         ("~/Projects/standards/plugins/standards/skills/brainstorming/SKILL.md", None, 1778),
         ("~/Projects/standards/plugins/standards/skills/backlog-sweep/SKILL.md", None, 770),
         ("~/Projects/standards/plugins/standards/skills/spec-plan-review/SKILL.md", None, 1200),

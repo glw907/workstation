@@ -62,7 +62,7 @@ assert_eq "$rc" "0" "900-token rule under a 1000 budget: exit"
 # --skill-caps: under every cap exits 0; one file over exits 1 naming it; an absent file exits 1.
 caps="$root/caps"
 for f in SKILL.md references/executor.md references/planner.md references/conductor.md \
-  references/round.md references/round-run.md; do
+  references/round.md references/round-run.md references/ready.md; do
   mkdir -p "$(dirname "$caps/claude/.claude/skills/pass-core/$f")"
   seq 400 >"$caps/claude/.claude/skills/pass-core/$f"
 done
@@ -126,6 +126,7 @@ assert_eq "$(item_numbers "$fixture" "First")" "1 2 3" "count helper: item numbe
 refs="claude/.claude/skills/pass-core/references"
 assert_eq "$(count_items "$refs/round.md" "Planner rules" 2>/dev/null)" "4" "round.md: planner rules"
 assert_eq "$(count_items "$refs/round.md" "Design rules" 2>/dev/null)" "4" "round.md: design rules"
+assert_eq "$(count_items "$refs/ready.md" "Ready to run" 2>/dev/null)" "4" "ready.md: ready-to-run rules"
 assert_eq "$(item_numbers "$refs/round-run.md" "Standing answers" 2>/dev/null)" \
   "1 2 3 4 5 6 7 8 9 10 11 12" "round-run.md: standing answers, numbered 1 to 12"
 tags=$(section_of "$refs/round-run.md" "Miss tags" 2>/dev/null)

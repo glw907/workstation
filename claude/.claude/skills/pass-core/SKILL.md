@@ -19,8 +19,8 @@ Load `standards:running-passes` first; this skill adds Geoff's operation to it. 
 
 Geoff approves a design as a `design` document in the Approval Queue (`approval-packet`), never
 through a question in chat (Geoff, 2026-10-28). Every design is a
-round design of one to six passes in one repo. A planner also reads `references/round.md`, and a
-conductor or an executor reads `references/round-run.md`.
+round design of one to six passes in one repo. A planner also reads `references/round.md` and
+`references/ready.md`, and a conductor or an executor reads `references/round-run.md`.
 
 1. **Design.** Opus at `high` brainstorms (`standards:brainstorming`); the planner reference holds
    what a design carries. If the diff fits in one sentence, skip steps 2 to 4.

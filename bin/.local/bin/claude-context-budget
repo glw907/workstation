@@ -32,6 +32,7 @@ SKILL_CAPS=(
   "pass-core/references/conductor.md 560"
   "pass-core/references/round.md 1500"
   "pass-core/references/round-run.md 1500"
+  "pass-core/references/ready.md 500"
 )
 
 # Prints one line for each capped file over its cap or absent, and exits 1 if any is.
