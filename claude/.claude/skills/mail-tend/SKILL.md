@@ -7,9 +7,10 @@ description: Use when Geoff says a message landed in the wrong folder ("this mad
 
 Geoff's mailbox on ward is sorted by one Sieve script, rendered from data files in
 `~/Projects/household-it/roles/mail-filters/`. The reference is
-`~/Projects/household-it/docs/systems/mail.md#mail-filters`, and its `#the-quick-lane` sets how a
-change lands (Geoff, 2026-10-24). This skill is the loop from a complaint to a fixed mailbox. Work
-in a worktree of household-it cut from `origin/main`.
+`~/Projects/household-it/docs/systems/mail.md#mail-filters`, and
+`~/Projects/household-it/docs/systems/mail.md#the-quick-lane` sets how a change lands (Geoff,
+2026-10-24). This skill is the loop from a complaint to a fixed mailbox. Work in a worktree cut
+from `origin/main` of the repo.
 
 This skill sorts Geoff's mailbox, and its steps name his script, `data/geoff.sieve.in`. Ward's
 technical mailbox has a template of its own, `roles/mail-filters/data/<account name>.sieve.in`, and
