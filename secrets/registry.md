@@ -194,6 +194,11 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | PHONEBOOK_ACCESS_CLIENT_SECRET | ✓ | — | — |
 | IMMICH_PIKAPODS_API_KEY | ✓ | — | — |
 | TPLINK_ROUTER_PASSWORD | ✓ | — | — |
+| ROUTER_ADMIN_PASSWORD | ✓ | — | — |
+| ROUTER_SSH_KEY_B64 | ✓ | — | — |
+| ROUTER_WIFI_WARWICK | ✓ | — | — |
+| ROUTER_WIFI_DEVICES | ✓ | — | — |
+| ROUTER_WIFI_GUEST | ✓ | — | — |
 
 > `DUBPLATE_MAGIC_LINK_SECRET` and `DUBPLATE_SESSION_SECRET` (minted 2026-10-05, dubplate rung
 > 5d's first-deploy sitting): the greenfield server's two HMAC keys, 48 random bytes each
@@ -864,6 +869,26 @@ tmpfs cache; no password manager holds it for scripts.
   stays off; this credential never leaves the LAN.
 - **Rotate**: change it on the router's admin page, then `secret-receive TPLINK_ROUTER_PASSWORD`.
   A scripted login shares the router's single admin session, so a run logs Geoff's browser out.
+
+### ROUTER_ADMIN_PASSWORD / ROUTER_SSH_KEY_B64
+- **Grants**: full control of the house router, a GL.iNet Flint 2 (GL-MT6000) on OpenWrt. The
+  password signs `root` in to the router's web page, which answers on the household network
+  alone. The key is the Ed25519 key that household-it's `scripts/router/` scripts sign in over
+  SSH with; SSH refuses passwords. Minted 2026-11-13 by the router pass. Local only: no Worker
+  and no server reads either.
+- **Rotate**: store a new value with `secret-set.sh`, update the `Router (Flint 2)` item in the
+  `Infrastructure` vault, then run `scripts/router/apply.sh --apply` in household-it. For the
+  key, put the new public half in `scripts/router/config/authorized_keys` first and apply with
+  the old key.
+
+### ROUTER_WIFI_WARWICK / ROUTER_WIFI_DEVICES / ROUTER_WIFI_GUEST
+- **Grants**: a place on the household Wi-Fi (`Warwick`), the isolated network for devices
+  (`Warwick-Devices`), and the guest network (`Warwick-Guest`). Minted 2026-11-13. The router
+  holds them through `scripts/router/render.sh`, and each has an item in the `Infrastructure`
+  vault. Local only.
+- **Rotate**: store a new value, update the vault item, run `scripts/router/apply.sh --apply`,
+  then rejoin every device on that network. The desk phones take the `Warwick` value through
+  their web pages.
 
 
 ## age Key Details
