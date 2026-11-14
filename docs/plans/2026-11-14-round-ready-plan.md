@@ -134,9 +134,8 @@ Copied from the design, each with its task and evidence.
    faults is a red. The rule words are approved and stay as they are: the session may correct the
    reader's inputs or prompt once, never by naming a fault, then stops as below.
 4. **Close** (10 min). The gate, `claude-tooling-sync verify`, one `gitleaks git` scan of the
-   branch, the whole-branch `standards:diff-reviewer`, a backlog item in the `standards` repo for
-   its full-sweep sentence (`standards:log-issue`, after `claude-worktree-busy ~/Projects/standards`
-   prints nothing), an entry in the round log in `initiatives` (this session's checkout, committed
+   branch, the whole-branch `standards:diff-reviewer`, a backlog item for the `standards` plugin's full-sweep sentence (filed in this repo's
+   `BACKLOG.md` as #93, since `~/Projects/standards` keeps no backlog), an entry in the round log in `initiatives` (this session's checkout, committed
    as a hand-over), the PR, and the landing.
 
 Path: 25 + 15 + 15 + 10 = 65 minutes. No pairs: tasks 1 and 2 share the test files' expectations.
