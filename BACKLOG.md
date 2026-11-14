@@ -11,7 +11,7 @@
 ## Medium
 
 - [ ] **#92** Drop the allow rule for `claude-mail.sh`, a script that never existed `#bug` `#workstation` *(2026-11-14)*
-  `claude/.claude/settings.json` line 88 allows `Bash(/var/home/glw907/Projects/servers/scripts/claude-mail.sh *)`, and neither household-it nor the old servers repo has ever held that script (`git log --all` at `origin/main` finds no such path). The rule clears nothing, and a later script of that name would run with no prompt. Remove the line with the same `settings.json` edit that repoints lines 86 and 431, or in the next pass that touches the file. Found in workstation PR #242.
+  `claude/.claude/settings.json` line 88 allows `Bash(/var/home/glw907/Projects/servers/scripts/claude-mail.sh *)`, and no repo of Geoff's has ever held that script (`git log --all` at `origin/main` finds no such path). The rule clears nothing, and a later script of that name would run with no prompt. Remove the line with the same `settings.json` edit that repoints lines 86 and 431, or in the next pass that touches the file. Found in workstation PR #242.
 - [ ] **#88** Put a size limit on Node's compile cache in `/tmp` `#improvement` `#workstation` *(2026-11-13)*
   `/tmp/node-compile-cache` has no size limit and had grown to 3.1G when pavilion's 13.0G per-user `/tmp` quota filled on 2026-11-13, which made every Claude session's Bash fail with EDQUOT (the larger share was cairn-cms backlog #465). `/tmp` is a RAM-backed tmpfs that also holds `/tmp/claude-1000`. Left alone the cache grows back. Options: point `NODE_COMPILE_CACHE` at a disk path outside `/tmp`, or prune it on a timer. Found by session `dotfiles-d8`.
 
