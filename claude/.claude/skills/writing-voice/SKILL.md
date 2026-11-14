@@ -22,6 +22,7 @@ authoring charter (`~/.claude/docs/authoring-charter.md`).
 |---|---|---|
 | Developer docs, README, or design doc in a Go repo | Google Developer Documentation Style Guide | `~/.claude/docs/voice/technical-doc-go.md` |
 | Developer docs, README, or design doc in a SvelteKit or web repo | Google Developer Documentation Style Guide | `~/.claude/docs/voice/technical-doc-web.md` |
+| A doc page, README, runbook, or guide in any other repo (Ansible, shell, records) | The Federal Plain Language Guidelines, Nielsen Norman Group on web writing, and Google's rules for headings, with the repo's Vale config as the linter | `~/.claude/docs/voice/written-for-people.md` |
 | Published cairn-cms docs (`docs/admin/`, the front door, the changelog) and cairn.pub's own prose | Google, with the cairn docs voice overlay | the developer-docs drafting brief in cairn-cms `.claude/skills/cairn-writing-docs/references/docs-register.md` |
 | Published cairn-cms editor docs (`docs/editors/`) | Microsoft Writing Style Guide, tightened by the editor brief | the editor-docs drafting brief in cairn-cms `.claude/skills/cairn-writing-docs/references/docs-register.md` |
 | cairn-cms admin UI copy | Microsoft UI-text voice, professional and restrained: no cute, no chatty | cairn-cms `.claude/skills/cairn-following-admin-design/references/admin-design-system.md`, Voice |
@@ -36,8 +37,9 @@ authoring charter (`~/.claude/docs/authoring-charter.md`).
 | Python comments and docstrings | PEP 257, PEP 8 | the standards:python-conventions skill |
 | Site content (pages, posts, form copy) | the site's own content guide | the site repo's `docs/content-guide.md`, via the standards:content-draft skill |
 
-Every file in a public repo that a person reads also goes through steps 1 to 3 of
-`~/.claude/docs/voice/written-for-people.md`.
+Every file a person reads, in any repo, also goes through steps 1 to 3 of
+`~/.claude/docs/voice/written-for-people.md`. That guide is the default, and only a repo's
+recorded rules replace it (Geoff, 2026-11-13).
 
 Site content is the one personal voice, and it lives in the site repo, out of the workstation's
 scope. Every other audience starts from its external standard. The web dialect follows the repo's stack;

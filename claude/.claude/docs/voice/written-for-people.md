@@ -26,7 +26,7 @@ A repo whose rules name a different format keeps it.
    - A title names what changed or what is asked, and never counts things.
    - The opening is the whole page made small. A line of status isn't a summary.
 
-   For a reader of a public repo, use the standard the `writing-voice` router names for the file.
+   A page in a repo follows the standard the `writing-voice` router names for it.
 2. **Run Vale.** Name a queue document `<name>.queue.md` and write it in the session's job `tmp`
    folder, outside any repo. Run `vale` on it and fix every error. A summary ending
    `in 0 files.` means a wrong name or folder.
@@ -41,17 +41,21 @@ If `vale` or `tellgrader` isn't installed, stop and report it. Never skip the st
 
 ## What each kind of writing gets
 
+This guide is the default for everything a session writes for a person, in every repo, private
+or public. A repo's recorded rules replace it, and nothing else does (Geoff, 2026-11-13).
+
 | Writing | Steps |
 | --- | --- |
 | A queue document, a round report, a string on a queue page | All four |
 | A pull request's opening, STATUS, a hand-over's last message | 1 to 3, and 4 when it asks Geoff for something |
 | A reply or a question in chat | 1 |
 | Writing a repo already has rules for: cairn's docs, a site's pages and posts | Those rules, unchanged |
-| Any other README, doc page, pull request, issue, or release note in a public repo | 1 to 3 under the router's standard, and 4 for a page a visitor lands on first |
+| Any other README, doc page, runbook, pull request, issue, or release note, in any repo | 1 to 3 under the router's standard, and 4 for a page a reader lands on first |
 | A plan, a launch prompt, a note between sessions, or another file only a session reads | None, in a public repo too |
 
 A file only a session reads is written however is quickest and clearest for that session. Skills
-and `CLAUDE.md` stay in the agent-facing register.
+and `CLAUDE.md` stay in the agent-facing register. A plan or a launch prompt still names this
+guide for what its session writes for a person, as `pass-core` `references/planner.md` says.
 
 ## Public repos
 
