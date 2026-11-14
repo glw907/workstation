@@ -857,6 +857,29 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotation**: inventory rule 6, then `read_secret CF_CI_PHONEBOOK_TOKEN | gh secret set
   CLOUDFLARE_API_TOKEN -R glw907/phonebook`.
 
+### CF_CI_CAIRN_CATALOG_R2_RW_TOKEN, CF_CI_CAIRN_CATALOG_PROVING_R2_RW_TOKEN
+- **Grants**: Cloudflare account-owned tokens `ci-cairn-catalog-r2-rw` (id `29a62de6...`) and
+  `ci-cairn-catalog-proving-r2-rw` (id `e79d4ecb...`). Each has R2 object read and write on one
+  bucket, `cairn-catalog` or `cairn-catalog-proving`. The proving token answers 403 on the other
+  bucket. No expiry and no IP filter. Each has an S3 pair stored as `_KEY_ID` (the token id) and
+  `_SECRET` (the SHA-256 of the token value).
+- **Used by**: the `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` secrets of the `catalog` and
+  `catalog-proving` environments on `glw907/cairn-cms`, for the theme catalog's publish job.
+- **Minted 2026-11-14** through the API, values unseen.
+- **Rotation**: inventory rule 6, then `gh secret set --env` both halves of the pair on stdin.
+
+### CF_CI_CAIRN_DEMOS_TOKEN, CF_CI_CAIRN_DEMOS_PROVING_TOKEN
+- **Grants**: Cloudflare account-owned tokens `ci-cairn-demos` (id `97e6213d...`) and
+  `ci-cairn-demos-proving` (id `1c3b21c1...`). Each is Individual Workers Editor on one script,
+  `cairn-demo-waymark` or `cairn-demo-proving`. No expiry and no IP filter. A `wrangler deploy`
+  whose config names the custom domain fails with code 10084, so the deploy config carries no
+  `routes` entry; the domain stays attached.
+- **Used by**: the `CLOUDFLARE_API_TOKEN` secret of the `catalog` and `catalog-proving`
+  environments on `glw907/cairn-cms`, for the publish job's demo deploys.
+- **Minted 2026-11-14** through the API, values unseen. A new theme's demo Worker needs its script
+  added to `ci-cairn-demos`, which takes a temporary token.
+- **Rotation**: inventory rule 6, then `gh secret set CLOUDFLARE_API_TOKEN --env <environment>`.
+
 ### TPLINK_ROUTER_PASSWORD
 - **Grants**: the local admin password of the house router (TP-Link Archer C4000 v3.0 at
   192.168.1.1). **Pending (BACKLOG #26)**: the value stored 2026-10-20 is the TP-Link ID
