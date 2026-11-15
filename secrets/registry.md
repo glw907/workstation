@@ -871,8 +871,8 @@ tmpfs cache; no password manager holds it for scripts.
 
 ### CF_CI_CAIRN_DEMOS_TOKEN, CF_CI_CAIRN_DEMOS_PROVING_TOKEN
 - **Grants**: Cloudflare account-owned tokens `ci-cairn-demos` (id `97e6213d...`) and
-  `ci-cairn-demos-proving` (id `1c3b21c1...`). Each is Individual Workers Editor on one script,
-  `cairn-demo-waymark` or `cairn-demo-proving`. No expiry and no IP filter. A `wrangler deploy`
+  `ci-cairn-demos-proving` (id `1c3b21c1...`). The first is Individual Workers Editor on `cairn-demo-waymark` and, since 2026-11-14,
+  `cairn-demo-pennant`; the second on `cairn-demo-proving` alone. No expiry and no IP filter. A `wrangler deploy`
   whose config names the custom domain fails with code 10084, so the deploy config carries no
   `routes` entry; the domain stays attached.
 - **Used by**: the `CLOUDFLARE_API_TOKEN` secret of the `catalog` and `catalog-proving`
