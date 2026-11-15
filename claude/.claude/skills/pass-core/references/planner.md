@@ -35,15 +35,15 @@ changelog heading
 ## Stops
 
 The design's approval asks how to answer each stop the run can foresee, including an estimate
-overrun up to a named ceiling, and records each answer as a standing approval. A stop with no
-standing answer still stops (Geoff, 2026-10-12).
+overrun up to a named ceiling, and records each answer as a standing approval. A question with
+no standing answer goes through `advisor.md` (Geoff, 2026-11-14).
 
 No count cap stops the line (Geoff, 2026-10-19). Past one, the run goes on while each
 retry fixes a traced cause inside the ceiling, each fix a reversible change listed in
 `## Decisions`. A cause that returns gets one structural fix that
 replaces the unit the patches kept missing; if it returns again, the session escalates the item
 in the PR and goes on, where the plan allows that item's escalation. The run stops only on the
-spend or path ceiling, an untraced cause, or an escalation the plan doesn't allow.
+spend or path ceiling. An untraced cause or a barred escalation is flagged, and the run goes on.
 
 ## Pre-flight
 
@@ -71,7 +71,7 @@ step only Geoff can do (Geoff, 2026-11-01). It carries three lines: `Permissions
 ## Launch
 
 With unattended planning approved, the planner runs steps 2 to 4 and launches without
-Geoff. An estimate overrun or a finding that changes the design stops it: a planner that can't
+Geoff. A path over twice the estimate stops it: a planner that can't
 launch parks as `round.md` says. The planner writes the initiative record once,
 when it commits the design, plan, and prompts; a mid-run ruling goes in the PR's `## Decisions`.
 

@@ -27,7 +27,8 @@ round design of one to six passes in one repo. A planner also reads `references/
 2. **Spec.** Written only if `standards:spec-plan-review`'s depth calls for one, with every
    mechanism quoted from source or probed.
 3. **Review.** By class (see "Plan review lens"). A finding that changes the approved design
-   returns to Geoff as one batched question; the rest are folded.
+   returns to Geoff as one batched question while he is at the sitting, and goes through
+   `references/advisor.md` once planning runs unattended; the rest are folded.
 4. **Plan.** `running-passes` "Plan", opening with a `## Pre-flight` list (planner reference).
 5. **Execute.** See "Execute".
 6. **Close.** See "Close".
@@ -82,8 +83,9 @@ One session executes, named `<project>-<pass>` (repo basename and plan slug, as 
 
 ## Judgment calls
 
-Beyond `running-passes` "Execute", the session stops for a stop the plan writes once its standing
-answer runs out.
+A session goes on past an open question: it takes the advisor's choice and lists it for Geoff at
+the close (Geoff, 2026-11-14). It stops only for what `references/advisor.md` "What always stops"
+lists, and this overrides `running-passes` "Execute".
 
 A mid-run question to Geoff is a planning miss, recorded in the PR's `## Planning misses`: the
 question, his answer, and the plan item that should have answered it. The fix waits for the monthly
