@@ -100,6 +100,18 @@ def test_ignores_other_rounds(tmp_path):
     assert done.returncode == 3
 
 
+def test_a_failed_first_read_is_no_baseline(tmp_path):
+    done = watch(tmp_path, ["FAIL", [agent("idle")]], ["FAIL", [pull()]])
+    assert done.returncode == 3
+    assert done.stdout == ""
+
+
+def test_prefixes_that_match_nothing_exit_at_once(tmp_path):
+    done = watch(tmp_path, [[agent("idle", name="other-1")]], [[pull(branch="other-1")]])
+    assert done.returncode == 4
+    assert "no session named" in done.stderr
+
+
 def test_usage(tmp_path):
     done = subprocess.run([sys.executable, "-I", str(SCRIPT)], capture_output=True, text=True, check=False)
     assert done.returncode == 2

@@ -80,7 +80,7 @@ can check, and each answers one of the largest classes of planning miss.
    `~/.local/state/claude-denials.jsonl` against each task's commands. It names the log's date
    range and every class found with its row count, and the plan names an alternative for each
    command the log shows refused.
-4. Every stop the plan writes has a standing answer or parks the pass. No stop says "ask Geoff".
+4. Every stop the plan writes has a standing answer or goes through `advisor.md`. No stop says "ask Geoff".
 
 The `Evidence:` line of `## Pre-flight` names the mechanism table and the recorded searches.
 

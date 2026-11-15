@@ -12,7 +12,8 @@ branches that start with the branch prefix) when it starts. It then polls, and
 exits 0 with the changed lines once the record differs and no session of the
 round is working. A change while a session works is that session's business,
 so the watch stays up. A command that fails keeps its last reading, so a
-dropped network link never reads as a change.
+dropped network link never reads as a change. Prefixes that match no session
+and no pull request exit 4 at once, since such a watch could never fire.
 
 Test hooks: ROUND_WATCH_EVERY (seconds between polls, default 120) and
 ROUND_WATCH_POLLS (give up with exit 3 after this many polls, default never).
@@ -96,6 +97,9 @@ def main(argv):
                 last[key] = read
                 if first[key] is None:
                     first[key] = read
+        if first["sessions"] == [] and first["pulls"] == []:
+            print(f"round-watch: no session named {prefix}* and no open pull request on {branch_prefix}*", file=sys.stderr)
+            return 4
         working = any(line.endswith(" working") for line in last["sessions"] or [])
         before = (first["sessions"] or []) + (first["pulls"] or [])
         now = (last["sessions"] or []) + (last["pulls"] or [])
