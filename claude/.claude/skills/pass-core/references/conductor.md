@@ -16,7 +16,7 @@ stall into the repo's `docs/STATUS.md`, never the report file, which would read 
 
 The conductor launches each pass's planner (`round-run.md` "The order table"), and the planner
 launches its executor. A failed executor launch parks the pass as `round.md` "Parking at
-planning" says, with the failure as the stop. The conductor never launches an executor.
+planning" says, with the failure as the stop. The conductor only relaunches executors.
 
 The prompt names the session and carries what `round.md` "What a round design adds" puts in it,
 plus each repo and checkout, the merge order and known `## Before merge` steps, the standing

@@ -25,7 +25,7 @@ its scope from the verdicts and lists each drop with its reason (Geoff, 2026-10-
 2026-10-25).
 
 The estimate is in path minutes, set from the actual-against-planned path in recent scores. A plan
-over twice the estimate returns to Geoff with the reason before launch; the path sets that
+over twice the estimate parks as `round.md` "Parking at planning" says; the path sets that
 stop, never the sum over every task (Geoff, 2026-10-12). A test never cuts a
 release candidate (Geoff, 2026-11-09): a run that needs a published build publishes a snapshot, a
 `dev` prerelease under a test dist-tag, with no GitHub release, rc tag, or
