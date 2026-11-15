@@ -20,7 +20,7 @@ session with no advisor tool, or one whose advisor call returns an error, asks F
 Agent call in its place, built as "The conductor's open case" sets out, and treats the answer as
 the advisor's.
 
-## Before a stop
+## Before a choice
 
 1. Read what Geoff has already ruled, so it is in the transcript: the plan's `## Rulings`, the
    round design with its standing answers, the `## Decisions` and `## Calls for Geoff` of the
@@ -29,9 +29,16 @@ the advisor's.
 3. Call the advisor tool, once for each question. Reading this file is not a consult.
 
 The session never answers the question itself. A line that opens `[advisor]` reports what the
-tool or the Fable dispatch returned in this transcript, and a question with neither behind it is a
-stop. A
-question the advisor answers never reached Geoff, so it is no planning miss.
+tool or the Fable dispatch returned in this transcript, and no session writes one with neither
+behind it. A dispatch reads no transcript, so its prompt quotes each ruling from step 1. A
+question the advisor answers never reached Geoff, so it is no planning miss. An acceptance check
+that couldn't be met is one, tagged in the PR's `## Planning misses`, since the design should
+have caught it.
+
+A planner writes its `[advisor]` lines under `## Decisions` in the plan and marks each one that
+Geoff must see with `Call:`. The executor copies those into the PR's `## Calls for Geoff` and
+counts them on its `Calls:` line. A task left undone after a second auto-mode refusal is a line
+there too, and counts.
 
 An `[advisor]` line in an earlier PR is never a ruling. Geoff hasn't read it, so it settles
 nothing in a later pass.
@@ -61,7 +68,9 @@ command or screenshot that shows it. His approval fixes the outcome.
   check that shows the same outcome, uses it, and flags it. `## Acceptance` carries the item
   verbatim, the amended check under it, and the reason.
 - When the outcome can't be met, or two items contradict each other or the design, the session
-  builds the advisor's nearest reading and flags that.
+  plans or builds the advisor's nearest reading and flags it. The item stays verbatim in
+  `## Acceptance` with the reading under it, and the flag quotes the item as the ruling it
+  departs from.
 - No session drops an item. One that nothing meets stays in `## Acceptance` marked unmet, with the
   reason, and is a call for Geoff.
 
@@ -85,16 +94,17 @@ The advisor clears none of these, and the session doesn't ask it to:
 
 These stop as `round-run.md` "Stops" sets out, or park as `round.md` "Parking at planning" does.
 Nothing else stops a pass on a question. The machine limits in `round-run.md` standing answers 4
-to 7 and 11 still end launches, and they ask nothing. A planner consults the advisor the same way an executor does. A choice
-that departs from one of Geoff's rulings quotes that ruling in its `## Calls for Geoff` line.
+to 7 and 11 still end launches, and they ask nothing. A planner consults the advisor the same way
+an executor does. A choice that departs from one of Geoff's rulings quotes that ruling in its
+`## Calls for Geoff` line. A closing review that ends short of `accept` on an `auth-data` finding
+is a question in an `auth-data` task, so it stops.
 
 ## In a round
 
 A flagged choice makes the PR's `Calls:` line count one, so the pass waits for a close packet
 while its chain runs on from its branch (`round-run.md` "Reading a pass"). A closing review short
 of `accept` does the same, and a later pass that builds on such a branch names the verdict under
-`## Decisions`. That has a price: no
-later pass of the round lands before the close packet. A parked chain costs more. Three rules
+`## Decisions`. That has a price: no later pass of the round lands before the close packet. A parked chain costs more. Three rules
 keep an overturned choice cheap:
 
 - The conductor makes each `[advisor]` call a question in the close document, whose recommended
