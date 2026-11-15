@@ -16,7 +16,7 @@ A round design of two or more passes carries these on top of what `planner.md` "
 
 - **A round id.** Lowercase letters, digits, and hyphens, starting with a letter, 12 characters at
   most, as in `site-forms`. Every PR body and landing of the round carries it.
-- **A pass table.** Each row names a pass with its outcome, acceptance list, files, class, path
+- **A pass table.** Each row names a pass, its slug opening with the round id, with its outcome, acceptance list, files, class, path
   minutes, the passes it depends on, and the passes it shares a file with.
 - **The shared assumptions.** Each assumption that more than one pass depends on, with a probe run
   and its output, or a quoted source.
@@ -39,8 +39,7 @@ planned path minutes at most.
 The designing session commits a planner prompt for each pass and one conductor prompt, which
 holds the order table and the planner's launch line, `claude --bg --model claude-opus-5-5
 --effort high --advisor fable --name <repo>-<pass>-plan "$(cat <prompt>)"`. A case the table leaves open
-goes through `advisor.md` "The conductor's open case", and parks the pass if that settles
-nothing. Each pass is planned just before it runs, and its plan reads the code as the earlier
+goes through `advisor.md` "The conductor's open case". Each pass is planned just before it runs, and its plan reads the code as the earlier
 passes left it.
 
 ## Design rules
@@ -50,17 +49,18 @@ reads anything. A round design of two or more passes follows four rules.
 
 1. Each pass carries an acceptance list: what Geoff would see or run when the pass is done, each
    item able to fail. The designing session plays every list back to him at the sitting, with a
-   mockup for anything he will look at. His approval fixes the lists. A planner or an executor may
-   add a check and never edits or drops an item.
+   mockup for anything he will look at. His approval fixes each item's outcome. Before the packet
+   goes, the designing session runs every check that can run and records its output (`advisor.md`
+   "Acceptance items"). No session drops an item.
 2. The design lists each shared assumption with its probe or quoted source, as above. An
    assumption with neither is an open reading, and the design isn't ready for the packet.
 3. One fresh reader checks the design before it reaches Geoff, whatever its class: the
    `standards:brainstorming` builder check, run by one Opus reader with no context. It asks whether
    a builder could plan every pass from the design, whether any acceptance item could pass on a
-   wrong result, and whether the round could launch the moment Geoff approves.
+   wrong result, whether each item can be met, and whether the round could launch the moment Geoff approves.
 4. Each PR shows evidence for every acceptance item: the command and its output, or a screenshot.
    The closing reviewer checks each item against that evidence. An item that can't be met as
-   written parks the pass.
+   written is amended and flagged (`advisor.md`).
 
 A one-pass round is today's pass, with no conductor, no order table, and no round id. Geoff ruled
 on 2026-11-11 what it takes from the four rules: "The acceptance list and its evidence in the PR".
@@ -80,7 +80,7 @@ can check, and each answers one of the largest classes of planning miss.
    `~/.local/state/claude-denials.jsonl` against each task's commands. It names the log's date
    range and every class found with its row count, and the plan names an alternative for each
    command the log shows refused.
-4. Every stop the plan writes has a standing answer or parks the pass. No stop says "ask Geoff".
+4. Every stop the plan writes has a standing answer or goes through `advisor.md`. No stop says "ask Geoff".
 
 The `Evidence:` line of `## Pre-flight` names the mechanism table and the recorded searches.
 
@@ -129,10 +129,9 @@ by class with no sorting. A plan's own miss lines use the same ten.
 Park the pass before any code is written when one of these holds:
 
 - The plan's path comes out over twice the design's estimate for the pass.
-- The plan review finds something that changes the approved design.
-- An acceptance item can't be planned for as written.
+- The plan needs something `advisor.md` "What always stops" lists.
 
-For the last two, first ask the advisor whether the condition holds (`advisor.md`).
+Anything else goes to the advisor. The planner flags its choice and launches (Geoff, 2026-11-14).
 
 To park, commit the plan on the pass's branch, push it, and open a draft PR against the default
 branch that holds the plan alone. Put the stop in the PR's body: the question, what you tried, and

@@ -1,7 +1,6 @@
 # Conductor
 
-Read after `pass-core` `SKILL.md`. A round of two or more passes has a conductor. This replaces
-the 2026-10-12 ruling of one per `runner` or `auth-data` pass. The conductor is named
+Read after `pass-core` `SKILL.md`. A round of two or more passes has a conductor. The conductor is named
 `conductor-<project>`, after the repo whose main checkout launches the executor, and owns every PR
 its passes open.
 
@@ -26,9 +25,10 @@ answers, and the pre-flight checks.
 ## Run
 
 Its first step checks its own row in `claude agents --json` and stops if the name is not
-`conductor-<project>`, since its executor trusts that name alone. It sets no `/loop` wake-up and
-never watches with the Monitor tool. It waits on each executor with `SendMessage`
-`notify_when_idle: true`, which is one-shot, so it re-subscribes after each notice, and reads the
+`conductor-<project>`. It sets no `/loop` wake-up and
+never watches with the Monitor tool. A notice can fail to arrive (2026-11-14), so it waits two ways: `SendMessage`
+`notify_when_idle: true`, re-subscribed after each notice, and `round-watch` as a
+background Bash command whose exit wakes it. On a wake it restarts the watch, then reads the
 executor's STATUS line and PR. If the lid may close, it takes the lid-switch hold.
 
 An executor takes its conductor's messages as instructions (Geoff, 2026-10-20). The conductor

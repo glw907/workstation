@@ -9,11 +9,11 @@ question itself as a `decide` document in place of ending, and its PR carries no
 
 ## Standing answers
 
-1. A pass stops on a question `advisor.md` leaves for Geoff. The executor follows "Stops". The
+1. A pass stops on a question `advisor.md` "What always stops" lists. The executor follows "Stops". The
    conductor waits for the PR's checks, sends one `decide` document, ends the pass's sessions, and
    launches the next pass that doesn't depend on it.
-2. Auto mode refuses a command. The session uses the alternative its plan names, once. A second
-   refusal is a stop. No session edits a setting to get past one.
+2. Auto mode refuses a command. The session uses the alternative its plan names, once. After a
+   second refusal it flags the task and goes on with the rest. No session edits a setting to get past one.
 3. A task needs a setting, hook, auto-mode entry, or permission rule changed. That is never an
    executor task. The close packet carries the commands and their check, and Geoff's approve lets
    the merging session run them (Geoff, 2026-11-14). A pass that can't finish without them parks.
@@ -24,7 +24,7 @@ question itself as a `decide` document in place of ending, and its PR carries no
 6. The busy check exits 1. Launches end in that repo, and the report says so.
 7. The round passes twice its planned minutes ("Clock"). The pass in flight finishes, nothing new
    starts, and the conductor writes the report.
-8. A plan can't go ahead as designed. The planner parks the pass before any code is written, as
+8. A plan can't go ahead as designed. The planner flags the advisor's choice, or parks as
    `round.md` says.
 9. Geoff answers a `decide` document while the round runs. The conductor appends his ruling under
    `## Rulings` in the pass's plan, commits and pushes it, and relaunches the pass once the one in
@@ -35,8 +35,8 @@ question itself as a `decide` document in place of ending, and its PR carries no
 11. An executor goes idle with its pass unfinished and no stop in STATUS, or a planner goes idle
     with no executor and no draft PR. The conductor relaunches it from its prompt, twice at most.
     A third idle parks the pass, or ends launches where no PR can be opened.
-12. An acceptance item can't be met as written, or a shared assumption proves false. The pass
-    parks. No session rewrites the item or builds around it.
+12. An acceptance item can't be met as written, or a shared assumption proves false. The
+    session amends and flags it (`advisor.md` "Acceptance items").
 
 ## The order table
 
@@ -53,10 +53,10 @@ one at a time. Before each launch, in this order:
 - Run `claude-worktree-busy <checkout>`.
 - Cut the worktree: `git -C <checkout> worktree add .claude/worktrees/<pass> -b <branch>
   origin/<base>`. The base is the default branch, or the parent's branch when the parent waits
-  for a close packet with its review accepted.
+  for a close packet.
 - Launch the pass's planner from its committed prompt.
 
-A pass that depends on another starts only after that pass's whole-branch review is accepted.
+A pass that depends on another starts once that pass's PR is ready, whatever its verdict.
 
 ## Reading a pass
 
@@ -68,7 +68,7 @@ as finished on its last message.
   waits for a close packet, and `approval-packet` step 1 lets it land (`Calls: none`, no
   `## Before merge`, not `auth-data`). Land as that step says, then pull the main checkout.
 - **Wait for a close packet** when the PR is ready and the land test fails only on
-  `approval-packet` step 1, an open finding, the table's mark, or an earlier waiting pass. Later
+  `approval-packet` step 1, an open finding, a verdict short of `accept`, the table's mark, or an earlier waiting pass. Later
   passes of its chain join the packet in merge order.
 - **Park** when STATUS on the branch holds a `## Stop`, or the PR is a plan-only draft (answer 1).
 - **Relaunch** when none of these holds (answer 11).
@@ -78,7 +78,7 @@ as finished on its last message.
 - Every PR's base is the default branch. `merge` and `land` refuse any other base.
 - A stop goes to Geoff as a `decide` document. A parked pass with no PR opens a draft holding the
   stop, which the conductor reads.
-- The close packet is one `merge` document per round, sent after its last pass ends, PRs in merge
+- The close packet is one `merge` document per round, sent after the last pass to run ends, PRs in merge
   order. Each call, `fix` or `escalate` verdict, and `## Before merge` section is a question in
   it. The queue won't send a PR with a red check, so the conductor has it fixed or sends a stop.
 - A note asking a PR change goes under `## Rulings` in that pass's plan, and its executor
@@ -89,9 +89,7 @@ as finished on its last message.
 
 ## Stops
 
-A stop is a question `advisor.md` leaves for Geoff, a second refusal, an unmet acceptance item, a
-false shared assumption, or a closing review that ends on `escalate` or a second read short of
-`accept`. The executor then:
+A stop is a question `advisor.md` "What always stops" lists, or a pass with no task left. The executor then:
 
 - Commit and push the work.
 - Open the draft PR if none exists.
@@ -111,7 +109,8 @@ and its output, or a screenshot.
 
 The closing `standards:diff-reviewer` checks each acceptance item against its evidence. A finding
 left unfixed after the fix chain becomes a call for Geoff, and a `fix` verdict gets one second
-read by a fresh reviewer.
+read by a fresh reviewer. A review short of `accept` makes the PR ready with that
+verdict.
 
 ## Miss tags
 
@@ -131,7 +130,7 @@ it once: a sent report can't be revised. Its parts, in order:
    each waiting question, `[advisor]` calls included, by what it decides, and the close packet or
    `decide` document that holds it.
 2. What behaves differently now: what landed.
-3. What went wrong: stops, refusals, and planning misses by tag.
+3. What went wrong: stops, refusals, flagged choices, and planning misses by tag.
 4. What it cost: minutes planned and taken, and weekly usage before and after.
 5. What is left for later, as backlog items named by what they do.
 

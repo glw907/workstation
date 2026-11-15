@@ -100,7 +100,9 @@ timer: the session sits until a human types. On 2026-09-20 an `EAI_AGAIN` drop k
 implementer at about 04:00, the chain halted, and the session sat unwoken until Geoff's 09:16
 message, with no suspend in `journalctl` and every inhibitor held. A session that only waits, on an
 `approval-queue send` call or an idle notice, arms no wake-up and no Monitor, because the
-command's exit or the notice wakes it. Any working session left unattended (an executor, a
+command's exit or the notice wakes it. A conductor also runs `round-watch` beside the notice
+(`pass-core` `references/conductor.md` "Run"), since a notice failed to arrive on 2026-11-14. Any
+working session left unattended (an executor, a
 workflow run) arms
 a scheduled wake-up as well: `/loop` with no interval (dynamic pacing), started as the executing
 session's first guard (`pass-core` "Execute") and, for a workflow, once it is launched. The
