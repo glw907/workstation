@@ -10,6 +10,9 @@
 
 ## Medium
 
+- [ ] **#100** Fix three loose pointers in the conductor's rules after run-past-park `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-16)*
+  The whole-branch review of pass `run-past-park` found three non-blocking gaps. `conductor.md` says "Each launch follows the planner reference's "Launch"", a file the conductor doesn't load, and that section's launch line is the executor's. `round-run.md` no longer says in a file the conductor loads that a stop with no PR opens a draft for the conductor to read; `round.md` holds it. The Clock pauses "while the conductor waits on ... Geoff's answer", and under run-ahead the conductor may be running a pass then, so the line should say "is idle". Answer 9's "Passes that depended on it follow in order" could say "built on it", and the `conductor.md` "Run" paragraph wants a rewrap after the cut. Left alone, a conductor reads each rule the narrow way and the pass still works.
+
 - [ ] **#99** Cover the desk launcher's untested branches `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-15)*
   `tests/desk.test.sh` has no case for a missing rules file, unreadable `--bg` output (exit 1), a yesterday row whose record is missing, or the stop-before-launch order (case 5 asserts counts only). `bin/.local/bin/desk` also exits with no message of its own when a row lacks `startedAt` (jq fails on `null / 1000` under `set -e`). Left alone, a changed `claude agents --json` shape breaks the launcher silently. Found by the whole-branch review of pass `desk-ws`.
 

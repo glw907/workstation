@@ -130,3 +130,8 @@ go-architecture-reader per touched
 # separate session and document (pass-core references/ready.md). Supersedes the 2026-10-25 and
 # 2026-10-27 placement of the full sweep inside the design.
 and its full sweep when one is due
+
+# Run past a parked pass (Geoff, 2026-11-16): a pass whose "Depends on" entry is marked
+# `(order)` runs past a parked pass; only a pass that builds on it waits (pass-core
+# references/round-run.md standing answer 5). Supersedes the rule that every later pass parks.
+parks too and never launches

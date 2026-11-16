@@ -1,14 +1,13 @@
 # Round
 
 Read after `pass-core` `SKILL.md` and `references/planner.md`, to design a round or to plan one of
-its passes. A designer then reads `references/ready.md`. A conductor and an executor read
-`references/round-run.md` in its place.
+its passes. A designer then reads `references/ready.md`.
 
 A round is one approved design that covers one to six passes in one repo. Its passes run one at a
 time while Geoff is away, and rounds run one at a time unless a design says otherwise. A pass stays
 what `standards:running-passes` defines: one plan, one executor, one worktree, and one PR. Geoff
 approves the design once, and that approval also approves unattended planning for every pass in
-it. The design and planner seats take the models `SKILL.md` "Models" names.
+it.
 
 ## What a round design adds
 
@@ -29,7 +28,9 @@ A round design of two or more passes carries these on top of what `planner.md` "
 
 Two rules set the order. A pass that shares a file with an unmerged pass counts as depending on
 it, because a pass cut from the default branch would conflict at merge.
-`BACKLOG.md` and `docs/STATUS.md` count as shared files.
+`BACKLOG.md` and `docs/STATUS.md` count as shared files, but a pass that shares only those two
+with another and uses none of its result only comes after it: its entry is marked, as in
+`2 (order)`. An unmarked entry builds on that pass.
 Where the dependencies allow, the pass that rests on the least-proven assumption runs first, so a
 wrong assumption costs one pass and never the round. A pass that waits for a close packet
 holds every later landing of the round, so the merge order puts a pass with no call for Geoff
@@ -81,8 +82,6 @@ can check, and each answers one of the largest classes of planning miss.
    range and every class found with its row count, and the plan names an alternative for each
    command the log shows refused.
 4. Every stop the plan writes has a standing answer or goes through `advisor.md`. No stop says "ask Geoff".
-
-The `Evidence:` line of `## Pre-flight` names the mechanism table and the recorded searches.
 
 ## A plan inside a round
 

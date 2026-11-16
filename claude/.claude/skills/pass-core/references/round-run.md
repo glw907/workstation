@@ -4,23 +4,25 @@ Read after `SKILL.md` and your role's reference. The round design and the conduc
 order table win over this file.
 
 An executor under a conductor enters the pass's worktree with `EnterWorktree` and its `path`,
-once, and merges nothing: the branch holds the plan. In a one-pass round the executor sends its
+once, and merges no PR: the branch holds the plan. In a one-pass round the executor sends its
 question itself as a `decide` document in place of ending, and its PR carries no `Round:` line.
 
 ## Standing answers
 
 1. A pass stops on a question `advisor.md` "What always stops" lists. The executor follows "Stops". The
    conductor waits for the PR's checks, sends one `decide` document, ends the pass's sessions, and
-   launches the next pass that doesn't depend on it.
+   launches the next pass `conductor.md` "Run" names.
 2. Auto mode refuses a command. The session uses the alternative its plan names, once. After a
-   second refusal it flags the task and goes on with the rest. No session edits a setting to get past one.
+   second refusal it flags the task and goes on. No session edits a setting to get past one.
 3. A task needs a setting, hook, auto-mode entry, or permission rule changed. That is never an
    executor task. The close packet carries the commands and their check, and Geoff's approve lets
    the merging session run them (Geoff, 2026-11-14). A pass that can't finish without them parks.
 4. The weekly usage reads 85 percent or more before a launch, or the figure can't be read. The
    conductor finishes the pass in flight, starts nothing new, writes the report, and waits for the
    reset.
-5. A pass's parent is parked. The pass parks too and never launches.
+5. A pass's parent is parked. A pass whose "Depends on" entry for it reads `(order)`, as in
+   `2 (order)`, runs past it as `conductor.md` "Run" says; an unmarked entry builds on it, and
+   that pass waits.
 6. The busy check exits 1. Launches end in that repo, and the report says so.
 7. The round passes twice its planned minutes ("Clock"). The pass in flight finishes, nothing new
    starts, and the conductor writes the report.
@@ -56,7 +58,7 @@ one at a time. Before each launch, in this order:
   for a close packet.
 - Launch the pass's planner from its committed prompt.
 
-A pass that depends on another starts once that pass's PR is ready, whatever its verdict.
+A pass that builds on another starts once that pass's PR is ready, whatever its verdict.
 
 ## Reading a pass
 
@@ -76,8 +78,6 @@ as finished on its last message.
 ## Queue rules
 
 - Every PR's base is the default branch. `merge` and `land` refuse any other base.
-- A stop goes to Geoff as a `decide` document. A parked pass with no PR opens a draft holding the
-  stop, which the conductor reads.
 - The close packet is one `merge` document per round, sent after the last pass to run ends, PRs in merge
   order. Each call, `fix` or `escalate` verdict, and `## Before merge` section is a question in
   it. The queue won't send a PR with a red check, so the conductor has it fixed or sends a stop.
