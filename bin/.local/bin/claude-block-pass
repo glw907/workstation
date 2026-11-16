@@ -180,19 +180,25 @@ def command_glob(cmd, names):
     return any(glob_names(m.group("word"), names) for m in COMMAND_WORD.finditer(cmd))
 
 
+BREW_SEGMENT = re.compile(r"^\s*(?:\w+=\S*\s+)*(?:[^\s;&|]*/)?brew(?:\s|$)")
+
+
 def default_session_named(cmd):
     """Return True when a token names the default session directory, proton-pass-cli.
 
-    A bare name counts only after a cd or pushd, since `brew pin proton-pass-cli` names the package.
+    A bare name counts only after a cd or pushd, and never in a brew command, where it names
+    the package (Geoff, 2026-11-16: Claude upgrades anything through brew).
     """
     moved = re.search(r"(?:^|[\s;&|(])(?:cd|pushd)\s", cmd) is not None
-    for token in TOKEN.findall(cmd):
-        if re.search(r"/proton-pass-cli(?![\w-])|(?<![\w-])proton-pass-cli/", token):
-            return True
-        if moved and token == "proton-pass-cli":
-            return True
-        if glob_names(token, ["proton-pass-cli"]):
-            return True
+    for segment in re.split(r"[;&|\n(]", cmd):
+        brew = BREW_SEGMENT.match(segment) is not None
+        for token in TOKEN.findall(segment):
+            if re.search(r"/proton-pass-cli(?![\w-])|(?<![\w-])proton-pass-cli/", token):
+                return True
+            if moved and not brew and token == "proton-pass-cli":
+                return True
+            if glob_names(token, ["proton-pass-cli"]):
+                return True
     return False
 
 

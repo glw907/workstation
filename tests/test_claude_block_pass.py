@@ -177,6 +177,9 @@ DENIED = [
     # The default session directory by a bare name after a cd, a trailing slash, or a glob.
     "cd ~/.local/share && tar c proton-pass-cli",
     "cd ~/.local/share; cat proton-pass-cli/.session/data",
+    # A brew segment excuses only its own bare name, never a later read.
+    "cd ~/.local/share && brew upgrade vim && tar c proton-pass-cli",
+    "cd ~/.local/share && brew info x; cat proton-pass-cli/x",
     "ls ~/.local/*/proton-pass-cli",
     "ls ~/.local/share/p*-pass-cli",
     "ls ~/.local/share/*pass-cli",
@@ -294,6 +297,10 @@ ALLOWED = [
     "cat docs/*.md",
     "brew pin proton-pass-cli",
     "bash -n bin/.local/bin/pass-sitting && shellcheck bin/.local/bin/pass-sitting",
+    # Brew names the package after a cd (Geoff, 2026-11-16).
+    "cd ~/.dotfiles && brew upgrade mise proton-pass-cli vim 2>&1 | grep -E '==>'",
+    "cd ~ && /home/linuxbrew/.linuxbrew/bin/brew info proton-pass-cli",
+    "cd ~ && HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade proton-pass-cli",
 ]
 
 

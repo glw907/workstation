@@ -31,7 +31,7 @@ stays the record of what's actually on disk. Current captured files:
   hosts. `ExecStart=` runs the main checkout's `scripts/check/nightly.sh`, so the checkout needs
   `npm ci` after a pull that changes its dependencies. After installing: `sudo -A systemctl daemon-reload && sudo -A systemctl enable --now
   phonebook-nightly.timer phonebook-gate.timer` <!-- host-ok -->
-- `bluefin/etc/systemd/resolved.conf.d/10-cloudflare-dns.conf` → `/etc/systemd/resolved.conf.d/`
+- `bluefin/etc/systemd/resolved.conf.d/10-cloudflare-dns.conf` → `/etc/systemd/resolved.conf.d/` <!-- host-ok -->
   (pavilion, Geoff 2026-11-10: "The home router is a lousey place for a DNS lookup."): every lookup
   goes to Cloudflare's resolvers over DNS-over-TLS, ahead of each link's DNS. The router's forwarder
   dropped about 1 lookup in 200 and failed cairn's clean-room runs. thinkpad-x1 does not install it,
@@ -44,7 +44,7 @@ stays the record of what's actually on disk. Current captured files:
   maintain-projects.timer` <!-- host-ok -->
   Pavilion is a desktop that stays awake on AC power. Orpheus, the always-available utility server,
   takes a job that truly must stay up (Geoff, 2026-11-01).
-- `bluefin/etc/sysusers.d/cleanroom.conf` → `/etc/sysusers.d/` and
+- `bluefin/etc/sysusers.d/cleanroom.conf` → `/etc/sysusers.d/` and <!-- host-ok -->
   `bluefin/etc/sudoers.d/cleanroom` → `/etc/sudoers.d/` (pavilion only, where the clean room
   runs; thinkpad-x1 skips both and `cleanroom` refuses to run there; mode 0440; Geoff 2026-11-09): the
   `cleanroom` system user (no login) that runs a clean-room session, and the rule that lets glw907
