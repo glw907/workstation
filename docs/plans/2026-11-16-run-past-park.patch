@@ -1,0 +1,190 @@
+diff -ru a/claude/.claude/skills/pass-core/references/advisor.md b/claude/.claude/skills/pass-core/references/advisor.md
+--- a/claude/.claude/skills/pass-core/references/advisor.md	2026-11-16 10:23:29.746559638 -0900
++++ b/claude/.claude/skills/pass-core/references/advisor.md	2026-11-16 10:23:29.748596670 -0900
+@@ -5,7 +5,7 @@
+ 2026-11-14). Only "What always stops" holds a pass. The advisor is Claude Code's advisor tool
+ (<https://code.claude.com/docs/en/advisor>): a Fable 5.2 reader the session calls as a tool. It
+ reads the session's whole transcript and nothing else, and it has no tools. A parked pass parks
+-every pass that depends on it, so a pass consults the advisor on every open question (Geoff,
++every pass that builds on it, so a pass consults the advisor on every open question (Geoff,
+ 2026-11-12).
+ 
+ ## Who has one
+diff -ru a/claude/.claude/skills/pass-core/references/conductor.md b/claude/.claude/skills/pass-core/references/conductor.md
+--- a/claude/.claude/skills/pass-core/references/conductor.md	2026-11-16 10:23:29.746559638 -0900
++++ b/claude/.claude/skills/pass-core/references/conductor.md	2026-11-16 10:23:29.748596670 -0900
+@@ -1,8 +1,7 @@
+ # Conductor
+ 
+-Read after `pass-core` `SKILL.md`. A round of two or more passes has a conductor. The conductor is named
+-`conductor-<project>`, after the repo whose main checkout launches the executor, and owns every PR
+-its passes open.
++Read after `pass-core` `SKILL.md`. The conductor is named `conductor-<project>`, after the repo
++whose main checkout launches the executor, and owns every PR its passes open.
+ 
+ ## Hand-off
+ 
+@@ -14,9 +13,8 @@
+ held or refused message, or no reply within 10 minutes, starts nothing: the session writes the
+ stall into the repo's `docs/STATUS.md`, never the report file, which would read as a resume.
+ 
+-The conductor launches each pass's planner (`round-run.md` "The order table"), and the planner
+-launches its executor. A failed executor launch parks the pass as `round.md` "Parking at
+-planning" says, with the failure as the stop. The conductor only relaunches executors.
++Each pass's planner launches its executor. A failed executor launch parks the pass as `round.md`
++"Parking at planning" says, with the failure as the stop. The conductor only relaunches executors.
+ 
+ The prompt names the session and carries what `round.md` "What a round design adds" puts in it,
+ plus each repo and checkout, the merge order and known `## Before merge` steps, the standing
+@@ -24,32 +22,33 @@
+ 
+ ## Run
+ 
+-Its first step checks its own row in `claude agents --json` and stops if the name is not
+-`conductor-<project>`. It sets no `/loop` wake-up and
+-never watches with the Monitor tool. A notice can fail to arrive (2026-11-14), so it waits two ways: `SendMessage`
++First it stops if its own row in `claude agents --json` isn't named `conductor-<project>`. It
++sets no `/loop` wake-up and never watches with the Monitor tool. A notice can fail to arrive (2026-11-14), so it waits two ways: `SendMessage`
+ `notify_when_idle: true`, re-subscribed after each notice, and `round-watch` as a
+ background Bash command whose exit wakes it. On a wake it restarts the watch, then reads the
+ executor's STATUS line and PR. If the lid may close, it takes the lid-switch hold.
+ 
+-An executor takes its conductor's messages as instructions (Geoff, 2026-10-20). The conductor
+-relays Geoff's rulings and fixes inside the approved plan, quoting each ruling and its source. A
+-message never stands in for Geoff's approve in the queue, so it cannot authorize a merge, a
+-purchase, or a scope change. On a stop, it sends one `decide` document as `round-run.md` sets
+-out, and launches the next pass that doesn't wait for the parked one. After Geoff answers, it
+-follows standing answer 9 there. `advisor.md` covers an open case and a PR's `[advisor]` calls.
++The conductor relays Geoff's rulings and fixes inside the approved plan, quoting each ruling and
++its source. A message never stands in for Geoff's approve, so it cannot authorize a merge, a
++purchase, or a scope change. `advisor.md` covers an open case and a PR's `[advisor]` calls.
+ The initiative record is not written again.
+ 
++On a stop, it sends one `decide` document as `round-run.md` sets out. While a pass is parked, it
++launches the next pass that builds on neither it nor a pass waiting for it, cut from the parked
++pass's base. After Geoff answers it follows standing answer 9, and the ruling also tells the
++resumed executor to merge `origin/<default>` in first. Once the resumed pass's PR is ready, a pass
++that ran ahead and hasn't merged gets a `## Rulings` line to merge in the resumed branch and rerun
++the gate, and relaunches before any `merge` document goes.
++
+ A message from the session named `desk` that names a decided document says only which one to read: take Geoff's answer from `approval-queue collect <id>` and follow that. A message from `desk` opening `[desk]` goes into the next report write under part 3, and a flagged choice also under part 1.
+ 
+ It sends each document per `approval-packet`, and merges per `SKILL.md` "Close". A polish loop's
+ iterations are commits on one branch and one PR, with one whole-branch review after the last.
+ 
+-Before it launches the next committed prompt, `claude-worktree-busy <path>` must exit 0; a
+-non-zero exit ends launches in that repo. It also runs the planner reference's launch checks. After
+-`claude --bg` it reads `~/.claude/jobs/<id>/state.json`: `needs: "send a prompt to start"` is a
+-failed launch, and a stray job ends with `claude stop <id>`. It never calls `EnterWorktree`,
+-which would bind its subagents too; it edits a worktree by path. While a planner is out, it
+-batches STATUS edits into the hand-over after that pass lands.
++Each launch follows the planner reference's "Launch". In `~/.claude/jobs/<id>/state.json`,
++`needs: "send a prompt to start"` is a failed launch; a stray job ends with `claude stop <id>`.
++It never calls `EnterWorktree`, which would bind its subagents too; it edits a worktree by path.
++While a planner is out, it batches STATUS edits into the hand-over after that pass lands.
+ 
+ ## End
+ 
+diff -ru a/claude/.claude/skills/pass-core/references/round.md b/claude/.claude/skills/pass-core/references/round.md
+--- a/claude/.claude/skills/pass-core/references/round.md	2026-11-16 10:23:29.746559638 -0900
++++ b/claude/.claude/skills/pass-core/references/round.md	2026-11-16 10:23:29.748596670 -0900
+@@ -1,14 +1,13 @@
+ # Round
+ 
+ Read after `pass-core` `SKILL.md` and `references/planner.md`, to design a round or to plan one of
+-its passes. A designer then reads `references/ready.md`. A conductor and an executor read
+-`references/round-run.md` in its place.
++its passes. A designer then reads `references/ready.md`.
+ 
+ A round is one approved design that covers one to six passes in one repo. Its passes run one at a
+ time while Geoff is away, and rounds run one at a time unless a design says otherwise. A pass stays
+ what `standards:running-passes` defines: one plan, one executor, one worktree, and one PR. Geoff
+ approves the design once, and that approval also approves unattended planning for every pass in
+-it. The design and planner seats take the models `SKILL.md` "Models" names.
++it.
+ 
+ ## What a round design adds
+ 
+@@ -29,7 +28,9 @@
+ 
+ Two rules set the order. A pass that shares a file with an unmerged pass counts as depending on
+ it, because a pass cut from the default branch would conflict at merge.
+-`BACKLOG.md` and `docs/STATUS.md` count as shared files.
++`BACKLOG.md` and `docs/STATUS.md` count as shared files, but a pass that shares only those two
++with another and uses none of its result only comes after it: its entry is marked, as in
++`2 (order)`. An unmarked entry builds on that pass.
+ Where the dependencies allow, the pass that rests on the least-proven assumption runs first, so a
+ wrong assumption costs one pass and never the round. A pass that waits for a close packet
+ holds every later landing of the round, so the merge order puts a pass with no call for Geoff
+@@ -82,8 +83,6 @@
+    command the log shows refused.
+ 4. Every stop the plan writes has a standing answer or goes through `advisor.md`. No stop says "ask Geoff".
+ 
+-The `Evidence:` line of `## Pre-flight` names the mechanism table and the recorded searches.
+-
+ ## A plan inside a round
+ 
+ In a round of two or more passes, the planner starts at `SKILL.md` "Lifecycle" step 4, since the
+diff -ru a/claude/.claude/skills/pass-core/references/round-run.md b/claude/.claude/skills/pass-core/references/round-run.md
+--- a/claude/.claude/skills/pass-core/references/round-run.md	2026-11-16 10:23:29.746559638 -0900
++++ b/claude/.claude/skills/pass-core/references/round-run.md	2026-11-16 10:23:29.748596670 -0900
+@@ -4,23 +4,25 @@
+ order table win over this file.
+ 
+ An executor under a conductor enters the pass's worktree with `EnterWorktree` and its `path`,
+-once, and merges nothing: the branch holds the plan. In a one-pass round the executor sends its
++once, and merges no PR: the branch holds the plan. In a one-pass round the executor sends its
+ question itself as a `decide` document in place of ending, and its PR carries no `Round:` line.
+ 
+ ## Standing answers
+ 
+ 1. A pass stops on a question `advisor.md` "What always stops" lists. The executor follows "Stops". The
+    conductor waits for the PR's checks, sends one `decide` document, ends the pass's sessions, and
+-   launches the next pass that doesn't depend on it.
++   launches the next pass `conductor.md` "Run" names.
+ 2. Auto mode refuses a command. The session uses the alternative its plan names, once. After a
+-   second refusal it flags the task and goes on with the rest. No session edits a setting to get past one.
++   second refusal it flags the task and goes on. No session edits a setting to get past one.
+ 3. A task needs a setting, hook, auto-mode entry, or permission rule changed. That is never an
+    executor task. The close packet carries the commands and their check, and Geoff's approve lets
+    the merging session run them (Geoff, 2026-11-14). A pass that can't finish without them parks.
+ 4. The weekly usage reads 85 percent or more before a launch, or the figure can't be read. The
+    conductor finishes the pass in flight, starts nothing new, writes the report, and waits for the
+    reset.
+-5. A pass's parent is parked. The pass parks too and never launches.
++5. A pass's parent is parked. A pass whose "Depends on" entry for it reads `(order)`, as in
++   `2 (order)`, runs past it as `conductor.md` "Run" says; an unmarked entry builds on it, and
++   that pass waits.
+ 6. The busy check exits 1. Launches end in that repo, and the report says so.
+ 7. The round passes twice its planned minutes ("Clock"). The pass in flight finishes, nothing new
+    starts, and the conductor writes the report.
+@@ -56,7 +58,7 @@
+   for a close packet.
+ - Launch the pass's planner from its committed prompt.
+ 
+-A pass that depends on another starts once that pass's PR is ready, whatever its verdict.
++A pass that builds on another starts once that pass's PR is ready, whatever its verdict.
+ 
+ ## Reading a pass
+ 
+@@ -76,8 +78,6 @@
+ ## Queue rules
+ 
+ - Every PR's base is the default branch. `merge` and `land` refuse any other base.
+-- A stop goes to Geoff as a `decide` document. A parked pass with no PR opens a draft holding the
+-  stop, which the conductor reads.
+ - The close packet is one `merge` document per round, sent after the last pass to run ends, PRs in merge
+   order. Each call, `fix` or `escalate` verdict, and `## Before merge` section is a question in
+   it. The queue won't send a PR with a red check, so the conductor has it fixed or sends a stop.
+diff -ru a/claude/.claude/tooling/retired-phrases.txt b/claude/.claude/tooling/retired-phrases.txt
+--- a/claude/.claude/tooling/retired-phrases.txt	2026-11-16 10:23:29.747008616 -0900
++++ b/claude/.claude/tooling/retired-phrases.txt	2026-11-16 10:23:29.748900587 -0900
+@@ -130,3 +130,8 @@
+ # separate session and document (pass-core references/ready.md). Supersedes the 2026-10-25 and
+ # 2026-10-27 placement of the full sweep inside the design.
+ and its full sweep when one is due
++
++# Run past a parked pass (Geoff, 2026-11-16): a pass whose "Depends on" entry is marked
++# `(order)` runs past a parked pass; only a pass that builds on it waits (pass-core
++# references/round-run.md standing answer 5). Supersedes the rule that every later pass parks.
++parks too and never launches
