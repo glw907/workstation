@@ -10,6 +10,9 @@
 
 ## Medium
 
+- [ ] **#96** Keep `/goal` out of executor prompts and catch every refused launch `#bug` `#workstation` `#initiative:unattended-rounds` *(2026-11-15)*
+  On 2026-11-15 the planner `approval-queue-desk-queue-plan` wrote its executor prompt as one `/goal` line of 5,529 characters. Claude Code caps a goal at 4,000, so the session opened, printed "Goal condition is limited to 4000 characters", and did no work. Its `state.json` read `needs: "open this session to continue setup"`. `pass-core` `references/planner.md` "Launch" and `conductor.md` name only `needs: "send a prompt to start"` as a failed launch, so the planner ended on `PLAN END: launched` and the pass sat idle until Geoff asked for status. Two fixes: `planner.md` says an executor prompt takes no `/goal` line (`claude/.claude/docs/unattended-work-guards.md` keeps `/goal` on trial for the monthly review only), and the launch check treats any `needs` value in `state.json` as a failed launch. Left alone, the next planner that copies the form stalls its pass the same way.
+
 - [ ] **#95** Restart a background session that stops on an API error `#bug` `#workstation` *(2026-11-15)*
   On 2026-11-15 at 12:40Z a DNS outage ended the turn of `cairn-cms-pennant-2` and of `conductor-pennant` with "API Error: Can't reach the API server (EAI_AGAIN)". Both stayed stopped after the network returned, and round `pennant` lost about five hours until Geoff asked for status. `claude agents --json` showed the executor as `busy` with state `blocked`, so a check that reads only `status` misses it. Nothing in `claude/.claude/docs/unattended-work-guards.md` or `pass-core` `references/conductor.md` watches for a session whose transcript ends in an API error. Left alone, any unattended round stops at the first network fault. Found by the session that launched the round.
 - [ ] **#94** Give a one-pass design the fresh reader's launch question `#improvement` `#workstation` *(2026-11-14)*
