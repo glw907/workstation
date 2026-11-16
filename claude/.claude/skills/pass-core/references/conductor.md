@@ -34,8 +34,7 @@ purchase, or a scope change. `advisor.md` covers an open case and a PR's `[advis
 The initiative record is not written again.
 
 On a stop, it sends one `decide` document as `round-run.md` sets out. While a pass is parked, it
-launches the next pass that builds on neither it nor a pass waiting for it, cut from the parked
-pass's base. After Geoff answers it follows standing answer 9, and the ruling also tells the
+launches the next pass that builds on neither it nor a pass waiting for it. After Geoff answers it follows standing answer 9, and the ruling also tells the
 resumed executor to merge `origin/<default>` in first. Once the resumed pass's PR is ready, a pass
 that ran ahead and hasn't merged gets a `## Rulings` line to merge in the resumed branch and rerun
 the gate, and relaunches before any `merge` document goes.
