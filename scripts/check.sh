@@ -199,6 +199,7 @@ legs() {
         "claude-pass-load" bash tests/claude-pass-load.test.sh
     run worktree-busy '^tests/claude-worktree-busy\.test\.sh$|^bin/\.local/bin/claude-worktree-busy$' \
         "claude-worktree-busy" bash tests/claude-worktree-busy.test.sh
+    run desk '^tests/desk\.test\.sh$|^bin/\.local/bin/desk$' "desk launcher" bash tests/desk.test.sh
     run claude-md-budget '^claude/\.claude/CLAUDE\.md$|^bin/\.local/bin/claude-context-budget$' \
         "CLAUDE.md context budget" bash bin/.local/bin/claude-context-budget claude/.claude/CLAUDE.md
     run skill-caps "^bin/\\.local/bin/claude-context-budget\$|$SKILLS" \

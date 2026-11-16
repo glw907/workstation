@@ -74,4 +74,5 @@ withdrawn.
 
 The command's forms are `check|send <doc.md>`, `send --returns <id> <doc.md>`,
 `collect|withdraw|merge <id>`, `notes <id>`, `reply <id> [thread] <text.md>`,
-`land <owner/repo#n> <sentence>`, and `restart`.
+`land <owner/repo#n> <sentence>`, `restart`, and the desk's `list [--wait]` and
+`answer <id> approve|sendback ...` (`pass-core` `references/desk.md`).

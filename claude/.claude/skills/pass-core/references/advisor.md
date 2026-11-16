@@ -13,7 +13,7 @@ every pass that depends on it, so a pass consults the advisor on every open ques
 The executor launches with `--advisor fable` (`planner.md` "Launch"), and so does the planner
 (`round.md`, the conductor prompt's launch line). A pair inherits its session's advisor. The
 conductor launches without one, since each consult would reread its long transcript. It asks
-Fable through a dispatch, as "The conductor's open case" sets out.
+the desk when one is live, else Fable through a dispatch, as "The conductor's open case" sets out.
 
 Claude Code drops the advisor from a background session with no error when a check fails. A
 session with no advisor tool, or one whose advisor call returns an error, asks Fable through one
@@ -128,6 +128,12 @@ When the order table leaves a case open, the conductor asks before it parks the 
 The prompt carries the case, the table rows that come near it, the design's section for the pass
 by path, and each ruling that bears on it, quoted with its source. A subagent starts with no
 context, so the prompt holds everything the answer rests on.
+
+When the plain `claude agents --json` lists a session named `desk`, the conductor sends it the
+same prompt by `SendMessage` in place of the Agent call, then arms a background `sleep 600`. A
+reply wakes the conductor first; the sleep's exit with no reply, or no desk, means the Fable
+dispatch. The desk's answer is followed as the dispatch's would be and listed in the report as a
+`[desk]` line, never an `[advisor]` one. The limits below bind the desk too.
 
 - If the design, the table, or a ruling settles the case, the conductor follows the answer and
   lists it in the round report in a line that opens `[advisor]`, with the source quoted.
