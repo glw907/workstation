@@ -77,7 +77,7 @@ Trims that make room are listed under "Decisions", each with the file where its 
 | # | Mechanism | Probe or source | Result |
 | --- | --- | --- | --- |
 | M1 | Word caps | `bin/.local/bin/claude-context-budget` lines 28 to 36, `SKILL_CAPS`: `conductor.md 610`, `round.md 1500`, `round-run.md 1500`; counted by whole-file `wc -w` | Today: conductor 610, round 1499, round-run 1499. Patched copy: 610, 1499, 1493; `--skill-caps --root .` exit 0. `conductor.md` sits at its cap |
-| M2 | Role loads | `claude-pass-load --check --root .` on a full copy of the worktree with the patch applied | Exit 0. Executor 8612, conductor 4629, planner 9617 |
+| M2 | Role loads | `claude-pass-load --check --root .` on a full copy of the worktree with the patch applied | Exit 0. Executor 8611, conductor 4640, planner 9618 |
 | M3 | What a conductor reads | M2's conductor row: `CLAUDE.md`, `SKILL.md`, `conductor.md`, `round-run.md`. No `round.md` | The `(order)` meaning has to be readable from `round-run.md`, so answer 5 defines it |
 | M4 | Retired-phrase scan | `scripts/check-claude-refs.py`, `scan_files`: `.md` and `.js` under `claude/.claude`, dated paths and `docs/record` excluded. Run on the patched copy | Exit 0. `grep -c "parks too and never launches"` on `round-run.md` prints 0 |
 | M5 | Reader pre-runs | Five fresh `general-purpose` agents, `sonnet` at `medium`, each given only the staged files and a neutral prompt ("Acceptance") | Checks 2 to 5 pass on the patched text. Check 2 on today's files launched nothing |
@@ -144,9 +144,9 @@ The planner's pre-run answers, kept for comparison with the executor's:
   files". Fails, as the design says.
 - Item 2 on the folded patch: pass 3 "is the one launch", its worktree cut from `origin/main`;
   "Pass 4 waits. Its "Depends on" entry is an unmarked `2`, so it builds on pass 2."
-- Item 3 on the folded patch: "the conductor sends the `decide` document for pass 2 and launches
-  nothing." This reader's opening line first named a launch, then corrected itself in the body. Its
-  conclusion passes; the executor judges each answer by its conclusion and says so if one wavers.
+- Item 3 on the folded patch, three fresh readers: two answered "The conductor launches nothing"
+  from their first line. The first opened by naming a pass 3 launch and then concluded "launches
+  nothing". The two clean reruns were sent because of that wobble.
 - Item 4 on the folded patch: pass 2 "relaunches the pass once the one in flight finishes", its
   executor "merges `origin/main` first", and pass 3, if it hasn't merged, "gets a `## Rulings` line
   to merge in the resumed branch and rerun the gate, and relaunches before any `merge` document
@@ -219,7 +219,7 @@ The round has three passes in one repo. Every pass edits `BACKLOG.md` to close i
 Write the round's order table with its "Depends on" column filled in for each pass, exactly as you would put it in the design. Quote the rule text you rely on for each entry.
 ```
 
-An answer passes when its conclusion says what the item says. Item 5 passes when pass 3's entry
+An answer passes when it says what the item says. Item 5 passes when pass 3's entry
 for pass 2 reads `2 (order)`, and the entries for pass 1 in rows 2 and 3 carry no mark: both
 passes use pass 1's parser. A reader that marks every entry fails.
 
@@ -343,8 +343,8 @@ role loads (M2 lists the loads).
   `round-run.md` "The order table" and standing answer 6. The `state.json` sentence stays, three
   words shorter, because the conductor doesn't load `planner.md` (review finding 2).
 - `conductor.md`: "in the queue" left "A message never stands in for Geoff's approve in the
-  queue". The approve is still Geoff's, and the sentence still bars a message from authorizing a
-  merge.
+  queue". The rule stands in `SKILL.md` line 123, "A PR merges only through the queue: on Geoff's
+  approve, or by a landing step 1 allows", which the conductor loads.
 - `conductor.md`: "On a stop ... After Geoff answers, it follows standing answer 9 there." moved
   into the new paragraph, which keeps both rules.
 - `round-run.md`: the queue-rules bullet "A stop goes to Geoff as a `decide` document. A parked
@@ -399,7 +399,10 @@ folded:
 7. Prompt C is written out in full.
 8. Pre-flight is cut to the refused shapes that touch this pass.
 
-The planner reran M1, M2, M4, M7, and the four reader checks on the folded text.
+The planner reran M1, M2, M4, M7, both load and budget test suites, and the four reader checks
+on the folded text, with item 3 run three times. A grep of `tests`, `scripts`, `bin`, and both
+skill trees for "merges nothing", "doesn't build on it", and "approve in the queue" found only
+the approval-packet lines about a stop packet's approve, a different rule.
 
 ## Later
 
