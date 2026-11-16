@@ -5,7 +5,7 @@ settle. A round goes on past an open question, and Geoff rules on it at the clos
 2026-11-14). Only "What always stops" holds a pass. The advisor is Claude Code's advisor tool
 (<https://code.claude.com/docs/en/advisor>): a Fable 5.2 reader the session calls as a tool. It
 reads the session's whole transcript and nothing else, and it has no tools. A parked pass parks
-every pass that depends on it, so a pass consults the advisor on every open question (Geoff,
+every pass that builds on it, so a pass consults the advisor on every open question (Geoff,
 2026-11-12).
 
 ## Who has one
