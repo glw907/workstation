@@ -113,6 +113,9 @@ enable_timers() {
         timer=${unit##*/}
         systemctl --user is-enabled -q "$timer" 2>/dev/null || systemctl --user enable --now "$timer" || ok=1
     done
+    # The one long-running service every host gets: it holds off suspend while Rufin plays.
+    systemctl --user is-enabled -q rufin-awake.service 2>/dev/null \
+        || systemctl --user enable --now rufin-awake.service || ok=1
     return "$ok"
 }
 

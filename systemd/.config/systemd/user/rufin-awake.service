@@ -1,0 +1,14 @@
+[Unit]
+Description=Hold off suspend while Rufin plays music
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+# awake lives in ~/.local/bin, which a user service's default PATH lacks.
+Environment=PATH=%h/.local/bin:/usr/bin
+ExecStart=%h/.local/bin/rufin-awake
+Restart=always
+RestartSec=20
+
+[Install]
+WantedBy=graphical-session.target

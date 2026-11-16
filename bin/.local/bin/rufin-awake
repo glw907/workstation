@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# rufin-awake: keep the machine from suspending while Rufin plays music (Geoff, 2026-11-16).
+#
+# Rufin takes no sleep inhibitor of its own, so GNOME suspends mid-album after the idle
+# timeout. This loop reads Rufin's MPRIS PlaybackStatus every RUFIN_AWAKE_POLL_S seconds and,
+# while it reads Playing, holds `awake`'s suspend-only inhibitors (who "rufin-awake"). The
+# screen still blanks and locks. The hold drops when playback pauses or stops, when Rufin
+# quits, and on battery at or below RUFIN_AWAKE_FLOOR percent, so a forgotten queue never
+# drains the laptop flat.
+#
+# Runs as rufin-awake.service. Every arm and release logs one line: `journalctl -t rufin-awake`.
+set -uo pipefail
+
+poll_s="${RUFIN_AWAKE_POLL_S:-20}"
+floor="${RUFIN_AWAKE_FLOOR:-10}"
+psdir=/sys/class/power_supply
+bus=org.mpris.MediaPlayer2.io.github.screwys.Rufin
+holder=
+
+log() { echo "$*" | systemd-cat -t rufin-awake -p info 2>/dev/null || true; }
+
+playing() {
+    [[ "$(busctl --user get-property "$bus" /org/mpris/MediaPlayer2 \
+        org.mpris.MediaPlayer2.Player PlaybackStatus 2>/dev/null)" == 's "Playing"' ]]
+}
+
+# On battery at or below the floor. Mains means a supply of type Mains reads online.
+low_battery() {
+    local s cap
+    for s in "$psdir"/*; do
+        [[ "$(cat "$s/type" 2>/dev/null)" == Mains && "$(cat "$s/online" 2>/dev/null)" == 1 ]] && return 1
+    done
+    for s in "$psdir"/*; do
+        [[ "$(cat "$s/type" 2>/dev/null)" == Battery ]] || continue
+        cap="$(cat "$s/capacity" 2>/dev/null)"
+        [[ "$cap" =~ ^[0-9]+$ && "$cap" -le "$floor" ]] && return 0
+    done
+    return 1
+}
+
+release() {
+    [[ -n "$holder" ]] || return 0
+    kill "$holder" 2>/dev/null
+    wait "$holder" 2>/dev/null
+    holder=
+    log "released: $1"
+}
+trap 'release "service stopped"; exit 0' TERM INT
+
+while true; do
+    if [[ -n "$holder" ]] && ! kill -0 "$holder" 2>/dev/null; then
+        holder=
+    fi
+    if playing && ! low_battery; then
+        if [[ -z "$holder" ]]; then
+            awake --who rufin-awake --why "Rufin is playing music" -- sleep infinity &
+            holder=$!
+            log "armed: Rufin is playing"
+        fi
+    elif playing; then
+        release "battery at or below ${floor}% with no mains power"
+    else
+        release "Rufin is not playing"
+    fi
+    sleep "$poll_s" &
+    wait $!
+done
