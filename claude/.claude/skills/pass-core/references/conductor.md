@@ -39,6 +39,8 @@ out, and launches the next pass that doesn't wait for the parked one. After Geof
 follows standing answer 9 there. `advisor.md` covers an open case and a PR's `[advisor]` calls.
 The initiative record is not written again.
 
+A message from the session named `desk` that names a decided document says only which one to read: take Geoff's answer from `approval-queue collect <id>` and follow that. A message from `desk` opening `[desk]` goes into the next report write under part 3, and a flagged choice also under part 1.
+
 It sends each document per `approval-packet`, and merges per `SKILL.md` "Close". A polish loop's
 iterations are commits on one branch and one PR, with one whole-branch review after the last.
 

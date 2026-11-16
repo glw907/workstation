@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# Open Geoff's desk session: a background Fable session named `desk`, or attach to the one already open.
+# The rules it reads are pass-core references/desk.md in the checkout this script lives in.
+set -euo pipefail
+
+root="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
+rules="$root/claude/.claude/skills/pass-core/references/desk.md"
+state_wait="${DESK_STATE_WAIT:-10}"
+
+if [[ ! -f $rules ]]; then
+    echo "desk: rules file not found: $rules" >&2
+    exit 1
+fi
+
+# The newest row named desk wins when a name repeats.
+row="$(claude agents --json | jq -c '[.[] | select(.name == "desk")] | sort_by(.startedAt) | last // empty')"
+
+attach() {
+    echo "desk $1"
+    if [[ -t 1 ]]; then
+        exec claude attach "$1"
+    fi
+    exit 0
+}
+
+# True when the session's last user or assistant entry is an assistant entry ending its turn.
+turn_ended() {
+    local f last
+    f="$(find "$HOME/.claude/projects" -maxdepth 2 -name "$1.jsonl" -print -quit 2>/dev/null || true)"
+    [[ -n $f ]] || return 1
+    last="$(jq -c 'select(.type == "user" or .type == "assistant")' "$f" | tail -n 1)"
+    [[ -n $last ]] || return 1
+    jq -e '.type == "assistant" and .message.stop_reason == "end_turn"' <<<"$last" >/dev/null
+}
+
+if [[ -n $row ]]; then
+    kind="$(jq -r .kind <<<"$row")"
+    sid="$(jq -r .sessionId <<<"$row")"
+    if [[ $kind == interactive ]]; then
+        echo "desk is open in another terminal (session $sid)"
+        exit 0
+    fi
+    id="$(jq -r .id <<<"$row")"
+    started="$(jq -r '.startedAt / 1000 | floor' <<<"$row")"
+    midnight="$(date -d 'today 00:00' +%s)"
+    if (( started < midnight )) && turn_ended "$sid"; then
+        claude stop "$id"
+    else
+        attach "$id"
+    fi
+fi
+
+prompt="You are the desk. Read $rules in full and follow it. Start with the brief."
+cd "$HOME/Projects"
+out="$(claude --bg --model fable --effort high --name desk "$prompt")"
+id="$(grep -oE 'backgrounded · [0-9a-f]{8} · desk' <<<"$out" | grep -oE '[0-9a-f]{8}' | head -n 1 || true)"
+if [[ -z $id ]]; then
+    echo "desk: could not read the session id from: $out" >&2
+    exit 1
+fi
+
+state="$HOME/.claude/jobs/$id/state.json"
+waited=0
+while [[ ! -f $state ]] && (( waited < state_wait )); do
+    sleep 1
+    waited=$((waited + 1))
+done
+if [[ -f $state ]] && [[ "$(jq -r '.needs // empty' "$state")" == "send a prompt to start" ]]; then
+    claude stop "$id"
+    echo "desk: launch failed, the session wanted a prompt (stopped $id)" >&2
+    exit 1
+fi
+attach "$id"

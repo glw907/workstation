@@ -75,6 +75,7 @@ one sentence makes it a pass.
 - `xhigh` and `max` only where a quality gain is measured: an unsettled decision re-runs at
   `xhigh`, then one `fable` dispatch at `high`, never a session switch or frontmatter pin. `haiku`
   reads and copies, never decides; `low` suits mechanical subagents, never Fable.
+- The desk (`references/desk.md`) is the one Fable session, at `high` (Geoff, 2026-11-16).
 
 ## Execute
 

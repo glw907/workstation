@@ -10,6 +10,15 @@
 
 ## Medium
 
+- [ ] **#99** Cover the desk launcher's untested branches `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-15)*
+  `tests/desk.test.sh` has no case for a missing rules file, unreadable `--bg` output (exit 1), a yesterday row whose record is missing, or the stop-before-launch order (case 5 asserts counts only). `bin/.local/bin/desk` also exits with no message of its own when a row lacks `startedAt` (jq fails on `null / 1000` under `set -e`). Left alone, a changed `claude agents --json` shape breaks the launcher silently. Found by the whole-branch review of pass `desk-ws`.
+
+- [ ] **#98** Say where the desk gets each round's `round-watch` prefix `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-15)*
+  `desk.md` arms `round-watch <repo>-<round> glw907/<repo> <round>`, but a pass session is named `<project>-<pass>` (`planner.md` "Launch"). A prefix that matches no session exits 4, the desk drops the watch, and a pass that finishes with no document goes unannounced. Found by the whole-branch review of pass `desk-ws`.
+
+- [ ] **#97** Settle which of two rules opens the desk's brief `#bug` `#workstation` `#initiative:unattended-rounds` *(2026-11-15)*
+  `desk.md` "The brief" says to open with every notes line after the last `--- brief`, and also that the opening says what matters most. The live run of 2026-11-15 opened with a one-line headline and put the settled item second. Left alone, a settled problem can sit below the fold of a long brief. Found by the live launcher check of pass `desk-ws`.
+
 - [ ] **#96** Keep `/goal` out of executor prompts and catch every refused launch `#bug` `#workstation` `#initiative:unattended-rounds` *(2026-11-15)*
   On 2026-11-15 the planner `approval-queue-desk-queue-plan` wrote its executor prompt as one `/goal` line of 5,529 characters. Claude Code caps a goal at 4,000, so the session opened, printed "Goal condition is limited to 4000 characters", and did no work. Its `state.json` read `needs: "open this session to continue setup"`. `pass-core` `references/planner.md` "Launch" and `conductor.md` name only `needs: "send a prompt to start"` as a failed launch, so the planner ended on `PLAN END: launched` and the pass sat idle until Geoff asked for status. Two fixes: `planner.md` says an executor prompt takes no `/goal` line (`claude/.claude/docs/unattended-work-guards.md` keeps `/goal` on trial for the monthly review only), and the launch check treats any `needs` value in `state.json` as a failed launch. Left alone, the next planner that copies the form stalls its pass the same way.
 
