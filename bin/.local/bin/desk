@@ -3,6 +3,10 @@
 # The rules it reads are pass-core references/desk.md in the checkout this script lives in.
 set -euo pipefail
 
+# Geoff's shell exports ANTHROPIC_API_KEY for scripts that call the API directly. With it set,
+# `claude --bg` refuses: the background service signs in through claude.ai and has no such key.
+unset ANTHROPIC_API_KEY
+
 root="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
 rules="$root/claude/.claude/skills/pass-core/references/desk.md"
 state_wait="${DESK_STATE_WAIT:-10}"
