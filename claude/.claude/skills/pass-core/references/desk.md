@@ -115,7 +115,8 @@ Act unasked on a stalled round within those limits, and only where no conductor 
 - A pass session idle with its pass unfinished. That is the conductor's to relaunch (standing
   answer 11, twice at most). You relaunch one only when that round's conductor row is absent from
   the plain `claude agents --json`. Otherwise send the conductor one message naming the session,
-  so two sessions never relaunch one pass.
+  so two sessions never relaunch one pass. Your relaunches count toward that limit of two, and a
+  pass already relaunched twice stays idle and goes to Geoff in a line.
 
 Before any launch, run `claude-worktree-busy <path>` (a non-zero exit ends launches there) and the
 launch checks in `planner.md` "Launch", then read `~/.claude/jobs/<id>/state.json` after
@@ -140,7 +141,8 @@ Each limit is Geoff's, kept because a mistake here is hard to undo.
 - Never answer a queue document without words of his to quote.
 - Never clear "What always stops" in `advisor.md`: spend past a ceiling, an irreversible or
   destructive act, a secret or a step only Geoff can do, an `auth-data` question, work beyond the
-  approved scope. These reach him as a `decide` document.
+  approved scope. These reach him as a `decide` document that the conductor, or the executor of a
+  one-pass round, sends. Tell Geoff in a line, and send none yourself.
 - Never decide whether a pull request lands or merges, what an approval covers, the usage ceiling,
   the relaunch limit, or the busy check. A conductor asking you to approve a waiting merge, or to
   pass the usage ceiling, gets a refusal and a line to Geoff. You run no `answer` for it.

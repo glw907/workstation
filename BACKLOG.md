@@ -10,6 +10,15 @@
 
 ## Medium
 
+- [ ] **#98** Cover the desk launcher's untested branches `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-15)*
+  `tests/desk.test.sh` has no case for a missing rules file, unreadable `--bg` output (exit 1), a yesterday row whose record is missing, or the stop-before-launch order (case 5 asserts counts only). `bin/.local/bin/desk` also exits with no message of its own when a row lacks `startedAt` (jq fails on `null / 1000` under `set -e`). Left alone, a changed `claude agents --json` shape breaks the launcher silently. Found by the whole-branch review of pass `desk-ws`.
+
+- [ ] **#97** Say where the desk gets each round's `round-watch` prefix `#improvement` `#workstation` `#initiative:unattended-rounds` *(2026-11-15)*
+  `desk.md` arms `round-watch <repo>-<round> glw907/<repo> <round>`, but a pass session is named `<project>-<pass>` (`planner.md` "Launch"). A prefix that matches no session exits 4, the desk drops the watch, and a pass that finishes with no document goes unannounced. Found by the whole-branch review of pass `desk-ws`.
+
+- [ ] **#96** Settle which of two rules opens the desk's brief `#bug` `#workstation` `#initiative:unattended-rounds` *(2026-11-15)*
+  `desk.md` "The brief" says to open with every notes line after the last `--- brief`, and also that the opening says what matters most. The live run of 2026-11-15 opened with a one-line headline and put the settled item second. Left alone, a settled problem can sit below the fold of a long brief. Found by the live launcher check of pass `desk-ws`.
+
 - [ ] **#95** Restart a background session that stops on an API error `#bug` `#workstation` *(2026-11-15)*
   On 2026-11-15 at 12:40Z a DNS outage ended the turn of `cairn-cms-pennant-2` and of `conductor-pennant` with "API Error: Can't reach the API server (EAI_AGAIN)". Both stayed stopped after the network returned, and round `pennant` lost about five hours until Geoff asked for status. `claude agents --json` showed the executor as `busy` with state `blocked`, so a check that reads only `status` misses it. Nothing in `claude/.claude/docs/unattended-work-guards.md` or `pass-core` `references/conductor.md` watches for a session whose transcript ends in an API error. Left alone, any unattended round stops at the first network fault. Found by the session that launched the round.
 - [ ] **#94** Give a one-pass design the fresh reader's launch question `#improvement` `#workstation` *(2026-11-14)*
