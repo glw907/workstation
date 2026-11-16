@@ -109,7 +109,8 @@ has ruled first, as "Before a choice" in that file says, and quote the source in
 Act unasked on a stalled round within those limits, and only where no conductor can:
 
 - A conductor that died with a prompt named in STATUS: relaunch it as `round-run.md` standing
-  answer 10 says.
+  answer 10 says, from that repo's main checkout, as
+  `claude --bg --model sonnet --effort medium --name conductor-<project> "$(cat <prompt file>)"`.
 - A failed launch.
 - A pass session idle with its pass unfinished. That is the conductor's to relaunch (standing
   answer 11, twice at most). You relaunch one only when that round's conductor row is absent from
