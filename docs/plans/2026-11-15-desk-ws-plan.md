@@ -55,6 +55,8 @@ all target `claude/.claude/settings.json`, which this pass never touches; the on
 - `git -C <other checkout>` from a worktree-isolated session (the worktree guard, seen by the
   planner 2026-11-16). The close leaves the worktree with `ExitWorktree` before any command on the
   main checkout (Task 6).
+- `stow -d ... -R claude` (Self-Modification, 2026-11-01), the same shape as Task 6's
+  `stow -d /var/home/glw907/.dotfiles -R bin`. A refusal follows "Stops".
 
 Reviewed: one `standards:plan-reviewer` read (Opus 5.5 at `medium`): 3 blocking, 15 should-fix,
 and 7 nits, all folded. See "Review".
@@ -159,7 +161,8 @@ Copied verbatim from the design. Each maps to its task and the evidence the PR c
    round moved from one routine step to the next. It writes what the desk would say. It writes one
    or two lines for each of the first three, naming what needs you where something does, and
    nothing for the fourth. It runs no command that records, merges, or launches." Task 4: the
-   answers, and the count of `tool_use` entries in the reader's subagent record, which must be 0.
+   answers, and the count of `tool_use` entries in the reader's subagent record other than the
+   hand-back that returns its report, which must be 0.
 4. "The same reader gets five problems. For a conductor's open method question, it answers and
    writes the three notes. For a product call with no precedent, it takes the cheapest-to-undo
    choice, flags it, and writes the notes. For a dead conductor with a prompt named in STATUS, it
@@ -202,9 +205,11 @@ Sections, in order:
 3. **Waking.** After the brief, arm `approval-queue list --wait` as a background Bash command, and
    one `ROUND_WATCH_POLLS=30 round-watch <repo>-<round> glw907/<repo> <round>` per running round,
    also in the background. On a wake, re-arm only the command that exited, never the others, so
-   waits never pile up. Re-arm a `round-watch` only while that round's conductor row is in the plain
-   `claude agents --json`; exit 4 or 3, or a conductor gone with its round finished, drops that
-   watch (M10, M12). No `/loop`, no Monitor. On a `list --wait` wake, run `approval-queue list`
+   waits never pile up. A `round-watch` exit 0 or 3 is re-armed while that round's conductor row is
+   in the plain `claude agents --json`; exit 4, or a conductor gone with its round finished, drops
+   that watch (M10, M12). Exit 3 comes every hour of a long pass, so it never means the round ended.
+   On any wake, also arm a watch for each running round that has none, so a round started after the
+   brief is watched. No `/loop`, no Monitor. On a `list --wait` wake, run `approval-queue list`
    again and speak only of ids not seen before; a wake with no new id, or one that is the desk's own
    `--new` document, says nothing (M13).
 4. **What you say, and what you record.** The design's five-row table, each row with its command.
@@ -252,7 +257,8 @@ Write no em dash.
 `bin/.local/bin/desk`, Bash, `set -euo pipefail`, `shellcheck`-clean, parsing rows with the `jq`
 on `PATH`:
 
-1. `root` is three directories above `readlink -f "$0"`; the rules file is
+1. `root` is three levels above the script's folder (`dirname "$(readlink -f "$0")"`, which is
+   `<root>/bin/.local/bin`); the rules file is
    `$root/claude/.claude/skills/pass-core/references/desk.md`. A missing file prints an error and
    exits 1. A worktree copy of the script so reads the worktree's rules.
 2. Read `claude agents --json` (the plain listing, M2). Take the rows named `desk`; with more than
@@ -345,15 +351,15 @@ run Task 6, and report acceptance 1 to 5 unmet in the PR under `## Calls for Geo
 
 One blocking Agent call, `model: "fable"`, `effort: "high"`, `subagent_type: "general-purpose"`. Its
 prompt holds the text of `desk.md` alone and the eight scenarios of acceptance 2, asks for the exact
-commands for each as text, and says to call no tool at all: this is a written exercise, and every
-command it names is live on this machine. Continue the same agent with `SendMessage` (M21) for the
+commands for each as text, and says to call no tool except the one that returns its report: this
+is a written exercise, and every command it names is live on this machine. Continue the same agent with `SendMessage` (M21) for the
 four events of acceptance 3 (each written as the stdout of the watch that woke the desk: a
 `round-watch` exit 0 with the merged PR, a `list --wait` line of kind `report`, one of kind
 `decide`, and a `round-watch` exit for a routine step), then for the five problems of acceptance 4.
 
 Grade each answer against its item, and count the `tool_use` entries in the reader's record (the
-`agent-<id>.jsonl` under this session's `subagents/` folder): the count must be 0, and any tool
-call is a miss whatever it did. A miss is traced to the `desk.md` rule it came from and fixed there,
+`agent-<id>.jsonl` under this session's `subagents/` folder) other than the hand-back that returns
+each report: the count must be 0, and any other tool call is a miss whatever it did. A miss is traced to the `desk.md` rule it came from and fixed there,
 and that set is rerun in a new Agent call, since the continued agent holds the old text. A miss
 that returns after its fix gets one structural fix (the section rewritten, not patched), and if it
 returns again it goes in the PR under `## Calls for Geoff` and the run goes on (`planner.md`
@@ -370,15 +376,17 @@ runs `claude stop <id>` and is recorded. The desk count is
 2. Run `bin/.local/bin/desk` from the worktree, with no TTY. Paste its output. Check the desk count
    is 1 and `jq -c .respawnFlags ~/.claude/jobs/<id>/state.json` holds `--model fable`.
 3. Run it again at once: it prints the same id, and the desk count is still 1.
-4. Wait for the brief turn to end. Read the record: each `message.model` starts `claude-fable`, and
-   the brief is pasted into the PR.
+4. Wait for the brief turn to end and the notes file to hold a `--- brief` line: a desk waiting on
+   its Sonnet subagents ends a turn before the brief exists. Read the record: each `message.model`
+   starts `claude-fable`, and the brief is pasted into the PR.
 5. Send the desk one `SendMessage`: a labelled test from `workstation-desk-ws`, a method question
    for a one-pass round named `test-round` with no conductor, asking it to settle the question, write
-   its notes, and act on nothing else this turn. Wait for the turn to end. The notes file holds a
-   line in the `desk.md` form for `test-round`.
+   its notes, and act on nothing else this turn. Wait for the turn to end and the notes file to hold
+   a `test-round` line in the `desk.md` form.
 6. Run `claude stop <id>` alone. The desk count is 0.
-7. Run `bin/.local/bin/desk` again: a new id. Wait for its brief turn to end. The brief opens with
-   the `test-round` line, from the record. Run `claude stop <new id>` alone; the desk count is 0.
+7. Run `bin/.local/bin/desk` again: a new id. Wait for its brief turn to end and the notes file to
+   hold a second `--- brief` line. The brief opens with the `test-round` line, from the record. Run
+   `claude stop <new id>` alone; the desk count is 0.
 8. Delete `~/.local/state/desk/` if step 1 found it absent; otherwise remove only the lines this
    task added.
 
@@ -422,6 +430,11 @@ ceilings are the path (190 minutes) and spend (85 percent weekly usage, Tasks 4 
 - `claude stop` on a test desk is refused: don't retry. The merge document gives Geoff one step,
   `claude stop <id>`, checked by a desk count of 0, and the close keeps the worktree until that
   check passes. A desk left live would read the worktree's rules, which the close removes.
+- `stow -d /var/home/glw907/.dotfiles -R bin` is refused at close: don't retry. Report it in the
+  PR's closing comment and in the reply, and note that `~/.dotfiles/bin/.local/bin/desk` runs
+  unstowed until `bin` is restowed.
+- `git -C /var/home/glw907/.dotfiles ...` is still refused after `ExitWorktree`: report the
+  checkout as stale, per `pass-core` "Close", and don't retry.
 - `--model fable` is refused at launch, or the record shows another model: take the advisor's
   nearest reading (a full model id from `claude --help`), and flag it under `## Calls for Geoff`.
 - A test desk acts on a live round: the Task 5 guard.
@@ -504,7 +517,11 @@ blocking, 15 should-fix, 7 nits. Each is folded:
   review floor, the `jq` on `PATH`, and the structural-fix wording.
 
 `state` turned out to be no idle signal while folding (probe `55906333`); M3 and launcher step 4 use
-the record.
+the record. An advisor read of the fold added four fixes: the hand-back excepted from Task 4's tool
+count; a notes-file condition on each Task 5 wait, since a turn can end before the brief exists;
+`round-watch` exit 3 re-armed, and new rounds watched on any wake; and the stow and `git -C`
+refusal answers. `answer` finds a record by session id under every `~/.claude/projects` folder
+(`approval-queue/cli/words.ts` line 150), so the `~/Projects` launch doesn't affect it.
 
 ## Later
 
