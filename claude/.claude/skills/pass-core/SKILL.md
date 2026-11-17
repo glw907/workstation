@@ -15,10 +15,25 @@ Load `standards:running-passes` first; this skill adds Geoff's operation to it. 
 `references/planner.md` to design or plan, `references/executor.md` to execute, or
 `references/conductor.md` to conduct. A planning dispatch cites `references/planning-samples.md`.
 
+## Until cc-desk runs
+
+Geoff stopped reading the Approval Queue and running the `desk` session on 2026-11-17; cc-desk
+(`~/Projects/cc-desk`) replaces both. Until then, these rules override every line here, in the
+references, or in `approval-packet` that sends him a document:
+
+1. A question or report for Geoff is written in his terminal session. Nothing runs
+   `approval-queue send`.
+2. A background session writes its report, or a question that stops it, under "Open decisions"
+   in the repo's STATUS with a recommendation. After a stopping question it ends.
+3. A pull request with no call for him lands as `approval-packet` step 1 says.
+4. A pull request that needs his approve waits, named under "Open decisions". Once his message
+   in a terminal session approves it by number, that session lands it with `approval-queue
+   land`. It first runs any `## Before merge` steps and their check and removes that section
+   from the PR body, and withdraws any queue document holding the PR.
+
 ## Lifecycle
 
-Geoff approves a design as a `design` document in the Approval Queue (`approval-packet`), never
-through a question in chat (Geoff, 2026-10-28). Every design is a
+Geoff approves a design in his terminal session ("Until cc-desk runs"). Every design is a
 round design of one to six passes in one repo. A planner also reads `references/round.md` and
 `references/ready.md`, and a conductor or an executor reads `references/round-run.md`.
 
@@ -75,7 +90,6 @@ one sentence makes it a pass.
 - `xhigh` and `max` only where a quality gain is measured: an unsettled decision re-runs at
   `xhigh`, then one `fable` dispatch at `high`, never a session switch or frontmatter pin. `haiku`
   reads and copies, never decides; `low` suits mechanical subagents, never Fable.
-- The desk (`references/desk.md`) is the one Fable session, at `high` (Geoff, 2026-11-16).
 
 ## Execute
 
@@ -116,18 +130,15 @@ opens with a paragraph written per `~/.claude/docs/voice/written-for-people.md`,
 landed, each `auth-data` verdict, `## Decisions`, `## Planning misses`, and the score. Follow-ups
 go through `approval-packet` step 7.
 
-A pass's hand-over is the `approval-packet` skill. Its step 1 says when a pass sends nothing and
-lands, and its later steps say how a document is written, checked, and sent, and how to act on
-Geoff's answer. An adapter line that says every PR waits for Geoff yields to step 1.
+A pass's hand-over is the `approval-packet` skill. Its step 1 says when a pass sends nothing and lands. An adapter line that says every PR waits for Geoff yields to step 1.
 
-A PR merges only through the queue: on Geoff's approve, or by a landing step 1 allows. A landing
-holds in every class, once the PR's checks are green and its whole-branch review is accepted with
-no open finding. `claude-merge-guard` denies every GitHub CLI merge stage.
+A PR merges only by `approval-queue land`, in any class, once its checks are green and its
+whole-branch review is accepted with no open finding. `claude-merge-guard` denies every GitHub
+CLI merge stage.
 
 A PR must be safe under a plain merge followed by a pull; the executor makes it so where it can.
 When it cannot, the PR body carries a `## Before merge` section: the exact commands in order and
-the one check that shows they ran. The merging session runs the commands and the check before
-`approval-queue merge`.
+the one check that shows they ran. The merging session runs both before it lands the PR.
 
 Whoever merges a PR then brings that repo's main checkout up to date: `git -C <checkout> pull
 --ff-only` when the checkout is on its default branch, has no uncommitted change in a file the

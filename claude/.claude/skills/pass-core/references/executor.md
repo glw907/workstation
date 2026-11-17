@@ -87,8 +87,6 @@ use. An escape also goes into STATUS with its commit.
 
 ## End
 
-Under a conductor, the executor ends at PR-ready and never runs `approval-queue`; the
-`claude-approval-queue-reminder` hook fires on every `gh pr create`, and such an executor passes
-over it. Without a conductor, the executor closes the pass per `SKILL.md` "Close". Either way, its
+Under a conductor, the executor ends at PR-ready and never runs `approval-queue`. Without a conductor, the executor closes the pass per `SKILL.md` "Close". Either way, its
 last act before ending releases a lid-switch hold it took, by stopping the `systemd-inhibit`
 process.
