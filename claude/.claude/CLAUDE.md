@@ -9,8 +9,8 @@ overspend, an `auth-data` question, a scope change). Never hand Geoff a command 
 ## The pass process lives in `pass-core`
 
 Planning, executing, and closing a pass is the `pass-core` skill, with `cairn-pass`, `site-pass`, and `dotfiles-pass` as per-repo
-adapters. Geoff's touchpoints are the round design, its pre-flight sitting, a `merge` document where a call remains, a `decide` document
-for a paused pass, the round's `report` (`approval-packet`), and the `desk` session (`pass-core` `references/desk.md`). One session runs
+adapters. Geoff no longer reads the Approval Queue or runs the `desk` session (2026-11-17): `pass-core` "Until cc-desk runs" says how a
+question, a report, or a pull request reaches him, and it overrides every line that sends him a queue document. One session runs
 each pass or hand-over, its state in the repo's STATUS; initiatives are records in `~/Projects/initiatives`.
 
 ## Search before you spelunk (Geoff, 2026-07-13)

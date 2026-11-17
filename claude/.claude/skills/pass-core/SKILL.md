@@ -15,6 +15,20 @@ Load `standards:running-passes` first; this skill adds Geoff's operation to it. 
 `references/planner.md` to design or plan, `references/executor.md` to execute, or
 `references/conductor.md` to conduct. A planning dispatch cites `references/planning-samples.md`.
 
+## Until cc-desk runs
+
+Geoff stopped reading the Approval Queue and running the `desk` session on 2026-11-17; cc-desk
+(`~/Projects/cc-desk`) replaces both. Until then, these rules override every line here, in the
+references, or in `approval-packet` that sends him a document:
+
+1. A question or report for Geoff is written in his terminal session. Nothing runs
+   `approval-queue send`.
+2. A background session with a question for him writes it under "Open decisions" in the repo's
+   STATUS with a recommendation, then ends.
+3. A pull request with no call for him lands as `approval-packet` step 1 says.
+4. A pull request that needs his approve waits, named under "Open decisions". Once he approves
+   it in a terminal session, that session lands it with `approval-queue land`.
+
 ## Lifecycle
 
 Geoff approves a design as a `design` document in the Approval Queue (`approval-packet`), never
@@ -75,7 +89,6 @@ one sentence makes it a pass.
 - `xhigh` and `max` only where a quality gain is measured: an unsettled decision re-runs at
   `xhigh`, then one `fable` dispatch at `high`, never a session switch or frontmatter pin. `haiku`
   reads and copies, never decides; `low` suits mechanical subagents, never Fable.
-- The desk (`references/desk.md`) is the one Fable session, at `high` (Geoff, 2026-11-16).
 
 ## Execute
 
