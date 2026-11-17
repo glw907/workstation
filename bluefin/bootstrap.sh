@@ -39,7 +39,9 @@ read_list() {
 # what this script actually stows.
 STOW_PACKAGES=()
 mapfile -t STOW_PACKAGES < <(read_list "$BLUEFIN_DIR/stow-packages.txt")
-STOW_SHARED_DIRS=("$HOME/.local/bin" "$HOME/.claude" "$HOME/.config/systemd/user")
+# systemd skips a symlinked drop-in directory, so each one the systemd package carries is listed.
+STOW_SHARED_DIRS=("$HOME/.local/bin" "$HOME/.claude" "$HOME/.config/systemd/user"
+    "$HOME/.config/systemd/user/app-flatpak-co.hyprlab.Hylki-.scope.d")
 
 # Where stow_clear_conflicts parks files it moves out of the way.
 STOW_CONFLICT_BACKUP="$HOME/.dotfiles-preexisting"

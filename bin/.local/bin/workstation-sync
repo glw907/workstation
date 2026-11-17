@@ -11,6 +11,7 @@ dotfiles=${SYNC_DOTFILES:-$HOME/.dotfiles}
 root=${SYNC_ROOT:-$HOME/Projects}
 state=${SYNC_STATE:-$HOME/.local/state/workstation-sync}
 probe=${SYNC_PROBE:-https://github.com/glw907/workstation}
+units=${SYNC_UNITS:-$HOME/.config/systemd/user}
 
 mkdir -p "$state"
 if [ "${1:-}" = --status ]; then
@@ -97,9 +98,24 @@ done
 
 # A plain stow only adds links. A restow briefly unlinks ~/.claude under any running session, so
 # it waits for a pull that can have removed a file.
+# systemd skips a drop-in directory that is a symlink, and stow folds a directory the host lacks
+# into one. So each drop-in directory the systemd package carries is made real before the stow.
+unfold_dropins() {
+    local src dst
+    for src in "$dotfiles"/systemd/.config/systemd/user/*.d; do
+        [ -d "$src" ] || continue
+        dst=$units/${src##*/}
+        if [ -L "$dst" ] && [ "$(readlink -f "$dst")" = "$(readlink -f "$src")" ]; then
+            rm "$dst" || return 1
+        fi
+        mkdir -p "$dst" || return 1
+    done
+}
+
 apply_stow() {
     local flag=-S pkg ok=0
     [ -z "$dotfiles_moved" ] || flag=-R
+    unfold_dropins || ok=1
     while read -r pkg; do
         (cd "$dotfiles" && stow "$flag" "$pkg") || ok=1
     done < <(read_list "$dotfiles/bluefin/stow-packages.txt")

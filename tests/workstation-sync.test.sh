@@ -101,6 +101,16 @@ check "status reports" "ok" "$(PATH="$stubs:$PATH" SYNC_STATE=$tmp/state "$bin/w
 run
 check "no pull means a plain stow" "stow -S bin" "$(cat "$calls")"
 
+# A drop-in directory stow folded into a link becomes a real directory, and one already real stays.
+units=$tmp/units
+mkdir -p "$units" "$dot/systemd/.config/systemd/user/app-x-.scope.d" "$dot/systemd/.config/systemd/user/app-y-.scope.d"
+ln -s "$dot/systemd/.config/systemd/user/app-x-.scope.d" "$units/app-x-.scope.d"
+mkdir "$units/app-y-.scope.d" && touch "$units/app-y-.scope.d/keep.conf"
+SYNC_UNITS=$units run
+[ -d "$units/app-x-.scope.d" ] && [ ! -L "$units/app-x-.scope.d" ] || { echo "FAIL: folded drop-in left a link"; fail=1; }
+[ -f "$units/app-y-.scope.d/keep.conf" ] || { echo "FAIL: real drop-in directory lost a file"; fail=1; }
+rm -rf "$dot/systemd/.config/systemd/user/app-x-.scope.d" "$dot/systemd/.config/systemd/user/app-y-.scope.d"
+
 printf '#!/bin/sh\nexit 1\n' >"$stubs/workstation-install"
 run
 [ "$rc" -eq 1 ] || { echo "FAIL: failed step exit $rc"; fail=1; }
