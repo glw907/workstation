@@ -4,7 +4,10 @@
   retired). Two profiles split the roles: Geoff browses in his own profile, and
   Claude Code drives the `Default` profile (the claude-in-chrome native-messaging
   host, chrome-devtools MCP automation, and `chromium-shot`), so automation never
-  runs beside his sessions or password manager.
+  runs beside his sessions or password manager. On pavilion no `Default` profile exists yet
+  (2026-11-18: `~/.config/chromium` holds only `Geoff`). A session there never falls back to
+  Geoff's profile, and a check that needs a real Chromium click is a `[you]` step until the
+  profile is made.
 - **Extensions are installed by hand, per profile.** Chromium policy is browser-wide
   with no per-profile scope, so no policy force-installs an extension. Geoff's
   profile carries the Proton Pass extension (Chrome Web Store id
