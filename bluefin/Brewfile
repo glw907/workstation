@@ -38,6 +38,8 @@ tap "stalwartlabs/tap"
 brew "vandelay" if `hostname`.strip == "pavilion"
 # Held with `brew pin proton-pass-cli`; the Pass 0 plan pins it so a
 # routine `ujust update` cannot change the CLI under the key scripts.
+# check-drift fails when a pinned formula falls behind, and the bump is
+# then taken by hand: unpin, upgrade, pin, and rerun `check-drift --proton-only`.
 brew "proton-pass-cli"
 brew "syncthing"
 brew "chafa"

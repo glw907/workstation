@@ -147,6 +147,8 @@ legs() {
         "vale style fixtures" bash tests/vale/run-fixtures.sh
     run check-drift-initiatives '^tests/(check-drift-initiatives\.test\.sh$|fixtures/initiatives/)|^bin/\.local/bin/check-drift$' \
         "check-drift initiatives leg" bash tests/check-drift-initiatives.test.sh
+    run check-drift-pins '^tests/check-drift-pins\.test\.sh$|^bin/\.local/bin/check-drift$' \
+        "check-drift pinned-formula leg" bash tests/check-drift-pins.test.sh
     run gather-dotfiles '^tests/(gather-dotfiles-initiatives\.test\.sh$|fixtures/initiatives/)|^claude/\.claude/gather-dotfiles\.sh$' \
         "gather-dotfiles initiatives leg" bash tests/gather-dotfiles-initiatives.test.sh
     run secret-set-overrides '^tests/secret-set-overrides\.test\.sh$|^scripts/secrets/|^bin/\.local/bin/ws-pass-key$|^secrets/' \

@@ -4,7 +4,8 @@ set -uo pipefail
 # check-drift: reconcile this repo against the live machine. Read-only; it
 # never modifies the repo, the packages, or $HOME.
 #
-# Sections: stow state per package, rpm-ostree layered set, Homebrew,
+# Sections: stow state per package, rpm-ostree layered set, Homebrew (the
+# Brewfile, and every pinned formula against its current version),
 # flatpaks (against the manifest, with Bluefin's stock set implicit), uv
 # tools, staged /etc drops, untracked ~/.local/bin executables, the
 # git state, user lingering, and the Proton Pass wiring (including the grant map against
@@ -72,6 +73,28 @@ check_work() {
     done < <(find "${WORK_DOCUMENTS:-$HOME/Documents}" "${WORK_MEMORY:-$HOME/.claude/projects}" \
         -path '*/.stversions' -prune -o -name '*.sync-conflict-*' -print 2>/dev/null)
     [[ -n "$found" ]] || ok "nothing left here"
+}
+
+# Pinned formulae. `brew pin` keeps a formula out of `ujust update` on purpose, so nothing else
+# ever upgrades it, and a pin with no watcher sits on an old version until someone looks. Each
+# pinned formula behind its current version fails the run; the bump is then taken by hand through
+# standards:dependency-upgrade. Reads the formula data brew last fetched and fetches nothing.
+check_pins() {
+    local brew_bin="${BREW:-brew}" pinned behind line
+    pinned=$(HOMEBREW_NO_AUTO_UPDATE=1 "$brew_bin" list --pinned 2>/dev/null) || pinned=""
+    if [[ -z "$pinned" ]]; then
+        ok "no pinned formulae"
+        return
+    fi
+    # One line per outdated formula: "name (2.7.0) < 2.7.1 [pinned at 2.7.0]".
+    behind=$(HOMEBREW_NO_AUTO_UPDATE=1 "$brew_bin" outdated --verbose 2>/dev/null | grep -F '[pinned at ') || behind=""
+    if [[ -z "$behind" ]]; then
+        ok "pinned formulae current: $(paste -sd' ' <<< "$pinned")"
+        return
+    fi
+    while IFS= read -r line; do
+        bad "pinned formula behind: ${line%% \[pinned at*} (brew unpin, upgrade, pin again)"
+    done <<< "$behind"
 }
 
 # Proton Pass wiring (self-hosting Pass W): the pass-cli version brew holds (never by running
@@ -239,6 +262,11 @@ if [[ "${1:-}" == "--proton-only" ]]; then
     exit "$fail"
 fi
 
+if [[ "${1:-}" == "--pins-only" ]]; then
+    check_pins
+    exit "$fail"
+fi
+
 if [[ "${1:-}" == "--initiatives-only" ]]; then
     check_initiatives
     exit 0
@@ -299,6 +327,7 @@ if [[ -n "$extra_brews" ]]; then
 else
     ok "no unmanifested leaves"
 fi
+check_pins
 
 echo ""
 echo "Flatpaks (bluefin/flatpaks.txt; Bluefin stock set implicit):"
