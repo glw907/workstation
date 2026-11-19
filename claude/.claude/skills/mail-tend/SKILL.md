@@ -95,12 +95,13 @@ moves only when the current script files it somewhere else.
 1. Ask, unless the plan is 20 moves or fewer and only follows a data edit Geoff asked for. The ask
    is one line in chat with the counts per destination, for example "3,380 list messages to
    Archive, nothing else moves. Go?" Any move to Deleted Items asks, whatever its size.
-2. The plan needs a backup newer than its preview. Ward's nightly backup finishes about 03:30 UTC.
-   For one sooner, run `ssh -o BatchMode=yes geoff@ward.907.life sudo systemctl start
+2. The plan needs a backup newer than its preview. Ward's nightly backup finishes about 03:30
+   Alaska time. For one sooner, run `ssh -o BatchMode=yes geoff@ward.907.life sudo systemctl start
    servers-backup.service`, which stops Stalwart for a few seconds.
 3. Run `scripts/ward-mail-sort.sh move`, or `move --trash` once Geoff has agreed to the Deleted
-   Items moves. Nothing runs from 03:20 to 04:00 UTC, and a plan expires 24 hours after its
-   preview.
+   Items moves. Without `--trash`, a plan holding any Deleted Items line is refused whole, so when
+   Geoff declines those moves, drop their lines from the plan first. Nothing runs from 03:20 to
+   04:00 Alaska time, and a plan expires 24 hours after its preview.
 4. Run `scripts/ward-mail-sort.sh prune` when the move emptied a folder. It removes every empty user
    folder, and the script recreates one when its next message arrives.
 5. Report the moved and skipped counts, the manifest path, and the folder counts that changed.
