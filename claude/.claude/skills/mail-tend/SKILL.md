@@ -27,8 +27,8 @@ ward as the IMAP keyword `Misfiled` (Geoff, 2026-10-28). When he says he has tag
 all and work through them as one batch: `ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters
 export geoff | jq -c 'select(.keywords | keys | map(ascii_downcase) | index("misfiled"))'`, and the
 same with `export geoff --junk` for Junk Mail. The jq runs locally, so it needs no file on ward. The
-helper never changes keywords, so name the moved messages in your report and Geoff clears the tag in
-Hylki.
+helper adds a category tag but never removes a keyword, so name the moved messages in your report
+and Geoff clears the `Misfiled` tag in Hylki.
 
 1. Find it on ward by its Message-ID: `ssh -o BatchMode=yes geoff@ward.907.life sudo stalwart-jmap
    find geoff '<message-id>'`, or search `sudo mail-filters export geoff` (headers only, never a
@@ -114,7 +114,8 @@ moves only when the current script files it somewhere else.
 - Run the repo gate as `bash scripts/check.sh </dev/null`. A gate moved to the background with an
   open stdin hangs in `apply.test.sh`. A fresh worktree needs `npm ci` in `cloudflare/monitor`
   and `cloudflare/mta-sts` for the workers leg.
-- A message in two folders never moves, and `move` never changes keywords.
+- A message in two folders never moves. `move` adds only the tags the script sets, never removes a
+  keyword, and `undo` takes off the tags its manifest records it added.
 - In sieve-rs 0.7.3 a `string` test with a list of keys matches only its last key. Test a list of
   senders with `address` or `header`, which match any key (`~/Projects/household-it/docs/reference/decisions.md#rulings-and-decisions-from-the-mail-filters-pass`, fact 12).
 - The probe set can't test the spam step: Stalwart scores only unauthenticated mail. The sieve-run
