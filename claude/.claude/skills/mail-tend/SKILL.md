@@ -27,8 +27,8 @@ ward as the IMAP keyword `Misfiled` (Geoff, 2026-10-28). When he says he has tag
 all and work through them as one batch: `ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters
 export geoff | jq -c 'select(.keywords | keys | map(ascii_downcase) | index("misfiled"))'`, and the
 same with `export geoff --junk` for Junk Mail. The jq runs locally, so it needs no file on ward. The
-helper never changes keywords, so name the moved messages in your report and Geoff clears the tag in
-Hylki.
+helper adds a category tag but never removes a keyword, so name the moved messages in your report
+and Geoff clears the `Misfiled` tag in Hylki.
 
 1. Find it on ward by its Message-ID: `ssh -o BatchMode=yes geoff@ward.907.life sudo stalwart-jmap
    find geoff '<message-id>'`, or search `sudo mail-filters export geoff` (headers only, never a
@@ -95,12 +95,13 @@ moves only when the current script files it somewhere else.
 1. Ask, unless the plan is 20 moves or fewer and only follows a data edit Geoff asked for. The ask
    is one line in chat with the counts per destination, for example "3,380 list messages to
    Archive, nothing else moves. Go?" Any move to Deleted Items asks, whatever its size.
-2. The plan needs a backup newer than its preview. Ward's nightly backup finishes about 03:30 UTC.
-   For one sooner, run `ssh -o BatchMode=yes geoff@ward.907.life sudo systemctl start
+2. The plan needs a backup newer than its preview. Ward's nightly backup finishes about 03:30
+   Alaska time. For one sooner, run `ssh -o BatchMode=yes geoff@ward.907.life sudo systemctl start
    servers-backup.service`, which stops Stalwart for a few seconds.
 3. Run `scripts/ward-mail-sort.sh move`, or `move --trash` once Geoff has agreed to the Deleted
-   Items moves. Nothing runs from 03:20 to 04:00 UTC, and a plan expires 24 hours after its
-   preview.
+   Items moves. Without `--trash`, a plan holding any Deleted Items line is refused whole, so when
+   Geoff declines those moves, drop their lines from the plan first. Nothing runs from 03:20 to
+   04:00 Alaska time, and a plan expires 24 hours after its preview.
 4. Run `scripts/ward-mail-sort.sh prune` when the move emptied a folder. It removes every empty user
    folder, and the script recreates one when its next message arrives.
 5. Report the moved and skipped counts, the manifest path, and the folder counts that changed.
@@ -114,7 +115,8 @@ moves only when the current script files it somewhere else.
 - Run the repo gate as `bash scripts/check.sh </dev/null`. A gate moved to the background with an
   open stdin hangs in `apply.test.sh`. A fresh worktree needs `npm ci` in `cloudflare/monitor`
   and `cloudflare/mta-sts` for the workers leg.
-- A message in two folders never moves, and `move` never changes keywords.
+- A message in two folders never moves. `move` adds only the tags the script sets, never removes a
+  keyword, and `undo` takes off the tags its manifest records it added.
 - In sieve-rs 0.7.3 a `string` test with a list of keys matches only its last key. Test a list of
   senders with `address` or `header`, which match any key (`~/Projects/household-it/docs/reference/decisions.md#rulings-and-decisions-from-the-mail-filters-pass`, fact 12).
 - The probe set can't test the spam step: Stalwart scores only unauthenticated mail. The sieve-run
