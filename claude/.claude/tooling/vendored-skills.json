@@ -105,6 +105,24 @@
       "path": "skills/receiving-code-review",
       "_why": "How to weigh review findings before acting on them (38 runs in the 30 days to 2026-10-19), vendored so the superpowers plugin can stay off.",
       "home": "standards"
+    },
+    "cc-desk": {
+      "repo": "glw907/cc-desk",
+      "path": "skills/cc-desk",
+      "branch": "v0.1.0",
+      "commit": "013f7ef3e950",
+      "license": "none",
+      "installed": "2026-11-19",
+      "_why": "The desk session's skill: how the session that `cc-desk` opens in Geoff's terminal reads the brief, asks his waiting questions, and records his rulings. From the cc-desk Desk and skills design (docs/specs/2026-11-18-desk-skills-design.md in glw907/cc-desk); edit it in that repo only."
+    },
+    "cc-desk-work": {
+      "repo": "glw907/cc-desk",
+      "path": "skills/cc-desk-work",
+      "branch": "v0.1.0",
+      "commit": "013f7ef3e950",
+      "license": "none",
+      "installed": "2026-11-19",
+      "_why": "The skill for every session cc-desk launches (a pass, a conductor, a design writer): how it reports a pull request ready, files a follow-up, writes a question, stops, and records a report. From the same design; edit it in glw907/cc-desk only."
     }
   }
 }
