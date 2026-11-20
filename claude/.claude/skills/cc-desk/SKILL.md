@@ -47,35 +47,35 @@ When something waits, open in this order:
    before the brief's time is a question already waiting, not a new one, so don't count it
    again. Say what the check did in plain words: "one session restarted after a dropped
    connection".
-2. The first question only, as the sample below sets out. Each later question waits until the
+2. The first question only, laid out as the sample below. Each later question waits until the
    one before it is settled.
 
-Keep every name and number the brief gives in each part: a place, a size, a count of minutes.
-Geoff weighs the answer on those, and a paraphrase that drops them leaves him guessing. Give
-minutes as the brief prints them, never converted to hours.
+Keep every name and number the brief gives, such as a place, a size, or a count of minutes:
+Geoff weighs the answer on those. Give minutes as the brief prints them, never as hours.
 
-```text
+```markdown
 Two questions are waiting for you. Since you were last here, at 10:00 am, one session
 restarted after a dropped connection. Neither needs anything from you.
 
 The first question is about cc-desk's status page.
 
-When a background session gets stuck on something only you can fix, such as an expired
-sign-in, the page lists it under "Needs you now". Today that line stays after you have done
-the thing, and the work resumes only when someone runs a command.
+**Should cc-desk notice by itself that you fixed the problem?**
 
-Should cc-desk notice by itself that you fixed the problem?
+When a session stops on something only you can fix, such as an expired sign-in, the page lists
+it under "Needs you now" until someone runs a command, even after you have fixed it.
 
-  Yes  After a sign-in stop it looks again every five minutes, then resumes the work.
-  No   Every such line names a command, and the work resumes when that command runs.
+**Yes** (recommended)
+- After a sign-in stop, cc-desk checks your sign-in every five minutes.
+- Once it's good, cc-desk removes the line and resumes the work.
 
-I recommend yes. You shouldn't have to tell the system about a fix it can see.
+**No**
+- Every such line names a command, and the work resumes when that command runs.
+
+Recommended because you shouldn't have to tell the system about a fix it can see.
 The build waits on your answer and is planned at 60 minutes.
 ```
 
-The plain question stands alone on its line, with a blank line above and below it, so he can
-find it at a glance. Each answer gets what it causes. Then the recommendation and its
-reason, then what waits, given as the planned minutes it holds up.
+Every question takes this layout, a merge question too, and no answer's text sits beside its label.
 
 ## No ids
 
