@@ -1,0 +1,16 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "setup": "skill copy in a gitignored .claude/ folder, out of Glob's view",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "The spec is approved and says \"Mobile nav\" is a 45-minute task in `glw907/example-site` with no waits. I haven't run anything.\n\nThe launch command, from the main checkout of `example-site` on `main`:\n\n```bash\nclaude --bg --name mobile-nav --model claude-sonnet-5-5 --effort medium --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  \"/goal Build the task \\\"Mobile nav\\\" in /var/home/glw907/.claude/jobs/0a745dfc/tmp/hidden-1/p/spec.md. Done when: (1) npm run gate exits 0 and runs the new toggle test in tests/header.test.ts; (2) at 375 pixels wide, the header shows the menu button and hides the link list until it is pressed. Or stop after 90 minutes.\"\n```\n\nNotes on the command:\n- **Model and effort:** I chose Sonnet at medium because this is a small, well-specified component change. Opus at high would be the choice if you want more judgment on the accessibility work.\n- **Time clause:** 90 minutes is twice the spec's 45.\n- **Settings:** the `--settings` value applies to this session only, as the skill requires.\n\nBefore running it, I would check:\n\n1. **Checkout path.** I haven't located the local `example-site` checkout. I'd confirm its path, then `cd` there so the worktree is created by Claude Code itself.\n2. **Busy check.** `claude-worktree-busy <checkout>` exits 0.\n3. **Checkout state.** The checkout is on `main`, clean, and up to date.\n4. **Secrets.** The spec names none. I'd confirm that `npm run gate` needs no credential.\n5. **CI.** `gh repo view glw907/example-site --json visibility` answers, and the repo's CI starts jobs. The goal doesn't require green CI, but a red check would block the pull request from being ready.\n6. **Session count.** `claude agents --json` shows fewer than four working sessions on pavilion.\n7. **Reviewer names.** The spec names `standards:daisyui-a11y-reviewer`, which isn't among the skills I can see. I'd confirm it exists before launch. If it doesn't, the reviewer needs to be replaced or the spec amended. The skill's own reviewer set is `standards:diff-reviewer`, plus `standards:visual-verifier` for rendered UI.\n8. **Repo skill.** Check whether `example-site` has its own repo skill. `site-pass` covers a different set of sites, so it may not apply.",
+  "costUsd": 0.007262490000000001
+}
