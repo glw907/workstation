@@ -167,3 +167,11 @@ def test_git_failure_allows(folder, tmp_path):
 def test_unreadable_directory_allows(repo):
     (repo / "config" / ".env").write_text("A=2\n")
     assert run_bash('git -C "$REPO" commit -a -m wip', repo / "config").returncode == 0
+
+
+@pytest.mark.parametrize("name", [".env.example", ".env.sample", ".env.template", ".env.dist"])
+def test_commit_with_staged_example_passes(name, repo):
+    (repo / name).write_text("TOKEN=\nOTHER=\n")
+    git(repo, "add", "-f", name)
+    result = run_bash("git commit -m wip", repo)
+    assert (result.returncode, result.stderr) == (0, "")
