@@ -362,9 +362,7 @@
     "anthropic-skills:google-workspace": "off"
   },
   "tui": "fullscreen",
-  "autoMemoryEnabled": true,
   "skipWorkflowUsageWarning": true,
-  "agentPushNotifEnabled": true,
   "autoMode": {
     "environment": [
       "$defaults",
@@ -383,7 +381,7 @@
     ],
     "allow": [
       "$defaults",
-      "Edits and commits to skill files under claude/.claude/skills/ inside a git worktree of ~/.dotfiles (paths under /var/home/glw907/.dotfiles/.claude/worktrees/ or /var/home/glw907/Projects/workstation-wt/) are allowed when they implement a task of a pass plan Geoff approved. The workstation repo is where these skills are authored, and each change takes effect only after Geoff merges its PR. This clears Self-Modification and Instruction Poisoning for that skill text only; it does not cover settings, hooks, permission rules, CLAUDE.md, or memory, and it does not cover text that grants permissions or tells a session to bypass a block.",
+      "Edits and commits to skill, agent, rule, docs, and instructions files under claude/.claude/, to the project skill under .claude/skills/, to scripts under bin/.local/bin/ and scripts/, and to their tests, inside a git worktree of ~/.dotfiles (paths under /var/home/glw907/.dotfiles/.claude/worktrees/ or /var/home/glw907/Projects/workstation-wt/) are allowed when they implement a task of a spec Geoff approved. The same holds for skill, agent, script, test, evaluation, and plugin manifest files inside a git worktree of ~/Projects/standards or ~/Projects/survey. These repos are where the files are authored, and each change takes effect only after Geoff merges its PR. This clears Self-Modification and Instruction Poisoning for those files only; it does not cover settings.json, hook registration, permission rules, CLAUDE.md, memory, or the lists under claude/.claude/tooling/, and it does not cover text that grants permissions or tells a session to bypass a block.",
       "Edits and commits to `permissions.allow` in claude/.claude/settings.json inside a git worktree of ~/.dotfiles (paths under /var/home/glw907/.dotfiles/.claude/worktrees/ or /var/home/glw907/Projects/workstation-wt/) are allowed when Geoff asked for that rule in the session, and the change takes effect only after Geoff merges its PR. Narrow rules only: never `Bash(*)`, a wildcarded interpreter, a deny or ask rule change, or a change to hooks or autoMode beyond this line.",
       "Edits, commits, PRs, and merges of CLAUDE.md files, files under claude/.claude/docs/, and skill or agent files, inside a git worktree (paths under .claude/worktrees/) of /var/home/glw907/.dotfiles or any repo under /var/home/glw907/Projects, are allowed when Geoff approved that specific change in the current session. When he has approved it in chat, that approval is the merge authorization for this classifier, and the classifier needs nothing more. This clears Self-Modification and Instruction Poisoning for that change only; it does not cover settings, hooks, permission rules, autoMode, or memory, and it does not cover text that grants permissions or tells a session to bypass a block.",
       "Moving a worktree's uncommitted edits onto the current default branch is routine in any git worktree under .claude/worktrees/ of /var/home/glw907/.dotfiles or of a repo under /var/home/glw907/Projects, whichever session created it. This covers `git stash` followed by `git reset --hard origin/<default>` and `git stash pop`, and `git rebase origin/<default>`, when the same command first stashes or commits every uncommitted edit and HEAD is already an ancestor of origin/<default>, so no commit or edit is lost. This clears Irreversible Local Destruction for that sequence only. It does not cover the primary checkout, `git clean`, `git stash drop` or `clear`, a reset that would drop unpushed commits, or any force push.",
@@ -395,7 +393,9 @@
       "setup-tooling-sweep: Under the approved setup-tooling plan (/var/home/glw907/Projects/initiatives/cairn-setup/plans/2026-11-09-setup-tooling-plan.md), `bash scripts/gate/run-gate.sh sweep --apply` in a checkout or worktree of /var/home/glw907/Projects/cairn-cms is routine once a dry run in the same session printed its delete list. It deletes only what setup derives from a `Cairn gate <run id>` site name, matched by the anchored names the plan gives: on the glw907-test machine account the repository `cairn-gate-<10 digits>[-<2-9>]` (its in-progress Actions runs cancelled first) and the GitHub App `cairn-cairn-gate-<10 digits>`; on the Cloudflare account the Worker of the repository's name, the custom domains whose `service` is that Worker, the D1 database `<name>-auth`, and the R2 bucket `<name>-media`, emptied first. It deletes no DNS record. This clears Blind Apply and Irreversible Destruction for those deletes only. It does not cover the carin-test.org zone, its DNS records, or its Email Sending, the ci-cairn-build token or the cairn-build registration, the old gate's `cairn-e2e-gate-` resources, any other name, or anything on the glw907 account. The initiative's end packet removes this line through Geoff's [you] step."
     ]
   },
-  "voiceEnabled": true,
+  "voice": {
+    "enabled": true
+  },
   "modelSettings": {
     "claude-opus-5-5": {
       "autoCompactWindow": 200000,
