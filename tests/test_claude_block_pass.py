@@ -390,3 +390,64 @@ def test_secret_guard_blocks_proton_token_in_bash():
 def test_secret_guard_passes_lookalikes(text):
     result = run(GUARD, {"tool_name": "Write", "tool_input": {"content": text}})
     assert result.returncode == 0
+
+
+# Read-only searches the hook refused in session records between 2026-11-01 and 2026-11-20. A
+# quoted (, ), |, &, or ; read as a pipeline, or a bracket expression counted as literal letters.
+SEARCHES = json.loads((Path(__file__).parent / "fixtures/block-pass-searches.json").read_text())
+
+
+@pytest.mark.parametrize("cmd", SEARCHES)
+def test_recorded_searches_allowed(cmd):
+    result = run(BLOCK, bash(cmd))
+    assert (result.returncode, result.stdout) == (0, "")
+
+
+# A word that runs a shell keeps the strict scan, so a quoted separator still counts there.
+SHELL_RUN = [
+    "bash -c 'pass-cli item list'",
+    'eval "pass-cli item list"',
+    'sh -c "pass-sitting x.jsonl"',
+    "'pass-cli' item list",
+    'p"ass"-cli item list',
+    'bash -c "secret-tool lookup a b"',
+    "bash -c 'true; pass-cli item list'",
+    "\"bash\" -c 'true; pass-cli item list'",
+    "echo 'true; pass-cli item list' | bash",
+    "ssh host 'true; pass-cli item list'",
+    "su -c 'true; pass-cli item list'",
+    "script -qc 'true; pass-cli item list' /dev/null",
+    "find . -exec sh -c 'true; pass-cli info' +",
+    "find . -exec cat 'x;' + ; true 'a; pass-cli info'",
+    "claude-pass run 'true; pass-cli info'",
+    "xargs -I{} sh -c 'true; pass-cli {}' < list",
+    "python3 -c 'import os; os.system(\"pass-cli info\")'",
+    'echo "$(true; pass-cli item list)"',
+    'echo "`pass-cli item list`"',
+    "grep x 'a|b' file; pass-cli item list",
+    "timeout 5 'true; pass-cli info'",
+]
+
+
+@pytest.mark.parametrize("cmd", SHELL_RUN)
+def test_shell_words_keep_the_strict_scan(cmd):
+    assert "deny" in run(BLOCK, bash(cmd)).stdout
+
+
+@pytest.mark.parametrize("cmd", [
+    "grep -n 'x|pass-cli' file",
+    "grep -n \"(pass-cli|pass-sitting)\" docs/a.md",
+    "git log --grep='fix; pass-cli login'",
+    "grep -rhoE '^func (Test|Fuzz)[A-Za-z0-9_]*' cmd",
+])
+def test_quoted_separators_are_text(cmd):
+    assert run(BLOCK, bash(cmd)).stdout == ""
+
+
+@pytest.mark.parametrize("cmd", [
+    "ls ~/.local/share/[p]roton-pass-cli",
+    "ls ~/.local/share/[a-z]*-pass-cli",
+    "p[a]ss-cli info",
+])
+def test_bracket_globs_with_literal_names_still_count(cmd):
+    assert "deny" in run(BLOCK, bash(cmd)).stdout

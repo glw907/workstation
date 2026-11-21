@@ -31,7 +31,10 @@ after it is still denied.
 
 There is no allowance: the agent token pops up no prompt, so a rate
 limit would protect nothing. A mention inside a quoted argument (a commit message, an echo)
-is not a command and passes.
+is not a command and passes. A (, ), |, &, or ; inside quoted text is plain text too, so a quoted
+grep pattern is never read as a pipeline, unless the command holds a word that could run that
+text as shell code: a wrapper, a shell, eval, ssh, su -c, script -c, find -exec, claude-pass run,
+or an interpreter's -c or -e. Then the scan reads every quoted separator as syntax.
 
 This is a guardrail, not a boundary: Claude runs as the same UID, so an indirect call
 (PC=pass-cli; $PC info) or another interpreter gets past any regex. A heredoc body is
@@ -134,6 +137,7 @@ SITTING_PATTERNS = [
 COMMAND_WORD = re.compile(START + r"(?P<word>[^\s;&|()<>`]+)")
 TOKEN = re.compile(r"[^\s;&|()<>`]+")
 GLOB_CHARS = re.compile(r"[*?\[\]{}]")
+BRACKET = re.compile(r"\[!?\]?[^\]]*\]")
 
 
 def expand_braces(word, limit=64):
@@ -163,12 +167,13 @@ def expand_braces(word, limit=64):
 def glob_names(word, names):
     """Return True when a glob or brace word's basename could expand to one of names.
 
-    The basename needs four literal characters, so a bare * or *.md never counts.
+    The basename needs four literal characters, so a bare * or *.md never counts. A bracket
+    expression such as [a-z-] matches one character, so its letters are not literal.
     """
     if not GLOB_CHARS.search(word):
         return False
     for candidate in expand_braces(word.rsplit("/", 1)[-1]):
-        if len(GLOB_CHARS.sub("", candidate)) >= 4 and any(
+        if len(GLOB_CHARS.sub("", BRACKET.sub("", candidate))) >= 4 and any(
             fnmatch.fnmatchcase(name, candidate) for name in names
         ):
             return True
@@ -265,6 +270,79 @@ def normalize(cmd):
     return cmd.replace("'", "").replace('"', "")
 
 
+# A word that runs a string or a file as shell code, which turns a quoted separator back into
+# syntax. Any of them anywhere in the command, quotes removed, keeps the strict scan: the WRAP
+# wrappers and a shell in command position, and these words wherever they stand.
+SHELL_WORDS = [
+    re.compile(SEP + ASSIGN + REDIR + WRAP + BIN + r"(?:sudo|doas|env|nohup|time|exec|command|nice|ionice"
+               r"|timeout|xargs|eval|watch|stdbuf|setsid|flock|strace|unbuffer|builtin|source"
+               r"|(?:busybox\s+)?(?:r?ba|z|da|k)?sh)" + NAMEEND),
+    re.compile(r"(?<![\w.-])(?:eval|ssh|xargs|claude-pass\s+run)(?![\w-])"),
+    re.compile(r"(?<![\w.-])(?:busybox\s+)?(?:r?ba|z|da|k)?sh\s+(?:\S+\s+)*?-\w*c"),
+    re.compile(r"(?<![\w.-])(?:su|script)\s+(?:\S+\s+)*?-\w*c"),
+    re.compile(r"(?<![\w.-])(?:python[\d.]*|perl|ruby|node|osascript)\s+(?:\S+\s+)*?-\w*[ce]\b"),
+    re.compile(r"(?<![\w.-])find\s[^\n]*-exec"),
+]
+
+
+def runs_shell(cmd):
+    """Return True when the command holds a word that could run quoted text as shell code."""
+    plain = normalize(cmd)
+    return any(p.search(plain) for p in SHELL_WORDS)
+
+
+def plain_quoted_separators(cmd):
+    """Blank (, ), |, &, and ; inside quoted text, so a quoted pattern is never read as a pipeline.
+
+    A $(...) or backtick span inside double quotes runs, so its text stays live; `stack` holds
+    the open spans (a paren depth for $(, or a backtick marker). An ANSI-C $'...' span honors
+    backslash escapes, and a plain single-quoted span does not.
+    """
+    out = list(cmd)
+    index, quote = 0, ""
+    stack = []
+    while index < len(out):
+        char = out[index]
+        if char == "\\" and quote in ("", '"', "$'"):
+            index += 2
+            continue
+        if stack and not quote:
+            if stack[-1] == "`" and char == "`":
+                stack.pop()
+                quote = '"'
+                index += 1
+                continue
+            if stack[-1] != "`" and char in "()":
+                stack[-1] += 1 if char == "(" else -1
+                if stack[-1] == 0:
+                    stack.pop()
+                    quote = '"'
+                    index += 1
+                    continue
+        if quote == '"' and char == "$" and cmd[index + 1:index + 2] == "(":
+            stack.append(1)
+            quote = ""
+            index += 2
+            continue
+        if quote == '"' and char == "`":
+            stack.append("`")
+            quote = ""
+            index += 1
+            continue
+        if quote:
+            if char == quote[-1]:
+                quote = ""
+            elif char in "()|&;":
+                out[index] = " "
+        elif char == "$" and cmd[index + 1:index + 2] == "'":
+            quote = "$'"
+            index += 1
+        elif char in "'\"":
+            quote = char
+        index += 1
+    return "".join(out)
+
+
 def main():
     """Deny a Bash command that reaches Proton Pass; allow everything else."""
     try:
@@ -274,7 +352,8 @@ def main():
     if data.get("tool_name") != "Bash":
         return 0
     cmd = (data.get("tool_input") or {}).get("command", "")
-    cmd = normalize(LOOKUP.sub("type", strip_heredocs(cmd)))
+    cmd = LOOKUP.sub("type", strip_heredocs(cmd))
+    cmd = normalize(cmd if runs_shell(cmd) else plain_quoted_separators(cmd))
     if any(p.search(cmd) for p in SITTING_PATTERNS) or command_glob(cmd, ["pass-sitting"]):
         reason = SITTING_REASON
     elif any(p.search(cmd) for p in PATTERNS) or command_glob(cmd, ["pass-cli"]) or default_session_named(cmd):
