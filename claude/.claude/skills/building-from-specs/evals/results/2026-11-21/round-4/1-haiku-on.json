@@ -1,0 +1,17 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:48:37Z",
+  "seconds": 19.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "The spec is approved, and the Mobile nav task is one task with a 45-minute plan. I haven't run anything.\n\n**Launch command** (from the example-site main checkout, which I haven't located yet, so `<checkout>` is a placeholder):\n\n```bash\ncd <checkout>\nclaude --bg --name mobile-nav --model claude-opus-5-5 --effort high --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  \"/goal Build the Mobile nav task in /var/home/glw907/.claude/jobs/0a745dfc/tmp/runs4/1-haiku-on/spec.md. Done when: npm run gate exits 0 and runs the new toggle test in tests/header.test.ts; at 375 pixels wide the header shows the menu button and hides the link list until it is pressed; or stop after 90 minutes.\"\n```\n\nNotes on the choices:\n- The spec names no model or effort. I picked Opus at high because the task includes accessibility judgment. Sonnet would also fit the mechanical parts.\n- The time clause is 90 minutes, twice the 45-minute plan.\n\n**Checks before running:**\n1. Find the example-site main checkout and run `claude-worktree-busy <checkout>`. It must exit 0.\n2. Confirm the spec needs no secrets. It names none, so there is nothing to look up in the store.\n3. Run `claude agents --json` on pavilion. Fewer than four sessions should be working.\n4. Confirm the task starts from the default branch. It waits on nothing, so no other branch needs to merge first.\n5. Read example-site's repo skill before the launch, since the building-from-specs process requires it. The task's gate is local (`npm run gate`), so a CI check is needed only if the goal later requires green CI.\n6. Settle the reviewers. The spec names `standards:daisyui-a11y-reviewer`, which the building-from-specs process does not list. The process always runs `standards:diff-reviewer`, and it adds `standards:visual-verifier` for rendered UI. This task renders UI, so the visual verifier should run too. I'd launch with the spec's named reviewer plus the visual verifier, and confirm that the daisyUI reviewer exists. Changing the spec's reviewer list needs Geoff's go-ahead, since he approved those words.",
+  "costUsd": 0.007427930000000001
+}

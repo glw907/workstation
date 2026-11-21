@@ -1,10 +1,12 @@
 #!/usr/bin/env -S python3 -I
 """Run one evaluation of evals.json in a fresh Claude Code session and save its evidence.
 
-The session runs with `claude -p` in a scratch project whose `.claude/skills/` links to this
-skill, so the skill loads from the branch under test. With `--state off`, `skillOverrides`
-sets the skill to "off" for that session only. The raw stream stays in the scratch folder; the
-evidence file keeps the query, the skills the session invoked, and its final answer.
+The session runs with `claude -p` in a scratch project. With `--state on`, the project's
+`.claude/skills/` holds a copy of this skill (its evaluations left out), so the skill loads from
+the branch under test. It is a copy because Glob does not follow a link, and a session that looks
+for the file would miss it. With `--state off`, the project holds no copy and `skillOverrides`
+sets the skill to "off". The raw stream stays in the scratch folder. The evidence file keeps the
+query, the skills the session loaded, and its final answer.
 """
 
 import argparse
@@ -20,12 +22,13 @@ SKILL = SKILL_DIR.name
 MODELS = {"haiku": "claude-haiku-5-5", "sonnet": "claude-sonnet-5-5", "opus": "claude-opus-5-5"}
 
 
-def project(scratch, case):
-    """Build an empty project that holds a link to the skill and the case's files."""
+def project(scratch, case, state):
+    """Build an empty project that holds the case's files, and a copy of the skill when it is on."""
     if scratch.exists():
         shutil.rmtree(scratch)
     (scratch / ".claude/skills").mkdir(parents=True)
-    (scratch / ".claude/skills" / SKILL).symlink_to(SKILL_DIR)
+    if state == "on":
+        shutil.copytree(SKILL_DIR, scratch / ".claude/skills" / SKILL, ignore=shutil.ignore_patterns("evals"))
     for name in case["files"]:
         shutil.copy(SKILL_DIR / name, scratch / Path(name).name)
 
@@ -43,8 +46,11 @@ def overrides(state):
 
 
 def evidence(lines):
-    """Pull the invoked skills, the listing, and the final answer out of a stream-json run."""
-    invoked, listed, result, cost = [], None, "", None
+    """Pull the invoked skills, the listing, and the final answer out of a stream-json run.
+
+    A skill counts as loaded when the session calls Skill on it or reads its SKILL.md.
+    """
+    invoked, read, listed, result, cost = [], False, None, "", None
     for line in lines:
         try:
             event = json.loads(line)
@@ -56,11 +62,14 @@ def evidence(lines):
             for part in event.get("message", {}).get("content", []):
                 if part.get("type") == "tool_use" and part.get("name") == "Skill":
                     invoked.append(part.get("input", {}).get("skill", ""))
+                if part.get("type") == "tool_use" and part.get("name") == "Read":
+                    path = part.get("input", {}).get("file_path", "")
+                    read = read or path.endswith(f"skills/{SKILL}/SKILL.md")
         if event.get("type") == "result":
             result = event.get("result", "")
             cost = event.get("total_cost_usd")
-    loaded = any(name.split(":")[-1] == SKILL for name in invoked)
-    return {"listed": listed, "invoked": invoked, "loaded": loaded, "result": result, "costUsd": cost}
+    loaded = read or any(name.split(":")[-1] == SKILL for name in invoked)
+    return {"listed": listed, "invoked": invoked, "readSkillFile": read, "loaded": loaded, "result": result, "costUsd": cost}
 
 
 def main():
@@ -75,7 +84,7 @@ def main():
     case = json.loads((SKILL_DIR / "evals/evals.json").read_text())[args.case - 1]
     run_id = f"{args.case}-{args.model}-{args.state}"
     proj = args.scratch / run_id
-    project(proj, case)
+    project(proj, case, args.state)
     cmd = [
         "claude", "-p", case["query"],
         "--model", MODELS[args.model], "--effort", "medium",
@@ -101,7 +110,7 @@ def main():
     }
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / f"{run_id}.json").write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n")
-    print(json.dumps({k: record[k] for k in ("case", "model", "skill", "seconds", "exitCode", "listed", "loaded", "invoked")}))
+    print(json.dumps({k: record[k] for k in ("case", "model", "skill", "seconds", "exitCode", "listed", "loaded", "invoked", "readSkillFile")}))
 
 
 if __name__ == "__main__":

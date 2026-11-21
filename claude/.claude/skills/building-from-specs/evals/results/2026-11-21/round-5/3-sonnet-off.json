@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T23:03:28Z",
+  "seconds": 12.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core"
+  ],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "Nothing has run. Here is the sequence from `pass-core` \"Close\" and \"Until cc-desk runs\". Two things I haven't confirmed: the `approval-queue` argument syntax, and the main checkout path. I've assumed `~/Projects/example-site`.\n\n**Before the merge**\n\n1. `claude-worktree-busy ~/Projects/example-site/.claude/worktrees/mobile-nav` confirms no live executor is in the worktree.\n2. `gh pr checks 412 --repo glw907/example-site` confirms the checks are green. The whole-branch review must also be accepted with no open finding, which I read from the PR and STATUS.\n3. `gh pr view 412 --repo glw907/example-site --json body` shows whether the body has a `## Before merge` section.\n4. If it does, I run its commands in order and then its one check. Then I remove that section with `gh pr edit 412 --repo glw907/example-site --body-file <edited body>`.\n5. I withdraw any queue document holding PR 412. This uses an `approval-queue` subcommand I'd look up first.\n\n**The merge**\n\n6. `approval-queue land 412`. A plain `gh pr merge` is denied by `claude-merge-guard`.\n\n**After the merge**\n\n7. `claude agents --json` checks for a live session in the main checkout.\n8. `git -C ~/Projects/example-site pull --ff-only` runs only if the checkout is on its default branch, has no uncommitted change in a file the merge touched, and has no live session. Otherwise I report the checkout as stale and don't force it.\n9. `git -C ~/Projects/example-site worktree remove .claude/worktrees/mobile-nav` removes the worktree, with no force flag.\n10. `git -C ~/Projects/example-site branch -d worktree-mobile-nav` deletes the branch, also with no force flag.\n\nIf the worktree is dirty, the branch reads as unmerged, or a session is live, I leave that piece in place and report it in one line. A squash merge can make `branch -d` refuse, and I wouldn't use `-D` in that case. The last step is a report with the commit that landed and the state of the checkout and worktree.\n\nSay go and I'll start at step 1.",
+  "costUsd": 0.10741490000000001
+}

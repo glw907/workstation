@@ -1,0 +1,15 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:58:30Z",
+  "seconds": 20.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": true,
+  "loaded": true,
+  "result": "The spec is approved by Geoff on 2026-11-21 and has one task, \"Mobile nav\", in `glw907/example-site`, budgeted at 45 minutes with no dependencies. I read `spec.md` and the `building-from-specs` skill and ran nothing else.\n\n**Launch command** (run from the example-site main checkout, not this folder, which isn't a git repo; `<checkout>` is a placeholder because I don't know that path yet):\n\n```bash\ncd <checkout> && claude --bg --name mobile-nav --model claude-sonnet-5-5 --effort medium --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  \"/goal Build the task \\\"Mobile nav\\\" in /var/home/glw907/.claude/jobs/0a745dfc/tmp/runs5/1-haiku-on/spec.md, in glw907/example-site. Done when: npm run gate exits 0 and runs the new toggle test in tests/header.test.ts; at 375 pixels wide the header shows the menu button and hides the link list until it is pressed; and the branch has a fresh review from standards:diff-reviewer and standards:daisyui-a11y-reviewer. Or stop after 90 minutes.\"\n```\n\nChoices I made that the spec doesn't name:\n- **Model and effort:** Sonnet at medium. The work is a small header edit and one test, which the skill treats as mechanical.\n- **Time clause:** 90 minutes, which is twice the 45 planned.\n- **Task name:** `mobile-nav`, since `--name` takes a slug.\n\n**Checks before running:**\n1. `claude-worktree-busy <checkout>` exits 0 for the example-site main checkout, and that checkout is on the default branch with no uncommitted changes.\n2. Secrets: the spec names none. Confirm the gate needs none, and check any that turns up by name in `~/.local/secrets` or the registry, never by value.\n3. CI: `gh repo view glw907/example-site --json visibility` answers, so the pull request can reach a green check and the session doesn't read a no-job run as a failing test.\n4. Concurrency: this host is pavilion, so `claude agents --json` should show fewer than four working sessions.\n5. Reviewers: `standards:daisyui-a11y-reviewer` is named in the spec, but it isn't in the skill list I can see, so confirm it exists before launch. The skill also says `standards:visual-verifier` reads rendered UI, and the 375-pixel done item is rendered UI, but the spec doesn't name it. That's a question for Geoff, since the spec's reviewer list is part of what he approved.\n6. The `denyInsteadOfPrompting` and `baseRef` keys stay in the `--settings` argument only, never in `~/.claude/settings.json`.",
+  "costUsd": 0.007852350000000001
+}

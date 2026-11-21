@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T23:03:18Z",
+  "seconds": 10.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "Nothing has run. Here are the commands in order, with `<main>` standing for the example-site main checkout, whose path I haven't been given.\n\n**Before the merge**\n\n1. `gh pr view 412 --repo glw907/example-site --json body,state,isDraft,statusCheckRollup`\n   This reads the body for a `## Before merge` section and confirms the PR is ready with green checks. Per the spec's merge rules, I'd run any commands in that section, and their check, before step 4. I don't know yet whether the section exists.\n2. `claude-worktree-busy <main>/.claude/worktrees/mobile-nav`\n   This confirms the task session has ended and that nothing is writing to the branch. It should exit 0.\n\n**Merge**\n\n3. `claude-worktree-busy <main>`\n   This must exit 0 before the pull in step 5.\n4. `gh pr merge 412 --repo glw907/example-site --merge`\n   An `ask` rule stops this at a permission prompt, and you answer that prompt once for PR 412.\n\n**Cleanup**\n\n5. `git -C <main> pull --ff-only`\n   I run this only if the main checkout is on the default branch and has no uncommitted change in a file the PR merged. If either condition fails, I skip it and tell you.\n6. `git -C <main> worktree remove .claude/worktrees/mobile-nav`\n7. `git -C <main> branch -d worktree-mobile-nav`\n8. `git -C <main> push origin --delete worktree-mobile-nav`\n\nNone of these use a force flag. If step 6, 7, or 8 refuses, I read the refusal, because it means work is still there. I'd report that rather than force it.",
+  "costUsd": 0.10507069999999999
+}

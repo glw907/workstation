@@ -1,0 +1,17 @@
+{
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff approved spec.md and is away until tomorrow. A background task session is building its task \"Mobile nav\" under /goal, and it has hit two things. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. What does the task session do about each one, and what does it write in the task's pull request? Don't edit any file.",
+  "started": "2026-11-21T22:50:40Z",
+  "seconds": 16.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "Neither issue stops the task. The session never asks Geoff a question, and it never edits `settings.json`.\n\n**Menu button side.** The spec doesn't settle left or right, so the session treats it as a product or taste call with no precedent. It takes one option, the one a later commit would undo most cheaply (for a flex header, that is a single direction or order change), and keeps working. The pull request records the option taken, the option passed over, and what reversing would undo. The call goes under `## Decisions` with its source marked as silent in the spec. It also goes under `## For Geoff`, since it is a visible choice he should see before he merges.\n\n**PostToolUse hook line.** The session leaves `~/.dotfiles/claude/.claude/settings.json` alone. A hook the work needs is a setting, so the session writes the exact JSON line into the pull request, along with the check that shows it took. Because a plain merge does not change the dotfiles file, the line goes under `## Before merge`, with the target path, the restow step, and a `jq` query that prints the PostToolUse entry. CLAUDE.md routes `settings.json` changes through `claude-infra`, so Geoff's session runs that step at merge time. The hook also goes under `## For Geoff` as a step left undone. If one of the goal's done items can only pass once the hook is live, the session marks that item unmet and gives the reason. It does not drop the item or edit the goal to match.",
+  "costUsd": 0.00653275
+}

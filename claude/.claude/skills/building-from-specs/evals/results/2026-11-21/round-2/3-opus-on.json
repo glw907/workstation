@@ -1,0 +1,16 @@
+{
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Geoff just typed: \"Approved, merge 412.\" Write out the exact commands you would run to merge it and clean up, in order. Don't run them.",
+  "started": "2026-11-21T22:31:37Z",
+  "seconds": 21.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "loaded": true,
+  "result": "These are the commands in order. I'm assuming the main checkout is `~/Projects/example-site` and the default branch is `main`. Nothing below has been run.\n\n**1. Confirm it's safe to merge**\n\n```bash\nclaude agents --json\ngh pr view 412 --repo glw907/example-site --json state,isDraft,headRefName,baseRefName,mergeable,body\ngh pr checks 412 --repo glw907/example-site\n```\n\n- `claude agents --json` must show no running `mobile-nav` session. A task's PR can only merge after its session has ended.\n- `gh pr view` must show the PR open, not a draft, mergeable, with head `worktree-mobile-nav` and base `main`. I'd also read the body for a `## Before merge` section.\n- `gh pr checks` must be all green. If any check is red, I stop and tell you instead of merging.\n\n**2. Run the `## Before merge` commands, if the PR has that section**\n\nI'd run its commands exactly as written, then its one check. If the section isn't there, I skip this step.\n\n**3. Merge**\n\n```bash\ngh pr merge 412 --repo glw907/example-site --merge\n```\n\nAn `ask` rule stops this at a permission prompt, and you answer it once. I leave off `--delete-branch` because step 5 deletes the branch.\n\n**4. Update the main checkout**\n\n```bash\ncd ~/Projects/example-site\ngit branch --show-current\ngit status --porcelain\nclaude-worktree-busy ~/Projects/example-site\ngit pull --ff-only\n```\n\nI only pull if the checkout is on `main`, no merged file has uncommitted changes, and `claude-worktree-busy` exits 0. If any of those fails, I skip the pull and tell you why.\n\n**5. Clean up: the worktree, then the local branch, then the remote branch**\n\n```bash\nclaude-worktree-busy ~/Projects/example-site/.claude/worktrees/mobile-nav\ngit worktree remove .claude/worktrees/mobile-nav\ngit branch -d worktree-mobile-nav\ngit push origin --delete worktree-mobile-nav\n```\n\nNone of these uses a force flag. If `git worktree remove` or `git branch -d` refuses, work is still there that isn't on `main`. I'd read what it is before going further. After the pull in step 4, `git branch -d` should succeed, because the merge commit already contains the branch.\n\n**6. Check the result**\n\n```bash\ngit worktree list\ngit log --oneline -1\ngh pr view 412 --repo glw907/example-site --json state,mergeCommit\n```\n\nThe worktree should be gone from the list, and the PR should show `MERGED`. If the merge changes what's true about the \"Mobile nav\" work, I'd also update `docs/STATUS.md` and commit it straight to `main`.",
+  "costUsd": 0.21831840000000002
+}

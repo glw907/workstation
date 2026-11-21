@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T22:53:21Z",
+  "seconds": 12.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core"
+  ],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "The merge goes through `approval-queue land`, because `claude-merge-guard` denies every GitHub CLI merge stage. `pass-core` \"Until cc-desk runs\" and \"Close\" set the order. I haven't run anything.\n\nTwo things I couldn't confirm from the skill text: the exact arguments of `approval-queue land` and the path of the main checkout. I've assumed `~/Projects/example-site` and written `<repo>` for the PR argument. I'd check `approval-queue land --help` before the real run.\n\n**Checks before the merge (read-only)**\n1. `claude-worktree-busy .claude/worktrees/mobile-nav` to confirm no executor holds the worktree.\n2. Read the PR 412 body for a `## Before merge` section. Confirm the checks are green and the whole-branch review is accepted with no open finding.\n3. `claude agents --json` to see whether any live session sits in the main checkout or the worktree.\n\n**Merge**\n4. If `## Before merge` exists: run its commands in order, then its one check. Then remove that section from the PR 412 body.\n5. Withdraw any queue document that holds PR 412.\n6. `approval-queue land 412` (arguments unconfirmed, repo `glw907/example-site`).\n\n**Cleanup**\n7. `git -C ~/Projects/example-site pull --ff-only`. This runs only if the checkout is on its default branch, has no uncommitted change in a file the merge touched, and has no live session. Otherwise I report the checkout as stale and offer to pull once the blocker clears. I never force it.\n8. `git worktree remove .claude/worktrees/mobile-nav` with no force flag.\n9. `git branch -d worktree-mobile-nav` with no force flag.\n\nA dirty tree, an unmerged branch, or a live session in the worktree stops steps 8 and 9. I'd leave the worktree in place and report that in one line.\n\nSay go and I'll start at step 1.",
+  "costUsd": 0.1073309
+}

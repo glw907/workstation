@@ -1,0 +1,17 @@
+{
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:37:08Z",
+  "seconds": 15.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "I read `spec.md` and the `building-from-specs` skill. Nothing has been run.\n\nThe spec has one task, \"Mobile nav\". It targets `glw907/example-site`, is planned at 45 minutes, waits for nothing, and so starts from the default branch. The time clause is therefore 90 minutes.\n\n**Command**\n\nI'm assuming the main checkout is `~/Projects/example-site`. I haven't confirmed that path.\n\n```bash\ncd ~/Projects/example-site && claude --bg --name mobile-nav --model sonnet --effort medium --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  \"/goal Build the task 'Mobile nav' from /var/home/glw907/.claude/jobs/0a745dfc/tmp/runs3/1-sonnet-on/spec.md. Add a collapsible menu to the site header below 640 pixels: a menu button in src/lib/Header.svelte that opens and closes the link list, and a test in tests/header.test.ts that the button toggles the list. Before marking the pull request ready, have a fresh subagent review the branch against this goal with standards:diff-reviewer and standards:daisyui-a11y-reviewer. Done when: (1) npm run gate exits 0 and runs the new toggle test; (2) at 375 pixels wide, the header shows the menu button and hides the link list until it is pressed. Or stop after 90 minutes.\"\n```\n\nI chose Sonnet at medium because this is a small component plus one test. The skill sets no model for build sessions, so that is my call. I'd switch to Opus if you want more judgment on the a11y side.\n\n**Checks before running**\n\n1. `claude-worktree-busy ~/Projects/example-site` exits 0, so no other session holds the main checkout.\n2. The spec names no secret, so there is nothing to look up in the store.\n3. `gh repo view glw907/example-site --json visibility` shows whether CI can run today. The goal needs the gate, and the pull request needs green CI before it is ready.\n4. `claude agents --json` shows fewer than four working sessions. This is pavilion, so that limit applies.\n5. The checkout is on its default branch, and the repo has a skill or adapter to read first. `site-pass` names only four sites, and `example-site` isn't one of them.\n\nOne gap in the spec: the second done item is rendered UI, and the skill adds `standards:visual-verifier` for that. The spec lists only the diff and a11y reviewers. I'd launch with the spec's list and flag the gap to you, since a spec grant covers a mechanism and not extra work.",
+  "costUsd": 0.1144174
+}

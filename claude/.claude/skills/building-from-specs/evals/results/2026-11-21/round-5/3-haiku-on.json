@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T23:02:54Z",
+  "seconds": 12.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "I haven't run anything. Here are the commands, in order. The main checkout path is `<main-checkout>`; I'll resolve it before running.\n\nPreconditions, checked before step 1:\n- The Mobile nav task session has ended (`claude agents --json`).\n- PR 412's body has no `## Before merge` section, or any commands in it are run first.\n\n1. **Read PR 412's body for a `## Before merge` section.** If it has one, run its commands and their check. This is a read, so I'd run it first.\n   ```bash\n   gh pr view 412 --repo glw907/example-site --json body --jq .body\n   ```\n\n2. **Merge the pull request.** An `ask` rule stops this at a permission prompt, and you answer it once.\n   ```bash\n   gh pr merge 412 --repo glw907/example-site --merge\n   ```\n\n3. **Confirm the main checkout is safe to pull.**\n   ```bash\n   claude-worktree-busy <main-checkout>\n   git -C <main-checkout> status --short\n   git -C <main-checkout> branch --show-current\n   ```\n   The pull goes ahead only if the first command exits 0, the branch is the default branch, and no merged file has uncommitted changes.\n\n4. **Pull the main checkout.**\n   ```bash\n   git -C <main-checkout> pull --ff-only\n   ```\n\n5. **Remove the worktree.** No force flag. A refusal means work is still in it, so I'd read the message before doing anything else.\n   ```bash\n   git -C <main-checkout> worktree remove .claude/worktrees/mobile-nav\n   ```\n\n6. **Delete the local branch.** Lowercase `-d` refuses unless the branch is merged.\n   ```bash\n   git -C <main-checkout> branch -d worktree-mobile-nav\n   ```\n\n7. **Delete the remote branch.**\n   ```bash\n   git -C <main-checkout> push origin --delete worktree-mobile-nav\n   ```\n\nOnce you say go, I'll resolve `<main-checkout>` and run these in this order, stopping at any refusal.",
+  "costUsd": 0.00621349
+}

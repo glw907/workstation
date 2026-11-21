@@ -1,0 +1,15 @@
+{
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Write a bash one-liner that prints the ten largest files under the current directory, with their sizes.",
+  "started": "2026-11-21T23:04:44Z",
+  "seconds": 3.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "```bash\nfind . -type f -printf '%s\\t%p\\n' | sort -nr | head -10 | numfmt --to=iec --field=1\n```\n\n`find` prints each file's size in bytes and path, `sort -nr` puts the biggest first, `head -10` keeps ten, and `numfmt` turns the byte counts into readable units like `1.2M`. It uses GNU `find` and `numfmt`, which Fedora ships by default.\n\nPaths with spaces survive, but a filename containing a newline would break the output.",
+  "costUsd": 0.0764471
+}

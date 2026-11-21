@@ -1,0 +1,14 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "The spec in spec.md is approved. Launch its task \"Mobile nav\" as a background task session. Don't run anything: write out the exact launch command you would use, and what you would check before running it.",
+  "started": "2026-11-21T22:18:34Z",
+  "seconds": 18.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "loaded": false,
+  "result": "I haven't run anything. I read `spec.md` only, to get the task text and file list.\n\n**Blocker: the spec names a repo that doesn't exist.** `spec.md` says it is a fixture for `building-from-specs` evaluations, and its repo is `glw907/example-site`. If that's right, there is nothing to launch against. I'd confirm with you before going further. If you want a real launch, name the repo that should get the Mobile nav change.\n\n**Launch command I would use**, assuming the repo exists at `~/Projects/example-site`. I haven't confirmed a house launcher for background sessions, so this is plain `claude -p` in print mode, backgrounded with `nohup`:\n\n```bash\nREPO=~/Projects/example-site\nJOBS=/var/home/glw907/.claude/jobs/0a745dfc/tmp/runs/1-haiku-off\nclaude-worktree-busy \"$REPO\" && \\\ncd \"$REPO\" && \\\nnohup claude -p \"$(cat \"$JOBS/brief-mobile-nav.md\")\" \\\n  --model claude-sonnet-5-5 \\\n  > \"$JOBS/mobile-nav.log\" 2>&1 &\n```\n\nThe brief file doesn't exist yet. I'd write it first as a self-contained prompt: the goal, the two files and their changes, the two done items, the two reviewers, and the instruction to report through the repo's STATUS. It would not refer to this conversation. The log goes in the jobs directory, not the repo, so it can't be committed. Sonnet fits the build, since the edits are mechanical. The reviews are judgment, so a reviewer pass may warrant Opus.\n\n**What I'd check before running:**\n\n1. The repo exists and is cloned at the path above. The spec says it doesn't.\n2. `claude-worktree-busy \"$REPO\"` reports the path free. No other session may be in that worktree.\n3. `src/lib/Header.svelte` and `tests/header.test.ts` exist, so the spec's file list matches the repo.\n4. `npm run gate` exists in `package.json`, and I'd run it bare, not piped to `head` or `tail`.\n5. `standards:diff-reviewer` exists. I can see it referenced in the skill text, but not in the skill list. `standards:daisyui-a11y-reviewer` is not in the list at all, so the second reviewer may not be available.\n6. The task runs 45 minutes. Past about 30 minutes unattended, the guards in `~/.claude/docs/unattended-work-guards.md` must be armed first.\n7. The brief names a model and an effort, since house rules require both. I haven't confirmed a flag for effort, so I'd put it in the brief text.\n\nTell me the real repo, or confirm this is only a fixture and I'll stop here.",
+  "costUsd": 0.00631029
+}

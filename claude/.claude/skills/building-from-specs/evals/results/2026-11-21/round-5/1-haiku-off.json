@@ -1,0 +1,15 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:58:51Z",
+  "seconds": 15.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "The spec is approved, with one task: **Mobile nav** in `glw907/example-site`, budgeted at 45 minutes and waiting on nothing. The build session adds a menu button to `src/lib/Header.svelte` that opens and closes the link list below 640 px, and a toggle test in `tests/header.test.ts`. It's done when `npm run gate` exits 0 with the new test running, and at 375 px the button shows while the list stays hidden until pressed.\n\nI can't give you a verified launch command. The spec doesn't name a launcher, and the background-session conventions live in `pass-core` and `cc-desk-work`, which I haven't read in this session. The shape would be:\n\n```\nclaude-worktree-busy <worktree-path>\ncd <worktree-path> && claude -p \"<brief>\" --model claude-opus-5-5\n```\n\nThe `<brief>` has to stand alone, because the session starts with no context. It should name the spec path, the task, the two files, the done items, and the two reviewers. It should also say to stop and ask rather than edit outside those two files. The effort setting is missing from the command because I haven't confirmed the flag.\n\nBefore running it:\n\n1. Confirm `<worktree-path>` is a clean checkout of the repo on the branch the pass should use. The directory I'm in isn't a git repo, so I haven't checked any of this.\n2. Run `claude-worktree-busy <worktree-path>` and read the result. If the worktree is busy, stop and ask instead of racing it.\n3. Confirm `src/lib/Header.svelte` and `tests/header.test.ts` exist, and that `package.json` defines a `gate` script.\n4. Check the reviewers. `standards:diff-reviewer` appears in the skill list, but `standards:daisyui-a11y-reviewer` doesn't, so the session may not be able to run it.\n5. Name the model and effort in the dispatch. I'd use Opus, since the menu's accessibility behaviour is a judgment call and not a mechanical edit.\n6. The 45-minute budget runs past 30 minutes unattended, so arm the guards in `~/.claude/docs/unattended-work-guards.md` first. I haven't read that file.",
+  "costUsd": 0.005932880000000001
+}

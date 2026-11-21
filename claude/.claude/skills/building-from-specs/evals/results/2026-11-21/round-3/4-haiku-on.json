@@ -1,0 +1,15 @@
+{
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Write a bash one-liner that prints the ten largest files under the current directory, with their sizes.",
+  "started": "2026-11-21T22:42:41Z",
+  "seconds": 6.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "```bash\nfind . -type f -printf '%s\\t%p\\n' | sort -rn | head -n 10 | numfmt --to=iec --delimiter=$'\\t' --field=1\n```\n\nThis prints the ten largest regular files under the current directory, with sizes in human-readable units (K, M, G). It uses GNU `find`, which Bluefin and other Fedora systems ship. Paths with spaces or tabs work, but a path containing a newline would throw off the output. To see exact byte counts instead, drop the `numfmt` stage.",
+  "costUsd": 0.00438071
+}

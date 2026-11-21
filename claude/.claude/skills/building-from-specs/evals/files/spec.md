@@ -2,9 +2,6 @@
 
 Status: approved by Geoff on 2026-11-21 ("Approved.").
 
-This spec is a fixture for the `building-from-specs` evaluations. It names a repo that doesn't
-exist.
-
 ## Tasks
 
 | Task | Repo | Minutes | Waits for |

@@ -1,0 +1,17 @@
+{
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:37:43Z",
+  "seconds": 22.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "I've read the spec and loaded `building-from-specs`. Nothing has been run.\n\n## Launch command\n\nThe command runs from the repo's main checkout so that Claude Code creates the worktree itself. I'm assuming that checkout is at `~/Projects/example-site`. I'd confirm that path before running anything.\n\n```bash\ncd ~/Projects/example-site && \\\nclaude --bg --name mobile-nav --model opus --effort high --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  \"/goal Build the task 'Mobile nav' from the approved spec at /var/home/glw907/.claude/jobs/0a745dfc/tmp/runs3/1-opus-on/spec.md, in glw907/example-site, following the site-pass skill. Done when: (1) npm run gate exits 0 and runs the new toggle test; (2) at 375 pixels wide, the header shows the menu button and hides the link list until it is pressed. Before marking the pull request ready, have fresh subagents review the branch: standards:diff-reviewer, standards:daisyui-a11y-reviewer, and standards:visual-verifier. Or stop after 90 minutes.\"\n```\n\nNotes on the command:\n\n- **Time clause:** the spec plans 45 minutes, so the clause is twice that, 90 minutes.\n- **Model:** Opus at high, because building UI involves judgment calls. Sonnet is for reads and mechanical edits.\n- **Absolute spec path:** `spec.md` is in this job folder, not in the repo, so the session needs the full path to find it.\n- **No backticks:** I left them out of the goal text even though the spec puts them around `npm run gate`. Inside double quotes, bash would run that text as a command before the session started.\n- **Extra reviewer:** I added `standards:visual-verifier` to the two reviewers the spec names. The skill requires it for any task that renders UI, and the second done item is a check on the rendered page. If you'd rather keep strictly to the spec's list, I'd drop it from the goal.\n\n## What I'd check before running it\n\n1. **The checkout isn't busy.** `claude-worktree-busy ~/Projects/example-site` should exit 0. I'd also read the repo's `docs/STATUS.md` for anything in flight.\n2. **Secrets.** The spec names none, and a header menu plus a unit test shouldn't need any. I'd skim `npm run gate` and the CI workflow for a step that reads a token. If one does, I'd check that secret by name in the store.\n3. **CI can run today.** `gh repo view glw907/example-site --json visibility`. A private repo also needs Actions minutes available.\n4. **Session load on pavilion.** `claude agents --json` should show fewer than four sessions working.\n5. **Starting point.** The task waits for nothing, so it can start from the default branch. `baseRef: fresh` handles that. I'd also confirm the main checkout is a clean clone of `glw907/example-site`, so the worktree is created from the right remote.\n\nIf all five pass, I'd ask for your go-ahead and then launch it.",
+  "costUsd": 0.22752440000000002
+}

@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T22:58:07Z",
+  "seconds": 12.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "I haven't run anything yet. Here are the commands in order. Two details are still open, noted after the list.\n\n1. Run the PR's `## Before merge` commands and their check, if the body has that section. I haven't read PR 412's body, so I don't know whether it does.\n2. Confirm the main checkout is safe to pull into. Run each of these against the main checkout, with `<main>` standing for its path, which I haven't located yet:\n   - `git -C <main> branch --show-current` (expect the default branch)\n   - `git -C <main> status --porcelain` (expect no changes in files the PR touches)\n   - `claude-worktree-busy <main>` (expect exit 0)\n3. `gh pr merge 412 --repo glw907/example-site --merge`. An `ask` rule may stop this at a permission prompt, and you answer it once.\n4. `git -C <main> pull --ff-only`\n5. `git -C <main> worktree remove .claude/worktrees/mobile-nav` (no force flag)\n6. `git -C <main> branch -d worktree-mobile-nav` (lowercase `-d`, not `-D`)\n7. `git -C <main> push origin --delete worktree-mobile-nav`\n\nOpen items:\n- I need the main checkout's path. The directory I'm in is not a git repo.\n- I haven't read PR 412's body, so I can't say whether step 1 has commands to run.\n\nYour \"Approved, merge 412\" names the PR by number, which is what the merge rule requires. Say the word and I'll run these in order, stopping at any refusal.",
+  "costUsd": 0.00624181
+}

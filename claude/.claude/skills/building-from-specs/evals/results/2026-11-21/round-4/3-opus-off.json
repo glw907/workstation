@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T22:53:52Z",
+  "seconds": 32.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core"
+  ],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "Here are the commands, in order. I've run none of them. I'm assuming the main checkout is `~/Projects/example-site`, which makes the worktree `~/Projects/example-site/.claude/worktrees/mobile-nav`. I'll confirm that path before step 1.\n\n**Checks before landing (read-only)**\n\n1. `gh pr view 412 --repo glw907/example-site --json state,headRefName,statusCheckRollup,reviewDecision,body`\n   This confirms the PR is open on `worktree-mobile-nav`, its checks are green, and the whole-branch review has no open finding. It also shows whether the body has a `## Before merge` section.\n2. `approval-queue list`\n   This finds any queue document that still holds #412.\n\n**Landing**\n\n3. Only if step 1 shows a `## Before merge` section: run its commands in the order given, then its check. Then remove the section with `gh pr edit 412 --repo glw907/example-site --body-file <trimmed-body.md>`. I can't name these commands until I've read the body.\n4. Only if step 2 found a document: `approval-queue withdraw <id>`.\n5. `approval-queue land glw907/example-site#412 \"<one sentence on what the mobile nav does>\"`\n   I'll write the sentence from spec.md. `claude-merge-guard` blocks every `gh pr merge`, so this is the only merge path.\n\n**Updating the main checkout**\n\n6. `claude agents --json` confirms no live session is in the checkout or the worktree.\n7. `git -C ~/Projects/example-site branch --show-current` confirms it's on the default branch.\n8. `git -C ~/Projects/example-site status --porcelain` confirms nothing uncommitted overlaps the files the merge touched.\n9. `git -C ~/Projects/example-site pull --ff-only`\n\nIf step 6, 7 or 8 turns up a blocker, I skip the pull and report the checkout as stale. I won't force anything.\n\n**Cleanup**\n\n10. `claude-worktree-busy ~/Projects/example-site/.claude/worktrees/mobile-nav`\n11. `git -C ~/Projects/example-site/.claude/worktrees/mobile-nav status --porcelain`\n12. `git -C ~/Projects/example-site worktree remove .claude/worktrees/mobile-nav`\n13. `git -C ~/Projects/example-site branch -d worktree-mobile-nav`\n\nSteps 12 and 13 run without force flags. If the worktree is dirty or busy, or the branch counts as unmerged, I leave it in place and report it in one line. A squash merge will make `branch -d` refuse, because the branch's commits never land on the default branch as they are. If that happens, I'll leave the branch and tell you rather than use `-D`.\n\n**STATUS hand-over**\n\n14. Edit `~/Projects/example-site/docs/STATUS.md` to take #412 out of \"Open decisions\" and update the next action.\n15. Run the repo's gate.\n16. `git -C ~/Projects/example-site add docs/STATUS.md`\n17. `git -C ~/Projects/example-site commit -m \"Record mobile nav landing in STATUS\"`\n18. `git -C ~/Projects/example-site push`\n\nSay go and I'll run them.",
+  "costUsd": 0.28758680000000003
+}

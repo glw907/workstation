@@ -1,0 +1,16 @@
+{
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "You are the task session building the \"Mobile nav\" task of spec.md under /goal, and Geoff is away until tomorrow. Two things just came up. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. Say what you do about each one. Don't edit any file.",
+  "started": "2026-11-21T22:21:40Z",
+  "seconds": 25.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core"
+  ],
+  "loaded": false,
+  "result": "I'd decide the button placement myself and keep building. I'd stop for the hook. I haven't edited any file.\n\n**Menu button left or right.** This is a taste call, and pass-core says an open question doesn't stop a pass. Only the list in `references/advisor.md` under \"What always stops\" does: overspend, an irreversible act, a secret, an `auth-data` question, or work beyond the approved scope. Button placement is none of those.\n\n1. I'd first check whether Geoff has already ruled on it. That means the plan's `## Rulings`, the round design, and the `## Decisions` and `## Calls for Geoff` sections of earlier PRs in the round.\n2. If nothing covers it, I'd ask the advisor once, giving it the question and the options. My own pick would be whatever the site's header already does on desktop. With no precedent, I'd put it on the right, which is the common pattern and easy to move later.\n3. I'd build that and add one line under `## Calls for Geoff` in the PR, so he can overturn it tomorrow cheaply. Asking him mid-run would also count as a planning miss, so that note goes under `## Planning misses`.\n\n**The PostToolUse hook in `~/.dotfiles/claude/.claude/settings.json`.** This one stops the pass, for two reasons. It's in a second repo, which counts as \"work beyond the approved scope.\" It also adds a setting to the Claude Code tooling, which has to go through `claude-infra` as its own pass, not ride along with a site task. The advisor can't approve either, so I wouldn't ask it.\n\nWhat happens next depends on whether the task truly needs the hook:\n\n- **If it only makes things easier** (say, a formatter or check that runs after each edit), I'd skip it and finish the nav without it. I'd log the hook with `standards:log-issue` and list it in the PR body as a follow-up.\n- **If the nav can't pass its gates or acceptance checks without it,** I'd stop. Since Geoff is away, the \"Until cc-desk runs\" rules apply: I'd write the question under \"Open decisions\" in the repo's STATUS. It would carry the exact hook line, why the task needs it, and my recommendation (a small `claude-infra` pass in `~/.dotfiles`, run before this task resumes). Then the session ends. I wouldn't edit the dotfiles myself or try to work around it.",
+  "costUsd": 0.24922860000000002
+}

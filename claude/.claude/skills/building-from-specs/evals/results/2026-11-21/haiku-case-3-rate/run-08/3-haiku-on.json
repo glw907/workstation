@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T22:57:53Z",
+  "seconds": 13.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "I haven't run anything yet. This is the sequence for merging PR 412 and cleaning up the worktree, per the building-from-specs merge procedure:\n\n1. **Read the PR's state and any pre-merge steps.**\n   `gh pr view 412 --repo glw907/example-site --json state,isDraft,headRefName,statusCheckRollup,body`\n   Confirm the head branch is `worktree-mobile-nav`, checks are green, and the body. If the body has a `## Before merge` section, run its commands and their check before step 2.\n\n2. **Confirm the worktree is idle.**\n   `claude-worktree-busy .claude/worktrees/mobile-nav` (run from the main checkout) must exit 0.\n\n3. **Merge the PR.**\n   `gh pr merge 412 --repo glw907/example-site --merge`\n   A permission prompt will appear. Geoff answers it once for this PR.\n\n4. **Update the main checkout.** Only if it is on the default branch, has no uncommitted change in a merged file, and `claude-worktree-busy <main-checkout>` exits 0:\n   `git -C <main-checkout> pull --ff-only`\n\n5. **Remove the worktree.**\n   `git -C <main-checkout> worktree remove .claude/worktrees/mobile-nav`\n   No `--force`. A refusal means uncommitted work is still there, so I'll read it before going further.\n\n6. **Delete the local branch.**\n   `git -C <main-checkout> branch -d worktree-mobile-nav`\n   Lowercase `-d` only. It refuses if the branch isn't merged.\n\n7. **Delete the remote branch.**\n   `git -C <main-checkout> push origin --delete worktree-mobile-nav`\n   No force flag.\n\nTwo things I can't settle from here. This session's working directory is not a git repository, and I don't know where the `example-site` checkout lives, so `<main-checkout>` is a placeholder. I'll find it and verify it with `git rev-parse --show-toplevel` before step 4. I also haven't confirmed that the PR's remote branch is named `worktree-mobile-nav`; step 1 checks that.\n\nWaiting for your go-ahead before I run step 1.",
+  "costUsd": 0.00640311
+}

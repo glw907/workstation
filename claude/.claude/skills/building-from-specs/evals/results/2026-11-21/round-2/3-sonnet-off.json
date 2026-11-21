@@ -1,0 +1,16 @@
+{
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Geoff just typed: \"Approved, merge 412.\" Write out the exact commands you would run to merge it and clean up, in order. Don't run them.",
+  "started": "2026-11-21T22:31:23Z",
+  "seconds": 13.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core"
+  ],
+  "loaded": false,
+  "result": "These are the commands in order, run from the main checkout (I'm assuming it is `~/Projects/example-site`). Nothing here has been run.\n\n1. Confirm no session is live in the worktree, and read its status docs.\n   ```bash\n   claude-worktree-busy ~/Projects/example-site/.claude/worktrees/mobile-nav\n   ```\n\n2. Check that CI is green and see whether the PR body has a `## Before merge` section.\n   ```bash\n   gh pr checks 412 --repo glw907/example-site\n   gh pr view 412 --repo glw907/example-site --json body --jq .body\n   ```\n   The whole-branch review must also be accepted with no open finding. The review record is in the PR body or comments.\n\n3. Only if step 2 shows a `## Before merge` section, run its commands in the order given and run its one check. Then take the section out of the body.\n   ```bash\n   gh pr view 412 --repo glw907/example-site --json body --jq .body > /tmp/pr412-body.md\n   # delete the \"## Before merge\" section from /tmp/pr412-body.md\n   gh pr edit 412 --repo glw907/example-site --body-file /tmp/pr412-body.md\n   ```\n\n4. Merge. `claude-merge-guard` denies every `gh pr merge` stage, so `approval-queue land` is the only path. This also withdraws any queue document holding the PR.\n   ```bash\n   approval-queue land 412\n   ```\n   I haven't confirmed the argument form. I'd run `approval-queue land --help` first.\n\n5. Check whether the main checkout is safe to pull. It must be on its default branch, with no uncommitted change in a file the merge touches and no live session.\n   ```bash\n   claude agents --json\n   git -C ~/Projects/example-site branch --show-current\n   git -C ~/Projects/example-site status --porcelain\n   ```\n\n6. If those checks pass, bring the main checkout up to date. If not, report it as stale and offer to pull once the blocker clears. I never force it.\n   ```bash\n   git -C ~/Projects/example-site pull --ff-only\n   ```\n\n7. Remove the worktree, then the branch, with no force flag. A dirty tree, an unmerged branch, or a live session leaves them in place, and I report that in one line.\n   ```bash\n   git -C ~/Projects/example-site worktree remove .claude/worktrees/mobile-nav\n   git -C ~/Projects/example-site branch -d worktree-mobile-nav\n   ```\n\nThe branch removal depends on step 6, because `branch -d` refuses a branch the checkout hasn't yet seen as merged. A stale checkout therefore leaves the branch in place too.",
+  "costUsd": 0.10960460000000001
+}

@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T22:57:11Z",
+  "seconds": 15.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "Nothing has run yet. Two values are unknown until I read them: the path to the main checkout of example-site, and the default branch name. Read-only checks come first, and the merge follows them.\n\n**Checks (read-only)**\n\n1. `gh pr view 412 --repo glw907/example-site --json state,headRefName,baseRefName,body`. Confirms the PR is open and its head branch is `worktree-mobile-nav`, and reads the body for a `## Before merge` section.\n2. `claude-worktree-busy .claude/worktrees/mobile-nav`. Must exit 0.\n3. `git -C <main-checkout> branch --show-current`, then `git -C <main-checkout> status --porcelain`. The checkout must be on the default branch, with no uncommitted change in a file this PR touches.\n\n**Merge and cleanup, in order**\n\n1. Run any commands from the PR's `## Before merge` section, then their check. None are known until step 1 of the checks is read.\n2. `gh pr merge 412 --repo glw907/example-site --merge`. Expect a permission prompt; you answer it once.\n3. `git -C <main-checkout> pull --ff-only`\n4. `claude-worktree-busy <main-checkout>/.claude/worktrees/mobile-nav`. Must exit 0 before the worktree is removed. This comes from the global rule on entering a worktree, not from the merge procedure.\n5. `git -C <main-checkout> worktree remove <main-checkout>/.claude/worktrees/mobile-nav`. No `--force`. A refusal means uncommitted work is still there, and I'll read it before doing anything else.\n6. `git -C <main-checkout> branch -d worktree-mobile-nav`. Lowercase `-d` only, so git refuses if the branch isn't merged.\n7. `git -C <main-checkout> push origin --delete worktree-mobile-nav`\n\nI'm stopping here. Say go ahead and I'll run the checks, then the steps in order, and stop on any refusal.",
+  "costUsd": 0.0065980100000000005
+}

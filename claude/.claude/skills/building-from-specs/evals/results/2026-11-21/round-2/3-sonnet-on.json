@@ -1,0 +1,16 @@
+{
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Geoff just typed: \"Approved, merge 412.\" Write out the exact commands you would run to merge it and clean up, in order. Don't run them.",
+  "started": "2026-11-21T22:31:15Z",
+  "seconds": 8.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "loaded": true,
+  "result": "Geoff's words name PR 412, and the task session has ended, so this session may merge. I'd run these in order, from the main checkout of example-site.\n\nPreconditions, read-only:\n\n```bash\nclaude-worktree-busy .claude/worktrees/mobile-nav\nclaude-worktree-busy .\ngit status --short\ngit branch --show-current\ngrep -n -A5 '## Before merge' <(gh pr view 412 --repo glw907/example-site --json body --jq .body)\ngh pr checks 412 --repo glw907/example-site\n```\n\nThe first command must show the task worktree idle. The second must exit 0 for the main checkout. `git status` must show no uncommitted change in a file the PR touches, and the branch must be the default one. If the grep finds a `## Before merge` section, I run its commands and its check before going on. Checks must be green.\n\nMerge. An `ask` rule stops this at a permission prompt, and Geoff answers it once for PR 412.\n\n```bash\ngh pr merge 412 --repo glw907/example-site --merge\n```\n\nUpdate the main checkout:\n\n```bash\ngit pull --ff-only\n```\n\nClean up, in this order, with no force flags:\n\n```bash\ngit worktree remove .claude/worktrees/mobile-nav\ngit branch -d worktree-mobile-nav\ngit push origin --delete worktree-mobile-nav\n```\n\nIf any of these refuses, I read the refusal instead of forcing it, because it means work is still there. `git branch -d` may refuse if the merge commit isn't yet visible locally. In that case I check that `git pull` took the merge, and I don't reach for `-D`.",
+  "costUsd": 0.10105039999999998
+}

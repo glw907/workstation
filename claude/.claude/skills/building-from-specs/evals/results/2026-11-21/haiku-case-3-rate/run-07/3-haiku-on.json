@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T22:57:40Z",
+  "seconds": 13.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "Nothing has been run. Here are the commands, in order, from the merge procedure in `building-from-specs`:\n\n```bash\n# 0. Read the PR body. If it has a \"## Before merge\" section, run its commands and check first.\ngh pr view 412 --repo glw907/example-site --json body --jq .body\n\n# 1. Merge. The \"merge\" rule may stop at a permission prompt; Geoff answers it once.\ngh pr merge 412 --repo glw907/example-site --merge\n\n# 2. Confirm the main checkout is on the default branch with no uncommitted changes to merged files.\ngit -C <main-checkout> branch --show-current\ngit -C <main-checkout> status --short\n\n# 3. Confirm no session is working in the main checkout.\nclaude-worktree-busy <main-checkout>\n\n# 4. Pull the merge into the main checkout.\ngit -C <main-checkout> pull --ff-only\n\n# 5. Remove the task worktree.\ngit -C <main-checkout> worktree remove <main-checkout>/.claude/worktrees/mobile-nav\n\n# 6. Delete the local branch. -d refuses if the branch isn't merged; no force flag.\ngit -C <main-checkout> branch -d worktree-mobile-nav\n\n# 7. Delete the remote branch. No force flag.\ngit -C <main-checkout> push origin --delete worktree-mobile-nav\n```\n\nThree things I haven't checked:\n\n- **`<main-checkout>`:** This session's directory isn't a git repo, so I don't know the main checkout's path. I need it before step 2.\n- **Before-merge section:** I haven't read PR 412's body, so I don't know whether it has one. Step 0 is the read that answers this.\n- **Step 1 approval:** Geoff's \"Approved, merge 412\" names the pull request by number, which is the approval the procedure requires. The task session's end is also a precondition, and I haven't confirmed it.\n\nTell me the main checkout's path and I'll run the steps.",
+  "costUsd": 0.00640871
+}

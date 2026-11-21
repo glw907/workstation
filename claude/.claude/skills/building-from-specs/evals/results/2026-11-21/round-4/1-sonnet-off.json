@@ -1,0 +1,15 @@
+{
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:49:28Z",
+  "seconds": 13.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "The spec is approved and has one task, \"Mobile nav\" (45 minutes, repo `glw907/example-site`, waits for nothing). It doesn't say how to launch a session, and I haven't read `pass-core`, so the command below is my best reading of the house conventions. I'd confirm the exact launcher flags against `pass-core` before running it.\n\n**Command**\n\n```bash\ncd ~/Projects/example-site-mobile-nav   # a fresh worktree, not the primary checkout\nclaude --model sonnet --effort medium --background \\\n  -p \"$(cat /var/home/glw907/.claude/jobs/0a745dfc/tmp/runs4/1-sonnet-off/brief-mobile-nav.md)\"\n```\n\nThe brief file would be written first, for a reader with no context. It would hold these points:\n\n- **Task:** Add a collapsible menu to the site header below 640 pixels.\n- **Files:** `src/lib/Header.svelte` gets a menu button that opens and closes the link list. `tests/header.test.ts` gets a test that the button toggles the list.\n- **Reviewers:** `standards:diff-reviewer` and `standards:daisyui-a11y-reviewer`.\n- **Done items:** `npm run gate` exits 0 and runs the new toggle test. At 375 pixels wide, the header shows the menu button and hides the link list until it is pressed.\n- **Path to the spec:** the full path, so the session can read the source.\n\nI chose Sonnet at medium effort because this is a small, well-specified edit with a test. The a11y review carries the judgment.\n\n**Checks before running**\n\n1. Run `claude-worktree-busy` on the target path and read the repo's STATUS. This confirms no other executor holds the worktree.\n2. Confirm a local checkout of `glw907/example-site` exists under `~/Projects/`, and create a dedicated worktree from a clean, current main.\n3. Confirm the two reviewers resolve. Neither appears in my skill list, so they may be agents or may not exist under those names.\n4. Confirm the repo has a `gate` script in `package.json`, and that `src/lib/Header.svelte` and `tests/header.test.ts` (or its directory) exist.\n5. Re-read the spec's status line to confirm the approval is still current, then check `pass-core` for the launch convention and for how the session reports back.\n6. At 45 minutes, this is past the unattended-work threshold if it runs long. I'd read `~/.claude/docs/unattended-work-guards.md` and arm those guards if needed.",
+  "costUsd": 0.0943236
+}

@@ -1,0 +1,17 @@
+{
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:59:39Z",
+  "seconds": 26.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "I'd launch it from the repo's main checkout. That way Claude Code makes the task's worktree itself, and `worktree.baseRef: fresh` starts it from the remote's default branch.\n\n```bash\ncd ~/Projects/example-site\nclaude --bg --name mobile-nav --model opus --effort medium --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  '/goal Build the task \"Mobile nav\" from the approved spec at /var/home/glw907/.claude/jobs/0a745dfc/tmp/runs5/1-opus-on/spec.md, in glw907/example-site. Done when: (1) npm run gate exits 0 and runs the new toggle test; (2) at 375 pixels wide, the header shows the menu button and hides the link list until it is pressed. Or stop after 90 minutes.'\n```\n\nHere's why each part is set the way it is:\n\n- **Quoting:** The goal is in single quotes because the spec's done items contain backticks. Inside double quotes, bash would run those backticks as commands, so I dropped them from the goal text and kept the wording otherwise word for word.\n- **Time clause:** 90 minutes is twice the spec's 45.\n- **Model:** This is a small build, but it involves accessibility calls on the toggle (focus, `aria-expanded`), so it gets Opus at medium. Sonnet would fit if you'd rather treat it as mechanical.\n- **Spec path:** The spec lives outside the repo, so the goal gives its absolute path. The session can read it from inside its worktree.\n\n## Checks before launch\n\n1. `claude-worktree-busy ~/Projects/example-site` exits 0. I'd also confirm the checkout exists at that path and is on the default branch.\n2. Secrets: the spec names none and the task touches no account. There's nothing to look up in the store.\n3. CI: `gh repo view glw907/example-site --json visibility` shows whether CI can run today. If the repo is private, I'd check recent Actions runs for a billing or minutes annotation.\n4. Session count: the SessionStart hook says this host is pavilion, so `claude agents --json` needs to show fewer than four sessions working.\n5. The gate: `package.json` in the checkout defines `npm run gate`. If it doesn't, done item 1 can't be met.\n6. Reviewers: the spec names `standards:diff-reviewer` and `standards:daisyui-a11y-reviewer`. I'd confirm the second one is installed as an agent, since it isn't one the skill lists. The skill also wants `standards:visual-verifier` on any rendered UI, and the spec leaves it out. I'd let the session add it and record that under `## Decisions`. The goal stays as you approved it.\n\n`example-site` isn't one of the repos `site-pass` names. If it has no repo skill, the session takes its gate from the spec's `npm run gate`.\n\nNothing has been run.",
+  "costUsd": 0.23652440000000002
+}

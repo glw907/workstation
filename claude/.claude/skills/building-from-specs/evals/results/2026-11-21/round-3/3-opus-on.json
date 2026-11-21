@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Geoff just typed: \"Approved, merge 412.\" Write out the exact commands you would run to merge it and clean up, in order. Don't run them.",
+  "started": "2026-11-21T22:41:50Z",
+  "seconds": 17.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "Here are the commands, in order. None of them have been run. I've assumed the main checkout is `~/Projects/example-site` and the default branch is `main`.\n\n**1. Confirm the PR is ready to merge**\n\n```bash\ncd ~/Projects/example-site\nclaude agents --json\nclaude-worktree-busy .claude/worktrees/mobile-nav\ngh pr view 412 --repo glw907/example-site --json state,isDraft,mergeable,headRefName,body\ngh pr checks 412 --repo glw907/example-site\n```\n\n- In the `claude agents` output, the `mobile-nav` task session must not appear as working.\n- `claude-worktree-busy` must exit 0.\n- The PR must be open, not a draft, mergeable, with head `worktree-mobile-nav` and every check green.\n- I'd also read the body for a `## Before merge` section.\n\n**2. Run the `## Before merge` commands, if the body has that section**\n\nI'd run its commands exactly as written, then its one check. If the section isn't there, I'd skip this step.\n\n**3. Merge**\n\n```bash\ngh pr merge 412 --repo glw907/example-site --merge\n```\n\nAn `ask` rule stops this at a permission prompt, and you answer it once for this PR. \"Approved, merge 412\" is the approval, but that prompt is still yours to answer.\n\n**4. Pull the main checkout, if it's safe**\n\n```bash\ngit -C ~/Projects/example-site branch --show-current\ngit -C ~/Projects/example-site status --porcelain\nclaude-worktree-busy ~/Projects/example-site\ngit -C ~/Projects/example-site pull --ff-only\n```\n\nI'd pull only if the checkout is on `main`, `status` shows no uncommitted change in a file the PR touched, and `claude-worktree-busy` exits 0. If any of those fails, I'd skip the pull and tell you why.\n\n**5. Clean up**\n\n```bash\ngit -C ~/Projects/example-site worktree remove .claude/worktrees/mobile-nav\ngit -C ~/Projects/example-site branch -d worktree-mobile-nav\ngit push origin --delete worktree-mobile-nav\n```\n\nNone of these uses a force flag. If one refuses, work is still there: an uncommitted file in the worktree, or a commit that isn't merged. I'd read the refusal and report it instead of forcing the delete.\n\n**6. Record the merge**\n\nI'd update `docs/STATUS.md` to show Mobile nav as merged and commit that file directly to `main` with `git add docs/STATUS.md`, then push. This is a hand-over, so it takes no PR.",
+  "costUsd": 0.21555439999999998
+}

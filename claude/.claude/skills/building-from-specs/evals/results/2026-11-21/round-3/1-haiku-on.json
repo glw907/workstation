@@ -1,0 +1,15 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:36:20Z",
+  "seconds": 22.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": true,
+  "loaded": true,
+  "result": "The spec is approved and has one task, **Mobile nav**, in `glw907/example-site`, planned at 45 minutes with nothing to wait for. Nothing was run.\n\nLaunch command, from the repo's main checkout (I didn't verify that path, so `<main-checkout>` is a placeholder):\n\n```bash\ncd <main-checkout> && claude --bg --name mobile-nav --model claude-opus-5-5 --effort high --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  \"/goal Build the task Mobile nav in /var/home/glw907/.claude/jobs/0a745dfc/tmp/runs3/1-haiku-on/spec.md. Done when: npm run gate exits 0 and runs the new toggle test; at 375 pixels wide the header shows the menu button and hides the link list until it is pressed. Or stop after 90 minutes.\"\n```\n\nI picked Opus at high because the work is UI judgment: menu behavior and accessibility. Sonnet at medium would be the choice if you want it cheaper and the work treated as mechanical. The 90-minute clause is twice the planned 45. The `--settings` keys stay on this session only and must not go into `~/.claude/settings.json`.\n\nChecks before running:\n\n1. Run `claude-worktree-busy <main-checkout>` and confirm it exits 0.\n2. Confirm no other session is already working on this task or the repo.\n3. Secrets: the spec names none, so the only check is that `npm run gate` runs without one.\n4. CI: the goal doesn't name CI, but a pull request with a red check is never marked ready. Run `gh repo view glw907/example-site --json visibility` to confirm CI can run.\n5. This host is pavilion, so run `claude agents --json` and confirm fewer than four sessions are working.\n6. Confirm the default branch is clean, since the task starts from it.\n\nTwo things in the spec to settle before launch:\n\n- The spec names `standards:daisyui-a11y-reviewer`, which the `building-from-specs` skill doesn't list. Confirm that reviewer exists.\n- The skill says `standards:visual-verifier` also reads any rendered UI, and the 375-pixel item is rendered UI. I'd add it to the reviewers. That's a skill rule, not a change to the approved spec, but it is a change to the reviewer list, so it's your call.",
+  "costUsd": 0.00837263
+}

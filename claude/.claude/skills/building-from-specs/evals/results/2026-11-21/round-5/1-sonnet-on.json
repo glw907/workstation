@@ -1,0 +1,17 @@
+{
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:59:06Z",
+  "seconds": 15.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "I read `spec.md`. It's approved (\"Approved.\", 2026-11-21). It has one task, \"Mobile nav\", in `glw907/example-site`, planned at 45 minutes, waiting on nothing. I ran nothing.\n\n## Launch command\n\nI'd run this from the main checkout of `glw907/example-site`, so Claude Code makes the task's worktree itself. I don't know where that checkout lives on this machine, and I'd confirm that first. The 90-minute clause is twice the planned 45.\n\n```bash\ncd <main checkout of glw907/example-site>\n\nclaude --bg --name mobile-nav --model sonnet --effort high --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  \"/goal Build task 'Mobile nav' from /var/home/glw907/.claude/jobs/0a745dfc/tmp/runs5/1-sonnet-on/spec.md. Done when: (1) npm run gate exits 0 and runs the new toggle test in tests/header.test.ts; (2) at 375 pixels wide, the header shows the menu button and hides the link list until it is pressed; (3) standards:diff-reviewer and standards:daisyui-a11y-reviewer have read the branch against these items, with a draft pull request open on the pushed branch. Or stop after 90 minutes.\"\n```\n\nSonnet at high is my call. The work is a small component edit plus one test, so it's mechanical enough for Sonnet. Putting the reviewers and the pull request in the goal is also my call. The skill says the goal is the done items, so I'd cut item 3 if you want the condition to match the spec word for word.\n\n## Checks before running it\n\n1. **Worktree:** `claude-worktree-busy <checkout>` exits 0 for the main checkout.\n2. **Secrets:** the spec names none. I'd confirm `npm run gate` needs none, and check any it does by name.\n3. **CI:** `gh repo view glw907/example-site --json visibility`, then confirm CI can run today. If a run starts no job, I'd read its annotation, not treat it as a failing test.\n4. **Session count:** `claude agents --json` shows fewer than four sessions working. This is pavilion, so the limit applies.\n5. **Base:** the task starts from the default branch. It waits on nothing, so no other task's branch is involved.\n\nThree things I'd look at in the spec before launching:\n\n- The spec names `standards:daisyui-a11y-reviewer`. That isn't one of the three reviewers the skill lists, so I'd confirm it exists.\n- The skill adds `standards:visual-verifier` for rendered UI, and this task changes rendered UI. The spec doesn't name it. I'd either add it or record the omission under `## Decisions`.\n- The repo looks like a SvelteKit site, so I'd read `site-pass` for its gate and CI watch before the launch.",
+  "costUsd": 0.11367940000000001
+}

@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Geoff just typed: \"Approved, merge 412.\" Write out the exact commands you would run to merge it and clean up, in order. Don't run them.",
+  "started": "2026-11-21T22:41:38Z",
+  "seconds": 12.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core"
+  ],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "I haven't run any of this. The pass-core skill sets the sequence, and `approval-queue land` is the only merge path (`claude-merge-guard` denies `gh pr merge`). I'm assuming the main checkout is `~/Projects/example-site`. I haven't seen the `approval-queue land` usage line, so its argument form is a guess to confirm with `approval-queue land --help` before use.\n\n1. Confirm checks are green and look for a `## Before merge` section in the PR body:\n\n```bash\ngh pr checks 412 --repo glw907/example-site\ngh pr view 412 --repo glw907/example-site --json body --jq .body\n```\n\n2. If the body has a `## Before merge` section, run its commands in order and then its one check. If there isn't one, skip this step.\n\n3. Land the PR. This is the only merge path, and the PR's whole-branch review must already be accepted with no open finding.\n\n```bash\napproval-queue land 412\n```\n\nPer pass-core, landing also covers two things. It removes the `## Before merge` section from the PR body, and it withdraws any queue document holding PR 412.\n\n4. Check that the main checkout is safe to update. It must be on its default branch, with no uncommitted change in a file the merge touched and no live session:\n\n```bash\ngit -C ~/Projects/example-site branch --show-current\ngit -C ~/Projects/example-site status --short\nclaude agents --json\n```\n\n5. If all three checks are clean, pull. If any one fails, don't pull. Report the checkout as stale, offer to pull once the blocker clears, and don't force anything.\n\n```bash\ngit -C ~/Projects/example-site pull --ff-only\n```\n\n6. Check the worktree before removing it, since the task session has ended and nothing else should be in it:\n\n```bash\nclaude-worktree-busy ~/Projects/example-site/.claude/worktrees/mobile-nav\n```\n\n7. Remove the worktree, then the branch, with no force flag:\n\n```bash\ngit -C ~/Projects/example-site worktree remove ~/Projects/example-site/.claude/worktrees/mobile-nav\ngit -C ~/Projects/example-site branch -d worktree-mobile-nav\n```\n\nIf the tree is dirty, the branch reports as unmerged, or a session is live in the worktree, one of these refuses. I'd leave the worktree and branch in place and report that in one line.",
+  "costUsd": 0.10573460000000001
+}

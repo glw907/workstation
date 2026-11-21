@@ -1,0 +1,15 @@
+{
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff approved spec.md and is away until tomorrow. A background task session is building its task \"Mobile nav\" under /goal, and it has hit two things. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. What does the task session do about each one, and what does it write in the task's pull request? Don't edit any file.",
+  "started": "2026-11-21T23:00:45Z",
+  "seconds": 21.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": true,
+  "loaded": true,
+  "result": "**Menu button side:** The task session decides it and keeps going. The spec doesn't settle the side, and Geoff hasn't ruled on it, so this is a product or taste call with no precedent. The session takes the side that a later commit could undo most cheaply. It checks the header code to judge which side is cheaper to reverse, then builds on that choice. It doesn't stop or ask Geoff.\n\nIn the PR's `## Decisions` section, it records the side it took, the side it passed over, and what reversing would undo, meaning the files and lines that would move. It also says the source was the spec's silence, so Geoff can see the call was made without a ruling.\n\n**PostToolUse hook line:** The session doesn't edit `~/.dotfiles/claude/.claude/settings.json`. The skill's rule for settings and hooks is to leave the file alone and write the change into the PR as exact text, with a check that shows it took. So the PR body carries the exact hook entry, the file it belongs in, and a check command, such as a `jq` query that prints the new entry and fails if it's missing.\n\nBecause the hook sits outside the task's diff, the PR lists it under `## For Geoff` as a step left. If the feature stays inert without the hook, the PR is still safe to merge plainly, and no `## Before merge` section is needed. If the feature needs the hook to work, the PR adds a `## Before merge` section with the commands and the check that shows they worked. That's my reading of the rule, and it fits this case. If the goal requires the hook to be live before the PR is ready, the session marks that goal item unmet with the reason. It doesn't drop the item or edit the goal to match what it built.\n\n**The PR overall:** The title says what is true now. The first paragraph is the whole report in brief, and it ends by saying Geoff has two things to look at: the menu side, which is already decided and easy to reverse, and the hook line, which is ready to apply. The body then follows the skill's order: what landed, each goal item word for word with its evidence, the review verdict from the fresh subagent with the count of open findings, `## Decisions`, `## For Geoff`, and the `task-score` comment for measured minutes. Geoff approves the PR by number, and the session he's talking to does the merge.\n\nI didn't edit any files.",
+  "costUsd": 0.00882166
+}

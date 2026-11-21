@@ -1,0 +1,19 @@
+{
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T23:04:03Z",
+  "seconds": 28.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "site-pass",
+    "pass-core",
+    "approval-packet"
+  ],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "Here is the sequence for landing PR 412 and cleaning up after it. I haven't run any of it. I'm assuming the main checkout is `~/Projects/example-site`, so the worktree is at `~/Projects/example-site/.claude/worktrees/mobile-nav`. I'll confirm that path before step 1.\n\n**Checks before landing (read-only)**\n\n1. `gh pr view 412 --repo glw907/example-site --json state,headRefOid,mergeable,statusCheckRollup,body`\n   This confirms the PR is open, its checks are green, and its body shows the whole-branch review accepted with no open finding. It also shows whether there's a `## Before merge` section.\n2. `claude-worktree-busy ~/Projects/example-site/.claude/worktrees/mobile-nav`\n3. `claude agents --json`\n   This confirms no live session is in the worktree or the main checkout.\n\n**Steps that only apply if the PR body calls for them**\n\n4. If the body has a `## Before merge` section, I run its commands in order, then its check. I can only list those exact commands after step 1 shows them. Then I remove the section with `gh pr edit 412 --repo glw907/example-site --body-file <edited-body.md>`.\n5. If a queue document still holds PR 412, I take it back with `approval-queue withdraw <id>`.\n\n**Landing**\n\n6. `approval-queue land glw907/example-site#412 \"Adds the mobile navigation menu from the approved spec.\"`\n   I'll adjust the sentence if the PR body describes the change differently. The `gh` merge commands are blocked by `claude-merge-guard`, so this is the only way to merge.\n\n**Cleanup**\n\n7. `git -C ~/Projects/example-site branch --show-current` and `git -C ~/Projects/example-site status --porcelain`\n   These confirm the checkout is on the default branch with no uncommitted changes in files the merge touches.\n8. `git -C ~/Projects/example-site pull --ff-only`\n   If step 3 or step 7 turns up a blocker, I skip the pull, report the checkout as stale, and offer to pull once the blocker clears.\n9. `git -C ~/Projects/example-site worktree remove .claude/worktrees/mobile-nav`\n10. `git -C ~/Projects/example-site branch -d worktree-mobile-nav`\n11. Update `docs/STATUS.md` to take PR 412 out of \"Open decisions\" and set the next action. Then I run the repo's gate, `git -C ~/Projects/example-site add docs/STATUS.md`, commit with the message \"Record the mobile nav merge in STATUS\", and push.\n    example-site isn't in the site-pass gate table, so I'll read the gate command from its `CLAUDE.md` first.\n\nNo step uses a force flag. If the worktree is dirty, I leave it in place and report it in one line. The same goes for the branch if `branch -d` won't delete it. That can happen if the land squash-merges, because git then doesn't see the branch as merged.\n\nSay go and I'll run these in order, stopping if any check fails.",
+  "costUsd": 0.271358
+}

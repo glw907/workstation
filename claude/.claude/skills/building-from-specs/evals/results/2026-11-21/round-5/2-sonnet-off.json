@@ -1,0 +1,17 @@
+{
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Geoff approved spec.md and is away until tomorrow. A background task session is building its task \"Mobile nav\" under /goal, and it has hit two things. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. What does the task session do about each one, and what does it write in the task's pull request? Don't edit any file.",
+  "started": "2026-11-21T23:01:34Z",
+  "seconds": 18.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core"
+  ],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "The two items go different ways: the button side is a flagged call the session takes and records, and the hook line is a stop.\n\n**Menu button side.** This is a taste call with no precedent, so it doesn't stop the session. It first reads what Geoff has already ruled (the plan's `## Rulings`, the round design, earlier PRs' `## Decisions`) so it's in the transcript. Then it calls the advisor once on the question and takes the answer. If the session has no advisor tool, or the call errors, it asks Fable through one Agent call instead. The session never answers it by itself, and it writes no `[advisor]` line unless the tool or the dispatch returned one. Because the advisor settled it, it isn't a planning miss, and Geoff isn't asked mid-run. The button gets built on the advisor's side and the work continues.\n\n**The `settings.json` hook line.** I'm assuming the approved design doesn't list this edit. `~/.dotfiles` is another repo, and a path the design doesn't list counts as work beyond approved scope. It's also a new setting in a `runner` path, so `pass-core` \"Direct changes\" doesn't cover it, and it belongs to a `claude-infra` pass of its own. This one is on the \"What always stops\" list. The advisor can't clear it and the session doesn't ask it to. The session edits nothing in `~/.dotfiles`. It finishes the Mobile nav work that doesn't depend on the hook. It then writes the stop under \"Open decisions\" in the repo's STATUS, with a recommendation, and ends. Nothing goes through `approval-queue send`. The hook is not filed as a backlog item with `standards:log-issue`, and it isn't sent as a packet item, because found work only gets listed.\n\n**The PR body.** It opens with a plain paragraph on what landed, then covers what the work did and the `## Decisions`. It has two further parts:\n- `## Calls for Geoff` holds one `[advisor]` line for the button side. It names the side taken, the side passed over, and what reversing it would undo. The `Calls:` line counts it as one.\n- The hook is described as a stop pending Geoff's ruling and left undone. It is not recorded as a Planning miss, since the advisor-settled button question isn't one either.\n\nWith a call flagged, the PR can't land on its own. It waits under \"Open decisions\", and after Geoff approves it by number in a terminal session, `approval-queue land` merges it.\n\nI read `pass-core` and `references/advisor.md` and edited nothing.",
+  "costUsd": 0.12999719999999998
+}

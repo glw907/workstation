@@ -1,0 +1,16 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Geoff just typed: \"Approved, merge 412.\" Write out the exact commands you would run to merge it and clean up, in order. Don't run them.",
+  "started": "2026-11-21T22:30:50Z",
+  "seconds": 11.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "loaded": true,
+  "result": "I haven't run anything. These are the commands I'd run, in order. Two things first: the session isn't inside a repo, so I'd need the main checkout's path (I'm shown it as `<main-checkout>` below), and the merge only goes ahead if the PR's checks are green and its body has no `## Before merge` section left undone.\n\n**1. Check the PR and the task session (read-only)**\n\n```bash\ngh pr view 412 --repo glw907/example-site --json isDraft,state,body,statusCheckRollup\nclaude agents --json\n```\n\nThe PR should be out of draft with every check passing. If its body has a `## Before merge` section, I run those commands and their check first. I also confirm the mobile-nav task session is no longer listed as working.\n\n**2. Confirm the main checkout is free**\n\n```bash\nclaude-worktree-busy <main-checkout>\ngit -C <main-checkout> status --short\ngit -C <main-checkout> branch --show-current\n```\n\n`claude-worktree-busy` must exit 0, the status must show no uncommitted change in a merged file, and the branch must be the default branch.\n\n**3. Merge**\n\n```bash\ngh pr merge 412 --repo glw907/example-site --merge\n```\n\nAn `ask` rule may stop this at a permission prompt. Geoff answers that prompt once for this pull request.\n\n**4. Pull the main checkout**\n\n```bash\ngit -C <main-checkout> pull --ff-only\n```\n\n**5. Remove the worktree and the branches**\n\n```bash\ngit -C <main-checkout> worktree remove .claude/worktrees/mobile-nav\ngit -C <main-checkout> branch -d worktree-mobile-nav\ngit -C <main-checkout> push origin --delete worktree-mobile-nav\n```\n\nI use no force flags anywhere. `worktree remove` and `branch -d` refuse if work is still there, and I'd read the refusal before doing anything else. If `branch -d` refuses because git doesn't see the branch as merged, I'd check the merge on GitHub before using `-D`, and I'd ask Geoff first.\n\n**6. Verify**\n\n```bash\ngit -C <main-checkout> log --oneline -3\ngit -C <main-checkout> worktree list\n```\n\nThe log should show the merge commit for #412, and the worktree list should no longer include `mobile-nav`.",
+  "costUsd": 0.006161959999999999
+}

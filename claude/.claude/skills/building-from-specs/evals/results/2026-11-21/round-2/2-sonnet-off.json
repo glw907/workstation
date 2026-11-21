@@ -1,0 +1,14 @@
+{
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Build the task \"Mobile nav\" of the approved spec in spec.md. You are its task session, running under /goal, and Geoff is away until tomorrow. Before you start, two things have come up. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. Say what you do about each one. Don't edit any file yet.",
+  "started": "2026-11-21T22:29:54Z",
+  "seconds": 12.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "loaded": false,
+  "result": "**Menu button side.** I don't stop for this. Which side the button sits on is a small design call that the spec leaves to the builder, and Geoff's absence doesn't change that. First I'd check the site's existing header, the spec's mockups and any sibling site for precedent, and match what I find. If there's none, I'd put it on the right, opposite the logo, which is the usual layout. I'd keep it in one place in the header component so a flip takes a single change. I'd record the choice and the reason under `## Decisions` in the PR, so Geoff can reverse it when he's back.\n\n**The PostToolUse hook line.** I don't edit `settings.json` directly. Changes to Claude Code tooling go through the `claude-infra` skill, so I'd load it and follow its landing path. The rest of the path:\n\n1. Run `claude-worktree-busy ~/.dotfiles` and read its status docs, so I don't race another session.\n2. Edit the dotfiles copy at `~/.dotfiles/claude/.claude/settings.json`, never the stowed link. This is a different repo from the spec's, so it gets its own worktree and branch.\n3. Run `bash scripts/gate.sh` from that worktree root, bare, and fix anything it reports.\n\nI'd also check whether the approved spec covers this hook. If it does, I proceed as above. If it doesn't, adding a global hook that runs on every session's tool calls is a scope change, which is one of the stops `pass-core` reserves for Geoff. In that case I'd build the mobile nav without the hook, queue the hook as a question for him the way `pass-core` \"Until cc-desk runs\" says, and note the gap in the PR.\n\nI haven't read `spec.md`, `pass-core` or `claude-infra` yet, so the spec check and the exact landing steps come first. I'll make no edits until you tell me to start.",
+  "costUsd": 0.0867951
+}

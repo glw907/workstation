@@ -1,0 +1,15 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:48:57Z",
+  "seconds": 17.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "The spec is approved and has one task, \"Mobile nav,\" with no waits. It targets `glw907/example-site` and carries a 45-minute estimate. It changes two files: `src/lib/Header.svelte` gets a menu button that opens and closes the link list below 640px, and `tests/header.test.ts` gets a test that the button toggles the list. It names two reviewers, `standards:diff-reviewer` and `standards:daisyui-a11y-reviewer`. Done means `npm run gate` exits 0 with the new test running, and at 375px the button shows while the list stays hidden until pressed.\n\nI can't write the exact launch command yet. The spec doesn't name a launcher, this directory isn't a git repo, and I haven't read the launch convention in `pass-core` or `cc-desk-work`. The shape would be something like this, with every placeholder to be filled from that convention:\n\n```\ncd <local path to example-site> && <launcher from pass-core> --background --model <model> --effort <effort> --prompt-from STATUS\n```\n\nBefore running anything, I would check:\n\n1. **The repo.** Confirm the local checkout of `glw907/example-site` exists. The name reads like a placeholder, so I'd verify it's the real repo before launch.\n2. **The worktree.** Run `claude-worktree-busy <path>` and confirm no other executor holds it.\n3. **The reviewers.** Confirm both reviewer names resolve. I don't see either in my available skills list, so they may not exist yet.\n4. **The launch convention.** Read the launch section of `pass-core` and the repo's STATUS for the launch prompt and session state.\n5. **The guards.** At 45 minutes, the task runs past the 30-minute unattended threshold, so arm the guards in `~/.claude/docs/unattended-work-guards.md`.\n6. **The dispatch.** Name a model and an effort. I'd use Opus for the build, since the menu's keyboard and screen-reader behavior needs judgment, and Sonnet for mechanical reads. The brief needs to stand alone for a reader with no context.\n7. **The gate.** The gate runs bare, not piped to `head` or `tail`.\n8. **The Svelte work.** Run the Svelte autofixer on `Header.svelte` and `standards:svelte-check` after editing, since both files are Svelte or TypeScript.\n\nNothing has been run, and no files have been changed.",
+  "costUsd": 0.006491480000000001
+}

@@ -1,0 +1,15 @@
+{
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Write a bash one-liner that prints the ten largest files under the current directory, with their sizes.",
+  "started": "2026-11-21T22:42:57Z",
+  "seconds": 6.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "```bash\nfind . -type f -printf '%s\\t%p\\n' | sort -rn | head -10 | numfmt -d $'\\t' --field=1 --to=iec\n```\n\n`find` prints each file's size in bytes and its path, `sort -rn` puts the largest first, `head -10` keeps ten, and `numfmt` turns the byte counts into readable units like `1.2G`. Tabs separate the fields, so paths with spaces stay intact.\n\nIf you only want a quick look and don't mind du's rounding, this works too:\n\n```bash\nfind . -type f -exec du -h {} + | sort -rh | head -10\n```",
+  "costUsd": 0.0784151
+}

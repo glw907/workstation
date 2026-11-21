@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T22:53:34Z",
+  "seconds": 17.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "I haven't run anything. I'm assuming the main checkout is `~/Projects/example-site`, since this directory isn't a git repo. Tell me if it lives somewhere else.\n\n**Checks before the merge**\n\n1. `claude agents --json`\n   This confirms the mobile-nav task session has ended. I only merge after it has.\n2. `gh pr view 412 --repo glw907/example-site --json state,isDraft,headRefName,statusCheckRollup,body`\n   This confirms the PR is open, marked ready, on `worktree-mobile-nav`, and has no red check. I also read the body for a `## Before merge` section.\n3. If the body has a `## Before merge` section, I run its commands and the check it names, exactly as written. I can't list them until I've read the body.\n\n**The merge**\n\n4. `gh pr merge 412 --repo glw907/example-site --merge`\n   An `ask` rule stops this at a permission prompt, which you answer once.\n\n**Updating the main checkout**\n\n5. `git -C ~/Projects/example-site branch --show-current`\n   This must print the default branch.\n6. `git -C ~/Projects/example-site status --porcelain`\n   This must show no uncommitted change in a file the PR touched.\n7. `claude-worktree-busy ~/Projects/example-site`\n   This must exit 0.\n8. `git -C ~/Projects/example-site pull --ff-only`\n   I run this only if steps 5 to 7 all pass.\n\n**Cleanup, with no force flags**\n\n9. `git -C ~/Projects/example-site worktree remove .claude/worktrees/mobile-nav`\n10. `git -C ~/Projects/example-site branch -d worktree-mobile-nav`\n    This works once step 8 has brought the merge commit in.\n11. `git -C ~/Projects/example-site push origin --delete worktree-mobile-nav`\n\nIf any step refuses, I stop and read why before going on. A refusal at step 9 or 10 usually means there's still work in the worktree or on the branch.\n\nShould I run them?",
+  "costUsd": 0.213455
+}
