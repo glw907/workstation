@@ -25,6 +25,54 @@ def run_hook(command):
 @pytest.mark.parametrize(
     "command",
     [
+        "gh pr merge 5",
+        "gh pr merge 5 --merge",
+        "gh pr merge 5 --merge --match-head-commit abc123",
+        "gh pr merge -R owner/repo 5",
+        "cd /x && gh pr merge 5",
+        "git status; gh pr merge 5",
+        "gh pr view 5 | gh pr merge 5",
+        "# note\ngh pr merge 5",
+        "timeout 60 gh pr merge 5",
+        "command gh pr merge 5",
+        "env FOO=1 gh pr merge 5",
+        "nohup gh pr merge 5",
+        "FOO=1 gh pr merge 5",
+        "PREMERGE_DONE=5 gh pr merge 5",
+        "echo $(gh pr merge 5)",
+        "echo `gh pr merge 5`",
+        "(gh pr merge 5)",
+        "for n in 1 2; do gh pr merge $n --merge; done",
+        "if true; then gh pr merge 5; fi",
+        "while read n; do gh pr merge \"$n\"; done < prs",
+        "{ gh pr merge 5; }",
+        "! gh pr merge 5",
+        "sudo gh pr merge 5",
+        "echo 5 | xargs gh pr merge",
+        "timeout -s KILL 60 gh pr merge 5",
+        "2>/dev/null gh pr merge 5",
+        "/usr/bin/gh pr merge 5",
+        'out="$(gh pr merge 5 --merge 2>&1)"; echo "$out"',
+        'echo "`gh pr merge 5`"',
+    ],
+)
+def test_every_merge_stage_asks(command):
+    result = run_hook(command)
+    assert result.returncode == 0
+    out = json.loads(result.stdout)["hookSpecificOutput"]
+    assert out["hookEventName"] == "PreToolUse"
+    assert out["permissionDecision"] == "ask"
+
+
+def test_ask_message_names_no_retired_command():
+    reason = json.loads(run_hook("gh pr merge 5").stdout)["hookSpecificOutput"]["permissionDecisionReason"]
+    assert "Geoff answers this prompt" in reason
+    assert "approval-queue" not in reason
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
         "approval-queue merge 20261110T120000-1",
         'approval-queue land glw907/x#1 "Deny gh pr merge"',
         'git commit -m "Explain gh pr merge"',
@@ -34,8 +82,6 @@ def run_hook(command):
         "git status\n# gh pr merge 5\ngit log",
         "gh pr view 5",
         "gh pr list",
-        "gh pr merge 5 --merge",
-        "gh api -X PUT repos/owner/repo/pulls/5/merge",
         "git status",
         "python3 -I - <<'EOF'\nnote = 'gh pr merge 5 later'\ngh pr merge 7\nEOF\ngit status",
         "git commit -F - <<EOF\nRun gh pr merge 5\nEOF",
@@ -88,6 +134,17 @@ def run_in(command, cwd, exempt=""):
     return output["permissionDecisionReason"]
 
 
+def asks(command, cwd):
+    """Return whether the hook sends a command to a permission prompt."""
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT)],
+        input=json.dumps({"tool_input": {"command": command}, "cwd": str(cwd)}),
+        capture_output=True, text=True, check=False,
+    )
+    assert (result.returncode, result.stderr) == (0, "")
+    return json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"] == "ask"
+
+
 @pytest.fixture
 def repos(tmp_path):
     """Build a primary checkout on main, a worktree of it, an empty repo, and a plain folder."""
@@ -107,6 +164,34 @@ def repos(tmp_path):
     plain.mkdir()
     return {"primary": primary, "worktree": worktree, "empty": empty, "plain": plain,
             "root": tmp_path}
+
+
+@pytest.mark.parametrize("command", [
+    "gh -R owner/repo pr merge 5",
+    "gh --repo owner/repo pr merge 5 --squash",
+    "gh --repo=owner/repo pr merge 5",
+    "gh api -X PUT repos/owner/repo/pulls/5/merge",
+    "gh api --method PUT /repos/owner/repo/pulls/5/merge -f merge_method=squash",
+    "gh api repos/owner/repo/pulls/5/merge -X PUT",
+    "gh api -XPUT repos/o/r/pulls/7/merge",
+])
+def test_other_merge_spellings_ask(command, tmp_path):
+    assert asks(command, tmp_path)
+
+
+def test_forced_push_beside_a_merge_is_denied(repos):
+    assert run_in("gh pr merge 5 --merge; git push -f origin main", repos["primary"]) is not None
+
+
+@pytest.mark.parametrize("command", [
+    "gh api repos/owner/repo/pulls/5/merge",
+    "gh api -X GET repos/owner/repo/pulls/5/merge",
+    "gh api repos/owner/repo/pulls/5",
+    "gh -R owner/repo pr view 5",
+    "echo 'gh api -X PUT repos/o/r/pulls/5/merge'",
+])
+def test_merge_lookalikes_pass(command, tmp_path):
+    assert run_in(command, tmp_path) is None
 
 
 @pytest.mark.parametrize("command", [
@@ -272,7 +357,7 @@ def test_unreadable_directory_allows(command, repos):
     assert run_in(command, repos["plain"]) is None
 
 
-def test_no_git_word_exits_before_parsing(repos):
+def test_no_git_or_gh_word_exits_before_parsing(repos):
     # An unbalanced quote would make the parser fall back; the prefilter means it never runs.
     assert run_in("echo 'legit ghost digit", repos["primary"]) is None
     assert run_in("make push -f", repos["primary"]) is None
@@ -311,6 +396,11 @@ def test_crash_allows(repos):
 ])
 def test_expansion_elsewhere_still_refused(command, repos):
     assert run_in(command, repos["primary"]) is not None
+
+
+def test_merge_inside_substitution_asks(tmp_path):
+    assert asks('echo "$(gh pr merge 7)"', tmp_path)
+    assert asks("x=$(gh pr merge 7)", tmp_path)
 
 
 def test_absolute_directory_read_without_cwd(repos):

@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""PreToolUse hook for the Git slips no session should make.
+"""PreToolUse hook for the Git and gh slips no session should make.
+
+It sends a pull request merge to a permission prompt: `gh pr merge`, `gh -R <repo> pr merge`,
+`/usr/bin/gh pr merge`, and the REST merge call, `gh api -X PUT .../pulls/<n>/merge`. Geoff
+answers the prompt in the session he is talking to, and a session nobody is watching is refused.
+The `ask` rules in `settings.json` prompt for the usual spelling. The permissions page
+(https://code.claude.com/docs/en/permissions) says such a rule "isn't a security boundary around
+the program" and names a PreToolUse hook for reading the whole command, which is this one.
 
 It denies two things:
 
@@ -17,14 +24,11 @@ A Git check reads its directory from `git -C <dir>`, then a literal `cd <dir>` e
 command, then the hook input's `cwd`. A directory the text can't show (a variable, a glob) allows
 the command, and so does any Git subprocess that fails: Git reports the problem itself.
 
-A pull request merge isn't checked here. The `ask` rules in `settings.json` stop `gh pr merge`
-at a permission prompt.
-
 Quoted text, escapes, comments, and heredoc bodies never count as shell syntax, so a command that
-only mentions one of these goes through. A command without `git` as a word exits before any
-parsing. Per the hooks reference (https://code.claude.com/docs/en/hooks) a denial is
-`hookSpecificOutput.permissionDecision: "deny"` with a `permissionDecisionReason`, printed with
-exit 0. This is a slip guard, not a security boundary; its registration sets `onFailure: "block"`
+only mentions one of these goes through. A command with neither `git` nor `gh` as a word exits
+before any parsing. Per the hooks reference (https://code.claude.com/docs/en/hooks) a decision is
+`hookSpecificOutput.permissionDecision`, `"deny"` or `"ask"`, with a `permissionDecisionReason`,
+printed with exit 0. A denial outranks a prompt when one command earns both. This is a slip guard, not a security boundary; its registration sets `onFailure: "block"`
 because a timed-out hook does not block the call. Every input the script cannot parse exits 0
 silently.
 """
@@ -38,7 +42,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-PREFILTER = re.compile(r"(?<![\w.-])git(?![\w.-])")
+PREFILTER = re.compile(r"(?<![\w.-])(?:git|gh)(?![\w.-])")
 HEREDOC = re.compile(r"(?<!<)<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
 REDIRECT = re.compile(r"\d*[<>]&\d*")
 SEPARATORS = re.compile(r"[`()|&;\n]")
@@ -46,9 +50,15 @@ ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "nohup", "exec", "time", "timeout", "sudo", "xargs", "!", "{", "if",
             "then", "do", "else", "elif", "while", "until"}
 SKIPPED = re.compile(r"-\S*|\d+[smhd]?|[A-Z]{3,}|\d*[<>]\S*")
+GH = re.compile(r"(\S*/)?gh")
 GIT = re.compile(r"(\S*/)?git")
 REDIRECTION = re.compile(r"\d*(?:[<>]+|&>>?)&?(?P<target>\S*)")
 UNREADABLE = re.compile(r"[$`*?\[{]")
+MERGE_REASON = (
+    "This command merges a pull request. A merge runs only when Geoff answers this prompt, in the "
+    "session he is talking to, after he approved the pull request by number. A session he is not "
+    "talking to leaves the pull request open."
+)
 FORCE_REASON = (
     "Blocked: a forced push to main or master rewrites the branch every session builds on. Push "
     "the work to a feature branch and open a pull request; a forced push to a feature branch "
@@ -177,6 +187,30 @@ def stages(command: str):
                 read = list(live)
             yield live, read
         start = end + 1
+
+
+def merges(live: list[str], read: list[str]) -> bool:
+    """Return whether a stage merges a PR through gh."""
+    live = strip_wrappers(list(live))[0]
+    if not live or not GH.fullmatch(live[0]):
+        return False
+    words = strip_wrappers(list(read))[0][1:]
+    while words and (words[0] in ("-R", "--repo") or words[0].startswith(("--repo=", "-R"))):
+        del words[: 2 if words[0] in ("-R", "--repo") else 1]
+    if words[:2] == ["pr", "merge"]:
+        return True
+    if words[:1] != ["api"]:
+        return False
+    method, rest = "", words[1:]
+    for index, word in enumerate(rest):
+        if word in ("-X", "--method") and index + 1 < len(rest):
+            method = rest[index + 1]
+        elif word.startswith("--method="):
+            method = word.split("=", 1)[1]
+        elif word.startswith("-X") and len(word) > 2:
+            method = word[2:]
+    paths = [word for word in rest if re.search(r"(?:^|/)pulls/[^/\s]+/merge/?$", word)]
+    return method.upper() == "PUT" and bool(paths)
 
 
 def git_env(assigned: dict[str, str]) -> dict[str, str]:
@@ -368,18 +402,19 @@ def git_stages(command: str, cwd: Path | None):
             yield live, read, Git(read, base)
 
 
-def refusal(command: str, cwd: Path | None) -> str | None:
-    """Return the reason to deny a command, or None to let it run."""
+def decision(command: str, cwd: Path | None) -> tuple[str, str] | None:
+    """Return the hook's decision on a command and its reason, or None to let it run."""
+    asks = any(merges(live, read) for live, read in stages(command))
     for _, _, git in git_stages(command, cwd):
         if git.subcommand == "push" and forced_push_to_main(git):
-            return FORCE_REASON
+            return "deny", FORCE_REASON
         if whole_tree(git) and primary_checkout(git):
-            return STAGING_REASON
-    return None
+            return "deny", STAGING_REASON
+    return ("ask", MERGE_REASON) if asks else None
 
 
 def main() -> int:
-    """Read the hook input and deny a command this guard refuses."""
+    """Read the hook input and print this guard's decision on the command, if it has one."""
     try:
         payload = json.load(sys.stdin)
         command = payload["tool_input"]["command"]
@@ -389,14 +424,14 @@ def main() -> int:
         return 0
     cwd = payload.get("cwd") if isinstance(payload, dict) else None
     try:
-        reason = refusal(command, Path(cwd) if isinstance(cwd, str) and cwd else None)
+        found = decision(command, Path(cwd) if isinstance(cwd, str) and cwd else None)
     except Exception:  # noqa: BLE001 - this hook blocks every Bash call on a crash, so it allows
         return 0
-    if reason:
+    if found:
         print(json.dumps({"hookSpecificOutput": {
             "hookEventName": "PreToolUse",
-            "permissionDecision": "deny",
-            "permissionDecisionReason": reason,
+            "permissionDecision": found[0],
+            "permissionDecisionReason": found[1],
         }}))
     return 0
 
