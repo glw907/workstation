@@ -21,6 +21,12 @@ the `pavilion` desktop (Fedora 44 base, `bootc`/`ostree`). GNU Stow links tracke
 
 ## Open steps
 
+- **thinkpad-x1: finish Zen's links after the next pull** (PR #260, 2026-11-21). Zen is installed and is the
+  default browser, but `~/.local/zen/distribution/policies.json` and `~/.local/share/applications/zen.desktop` are
+  copies, since a live session held the main checkout. After `git -C ~/.dotfiles pull --ff-only`, run
+  `rm ~/.local/share/applications/zen.desktop && cd ~/.dotfiles && stow -R applications`, then
+  `ln -sf ~/.dotfiles/bluefin/zen/policies.json ~/.local/zen/distribution/policies.json`.
+
 - **thinkpad-x1: restart the queue and move the household-it checkout.** Its first session pulls `~/.dotfiles` and `~/Projects/approval-queue`,
   then runs `approval-queue restart` (it names any old item still undecided and archives the old files
   into `archive-2026-11.tar.gz`; see the queue's README, "Restart and the archive"), disables the
