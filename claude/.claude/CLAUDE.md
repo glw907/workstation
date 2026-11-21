@@ -3,19 +3,17 @@
 ## Work Autonomously Until Done
 
 Do not ask for review or approval until the task is done; keep working until every gate passes. Stop early only for
-what only Geoff can provide or a `pass-core` "Judgment calls" stop (an irreversible or destructive act, a secret,
-overspend, an `auth-data` question, a scope change). Never hand Geoff a command to paste that Claude could run: ask
-for the go-ahead, then run it.
+what only Geoff can provide. A background session never waits on a question: `building-from-specs` "In place of a
+question" says what it does. Never hand Geoff a command to paste that Claude could run: ask for the go-ahead, then
+run it.
 
-## The pass process lives in `pass-core`
+## Work is built from specs
 
-Planning, executing, and closing a pass is the `pass-core` skill, with `cairn-pass`, `site-pass`, and `dotfiles-pass`
-as per-repo adapters. Geoff no longer reads the Approval Queue or runs the `desk` session: `pass-core` "Until cc-desk
-runs" says how a question, a report, or a pull request reaches Geoff, and it overrides every line that sends him a
-queue document. One session runs each pass or hand-over, its state in the repo's STATUS.
-cc-desk's spec work is exempt: a session in `~/Projects/cc-desk`, or one whose prompt says it builds a cc-desk spec,
-reads `pass-core`, its adapters, and the skills they name as reference only, and follows its prompt wherever this
-file names them.
+Work larger than a one-sentence change follows the `building-from-specs` skill. Geoff approves a spec, a fresh
+session builds each task under `/goal`, a fresh subagent reviews the result against the spec, and the work ends in a
+pull request. Only the session Geoff is talking to merges, and only after he approves the pull request by number.
+Questions and reports reach him in his terminal. `cairn-pass`, `site-pass`, and `dotfiles-pass` hold each repo's
+gate and checklists. A project file that names `pass-core`, a pass, or a plan means this skill, a task, and a spec.
 
 ## Search before you spelunk
 
@@ -23,10 +21,10 @@ When a symptom looks framework-, library-, or OS-specific, spend one web search 
 debugging loop: a documented quirk or GitHub issue often names the cause. Add "Bluefin DX" to the query for an OS
 symptom, and search again after two failed attempts.
 
-## One executor per worktree
+## One session per worktree
 
-Before any executor enters a repo or worktree, run `claude-worktree-busy <path>` and read the status docs; when in
-doubt, ask rather than race. Two sessions never both close, merge, or release one branch. Do not read a file a
+Before a session enters a repo or worktree, it runs `claude-worktree-busy <path>` and reads the status docs; when in
+doubt, ask rather than race. Two sessions never both finish, merge, or release one branch. Do not read a file a
 background agent is editing; wait for its result, since a mid-edit read is stale.
 
 ## Machine Environment
@@ -92,7 +90,7 @@ token. Use an API or CLI first.
 ## Claude Code Agent Usage
 
 - Changes to Claude Code tooling go through the `claude-infra` skill.
-- No human-scale time estimates in chat; plan tasks carry minute estimates, per `pass-core`.
+- No human-scale time estimates in chat; a spec's tasks carry minute estimates, per `building-from-specs`.
 - Every dispatch names a model and an effort (Sonnet for reads, searches, and mechanical edits; Opus for judgment).
 - Write each dispatch brief for a reader with no context.
 - Run gates, test suites, and CI watches bare, never piped to `tail` or `head`.
@@ -102,15 +100,15 @@ token. Use an API or CLI first.
 
 ## Compact instructions
 
-Preserve the plan path; the task ledger (done, in flight, next); open decisions; the last CI and review verdicts;
+Preserve the spec path; the step ledger (done, in flight, next); open decisions; the last CI and review verdicts;
 and the STATUS launch prompt. Drop tool output, diffs, and agent transcripts.
 
 ## Process proportionality
 
-Interaction is batched and front-loaded: before approval, probe until the plan carries no open readings, one
-question at a time. After approval, execution runs to completion, with judgment calls in the PR's `## Decisions`.
+Interaction is batched and front-loaded: before approval, probe until the spec carries no open readings, one
+question at a time. After approval, the build runs to completion, with judgment calls in the PR's `## Decisions`.
 Method and architecture calls are Claude's; Geoff's are product, taste, priority, scope, and budget. A fully
-specified one-sentence change lands directly: `pass-core` "Direct changes".
+specified one-sentence change lands directly: `building-from-specs` "Direct changes".
 
 ## Writing voice
 

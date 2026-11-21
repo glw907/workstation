@@ -1,7 +1,5 @@
 """Tests for the claude-merge-guard PreToolUse hook, driven by subprocess."""
 
-import importlib.machinery
-import importlib.util
 import json
 import os
 import subprocess
@@ -27,57 +25,6 @@ def run_hook(command):
 @pytest.mark.parametrize(
     "command",
     [
-        "gh pr merge 5",
-        "gh pr merge 5 --merge",
-        "gh pr merge 5 --merge --match-head-commit abc123",
-        "gh pr merge -R owner/repo 5",
-        "cd /x && gh pr merge 5",
-        "git status; gh pr merge 5",
-        "gh pr view 5 | gh pr merge 5",
-        "# note\ngh pr merge 5",
-        "timeout 60 gh pr merge 5",
-        "command gh pr merge 5",
-        "env FOO=1 gh pr merge 5",
-        "nohup gh pr merge 5",
-        "FOO=1 gh pr merge 5",
-        "PREMERGE_DONE=5 gh pr merge 5",
-        "echo $(gh pr merge 5)",
-        "echo `gh pr merge 5`",
-        "(gh pr merge 5)",
-        "for n in 1 2; do gh pr merge $n --merge; done",
-        "if true; then gh pr merge 5; fi",
-        "while read n; do gh pr merge \"$n\"; done < prs",
-        "{ gh pr merge 5; }",
-        "! gh pr merge 5",
-        "sudo gh pr merge 5",
-        "echo 5 | xargs gh pr merge",
-        "timeout -s KILL 60 gh pr merge 5",
-        "2>/dev/null gh pr merge 5",
-        "/usr/bin/gh pr merge 5",
-        'out="$(gh pr merge 5 --merge 2>&1)"; echo "$out"',
-        'echo "`gh pr merge 5`"',
-    ],
-)
-def test_denies_every_merge_stage(command):
-    result = run_hook(command)
-    assert result.returncode == 0
-    out = json.loads(result.stdout)["hookSpecificOutput"]
-    assert out["hookEventName"] == "PreToolUse"
-    assert out["permissionDecision"] == "deny"
-
-
-def test_deny_message_names_replacements():
-    reason = json.loads(run_hook("gh pr merge 5").stdout)["hookSpecificOutput"]["permissionDecisionReason"]
-    assert "approval-queue merge <id>" in reason
-    assert "approval-queue land <owner/repo#n> <sentence>" in reason
-    assert "approval-packet" in reason
-    assert "--premerge-done" not in reason
-    assert "packet" not in reason.replace("approval-packet", "")
-
-
-@pytest.mark.parametrize(
-    "command",
-    [
         "approval-queue merge 20261110T120000-1",
         'approval-queue land glw907/x#1 "Deny gh pr merge"',
         'git commit -m "Explain gh pr merge"',
@@ -87,6 +34,8 @@ def test_deny_message_names_replacements():
         "git status\n# gh pr merge 5\ngit log",
         "gh pr view 5",
         "gh pr list",
+        "gh pr merge 5 --merge",
+        "gh api -X PUT repos/owner/repo/pulls/5/merge",
         "git status",
         "python3 -I - <<'EOF'\nnote = 'gh pr merge 5 later'\ngh pr merge 7\nEOF\ngit status",
         "git commit -F - <<EOF\nRun gh pr merge 5\nEOF",
@@ -110,11 +59,6 @@ def test_malformed_input_exits_zero():
 
 # The checks the cc-desk core spec adds. Every case passes a cwd, and the tests replace the
 # exempt list through the hook's environment, since their repos sit under /tmp.
-TODAYS_REASON = (
-    "Blocked: merge through approval-queue, never `gh pr merge`. Use `approval-queue merge <id>` for a "
-    "document Geoff approved, or `approval-queue land <owner/repo#n> <sentence>` for a PR that "
-    "needs no document; the `approval-packet` skill has the procedure."
-)
 GIT_ID = ["-c", "user.name=Test", "-c", "user.email=test@example.invalid", "-c", "commit.gpgsign=false"]
 
 
@@ -163,38 +107,6 @@ def repos(tmp_path):
     plain.mkdir()
     return {"primary": primary, "worktree": worktree, "empty": empty, "plain": plain,
             "root": tmp_path}
-
-
-def test_reason_matches_todays_text():
-    loader = importlib.machinery.SourceFileLoader("merge_guard", str(SCRIPT))
-    spec = importlib.util.spec_from_loader("merge_guard", loader)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    assert module.REASON == TODAYS_REASON
-
-
-@pytest.mark.parametrize("command", [
-    "gh -R owner/repo pr merge 5",
-    "gh --repo owner/repo pr merge 5 --squash",
-    "gh --repo=owner/repo pr merge 5",
-    "gh api -X PUT repos/owner/repo/pulls/5/merge",
-    "gh api --method PUT /repos/owner/repo/pulls/5/merge -f merge_method=squash",
-    "gh api repos/owner/repo/pulls/5/merge -X PUT",
-    "gh api -XPUT repos/o/r/pulls/7/merge",
-])
-def test_other_merge_spellings_get_todays_reason(command, tmp_path):
-    assert run_in(command, tmp_path) == TODAYS_REASON
-
-
-@pytest.mark.parametrize("command", [
-    "gh api repos/owner/repo/pulls/5/merge",
-    "gh api -X GET repos/owner/repo/pulls/5/merge",
-    "gh api repos/owner/repo/pulls/5",
-    "gh -R owner/repo pr view 5",
-    "echo 'gh api -X PUT repos/o/r/pulls/5/merge'",
-])
-def test_merge_lookalikes_pass(command, tmp_path):
-    assert run_in(command, tmp_path) is None
 
 
 @pytest.mark.parametrize("command", [
@@ -360,7 +272,7 @@ def test_unreadable_directory_allows(command, repos):
     assert run_in(command, repos["plain"]) is None
 
 
-def test_no_git_or_gh_word_exits_before_parsing(repos):
+def test_no_git_word_exits_before_parsing(repos):
     # An unbalanced quote would make the parser fall back; the prefilter means it never runs.
     assert run_in("echo 'legit ghost digit", repos["primary"]) is None
     assert run_in("make push -f", repos["primary"]) is None
@@ -399,11 +311,6 @@ def test_crash_allows(repos):
 ])
 def test_expansion_elsewhere_still_refused(command, repos):
     assert run_in(command, repos["primary"]) is not None
-
-
-def test_merge_inside_substitution_refused(tmp_path):
-    assert run_in('echo "$(gh pr merge 7)"', tmp_path) == TODAYS_REASON
-    assert run_in("x=$(gh pr merge 7)", tmp_path) == TODAYS_REASON
 
 
 def test_absolute_directory_read_without_cwd(repos):
