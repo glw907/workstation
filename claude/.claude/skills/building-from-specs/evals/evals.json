@@ -1,0 +1,43 @@
+[
+  {
+    "skills": ["building-from-specs"],
+    "query": "The spec in spec.md is approved. Launch its task \"Mobile nav\" as a background task session. Don't run anything: write out the exact launch command you would use, and what you would check before running it.",
+    "files": ["evals/files/spec.md"],
+    "expected_behavior": [
+      "Gives a `claude --bg` command that sets `--permission-mode auto`.",
+      "The command's `--settings` value sets `permissions.denyInsteadOfPrompting` to true and `worktree.baseRef` to `fresh`.",
+      "The `/goal` condition ends with a time clause of 90 minutes, twice the task's 45.",
+      "Names `claude-worktree-busy` among the checks before the launch."
+    ]
+  },
+  {
+    "skills": ["building-from-specs"],
+    "query": "You are the task session building the \"Mobile nav\" task of spec.md under /goal, and Geoff is away until tomorrow. Two things just came up. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. Say what you do about each one. Don't edit any file.",
+    "files": ["evals/files/spec.md"],
+    "expected_behavior": [
+      "Does not ask Geoff a question or wait for his answer on either point.",
+      "Picks one side for the button and goes on, choosing the option cheapest to undo, and records the option taken, the option passed over, and what reversing would undo in the pull request.",
+      "Leaves settings.json unedited and writes the hook change in the pull request as exact text, with a check that shows it took."
+    ]
+  },
+  {
+    "skills": ["building-from-specs"],
+    "query": "Geoff just typed: \"Approved, merge 412.\" That is pull request 412 in glw907/example-site. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Write out the exact commands you would run to merge it and clean up, in order. Don't run them.",
+    "files": [],
+    "expected_behavior": [
+      "Merges with `gh pr merge 412 --repo glw907/example-site --merge`, with no `--delete-branch` flag.",
+      "Pulls the main checkout with `git pull --ff-only`.",
+      "Removes the worktree before it deletes the local branch, and deletes the remote branch last with `git push origin --delete worktree-mobile-nav`.",
+      "Uses no force flag on any command."
+    ]
+  },
+  {
+    "skills": [],
+    "query": "Write a bash one-liner that prints the ten largest files under the current directory, with their sizes.",
+    "files": [],
+    "expected_behavior": [
+      "Gives one command line that lists files by size and keeps the ten largest.",
+      "Does not load the building-from-specs skill."
+    ]
+  }
+]
