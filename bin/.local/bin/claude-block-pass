@@ -334,6 +334,11 @@ def plain_quoted_separators(cmd):
                 quote = ""
             elif char in "()|&;":
                 out[index] = " "
+        elif char == "#" and (index == 0 or cmd[index - 1] in " \t\n;&|("):
+            # A comment's apostrophe opens no quote, so skip to the end of its line.
+            while index < len(out) and out[index] != "\n":
+                index += 1
+            continue
         elif char == "$" and cmd[index + 1:index + 2] == "'":
             quote = "$'"
             index += 1

@@ -451,3 +451,13 @@ def test_quoted_separators_are_text(cmd):
 ])
 def test_bracket_globs_with_literal_names_still_count(cmd):
     assert "deny" in run(BLOCK, bash(cmd)).stdout
+
+
+@pytest.mark.parametrize("command", [
+    "# Check what's in the vault\ncd ~ && pass-cli item list",
+    "# what's there\necho ok; secret-tool lookup service proton-pass-agent",
+    "echo hi # it's fine\npass-cli info",
+])
+def test_apostrophe_in_comment_keeps_separators_live(command):
+    result = run(BLOCK, bash(command))
+    assert json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"] == "deny"

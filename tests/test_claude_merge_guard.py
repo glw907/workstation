@@ -371,11 +371,25 @@ def test_no_git_or_gh_word_exits_before_parsing(repos):
     "git add -A $DIR",
     "git add -u $(git diff --name-only -- docs)",
     "git add -A ${DIR}",
-    "git push -f origin $BRANCH",
-    "git push --force origin $(git branch --show-current)",
 ])
 def test_unquoted_expansion_operand_passes(command, repos):
     assert run_in(command, repos["primary"]) is None
+
+
+# A forced push to a ref the text can't show falls back to the current branch.
+@pytest.mark.parametrize("command", [
+    "git push -f origin $BRANCH",
+    "git push -f origin $(git branch --show-current)",
+    'git push --force-with-lease origin "$(git branch --show-current)"',
+    "git push -f origin `git branch --show-current`",
+])
+def test_forced_push_to_unreadable_ref(command, repos):
+    assert run_in(command, repos["primary"]) is not None
+    assert run_in(command, repos["worktree"]) is None
+
+
+def test_crash_allows(repos):
+    assert run_in("git -C ~\udcff add -A", repos["primary"]) is None
 
 
 @pytest.mark.parametrize("command", [

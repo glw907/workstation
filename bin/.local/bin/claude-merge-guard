@@ -335,9 +335,7 @@ def forced_push_to_main(git: Git) -> bool:
     readable = [target for target in targets if not UNREADABLE.search(target.replace("*", ""))]
     if any(protected(target) for target in readable if target not in ("HEAD", "@")):
         return True
-    if len(readable) < len(targets):
-        return False
-    if targets and all(target not in ("HEAD", "@") for target in targets):
+    if readable and len(readable) == len(targets) and all(target not in ("HEAD", "@") for target in targets):
         return False
     branch = current_branch(git)
     return branch is not None and protected(branch)
@@ -424,7 +422,10 @@ def main() -> int:
     if not isinstance(command, str) or not PREFILTER.search(command):
         return 0
     cwd = payload.get("cwd") if isinstance(payload, dict) else None
-    reason = refusal(command, Path(cwd) if isinstance(cwd, str) and cwd else None)
+    try:
+        reason = refusal(command, Path(cwd) if isinstance(cwd, str) and cwd else None)
+    except Exception:  # noqa: BLE001 - this hook blocks every Bash call on a crash, so it allows
+        return 0
     if reason:
         print(json.dumps({"hookSpecificOutput": {
             "hookEventName": "PreToolUse",
