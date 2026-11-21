@@ -12,12 +12,13 @@ Planning, executing, and closing a pass is the `pass-core` skill, with `cairn-pa
 adapters. Geoff no longer reads the Approval Queue or runs the `desk` session (2026-11-17): `pass-core` "Until cc-desk runs" says how a
 question, a report, or a pull request reaches him, and it overrides every line that sends him a queue document. One session runs
 each pass or hand-over, its state in the repo's STATUS; initiatives are records in `~/Projects/initiatives`.
+cc-desk's spec work is exempt (Geoff, 2026-11-20): a session in `~/Projects/cc-desk`, or one whose prompt says it builds a cc-desk
+spec, reads `pass-core`, its adapters, and the skills they name as reference only, and follows its prompt wherever this file names them.
 
 ## Search before you spelunk (Geoff, 2026-07-13)
 
-When a symptom looks framework- or library-specific, spend one web search on the exact symptom
-before an interactive debugging loop: a documented quirk or GitHub issue often names the cause.
-Never read a file's "current state" while a background agent edits it.
+When a symptom looks framework- or library-specific, spend one web search on the exact symptom before an interactive debugging
+loop: a documented quirk or GitHub issue often names the cause. Never read a file's "current state" while a background agent edits it.
 
 ## One executor per worktree (Geoff, 2026-07-14)
 
@@ -51,11 +52,10 @@ docs; when in doubt, ask rather than race. Two sessions never both close, merge,
 
 ## Dotfiles Management
 
-`~/.dotfiles`, GNU Stow (`bluefin/stow-packages.txt`). **Every install records itself in its
-tier's manifest, same session**; `check-drift` reconciles. Gate: `bash scripts/gate.sh`. New
-script: `bin/.local/bin/` + `stow -R bin`. Git: imperative mood, commit specific files (never
-`git add -A`), never commit .env files or secrets, never force push to main/master. Every
-dependency bump goes through `standards:dependency-upgrade` (Geoff, 2026-09-13 and 2026-09-14).
+`~/.dotfiles`, GNU Stow (`bluefin/stow-packages.txt`). **Every install records itself in its tier's manifest, same
+session**; `check-drift` reconciles. Gate: `bash scripts/gate.sh`. New script: `bin/.local/bin/` + `stow -R bin`. Git:
+imperative mood, commit specific files (never `git add -A`), never commit .env files or secrets, never force push to
+main/master. Every dependency bump goes through `standards:dependency-upgrade` (Geoff, 2026-09-13 and 2026-09-14).
 
 Tool languages (Geoff, 2026-10-19): Bash for glue that runs other commands (Python once it parses
 data or passes ~100 lines); stdlib-only Python for a one-file `~/.dotfiles/bin` helper run as
