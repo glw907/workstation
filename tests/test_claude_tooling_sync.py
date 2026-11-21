@@ -255,6 +255,9 @@ def test_lint_passes_on_a_clean_overlaid_tree(tmp_path):
 # ---- lint: description-cap and fork-skill ----
 
 
+CAP = 1536
+
+
 def cap_skill(root, name, description, extra=""):
     put_skill(root, name, f"---\nname: {name}\ndescription: {description}\n{extra}---\n\nBody.\n")
 
@@ -275,12 +278,12 @@ def hits(proc, check):
 
 
 def test_description_cap_counts_code_points_after_collapse(tmp_path):
-    cap_skill(tmp_path, "over", "é" * 501)
-    cap_skill(tmp_path, "edge", "x" * 500)
-    cap_skill(tmp_path, "gated", "y" * 901, extra="paths: src/**\n")
+    cap_skill(tmp_path, "over", "é" * (CAP + 1))
+    cap_skill(tmp_path, "edge", "x" * CAP)
+    cap_skill(tmp_path, "gated", "y" * (CAP + 401), extra="paths: src/**\n")
     put_skill(tmp_path, "block",
-              "---\nname: block\ndescription: >-\n  " + "word " * 60 + "\n  " + "more " * 41 + "\n---\n")
-    cap_skill(tmp_path, "colon", "Use when: " + "z" * 495)
+              "---\nname: block\ndescription: >-\n  " + "word " * 160 + "\n  " + "more " * 148 + "\n---\n")
+    cap_skill(tmp_path, "colon", "Use when: " + "z" * (CAP - 5))
     proc = lint_proc(tmp_path)
     assert proc.returncode == 1
     assert hits(proc, "description-cap") == [("block", "description"), ("colon", "description"),
@@ -288,11 +291,11 @@ def test_description_cap_counts_code_points_after_collapse(tmp_path):
 
 
 def test_description_cap_scopes_to_skill_dirs_without_synced(tmp_path):
-    cap_skill(tmp_path, "vendored", "v" * 501)
-    cap_skill(tmp_path, "synced", "s" * 501)
+    cap_skill(tmp_path, "vendored", "v" * (CAP + 1))
+    cap_skill(tmp_path, "synced", "s" * (CAP + 1))
     d = tmp_path / "claude" / ".claude" / "skills" / "synced" / "inner"
     d.mkdir(parents=True)
-    (d / "SKILL.md").write_text("---\nname: inner\ndescription: " + "i" * 501 + "\n---\n")
+    (d / "SKILL.md").write_text("---\nname: inner\ndescription: " + "i" * (CAP + 1) + "\n---\n")
     assert hits(lint_proc(tmp_path), "description-cap") == [("vendored", "description")]
 
 
@@ -329,11 +332,11 @@ def test_fork_skill_repeats_report_one_violation_each(tmp_path):
 
 
 def test_an_over_cap_description_fails_lint_and_a_trimmed_one_passes(tmp_path):
-    cap_skill(tmp_path, "long", "x" * 501)
+    cap_skill(tmp_path, "long", "x" * (CAP + 1))
     proc = lint_proc(tmp_path)
     assert proc.returncode == 1
     assert "long/SKILL.md: description-cap: description" in out(proc)
-    cap_skill(tmp_path, "long", "x" * 500)
+    cap_skill(tmp_path, "long", "x" * CAP)
     assert lint_proc(tmp_path).returncode == 0
 
 

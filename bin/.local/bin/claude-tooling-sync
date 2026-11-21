@@ -26,7 +26,7 @@ Commands:
                    tree-only checks against TREE's own copy: vendored-skills.json is
                    well formed, every skills/<dir> carrying a LICENSE* file has a
                    manifest entry, and every installed vendored SKILL.md carries its
-                   entry's overlays, no SKILL.md description runs over 500 characters
+                   entry's overlays, no SKILL.md description runs over 1,536 characters
                    (`description-cap`, unless it carries a `paths:` key), and no
                    `context: fork` skill body assumes a conversation (`fork-skill`).
                    Runs from a worktree's own checkout (check.sh calls
@@ -59,7 +59,7 @@ NOTE_BLOCK = re.compile(re.escape(NOTE_OPEN) + r"\n(.*?)\n?" + re.escape(NOTE_CL
                         re.DOTALL)
 FENCE = re.compile(r"^ {0,3}(```|~~~)")
 SPAN = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
-DESCRIPTION_CAP = 500
+DESCRIPTION_CAP = 1536
 _MISSING = object()
 AUTOMODE_KEY_LEN = 60
 INITIATIVE_PATH = re.compile(r"initiatives/([A-Za-z0-9][\w.-]*)/")
