@@ -1,14 +1,22 @@
 # Browsers
 
-- **Chromium** (layered RPM) — the daily browser (Geoff, 2026-10-18; Firefox is
-  retired). Two profiles split the roles: Geoff browses in his own profile, and
+- **Zen Browser** (upstream tarball in `~/.local/zen`) is Geoff's daily browser on
+  thinkpad-x1 (Geoff, 2026-11-21). It is a Firefox fork, so Firefox add-ons install from
+  addons.mozilla.org. `bluefin/zen/policies.json`, linked into the install's
+  `distribution/` directory, carries the Chromium policies' settings and installs Proton
+  Pass and Floccus. Zen's updater keeps the tarball current and leaves `distribution/`
+  alone. `bootstrap.sh` (`setup_zen`) installs it on thinkpad-x1 only. Claude never
+  drives Zen, since Anthropic ships no Firefox build of the Claude extension.
+- **Chromium** (layered RPM) is the daily browser on pavilion (Geoff, 2026-10-18; Firefox is
+  retired), and the browser Claude Code drives on both hosts. Two profiles split the roles: Geoff browses in his own profile, and
   Claude Code drives the `Default` profile (the claude-in-chrome native-messaging
   host, chrome-devtools MCP automation, and `chromium-shot`), so automation never
   runs beside his sessions or password manager. On pavilion no `Default` profile exists yet
   (2026-11-18: `~/.config/chromium` holds only `Geoff`). A session there never falls back to
   Geoff's profile, and a check that needs a real Chromium click is a `[you]` step until the
-  profile is made.
-- **Extensions are installed by hand, per profile.** Chromium policy is browser-wide
+  profile is made. On thinkpad-x1 Chromium holds one profile, `Profile 1` (2026-11-21), which
+  carries the Claude extension beside Proton Pass and Floccus from before the move to Zen.
+- **Chromium extensions are installed by hand, per profile.** Chromium policy is browser-wide
   with no per-profile scope, so no policy force-installs an extension. Geoff's
   profile carries the Proton Pass extension (Chrome Web Store id
   `ghmbeldphafepmbegfdlkpapadhbakde`) and Floccus, the bookmark sync to his share on

@@ -230,6 +230,9 @@ Found while executing setup and restore on the installed system.
   installer into ~/.local/kitty.app, not layered. Superseded by the amendment
   above: on Bluefin, Ptyxis is the terminal and kitty is kept only as the
   tui-visual-verify gate platform. The installer path is unchanged.
+- Zen Browser became Geoff's daily browser on thinkpad-x1 (Geoff, 2026-11-21), from the
+  upstream tarball into ~/.local/zen, not layered and not Flatpak. Chromium stays layered:
+  it is pavilion's daily browser and the one Claude Code drives on both hosts.
 - Claude Code via the Homebrew cask (see the amendment above; this line
   originally said the native installer to ~/.local/bin/claude). ~/.claude is
   restored from backup before first launch either way.

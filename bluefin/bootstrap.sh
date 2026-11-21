@@ -238,7 +238,10 @@ setup_remove_conflicting_flatpaks() {
 
     # Hand the default-browser association to the layered Chromium RPM;
     # setting it explicitly covers a system where it pointed at Firefox.
-    if [[ -f /usr/share/applications/chromium-browser.desktop ]]; then
+    # thinkpad-x1 browses in Zen, and setup_zen sets its default.
+    if [[ "$(hostname)" == thinkpad-x1 ]]; then
+        echo "thinkpad-x1: default browser left to setup_zen"
+    elif [[ -f /usr/share/applications/chromium-browser.desktop ]]; then
         xdg-settings set default-web-browser chromium-browser.desktop
         echo "default browser set to chromium-browser.desktop (layered RPM)"
     else
@@ -380,6 +383,48 @@ setup_kitty() {
     ln -sf "$HOME/.local/kitty.app/bin/kitten" "$HOME/.local/bin/kitten"
 }
 
+# Zen is Geoff's daily browser on thinkpad-x1 (Geoff, 2026-11-21); pavilion
+# stays on Chromium. It installs from the upstream tarball into ~/.local/zen,
+# where its built-in updater keeps it current. A Flatpak build is out (see
+# browsers.md), and the tarball gives policies.json a writable home in the
+# install's distribution directory, which updates leave alone. The policies
+# also install Proton Pass and Floccus.
+setup_zen() {
+    echo "== setup: Zen Browser upstream tarball (thinkpad-x1 daily browser) =="
+    if [[ "$(hostname)" != thinkpad-x1 ]]; then
+        echo "not thinkpad-x1, skipping"
+        return
+    fi
+    local zen_dir="$HOME/.local/zen"
+    if [[ ! -x "$zen_dir/zen" ]]; then
+        local tmp release url digest
+        tmp=$(mktemp -d) || return 1
+        release=$(curl -fsSL https://api.github.com/repos/zen-browser/desktop/releases/latest) || return 1
+        read -r url digest < <(python3 -I -c '
+import json, sys
+for a in json.load(sys.stdin)["assets"]:
+    if a["name"] == "zen.linux-x86_64.tar.xz":
+        print(a["browser_download_url"], a["digest"].removeprefix("sha256:"))
+' <<< "$release")
+        if [[ -z "$url" || -z "$digest" ]]; then
+            echo "Zen install failed: no linux-x86_64 tarball in the latest release" >&2
+            return 1
+        fi
+        curl -fsSL -o "$tmp/zen.tar.xz" "$url" || return 1
+        echo "$digest  $tmp/zen.tar.xz" | sha256sum -c --quiet || return 1
+        tar -xJf "$tmp/zen.tar.xz" -C "$HOME/.local" || return 1
+        rm -rf "$tmp"
+    else
+        echo "Zen already installed"
+    fi
+    mkdir -p "$zen_dir/distribution" || return 1
+    ln -sf "$BLUEFIN_DIR/zen/policies.json" "$zen_dir/distribution/policies.json" || return 1
+    ln -sf "$zen_dir/zen" "$HOME/.local/bin/zen" || return 1
+    # zen.desktop comes from the applications stow package.
+    xdg-settings set default-web-browser zen.desktop
+    echo "default browser set to zen.desktop"
+}
+
 # Prints a --schemadir option for a schema that ships inside a GNOME Shell
 # extension (dash-to-dock, say), which the global schema cache doesn't
 # include. Prints nothing for any other schema. Same function as check-drift's;
@@ -466,7 +511,11 @@ Browsers:
   - `flatpak list | grep -i firefox` returns nothing: the
     preinstalled Flatpak builds are gone and the layered Chromium is what runs.
   - `xdg-settings get default-web-browser` prints chromium-browser.desktop,
-    the layered RPM's desktop file under /usr/share/applications.
+    the layered RPM's desktop file under /usr/share/applications. On
+    thinkpad-x1 it prints zen.desktop instead.
+  - thinkpad-x1 only: about:policies in Zen lists the policies from
+    bluefin/zen/policies.json as active, and Proton Pass and Floccus appear
+    in about:addons.
 
 Hylki (desktop mail client) and GNOME Online Accounts:
   - `flatpak list | grep -i thunderbird` returns nothing.
@@ -849,6 +898,7 @@ phase_setup() {
         setup_vale_styles
         setup_upkeep_timer
         setup_kitty
+        setup_zen
         setup_gnome_settings
         setup_verify_claude_code
         setup_claude_settings
