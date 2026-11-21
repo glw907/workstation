@@ -35,8 +35,8 @@ background agent is editing; wait for its result, since a mid-edit read is stale
   names the one you are on; never infer the host from a doc.
 - Bluefin DX, `stable` stream (Fedora 44, bootc/ostree); GNOME on Wayland, bash, Ptyxis. Repos in `~/Projects/`.
   Node via mise, Python via uv, Go via Homebrew, Java 17.
-- Chromium is the daily browser, in Geoff's profile; Claude Code drives its `Default` profile, never Geoff's, and
-  never a Flatpak build. Artifacts, sitting pages, and mockups open in Chromium. Read
+- Geoff browses in Zen on thinkpad-x1 (2026-11-21) and in Chromium, his profile, on pavilion. Claude Code drives
+  Chromium's `Default` profile, never Geoff's, and never a Flatpak build. Artifacts, sitting pages, and mockups open in Chromium. Read
   `~/.claude/docs/bluefin-admin/browsers.md` before browser work.
 
 ## Sysadmin Preferences

@@ -1,0 +1,79 @@
+{
+  "policies": {
+    "SearchEngines": {
+      "Add": [
+        {
+          "Name": "Kagi",
+          "URLTemplate": "https://kagi.com/search?q={searchTerms}",
+          "SuggestURLTemplate": "https://kagi.com/api/autosuggest?q={searchTerms}",
+          "Method": "GET",
+          "IconURL": "https://kagi.com/favicon.ico",
+          "Alias": "kagi.com"
+        }
+      ],
+      "Default": "Kagi"
+    },
+    "Homepage": {
+      "URL": "https://kagi.com/"
+    },
+    "SearchSuggestEnabled": false,
+    "PasswordManagerEnabled": false,
+    "OfferToSaveLogins": false,
+    "AutofillAddressEnabled": false,
+    "AutofillCreditCardEnabled": false,
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "FirefoxSuggest": {
+      "WebSuggestions": false,
+      "SponsoredSuggestions": false,
+      "ImproveSuggest": false
+    },
+    "FirefoxHome": {
+      "SponsoredTopSites": false,
+      "SponsoredPocket": false
+    },
+    "UserMessaging": {
+      "ExtensionRecommendations": false,
+      "FeatureRecommendations": false,
+      "MoreFromMozilla": false
+    },
+    "DNSOverHTTPS": {
+      "Enabled": true,
+      "ProviderURL": "https://cloudflare-dns.com/dns-query",
+      "Fallback": false,
+      "Locked": true
+    },
+    "Preferences": {
+      "browser.safebrowsing.malware.enabled": {
+        "Value": false,
+        "Status": "locked"
+      },
+      "browser.safebrowsing.phishing.enabled": {
+        "Value": false,
+        "Status": "locked"
+      },
+      "browser.safebrowsing.downloads.enabled": {
+        "Value": false,
+        "Status": "locked"
+      },
+      "dom.private-attribution.submission.enabled": {
+        "Value": false,
+        "Status": "locked"
+      },
+      "browser.shopping.experience2023.enabled": {
+        "Value": false,
+        "Status": "locked"
+      }
+    },
+    "ExtensionSettings": {
+      "78272b6fa58f4a1abaac99321d503a20@proton.me": {
+        "installation_mode": "normal_installed",
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/proton-pass/latest.xpi"
+      },
+      "floccus@handmadeideas.org": {
+        "installation_mode": "normal_installed",
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/floccus/latest.xpi"
+      }
+    }
+  }
+}
