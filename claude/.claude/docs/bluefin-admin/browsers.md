@@ -3,7 +3,8 @@
 - **Zen Browser** (upstream tarball in `~/.local/zen`) is Geoff's daily browser on
   thinkpad-x1 (Geoff, 2026-11-21). It is a Firefox fork, so Firefox add-ons install from
   addons.mozilla.org. `bluefin/zen/policies.json`, linked into the install's
-  `distribution/` directory, carries the Chromium policies' settings and installs Proton
+  `distribution/` directory, carries every Chromium policy that has a Firefox equivalent
+  (the home button, spell-check service, and background mode have none) and installs Proton
   Pass and Floccus. Zen's updater keeps the tarball current and leaves `distribution/`
   alone. `bootstrap.sh` (`setup_zen`) installs it on thinkpad-x1 only. Claude never
   drives Zen, since Anthropic ships no Firefox build of the Claude extension.
@@ -32,7 +33,7 @@
 ## Showing Geoff a visual (Geoff, 2026-09-13, every repo)
 
 Before-and-after renders, mockups, screenshots, and HTML pages built for a visual decision
-open in the desktop browser by default, one tab per state, so he can tab between states, zoom,
+open in Chromium by default, on both hosts, one tab per state, so he can tab between states, zoom,
 and compare at full size. Send them as files in the conversation as well only when he is away
 from the workstation. Artifacts are one-off tools: they open in Chromium and get no
 cross-browser work. Sitting pages and mockups open in Chromium too (Geoff, 2026-10-18). For a page Claude

@@ -399,6 +399,8 @@ setup_zen() {
     if [[ ! -x "$zen_dir/zen" ]]; then
         local tmp release url digest
         tmp=$(mktemp -d) || return 1
+        # Removes the download on every exit path, failures included.
+        trap 'rm -rf "$tmp"; trap - RETURN' RETURN
         release=$(curl -fsSL https://api.github.com/repos/zen-browser/desktop/releases/latest) || return 1
         read -r url digest < <(python3 -I -c '
 import json, sys
@@ -413,7 +415,6 @@ for a in json.load(sys.stdin)["assets"]:
         curl -fsSL -o "$tmp/zen.tar.xz" "$url" || return 1
         echo "$digest  $tmp/zen.tar.xz" | sha256sum -c --quiet || return 1
         tar -xJf "$tmp/zen.tar.xz" -C "$HOME/.local" || return 1
-        rm -rf "$tmp"
     else
         echo "Zen already installed"
     fi
@@ -513,6 +514,9 @@ Browsers:
   - `xdg-settings get default-web-browser` prints chromium-browser.desktop,
     the layered RPM's desktop file under /usr/share/applications. On
     thinkpad-x1 it prints zen.desktop instead.
+  - thinkpad-x1 only: setup_zen gates on the hostname, which a fresh install
+    sets after its first `setup` run. Rerun `bootstrap.sh setup` once the
+    hostname is thinkpad-x1, or Zen is skipped and Chromium stays the default.
   - thinkpad-x1 only: about:policies in Zen lists the policies from
     bluefin/zen/policies.json as active, and Proton Pass and Floccus appear
     in about:addons.

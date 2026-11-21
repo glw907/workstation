@@ -40,28 +40,29 @@
     "DNSOverHTTPS": {
       "Enabled": true,
       "ProviderURL": "https://cloudflare-dns.com/dns-query",
-      "Fallback": false
+      "Fallback": false,
+      "Locked": true
     },
     "Preferences": {
       "browser.safebrowsing.malware.enabled": {
         "Value": false,
-        "Status": "default"
+        "Status": "locked"
       },
       "browser.safebrowsing.phishing.enabled": {
         "Value": false,
-        "Status": "default"
+        "Status": "locked"
       },
       "browser.safebrowsing.downloads.enabled": {
         "Value": false,
-        "Status": "default"
+        "Status": "locked"
       },
       "dom.private-attribution.submission.enabled": {
         "Value": false,
-        "Status": "default"
+        "Status": "locked"
       },
       "browser.shopping.experience2023.enabled": {
         "Value": false,
-        "Status": "default"
+        "Status": "locked"
       }
     },
     "ExtensionSettings": {
