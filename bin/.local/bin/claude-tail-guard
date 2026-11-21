@@ -4,7 +4,8 @@
 A pipe into tail or head hides the command's output until it exits, so a
 long gate or CI watch looks hung and its exit code is lost. The guarded
 commands are cairn-run-gate, ci-green, scripts/check.sh, scripts/gate.sh,
-npm test, npm run check[:suffix], and gh pr checks. Exit 2 denies the call;
+scripts/gate/run-gate.sh, npm test, npm run check[:suffix], make check, make
+test, go test, gh pr checks, and gh run watch. Exit 2 denies the call;
 any other non-zero exit is a non-blocking error that puts a notice on every
 such call (https://code.claude.com/docs/en/hooks), so every input the script
 cannot parse exits 0 silently.
@@ -23,8 +24,8 @@ import shlex
 import sys
 
 PREFILTER = re.compile(
-    r"cairn-run-gate|ci-green|scripts/(?:check|gate)\.sh|npm\s+test"
-    r"|npm\s+run\s+check|gh\s+pr\s+checks"
+    r"cairn-run-gate|ci-green|scripts/(?:check|gate)\.sh|scripts/gate/run-gate\.sh|npm\s+test"
+    r"|npm\s+run\s+check|gh\s+pr\s+checks|gh\s+run\s+watch|make\b|go\s+test"
 )
 TAIL_HEAD = re.compile(r"\b(?:tail|head)\b")
 HEREDOC = re.compile(r"(?<!<)<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
@@ -33,7 +34,7 @@ TRAILING_TAIL_HEAD = re.compile(r"(?:\s*\|\s*(?:tail|head)\b[^|;&\n]*)+$")
 PIPES = {"|", "|&"}
 MESSAGE = (
     "Blocked: nothing in this Bash call ran, including every command before and "
-    "after this pipe, so reissue all of it. Piping a gate or CI-watch command "
+    "after this pipe, so reissue all of it. Piping a gate, test suite, or CI-watch command "
     "into tail or head hides its output until it exits. Run it bare, or redirect "
     "it to a file (cmd > /tmp/out.log 2>&1) and read the file."
 )
@@ -120,15 +121,20 @@ def is_guarded(words: list[str]) -> bool:
         return not {"--records", "--receipt"} & set(words)
     if os.path.basename(first) == "ci-green":
         return True
-    if re.fullmatch(r"(?:.*/)?scripts/(?:check|gate)\.sh", first):
+    if re.fullmatch(r"(?:.*/)?scripts/(?:check|gate)\.sh|(?:.*/)?scripts/gate/run-gate\.sh", first):
         return "--dry-run" not in words
+    if first == "make" or first.endswith("/make"):
+        targets = [word for word in words[1:] if not word.startswith("-") and "=" not in word]
+        return bool({"check", "test"} & set(targets))
+    if first == "go":
+        return words[1:2] == ["test"]
     if first == "npm":
         return words[1:2] == ["test"] or (
             words[1:2] == ["run"]
             and len(words) > 2
             and re.fullmatch(r"check(?::.*)?", words[2]) is not None
         )
-    return words[:3] == ["gh", "pr", "checks"]
+    return words[:3] in (["gh", "pr", "checks"], ["gh", "run", "watch"])
 
 
 def strip_trailing_stages(command: str) -> str | None:

@@ -152,3 +152,46 @@ def test_rewrite_keeps_quoted_expansion_byte_for_byte():
     assert result.returncode == 0
     updated = json.loads(result.stdout)["hookSpecificOutput"]["updatedInput"]
     assert updated["command"] == 'cairn-run-gate "$X" 2>&1'
+
+
+# The wider set: CI watches, the run-gate script, make check and test, and go test.
+@pytest.mark.parametrize(("command", "expected"), [
+    ("gh run watch 123 --exit-status | tail -5", "gh run watch 123 --exit-status"),
+    ("bash scripts/gate/run-gate.sh full 2>&1 | tail -20", "bash scripts/gate/run-gate.sh full 2>&1"),
+    ("scripts/gate/run-gate.sh | head", "scripts/gate/run-gate.sh"),
+    ("make check | tail", "make check"),
+    ("make -j4 test 2>&1 | tail -30", "make -j4 test 2>&1"),
+    ("go test ./... | tail -20", "go test ./..."),
+    ("CGO_ENABLED=0 go test -count=1 ./internal/... 2>&1 | head -50",
+     "CGO_ENABLED=0 go test -count=1 ./internal/... 2>&1"),
+])
+def test_wider_set_rewritten(command, expected):
+    result = run_hook({"tool_input": {"command": command}})
+    assert result.returncode == 0
+    assert json.loads(result.stdout)["hookSpecificOutput"]["updatedInput"] == {"command": expected}
+
+
+@pytest.mark.parametrize("command", [
+    "make test | tee out.log | tail",
+    "go test ./... | grep FAIL | tail",
+    "git status; gh run watch 5 | tail",
+])
+def test_wider_set_denied(command):
+    result = run_hook({"tool_input": {"command": command}})
+    assert result.returncode == 2
+    assert "test suite" in result.stderr
+
+
+@pytest.mark.parametrize("command", [
+    "make build | tail",
+    "make | tail",
+    "go vet ./... | tail",
+    "go build ./... 2>&1 | head",
+    "gh run view 5 --log | tail -50",
+    "gh run list | head",
+    "make test",
+    "go test ./...",
+])
+def test_wider_set_allows_others(command):
+    result = run_hook({"tool_input": {"command": command}})
+    assert (result.returncode, result.stdout, result.stderr) == (0, "", "")
