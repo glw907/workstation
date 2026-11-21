@@ -26,8 +26,9 @@ Commands:
                    tree-only checks against TREE's own copy: vendored-skills.json is
                    well formed, every skills/<dir> carrying a LICENSE* file has a
                    manifest entry, and every installed vendored SKILL.md carries its
-                   entry's overlays, no SKILL.md description runs over 1,536 characters
-                   (`description-cap`, unless it carries a `paths:` key), and no
+                   entry's overlays, no SKILL.md description runs over 500 characters
+                   (`description-cap`, unless it carries a `paths:` key; a skill named in
+                   DESCRIPTION_CAP_EXEMPT gets its own cap), and no
                    `context: fork` skill body assumes a conversation (`fork-skill`).
                    Runs from a worktree's own checkout (check.sh calls
                    it as `claude-tooling-sync lint --root .`), never through ~/.claude.
@@ -59,7 +60,10 @@ NOTE_BLOCK = re.compile(re.escape(NOTE_OPEN) + r"\n(.*?)\n?" + re.escape(NOTE_CL
                         re.DOTALL)
 FENCE = re.compile(r"^ {0,3}(```|~~~)")
 SPAN = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
-DESCRIPTION_CAP = 1536
+DESCRIPTION_CAP = 500
+# building-from-specs carries its approved spec's text word for word, and that spec caps a
+# description at the native listing's 1,536 characters.
+DESCRIPTION_CAP_EXEMPT = {"building-from-specs": 1536}
 _MISSING = object()
 AUTOMODE_KEY_LEN = 60
 INITIATIVE_PATH = re.compile(r"initiatives/([A-Za-z0-9][\w.-]*)/")
@@ -655,7 +659,8 @@ def skill_violations(root, path):
     found = []
     description = read_description(fm)
     gated = any(line.startswith("paths:") for line in fm)
-    if description is not None and len(description) > DESCRIPTION_CAP and not gated:
+    cap = DESCRIPTION_CAP_EXEMPT.get(path.parent.name, DESCRIPTION_CAP)
+    if description is not None and len(description) > cap and not gated:
         found.append({"check": "description-cap", "file": rel, "fingerprint": "description"})
     if any(FORK_CONTEXT.match(line) for line in fm):
         text = collapse(body).lower()
