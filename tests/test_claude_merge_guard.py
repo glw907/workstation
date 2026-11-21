@@ -364,3 +364,42 @@ def test_no_git_or_gh_word_exits_before_parsing(repos):
     # An unbalanced quote would make the parser fall back; the prefilter means it never runs.
     assert run_in("echo 'legit ghost digit", repos["primary"]) is None
     assert run_in("make push -f", repos["primary"]) is None
+
+
+# An unquoted variable or substitution names a path or ref the text can't show, so it passes.
+@pytest.mark.parametrize("command", [
+    "git add -A $DIR",
+    "git add -u $(git diff --name-only -- docs)",
+    "git add -A ${DIR}",
+    "git push -f origin $BRANCH",
+    "git push --force origin $(git branch --show-current)",
+])
+def test_unquoted_expansion_operand_passes(command, repos):
+    assert run_in(command, repos["primary"]) is None
+
+
+@pytest.mark.parametrize("command", [
+    "git add -A; echo $DIR",
+    "echo $DIR && git add -A",
+    "git push -f origin main $EXTRA",
+])
+def test_expansion_elsewhere_still_refused(command, repos):
+    assert run_in(command, repos["primary"]) is not None
+
+
+def test_merge_inside_substitution_refused(tmp_path):
+    assert run_in('echo "$(gh pr merge 7)"', tmp_path) == TODAYS_REASON
+    assert run_in("x=$(gh pr merge 7)", tmp_path) == TODAYS_REASON
+
+
+def test_absolute_directory_read_without_cwd(repos):
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    env["CLAUDE_MERGE_GUARD_EXEMPT"] = ""
+    for command in (f"git -C {repos['primary']} add -A", f"cd {repos['primary']} && git add -A"):
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT)],
+            input=json.dumps({"tool_input": {"command": command}, "cwd": ""}),
+            capture_output=True, text=True, check=False, env=env,
+        )
+        assert result.returncode == 0, result.stderr
+        assert json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"] == "deny"

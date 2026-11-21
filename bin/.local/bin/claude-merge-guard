@@ -42,7 +42,7 @@ from pathlib import Path
 PREFILTER = re.compile(r"(?<![\w.-])(?:git|gh)(?![\w.-])")
 HEREDOC = re.compile(r"(?<!<)<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
 REDIRECT = re.compile(r"\d*[<>]&\d*")
-SEPARATORS = re.compile(r"[$`()|&;\n]")
+SEPARATORS = re.compile(r"[`()|&;\n]")
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "nohup", "exec", "time", "timeout", "sudo", "xargs", "!", "{", "if",
             "then", "do", "else", "elif", "while", "until"}
@@ -230,10 +230,12 @@ def run_git(directory: Path, args: list[str], env: dict[str, str]) -> list[str] 
 
 def readable_dir(word: str, base: Path | None) -> Path | None:
     """Return the directory a literal word names, against base, or None when the text can't show it."""
-    if base is None or not word or word == "-" or UNREADABLE.search(word):
+    if not word or word == "-" or UNREADABLE.search(word):
         return None
     path = Path(os.path.expanduser(word))
-    return path if path.is_absolute() else base / path
+    if path.is_absolute():
+        return path
+    return None if base is None else base / path
 
 
 class Git:
@@ -330,10 +332,11 @@ def forced_push_to_main(git: Git) -> bool:
     if any(option in ("--all", "--mirror", "--branches") for option in options):
         return True
     targets = [spec.lstrip("+").rsplit(":", 1)[-1] or spec for spec in refspecs]
-    if any(UNREADABLE.search(target.replace("*", "")) for target in targets):
-        return False
-    if any(protected(target) for target in targets if target not in ("HEAD", "@")):
+    readable = [target for target in targets if not UNREADABLE.search(target.replace("*", ""))]
+    if any(protected(target) for target in readable if target not in ("HEAD", "@")):
         return True
+    if len(readable) < len(targets):
+        return False
     if targets and all(target not in ("HEAD", "@") for target in targets):
         return False
     branch = current_branch(git)
