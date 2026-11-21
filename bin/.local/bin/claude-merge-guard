@@ -1,33 +1,80 @@
 #!/usr/bin/env python3
-"""PreToolUse hook denying every `gh pr merge`, so a merge goes through `approval-queue`.
+"""PreToolUse hook for the Git and gh slips no session should make.
 
-A merge lands through `approval-queue merge <id>` (a document Geoff approved) or
-`approval-queue land <owner/repo#n> <sentence>` (a PR that needs no document). Quoted text, escapes, comments, and heredoc bodies never
-count as shell syntax, so a command that only mentions `gh pr merge` goes through. Per the hooks
-reference (https://code.claude.com/docs/en/hooks) a denial is `hookSpecificOutput.permissionDecision:
-"deny"` with a `permissionDecisionReason`, printed with exit 0. This is a slip guard, not a
-security boundary; its registration sets `onFailure: "block"` because a timed-out hook does not
-block the call. Every input the script cannot parse exits 0 silently.
+It denies four things:
+
+- A PR merge outside `approval-queue`: `gh pr merge`, `gh -R <repo> pr merge`, and the REST merge
+  call, `gh api -X PUT .../pulls/<n>/merge`. A merge lands through `approval-queue merge <id>` (a
+  document Geoff approved) or `approval-queue land <owner/repo#n> <sentence>` (a PR that needs no
+  document).
+- A forced `git push` whose destination is `main` or `master`: named in a ref argument, reached
+  through `--all` or `--mirror`, or reached through `HEAD`, `@`, or no ref argument when the
+  current branch is one of them. A forced push to any other branch passes.
+- Whole-tree staging in a primary checkout: a `git add` whose only targets are `-A`, `--all`,
+  `-u`, `--update`, or a bare `.`, `:/`, or `*`, and a `git commit` with `-a`. A primary checkout
+  is one where `git rev-parse --path-format=absolute --git-dir --git-common-dir` prints one path
+  twice. A worktree, a repo with no commit, and a repo under an exempt folder pass. The
+  CLAUDE_MERGE_GUARD_EXEMPT variable in the hook's environment replaces the exempt list (a
+  colon-separated list), which only the tests set.
+
+A Git check reads its directory from `git -C <dir>`, then a literal `cd <dir>` earlier in the
+command, then the hook input's `cwd`. A directory the text can't show (a variable, a glob) allows
+the command, and so does any Git subprocess that fails: Git reports the problem itself.
+
+Quoted text, escapes, comments, and heredoc bodies never count as shell syntax, so a command that
+only mentions one of these goes through. A command with neither `git` nor `gh` as a word exits
+before any parsing. Per the hooks reference (https://code.claude.com/docs/en/hooks) a denial is
+`hookSpecificOutput.permissionDecision: "deny"` with a `permissionDecisionReason`, printed with
+exit 0. This is a slip guard, not a security boundary; its registration sets `onFailure: "block"`
+because a timed-out hook does not block the call. Every input the script cannot parse exits 0
+silently.
 """
 
+import fnmatch
 import json
+import os
 import re
+import shlex
+import subprocess
 import sys
+from pathlib import Path
 
-PREFILTER = re.compile(r"gh\s+pr\s+merge")
+PREFILTER = re.compile(r"(?<![\w.-])(?:git|gh)(?![\w.-])")
 HEREDOC = re.compile(r"(?<!<)<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
 REDIRECT = re.compile(r"\d*[<>]&\d*")
-SEPARATORS = re.compile(r"[$`()|&;\n]")
+SEPARATORS = re.compile(r"[`()|&;\n]")
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "nohup", "exec", "time", "timeout", "sudo", "xargs", "!", "{", "if",
             "then", "do", "else", "elif", "while", "until"}
 SKIPPED = re.compile(r"-\S*|\d+[smhd]?|[A-Z]{3,}|\d*[<>]\S*")
 GH = re.compile(r"(\S*/)?gh")
+GIT = re.compile(r"(\S*/)?git")
+REDIRECTION = re.compile(r"\d*(?:[<>]+|&>>?)&?(?P<target>\S*)")
+UNREADABLE = re.compile(r"[$`*?\[{]")
 REASON = (
     "Blocked: merge through approval-queue, never `gh pr merge`. Use `approval-queue merge <id>` for a "
     "document Geoff approved, or `approval-queue land <owner/repo#n> <sentence>` for a PR that "
     "needs no document; the `approval-packet` skill has the procedure."
 )
+FORCE_REASON = (
+    "Blocked: a forced push to main or master rewrites the branch every session builds on. Push "
+    "the work to a feature branch and open a pull request; a forced push to a feature branch "
+    "passes (git push --force-with-lease origin <branch>)."
+)
+STAGING_REASON = (
+    "Blocked: whole-tree staging in a primary checkout can sweep in another session's files. "
+    "Stage files by name (git add path/a path/b, then git commit), or work in a worktree, where "
+    "this check does not apply."
+)
+DEFAULT_EXEMPT = ["~/.local/state", "~/.claude/jobs", "$CLAUDE_JOB_DIR", "/tmp", "~/.cache"]
+GIT_VALUE_OPTIONS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env",
+                     "--super-prefix", "--exec-path"}
+PUSH_VALUE_OPTIONS = {"-o", "--push-option", "--repo", "--receive-pack", "--exec"}
+COMMIT_VALUE_SHORT = set("mFCct")
+COMMIT_VALUE_LONG = {"--message", "--file", "--reuse-message", "--reedit-message", "--author",
+                     "--date", "--template", "--fixup", "--squash", "--cleanup", "--trailer",
+                     "--pathspec-from-file"}
+WHOLE_TREE_TARGETS = {".", "./", ":/", ":/.", ":(top)", "*"}
 
 
 def blank_heredocs(command: str) -> str:
@@ -103,32 +150,287 @@ def mask(command: str) -> str:
     return REDIRECT.sub(lambda found: " " * len(found.group(0)), "".join(out))
 
 
-def merges(masked: str) -> bool:
-    """Return whether any stage of masked text runs `gh pr merge`, past assignments and wrappers."""
-    for stage in SEPARATORS.split(masked):
-        words = stage.split()
-        while words and (ASSIGNMENT.match(words[0]) or SKIPPED.fullmatch(words[0])
-                         or words[0] in WRAPPERS):
-            del words[:1]
-        if len(words) >= 3 and GH.fullmatch(words[0]) and words[1:3] == ["pr", "merge"]:
+def strip_wrappers(words: list[str]) -> tuple[list[str], dict[str, str], bool]:
+    """Drop leading assignments and wrappers; return the rest, the assignments, and whether xargs ran."""
+    assigned: dict[str, str] = {}
+    xargs = False
+    while words and (ASSIGNMENT.match(words[0]) or SKIPPED.fullmatch(words[0])
+                     or words[0] in WRAPPERS):
+        if ASSIGNMENT.match(words[0]):
+            name, _, value = words[0].partition("=")
+            assigned[name] = value
+        xargs = xargs or words[0] == "xargs"
+        del words[:1]
+    return words, assigned, xargs
+
+
+def stages(command: str):
+    """Yield each live stage as (masked words, read words), in order.
+
+    Masked words come from text with quotes blanked, so they say which command is live. Read
+    words come from shlex on the same span of the unmasked text, so a quoted argument keeps its
+    value; a span shlex can't split falls back to the masked words.
+    """
+    original = blank_heredocs(command)
+    masked = mask(original)
+    start = 0
+    for found in list(SEPARATORS.finditer(masked)) + [None]:
+        end = found.start() if found else len(masked)
+        live = masked[start:end].split()
+        if live:
+            try:
+                read = shlex.split(original[start:end], comments=True)
+            except ValueError:
+                read = list(live)
+            yield live, read
+        start = end + 1
+
+
+def merges(live: list[str], read: list[str]) -> bool:
+    """Return whether a stage merges a PR through gh."""
+    live = strip_wrappers(list(live))[0]
+    if not live or not GH.fullmatch(live[0]):
+        return False
+    words = strip_wrappers(list(read))[0][1:]
+    while words and (words[0] in ("-R", "--repo") or words[0].startswith(("--repo=", "-R"))):
+        del words[: 2 if words[0] in ("-R", "--repo") else 1]
+    if words[:2] == ["pr", "merge"]:
+        return True
+    if words[:1] != ["api"]:
+        return False
+    method, rest = "", words[1:]
+    for index, word in enumerate(rest):
+        if word in ("-X", "--method") and index + 1 < len(rest):
+            method = rest[index + 1]
+        elif word.startswith("--method="):
+            method = word.split("=", 1)[1]
+        elif word.startswith("-X") and len(word) > 2:
+            method = word[2:]
+    paths = [word for word in rest if re.search(r"(?:^|/)pulls/[^/\s]+/merge/?$", word)]
+    return method.upper() == "PUT" and bool(paths)
+
+
+def git_env(assigned: dict[str, str]) -> dict[str, str]:
+    """Return an environment for Git subprocesses: no inherited GIT_ variables, plus the command's."""
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    env.update({key: value for key, value in assigned.items() if key in ("GIT_DIR", "GIT_WORK_TREE")})
+    env["GIT_OPTIONAL_LOCKS"] = "0"
+    return env
+
+
+def run_git(directory: Path, args: list[str], env: dict[str, str]) -> list[str] | None:
+    """Run one read-only Git command and return its output lines, or None on any failure."""
+    try:
+        result = subprocess.run(["git", "-C", str(directory), *args], capture_output=True,
+                                text=True, timeout=5, env=env, check=False)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+    return result.stdout.splitlines() if result.returncode == 0 else None
+
+
+def readable_dir(word: str, base: Path | None) -> Path | None:
+    """Return the directory a literal word names, against base, or None when the text can't show it."""
+    if not word or word == "-" or UNREADABLE.search(word):
+        return None
+    path = Path(os.path.expanduser(word))
+    if path.is_absolute():
+        return path
+    return None if base is None else base / path
+
+
+class Git:
+    """One live `git` stage: its directory, subcommand, and arguments."""
+
+    def __init__(self, read: list[str], base: Path | None):
+        words, assigned, self.xargs = strip_wrappers(list(read))
+        self.env = git_env(assigned)
+        self.directory = base
+        self.globals: list[str] = []
+        words = words[1:]
+        while words and words[0].startswith("-"):
+            option = words.pop(0)
+            name, has_value, value = option.partition("=")
+            if name in GIT_VALUE_OPTIONS and not has_value:
+                value = words.pop(0) if words else ""
+            if name == "-C":
+                self.directory = readable_dir(value, self.directory)
+            elif name in ("--git-dir", "--work-tree"):
+                if UNREADABLE.search(value):
+                    self.directory = None
+                self.globals.append(f"{name}={os.path.expanduser(value)}")
+        self.subcommand = words[0] if words else ""
+        self.args = words[1:]
+        if any(key in assigned and UNREADABLE.search(assigned[key]) for key in ("GIT_DIR", "GIT_WORK_TREE")):
+            self.directory = None
+
+    def lines(self, *args: str) -> list[str] | None:
+        """Run a read-only Git command in this stage's repo."""
+        if self.directory is None:
+            return None
+        return run_git(self.directory, [*self.globals, *args], self.env)
+
+
+def operands(args: list[str], value_options: set[str], value_short: set[str] = frozenset()):
+    """Split arguments into options and operands, dropping redirections and option values."""
+    options, found = [], []
+    index, ended = 0, False
+    while index < len(args):
+        word = args[index]
+        index += 1
+        redirection = REDIRECTION.fullmatch(word)
+        if redirection and not ended:
+            index += 0 if redirection.group("target") else 1
+            continue
+        if ended or not word.startswith("-") or word == "-":
+            found.append(word)
+        elif word == "--":
+            ended = True
+        else:
+            options.append(word)
+            name = word.split("=", 1)[0]
+            short_value = (not word.startswith("--") and len(word) == 2 and word[1] in value_short)
+            if "=" not in word and (name in value_options or short_value):
+                index += 1
+    return options, found
+
+
+def short_cluster_has(option: str, flag: str, value_short: set[str]) -> bool:
+    """Return whether a short-flag cluster such as -fu or -am sets flag before a value flag."""
+    if option.startswith("--") or not option.startswith("-"):
+        return False
+    for char in option[1:]:
+        if char == flag:
             return True
+        if char in value_short:
+            return False
     return False
 
 
+def current_branch(git: Git) -> str | None:
+    """Return the current branch's short name, or None when detached or unreadable."""
+    lines = git.lines("symbolic-ref", "--quiet", "--short", "HEAD")
+    return lines[0] if lines else None
+
+
+def protected(name: str) -> bool:
+    """Return whether a destination ref names main or master, a wildcard included."""
+    name = name.removeprefix("refs/heads/")
+    return any(fnmatch.fnmatchcase(branch, name) for branch in ("main", "master"))
+
+
+def forced_push_to_main(git: Git) -> bool:
+    """Return whether a live git push forces onto main or master."""
+    options, found = operands(git.args, PUSH_VALUE_OPTIONS, {"o"})
+    refspecs = found[1:]
+    forced = any(
+        option in ("--force", "--force-if-includes") or option.startswith("--force-with-lease")
+        or short_cluster_has(option, "f", {"o"})
+        for option in options
+    ) or any(spec.startswith("+") for spec in refspecs)
+    if not forced:
+        return False
+    if any(option in ("--all", "--mirror", "--branches") for option in options):
+        return True
+    targets = [spec.lstrip("+").rsplit(":", 1)[-1] or spec for spec in refspecs]
+    readable = [target for target in targets if not UNREADABLE.search(target.replace("*", ""))]
+    if any(protected(target) for target in readable if target not in ("HEAD", "@")):
+        return True
+    if readable and len(readable) == len(targets) and all(target not in ("HEAD", "@") for target in targets):
+        return False
+    branch = current_branch(git)
+    return branch is not None and protected(branch)
+
+
+def whole_tree(git: Git) -> bool:
+    """Return whether a live git add or commit stages the whole tree."""
+    if git.subcommand in ("add", "stage"):
+        if git.xargs:
+            return False
+        options, found = operands(git.args, {"--chmod", "--pathspec-from-file"})
+        if any(option.startswith("--pathspec-from-file") for option in options):
+            return False
+        flagged = any(
+            option in ("--all", "--update") or (option.startswith("--") and len(option) > 3
+                                                 and ("--all".startswith(option) or "--update".startswith(option)))
+            or short_cluster_has(option, "A", set()) or short_cluster_has(option, "u", set())
+            for option in options
+        )
+        if found:
+            return all(target in WHOLE_TREE_TARGETS for target in found)
+        return flagged
+    if git.subcommand == "commit":
+        options, _ = operands(git.args, COMMIT_VALUE_LONG, COMMIT_VALUE_SHORT)
+        return any(option == "--all" or short_cluster_has(option, "a", COMMIT_VALUE_SHORT)
+                   for option in options)
+    return False
+
+
+def exempt_roots() -> list[Path]:
+    """Return the folders the staging check skips."""
+    raw = os.environ.get("CLAUDE_MERGE_GUARD_EXEMPT")
+    entries = raw.split(":") if raw is not None else DEFAULT_EXEMPT
+    roots = []
+    for entry in entries:
+        if entry == "$CLAUDE_JOB_DIR":
+            entry = os.environ.get("CLAUDE_JOB_DIR", "")
+        if entry:
+            roots.append(Path(os.path.expanduser(entry)).resolve())
+    return roots
+
+
+def primary_checkout(git: Git) -> bool:
+    """Return whether the stage's repo is a primary checkout with a commit, outside the exempt folders."""
+    lines = git.lines("rev-parse", "--path-format=absolute", "--git-dir", "--git-common-dir", "HEAD")
+    if not lines or len(lines) < 3 or lines[0] != lines[1]:
+        return False
+    places = [Path(lines[0]).resolve(), git.directory.resolve()]
+    return not any(place.is_relative_to(root) for root in exempt_roots() for place in places)
+
+
+def git_stages(command: str, cwd: Path | None):
+    """Yield each live git stage in order, with the directory a literal cd left it in."""
+    base = cwd
+    for live, read in stages(command):
+        words = strip_wrappers(list(live))[0]
+        if words and words[0] in ("cd", "pushd"):
+            target = strip_wrappers(list(read))[0][1:2]
+            base = readable_dir(target[0], base) if target else Path.home()
+        elif words and GIT.fullmatch(words[0]):
+            yield live, read, Git(read, base)
+
+
+def refusal(command: str, cwd: Path | None) -> str | None:
+    """Return the reason to deny a command, or None to let it run."""
+    for live, read in stages(command):
+        if merges(live, read):
+            return REASON
+    for _, _, git in git_stages(command, cwd):
+        if git.subcommand == "push" and forced_push_to_main(git):
+            return FORCE_REASON
+        if whole_tree(git) and primary_checkout(git):
+            return STAGING_REASON
+    return None
+
+
 def main() -> int:
-    """Read the hook input and deny a command that merges a PR."""
+    """Read the hook input and deny a command this guard refuses."""
     try:
-        command = json.load(sys.stdin)["tool_input"]["command"]
+        payload = json.load(sys.stdin)
+        command = payload["tool_input"]["command"]
     except (KeyError, TypeError, ValueError):
         return 0
-    if not isinstance(command, str):
+    if not isinstance(command, str) or not PREFILTER.search(command):
         return 0
-    masked = mask(blank_heredocs(command))
-    if PREFILTER.search(masked) and merges(masked):
+    cwd = payload.get("cwd") if isinstance(payload, dict) else None
+    try:
+        reason = refusal(command, Path(cwd) if isinstance(cwd, str) and cwd else None)
+    except Exception:  # noqa: BLE001 - this hook blocks every Bash call on a crash, so it allows
+        return 0
+    if reason:
         print(json.dumps({"hookSpecificOutput": {
             "hookEventName": "PreToolUse",
             "permissionDecision": "deny",
-            "permissionDecisionReason": REASON,
+            "permissionDecisionReason": reason,
         }}))
     return 0
 
