@@ -141,7 +141,7 @@ legs() {
         "roadmap-refs check test" bash tests/check-roadmap-refs.test.sh
     run memory-write-check '^tests/claude-memory-write-check\.test\.sh$|^bin/\.local/bin/claude-memory-write-check$' \
         "claude-memory-write-check hook" bash tests/claude-memory-write-check.test.sh
-    run pytest "\\.py\$|^ruff\\.toml\$|^tests/(fixtures|vale)/|^bin/\\.local/bin/(claude-(block-pass|launch-guard|merge-guard|secret-guard|tail-guard|tierguard|tooling-sync|pass|worktree-busy)|cairn-run-gate|ci-green|cleanroom|phone-check|pass-report|vale-hook|voipms-sms|pass-access|pass-count|pass-sitting|secret-receive|ws-pass-key|planner|round-watch)\$|^bin/\\.local/share/cleanroom/|^scripts/(check-claude-refs\\.py|check\\.sh|gate\\.sh|githooks/)|^vale/|^claude/\\.claude/(settings\\.json|tooling/|docs/bluefin-admin)|^bluefin/(Brewfile|layered-packages\\.txt|etc/sudoers\\.d/)|$SKILLS" \
+    run pytest "\\.py\$|^ruff\\.toml\$|^tests/(fixtures|vale)/|^bin/\\.local/bin/(claude-(block-pass|launch-guard|merge-guard|secret-guard|tail-guard|tierguard|tooling-sync|pass|worktree-busy)|cairn-run-gate|ci-green|cleanroom|phone-check|pass-report|vale-hook|voipms-sms|pass-access|pass-count|pass-sitting|secret-receive|ws-pass-key|planner|round-watch)\$|^bin/\\.local/share/cleanroom/|^scripts/(check-claude-refs\\.py|check\\.sh|gate\\.sh|githooks/)|^vale/|^claude/\\.claude/(CLAUDE\\.md\$|settings\\.json|tooling/|docs/bluefin-admin)|^bluefin/(Brewfile|layered-packages\\.txt|etc/sudoers\\.d/)|$SKILLS" \
         "vale-hook test suite" uv run --with pytest --no-project python -m pytest tests/ -q
     run vale-fixtures '^tests/(vale/|test_vale_hook\.py$)|^vale/|^bin/\.local/bin/vale-hook$' \
         "vale style fixtures" bash tests/vale/run-fixtures.sh
