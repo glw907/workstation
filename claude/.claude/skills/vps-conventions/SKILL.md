@@ -1,10 +1,6 @@
 ---
 name: vps-conventions
 description: Holds the judgment calls for systemd units, cloud-init, and deploy scripts on a RHEL-family VPS. Use when writing or changing systemd units (services, timers, path units), cloud-init user-data, or provisioning and deploy scripts, or anything that places files or locks on a Linux VPS. Also use when choosing where a lock, temp, or state file lives, when a unit fails with mount-namespacing or missing-directory errors, when auto mode denies an ssh step, or before adding an ssh allow rule.
-paths:
-  - "**/*.service"
-  - "**/*.timer"
-  - "**/user-data.yaml"
 ---
 
 # VPS conventions
