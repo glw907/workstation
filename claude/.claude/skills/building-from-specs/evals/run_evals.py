@@ -13,7 +13,10 @@ out), so the skill loads from the branch. It is a copy because Glob does not fol
 session that looks for the file would miss it. With `--state off`, the project holds no copy and
 `skillOverrides` sets the skill to "off". The raw stream stays in the scratch folder. The evidence
 file keeps the query, the skills the session loaded, the folder each load came from, the tools it
-called, and its final answer.
+was offered, each call with its input, and its final answer.
+
+A session can only read: it gets Read, Glob, Grep, and Skill, the write tools are refused, and no
+MCP server loads, so a query can ask for a plan but nothing can carry one out.
 """
 
 import argparse
@@ -85,7 +88,7 @@ def evidence(lines, skill, query=""):
     expands it before the model runs, and the stream does not echo the expanded text.
     """
     invoked, reads, listed, result, cost, tools, bases = [], [], None, "", None, [], []
-    slash = False
+    slash, offered, calls = False, [], []
     for line in lines:
         try:
             event = json.loads(line)
@@ -95,6 +98,7 @@ def evidence(lines, skill, query=""):
             listed = any(s.split(":")[-1] == skill for s in event.get("skills", []))
             opens = query.split(maxsplit=1)[0] if query.strip() else ""
             slash = opens == f"/{skill}" and skill in event.get("slash_commands", [])
+            offered = sorted(event.get("tools", []))
         message = event.get("message")
         content = message.get("content", []) if isinstance(message, dict) else []
         if isinstance(content, str):
@@ -104,6 +108,8 @@ def evidence(lines, skill, query=""):
                 continue
             if part.get("type") == "tool_use":
                 tools.append(part.get("name", ""))
+                # The input is kept so a reader can check each call for a write.
+                calls.append({"name": part.get("name", ""), "input": json.dumps(part.get("input", {}))[:400]})
                 if part.get("name") == "Skill":
                     invoked.append(part.get("input", {}).get("skill", ""))
                 path = part.get("input", {}).get("file_path", "")
@@ -117,7 +123,8 @@ def evidence(lines, skill, query=""):
     loaded = bool(reads or bases or slash) or any(name.split(":")[-1] == skill for name in invoked)
     return {"listed": listed, "invoked": invoked, "readSkillFile": reads, "loadedFrom": sorted(set(bases)),
             "slashExpanded": slash,
-            "loaded": loaded, "toolsUsed": sorted(set(tools)), "result": result, "costUsd": cost}
+            "loaded": loaded, "toolsOffered": offered, "toolsUsed": sorted(set(tools)), "toolCalls": calls,
+            "result": result, "costUsd": cost}
 
 
 def main():
@@ -140,6 +147,10 @@ def main():
         "--model", MODELS[args.model], "--effort", "medium",
         "--output-format", "stream-json", "--verbose",
         "--tools", "Read,Glob,Grep,Skill",
+        # --tools alone let Bash through in one round, so the write tools are refused outright.
+        # --strict-mcp-config drops the connectors but not a plugin's server, which is denied by name.
+        "--disallowedTools", "Bash,Edit,Write,NotebookEdit,WebFetch,mcp__plugin_cloudflare_cloudflare",
+        "--strict-mcp-config",
         "--setting-sources", "project,local",
         "--settings", json.dumps(settings(args.skill, args.state)),
         "--no-session-persistence",

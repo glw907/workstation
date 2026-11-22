@@ -1,0 +1,25 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T02:12:07Z",
+  "seconds": 13.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "**Put it in a hook, not CLAUDE.md or a skill.**\n\nYour `claude-infra` skill ranks the homes: hook first, then skill or agent, then CLAUDE.md. It quotes Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>): \"If a rule must hold every time, make it a hook rather than a prompt instruction.\" \"No exceptions\" is that case.\n\n- **CLAUDE.md** is a request to the model. Claude can misjudge it, lose it after a context compaction, or run the command through a subagent that never read it. It is the weakest option for a hard block.\n- **A skill** loads only when it's invoked, and it still only advises. It carries reference material \"Claude needs sometimes\", which is the wrong shape for an always-on prohibition.\n- **A hook** runs in the harness, outside the model's judgment. A `PreToolUse` hook on `Bash` can inspect the command and exit with code 2 to block it. The block holds whatever Claude intended.\n\n**How to build it**\n\n- Write the hook with a settings-level `PreToolUse` matcher on `Bash`, using the built-in `update-config` skill for the `settings.json` mechanics. Put it in user scope so it covers every repo.\n- Keep the check in a small script. Per your tool-language rule, that's Bash, or stdlib-only Python run as `python3 -I` if it parses the command. It lives under `~/.dotfiles/bin/.local/bin/` and is stowed.\n- Match `rm` with a recursive flag, in any spelling (`-rf`, `-fr`, `-r -f`, `--recursive`, `sudo rm`). The target has to resolve to a home folder: `~`, `$HOME`, `/var/home/glw907`, `/home/...`, with or without a trailing slash or `/*`. Expand variables and normalize the path before comparing.\n- Decide up front whether \"a home folder\" means only your own or any user's. Decide whether it means the folder itself or anything inside it. Those readings change the pattern a lot. Your CLAUDE.md says a spec carries no open readings, so settle these before building.\n\n**Limits and caveats**\n\n- A command-string match can't catch every indirection, such as `bash -c \"$(...)\"`, a script that does the deletion, `find -delete`, or `rsync --delete`. A hook gives a strong but not airtight \"no exceptions\". For true enforcement, pair it with a `permissions.deny` rule, such as `Bash(rm -rf ~*)`, as a second layer. Deny rules are prefix-based and also have gaps.\n- This hook only covers Claude's Bash calls, not your own terminal. Say so if \"blocked\" was meant more broadly.\n\n**How it lands**\n\n- Per `claude-infra`, cite the Anthropic hooks page in the commit and PR.\n- Add the manifest entry for the hook. The \"Layout\" table in `~/.claude/docs/claude-tooling.md` says which one.\n- Run `claude-tooling-sync verify`.\n- Land the change through a PR in `~/.dotfiles`, with `bash scripts/gate.sh` as its gate.\n- Add a test that feeds the hook a few commands, some that should block and some that shouldn't.\n\nOptionally, add one line to CLAUDE.md saying the hook exists, so Claude doesn't waste turns retrying a blocked command. The hook's own stderr message already covers that, and `claude-infra` says one home per rule, so I'd skip the CLAUDE.md line.\n\nI changed nothing. Say the word and I'll build it, and tell me which reading of \"home folder\" you want.",
+  "costUsd": 0.0925443
+}

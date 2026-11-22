@@ -1,0 +1,22 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T02:09:38Z",
+  "seconds": 15.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "result": "**Recommendation:** put the checklist in the `cairn-pass` skill, under a \"Cutting a release\" heading. It's the adapter for cairn-cms work, and per `~/.claude/CLAUDE.md` each repo's checklists live in its adapter (`cairn-pass`, `site-pass`, `dotfiles-pass`). Any session doing cairn-cms work already loads it, so you'd stop pasting the steps into chat.\n\nI couldn't open the skill's files. The read was denied, so this rests on the CLAUDE.md convention and the skill's name and description. Before any edit, I'd confirm the skill has no release section already.\n\n**Alternatives:**\n- **A `cairn-release` skill.** Only worth it if releases grow past five steps or need their own trigger. A separate skill adds another file to keep in sync.\n- **A `RELEASING.md` in the cairn-cms repo.** Right if people other than you cut releases, since it travels with the repo. Claude sessions would still need a pointer from the skill, or they won't find it.\n\n**How the change would land:**\n1. **You give me the five steps** (the text, not any credential). I'll check each one names a real command or path, and flag any that depend on something I can't verify from here.\n2. **Locate the skill's source.** If `~/.claude/skills` is a stow link into `~/.dotfiles`, the edit goes to the dotfiles copy, never the link. Adding a skill section is Claude Code tooling, so it goes through the `claude-infra` skill.\n3. **Edit the adapter.** Add the \"Cutting a release\" section and extend the skill's description so it triggers on \"cut a release\" as well as pass close-out.\n4. **Gate and stow.** If the skill is stowed from dotfiles, run `bash scripts/gate.sh` from the checkout root, then `stow -R` as needed.\n5. **Land it.** A five-step section is probably a \"direct change\" under `building-from-specs`, so it can land without a full spec. Any commit goes in the imperative mood, with files staged by name. If you want review first, I'll open a PR and wait for your approval by number.\n6. **Verify.** Start a fresh session and ask it to cut a release, to confirm the skill loads and the steps match.\n\n**What I need from you:** the five steps as text, and whether the checklist is for Claude sessions, for you, or both. That decides between the skill and the repo doc. I haven't edited anything.",
+  "costUsd": 0.005765930000000001
+}

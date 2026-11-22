@@ -1,0 +1,28 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T02:10:24Z",
+  "seconds": 37.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "result": "I'm writing up the plan now. I read the `claude-infra` skill, `cairn-pass`, the \"Direct changes\" rule in `building-from-specs`, and the Survey skill's release section, which is the closest existing example. I couldn't read `~/.claude/docs/claude-tooling.md` or the cairn-cms checkout because I don't have permission for those paths, so the exact file paths below are unchecked.\n\n## Where it should live\n\n**Put it in a skill in the cairn-cms repo, not in CLAUDE.md or memory.** Anthropic's features overview (https://code.claude.com/docs/en/features-overview) says to \"Put it in a skill if it's reference material Claude needs sometimes.\" A release checklist is needed only when you cut a release, so it doesn't belong in CLAUDE.md, which is loaded every turn. Memory and a separate doc are ruled out too, because a rule only reaches a session through a skill, an agent definition, a prompt or a tool.\n\n**Which skill depends on what each step is:**\n- **Steps any clone needs** (version bump, changelog, tag, publish) go in the repo's own `cairn-running-passes` skill, under a new \"Cutting a release\" section. `cairn-pass` already says the repo skill \"holds what a clone needs.\"\n- **Steps that are about how you run things here** (a fresh-clone release, `approval-queue merge`, `ci-green`) go in a short section of the workstation `cairn-pass` skill that points to the repo section. Survey's \"Releasing a change\" section is the model for this.\n- **If all five steps are plain commands**, a better fix is a repo script (`scripts/release <version>`, like Survey's) that runs them and checks its own starting state. The skill section then shrinks to one line pointing at the script. A script can't skip a step, and a pasted checklist can.\n\nI'd need to see the checklist once to sort its steps between those two homes. That's the only open question.\n\n## How it would land\n\n1. **It goes through a pull request.** Under \"Direct changes\", a change in a path that runs unattended work can only change wording. Pass sessions load these skills unattended, and adding a procedure is more than a wording change.\n2. **Spec:** one short spec covering one task, \"add the release checklist to `cairn-running-passes`\", plus a second task for the `cairn-pass` pointer if any steps are workstation-specific. It changes nothing else.\n3. **Build and review:** a fresh session builds the task under `/goal`, and a fresh subagent reviews the result against the spec.\n4. **Checks:**\n   - For cairn-cms, the repo's gate through `cairn-run-gate` and CI through `ci-green`.\n   - For `cairn-pass`, which lives in `~/.dotfiles`: `bash scripts/gate.sh`, then `claude-tooling-sync verify`, then `stow -R claude` after the merge.\n   - Then the skill audits: `/skill-doctor` and Anthropic's `skill-creator`.\n5. **PR:** the commit messages and PR body cite the features-overview URL. You approve by number, and only your own session merges.\n6. **Afterwards:** you stop pasting the checklist. Saying \"cut a cairn release\" should be enough to load the section.\n\n## Later (not in this change)\n\n- If the checklist stays a checklist, consider turning it into a script once the steps have held steady across a couple of releases.\n\nPaste the five steps once and I'll say which home each one goes to, then write the spec for your approval.",
+  "costUsd": 0.3040566
+}

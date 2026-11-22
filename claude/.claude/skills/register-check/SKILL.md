@@ -1,6 +1,6 @@
 ---
 name: register-check
-description: Runs the full cairn four-gate prose review (mechanical slop gate, adversarial register edit, logic and claims check, links and citations) on one or more drafts and folds the findings into one report. Use on any cairn prose artifact before Geoff reads it, or when Geoff asks for a register check.
+description: Gives one or more cairn drafts the full four-gate prose review (mechanical slop gate, adversarial register edit, logic and claims check, links and citations) and folds the findings into one report. Use on any cairn prose artifact before Geoff reads it, or when Geoff asks for a register check.
 context: fork
 background: false
 ---

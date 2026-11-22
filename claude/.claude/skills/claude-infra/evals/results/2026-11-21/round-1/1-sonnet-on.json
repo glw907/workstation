@@ -1,0 +1,27 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T02:09:54Z",
+  "seconds": 15.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "result": "I couldn't read `~/.claude/docs/claude-tooling.md` or `~/.claude/skills` because those reads were declined. This plan comes from the `claude-infra` skill text alone. I haven't checked the layout table or whether a release skill already exists.\n\n## Where it lives\n\n**Put it in the `cairn-pass` skill, as a release section or a reference file beside it.**\n\n- `claude-infra` says to choose the strongest home: a hook, then a skill or agent, then CLAUDE.md. Its example for a skill is \"reference material Claude needs sometimes\". A release checklist fits that, because it applies only when you cut a release.\n- It isn't a hook, because nothing in it needs to fire automatically on a tool call. If one step is a hard invariant, such as \"never tag without a green gate\", that step alone could become a hook or a check in the gate wrapper. I'd start with the skill.\n- It isn't CLAUDE.md, because that file carries only facts that apply every turn. A five-step release procedure would cost context on every session.\n- A new skill is the wrong shape. `cairn-pass` is already the cairn-cms overlay and covers closing a pass, so one home per rule points there.\n- The checklist should hold the steps as you paste them, and nothing else.\n- Be careful with the `description` line. Add something like \"cutting a cairn release\" to the `cairn-pass` trigger, or the skill won't load when you ask for a release.\n- If the steps run to more than a few lines of detail, put them in a reference file under the skill and link it from `SKILL.md`.\n\nI also need to know whether the five steps are cairn-cms engine steps or apply to the consumer sites too. If they apply to the sites, `site-pass` may need a pointer to the same file, but the rule itself stays in one place.\n\n## How the change lands\n\n1. **Cite the guidance.** Name the Anthropic features-overview URL (`https://code.claude.com/docs/en/features-overview`) before writing. Check for a built-in first. A release step may already be covered by a command or setting, in which case the checklist only needs to name it.\n2. **Edit the dotfiles copy of the skill,** not the stowed link. I need to confirm where the skill sits in `~/.dotfiles` before I edit.\n3. **Check the manifest.** The skill's manifest is whichever one the \"Layout\" table in `claude-tooling.md` names, which I couldn't read. If the skill is already listed, a content change may need no entry. Then run `claude-tooling-sync verify`.\n4. **Keep scope to the five steps.** Anything else I notice goes under \"Later\".\n5. **Open a PR.** The commit messages (imperative) and the body cite the guidance URL. This is more than a one-sentence change with a new section, so I wouldn't treat it as a \"Direct change\" under `building-from-specs`. That means a short spec first, then a build session.\n6. **Audit** with `/doctor prompt-audit`, `/skill-doctor`, and `skill-creator`. The save hooks (`vale-hook`, `tellgrader`) check the prose. Skills load live, so no restart is needed.\n7. **Run the dotfiles gate,** `bash scripts/gate.sh`, from the worktree root. Run it bare.\n\n## What I need from you\n\n- Paste the five steps, or point me at the last chat where you pasted them.\n- Tell me whether they are for the cairn-cms engine only or also for the consumer sites.\n- Approve the reads of `~/.claude/docs/claude-tooling.md` and `~/.claude/skills`, so I can confirm the manifest and check for an existing release section before I write the spec.",
+  "costUsd": 0.1002865
+}

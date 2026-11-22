@@ -1,0 +1,24 @@
+{
+  "skillName": "register-check",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+  "started": "2026-11-22T02:15:16Z",
+  "seconds": 22.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Bash",
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "result": "I ran the register check by hand and did not edit `draft.md`. Bash is disabled in this session, so I could not run `tellgrader` or Vale. I also could not read `~/.claude/docs/voice/editor.md` (permission was denied), so I checked against the copy of the editor register in this folder's `survey` skill (`.claude/skills/survey/writing/editor.md`). If that copy differs from the canonical one, the findings below may need adjusting.\n\n**Register chosen:** The draft tells an editor how to publish, so I used the end-user and editor register (Microsoft Writing Style Guide). If the file lives in cairn-cms `docs/editors/`, the cairn editor brief adds tightenings I could not read.\n\n**Findings, in priority order**\n\n1. **Selling copy opens the page (lines 3-4).** \"Cairn isn't just a content system, it's a seamless way to publish,\" \"empowers every editor,\" \"world-class pages in minutes.\" The register says to lead with the task and skip marketing. The \"isn't just X, it's Y\" frame is also a machine-writing tell. The first real instruction does not appear until line 6. Suggested fix: delete lines 3-4 and start with the task.\n\n2. **Unverified claim (line 9).** \"Cairn was first released in 2019 and is used by over ten thousand sites.\" It is marketing, it does not help an editor publish, and nothing in the draft supports it. Under the facts-discipline rule, confirm it or cut it.\n\n3. **Steps are not a numbered list (line 6).** \"Open the admin, choose the page, and select **Publish**\" is a sequence of actions in one sentence. The document-shape rule says a sequence is a numbered list. Suggested form:\n   1. Open the admin.\n   2. Choose the page.\n   3. Select **Publish**.\n\n4. **Jargon and an unexplained term (line 6-7).** \"The site rebuilds on Cloudflare\" names a host that a non-technical editor does not need. \"The admin\" is also undefined for a first-time reader. Keep \"Cloudflare\" only if an editor must act on it. Name the admin only if the source gives its location, which I could not verify.\n\n5. **Non-descriptive link (line 7).** \"Click here to read more about builds.\" The register asks for link text that names the destination, and for \"select\" rather than \"click\" on UI. Suggested: \"Read more about builds\" as the link text, with the link target supplied by the author.\n\n6. **Filler connective (line 4).** \"Moreover\" is stiff in a how-to. Remove it along with finding 1.\n\n**What works:** The core sentence on lines 6-7 leads with the task, uses second-person-free imperatives that match Microsoft's how-to style, and states a concrete outcome (\"live about a minute later\"). Keep it. The title is sentence case, and there are no em dashes.\n\n**Net result:** The useful content is two sentences. The fix is mostly deletion plus the numbered steps and the link text.",
+  "costUsd": 0.00924714
+}

@@ -1,0 +1,28 @@
+{
+  "skillName": "register-check",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Geoff asked for a register check on draft.md in this folder. Propose rewrites for what you find, but don't apply any.",
+  "started": "2026-11-22T02:21:45Z",
+  "seconds": 30.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "register-check"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/.claude/skills/register-check"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Bash",
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "I reviewed `draft.md` and have rewrites to propose. I haven't changed the file.\n\nOnly part of the check ran. The automated pass (Vale and `tellgrader`) and the adversarial register edit couldn't run in this session, and the register reference file isn't in this folder. So these findings come from a manual read, not the full four-gate review.\n\n## Fixes I'd make\n\n1. **Lines 3-4: the opening paragraph.** \"Cairn isn't just a content system, it's a seamless way to publish. Moreover, it empowers every editor to ship robust, world-class pages in minutes.\"\n   - It uses the \"isn't just X, it's Y\" pattern, opens with \"Moreover,\" and leans on marketing words: \"seamless\", \"empowers\", \"robust\", \"world-class\".\n   - Nothing backs up \"in minutes\".\n   - **Proposal:** delete the paragraph, since line 6 already says what the page does. If you want an opener, use \"Publishing rebuilds the site from the page you choose.\"\n2. **Line 7: \"Click here to read more about builds.\"** The link text is \"here\" and the sentence adds nothing. **Proposal:** \"For what runs during a rebuild, see [How builds work](…).\" I didn't guess the link target, so this only works if a builds page exists.\n3. **Line 6: \"Cloudflare\".** It's mentioned without a link. Linking it is optional and low priority.\n\n## Your call\n\n4. **Line 9: \"Cairn was first released in 2019 and is used by over ten thousand sites.\"** I can't trace either number to a source, and both look doubtful for this project. Even if they're true, a usage claim doesn't belong on a task page. **Proposal:** cut it. If you want it kept, give me the source.\n5. **Line 6: \"live about a minute later\".** I couldn't check this timing. Keep it if it's accurate; if it varies, say what it depends on.\n\n## The page with all fixes\n\nThis version also cuts line 9:\n\n```\n# Publishing a page\n\nTo publish a page, open the admin, choose the page, and select **Publish**. The site rebuilds on\nCloudflare and the new version is live about a minute later. For what runs during a rebuild, see\n[How builds work](…).\n```\n\n## Not checked\n\n- **Sibling pages:** I couldn't check consistency with the README, why-cairn and the docs index, because those pages aren't in this folder.\n- **Button label:** I couldn't confirm that the admin's button is labeled **Publish**.\n\nRun the check from the cairn repo to get the two missing gates and the sibling check.",
+  "costUsd": 0.2731577
+}

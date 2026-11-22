@@ -1,0 +1,25 @@
+{
+  "skillName": "register-check",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "draft.md here is a cairn docs page that Geoff will read next. Give it the full four-gate prose review before he does, and report what you find. Findings only, no edits.",
+  "started": "2026-11-22T02:18:38Z",
+  "seconds": 22.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "standards:content-review"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "The review ran, but it was incomplete and the gate verdict is provisional. The reviewer couldn't read the shared method file (`web-content-method.md`) because read permission was denied. There is no `docs/content-guide.md` or `.vale.ini` here, and it had no shell to run Vale. The banned-word list is therefore unconfirmed. I also used `standards:content-review`, which is written for site content, so I didn't check this developer-docs page against the Google style standard.\n\n**Gate status: blocked**\n\n1. **Banned words or phrases: hit.** Lines 3-4 have \"seamless\", \"empowers\", \"robust\", \"world-class\" and \"Moreover\".\n2. **Unverified or false claims: hit.**\n   - Line 9 says \"first released in 2019\" and \"used by over ten thousand sites\". No brief or primary source backs either.\n   - Line 7 says the site is \"live about a minute later\". That is an unsourced timing promise.\n   - Line 4 says \"in minutes\", which repeats the same timing claim.\n3. **Safety or standard-of-care promise:** none.\n4. **Cost misstatement:** none.\n\n**Findings, cheapest fix first**\n\n1. **Line 7, \"Click here to read more about builds.\"** The link text doesn't name its destination. Make \"Read how builds work\" the link.\n2. **Lines 3-4, the opening paragraph.**\n   - It has the \"isn't just X, it's Y\" pattern, a comma splice, the banned words and an unsourced superlative.\n   - It states no fact and shows no one doing anything. Line 6 already gives the steps, so the paragraph can go.\n3. **Line 9, the release year and adoption count.**\n   - Both are unverified, and a wrong adoption number would fail the claims gate.\n   - The line is also off-topic for a how-to page. Delete it, or restore it only after confirming the facts against a primary source.\n4. **Lines 6-7, \"live about a minute later\".** Build time varies, and a stated figure becomes a promise. Say the new version goes live when the build finishes, unless a source supplies a measured figure.\n\n**Keep:** the steps in line 6 (\"open the admin, choose the page, and select **Publish**\") are clear and show a person acting.\n\nIf you want the banned-word list and budgets checked properly, I need read access to the method file or the cairn docs guide. I made no edits.",
+  "costUsd": 0.1517922
+}

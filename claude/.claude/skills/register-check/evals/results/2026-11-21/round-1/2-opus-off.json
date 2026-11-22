@@ -1,0 +1,27 @@
+{
+  "skillName": "register-check",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "draft.md here is a cairn docs page that Geoff will read next. Give it the full four-gate prose review before he does, and report what you find. Findings only, no edits.",
+  "started": "2026-11-22T02:19:32Z",
+  "seconds": 52.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "writing-voice",
+    "standards:content-review"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "result": "I've finished the review. One caveat first: I couldn't run cairn's own docs review. Its rules are in the cairn-cms repo (the `cairn-writing-docs` skill and its `docs-register.md` overlay), and the request to read outside this scratch directory was denied. So I used the house four-gate content review, plus the Google and Microsoft docs rules and the house writing rules for document shape. If you want the review done against cairn's own rules, let me read the cairn-cms repo. I made no edits.\n\n**Result: blocked. Two of the four gates fail.**\n\n| Gate | Result |\n|---|---|\n| 1. Banned words | **Fails.** \"seamless\", \"empowers\", \"robust\", \"world-class\", and starting a sentence with \"Moreover\" (lines 3 and 4). |\n| 2. Unverified claims | **Fails.** Line 9: \"first released in 2019\" and \"over ten thousand sites\". Line 7: \"live about a minute later\". Nothing here backs any of them. |\n| 3. Safety promises | Passes. |\n| 4. Cost claims | Passes. |\n\n**Findings, cheapest fix first**\n\n1. **Line 7, \"Click here to read more about builds.\"** Both Google and Microsoft ban \"click here\" as link text. It also doesn't match \"select\" in the sentence before it. Use link text that names the page, such as \"how builds work\". The draft doesn't say where the link goes, so that needs supplying.\n2. **Line 1, the heading \"Publishing a page\".** For a task page, Google and Microsoft both prefer the imperative: \"Publish a page\".\n3. **Lines 3 and 4, the opening paragraph.** \"Isn't just X, it's Y\" is a known AI-writing pattern. The rest of the paragraph is marketing with no facts in it: \"seamless\", \"empowers\", \"robust\", \"world-class\", \"in minutes\". The procedure below already makes the point, so I'd delete the paragraph. If the page needs an opening line, state one fact.\n4. **Line 9, the history line.** Release history and site counts don't belong on a how-to page. Neither figure can be checked here, and a reader who can disprove a number stops trusting the page. Delete it, or keep it only once there's a source.\n5. **Line 6, the steps are written as a sentence.** The house rule is that a sequence of steps is always a numbered list: open the admin, choose the page, select **Publish**. This one is a rule, not a matter of style.\n6. **Line 7, \"about a minute later\".** This is a timing promise. Check it against real build times, or say what the editor sees when the new version is live, without a number.\n\n**Also worth deciding:** the page reads as written for editors (open the admin, select a button). Pages in `docs/editors/` follow Microsoft's style guide, and the other published docs follow Google with the cairn overlay. Where it lives changes which rules apply. Both standards agree on every finding above.\n\nOnce lines 3, 4 and 9 are cut and the link and heading are fixed, the page is a clean three-step procedure. Only the \"about a minute\" claim would still need checking.",
+  "costUsd": 0.39242550000000004
+}

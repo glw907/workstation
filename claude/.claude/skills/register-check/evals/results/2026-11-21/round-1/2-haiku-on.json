@@ -1,0 +1,28 @@
+{
+  "skillName": "register-check",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "draft.md here is a cairn docs page that Geoff will read next. Give it the full four-gate prose review before he does, and report what you find. Findings only, no edits.",
+  "started": "2026-11-22T02:17:10Z",
+  "seconds": 22.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "register-check"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/register-check"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Bash",
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "The register check ran only in part, so this is not the full four-gate review you asked for. Bash and agent dispatch were disabled in that session. Gates 1 to 3 were my own read of the text, and Gate 4 was by inspection. There is also no `.vale.ini`, codebase, or `docs-register.md` in the scratch directory to check against. I re-read `draft.md` to confirm the quoted lines. Nothing was edited.\n\n**Fix before Geoff reads it, ranked**\n\n1. **Line 3:** \"Cairn isn't just a content system, it's a seamless way to publish.\" This is the \"isn't just X, it's Y\" pattern. It also has a comma splice, and \"seamless\" is marketing language. Cut it, or state what Cairn is.\n2. **Line 4:** \"Moreover, it empowers every editor to ship robust, world-class pages in minutes.\" It opens with a connector, uses \"empowers\", \"robust\", and \"world-class\" as praise, and makes a speed claim with no support. \"In minutes\" also sits oddly beside \"about a minute\" on line 7. Delete the sentence, or use the measured rebuild time from line 7.\n3. **Line 7:** \"Click here to read more about builds.\" \"Click here\" is weak link text, and the sentence has no link. Use descriptive link text, such as \"See how builds work,\" and link it only to a page that exists. I could not verify a target, so I did not invent one.\n4. **Line 6:** \"Cloudflare\" is named with no link. This is optional and depends on the page's link density.\n\n**Needs Geoff's call (unverified facts)**\n\n- **Line 9:** \"first released in 2019\" and \"used by over ten thousand sites.\" Nothing here supports either claim. \"Over ten thousand\" looks invented. He needs to give a source or a measured count, or cut both.\n- **Line 7:** \"about a minute later.\" It is plausible, but he should confirm it against a measured rebuild.\n- **Line 6:** the publish steps (open the admin, choose the page, select **Publish**) should be checked against the real admin UI.\n\n**Not run**\n\n- Gate 1 (Vale and `tellgrader --register docs`) did not run. Run both from a real cairn checkout.\n- Gate 2 (the `cairn-register-editor` agent) was not dispatched. The register findings above are my read, not that agent's.\n- Gate 3 (the Opus fact-check agent) was not dispatched, and there is no codebase here to verify claims against.\n\nTo finish the review, run it from a cairn checkout that has the Vale config, the register doc, and agent dispatch available.",
+  "costUsd": 0.08077680999999999
+}

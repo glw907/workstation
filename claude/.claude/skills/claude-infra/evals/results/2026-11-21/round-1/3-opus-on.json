@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T02:13:58Z",
+  "seconds": 14.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Grep",
+    "Skill"
+  ],
+  "result": "Not in ecxc-ski's `.mcp.json`. It should be added once, at user scope, and recorded in the workstation tooling manifest.\n\nThe `claude-infra` skill's rules decide this:\n\n- **Shared stack pieces go at user scope.** The rule is: \"Everything the cairn-family stack shares (Svelte, Playwright, DaisyUI) is user scope and in the manifest.\" 907-life, aksailingclub-org and cairn-pub use Svelte too, so it isn't ecxc-ski's alone.\n- **A repo's `.mcp.json` is only for what that repo alone needs**, and the repo's CLAUDE.md should say so. A Svelte docs server doesn't meet that test.\n- **Look at the skill before the server.** An MCP server only reaches the main session and agents with no tool restrictions. A skill reaches agents with a fixed tool list too, through `Skill` or a `skills:` preload. So if Svelte publishes a skill, use that first, and add the server only for on-demand doc lookups the skill can't carry. You already have `standards:svelte-conventions` and `standards:svelte-check`, but neither looks up docs, so the server would fill a real gap.\n- **Housekeeping when it's added:**\n  - Give it an entry in the manifest named in the \"Layout\" table of `~/.claude/docs/claude-tooling.md`.\n  - Any rule for using it goes in the skills or agent definitions that call it.\n  - Run `claude-tooling-sync verify` and commit the dotfiles.\n  - Land it through a PR that cites the Anthropic page it follows.\n  - It loads after a Claude Code restart, so restart between sessions.\n\nI wasn't allowed to read `claude-tooling.md`, so I couldn't check whether a Svelte server or skill is already in the manifest. Check that before adding anything. I didn't change anything.",
+  "costUsd": 0.2056108
+}

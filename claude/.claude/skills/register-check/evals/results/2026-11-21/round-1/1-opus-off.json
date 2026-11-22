@@ -1,0 +1,25 @@
+{
+  "skillName": "register-check",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+  "started": "2026-11-22T02:16:44Z",
+  "seconds": 26.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "I ran the register check on `draft.md` without applying anything, and the file is unchanged. I judged it as editor-facing copy, a walkthrough done entirely in the UI, so the standard is the Microsoft Writing Style Guide.\n\nI checked it by reading it against the `writing-voice` shape and facts rules and the Microsoft guide. Two things limited the check. I couldn't read the register file `~/.claude/docs/voice/editor.md` because permission was denied. And I have no shell in this session, so I couldn't run `tellgrader` or Vale. If this page belongs in cairn-cms `docs/editors/`, the editor brief in `cairn-writing-docs` also applies, and I haven't checked against it.\n\n## Findings\n\n**Line 3: \"Cairn isn't just a content system, it's a seamless way to publish.\"**\n- It uses the \"isn't just X, it's Y\" frame, a known AI-writing tell.\n- The comma joins two complete sentences, which is a comma splice.\n- \"Seamless\" is a marketing word. Microsoft copy avoids hype.\n\n**Lines 3–4: \"Moreover, it empowers every editor to ship robust, world-class pages in minutes.\"**\n- Opening with \"Moreover\" is a connector tell.\n- \"Empowers,\" \"robust,\" and \"world-class\" are common AI filler words and promotional.\n- \"In minutes\" is a claim with no source.\n- The opening paragraph tells the reader nothing about the task. I'd cut it.\n\n**Line 6: the steps are written as a sentence.**\n- \"open the admin, choose the page, and select **Publish**\" is a series of actions, and the shape rule says those go in a numbered list, never a paragraph.\n- Using \"select\" and bolding the button name both follow Microsoft style.\n\n**Line 7: \"Click here to read more about builds.\"**\n- Microsoft rules out \"click here\" as link text. The link text should name where it goes, for example \"Learn how builds work.\"\n- Microsoft also uses \"select\" rather than \"click.\"\n- \"About a minute later\" and the mention of Cloudflare are specific claims. Keep them only if they've been checked. Editors probably don't need to know where the site is hosted.\n\n**Line 9: \"Cairn was first released in 2019 and is used by over ten thousand sites.\"**\n- The year and the site count have no source. Under the facts rule, a number nobody has checked comes out.\n- This line is product history in the middle of a how-to page, so the page switches register.\n- For counts, Microsoft prefers \"more than\" to \"over.\"\n\n**Line 1: the heading \"Publishing a page\"** (minor, and I'm less sure of this one)\n- A task heading in the imperative, \"Publish a page,\" is the more common form for procedures.\n\n## What would remain after the fixes\n\nThe page would be a heading, a short numbered procedure, one sentence on what happens after publishing (if checked), and a descriptive link to the builds page. Nothing has been edited.",
+  "costUsd": 0.22462780000000004
+}

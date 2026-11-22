@@ -5,7 +5,7 @@
     "files": [],
     "expected_behavior": [
       "Makes it a skill, since it is a procedure Claude needs only sometimes.",
-      "Gives it one home with a manifest entry, and runs `claude-tooling-sync verify` after.",
+      "Gives it one home, says what records it (a skill authored here is its own manifest, its directory), and runs `claude-tooling-sync verify` after.",
       "Lands it through a pull request that cites the Anthropic page it follows, unless it qualifies as a direct change."
     ]
   },

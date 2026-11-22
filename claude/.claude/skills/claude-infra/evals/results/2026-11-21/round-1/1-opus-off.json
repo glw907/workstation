@@ -1,0 +1,23 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T02:11:02Z",
+  "seconds": 42.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "result": "I'd put the checklist in the workstation `cairn-pass` skill, as a new `## Releasing` section. It can't land as a quick direct edit; it goes through a small spec and a pull request.\n\n**Where it lives.** `cairn-pass` (`.claude/skills/cairn-pass/SKILL.md`) is where Geoff's own way of running cairn-cms is meant to go, as opposed to what any clone of the repo needs. The `survey` skill already has a release checklist in this form, under \"Releasing a change\" (`.claude/skills/survey/SKILL.md:75`): numbered steps with the exact commands, then a rollback line. The cairn section would copy that shape.\n\nTwo details make it work:\n- **Fix the description too.** Right now it mentions planning, executing, and closing a pass, but not releases. Without \"cutting or publishing a cairn release\" in that line, a session won't load the skill when you ask for a release, and you'd be back to pasting.\n- **The copy that counts is in `~/.dotfiles`.** The edit goes to `~/.dotfiles/claude/.claude/skills/cairn-pass/SKILL.md` and reaches `~/.claude` through `stow -R claude`. Editing the linked copy doesn't stick.\n\n**When it belongs in the repo instead.** `cairn-pass` points to a skill inside the cairn-cms checkout, `cairn-running-passes`, for anything a clone needs. If your five steps use only repo tools (changesets, `npm publish`, tags) and none of the workstation's (`approval-queue`, `ci-green`, `~/.dotfiles`), they belong in that repo skill. If they mix, split them: repo mechanics in the repo, your approval and merge steps in `cairn-pass`. I couldn't read `~/Projects/cairn-cms` because permission was refused, so I haven't checked whether that skill already covers part of this. That's the first thing to check.\n\n**How it lands.**\n1. **It's not a direct change.** \"Direct changes\" (`building-from-specs/SKILL.md:156`, `pass-core/SKILL.md:63`) allows only wording changes in a skill that drives sessions. A section of new steps that sessions will follow goes beyond that.\n2. **Spec.** A short spec under `building-from-specs` with one task: add the section, update the description, and note any split with the repo skill. You approve it.\n3. **Build.** A fresh session runs `claude-worktree-busy` on `~/.dotfiles`, makes a worktree from `origin/main`, makes the edit, and runs `bash scripts/gate.sh`. A fresh subagent then reviews the result against the spec. If part of it goes to the cairn-cms skill, that's a second pull request with that repo's gate.\n4. **Pull request.** You approve it by number, the session you're talking to merges it, then runs `stow -R claude` and removes the worktree.\n5. **Check.** A fresh session asked to \"cut a cairn release\" should load `cairn-pass` on its own and follow the section.\n\n`CLAUDE.md` says changes to Claude Code tooling go through a `claude-infra` skill, but it isn't installed in this session. The build session should load it if it's available, or fall back to the steps above.\n\nI need two things from you to write the spec: the five steps as you paste them, and whether any of them is the repo's own publish procedure rather than yours.",
+  "costUsd": 0.3091038
+}

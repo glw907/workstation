@@ -1,0 +1,22 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T02:14:13Z",
+  "seconds": 18.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "result": "**Recommendation:** don't put it in ecxc-ski's `.mcp.json`. Add it once for the whole workstation (Claude Code's user scope), not once per repo.\n\n**Why not ecxc-ski's `.mcp.json`:** that file only applies to ecxc-ski. Every Svelte repo you have would need its own copy: ecxc-ski, 907-life, aksailingclub-org, cairn-pub, and the cairn-cms engine itself. Keeping five copies the same is exactly the drift `check-drift` exists to catch, and it gains you nothing. Svelte's docs don't change from one site to the next.\n\n**Why the workstation level:** one entry covers every repo, it matches how you already run tools across the workstation, and it adds nothing to the sites' own config. The cost is that the server's tools also show up in non-Svelte sessions (dotfiles, household-it). That cost is small, because MCP tools are deferred and only load when they're searched for.\n\n**How, when you want it done:**\n- It's a change to Claude Code tooling, so it goes through the `claude-infra` skill and gets recorded in `~/.dotfiles` like any other config. It shouldn't be a loose edit to `~/.claude.json`.\n- The Svelte team maintains an official server at `https://mcp.svelte.dev/mcp`. As far as I know, they also publish a Claude Code plugin from the `sveltejs/ai-tools` repo that bundles that server with Svelte skills. If so, the plugin may fit better than a bare server entry, since your tooling already uses plugins. Check that it exists before deciding.\n\n**When a repo-level `.mcp.json` would make sense:** only if sessions run where your workstation config isn't present, such as cloud or CI runs of a site. Even then, it belongs in each Svelte repo or in a shared template, not in ecxc-ski alone.\n\nI didn't get permission to read `~/Projects` or `~/.claude/settings.json`, so this doesn't account for any Svelte server you might already have set up somewhere. I changed nothing.",
+  "costUsd": 0.1896956
+}

@@ -1,0 +1,27 @@
+{
+  "skillName": "register-check",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+  "started": "2026-11-22T02:16:15Z",
+  "seconds": 28.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "register-check"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/register-check"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "I ran the register check on `draft.md` with apply set to no, and the file is unchanged. The check is incomplete. Vale and `tellgrader` didn't run, and the register-editor agent wasn't dispatched, because this folder has no `.vale.ini`, no `cairn-register-editor` agent and no docs-register reference. A manual read replaced the first two gates (the mechanical and register passes). The claims check could only compare the draft with itself, since no code was available. To get the full mechanical pass, run it again in a cairn checkout. I checked every quote below against the file.\n\n## Mine to fix\n\n1. **Marketing and virtue claims (line 3–4):** \"seamless way to publish\", \"empowers every editor\", \"ship robust, world-class pages in minutes\". None of these states a fact anyone could check. Cut the whole first paragraph, since paragraph 2 already says what happens.\n2. **\"isn't just X, it's Y\" framing (line 3):** \"Cairn isn't just a content system, it's a seamless way to publish.\" It's also a comma splice. Cutting paragraph 1 removes it.\n3. **Filler opener (line 3):** \"Moreover\". This also goes with paragraph 1.\n4. **Link text (line 7):** \"Click here to read more about builds.\" The anchor is \"here\", and the text isn't actually a link. Rewrite it as \"For how builds work, see [Builds](…)\". The target page wasn't confirmed, so the path still needs filling in.\n5. **Cloudflare (line 7):** a product named for the first time. Link it only if the house docs do that elsewhere.\n6. **Page structure:** the page opens with promotion and the task doesn't start until paragraph 2. Lead with \"To publish a page, open the admin, choose the page, and select **Publish**.\"\n\n## Your call\n\n7. **\"first released in 2019\" and \"used by over ten thousand sites\" (line 9):** nothing here supports either claim. The ten-thousand figure is the riskier one. Both are also out of place on a how-to page. Either source them or move them to a why-cairn page.\n8. **\"live about a minute later\" (line 7):** this timing needs a real build measurement behind it. Without one, change it to \"shortly after\" or give the measured range.\n9. **\"The site rebuilds on Cloudflare\" (line 7):** confirm this matches how builds actually run now.\n\n## Not flagged\n\nThe bold **Publish** is a UI label, which is correct, and the steps in paragraph 2 read cleanly. The check found no new kinds of problem beyond the ones it already knows.",
+  "costUsd": 0.2702645
+}

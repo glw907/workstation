@@ -1,6 +1,6 @@
 ---
 name: engine-consult
-description: Runs the consultation between a cairn-consuming site and the cairn engine before the site builds against an engine surface. Use when writing a spec in ecxc-ski, 907-life, aksailingclub-org, cairn-pub, or another repo that builds against the cairn engine; when a task starts on a spec that fails the consultation check; or when the work involves a "consultation", an "engine ask", or a request to "consult the engine".
+description: Guides the consultation between a cairn-consuming site and the cairn engine before the site builds against an engine surface. Use when writing a spec in ecxc-ski, 907-life, aksailingclub-org, cairn-pub, or another repo that builds against the cairn engine; when a task starts on a spec that fails the consultation check; or when the work involves a "consultation", an "engine ask", or a request to "consult the engine".
 ---
 
 # Engine consultation

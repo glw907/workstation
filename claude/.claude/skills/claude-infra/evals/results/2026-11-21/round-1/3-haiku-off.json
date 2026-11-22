@@ -1,0 +1,23 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T02:13:27Z",
+  "seconds": 14.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "result": "**Recommendation: put it at user scope, not in ecxc-ski's `.mcp.json`.** I couldn't check the repo files, so this rests on what the setup implies, not on what's actually in them.\n\nI was denied read access to `~/Projects` and `~/.claude`, so I couldn't open ecxc-ski's `.mcp.json`, the other sites' configs, or the Claude docs. I changed nothing.\n\nWhy user scope:\n\n- **The server isn't specific to ecxc-ski.** The Svelte docs are the same for every cairn site. A user-level entry gives all four (ecxc-ski, 907-life, aksailingclub-org, cairn-pub) the same tool once, without four copies.\n- **`.mcp.json` is committed.** Anything in it runs for every clone and collaborator. A personal docs helper shouldn't ride along in one repo's history.\n- **Scope in Claude Code.** `claude mcp add --scope user` writes to the user's Claude config, not a project file. Check that the flag exists in your installed version before relying on it.\n\nWhen a project scope would be the right call: if ecxc-ski pins a specific Svelte version and you want its docs tied to that repo, or if you want the server available only there. Those are reasons to use project scope, not the default.\n\nBefore adding it, I'd check three things:\n\n1. **Whether any site already has a Svelte MCP entry.** If one does, a second copy at user scope would duplicate it.\n2. **Routing.** Your CLAUDE.md says changes to Claude Code tooling go through the `claude-infra` skill. An MCP entry is that kind of change, so it should go through that skill, and the config should land in `~/.dotfiles` if it's stowed.\n3. **Version pinning.** The official Svelte MCP is usually run via `npx`, which fetches whatever version is current. If you pin it, bumps should go through `standards:dependency-upgrade`.\n\nThe server itself: Svelte publishes an official MCP server (`@sveltejs/mcp`). I'm recalling its package name and tools from memory, not from a current source, so confirm the install command against its docs before adding it.\n\nIf you grant read access to `~/Projects` and `~/.claude`, I can check the existing configs and tell you whether anything already covers this.",
+  "costUsd": 0.00613845
+}

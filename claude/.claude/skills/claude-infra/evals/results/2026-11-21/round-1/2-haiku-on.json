@@ -1,0 +1,25 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T02:11:44Z",
+  "seconds": 11.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "**Recommendation: a PreToolUse hook on the Bash tool, in user-scope `settings.json`.** Don't use CLAUDE.md or a skill for this.\n\n**Why a hook:** The claude-infra skill's rule is that \"if a rule must hold every time, make it a hook rather than a prompt instruction.\" A hook runs on every Bash call before it executes, so it can't be skipped or forgotten. The hook exits with code 2 to block the call and returns a reason to Claude.\n\n**Why not the other options:**\n\n- **CLAUDE.md:** It's guidance Claude reads and usually follows, but nothing enforces it. It also only carries facts that apply every turn, which doesn't fit a single blocking rule.\n- **A skill:** It only applies when the skill is loaded, so it doesn't cover every call.\n- **A settings deny rule:** This is the closest alternative, since `permissions.deny` can match `Bash(rm -rf ...)`. I'd use it only as a second layer. Pattern matching is easy to get around: `rm -fr`, `rm -r -f`, `rm --recursive --force`, `$HOME` or `${HOME}` in place of `~`, and the real path `/var/home/glw907` (on Bluefin, `/home` points there) all need separate patterns. A hook can parse the command and cover these.\n\n**What the hook would do:**\n\n- Match any Bash command that has `rm` with both recursive and force flags in any order or spelling.\n- Check whether any target resolves to a home folder: `~`, `$HOME`, `${HOME}`, `/var/home/glw907`, `/home/glw907`, or a bare `~/` path.\n- Block with a clear message and allow everything else.\n- Apply in every project, so it goes in `~/.claude/settings.json` (user scope), not a repo's settings.\n\n**Where it lives on this workstation:** The script goes in `~/.dotfiles/bin/.local/bin/`, stowed with `stow -R bin`. The hook entry goes in `settings.json` (written with the `update-config` skill), and the change gets a manifest entry in `claude-tooling.md`. Then `claude-tooling-sync verify` and a dotfiles commit.\n\n**Limits to know about:** A hook stops Claude's Bash calls, not commands you run yourself in a terminal. It also doesn't stop a session that is started with hooks disabled, or a path that bypasses Bash, such as editing a file with a delete script. For \"no exceptions,\" the hook is the right layer. Nothing else changed in this session.\n\nIf you want it, I'll write the hook script, add the settings entry, and run the verify step.",
+  "costUsd": 0.005615030000000001
+}

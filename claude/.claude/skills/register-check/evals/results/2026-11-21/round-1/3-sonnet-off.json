@@ -1,0 +1,24 @@
+{
+  "skillName": "register-check",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Geoff asked for a register check on draft.md in this folder. Propose rewrites for what you find, but don't apply any.",
+  "started": "2026-11-22T02:21:33Z",
+  "seconds": 11.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Read",
+    "Skill"
+  ],
+  "result": "Draft.md reads as editor-facing, so I checked it against the Microsoft Writing Style Guide. I couldn't tell the audience from the file. If it's developer docs, the standard is Google's, and the findings below would still hold. I applied nothing.\n\n**Line 3–4: marketing register, contrast frame, slop words**\n- \"isn't just a content system, it's a seamless way to publish\" is a contrast frame.\n- \"Moreover\" is a connector opener.\n- \"empowers\", \"robust\", \"world-class\" and \"seamless\" are promotional filler.\n- \"every editor\" is an unverifiable claim.\n- The paragraph tells the reader nothing they can act on.\n\nProposed rewrite: delete the paragraph, or replace it with one factual sentence on what the page covers.\n\n> You can publish a page from the admin. The site rebuilds, and the new version goes live.\n\n**Line 6–7: the right register, with two problems**\n- The first sentence is a good imperative sequence. It would read better as a numbered list, since it is a sequence of actions.\n- \"Click here to read more about builds\" is a bad link pattern. \"Click here\" is banned in both Microsoft and Google style, and it also gives no information about the destination.\n\nProposed rewrite:\n\n> To publish a page:\n>\n> 1. Open the admin.\n> 2. Choose the page.\n> 3. Select **Publish**.\n>\n> The site rebuilds on Cloudflare, and the new version is live about a minute later. For details, see [How builds work](link).\n\nI left the link target as a placeholder because I don't know the real page.\n\n**Line 9: unverified facts**\n\"first released in 2019\" and \"used by over ten thousand sites\" are specifics I can't confirm from anything in this folder. The sentence is also off-topic for a how-to page. Proposed fix: cut it, or keep it only if you can source both numbers, and then move it to the front-door or about page.\n\n**Smaller points**\n- \"about a minute\" and \"on Cloudflare\" are plausible but unconfirmed here. Check them against the actual build behavior.\n- The title \"Publishing a page\" is fine. Microsoft style would also accept \"Publish a page\", the task-style form.\n- There are no scaffold headers or em dashes, so the shape is otherwise clean.\n\nIf you want, I can apply the rewrites once you've confirmed the audience and the link target. I haven't run `tellgrader` or Vale, since this review is by reading only.",
+  "costUsd": 0.0954084
+}

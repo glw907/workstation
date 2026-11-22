@@ -1,0 +1,21 @@
+{
+  "skillName": "register-check",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "How many words are in draft.md in this folder? Just give me the count.",
+  "started": "2026-11-22T02:23:08Z",
+  "seconds": 10.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Read"
+  ],
+  "result": "**76 words.** That counts the text as you'd read it and leaves out the `#` heading marker. A whitespace count like `wc -w` would include the `#` and give 77.",
+  "costUsd": 0.1793938
+}

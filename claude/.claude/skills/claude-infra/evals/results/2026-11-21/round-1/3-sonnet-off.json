@@ -1,0 +1,19 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T02:13:49Z",
+  "seconds": 9.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "Put it at user scope, once, not in ecxc-ski's `.mcp.json`. I haven't opened any config files, so this is a judgment call, not a check of your current setup.\n\n- **Reuse:** all the site repos (ecxc-ski, 907-life, aksailingclub-org, cairn-pub) use Svelte, and so does the cairn engine. A per-repo `.mcp.json` means the same entry in four or five places that can drift apart.\n- **Checked-in files:** a project `.mcp.json` is committed, so it becomes part of ecxc-ski's contract and its PRs. A Svelte docs server is a workstation convenience, not something the site needs.\n- **Host parity:** thinkpad-x1 and pavilion share their config through `~/.dotfiles`. Your CLAUDE.md says Claude Code tooling changes go through the `claude-infra` skill, so that skill is the route for adding it. It should land in the dotfiles-managed user config, not as a loose edit on one host.\n\nUse a project `.mcp.json` only if you want every contributor or CI session on that repo to get the server automatically, which doesn't apply to a household setup.\n\nBefore adding it, check whether you need it at all. The Svelte docs are also available as plain `llms.txt` files, which Claude can fetch on demand. An MCP server mainly earns its place through the Svelte autofixer and doc-section lookup. Your `svelte-check` and `svelte-conventions` skills already cover part of that ground.",
+  "costUsd": 0.07298930000000001
+}

@@ -1,0 +1,27 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T02:13:16Z",
+  "seconds": 10.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "**Recommendation: put it at user scope, in the Claude tooling manifest, not in ecxc-ski's `.mcp.json`.** I made no changes.\n\n- **Why not ecxc-ski's `.mcp.json`:** The `claude-infra` rules say a repo's `.mcp.json` carries only what that repo alone needs. Svelte is shared by all the cairn sites, so a project-scope entry would be duplicated across them.\n- **Where it goes:** Stack-wide tools (Svelte, Playwright, DaisyUI) are user scope and listed in the manifest. The manifest's entry is described in the \"Layout\" table of `~/.claude/docs/claude-tooling.md`. Once it's added, `claude-tooling-sync verify` checks it, and the dotfiles get committed.\n- **Server or skill first:** The rules say to take a skill first and use a server only for on-demand retrieval or tools a skill can't carry. The workstation already has `standards:svelte-conventions` and `standards:svelte-check`. A docs server would add lookup of current Svelte/SvelteKit API docs, which fits the server case, so it's a reasonable addition. Confirm the server's package and license before adding it, since it's third-party. I haven't checked which Svelte docs server is official.\n- **Reach:** An MCP server reaches only the main loop and unrestricted agents. Subagents with a fixed tool list won't see it.\n- **Activation:** New servers load at session start, so restart Claude Code at a session boundary.\n\n**Gap:** Permission to read `~/Projects/ecxc-ski/.mcp.json` and `~/.claude/docs/claude-tooling.md` was denied, so I couldn't confirm the current manifest layout or whether ecxc-ski already has a Svelte entry. Grant read access to those two paths and I'll check both before recommending the exact manifest entry.",
+  "costUsd": 0.00613787
+}

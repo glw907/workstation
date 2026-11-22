@@ -1,0 +1,28 @@
+{
+  "skillName": "register-check",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+  "started": "2026-11-22T02:14:55Z",
+  "seconds": 20.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "register-check"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/register-check"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Bash",
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "The register check on `draft.md` ran with `apply: no`, and I didn't edit the file. Vale and `tellgrader` could not run because Bash was disabled in the check session. The scratch folder also has no `.vale.ini`, style agent, or sibling pages. So the mechanical gate was skipped, and the adversarial register and claims reads were manual only. I read the file myself and the quoted text matches it. Two line numbers in the report are off by one: \"about a minute later\" and \"Cloudflare\" are on line 7, not line 6.\n\n## Findings, ranked\n\n**Fix (proposed edits)**\n\n1. **Line 3, \"Cairn isn't just a content system, it's a seamless way to publish.\"** This is the \"isn't just X, it's Y\" frame. It is also a comma splice, and \"seamless\" is marketing language. Proposed fix: cut it and open with the task.\n2. **Lines 3–4, \"Moreover, it empowers every editor to ship robust, world-class pages in minutes.\"** It has a connector opener (\"Moreover\") and virtue and marketing words (\"empowers\", \"robust\", \"world-class\"). \"In minutes\" is an unsupported claim. Proposed fix: delete the sentence. Line 7 already has the one supported timing.\n3. **Line 7, \"Click here to read more about builds.\"** \"Here\" is a bad link anchor under the Google link-text rule, and there is no link target. Proposed fix: link a descriptive phrase to the builds page if one exists. If not, cut the sentence. I won't invent a URL.\n4. **Line 7, \"Cloudflare\" has no link.** Gate 4 would want one link at first mention to a verified Cloudflare page. I could not verify a target here.\n\n**Your call**\n\n5. **Line 9, \"first released in 2019\" and \"used by over ten thousand sites.\"** Neither figure has a source I could check. The count reads as a credibility claim, and the sentence is off-topic for a how-to page. Cite both, or cut the line.\n6. **Line 7, \"about a minute later.\"** This is a measured claim. Confirm the build time before keeping it.\n\n**Not flagged:** the bold **Publish** label is used correctly. \"The site rebuilds on Cloudflare\" is plausible, but I couldn't verify it.\n\n## Suggested shape if the fixes are applied\n\n> # Publishing a page\n>\n> To publish a page, open the admin, choose the page, and select **Publish**. The site rebuilds on Cloudflare and the new version is live about a minute later. See [how builds work](...).\n\nNo new tells beyond the ones named above.",
+  "costUsd": 0.09950555
+}
