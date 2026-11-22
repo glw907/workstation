@@ -21,11 +21,17 @@ the `pavilion` desktop (Fedora 44 base, `bootc`/`ostree`). GNU Stow links tracke
 
 ## Open steps
 
-- **thinkpad-x1: finish Zen's links after the next pull** (PR #260, 2026-11-21). Zen is installed and is the
-  default browser, but `~/.local/zen/distribution/policies.json` and `~/.local/share/applications/zen.desktop` are
-  copies, since a live session held the main checkout. After `git -C ~/.dotfiles pull --ff-only`, run
-  `rm ~/.local/share/applications/zen.desktop && cd ~/.dotfiles && stow -R applications`, then
-  `ln -sf ~/.dotfiles/bluefin/zen/policies.json ~/.local/zen/distribution/policies.json`.
+- **thinkpad-x1: carry the browser setup over** (BACKLOG #109, 2026-11-21). Zen is installed and is the default
+  browser there, but its `policies.json` and `zen.desktop` are copies, it has no Adwaita theme, and Chromium still
+  holds Geoff's `Profile 1`. Geoff wants the laptop to match pavilion. The seven steps are in
+  `bluefin/SECOND-WORKSTATION.md`, "Changes to carry to thinkpad-x1", the 2026-11-21 entry.
+- **pavilion: two browser steps for Geoff** (2026-11-21). `[you]` In Zen, delete the four stock Mozilla
+  bookmarks, then set up Floccus with the passphrase entered before the first sync
+  (`~/Projects/household-it/docs/systems/bookmarks.md`). That brings the 17 bookmarks the old Chromium profile
+  synced to the server. `[you]` In Chromium, open
+  `https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn`, click "Add to Chromium", and
+  sign in to Claude. Until then claude-in-chrome can't drive Chromium on pavilion. The old `Geoff` profile is in
+  the trash.
 
 - **thinkpad-x1: restart the queue and move the household-it checkout.** Its first session pulls `~/.dotfiles` and `~/Projects/approval-queue`,
   then runs `approval-queue restart` (it names any old item still undecided and archives the old files

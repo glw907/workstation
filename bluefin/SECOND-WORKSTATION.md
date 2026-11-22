@@ -362,11 +362,11 @@ the rest unless the step says it is a hard stop.
    the machine's own gws user token. The OAuth client pair comes from
    `~/.local/secrets`, which Part 2 step 3 wrote. A terminal opened before
    then never loaded it, and `gws` reports "No OAuth client configured".
-2. In Chromium's `Default` profile (Claude's), install the Claude extension
-   and confirm it connects to Claude Code. In Geoff's own profile, install
-   the Proton Pass extension (`ghmbeldphafepmbegfdlkpapadhbakde`). Install
-   each by hand: Chromium policy is browser-wide, so neither extension is
-   force-installed, and no profile carries a 1Password extension. If the
+2. In Chromium's `Default` profile, the one development profile, install the
+   Claude extension and confirm it connects to Claude Code. Install it by
+   hand: Chromium policy is browser-wide, so no extension is force-installed.
+   Chromium carries no password manager. Proton Pass and Floccus are in Zen,
+   where its policy file installs them. If the
    Claude extension can't connect, check for
    `~/.config/chromium/NativeMessagingHosts/com.anthropic.claude_code_browser_extension.json`.
    A Claude session started without `--chrome` doesn't write it, and
@@ -512,6 +512,28 @@ flatpak override --user --env=WEBKIT_DISABLE_DMABUF_RENDERER=1 co.hyprlab.Hylki
 ```
 
 Remove the override once Hylki ships a fix (`flatpak override --user --unset-env=WEBKIT_DISABLE_DMABUF_RENDERER co.hyprlab.Hylki`), and keep the cap.
+
+On 2026-11-21, pavilion took Zen as its daily browser with an Adwaita theme, and its Chromium went down to one development profile. Geoff wants the same on thinkpad-x1: "I'll want to follow this same process on the thinkpad." Zen is already installed there and is the default browser (pull request 260). The laptop needs these, from a session Geoff is at:
+
+1. Pull `~/.dotfiles`. Replace the copied launcher with its stow link: `rm ~/.local/share/applications/zen.desktop && cd ~/.dotfiles && stow -R applications`. The copy came from `xdg-settings`, which rewrites a launcher that lacks the `about` and `unknown` scheme handlers. The tracked launchers now list both, so the link survives step 2.
+2. Run `claude-sudo-setup`, then `bash ~/.dotfiles/bluefin/bootstrap.sh setup`. The run links Zen's `policies.json`, clones the theme at its pinned commit, links it into each Zen profile, and installs the Chromium policy file `development-browser.json`. If it prints "Zen has no profile yet", launch Zen once and run it again.
+3. Restart Zen. The sidebar is Adwaita gray (`#2e2e32`), not near-black, and `about:addons` lists Proton Pass and Floccus. `[you]` Geoff signs in to Proton Pass.
+4. Move the bookmarks. Zen starts with none of Chromium's, and Floccus carries them through the server. `[you]` In Chromium, Geoff opens Floccus and clicks its sync button, and the sync ends with no error. `[you]` In Zen, he deletes the four stock Mozilla bookmarks and sets up Floccus (`~/Projects/household-it/docs/systems/bookmarks.md#set-up-floccus-on-a-device`), entering the passphrase before the first sync. Zen's bookmarks toolbar then holds what Chromium's bookmarks bar held. Do not go on to step 5 until it does.
+5. Replace Chromium's `Profile 1` with the development profile. This removes Geoff's Chromium history and sign-ins on the laptop. The trash keeps them until it is emptied. Close every Chromium window, then run:
+
+   ```bash
+   cd ~/.config/chromium
+   test ! -L SingletonLock || { echo "Chromium is still running"; exit 1; }
+   jq '.profile.info_cache |= del(."Profile 1") | .profile.last_used = "Default" | .profile.last_active_profiles = ["Default"] | .profile.profiles_order |= ((. // []) - ["Profile 1"])' "Local State" > "Local State.new" || exit 1
+   mv "Local State.new" "Local State"
+   gio trash "Profile 1"
+   setsid -f chromium-browser --profile-directory=Default \
+       https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn
+   ```
+
+   `ls ~/.config/chromium` then lists `Default` and no `Profile 1`. A `SingletonLock` left by a Chromium that was killed, not closed, is stale: check that no Chromium process runs, delete the link, and run the block again.
+6. `[you]` In the Chromium window that opened, Geoff clicks "Add to Chromium" and signs in to Claude. A fresh `claude --chrome` session then connects. Part 3 step 2 says what to check when it doesn't.
+7. Run `check-drift`. It prints no `x` line for a Chromium policy file or for the `applications` stow package.
 
 ## After pavilion is up
 

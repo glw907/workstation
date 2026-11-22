@@ -4,7 +4,7 @@ Type=Application
 Name=Zen Browser
 GenericName=Web Browser
 Comment=Browse the web
-# TryExec hides the launcher on a host without the upstream tarball (pavilion).
+# TryExec hides the launcher on a host where the upstream tarball isn't installed yet.
 TryExec=/var/home/glw907/.local/zen/zen
 Exec=/var/home/glw907/.local/zen/zen %u
 Icon=/var/home/glw907/.local/zen/browser/chrome/icons/default/default128.png
@@ -12,7 +12,7 @@ Terminal=false
 StartupNotify=true
 StartupWMClass=zen
 Categories=Network;WebBrowser;
-MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;application/pdf;image/gif;image/jpeg;image/png;image/webp;x-scheme-handler/http;x-scheme-handler/https;
+MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;application/pdf;image/gif;image/jpeg;image/png;image/webp;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/about;x-scheme-handler/unknown;
 Actions=new-window;new-private-window;
 
 [Desktop Action new-window]
