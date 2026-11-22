@@ -45,8 +45,8 @@ before it finished, as the guide asks.
 ## What the sessions could not reach
 
 Five of the six writing sessions reached for `~/.claude/docs/voice/written-for-people.md`, which
-`building-from-specs` names as the standard for a pull request's body. Three tried to read it,
-and two tried to list its folder. The file links into `~/.dotfiles`, which the test hides so that
+`building-from-specs` names as the standard for a pull request's body. Three tried to read it.
+One listed its folder, and one listed `~/.claude/docs`, the folder above. The file links into `~/.dotfiles`, which the test hides so that
 no session reads the installed skill or the main checkout. The sessions went on without it. A
 spec's length doesn't rest on that file, since the guide, which the sessions did read, governs
 what a spec carries.
