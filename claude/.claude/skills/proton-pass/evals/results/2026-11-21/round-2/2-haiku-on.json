@@ -1,0 +1,37 @@
+{
+  "skillName": "proton-pass",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "claude-pass just failed with \"Agent login failed\" after I ran four item views in a row, and the token itself is fine. What's going on, and what should happen next? Don't run claude-pass again yet.",
+  "started": "2026-11-22T02:48:03Z",
+  "seconds": 7.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"proton-pass\"}"
+    }
+  ],
+  "result": "**What's going on:** Proton throttles an agent's logins after about four quick calls. Your four item views in a row hit that limit. The failure message is misleading: \"Agent login failed\" with a valid token is the throttle, not a bad credential. Your token is probably fine.\n\n**What should happen next:**\n\n1. **Don't call `claude-pass` for about 25 minutes.** Every further attempt during the cooldown can extend it.\n2. **Don't run anything that signs in as the agent either.** `pass-access` and `check-drift` log in through the agent tokens, so they count toward the same limit. Hold them until the wait is over.\n3. **After the wait, space calls about 150 seconds apart.** Run any longer chain in the background and write its output to a file, so the calls don't bunch up.\n4. **If it still fails after the wait,** check the token's expiry in `secrets/proton-grants.tsv`. The skill notes that `pass-cli agent renew` keeps the agent's grants, so a renewed token needs no regrant. If the token is still valid, the next step is to look at the agent's sign-in path, not the token.\n\nI haven't run `claude-pass` since the failure, and I haven't checked the live throttle state. The 25-minute figure comes from the skill's documented procedure. I can start the wait now and run one check call when it ends, if you want that.",
+  "costUsd": 0.004531370000000001
+}

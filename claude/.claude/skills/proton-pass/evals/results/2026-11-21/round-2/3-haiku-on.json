@@ -1,0 +1,37 @@
+{
+  "skillName": "proton-pass",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I want to move about 30 Proton Pass items between vaults and rename some of them. Can Claude just do this with claude-pass? How should it go? Plan only; don't run anything.",
+  "started": "2026-11-22T02:49:12Z",
+  "seconds": 11.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"proton-pass\", \"args\": \"Planning a bulk move of about 30 items between vaults plus some renames. Plan only, no execution. Need: whether claude-pass can do vault moves and renames, the naming and note rules, grant and check-drift effects, and how a bulk vault edit is handled (pass-sitting).\"}"
+    }
+  ],
+  "result": "**Short answer: no, not as a bulk job.** Claude can run single `claude-pass` item moves, but a bulk vault edit is Geoff's to run through `pass-sitting`. Claude writes the sitting file, and Geoff does the dry run and apply.\n\n**Why**\n- `claude-pass` does have `item move` and `item update`, so Claude could move one item at a time. But Claude is an editor only in `Infrastructure`, `Age key`, `Projects`, `ASC`, and `Test accounts`. It can't see or touch `Private`, `Cathy & Geoff`, `Family`, `Parents`, or `Proton recovery`.\n- Moves, renames, notes, and trashes are listed as bulk edits that run under Geoff's login after a dry run. `claude-block-pass` refuses every `pass-sitting` form for Claude.\n\n**Plan**\n\n1. **Get the mapping.** I need, for each of the ~30 items: current vault and folder, target vault and folder, and new title (if renamed). Items in vaults Claude can't see are fine to include, since Geoff's sitting file handles them.\n2. **Check each target against the vault table.** Put each item in the narrowest vault that holds everyone who signs in to it. Money and medical accounts lean to `Cathy & Geoff` unless a kid uses them. Moving an item into a wider-reader vault exposes it to those readers, so flag any such move for Geoff's approval.\n3. **Check the titles.** Use the service's name, with one trailing parenthesis only if the vault has two accounts at that service. Key or secret names follow system, secret, scope. Custom field titles are sentence case. No generic titles.\n4. **Notes.** Technical vaults get the full template (`For`, `Used by`, `Rotate`, `Recovery`, `Mask`, `Reviewed`), with each line only where a source supports it. Personal and family vaults get only `Mask` and `Recovery` where they help. New note text goes above any existing note.\n5. **Write the sitting file.** Claude writes the JSON-lines file, following the header of `bin/.local/bin/pass-sitting`, with `move` and `update` lines and no `revoke` or `grant` lines unless they're intended. Then Claude gives Geoff two commands to run in a Ptyxis terminal: `pass-sitting FILE`, then `pass-sitting --apply FILE`.\n6. **Grants.** Moving items doesn't change grants. But any agent that loses sight of an item (because it moved out of one of the five Claude vaults) will stop finding it. Check `pass-access` afterward. Change `secrets/proton-grants.tsv` only by Geoff's hand, in the same PR.\n7. **Verify.** After Geoff applies, run `check-drift --titles` to lint the five Claude vaults. It prints a count and writes titles to a private file, so no titles reach the transcript. Then run `check-drift` to compare the grant map with the live grants.\n8. **Throttle.** Don't do this as a chain of `claude-pass` calls. Proton throttles agent logins after about four quick calls, so a 30-item loop would hit the throttle.\n\n**What I need from you:** the mapping in step 1, and your call on any item whose target vault is wider than its source. I haven't run anything.",
+  "costUsd": 0.005019920000000001
+}

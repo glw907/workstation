@@ -1,0 +1,50 @@
+{
+  "skillName": "proton-pass",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "claude-pass just failed with \"Agent login failed\" after I ran four item views in a row, and the token itself is fine. What's going on, and what should happen next? Don't run claude-pass again yet.",
+  "started": "2026-11-22T02:48:49Z",
+  "seconds": 22.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"Agent login failed|rate.?limit|login\", \"path\": \"/var/home/glw907/.claude/docs/bluefin-admin/secrets.md\", \"output_mode\": \"content\", \"-i\": true, \"-C\": 3}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*proton-pass*/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"bin/.local/bin/claude-pass*\", \"path\": \"/var/home/glw907/.dotfiles\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"claude-pass|Agent login|proton\", \"-i\": true, \"output_mode\": \"content\", \"-C\": 4}"
+    }
+  ],
+  "result": "I can't confirm the cause yet. My reads of `~/.claude/docs/bluefin-admin/secrets.md`, the `claude-pass` wrapper in `~/.dotfiles/bin/.local/bin/`, and the `proton-pass` skill were all denied, and nothing in this directory covers the error. So what follows is my best guess, not something I've checked.\n\n**Most likely cause: Proton throttled the logins.** A login that fails only after a quick burst, with a token you know is good, usually means rate limiting rather than a bad credential. If `claude-pass` starts a fresh agent session on every call instead of reusing one, four item views meant four logins close together. Proton's API pushes back on that by refusing the request (an HTTP 429) or by asking for human verification. The wrapper would show either one as a plain \"Agent login failed.\"\n\n**What should happen next:**\n\n1. **Wait before trying again.** Every retry during a throttle can extend the lockout, so give it several minutes. When you do retry, make it one item view, not a batch.\n2. **If that single call still fails, it's probably a human-verification challenge.** Only you can clear that, by signing in to Proton yourself. I shouldn't keep calling while it's pending.\n3. **Fix the pattern so it doesn't recur.** If the wrapper logs in on every call, it should reuse one session, or callers should bunch lookups together and space them out. That's a change to Claude Code tooling, so it would go through `claude-infra`, and the fix would land in `~/.dotfiles` and pass its gate.\n\nTo confirm instead of guess, allow me to read `secrets.md` and the `claude-pass` script. They'll show whether the wrapper logs in on every call and whether there's a known cooldown or recovery step for this error. I won't run `claude-pass` until you say so.",
+  "costUsd": 0.19696699999999995
+}

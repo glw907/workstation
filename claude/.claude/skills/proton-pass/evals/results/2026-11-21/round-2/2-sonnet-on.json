@@ -1,0 +1,37 @@
+{
+  "skillName": "proton-pass",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "claude-pass just failed with \"Agent login failed\" after I ran four item views in a row, and the token itself is fine. What's going on, and what should happen next? Don't run claude-pass again yet.",
+  "started": "2026-11-22T02:48:22Z",
+  "seconds": 5.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"proton-pass\"}"
+    }
+  ],
+  "result": "**What happened:** This is Proton's login throttle, not a bad token. Proton throttles an agent's logins after about four quick calls. Your four item views in a row hit that limit, and the next call failed with \"Agent login failed\". The token is fine, which matches the skill's note that this error with a good token means the throttle.\n\n**What should happen next:**\n\n1. **Wait 25 minutes** from the failed call before running `claude-pass` again. I haven't run it, and retrying sooner would probably fail and may extend the throttle.\n2. **Space later calls 150 seconds apart.** Don't run another burst.\n3. **Run any longer chain in the background** and write its output to a file. Secret values from `item view` go to a file or a pipe, never the transcript.\n\nIf you tell me which items you still need, I can plan the remaining reads. I can combine them where possible, for example one `item list` instead of several views, and set `CLAUDE_PASS_REASON` so the calls are labeled. After the wait, I'll run the first call and then pace the rest.",
+  "costUsd": 0.08020340000000001
+}

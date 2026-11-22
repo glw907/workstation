@@ -1,0 +1,37 @@
+{
+  "skillName": "proton-pass",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I want to move about 30 Proton Pass items between vaults and rename some of them. Can Claude just do this with claude-pass? How should it go? Plan only; don't run anything.",
+  "started": "2026-11-22T02:49:24Z",
+  "seconds": 13.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"claude-pass\", \"path\": \"/var/home/glw907/.claude\", \"output_mode\": \"content\", \"-n\": true, \"head_limit\": 80}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"claude-pass\", \"path\": \"/var/home/glw907/.dotfiles\", \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "Yes, Claude can probably do this with `claude-pass`, but I couldn't confirm it. My attempt to read `~/.claude` and `~/.dotfiles` for the `claude-pass` docs was denied, so this plan rests on the CLAUDE.md rules and on what I'd check first.\n\n**Open question: does `claude-pass` support move and rename?**\nThe first step, once you approve running things, is `claude-pass --help` and a names-only listing. If it has no move or rename verb, the fallback is create-new, copy the values, delete-old. That handles secret values, so I'd rather not do it for 30 items without your sign-off. Please grant read access to `~/.claude/docs` and `~/.dotfiles` if you want me to check the exact commands now.\n\n**Plan**\n\n1. **Inventory (read-only).** List all items by vault and name through `claude-pass`. Names only, never values.\n2. **Check capabilities.** Confirm whether `claude-pass` can move an item in place and rename it. In-place move and rename keep the item's values and history. Copy-and-delete does not, so I'd stop and ask before using it.\n3. **Build the mapping.** One table: current vault and name, target vault and new name. Save it as a file outside the repo, with no values in it. You approve the table before anything changes.\n4. **Audit references.** Names are how other systems find credentials. Before renaming, search by name in `~/.local/secrets`, the registry, `wrangler secret list`, and the household-it runbook. Each hit for a renamed item gets updated in the same batch. Otherwise a rename breaks a deploy silently.\n5. **Execute in batches of about 5.** After each batch, verify by name that the new item exists in the target vault and the old name is gone. Then re-run the reference check.\n6. **Report.** Give you the final mapping, every reference I updated, and anything I skipped or couldn't do.\n\n**Risks**\n- A rename without the reference audit breaks whatever uses the old name.\n- Copy-and-delete can lose data if it fails partway, so it needs your go-ahead.\n- Proton Pass is the authoritative record, so verify each step there, not just in the local stores.\n\n**Rollback:** A move or rename is reversible by moving or renaming back. The mapping file is the undo list.\n\nThis is a one-off admin task, not a repo change, so I'd run it directly after you approve the mapping. Nothing has been run or changed.",
+  "costUsd": 0.004755580000000001
+}

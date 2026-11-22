@@ -1,0 +1,37 @@
+{
+  "skillName": "proton-pass",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I want to move about 30 Proton Pass items between vaults and rename some of them. Can Claude just do this with claude-pass? How should it go? Plan only; don't run anything.",
+  "started": "2026-11-22T02:49:48Z",
+  "seconds": 13.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/claude-pass*\", \"path\": \"/var/home/glw907/.dotfiles\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/proton-pass/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    }
+  ],
+  "result": "I couldn't read the `claude-pass` script or the `proton-pass` skill, because read access to `~/.dotfiles` and `~/.claude` wasn't granted. So this plan comes from your CLAUDE.md and not from what `claude-pass` actually supports. Step 1 is therefore a check of the tool's real capabilities.\n\n## Can Claude do it?\n\nProbably yes for the rename and move work. `claude-pass` is the sanctioned route, and the CLAUDE.md rules allow it as long as values stay on stdin and bare `pass-cli` is never used. I can't confirm that `claude-pass` has move or rename subcommands. If it only reads and writes secret values, a vault move becomes a create-in-target plus delete-from-source, and that is a different, riskier plan.\n\n## Plan\n\n1. **Check what the tool can do (read-only).** Read `claude-pass --help` and the `proton-pass` skill. Settle three questions: does it support item move, item rename, and vault listing, and are those operations atomic? This decides the rest.\n\n2. **Get the mapping from you.** I need a table of about 30 rows: current item, source vault, target vault, and new name (blank if unchanged). I'd take it as a pasted list or a file. The table only has titles and vault names, never secret values.\n\n3. **Dry run.** I list the current items by name, vault, and ID only, with no values. I check that every row in your table matches exactly one item, and I flag duplicates, missing items, and target-name collisions. I print the full planned change list. Nothing changes yet.\n\n4. **Snapshot for rollback.** I save a before-state record of item ID, vault, and title for each of the 30 items, outside any repo, so every change can be reversed. It holds no secrets.\n\n5. **Pilot on 1 or 2 items.** I ask for your go-ahead, run just those, and check that they landed in the right vault with the right title and that fields and TOTP survived. If the move is really copy-and-delete, I also compare the item contents before deleting the original.\n\n6. **Batch the rest.** After your go-ahead, I run the remaining items one at a time, with a per-item check afterwards. The script stops at the first failure and doesn't continue.\n\n7. **Verify.** I re-list both vaults and diff the result against your table and the snapshot, then report any mismatches.\n\n8. **Follow-up.** If any scripts, the registry, or `~/.local/secrets` refer to these items by name or vault, I list them so you can decide whether they need updating. Renames can break lookups that go by item name.\n\n## What I need from you\n\n- The mapping table from step 2.\n- Access to the `claude-pass` script and docs, so I can do step 1.\n- A go-ahead at step 5. Moves and renames are hard to reverse in bulk, so I won't start them without it.\n\n## Risks to watch\n\n- Shared vaults may change who can see an item.\n- Moves between vaults may drop item history or share links.\n- Item names may be referenced elsewhere (see step 8).",
+  "costUsd": 0.0813245
+}

@@ -1,0 +1,37 @@
+{
+  "skillName": "proton-pass",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "claude-pass just failed with \"Agent login failed\" after I ran four item views in a row, and the token itself is fine. What's going on, and what should happen next? Don't run claude-pass again yet.",
+  "started": "2026-11-22T02:48:38Z",
+  "seconds": 10.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"proton-pass\"}"
+    }
+  ],
+  "result": "That's Proton's login throttle, not a token problem. Proton throttles an agent's logins after about four quick calls, and each `claude-pass` run signs in again as `<host>-claude`. Your four item views in a row hit that limit. When the token is known good, \"Agent login failed\" means the throttle.\n\n**What should happen next:**\n\n1. **Wait 25 minutes from the failure** with no `claude-pass` calls at all. Each attempt during the wait is another sign-in and can extend the lockout.\n2. **Then space the calls 150 seconds apart.**\n3. **Run any longer chain in the background.** If more than a few item views are left, I'd script them with a 150-second sleep between calls and write the output to a file. That keeps secret values out of the transcript, and you don't have to babysit it.\n4. **Leave the token and grants alone.** Renewing, rotating or regranting won't help. The token is fine, and changing it only adds work.\n\nIf you tell me which items you still need, I'll write that spaced background chain and start it once the 25 minutes are up. Until you say so, I won't run `claude-pass`.",
+  "costUsd": 0.1616788
+}

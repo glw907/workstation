@@ -1,0 +1,37 @@
+{
+  "skillName": "proton-pass",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I want to move about 30 Proton Pass items between vaults and rename some of them. Can Claude just do this with claude-pass? How should it go? Plan only; don't run anything.",
+  "started": "2026-11-22T02:49:37Z",
+  "seconds": 10.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"proton-pass\"}"
+    }
+  ],
+  "result": "**Short answer: no. Claude can't do this one with claude-pass.** The proton-pass skill says bulk edits are Geoff's. Moves and renames run through `pass-sitting` under Geoff's login after a dry run. `claude-block-pass` refuses every form of `pass-sitting` when Claude runs it. Claude's agent also only sees five vaults (`Infrastructure`, `Age key`, `Projects`, `ASC`, `Test accounts`). Moves out of or into `Private`, `Cathy & Geoff`, `Family` or `Parents` aren't reachable. Proton also throttles an agent after about four quick calls, so 30 items one by one would be slow anyway.\n\n**How it should go**\n\n1. **You send the list.** For each item, send its current vault, its current title and the target vault. For renames, either give the new title or say \"apply the naming rules\". The list contains titles only, never values. Titles in the five Claude vaults I can read myself through `claude-pass item list`. Titles in your personal vaults I can't see, so those need to come from you.\n\n2. **I check the list against the rules.** I'd check:\n   - Each target vault is the narrowest one that holds everyone who signs in to the item. Money and medical accounts lean to `Cathy & Geoff` unless a kid uses them.\n   - Each new title is the service's name as people say it, with no domain. It has a single trailing parenthetical qualifier, used only when the vault holds more than one account at that service. Keys and secrets follow the system, secret, scope pattern.\n   - Any move into or out of an agent-visible vault is checked against the grant map. Moving an item out of Claude's reach changes what scripts can read, so I'll flag any item a script or `check-drift` depends on.\n   - Notes follow the vault: technical vaults carry the full template, personal ones only `Mask` and `Recovery`. A new note goes above an existing one, never over it.\n\n3. **I write the sitting file.** It's JSON-lines in the shape shown in the header of `bin/.local/bin/pass-sitting`, with one line per move or rename. I'll read that header first so the format is exact. I'd probably write it in one file, or two (moves, then renames) if you want a smaller blast radius.\n\n4. **You run it in a Ptyxis terminal**, not through `!`:\n   - `pass-sitting FILE` is the dry run. Read what it says it will change.\n   - `pass-sitting --apply FILE` applies it.\n\n5. **I verify afterward.** For the items in my vaults, I'd run `claude-pass item list` in the background, spaced 150 seconds apart for the throttle. I'd also run `check-drift --titles`. It writes to a private findings file, so no titles reach the transcript. Then I'd report outcomes faithfully, including anything that failed.\n\n**One thing I need from you:** where the list comes from. If it's \"everything in vault X\" or a pattern, say so. For the personal vaults, you'd have to give me the titles, since I can't list them.\n\nNothing has been run. The only thing I did was load the skill.",
+  "costUsd": 0.0871429
+}
