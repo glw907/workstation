@@ -1,7 +1,7 @@
 # The Fable overflow system (reframed 2026-07-26; originally the post-cutoff plan of 2026-07-07)
 
 **Note (2026-10-10):** this doc's original seat policy (Opus 5 holds the execution seat) was
-superseded by `pass-core` "Models". The overflow mechanics below (the access modes, the batch desk,
+superseded by `building-from-specs` "Models". The overflow mechanics below (the access modes, the batch desk,
 the suggestion rules) remain in force for Fable use beyond the 50% weekly cap.
 
 There is no cutoff anymore: as of 2026-07-20 Fable 5 is permanently included on the Max plan
@@ -24,7 +24,7 @@ Non-interactive Fable jobs go through the Batch API (async, <24h, usually minute
 
 ## Mode 2 — PER-DISPATCH (one-shot judgment from a live session)
 
-A single `model: fable` subagent dispatch from the conducting session (`pass-core` "Models"), for judgments
+A single `model: fable` subagent dispatch from the working session (`building-from-specs` "Models"), for judgments
 that gate immediate next steps. Rules: the brief is a prepared file; context <30k; output
 capped (ask for a verdict/decision table, not prose); never inside a loop.
 
@@ -42,7 +42,7 @@ brainstorm). Structured for cache economics:
 
 ## Governance
 
-- Fable-credits are a budget of their own (with tokens-at-large and Geoff's attended time; `pass-core` "Models"): every
+- Fable-credits are a budget of their own (with tokens-at-large and Geoff's attended time; `building-from-specs` "Models"): every
   invocation logged (purpose, mode, tokens) in the PR body's score.
 - A weekly credit ceiling Geoff sets; the session asks before exceeding it, never after.
 - Verify current Batch/caching terms at first use (50% batch discount and 5min/1h TTLs

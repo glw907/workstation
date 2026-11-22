@@ -1,6 +1,6 @@
 # Guards on long unattended work
 
-Full procedures for the guards the global CLAUDE.md and `pass-core` name. The sleep inhibitor is
+Full procedures for the guards the global CLAUDE.md names. The sleep inhibitor is
 tool-enforced; the runaway guard, the wake-up, and the lid-switch hold are still armed by the
 session. Read this when arming a guard or investigating a suspend.
 
@@ -93,20 +93,16 @@ or stalled.
 
 ## A wake-up that does not depend on the API link (born 2026-09-20, five hours lost)
 
-Every guard above watches the machine or the agents. None of them wakes the executing session. A
+Every guard above watches the machine or the agents. None of them wakes the working session. A
 workflow's completion or failure, or a background Bash task's exit, reaches the session only as a
 task notification, and a notification that fires while the API link is down is not retried on a
 timer: the session sits until a human types. On 2026-09-20 an `EAI_AGAIN` drop killed a fold
 implementer at about 04:00, the chain halted, and the session sat unwoken until Geoff's 09:16
-message, with no suspend in `journalctl` and every inhibitor held. A session that only waits, on an
-`approval-queue send` call or an idle notice, arms no wake-up and no Monitor, because the
-command's exit or the notice wakes it. A conductor also runs `round-watch` beside the notice
-(`pass-core` `references/conductor.md` "Run"), since a notice failed to arrive on 2026-11-14. Any
-working session left unattended (an executor, a
-workflow run) arms
-a scheduled wake-up as well: `/loop` with no interval (dynamic pacing), started as the executing
-session's first guard (`pass-core` "Execute") and, for a workflow, once it is launched. The
-notification is the primary signal and a 1200 to 1800 second fallback is the backstop. The
+message, with no suspend in `journalctl` and every inhibitor held. A session that only waits on
+an idle notice arms no wake-up and no Monitor, because the notice wakes it. Any working session
+left unattended (a task session, a workflow run) arms a scheduled wake-up as well: `/loop` with
+no interval (dynamic pacing), started as the session's first guard and, for a workflow, once it
+is launched. The notification is the primary signal and a 1200 to 1800 second fallback is the backstop. The
 fallback tick checks the journal or the branch's task commits for a dead or halted run and
 relaunches with `resumeFromRunId`, or resumes at the first task whose acceptance fails. A tick
 that fires while the link is still down fails and the next one retries, which is the property the
@@ -136,22 +132,17 @@ goal met by stopping at once cleared with no extra work. The December run is the
 December review also reads the trial results: the line that opens `Trials:` in each round report
 of the `unattended-rounds` initiative record, under `reports/`. That line counts the sessions
 that ran under a `/goal` line and how many of them went idle before their end line. The December
-review says whether to extend `/goal` to executors and conductors, which keep the `/loop` wake-up
-for now.
+review says whether a task session under `/goal` still needs the `/loop` wake-up.
 
 ## The weekly usage ceiling
 
-A round's conductor reads the weekly usage before each launch. The command is
+The session Geoff is talking to reads the weekly usage before each task launch. The command is
 `claude -p "/usage" --model haiku < /dev/null`, and the figure to note is the one on the line
 "Current week (all models)". That line also gives the time of the weekly reset.
 
 The ceiling is 85 percent of the weekly allowance, unless Geoff set another. A figure that can't
-be read counts as over the ceiling. At or over it, the conductor finishes the pass in flight,
-starts nothing new, writes the report, and waits for the reset.
-
-The rule's home is `pass-core` `references/round-run.md`: standing answer 4 and "The order
-table". A round design records another ceiling under `references/round.md` "What a round design
-adds".
+be read counts as over the ceiling. At or over it, the session lets the tasks in flight finish,
+launches nothing new, and waits for the reset.
 
 ## Restart recovery re-arms the FULL set (born of a 7% near-miss, 2026-09-03)
 

@@ -21,7 +21,7 @@ machine.** The manifests record intent; the script reports what happened.
 | Retired-service reference `fastmail-api.md`, reached from `bluefin-admin/email.md` | `~/.dotfiles/claude/.claude/docs/` (stowed) | the file itself | stow |
 | Workstation `CLAUDE.md` | `~/.dotfiles/claude/.claude/` (stowed) | the file itself | stow |
 | `settings.json` (hooks, plugins, env) | tracked at `~/.dotfiles/claude/.claude/settings.json`, generated into `~/.claude/settings.json` (a real file, never stowed) | the tracked file | `claude-tooling-sync apply` |
-| Plugin `standards` (craft skills, reviewer agents, `running-passes`; a skill or agent a second repository needs) | `~/Projects/standards`, public `glw907/standards`, `plugins/standards/`; names are `standards:<name>` | `.claude-plugin/marketplace.json`, validated in its CI; vendored entries carry `"home": "standards"` in `vendored-skills.json` | `claude plugin install standards@glw907-standards`; auto-updates from `main`; `update-skills` opens a pull request there |
+| Plugin `standards` (craft skills, reviewer agents; a skill or agent a second repository needs) | `~/Projects/standards`, public `glw907/standards`, `plugins/standards/`; names are `standards:<name>` | `.claude-plugin/marketplace.json`, validated in its CI; vendored entries carry `"home": "standards"` in `vendored-skills.json` | `claude plugin install standards@glw907-standards`; auto-updates from `main`; `update-skills` opens a pull request there |
 | Plugins | Claude Code's plugin cache | `settings.json` `enabledPlugins` + `extraKnownMarketplaces` | `claude plugin install` |
 | MCP servers, user scope | `~/.claude.json` (not in git; holds other state) | `~/.claude/tooling/mcp-servers.json` (stowed) | `claude-tooling-sync apply` |
 | MCP servers, project scope | a repo's `.mcp.json` | that repo | the repo's own CLAUDE.md names it |
@@ -37,19 +37,18 @@ by kind. Plans, pull request bodies, and skills are checked by the two save hook
 ## Model pins
 
 Model pins (2026-09-22, aligned with Anthropic's model guidance 2026-09-23; the seats are in
-`pass-core` "Models"): every reviewer agent under `agents/` names `claude-opus-5-5` explicitly
+`building-from-specs` "Models"): every reviewer agent under `agents/` names `claude-opus-5-5` explicitly
 (`standards:diff-reviewer`, the four domain reviewers, `standards:go-architecture-reader`,
-`standards:figure-verifier`, `standards:visual-verifier`, `prose-voice-reviewer`, `cairn-register-editor`,
-`standards:plan-reviewer`). No agent pins the `fable` alias; it is reached only by a per-dispatch escalation.
+`standards:figure-verifier`, `standards:visual-verifier`, `prose-voice-reviewer`, and
+`cairn-register-editor`). No agent pins the `fable` alias; it is reached only by a per-dispatch escalation.
 Implementers stay on `sonnet` at effort `medium`. A frontmatter pin is read at session start, so a
 repin reaches a running session only through a per-dispatch `model`; verify a
 repin from a fresh headless session by grepping the subagent transcript's `"model"` field,
 never from the agent's own answer.
 
-The advisor (2026-11-12, <https://code.claude.com/docs/en/advisor>): planners and executors launch
-with `--advisor fable`, and `pass-core` `references/advisor.md` says when they consult it. The
-flag carries it, never `advisorModel` in `settings.json`: the main model there is already `fable`,
-and the key would attach an advisor to every session. A background session that fails a pairing
+The advisor (2026-11-12, <https://code.claude.com/docs/en/advisor>): a session that should
+consult Fable launches with `--advisor fable`. The flag carries it, never `advisorModel` in
+`settings.json`: the main model there is already `fable`, and the key would attach an advisor to every session. A background session that fails a pairing
 check starts without the advisor and prints no error, so prove it from a fresh session:
 `claude -p "/advisor" --model sonnet --advisor fable < /dev/null` prints `Advisor: Fable 5.2`.
 
@@ -140,9 +139,8 @@ the diff, point the agents that need it at the skill file, commit skills and man
   and wired in as an advisory step of the per-task gate for admin-markup tasks.
 - **Dependency upgrades:** the authored `standards:dependency-upgrade` skill (2026-09-14), the procedure every
   bump in every repo follows; the global CLAUDE.md "Dependencies" section is the standing rule.
-- **Spec and plan review:** the authored `standards:spec-plan-review` skill (2026-10-10 rewrite), the review
-  every spec or plan takes before owner approval; its depth scales with the design's size, and it
-  dispatches the `standards:plan-reviewer` agent. `pass-core` points at it.
+- **Review:** `building-from-specs` holds it. A spec is reviewed on Opus at high before Geoff approves it,
+  and a fresh `standards:diff-reviewer` reads each finished branch against its spec.
 - **Svelte:** the official server (user scope, remote).
 - **Playwright:** Microsoft's server (user scope, stdio).
 - **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook. What a repo
