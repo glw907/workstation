@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Auto mode keeps denying an ssh command that deletes old upload files on one of our servers. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+  "started": "2026-11-22T02:03:58Z",
+  "seconds": 16.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "**No, don't add an ssh allow rule.** Here's why, and what to do instead.\n\n**Why an allow rule is the wrong fix**\n\n- **It would be far too broad.** Allow rules match on a prefix. A rule like `Bash(ssh uploads-host:*)` lets anything run on that server, not just the cleanup. A narrower rule like `Bash(ssh host find /srv/uploads ...)` is still easy to slip past: a different path, a different `-mtime`, or `; rm -rf` tacked on the end all match it.\n- **Auto mode may ignore it anyway.** When auto mode starts, it drops broad allow rules that would permit arbitrary code execution, and an open-ended ssh rule is that kind of rule.\n- **The denial is reasonable.** A remote delete driven by a model is exactly what the classifier is meant to stop. A rule that turns off the check removes protection without making the delete any safer.\n\n**What to do instead (best option first)**\n\n1. **Take Claude out of the loop.** Put a cleanup script on the server, with a hard-coded uploads directory, a fixed age limit, a `--dry-run` flag and logging. Run it from a systemd timer or cron on that server. Routine cleanup then needs no permission at all.\n2. **If Claude really must trigger it, give it one fixed command.** Create a dedicated ssh key and limit it in the server's `authorized_keys` with `command=\"/usr/local/bin/cleanup-uploads\",restrict`. That key can then run only the script, whatever command line is sent. A narrow local wrapper, or an allow rule for just that key's invocation, is then low-risk, because the server enforces the limit rather than a pattern match on your side.\n3. **For a one-off run,** approve that single run when prompted, or run it yourself. Don't change settings for it.\n\nIf you go with option 2, the settings change on this workstation should go through the `claude-infra` skill so it ends up in the right file. I haven't changed anything.",
+  "costUsd": 0.1532614
+}

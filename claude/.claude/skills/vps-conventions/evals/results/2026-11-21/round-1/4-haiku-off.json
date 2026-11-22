@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "What does `git rebase --onto` do? Give one short example.",
+  "started": "2026-11-22T02:04:19Z",
+  "seconds": 3.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "`git rebase --onto <newbase> <upstream> <branch>` takes the commits in `<upstream>..<branch>` and replays them onto `<newbase>` instead of `<upstream>`. Use it to move a branch off a base it was built on, not just to rebase onto its current parent.\n\nExample: `feature-b` was branched from `feature-a`, and `feature-a` has since been merged into `main`. To move only `feature-b`'s own commits onto `main`:\n\n```\ngit rebase --onto main feature-a feature-b\n```\n\nA plain `git rebase main` would also try to replay `feature-a`'s commits, which may already be in `main` under different hashes and cause conflicts.",
+  "costUsd": 0.0034918500000000003
+}

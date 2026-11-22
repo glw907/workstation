@@ -1,0 +1,25 @@
+{
+  "skillName": "engine-consult",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I'm about to write a spec in ~/Projects/ecxc-ski for a gear-booking page that needs a new custom field type in the cairn admin. Before I write it, what engine-consultation steps does the spec need, and what exactly goes in its header? Answer only; don't write or change any file.",
+  "started": "2026-11-22T01:54:46Z",
+  "seconds": 16.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "A new custom field type in the cairn admin presses an engine edge (the admin surface, plus whatever field-registration seam exists). So this spec needs a filed brief and a triage. It does not qualify for the null \"no engine asks\" line.\n\n## Steps, before the spec is written\n\n1. **Read the sources.**\n   - The exports and doc comments the gear-booking page builds on, under `~/Projects/cairn-cms/src/lib`. Look especially at how the admin defines and renders field types.\n   - The packaged `skills/` references, checked against the code at the current commit.\n   - The open engine items in `~/Projects/cairn-cms/BACKLOG.md`, so you catch anything another site already hit about custom fields.\n2. **Read the standard** in `~/Projects/cairn-cms/.claude/agents/engine-triage.md`, under \"The standard\". Write each item against that gate.\n3. **File the brief** at `~/Projects/cairn-cms/docs/internal/consultations/2026-11-21-ecxc-ski-<spec>.md`. Each item gets four fields:\n   1. What the site builds\n   2. The engine edge it presses, with `file:line` where you know it\n   3. Evidence that any site would need it (other uses, earlier cases)\n   4. The site's fallback if the item is declined, with its rough size\n   \n   The likely item is \"custom field type in the admin\". If the engine already has a field-type extension point, the item may be about how far that point reaches. If it has none, the item is about adding one.\n4. **Run the triage.** Dispatch a fresh, read-only Opus subagent. Its instructions are the body of `engine-triage.md`, and it gets absolute paths to the brief, `~/Projects/cairn-cms/docs/internal/engine-rulings.md` and the site spec. It reads the rulings ledger first.\n5. **Adjudicate.**\n   - Record the verdicts (accept, decline or defer) in the brief itself.\n   - Add one ledger entry per item, copied from the fenced template in the ledger's header.\n   - If the item is accepted and small and additive, it becomes a small engine task you run from this session, using the cross-repo checklist.\n   - If it breaks public surface or adds a subsystem, it goes into its own cairn-cms spec. Your fallback then becomes the sanctioned interim state, with a recorded trigger for retiring it.\n   - An accepted item's ledger entry stays open until the gear-booking task lands. That task closes it with a one-line report on how the seam fit.\n6. **Sequencing.** If the item is accepted, the engine work lands, is released to the registry and is restored with `link:consumer --restore` before the site branch merges. The site can't merge on a `file:` pin.\n7. **The check.** Run it before the spec goes to you, and list it among the first task's done items so the task session and its reviewer run it again:\n   ```\n   grep -c -E '^\\*\\*(Engine consultation|Sources consulted):\\*\\* ' <spec>\n   ```\n   It must print `2`.\n\n## The header\n\nExactly these two lines, at the start of the line, with this bold and colon formatting so the grep matches:\n\n```markdown\n**Engine consultation:** [2026-11-21-ecxc-ski-<spec>.md](<link to the filed brief>)\n**Sources consulted:** <the exports and skill references read; the open BACKLOG.md engine items found, or \"none\">\n```\n\nOnly one consultation line goes in. For this spec it's the brief link, not \"no engine asks.\"\n\nIf the build turns up further engine needs partway through a task, file each one with the same four-field schema and send it to the same triage.",
+  "costUsd": 0.2858596
+}

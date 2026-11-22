@@ -1,0 +1,40 @@
+[
+  {
+    "skills": ["retire-project"],
+    "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+    "files": [],
+    "expected_behavior": [
+      "Orders the work inventory, archive, approval, then teardown, with the archive before any delete.",
+      "Removes the custom domain and DNS records before deleting the Worker.",
+      "Puts the dry run in front of Geoff with each delete listed by its id, for his approval before any teardown."
+    ]
+  },
+  {
+    "skills": ["retire-project"],
+    "query": "/retire-project the club's old domain, which nothing uses any more. What happens to the domain itself? Plan only; change nothing.",
+    "files": [],
+    "expected_behavior": [
+      "Says the domain's fate is Geoff's call.",
+      "Parks a kept domain with `MX 0 .`, `v=spf1 -all`, and `v=DMARC1; p=reject;` at the apex, and Email Routing off.",
+      "Lets a domain with no use lapse at expiry with auto-renew off, parked until then."
+    ]
+  },
+  {
+    "skills": ["retire-project"],
+    "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+    "files": [],
+    "expected_behavior": [
+      "Writes one age-encrypted file named `<project>-<date>.tar.age` holding a verified `git bundle create --all` and the D1 export.",
+      "Proves it by restoring somewhere scratch: decrypt, clone the bundle, and load the SQL export into SQLite.",
+      "Stores it in `~/Documents/retired-projects/` and in R2, confirming the R2 copy with `rclone check`, and never archives a secret value."
+    ]
+  },
+  {
+    "skills": [],
+    "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+    "files": [],
+    "expected_behavior": [
+      "Outlines a shutdown plan without loading the retire-project skill, which loads only when invoked by name."
+    ]
+  }
+]

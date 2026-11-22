@@ -1,0 +1,26 @@
+{
+  "skillName": "proton-pass",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I want to move about 30 Proton Pass items between vaults and rename some of them. Can Claude just do this with claude-pass? How should it go? Plan only; don't run anything.",
+  "started": "2026-11-22T02:08:08Z",
+  "seconds": 20.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Read",
+    "Skill"
+  ],
+  "result": "No. Claude shouldn't do this through `claude-pass`. A batch of moves and renames is a bulk vault edit, and those are yours to run through `pass-sitting` under your own login. Claude can't run `pass-sitting` at all; `claude-block-pass` refuses it in every form. There are two practical reasons as well:\n\n- **Vault reach:** Claude's agents can only see `Infrastructure`, `Age key`, `Projects`, `ASC`, and `Test accounts`. Any move that touches `Private`, `Cathy & Geoff`, `Family`, `Parents`, or `Proton recovery` is out of their reach.\n- **Throttle:** Proton throttles an agent's logins after about four quick calls. After that, calls have to be 150 seconds apart, so 30-odd moves plus renames through `claude-pass` would take a long time and probably trip the 25-minute lockout.\n\n## How it should go\n\n1. **You give me the list.** For each item: its current title and vault, where it should go, and the new title if it's being renamed. Item titles aren't secrets, but if you'd rather not type them out, a rough description is enough for any of the five vaults Claude can see. I can list those vaults' titles with a few spaced-out `claude-pass item list` calls, written to a file rather than this chat.\n\n2. **I check the list against the vault rules.** For each move, I confirm the item is going to the narrowest vault that holds everyone who signs in to it. Money and medical accounts lean to `Cathy & Geoff` unless a kid uses them. For each rename, I check it against the naming rules:\n   - The title is the service's name as people say it, never a domain.\n   - A qualifier in one trailing parenthesis, only when a vault holds more than one account at that service.\n   - Keys and secrets are named system, then secret, then scope.\n   - No generic titles.\n\n   I'll point out any move that seems to break the tiebreaker, and any rename that would clash with a title already in the target vault.\n\n3. **I write the sitting file.** It's JSON lines, one line per move or rename, in the format set out in the header of `~/.dotfiles/bin/.local/bin/pass-sitting`. I tried to read that header just now to confirm the exact fields, but the read wasn't permitted, so I'll read it when we write the file. If an item is moving *and* being renamed, I'll check from the header whether that's two lines and which one comes first.\n\n4. **You run it in a Ptyxis terminal** (not through `!`):\n   - `pass-sitting FILE` shows the dry run. Check that every line resolves to the item you meant.\n   - `pass-sitting --apply FILE` makes the changes.\n\n5. **Afterwards:**\n   - If anything moved into or out of one of Claude's five vaults, I can confirm the result with a couple of spaced-out `claude-pass item list` calls. `check-drift --titles` also lints those vaults' titles. It writes the titles to a private findings file, so none of them appear in this chat.\n   - If any item has a technical-vault note template that depends on its location (for example, `Used by` pointing at a vault-specific path), notes are also sitting work. I'd add those as lines in the same file rather than as a second sitting.\n\nThe only thing I need from you to start is the list.",
+  "costUsd": 0.2339378
+}

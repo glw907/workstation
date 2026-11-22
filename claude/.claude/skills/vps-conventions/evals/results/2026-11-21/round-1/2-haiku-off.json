@@ -1,0 +1,22 @@
+{
+  "skillName": "vps-conventions",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "We want to add the `jq` package to the cloud-init user-data.yaml that provisions our RHEL-family VPS boxes. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; change nothing.",
+  "started": "2026-11-22T02:01:39Z",
+  "seconds": 15.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "result": "This is a plan only. I made no changes.\n\n**What I could check:** The working directory has no cloud-init file, and my request to read `~/Projects/` was denied, so I couldn't find the `user-data.yaml` or the fleet's provisioning notes. Everything below is from general knowledge of cloud-init and RHEL-family packaging. Confirm it against your repo.\n\n**Why the running servers need a separate step:** cloud-init runs its user-data once, on first boot of each instance. Adding `jq` to the file changes only new instances. The servers already running get `jq` only if something installs it on them.\n\n**Plan**\n\n1. **Check the package name on each RHEL major version you run.** On a box with the same major version as the target, and on the same mirror cloud-init uses:\n   - `dnf info jq` should show a package from an enabled repo, most likely AppStream. I expect `jq` is there on RHEL 8, 9, and 10 and their rebuilds, but confirm it.\n   - `dnf repolist` shows which repos are enabled. If `jq` is only in EPEL, the user-data would also need to enable EPEL first.\n   - Run this for each major version in the fleet. Different majors can differ.\n\n2. **Add `jq` to user-data.** Add `jq` under the `packages:` key. Cloud-init uses dnf on these systems.\n\n3. **Validate and test before rollout.**\n   - `cloud-init schema --config-file user-data.yaml` checks the syntax.\n   - Boot one throwaway instance per major version from the new file. Confirm `jq --version` and check `cloud-init status` for errors.\n\n4. **Install on the running servers.** Use whatever mechanism the fleet already uses, such as Ansible, a shell loop over SSH, or a config-management tool. The command on each box is `dnf install -y jq`. Run `rpm -q jq` first to skip hosts that already have it. Confirm with `jq --version`. I'd run the first pass against one host, then the rest.\n\n5. **Record it where the fleet's package list lives.** Put `jq` in the same place as the rest of the fleet's package definitions, so a rebuild or new host gets it. I didn't find that file, so I'd need its path.\n\n6. **Rollback.** `dnf remove jq` on any host where it causes a problem.\n\n**Open questions for you**\n\n- Which path holds `user-data.yaml` and the fleet's provisioning notes? Once you grant read access to `~/Projects/`, or give me the path, I can confirm the file's structure and check the names against the repo.\n- Which RHEL-family distros and major versions are in the fleet?\n- What tool manages the existing servers today: Ansible, SSH scripts, or something else?",
+  "costUsd": 0.006013579999999999
+}

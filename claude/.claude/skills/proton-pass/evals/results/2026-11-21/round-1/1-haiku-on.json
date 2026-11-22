@@ -1,0 +1,25 @@
+{
+  "skillName": "proton-pass",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I need to store a new Resend API key that the 907-life Worker uses. Which Proton Pass vault does it go in, what should the item be titled, and how would Claude write it without the value reaching the transcript? Plan only; don't run anything.",
+  "started": "2026-11-22T02:04:45Z",
+  "seconds": 14.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "**Vault:** `Projects`, in a `907-life` folder. Projects holds the vendor accounts for each project, and the Resend key is one of them. Claude is an editor there, so no `--pass` fallback is needed. I'd confirm the folder exists with `claude-pass folder list` at run time and create it if not.\n\n**Title:** `907-life Resend API key`. The key convention is system, then secret, then scope. Scope goes in the note if the key is restricted (for example, sending only), not in the title, since the trailing parenthesis is reserved for disambiguating two accounts at one service. Before creating, check for an existing Resend item in that vault by name, so nothing is duplicated.\n\n**How Claude writes it without the value reaching the transcript:**\n\n1. **Geoff creates the key in Resend.** Claude never sees the value in chat.\n2. **Claude launches `secret-receive RESEND_API_KEY`.** Its dialog takes the value. Claude only receives confirmation that the value was stored.\n3. **Store order:** the value goes into the workstation age store first (`secret-set.sh`), then to the Worker as a Workers secret. A Workers secret alone is not enough. I haven't read `~/.claude/docs/bluefin-admin/secrets.md` in this session, so I'd confirm the exact order there before running anything.\n4. **Proton Pass item:** Claude creates it with `claude-pass item create login --vault-name Projects --from-template -`. The template is piped on stdin, never passed in argv. The key sits in a hidden custom field titled \"API key\" in `extra_fields`. The note uses the technical-vault template (`For`, `Used by`, `Rotate`, `Recovery`, `Mask`), with only the lines a source supports.\n5. **Verify without printing:** list the item's field names and types only, then confirm with `check-drift --titles`, which writes titles to a private file and prints a count. Any `item view` of the secret goes to a file or pipe, never the transcript.\n\n**Before running:** the grant map and `pass-sitting` are not involved, since this is a single item write by Claude in a vault it already edits. Space any login-heavy chain 150 seconds apart, or run it in the background, to avoid the Proton login throttle.\n\n**Open point:** the key's scope (full access or sending only). The note needs it, and Geoff can answer from the Resend dashboard.",
+  "costUsd": 0.006122580000000001
+}

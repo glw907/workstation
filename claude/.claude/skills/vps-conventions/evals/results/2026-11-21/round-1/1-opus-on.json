@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I'm writing a systemd service and timer for a nightly backup script on our AlmaLinux VPS. It needs a lock file so two runs never overlap. Where should the lock file live, and what should the service unit carry? Answer with the unit text; don't create or change any file.",
+  "started": "2026-11-22T02:00:35Z",
+  "seconds": 23.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "**Put the lock at `/run/lock/nightly-backup.lock`.** On AlmaLinux, `/run` is a tmpfs owned by root, so nothing survives a reboot and unprivileged users can't plant files there. `/var/lock` is a symlink to `/run/lock`, so either path names the same place.\n\nAvoid `/tmp`. Any hardening that turns on `PrivateTmp=` gives the service its own `/tmp`. A manual run from your shell would then check a different lock file, and the lock would protect nothing.\n\n**Use `flock(1)` instead of having the script create and delete the lock file.** With `flock`, the kernel holds the lock and releases it when the process exits, even after `kill -9` or an out-of-memory kill. So a crashed run can't leave a stale lock behind. A file the script creates and deletes itself can be left behind like that.\n\nsystemd already refuses to start a second copy of a unit that is still running. If the timer fires while the last backup is still going, nothing new starts. The lock covers the case systemd can't see: someone running the script by hand, or from cron, while the service is running. That only works if the manual run takes the same lock, so either run it through `systemctl start nightly-backup.service` or put the same `flock` line in the script.\n\n### `/etc/systemd/system/nightly-backup.service`\n\n```ini\n[Unit]\nDescription=Nightly backup\nWants=network-online.target\nAfter=network-online.target\n\n[Service]\nType=oneshot\n# Take the lock without waiting; exit 75 (EX_TEMPFAIL) if another run holds it.\nExecStart=/usr/bin/flock --nonblock --conflict-exit-code 75 \\\n    /run/lock/nightly-backup.lock /usr/local/sbin/nightly-backup\n# Nightly jobs shouldn't compete with the VPS's real workload.\nNice=10\nIOSchedulingClass=idle\n# Light hardening; loosen if the script needs to write elsewhere.\nPrivateTmp=true\nNoNewPrivileges=true\nProtectHome=read-only\nTimeoutStartSec=6h\n```\n\n### `/etc/systemd/system/nightly-backup.timer`\n\n```ini\n[Unit]\nDescription=Run nightly backup\n\n[Timer]\nOnCalendar=*-*-* 02:30:00\nRandomizedDelaySec=15min\n# If the VPS was down at 02:30, run once at the next boot.\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n```\n\nThen run `systemctl daemon-reload` and `systemctl enable --now nightly-backup.timer`.\n\n**What to adjust:**\n- **When another run holds the lock:** the run exits with 75, and the unit shows as failed, so `systemctl --failed` and any alerting will show the skipped night. If you'd rather a skip count as success, add `SuccessExitStatus=75`.\n- **`network-online.target`:** keep these two lines only if the backup sends data to a remote target. Remove them for a purely local backup.\n- **`ProtectHome=read-only`:** the service can read home directories but can't change them. If the backup restores into `/home` or writes there, remove this line.\n- **`TimeoutStartSec`:** a oneshot unit has no start timeout by default. The 6h limit stops a hung run from holding the lock forever; size it to your longest normal backup.\n- **SELinux:** keep the script in `/usr/local/sbin`, where it gets the `bin_t` label. If it lives under `/home` or in a copied-in file with an odd label, systemd will be denied permission to run it. `restorecon -v /usr/local/sbin/nightly-backup` fixes the label.",
+  "costUsd": 0.1846044
+}

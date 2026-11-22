@@ -1,0 +1,21 @@
+{
+  "skillName": "proton-pass",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "claude-pass just failed with \"Agent login failed\" after I ran four item views in a row, and the token itself is fine. What's going on, and what should happen next? Answer only.",
+  "started": "2026-11-22T02:06:57Z",
+  "seconds": 14.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Grep"
+  ],
+  "result": "Most likely Proton's server is throttling logins. Nothing is wrong with the token. I tried to check this against `~/.claude/docs/bluefin-admin/secrets.md` to confirm, but the read was denied, so treat this as my best reading rather than a confirmed diagnosis.\n\n**What's going on**\n\nEach `claude-pass` item view probably logs the agent in again instead of reusing a session. Four logins in quick succession look like abuse to Proton's sign-in service, so it refuses the next one. `claude-pass` reports that refusal as \"Agent login failed.\" That's why a token that works fine still fails here.\n\n**What should happen next**\n\n1. **Stop calling it for now.** Every retry during the cooldown is another login attempt and can keep the block in place.\n2. **Wait for the cooldown, then try one item view.** If it works, throttling was the cause. If it still fails after a long pause, it's a real authentication problem. Then check the item and the stores by name before asking you anything, per the secrets rules.\n3. **Don't work around it.** No bare `pass-cli`, no `pass-sitting`, and no new token, since the token isn't the problem.\n4. **Avoid it next time.** Fetch several values in one `claude-pass` call or one session, or space the calls out. If `claude-pass` really does log in on every call, that's worth fixing so it reuses a session. That change would go through `claude-infra`.\n\nIf you allow access to `~/.claude/docs`, I can confirm this against the secrets doc and the `claude-pass` script.",
+  "costUsd": 0.1854438
+}

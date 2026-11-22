@@ -1,0 +1,9 @@
+[Unit]
+Description=Nightly backup of the app data
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/app-backup
+RuntimeDirectory=app-backup
+Environment=BACKUP_LOCK=/run/app-backup/backup.lock

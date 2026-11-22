@@ -1,0 +1,39 @@
+[
+  {
+    "skills": ["proton-pass"],
+    "query": "I need to store a new Resend API key that the 907-life Worker uses. Which Proton Pass vault does it go in, what should the item be titled, and how would Claude write it without the value reaching the transcript? Plan only; don't run anything.",
+    "files": [],
+    "expected_behavior": [
+      "Puts the item in the `Projects` vault, in a folder for the project.",
+      "Titles it by system, then secret, then scope (for example Resend, API key, 907-life), and not by a domain.",
+      "Writes it through `claude-pass` with the value on stdin (`--from-template -`), never in argv."
+    ]
+  },
+  {
+    "skills": ["proton-pass"],
+    "query": "claude-pass just failed with \"Agent login failed\" after I ran four item views in a row, and the token itself is fine. What's going on, and what should happen next? Don't run claude-pass again yet.",
+    "files": [],
+    "expected_behavior": [
+      "Says this is Proton throttling the agent's logins after a few quick calls.",
+      "Says to wait about 25 minutes, then space calls about 150 seconds apart."
+    ]
+  },
+  {
+    "skills": ["proton-pass"],
+    "query": "I want to move about 30 Proton Pass items between vaults and rename some of them. Can Claude just do this with claude-pass? How should it go? Plan only; don't run anything.",
+    "files": [],
+    "expected_behavior": [
+      "Says bulk edits are Geoff's and run through `pass-sitting`, which Claude never runs.",
+      "Has Claude write the JSON-lines sitting file for Geoff.",
+      "Gives Geoff the two commands, `pass-sitting FILE` and then `pass-sitting --apply FILE`, to run in his own terminal."
+    ]
+  },
+  {
+    "skills": [],
+    "query": "Write a bash one-liner that counts the lines in every .md file under the current folder and prints the total.",
+    "files": [],
+    "expected_behavior": [
+      "Gives a working one-liner, without loading the proton-pass skill."
+    ]
+  }
+]

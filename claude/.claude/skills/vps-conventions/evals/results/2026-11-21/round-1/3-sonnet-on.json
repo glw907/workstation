@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Auto mode keeps denying an ssh command that deletes old upload files on one of our servers. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+  "started": "2026-11-22T02:03:21Z",
+  "seconds": 8.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "Not a broad one. Don't add `Bash(ssh:*)` or `Bash(ssh host *)`. That would let any command run on the server, and it would remove the check on a destructive remote command, which is what auto mode is doing here. Auto mode also drops broad allow rules for arbitrary-code-execution prefixes like `ssh`, so it likely wouldn't stop the denials anyway.\n\nWhat I'd do instead, in order of preference:\n\n1. **Move the cleanup onto the server.** Make it a small script or a systemd timer (or cron job) that deletes uploads older than N days in one fixed directory. Then no ssh delete is needed. This is the durable fix if the cleanup recurs. The script belongs in the household-it repo and the server's config, like other infra.\n2. **If it must stay a manual ssh step, wrap it.** Put the exact command in a script with a hardcoded host, directory, and age cutoff. It should take no arguments, so no path can be injected. Then allow only that one invocation, for example `Bash(~/.dotfiles/bin/.local/bin/prune-uploads)`, never `ssh`. The script should list what it would delete first, and only delete with an explicit `--yes` flag.\n3. **For a one-off, don't add a rule at all.** I run the dry run (`find ... -mtime +N -print` over ssh), show you the file list, you give the go-ahead, and I run the delete. That matches your rule to show a dry run before a destructive op, and the permission prompt is the approval.\n\nFor a recurring job I'd pick option 1. For a one-off I'd pick option 3.",
+  "costUsd": 0.0727553
+}

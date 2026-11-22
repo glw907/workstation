@@ -1,0 +1,25 @@
+{
+  "skillName": "engine-consult",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "A background task session in ~/Projects/907-life has just started on an approved spec whose header has no engine consultation line, and the task builds against the cairn admin's media picker. What should that task session do before its first build step, and where does it record what it did? Answer only; change nothing.",
+  "started": "2026-11-22T01:56:14Z",
+  "seconds": 13.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "The spec fails the consultation check. Its header has no `**Engine consultation:**` line, so `grep -c -E '^\\*\\*(Engine consultation|Sources consulted):\\*\\* ' <spec>` won't print 2. That triggers the task-start backstop in `engine-consult`.\n\n**Before its first build step,** the session runs the engine-contact enumeration itself:\n\n1. **Read the sources.** It reads the exports and skill references the task builds on: the doc comments under `~/Projects/cairn-cms/src/lib`, the packaged `skills/`, and the code at the pinned commit. It also checks the open engine items in `~/Projects/cairn-cms/BACKLOG.md`.\n2. **Check each piece for an engine edge.** The cairn admin's media picker is an admin surface and an exported component's contract. That is an engine edge, so \"no engine asks\" is unlikely to be the honest result. The session should expect to file a brief.\n3. **File the brief if anything presses the engine.** It goes in `~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-907-life-<spec>.md`, with the four fields for each item. The session reads the standard in `engine-triage.md` before writing it.\n4. **Get the brief triaged.** A fresh read-only Opus subagent runs the `engine-triage` body against the brief, the rulings ledger and the spec. The session adjudicates the verdicts, records them in the brief and adds one ledger entry for each ruled item.\n5. **Act on each verdict.**\n   - An accept sized at a step or two runs first as a small cross-repo engine task, following the checklist.\n   - A larger accept is queued as its own spec, and the site's fallback stands in the meantime.\n   - A decline or defer means the site builds its fallback.\n\n**It records this** under its pull request's `## Decisions`. It writes the line it would have added to the spec header: either `**Engine consultation:** [<brief>](<link>)` or `**Engine consultation:** no engine asks.`, plus the `**Sources consulted:**` line. The brief and the triage verdicts also go in the brief document and the ledger, as above. Because it's a background session, it doesn't stop to ask anything along the way.",
+  "costUsd": 0.2169656
+}

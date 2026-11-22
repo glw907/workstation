@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I'm writing a systemd service and timer for a nightly backup script on our AlmaLinux VPS. It needs a lock file so two runs never overlap. Where should the lock file live, and what should the service unit carry? Answer with the unit text; don't create or change any file.",
+  "started": "2026-11-22T02:00:17Z",
+  "seconds": 17.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "**Lock file location:** put it under `/run`, not `/var/lib` or `/tmp`. Use `RuntimeDirectory=` so systemd creates `/run/nightly-backup/` with the right owner and SELinux label. `/run` is a tmpfs, so a reboot clears it. Take the lock with `flock(1)` rather than a \"create file, check it exists\" scheme. The kernel drops an `flock` when the process dies, so a crash or OOM kill can't leave a stale lock behind.\n\nsystemd already won't start a second instance of a running `Type=oneshot` service, so timer runs can't overlap each other. The `flock` covers the other case: someone running the script by hand while the timer fires.\n\n`/etc/systemd/system/nightly-backup.service`\n```ini\n[Unit]\nDescription=Nightly backup\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nRuntimeDirectory=nightly-backup\nRuntimeDirectoryPreserve=yes\nExecStart=/usr/bin/flock --nonblock --conflict-exit-code 75 /run/nightly-backup/lock /usr/local/sbin/nightly-backup\nNice=10\nIOSchedulingClass=idle\nTimeoutStartSec=6h\n\n# Hardening; /run/nightly-backup stays writable via RuntimeDirectory\nProtectSystem=strict\nReadWritePaths=/var/backups\nPrivateTmp=yes\nNoNewPrivileges=yes\n```\n\n`/etc/systemd/system/nightly-backup.timer`\n```ini\n[Unit]\nDescription=Run nightly backup\n\n[Timer]\nOnCalendar=*-*-* 02:30:00\nRandomizedDelaySec=15min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n```\n\nNotes:\n\n- **`RuntimeDirectoryPreserve=yes`** keeps the directory between runs. Without it, systemd deletes `/run/nightly-backup/` when the service stops. That could remove the lock file while a manual run holds it and let a third run start.\n- **`--nonblock` with exit code 75** makes a contended run exit at once with a distinct code (`EX_TEMPFAIL`) instead of queueing behind the first. A skipped run then shows up in `systemctl status` and the journal. Add `SuccessExitStatus=75` if you'd rather it count as success.\n- **Manual runs** should use the same lock: `sudo systemctl start nightly-backup.service`, or `flock -n /run/nightly-backup/lock /usr/local/sbin/nightly-backup`. The second form needs `/run/nightly-backup/` to exist, which `systemctl start` creates.\n- **`ReadWritePaths=`** must list wherever the script writes, such as the backup destination and any staging directory. Adjust `/var/backups` to match, or drop the hardening block if the script touches many paths.\n- **SELinux** needs nothing special on AlmaLinux. `/run/nightly-backup` gets a standard `var_run_t` label and the script runs in the usual `unconfined_service_t` context for a unit that isn't packaged with a policy.\n- **Enable it** with `systemctl daemon-reload && systemctl enable --now nightly-backup.timer`.",
+  "costUsd": 0.0847793
+}

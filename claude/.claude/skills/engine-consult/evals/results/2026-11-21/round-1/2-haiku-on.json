@@ -1,0 +1,26 @@
+{
+  "skillName": "engine-consult",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "A background task session in ~/Projects/907-life has just started on an approved spec whose header has no engine consultation line, and the task builds against the cairn admin's media picker. What should that task session do before its first build step, and where does it record what it did? Answer only; change nothing.",
+  "started": "2026-11-22T01:55:35Z",
+  "seconds": 10.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Glob",
+    "Skill"
+  ],
+  "result": "Before its first build step, the task session has to run the engine-contact enumeration. This is the task-start backstop in the engine-consult skill, which applies when a spec fails the consultation check.\n\n1. **Run the enumeration.** For each thing the spec will build, ask whether it presses an engine edge: an admin surface, engine CSS, an exported component's contract, auth, or any seam. The cairn admin's media picker is an admin surface, so this spec almost certainly presses an edge. The likely outcome is a consultation brief, not a \"no engine asks\" line.\n2. **Record the line it would add under the PR's `## Decisions`.** That is either `**Engine consultation:** no engine asks.` or a link to the brief. The spec is already approved, so the session records this in the PR rather than editing the spec.\n\nThe session does not file the brief or adjudicate it itself. The brief goes to `~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-907-life-<spec>.md`, and the spec-writing session runs the triage. The skill doesn't say whether the build must pause until a verdict arrives, so that call would need to come from Geoff or from the spec's own rules. I made no changes.",
+  "costUsd": 0.0065751
+}

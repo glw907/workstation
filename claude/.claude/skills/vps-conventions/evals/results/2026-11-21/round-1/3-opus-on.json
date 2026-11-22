@@ -1,0 +1,24 @@
+{
+  "skillName": "vps-conventions",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Auto mode keeps denying an ssh command that deletes old upload files on one of our servers. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+  "started": "2026-11-22T02:03:40Z",
+  "seconds": 17.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Grep",
+    "Skill"
+  ],
+  "result": "No, don't add an ssh allow rule. It won't fix this.\n\n**Why it won't work:** auto mode ignores ssh allow rules, even narrow prefixes. Interactive sessions still send every ssh call to the classifier, so a rule in `settings.json` wouldn't stop these denials. The workstation's `claude-infra` skill records this, tested with a stub on 2026-10-22. The only sessions an ssh allow rule helps are ones running in don't-ask mode.\n\n**What to do instead:** follow the \"Risky remote steps under auto mode\" section of `vps-conventions`:\n\n1. **Put the delete in a reviewed script in the repo.** For example, a script that removes upload files older than N days under one fixed directory. Hardcode the path and the age limit rather than passing them in, make it fail if the directory doesn't exist, and give it a dry-run flag that lists what it would delete.\n2. **Add an allow rule for that exact command.** The rule should match the script's invocation exactly, with no wildcard that would let other commands through.\n3. **Review it before it lands.** The script changes Claude Code's permissions, so it goes through the `claude-infra` process: a PR that cites the guidance it follows, unless it qualifies as a direct change.\n\nThis works because the classifier and the reviewer then see one known, bounded operation instead of a one-off `ssh ... rm` command. A one-off remote delete is exactly what auto mode is supposed to stop.\n\n**Cheaper alternative:** if this cleanup should just run regularly, a cron job or systemd timer on the server would take Claude out of it entirely.\n\nI couldn't open the `vps-conventions` section itself because reading `~/.claude` wasn't permitted, so the steps above come from `claude-infra`'s summary of it. I didn't change anything.",
+  "costUsd": 0.190551
+}

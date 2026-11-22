@@ -1,0 +1,25 @@
+{
+  "skillName": "proton-pass",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I want to move about 30 Proton Pass items between vaults and rename some of them. Can Claude just do this with claude-pass? How should it go? Plan only; don't run anything.",
+  "started": "2026-11-22T02:07:11Z",
+  "seconds": 11.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "**Short answer: no, not as a bulk job through `claude-pass`.** Moves and renames are bulk vault edits, and the proton-pass skill sends those through `pass-sitting`, which Geoff runs under his own login. Claude can't run it: `claude-block-pass` refuses every form.\n\nClaude can still do the prep, and Geoff only runs two commands.\n\n**Why not claude-pass**\n- `claude-pass` does expose `item move` and `item update`, so a per-item loop is technically possible. The skill rules it out for bulk work.\n- Claude is an editor only in `Infrastructure`, `Age key`, `Projects`, `ASC`, and `Test accounts`. Any item moving into or out of `Private`, `Cathy & Geoff`, `Family`, or `Parents` is outside its reach anyway.\n- Proton throttles agent logins after about four quick calls. Thirty spaced calls at 150 seconds apart is roughly 75 minutes, plus a 25-minute wait if it trips.\n\n**How it should go**\n1. **Inventory.** Claude lists the items it can see, by name only, and confirms each source and destination vault is in the vault map. Anything in a vault Claude can't read goes on Geoff's list, not Claude's.\n2. **Check the targets against the rules.** Each new title is the service name as people say it, with at most one trailing qualifier in parentheses, and no domains. Each destination follows the tiebreaker: the narrowest vault that holds everyone who signs in. Technical vaults get the full note template.\n3. **Write the sitting file.** JSON lines, one move or rename per line, shaped per the header of `bin/.local/bin/pass-sitting`. I haven't read that header yet, so I'd confirm the exact fields before writing it.\n4. **Geoff runs it** in a Ptyxis terminal, not through `!`: `pass-sitting FILE` first as the dry run, then, once he's read the output, `pass-sitting --apply FILE`.\n5. **Verify.** Claude runs `check-drift --titles` to lint the five Claude vaults, and `pass-access` plus `check-drift` to confirm the grant map still matches. Moving an item out of `Infrastructure`, `Age key`, or `Projects` can drop Claude's read access, so that gets checked after the apply.\n\n**What I need from you**\n- The list of about 30 items: current vault, target vault, and new title for each renamed one.\n- Confirmation that none of the moves cross into `Private`, `Cathy & Geoff`, `Family`, or `Parents` without your say-so. Those are your calls.\n\nI haven't run anything. Once you send the list, Claude can write the sitting file and the dry-run check.",
+  "costUsd": 0.006314660000000001
+}

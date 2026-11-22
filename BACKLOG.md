@@ -10,6 +10,10 @@
 
 ## Medium
 
+- [ ] **#111** Carry the cairn front-door "one section per read" rule into cairn-cms `cairn-writing-docs` `#improvement` `#workstation` *(2026-11-21)*
+  The personal-skills task of the claude-config-alignment spec (pull request 263) cut the paragraph from `claude/.claude/skills/writing-voice/SKILL.md` (old lines 84-88) as the audit's C10 directs: draft one section per read for `why-cairn.md`, `docs/README.md`, and the arm READMEs. The audit sends it to `cairn-writing-docs`, whose `docs-register.md` in cairn-cms has no such rule. Until it lands there, no skill tells a session to draft the cairn front door a section at a time.
+- [ ] **#110** Record engine-consult's first-run note in the cairn-cms rulings ledger `#improvement` `#workstation` *(2026-11-21)*
+  The personal-skills task of the claude-config-alignment spec (pull request 263) cut the "First run" section from `claude/.claude/skills/engine-consult/SKILL.md` (old lines 135-139) as the audit's C12 directs, which sends it to the cairn-cms rulings ledger. That ledger is in another repo and outside the task, so the note now lives only in this repo's history at commit 5e8bfc8's parent.
 - [ ] **#109** Trim Chromium to what development work needs `#improvement` `#workstation` *(2026-11-21)*
   Geoff, 2026-11-21: "And Chromium can be cleaned up, so it has only what it needs for development work." He said it the day Zen became his daily browser on thinkpad-x1 (pull request 260). `claude/.claude/docs/bluefin-admin/browsers.md` still says he browses in Chromium, in his profile, on pavilion, and Claude Code drives Chromium's `Default` profile on both hosts.
   Open before any build: whether the cleanup covers thinkpad-x1 only or pavilion too, and what "needs" keeps (policies, extensions, profiles, the Chrome extension Claude Code uses). It needs a spec: the Chromium policy files under `bluefin/` and `browsers.md` both change.

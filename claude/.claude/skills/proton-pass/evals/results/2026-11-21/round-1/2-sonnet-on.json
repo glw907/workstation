@@ -1,0 +1,25 @@
+{
+  "skillName": "proton-pass",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "claude-pass just failed with \"Agent login failed\" after I ran four item views in a row, and the token itself is fine. What's going on, and what should happen next? Answer only.",
+  "started": "2026-11-22T02:06:33Z",
+  "seconds": 7.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "**What's going on:** Proton's throttle on agent logins. Each `claude-pass` call signs in again as `<host>-claude`, and Proton blocks an agent's logins after about four quick calls. Your four item views in a row tripped it. \"Agent login failed\" with a good token is the throttle's signature, so the token is not the problem.\n\n**What should happen next:**\n1. Stop calling `claude-pass` for 25 minutes. Retrying now only extends the block.\n2. After that, space calls 150 seconds apart.\n3. Run any longer chain in the background and write its output to a file. Secret values go to a file or pipe, never the transcript.\n4. Don't renew or regrant the token. It's fine, and `pass-cli agent renew` wouldn't help anyway.\n\nIf the next call after the wait still fails, check the token's expiry in `secrets/proton-grants.tsv` before assuming anything else.",
+  "costUsd": 0.093597
+}

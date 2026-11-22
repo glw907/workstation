@@ -1,0 +1,23 @@
+{
+  "skillName": "engine-consult",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+  "started": "2026-11-22T01:57:11Z",
+  "seconds": 20.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "result": "Sequencing: the engine export lands first as its own cairn-cms pass, merges to cairn-cms's default branch, and only then does the aksailingclub-org site task launch. The site task can't start earlier because it builds on the export.\n\nI couldn't read the brief, the engine-triage verdict, or the cairn-cms and aksailingclub-org repos. They sit outside this working directory and I didn't have access to them. The plan below comes from the workstation's pass rules, so verify the three open points at the end before launching.\n\n**1. Classify the engine export as a pass, not a direct change.** A direct change may not add public surface, and an engine export is public surface. So it's a pass in cairn-cms. It's one task, so it runs as a one-pass round: no round id, no order table, and the pass's acceptance list and evidence stand in for the design rules.\n- Review class: `ordinary` (one whole-branch `diff-reviewer` at close) if the export touches no sign-in or data path. If it does, it's `auth-data`, which adds a `web-auth-security-reviewer` read before code and at close.\n\n**2. Build the export.**\n- Launch from cairn-cms's main checkout with `claude-worktree-busy` exiting 0, the secrets it needs checked by name, and `--settings` set per `building-from-specs`. Use a `/goal` naming the spec, the done items, and a time clause at twice the planned minutes.\n- Run the gate per `cairn-pass`: `cairn-run-gate` over the fast-lane legs from `gate-tier.mjs --fast`. The full suite runs in CI on the draft PR, and `ci-green --wait` runs in the background.\n- Before the PR is marked ready, a fresh reviewer checks the whole branch against the goal. The PR body follows the standard shape, with `## Decisions` and `## For Geoff`.\n\n**3. Merge the engine PR.** Geoff approves by number, in his terminal. The session he's talking to runs `gh pr merge --merge`, then `git pull --ff-only` on the main checkout, then removes the worktree and branch. No force flags.\n\n**4. Gate the site task on that merge.** The site task launches from the default branch only after the engine PR has merged and the cairn-cms checkout is current. It runs as its own session under `site-pass`, in a separate round in a separate repo. Its launch check is \"that work has merged.\" The site PR is not cut from the engine branch.\n\n**5. Land the site task.** The site's own gate and CI watch apply, plus its close checklist. Its CI must see the export, so a site pulling a published package fails its CI until that package is released.\n\n**Open points to check before launch:**\n- **How aksailingclub-org consumes cairn-cms.** If it's a workspace link or a git dependency at the default branch, the merge alone is enough. If it pins a published version, the merge isn't enough: a release step must happen first, and publishing is outward-facing, so it needs Geoff's confirmation.\n- **Whether the export touches a sign-in or data path.** This sets the review class in step 1.\n- **Whether the brief's verdict is recorded.** `cairn-pass` says to check `docs/internal/consultations/` for unrecorded verdicts first, and to record the accepted item there before the pass launches.\n\nI made no changes and wrote no files.",
+  "costUsd": 0.01013527
+}

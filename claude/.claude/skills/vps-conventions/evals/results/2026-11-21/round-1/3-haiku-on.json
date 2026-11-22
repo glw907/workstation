@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Auto mode keeps denying an ssh command that deletes old upload files on one of our servers. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+  "started": "2026-11-22T02:03:04Z",
+  "seconds": 9.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "**Don't add a broad ssh allow rule.** Auto mode is denying a remote command that deletes files, and an allow rule would bypass that check for every ssh command that matches, not just this cleanup. A rule like `Bash(ssh *)` is the worst case. Even a rule for the exact `rm` line is fragile, since any change to the path or flags falls outside it.\n\nBetter options, in order:\n\n1. **Run the cleanup yourself, or approve it per run.** Ask me to do a dry run first (list the files that would go, with count and total size). You review the list and confirm, then I run the delete. Your `CLAUDE.md` already calls for a dry run before destructive ops, so this matches your process.\n\n2. **Move the logic onto the server.** Put a small cleanup script on the server, with dry-run as the default and deletion only behind an explicit flag. Schedule it with a systemd timer or cron so retention runs without an agent in the loop. Then I only need to run `ssh <host> cleanup-uploads --dry-run`, which is read-only and can be allowed narrowly if you want. The real run stays a deliberate step.\n\n3. **If you still want unattended agent deletes,** allow the exact script invocation with its arguments, for example `Bash(ssh <host> cleanup-uploads --apply)`, in the project's `.claude/settings.local.json`. Make that choice on purpose, not as a workaround for the denial. The `update-config` skill can write it when you decide.\n\nI'd pick option 2 for ongoing retention and option 1 for this one-off cleanup. I haven't changed any settings or run anything. If you tell me the host and the upload path, I can run the read-only dry run now to see what the cleanup would touch.",
+  "costUsd": 0.004076410000000001
+}

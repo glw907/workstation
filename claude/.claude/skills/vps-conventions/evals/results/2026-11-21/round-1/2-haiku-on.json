@@ -1,0 +1,25 @@
+{
+  "skillName": "vps-conventions",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "We want to add the `jq` package to the cloud-init user-data.yaml that provisions our RHEL-family VPS boxes. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; change nothing.",
+  "started": "2026-11-22T02:01:23Z",
+  "seconds": 15.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/vps-conventions/SKILL.md"
+  ],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "result": "Plan only. I changed nothing.\n\n**What I could see:** this directory has no `user-data.yaml`, no runbook, and no presence gate. It holds only `.claude/skills/vps-conventions/SKILL.md`, which sets the rules for this case. Steps 2 and 4 need the real repo to confirm the file names.\n\n**Why existing servers need separate work:** cloud-init runs at first boot only. Adding `jq` to `user-data.yaml` changes nothing on a running box. Each live box needs its own install step.\n\n**1. Check the package name before editing**\n- Confirm the exact name is `jq`, on the same OS release the fleet runs (the skill's example is `almalinux:10`, but use the real fleet release).\n- Run `podman run --rm <image> dnf -q list jq`. The image should have the same repos enabled as the boxes. If the list comes back empty, `jq` may need a repo that is not enabled by default. Don't add it to the package list until the name resolves on the target image.\n- Repeat on each OS release in the fleet, since the name or repo can differ by version.\n\n**2. Edit `user-data.yaml`**\n- Add `jq` to the `packages:` list. Packages install before `runcmd`, so there is no ordering risk for a plain package.\n- If the check shows `jq` needs an optional repo, enable that repo in `runcmd` ahead of the install, and keep it from taking down other packages.\n\n**3. Update the presence gate in the same commit**\n- The runbook's presence gate checks what each box should have. Add `jq` there, in the same commit as the `user-data.yaml` change, so a fresh provision and the gate can't drift apart.\n\n**4. Remediate the live boxes**\n- Use a reviewed script in the repo, not an ad-hoc ssh command. Auto mode ignores ssh allow rules, so an ad-hoc command would be judged on its own. The script should take its hosts as arguments, print them before acting, offer a `--check` mode, and install idempotently with `dnf -y install jq`.\n- Add an exact `permissions.allow` rule for that invocation, and land the script and rule through review together.\n- Before running it on the fleet, confirm the host list and the plan with you.\n\n**5. Verify**\n- On each box: `command -v jq && jq --version`.\n- Run the presence gate and confirm it passes on every box.\n\n**Open questions for you:**\n1. Which OS releases do the VPS boxes run? The check in step 1 has to run on each one.\n2. Where do `user-data.yaml` and the presence gate live? They aren't in this directory, so I need the repo path.\n3. Is there an existing remediation script for installing packages on live boxes? If so, I'd add `jq` to it rather than write a new one.",
+  "costUsd": 0.007028400000000001
+}

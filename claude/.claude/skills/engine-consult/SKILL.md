@@ -40,7 +40,8 @@ again. Done item: `grep -c -E '^\*\*(Engine consultation|Sources consulted):\*\*
 
 **Task-start backstop.** A task session whose spec fails the check runs the enumeration
 before its first build step, and records the line it would add under its pull request's
-`## Decisions`.
+`## Decisions`. When the enumeration finds an engine ask, the task session takes the author's
+place: it files the brief, runs the triage, and builds on the verdicts without waiting for Geoff.
 
 ## Repos bound
 

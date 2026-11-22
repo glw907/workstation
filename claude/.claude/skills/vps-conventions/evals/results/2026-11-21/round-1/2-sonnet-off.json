@@ -1,0 +1,21 @@
+{
+  "skillName": "vps-conventions",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "We want to add the `jq` package to the cloud-init user-data.yaml that provisions our RHEL-family VPS boxes. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; change nothing.",
+  "started": "2026-11-22T02:02:06Z",
+  "seconds": 14.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob"
+  ],
+  "result": "The working directory has no `user-data.yaml` or related files, so this plan comes from general cloud-init behavior and not from your config.\n\n## Why running servers won't get it\n\ncloud-init runs the `packages:` module only on first boot, once per instance ID. Editing `user-data.yaml` changes nothing on machines that already exist. A rebuilt or reimaged box would pick it up, but the running ones need a separate step.\n\n## Plan\n\n**1. Check the package name first (read-only)**\n- `jq` is named `jq` on RHEL 8, 9 and 10, Rocky and Alma. It's in AppStream on 8 and 9. On RHEL 10 and some derivatives it may come from EPEL or CRB instead.\n- Check on one representative box per major version:\n  - `dnf info jq` shows whether the package resolves and which repo serves it.\n  - `dnf repoquery --whatprovides '/usr/bin/jq'` confirms the name against the binary path.\n  - `dnf provides jq` is a quick alternative.\n- If it doesn't resolve, check whether `epel-release` or CRB is enabled. If it's missing, the cloud-init change needs a repo step before `packages:`.\n- Check that `rpm -q jq` is absent, so you know the real baseline.\n- Run this on each distinct image or major version in the fleet, not just one box. A name that resolves on 9 can fail on 8 or 10.\n\n**2. Update `user-data.yaml` for new boxes**\n- Add `jq` to the `packages:` list.\n- If step 1 showed it needs EPEL, add `epel-release` (or the repo enablement) ahead of it. Make sure the user-data isn't also setting `package_update: false` in a way that stops the repo metadata from refreshing.\n- Validate with `cloud-init schema --config-file user-data.yaml`.\n- Don't use a `runcmd` `dnf install` unless there's a reason. The `packages:` module is the idiomatic route.\n\n**3. Roll it out to existing servers**\n- Don't re-run cloud-init (`cloud-init clean` plus a reboot). It re-runs every module, including ones that aren't idempotent, such as users, SSH keys and write_files. It's the riskiest option.\n- Use whatever config management you already run (Ansible, Salt or similar), and don't add a vendor for this. Otherwise run an ad hoc idempotent install over SSH: `dnf install -y jq`.\n- Make it idempotent, for example the Ansible `dnf` module with `state: present`.\n- Dry-run first: `dnf install --assumeno jq`, or Ansible `--check`, against a small canary group.\n- Then roll to the rest in batches, and confirm with `rpm -q jq` and `jq --version` across the fleet.\n- Boxes without EPEL or CRB need that repo enabled first, matching step 2.\n\n**4. Keep new and existing boxes from drifting**\n- Add `jq` to whatever source of truth drives the existing fleet (the playbook or role), so both paths install the same set.\n- If you keep an inventory of installed packages, record `jq` there in the same change.\n\n**5. Verify**\n- On one new box, provision from the updated user-data and check `cloud-init status --long` and `jq --version`.\n- Confirm `rpm -q jq` is present on every existing host.\n\n## Open question\nDo you have an existing config-management tool for the running fleet, or are those servers managed by hand? That decides whether step 3 is a playbook change or a one-off SSH loop.",
+  "costUsd": 0.0916734
+}

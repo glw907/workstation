@@ -1,0 +1,22 @@
+{
+  "skillName": "proton-pass",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I want to move about 30 Proton Pass items between vaults and rename some of them. Can Claude just do this with claude-pass? How should it go? Plan only; don't run anything.",
+  "started": "2026-11-22T02:07:24Z",
+  "seconds": 15.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Read"
+  ],
+  "result": "**Short answer:** Probably yes, but I can't confirm the exact commands yet. I couldn't read `~/.claude/docs/bluefin-admin/secrets.md` or the `proton-pass` skill because the read permission was denied. So this plan rests on the workstation rules in CLAUDE.md. The first step below checks what `claude-pass` actually supports.\n\n**Ground rules from CLAUDE.md**\n- Claude uses Proton Pass only through `claude-pass`. Not bare `pass-cli`, and not `pass-sitting`, which is your bulk tool.\n- Moving and renaming need no secret values, so values should never appear in chat or in a command line.\n- Show a dry run and get your confirmation before a destructive operation.\n\n**How it should go**\n\n1. **Check the tool (read-only).** Read `claude-pass` help and the `proton-pass` skill, and confirm whether it exposes move and rename. If it only does read and create, the plan changes (see the fallback below).\n2. **Inventory.** List the ~30 items by name, current vault, and item ID, with no values. Save this as a before snapshot.\n3. **Find references before renaming.** Renames can break anything that refers to a credential by name: `~/.local/secrets`, the registry, and `wrangler secret list`. Find every reference to each item name that will change, and fix those in the same pass. Check the stores by name only.\n4. **Write a mapping file.** One row per item: current name, current vault, new name, new vault, and the store references to update. Show it to you and wait for approval. This is the dry run.\n5. **Execute in small batches.** Start with 3 to 5 items, verify each one in the snapshot, then do the rest. Log every result.\n6. **Verify.** Re-list the vaults and diff against the snapshot. Expect the same item count, no deletions, and the mapped names and vaults. Re-check that the store references resolve.\n7. **Report.** Give you a table of what moved and what was renamed, and note anything that failed.\n\n**Risks**\n- **Item IDs.** I don't yet know whether a move keeps the item ID. If it changes, anything keyed by ID breaks. Check this on one test item in step 1, or ask first.\n- **Deletion.** Avoid any delete. A rename or move can be reversed by moving or renaming back. A delete cannot be undone.\n- **Sharing.** If an item is shared with someone else, a move may change who can see it. Flag any shared items.\n- **Re-auth.** If `claude-pass` needs a fresh sign-in, that 2FA step needs you (TOTP or your key, no phone).\n\n**Fallback:** If `claude-pass` cannot move or rename, the realistic options are a create-and-delete copy (which breaks ID links and loses history), or you do the moves in the Proton Pass app and I handle the store references and verification. I'd recommend the second.\n\n**What I need from you**\n- The list of items, or a rule for which ones move, and the target vault names.\n- The new names, or a naming rule.\n- Whether any of these items are shared.\n\nOnce you send those, I'll read the docs, do the read-only checks, and bring back the mapping file for your approval before anything moves.",
+  "costUsd": 0.005718750000000001
+}

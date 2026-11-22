@@ -1,0 +1,27 @@
+{
+  "skillName": "engine-consult",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+  "started": "2026-11-22T01:56:56Z",
+  "seconds": 15.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "result": "This is a plan only. I haven't changed anything. I couldn't read `~/Projects/cairn-cms` because that path isn't granted yet, so the brief, ledger, and `engine-triage` contents are unverified. The plan below follows the `engine-consult` skill.\n\n**Sequencing: the engine export lands first, then the site task consumes it.**\n\nThe accept verdict's sequencing call is \"small engine task now,\" since the item is one step and additive. That keeps it under the same threshold that decides whether a task runs in the site session or gets queued as its own cairn-cms spec.\n\n1. **Record the verdict.** The site session that wrote the aksailingclub-org spec adjudicates the triage, writes the verdict into the brief document (`docs/internal/consultations/YYYY-MM-DD-aksailingclub-org-<spec>.md`), and appends one ledger entry. The entry stays open until the consuming site task closes it.\n\n2. **Run the engine task from the site session**, following the cross-repo checklist:\n   - Check the worktree is free with `claude-worktree-busy`, then read `cairn-cms/docs/STATUS.md` for any claim on the work.\n   - Create a fresh worktree off cairn `main` and register it in STATUS before the first commit.\n   - Build under `building-from-specs` with `cairn-pass`: one session, the fast lane for the step, then a whole-branch review.\n   - Run `npm run check:close` by name. It covers comments, tiers, surface, snippets, transcripts, and symbols.\n\n3. **Ordered close, before the site task can merge:**\n   - Merge the engine PR to cairn `main`, after Geoff approves it by number.\n   - Publish through `cairn-releasing`. The site cannot merge on a `file:` pin, so the change has to be on the registry first.\n   - Run `npm run link:consumer -- <site-dir> --restore` from the cairn checkout.\n\n   During development, the site session uses `npm run link:consumer -- <site-dir>` to consume the local engine build.\n\n4. **Build the site task against the export.** The site's spec already names the export, so the site session builds the feature on top of the landed seam.\n\n5. **Close the ledger entry.** The consuming site task closes it with a one-line seam-fit report: either \"fit as designed\" or the backlog items it found. This prevents a seam from sitting unproven after it lands ahead of its consumer.\n\n**Fallback if the engine task stalls.** The site's declared fallback (the hand-roll) becomes the interim state, with the retirement trigger recorded in the ledger. The site task can proceed on the fallback without waiting on the engine.\n\n**Approvals.** The aksailingclub-org spec goes to Geoff first. The engine PR gets its own approval by number before merge. Only the session Geoff is talking to merges.",
+  "costUsd": 0.008691420000000002
+}

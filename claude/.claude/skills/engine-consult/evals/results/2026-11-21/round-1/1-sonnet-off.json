@@ -1,0 +1,26 @@
+{
+  "skillName": "engine-consult",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I'm about to write a spec in ~/Projects/ecxc-ski for a gear-booking page that needs a new custom field type in the cairn admin. Before I write it, what engine-consultation steps does the spec need, and what exactly goes in its header? Answer only; don't write or change any file.",
+  "started": "2026-11-22T01:54:19Z",
+  "seconds": 27.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "result": "I can give you the header and the outline of the consultation steps from the skills I could read. The `engine-consult` skill and the engine-ui-mechanics doc are the sources for the full steps, and I couldn't read either. The ecxc-ski checkout was also outside what I've been granted.\n\n## What the header carries\n\n`site-pass` sets the header rule. It names the plan header, and `building-from-specs` reads \"plan\" as \"spec\". The header carries exactly one of these two:\n\n- **A consultation-brief link.** Use this when the page needs something from the engine. A new custom field type in the cairn admin is engine work, so this is your case. Link the brief, not the words \"no engine asks\".\n- **The line \"no engine asks\".** This is for specs that need nothing from cairn-cms. It doesn't apply here.\n\nThe header also carries a **\"Sources consulted\" line**, which comes from `engine-consult`.\n\nA committed spec with neither gets the `engine-consult` enumeration run before the first task. It's cheaper to write the header correctly now.\n\n## Engine-consultation steps the spec needs\n\n1. **Run `engine-consult` and write the brief.** The protocol lives in that skill. Per cairn-pass, briefs live in cairn-cms under `docs/internal/consultations/`, and a brief can sit there with an unrecorded verdict. Check that folder first so you don't open a duplicate ask.\n2. **Follow the engine-UI rule.** A UI mechanic that belongs to the engine follows `~/.claude/docs/engine-ui-mechanics.md`. A new admin field type is that kind of mechanic, and the spec should cite the doc.\n3. **Keep the field type out of ecxc-ski's tasks.** The engine owns it. Per site-pass, the site pass lists the cairn items it found under \"Cairn backlog\" in the PR body, verified against cairn-cms. A cairn session files them in cairn-cms's `BACKLOG.md`. So the spec should treat the field type as a dependency on an engine task, not site work.\n4. **Add the engine-doc fix rule if you hit a mismatch.** If a cairn-cms docs page disagrees with reality, fix it on a `site-docs/<site>-<pass>` branch off cairn-cms `main` and merge it by PR before the site pass closes. Never edit cairn-cms `main` directly.\n5. **Check live sessions in cairn-cms.** A spec that changes another repo's work names the sessions working there and reads that repo's STATUS on the day it is approved.\n\n## Other spec requirements that apply\n\n- Read the Anthropic or vendor docs for each mechanism and label it documented, community, assembled, or invented.\n- List every file from a search, with its hit count.\n- Include the scoped `standards:backlog-sweep` verdicts.\n- Give each task a goal, its files, its reviewers, its minutes, and what it waits for.\n- Run the one-fresh-reader check before Geoff approves.\n- Use the `google-sheets` skill for the gear-checkout side if the page touches Sheets.\n- For the reviewer split, the admin and data paths are `auth-data` risk class. Site-pass names `src/routes/admin/**` and `src/hooks.server.ts` for that. A gear-booking page that writes data probably adds `standards:web-auth-security-reviewer`.\n\n## What I couldn't verify\n\n- The exact brief template and the required form of the \"Sources consulted\" line are in `engine-consult`.\n- I don't know whether ecxc-ski's own `CLAUDE.md` or STATUS overrides the spec path (`docs/{plans,specs}/` is only the usual case). Cross-repo specs live in `~/Projects/initiatives/<id>/`, so this one may belong there if it spans cairn-cms.\n\nIf you grant read access to `~/.claude/docs`, the `engine-consult` skill, and the ecxc-ski checkout, I can fill those gaps.",
+  "costUsd": 0.1977172
+}

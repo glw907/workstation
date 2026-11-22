@@ -1,0 +1,25 @@
+{
+  "skillName": "proton-pass",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I need to store a new Resend API key that the 907-life Worker uses. Which Proton Pass vault does it go in, what should the item be titled, and how would Claude write it without the value reaching the transcript? Plan only; don't run anything.",
+  "started": "2026-11-22T02:05:10Z",
+  "seconds": 14.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "**Vault:** `Projects`. It holds cairn, the sites, npm, Anthropic and Resend, with one folder per project, so this goes in a `907-life` folder. Claude has editor access there, so no `pass-sitting` hand-off is needed. Before creating the item, Claude would run `claude-pass folder list` to confirm the folder name.\n\n**Title:** `Resend API key 907-life`. The naming rule for a key is system, then secret, then scope, with no domain and no generic title. Before creating it, Claude would list the Resend items in that vault (titles only) to match the neighbouring convention. If another Resend key already exists, a trailing qualifier may apply.\n\n**Writing it without the value reaching the transcript:**\n1. **Geoff supplies the value.** Claude launches `secret-receive RESEND_API_KEY_907_LIFE` itself, and Geoff types the key into its dialog. It is never pasted into chat. This also fits the rule that a new long-lived secret originates in the workstation age store (`secret-set.sh`). I haven't read `secrets.md` to confirm how `secret-receive` hands off to the store, so I'd check that first.\n2. **Build the template in a pipe.** A script reads the value from the age store and emits the `item create login --from-template -` JSON on stdin. The key goes in an `extra_fields` entry (`{\"kind\":\"hidden\",\"title\":\"Token\",\"value\":...}`), because argv would expose it. The value never appears in argv, a file in the repo, or command output.\n3. **Run it through `claude-pass`**, not bare `pass-cli`:\n   `... | claude-pass item create login --vault-name Projects --from-template -`\n   Set `CLAUDE_PASS_REASON` and write output to a file. The throttle allows only about four quick logins, so I'd keep the calls few and run them in the background.\n4. **Fill the note** with the template lines a source supports:\n   - `For`: Resend sending from the 907-life Worker.\n   - `Used by`: the 907-life Worker.\n   - `Rotate`: how the key is rotated.\n   - `Reviewed`: today's date, 2026-11-21.\n5. **Verify without exposing the value.** `item view` would show field names and types only. Then `check-drift --titles` lints the title and writes findings to a private file, not the transcript.\n6. **Set the runtime secret.** The Worker also needs it as a Workers secret. Claude would pipe the same value from the age store into `wrangler secret put` on stdin, never as an argument.\n\nClaude can't mint the key itself, so Geoff creates it in the Resend dashboard first.",
+  "costUsd": 0.1073665
+}

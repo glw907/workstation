@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I'm writing a systemd service and timer for a nightly backup script on our AlmaLinux VPS. It needs a lock file so two runs never overlap. Where should the lock file live, and what should the service unit carry? Answer with the unit text; don't create or change any file.",
+  "started": "2026-11-22T02:00:59Z",
+  "seconds": 23.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "**Put the lock at `/run/lock/nightly-backup.lock`.** On AlmaLinux, `/var/lock` is a symlink to `/run/lock`. That directory is tmpfs, so it's wiped at every boot, and it's the FHS location for lock files. Use `flock(1)` rather than a \"does the file exist\" check. The kernel releases a `flock` lock when the holding process dies, so a crashed or killed backup never leaves a stale lock behind.\n\nAvoid `RuntimeDirectory=` for this. systemd deletes that directory when the unit stops, and a manual run outside systemd wouldn't use the same path.\n\nsystemd already prevents part of the overlap. If the timer fires while the service is still active, systemd does not start a second copy. The lock covers what systemd can't see: someone running the script by hand, or a `Persistent=` catch-up run landing on a manual run.\n\n## `/etc/systemd/system/nightly-backup.service`\n\n```ini\n[Unit]\nDescription=Nightly backup\nWants=network-online.target\nAfter=network-online.target\n\n[Service]\nType=oneshot\n# -n: if another run holds the lock, skip instead of queueing behind it.\n# -E 75: exit with EX_TEMPFAIL so a skipped run is easy to tell apart from a failed one.\nExecStart=/usr/bin/flock -n -E 75 /run/lock/nightly-backup.lock /usr/local/sbin/nightly-backup\n# Oneshot units have no start timeout by default; cap a hung run.\nTimeoutStartSec=6h\n# Keep the backup from competing with production work.\nNice=10\nIOSchedulingClass=idle\n# Light hardening that still lets a backup read the whole system.\nPrivateTmp=yes\nProtectHome=read-only\nNoNewPrivileges=yes\n```\n\n## `/etc/systemd/system/nightly-backup.timer`\n\n```ini\n[Unit]\nDescription=Run nightly backup\n\n[Timer]\nOnCalendar=*-*-* 02:30:00\nRandomizedDelaySec=15m\n# Run a missed backup at boot if the VPS was down at 02:30.\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n```\n\n## Notes\n\n- **Skipped runs show as failures.** I left exit code 75 out of `SuccessExitStatus=`, so a skipped run shows as failed in `systemctl status` and the journal. That way, a skip caused by a manual run that's still going doesn't pass silently. If you'd rather skips count as clean, add `SuccessExitStatus=75`.\n- **Hand-started runs:** use `systemctl start nightly-backup.service`. That goes through the same lock and logs to the journal.\n- **If people might run the script directly,** move the lock into the script instead of `ExecStart=`. Then every way of starting it is covered:\n  ```bash\n  exec 9>/run/lock/nightly-backup.lock\n  flock -n 9 || { echo \"backup already running\" >&2; exit 75; }\n  ```\n  With that in the script, `ExecStart=` becomes just `/usr/local/sbin/nightly-backup`.\n- **SELinux:** `/run/lock` is labeled `var_lock_t`, and an unconfined system service can write there without any policy changes.\n- **Enabling:** run `systemctl daemon-reload`, then enable the timer only with `systemctl enable --now nightly-backup.timer`. The service itself has no `[Install]` section.",
+  "costUsd": 0.1728894
+}

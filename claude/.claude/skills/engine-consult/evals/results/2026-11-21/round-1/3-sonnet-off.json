@@ -1,0 +1,24 @@
+{
+  "skillName": "engine-consult",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+  "started": "2026-11-22T01:57:43Z",
+  "seconds": 14.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "building-from-specs",
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "The accepted export goes in first as its own cairn-cms task and pull request. The aksailingclub-org site task waits until that pull request has merged. I haven't opened `pass-core`, `cairn-running-passes` or `engine-consult`, so the cairn-cms side of this rests on the two skills I loaded, and some details below are unchecked.\n\n**1. Not a direct change**\n- A new engine export adds public surface, so it fails the \"Direct changes\" test in `building-from-specs`. That holds even though it is about one step of work.\n- It needs a spec, a task session, a review, and a pull request.\n\n**2. Before launch**\n- Check that the brief's verdict is recorded in `docs/internal/consultations/` (`engine-consult`). I haven't verified this.\n- Run `claude-worktree-busy` on the cairn-cms main checkout.\n- Confirm CI can run on cairn-cms with `gh repo view --json visibility`.\n- On pavilion, confirm fewer than four sessions are running.\n- Check that the task needs no secrets.\n\n**3. Spec and approval**\n- The spec is short: a single task with a single step, covering the export, its test, and a docs line if the repo's checklist requires one.\n- Geoff approves it, and the cross-repo record goes in `~/Projects/initiatives/<id>/`.\n- Because the site task depends on the engine task, I'd put both tasks in one spec so the ordering is explicit. Whether that is the right shape is Geoff's call.\n\n**4. Engine task**\n- I launch it from the cairn-cms main checkout with `claude --bg ... \"/goal ...\"`.\n- The goal names the spec path and the task, lists the done items, and ends with a time clause at twice the planned minutes.\n- The session runs the fast lane through `cairn-run-gate`. CI on the draft pull request carries the full suite, watched with `ci-green <sha> --pr <n> --wait`.\n- A fresh `standards:diff-reviewer` subagent reads the whole branch against the goal.\n- The session marks the pull request ready only after the gate, green CI and the review verdict all pass. Its body carries the usual `## Decisions` and `## For Geoff` sections.\n\n**5. Landing**\n- I send the pull request to Geoff for approval via `approval-packet`.\n- Geoff approves by number, typed in his terminal.\n- I merge with `gh pr merge <n> --repo <owner/repo> --merge`, and only after the task session has ended.\n- Then I pull the main checkout with `--ff-only` and remove the worktree and branches.\n\n**6. Site task**\n- The site task starts from the site's default branch, never from the engine task's branch, and only after the engine merge.\n- The site spec and `site-pass` set the gate.\n- I haven't confirmed how aksailingclub-org consumes the engine, so I'd read its dependency setup first. If it takes the engine as a published package, the plan needs a release or version bump between steps 5 and 6. In that case the bump goes through `standards:dependency-upgrade`, and the site task starts only once the new version is available. If the engine is linked locally, the merge alone is enough.\n\n**7. Not allowed**\n- Running the two tasks in parallel.\n- Branching the site task off the engine branch.\n- Stubbing the export in the site task.\n- A task session merging, or two sessions finishing the same branch.\n\n**Question for Geoff**\n- Does the site consume the engine as a published release or as a local link? The answer decides whether a release step sits between the two tasks.",
+  "costUsd": 0.12315189999999998
+}

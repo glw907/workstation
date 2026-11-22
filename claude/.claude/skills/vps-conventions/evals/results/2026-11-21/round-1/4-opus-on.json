@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "What does `git rebase --onto` do? Give one short example.",
+  "started": "2026-11-22T02:04:32Z",
+  "seconds": 6.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "`git rebase --onto <newbase> <upstream> <branch>` takes the commits on `<branch>` that come after `<upstream>` and replays them on top of `<newbase>`. A plain rebase always uses the upstream as the new base. With `--onto`, you pick the cut point (`<upstream>`) and the destination (`<newbase>`) separately.\n\n**Example:** you branched `feature` off `topic`, but `feature` should sit directly on `main` without `topic`'s commits.\n\n```\nmain:    A---B\n              \\\ntopic:         C---D\n                    \\\nfeature:             E---F\n```\n\n```bash\ngit rebase --onto main topic feature\n```\n\n```\nmain:    A---B\n             |\\\ntopic:       | C---D\n              \\\nfeature:       E'--F'\n```\n\nGit takes the commits that are on `feature` but not on `topic` (E and F) and replays them onto `main`. C and D stay on `topic` and don't come along.\n\nA related use is dropping commits from the middle of a branch. `git rebase --onto HEAD~3 HEAD~1` removes the two commits between those points and keeps the latest one.",
+  "costUsd": 0.1358134
+}
