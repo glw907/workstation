@@ -173,6 +173,6 @@ hand-over commits directly and takes no pull request.
 
 ## Models
 
-Every dispatch names a model and an effort, picked by the work. Spec writing and review run on Opus at high.
+Every dispatch names a model and an effort, picked by the work. Spec writing and its fresh reader run on Fable at high. Review runs on Opus at high.
 Reads, searches, and mechanical edits run on Sonnet. `haiku` reads and never decides. `xhigh` and `max` are for
 work where a gain has been measured.

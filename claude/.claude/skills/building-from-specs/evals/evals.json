@@ -51,5 +51,213 @@
       "Gives one command line that lists files by size and keeps the ten largest.",
       "Does not load the building-from-specs skill."
     ]
+  },
+  {
+    "name": "write-missing-file",
+    "suite": "spec-writing",
+    "kind": "write",
+    "folder": "evals/files/spec-writing/write-missing-file",
+    "trap": {
+      "pattern": "completions/notes\\.bash",
+      "question": "Does the spec say that the work must change the file `completions/notes.bash`, for example by listing it among the files the task changes or with a step or done item that edits it?"
+    },
+    "expected_behavior": [
+      "Names `completions/notes.bash` as a file the work changes, since `test_completions_match` forces it, though the brief names only two files."
+    ]
+  },
+  {
+    "name": "write-gate-red",
+    "suite": "spec-writing",
+    "kind": "write",
+    "folder": "evals/files/spec-writing/write-gate-red",
+    "trap": {
+      "pattern": "test_export_csv",
+      "question": "The repo's gate fails today because the test `test_export_csv` fails. Does the spec account for that failure, either with a step that fixes or removes the test, or with done items that don't need that test to pass?"
+    },
+    "expected_behavior": [
+      "Names `test_export_csv` and deals with it, since the brief's done item is a passing gate and the gate fails today on that test."
+    ]
+  },
+  {
+    "name": "write-unlanded-work",
+    "suite": "spec-writing",
+    "kind": "write",
+    "folder": "evals/files/spec-writing/write-unlanded-work",
+    "trap": {
+      "pattern": "export",
+      "question": "Does the spec say that no `notes export` command exists in the repo today?"
+    },
+    "expected_behavior": [
+      "Says `notes export` doesn't exist, though the brief asks for the format it uses."
+    ]
+  },
+  {
+    "name": "write-check-passes-today",
+    "suite": "spec-writing",
+    "kind": "write",
+    "folder": "evals/files/spec-writing/write-check-passes-today",
+    "trap": {
+      "pattern": "README",
+      "question": "The README check `grep -c notes README.md` prints 1 or more already today, before any work, and the README does not mention `search` today. Does the spec either say that this check already passes before any work is done, or put in its place a README check that fails until the work is done?"
+    },
+    "expected_behavior": [
+      "Says the brief's README check passes today, or swaps it for one that fails today."
+    ]
+  },
+  {
+    "name": "write-uncovered-edge",
+    "suite": "spec-writing",
+    "kind": "write",
+    "folder": "evals/files/spec-writing/write-uncovered-edge",
+    "trap": {
+      "pattern": null,
+      "question": "Does the spec say what `notes search` prints, or how it exits, when the notes file does not exist?"
+    },
+    "expected_behavior": [
+      "Says what the search does with no notes file, which the brief leaves out and `notes list` has a tested rule for."
+    ]
+  },
+  {
+    "name": "write-two-sources",
+    "suite": "spec-writing",
+    "kind": "write",
+    "folder": "evals/files/spec-writing/write-two-sources",
+    "trap": {
+      "pattern": null,
+      "question": "Does the spec say that the brief's exit code for a search with no match disagrees with a rule in the README?"
+    },
+    "expected_behavior": [
+      "Says that the brief's exit code for no match breaks the README's rule on exit codes."
+    ]
+  },
+  {
+    "name": "read-false-fact",
+    "suite": "spec-writing",
+    "kind": "read",
+    "folder": "evals/files/spec-writing/read-false-fact",
+    "trap": {
+      "pattern": "fail",
+      "question": "Does the report say that the repo's gate fails today, though the spec says it passed?"
+    },
+    "expected_behavior": [
+      "Names that the gate fails today, though the spec says it passed."
+    ]
+  },
+  {
+    "name": "read-check-passes-today",
+    "suite": "spec-writing",
+    "kind": "read",
+    "folder": "evals/files/spec-writing/read-check-passes-today",
+    "trap": {
+      "pattern": null,
+      "question": "Does the report say that done item 5's check, `grep -c notes README.md`, already passes today before any work is done?"
+    },
+    "expected_behavior": [
+      "Names that a done item's check already passes with nothing built."
+    ]
+  },
+  {
+    "name": "read-wrong-path",
+    "suite": "spec-writing",
+    "kind": "read",
+    "folder": "evals/files/spec-writing/read-wrong-path",
+    "trap": {
+      "pattern": "run_all",
+      "question": "Does the report say that `tests/run_all.sh`, which a done item runs, does not exist in the repo?"
+    },
+    "expected_behavior": [
+      "Names that a done item's command runs a file that doesn't exist."
+    ]
+  },
+  {
+    "name": "read-prints-nothing",
+    "suite": "spec-writing",
+    "kind": "read",
+    "folder": "evals/files/spec-writing/read-prints-nothing",
+    "trap": {
+      "pattern": "passed",
+      "question": "Does the report say that `tests/run.sh` never prints the line `passed test_search_finds`, which done item 1 waits for, so the item can't be met as written?"
+    },
+    "expected_behavior": [
+      "Names that a done item waits for a line its command never prints."
+    ]
+  },
+  {
+    "name": "read-missing-file",
+    "suite": "spec-writing",
+    "kind": "read",
+    "folder": "evals/files/spec-writing/read-missing-file",
+    "trap": {
+      "pattern": "completions",
+      "question": "Does the report say that the work must change `completions/notes.bash`, a file the spec's file list leaves out?"
+    },
+    "expected_behavior": [
+      "Names the file a test forces the work to change, which the file list leaves out."
+    ]
+  },
+  {
+    "name": "read-vendored-file",
+    "suite": "spec-writing",
+    "kind": "read",
+    "folder": "evals/files/spec-writing/read-vendored-file",
+    "trap": {
+      "pattern": "strings\\.sh",
+      "question": "Does the report say that `lib/strings.sh` is copied in from another project and is not edited in this repo, though the spec's file list changes it?"
+    },
+    "expected_behavior": [
+      "Names that the file list changes a file the repo says is copied in and never edited."
+    ]
+  },
+  {
+    "name": "read-false-count",
+    "suite": "spec-writing",
+    "kind": "read",
+    "folder": "evals/files/spec-writing/read-false-count",
+    "trap": {
+      "pattern": null,
+      "question": "Does the report say that the spec's count of hits for `git grep -n usage -- bin tests` is wrong, because the search finds more than the one hit the spec names?"
+    },
+    "expected_behavior": [
+      "Names that a search the spec quotes finds more hits than the spec says."
+    ]
+  },
+  {
+    "name": "read-two-parts",
+    "suite": "spec-writing",
+    "kind": "read",
+    "folder": "evals/files/spec-writing/read-two-parts",
+    "trap": {
+      "pattern": null,
+      "question": "Does the report say that two parts of the spec give different exit codes for a search with no match?"
+    },
+    "expected_behavior": [
+      "Names that two sections give different exit codes for the same case."
+    ]
+  },
+  {
+    "name": "read-unlanded-work",
+    "suite": "spec-writing",
+    "kind": "read",
+    "folder": "evals/files/spec-writing/read-unlanded-work",
+    "trap": {
+      "pattern": "export",
+      "question": "Does the report say that the repo has no `notes export` command, so the output format the spec builds on doesn't exist?"
+    },
+    "expected_behavior": [
+      "Names that the spec builds on a command that isn't in the repo."
+    ]
+  },
+  {
+    "name": "read-uncovered-edge",
+    "suite": "spec-writing",
+    "kind": "read",
+    "folder": "evals/files/spec-writing/read-uncovered-edge",
+    "trap": {
+      "pattern": null,
+      "question": "Does the report say that the spec never says what `notes search` does when the notes file doesn't exist?"
+    },
+    "expected_behavior": [
+      "Names that the spec never says what happens with no notes file."
+    ]
   }
 ]
