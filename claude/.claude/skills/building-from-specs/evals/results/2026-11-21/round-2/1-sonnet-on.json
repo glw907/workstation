@@ -1,0 +1,16 @@
+{
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:26:47Z",
+  "seconds": 12.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "loaded": true,
+  "result": "I read the spec. Its one task, \"Mobile nav\", is 45 minutes in `glw907/example-site` and waits for nothing, so the time clause is 90 minutes. I assumed the checkout is at `~/Projects/example-site`. Nothing has been run.\n\n**Command** (from the repo's main checkout, so Claude Code makes the worktree itself):\n\n```bash\ncd ~/Projects/example-site && claude --bg --name mobile-nav --model sonnet --effort high --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  \"/goal Build the task 'Mobile nav' from /var/home/glw907/.claude/jobs/0a745dfc/tmp/runs2/1-sonnet-on/spec.md. Add a menu button to src/lib/Header.svelte that opens and closes the link list below 640 pixels, and a test in tests/header.test.ts that the button toggles the list. Done when: (1) 'npm run gate' exits 0 and runs the new toggle test; (2) at 375 pixels wide, the header shows the menu button and hides the link list until it is pressed. Before marking the pull request ready, have a fresh subagent review the branch with standards:diff-reviewer and standards:daisyui-a11y-reviewer. Or stop after 90 minutes.\"\n```\n\nI chose Sonnet at high because this is a bounded component and test edit. I'd move to Opus if you want judgment on the a11y details.\n\n**Checks before running**\n\n1. `claude-worktree-busy ~/Projects/example-site` exits 0.\n2. Secrets: the spec names none, so I'd confirm the task needs none (by name, never by value).\n3. CI: `gh repo view glw907/example-site --json visibility` shows the repo can run CI today. The spec says this repo doesn't exist, so I expect this to fail. If it does, I'd stop and tell you instead of launching.\n4. Session count: `claude agents --json` shows fewer than four sessions working on pavilion.\n\nTwo smaller checks. The task starts from the default branch, which `worktree.baseRef: fresh` handles, and there's no dependency to wait on. The spec's reviewer list differs from the skill's default, which adds `standards:visual-verifier` for rendered UI. The 375-pixel done item is rendered UI, so I'd ask whether you want it added.",
+  "costUsd": 0.11045540000000001
+}

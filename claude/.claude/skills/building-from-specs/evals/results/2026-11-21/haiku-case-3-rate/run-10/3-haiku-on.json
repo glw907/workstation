@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T22:58:19Z",
+  "seconds": 10.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "I have run nothing. Here is the sequence, using the merge and cleanup steps in the building-from-specs skill. `<main>` is the example-site main checkout, which I have not located yet.\n\n0. Confirm the task session has ended: `claude agents --json`. The skill allows the merge only after that.\n1. Read the pull request body: `gh pr view 412 --repo glw907/example-site --json body`. If it has a `## Before merge` section, run each command there and its check first. If it has none, skip this step.\n2. Merge: `gh pr merge 412 --repo glw907/example-site --merge`. Expect a permission prompt, which you answer once.\n3. Check the main checkout before pulling:\n   - `git -C <main> rev-parse --abbrev-ref HEAD` must print the default branch.\n   - `git -C <main> status --porcelain` must show no uncommitted change in a merged file.\n   - `claude-worktree-busy <main>` must exit 0.\n4. Pull: `git -C <main> pull --ff-only`.\n5. Remove the worktree: `git -C <main> worktree remove <main>/.claude/worktrees/mobile-nav`. No `--force`.\n6. Delete the local branch: `git -C <main> branch -d worktree-mobile-nav`. Use `-d`, not `-D`.\n7. Delete the remote branch: `git -C <main> push origin --delete worktree-mobile-nav`.\n\nIf any step refuses, I'll read the refusal and report it before going on. Tell me to proceed and I will run these in this order.",
+  "costUsd": 0.00615321
+}

@@ -1,0 +1,16 @@
+{
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:27:00Z",
+  "seconds": 14.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core"
+  ],
+  "loaded": false,
+  "result": "I haven't run anything. I read `spec.md` and the `pass-core` skill, and the command below is the form `references/planner.md:85` gives for an executor launch.\n\n**Command**\n\n```\nclaude --bg --model sonnet --effort medium --advisor fable --name example-site-mobile-nav \"$(cat <prompt file>)\"\n```\n\n- **Name:** `example-site-mobile-nav` is `<repo basename>-<plan slug>`, and a relaunch keeps it.\n- **Model and effort:** the spec doesn't call the work judgment, so it gets the `sonnet` at `medium` default.\n- **Prompt file:** the launch prompt has to be a committed file. The spec doesn't name one and the folder holds only `spec.md`, so `<prompt file>` is a placeholder. Someone has to write and commit it first, using what `references/planner.md` says a launch prompt carries.\n- **Working directory:** I'd launch from the `example-site` checkout or a worktree cut from it. The spec's repo `glw907/example-site` doesn't exist, so nothing can run until a real repo stands in for it.\n\n**Checks before running it**\n\n1. **Spec approval.** The spec's status line says Geoff approved it on 2026-11-21, so that gate is met.\n2. **Worktree busy.** Run `claude-worktree-busy <path>` on the target repo and read its status docs, since only one executor may work a worktree.\n3. **Live sessions.** Run `claude agents --json` to confirm no session named `example-site-mobile-nav` is already live. A one-pass round has no conductor, so I'd look for a name clash and nothing else.\n4. **Waits for.** The task's \"Waits for\" column says `none`, so there is no upstream task to check.\n5. **Pre-flight list.** The spec has no `## Pre-flight` section. I'd need any owner-only steps and permissions the run needs, such as running `npm run gate`, before I launched anything.\n6. **Reviewers.** The spec names `standards:diff-reviewer` and `standards:daisyui-a11y-reviewer`. The skills list here has `standards:daisyui` but no `daisyui-a11y-reviewer`, so I'd confirm that agent exists before the close step depends on it.\n7. **Advisor flag.** `references/advisor.md:18` says Claude Code drops the advisor from a background session without an error when a check fails. I'd run that check first.\n8. **After launch.** Confirm the session shows in `claude agents --json`. A row saying `needs: \"send a prompt to start\"` means the launch failed, and it gets ended with `claude stop <id>`.",
+  "costUsd": 0.12640020000000002
+}

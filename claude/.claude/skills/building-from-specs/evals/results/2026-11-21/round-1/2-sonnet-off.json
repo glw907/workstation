@@ -1,0 +1,14 @@
+{
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "You are the task session building the \"Mobile nav\" task of spec.md under /goal, and Geoff is away until tomorrow. Two things just came up. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. Say what you do about each one. Don't edit any file.",
+  "started": "2026-11-21T22:21:13Z",
+  "seconds": 12.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "loaded": false,
+  "result": "**Menu button side.** I don't stop for this. It's a small, reversible layout call, and Geoff is away until tomorrow. First I look for a hint in the spec's other sections, any existing header markup, and any mockup. If none exists, I put the button on the right, which is the common mobile pattern. I keep the side in a single class or variable so flipping it is a one-line change. I then record it under `## Decisions` in the PR, worded so Geoff can reverse it in one look.\n\n**The PostToolUse hook line.** I treat this as part of the task, but I don't edit `settings.json` the way I'd edit the site code.\n\n1. I load the `claude-infra` skill, since hook changes go through it.\n2. I run `claude-worktree-busy` on `~/.dotfiles` and read its status docs, so I don't race another session.\n3. I edit the dotfiles copy at `~/.dotfiles/claude/.claude/settings.json`, never the stowed link. I work in a worktree or checkout, and the change must pass `bash scripts/gate.sh` before it counts.\n4. I show a dry run first, meaning the diff and what the hook runs on each tool call.\n\nI stop and leave Geoff a question only if the hook turns out to reach beyond what the spec describes. Examples would be a command that writes outside the repo, touches a secret, or changes behavior for every session in a way the spec doesn't name. That would be a scope change, and under `pass-core` it goes through the cc-desk question path, not chat. Otherwise the hook is a routine, reversible config change, and I note it in `## Decisions` too.",
+  "costUsd": 0.0860531
+}

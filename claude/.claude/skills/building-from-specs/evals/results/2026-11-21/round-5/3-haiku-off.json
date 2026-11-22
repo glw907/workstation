@@ -1,0 +1,15 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T23:03:06Z",
+  "seconds": 11.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "I haven't run anything. Here is the planned sequence. The working directory isn't a git repo, so I'd run these from the primary `example-site` checkout, which I haven't located yet.\n\n1. Confirm no session is still in the worktree:\n   `claude-worktree-busy .claude/worktrees/mobile-nav`\n2. Confirm the PR is open, its head is the reviewed commit, and CI is green:\n   `gh pr view 412 --repo glw907/example-site --json state,headRefName,headRefOid,mergeable,statusCheckRollup`\n3. Confirm the worktree is clean and fully pushed:\n   `git -C .claude/worktrees/mobile-nav status --short`\n   `git -C .claude/worktrees/mobile-nav log --oneline origin/worktree-mobile-nav..HEAD`\n   Both should print nothing.\n4. Merge, pinned to the head commit from step 2 so nothing newer lands unreviewed:\n   `gh pr merge 412 --repo glw907/example-site --squash --match-head-commit <headRefOid>`\n   I haven't checked this repo's merge method. `--squash` is my guess, and I'd confirm it first. I'm also leaving off `--delete-branch` because the local branch is still checked out in the worktree, and gh would fail on it.\n5. Remove the worktree, from the primary checkout (no `--force`, since step 3 showed it clean):\n   `git worktree remove .claude/worktrees/mobile-nav`\n6. Delete the local branch:\n   `git branch -d worktree-mobile-nav`\n7. Delete the remote branch, if the merge didn't already remove it:\n   `git push origin --delete worktree-mobile-nav`\n8. Bring the primary checkout up to date with the merge:\n   `git switch main && git pull --ff-only origin main`\n9. Verify the result:\n   `gh pr view 412 --repo glw907/example-site --json state,mergedAt`\n   `git worktree list`\n\nTwo gaps before I act. First, I haven't read the repo's `site-pass` close checklist or its STATUS file. It may add steps after the merge, such as updating STATUS or the backlog. Second, I need the primary checkout's path. Tell me both, and I'll run these in order and report each result.",
+  "costUsd": 0.00504791
+}

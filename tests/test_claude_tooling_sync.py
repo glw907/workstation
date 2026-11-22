@@ -337,6 +337,13 @@ def test_an_over_cap_description_fails_lint_and_a_trimmed_one_passes(tmp_path):
     assert lint_proc(tmp_path).returncode == 0
 
 
+def test_an_exempt_skill_takes_its_own_cap(tmp_path):
+    cap_skill(tmp_path, "building-from-specs", "x" * 1536)
+    assert lint_proc(tmp_path).returncode == 0
+    cap_skill(tmp_path, "building-from-specs", "x" * 1537)
+    assert hits(lint_proc(tmp_path), "description-cap") == [("building-from-specs", "description")]
+
+
 # ---- the generated live settings.json ----
 
 

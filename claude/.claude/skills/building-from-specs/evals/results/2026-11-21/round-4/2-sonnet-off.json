@@ -1,0 +1,18 @@
+{
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Geoff approved spec.md and is away until tomorrow. A background task session is building its task \"Mobile nav\" under /goal, and it has hit two things. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. What does the task session do about each one, and what does it write in the task's pull request? Don't edit any file.",
+  "started": "2026-11-21T22:51:24Z",
+  "seconds": 20.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core",
+    "cc-desk-work"
+  ],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "Each one goes a different way. The menu button gets a choice and a flag. The hook stops the session.\n\n**Menu button side.** This is a product or taste call with no precedent, and `pass-core` says a session goes on past it. The task session first reads what Geoff has already ruled: the plan's `## Rulings`, the round design, and any dated rule that names the header. If none of those settles it, it calls the advisor tool once for this question. If the background session has no advisor, or the call errors, it makes one Fable Agent call instead and quotes each ruling in the prompt. It then builds with the advisor's side, and it does not pick one itself. Nothing stops, and there is no `pass stop`.\n\nThe PR gets a line under `## Calls for Geoff` that opens `[advisor]`. That line names the side taken, the side passed over, and what reversing it would undo, such as the header CSS and the nav screenshot. The `Calls:` line counts it as one. Under cc-desk the ready line carries `--calls 1`, so the check asks Geoff before it merges. This is not a planning miss, because the advisor answered it and the question never reached Geoff.\n\n**The hook line.** The line goes in `~/.dotfiles/claude/.claude/settings.json`, which is a different repo from the one the pass is building in. \"What always stops\" in `advisor.md` lists work beyond the approved scope, including another repo, and the advisor clears none of those. A change to Claude Code tooling also belongs to the `claude-infra` skill and the dotfiles gate, so it is not a drive-by edit from a site pass. I'm assuming the approved design doesn't name this hook. If it does, it is in scope, but the dotfiles edit still goes through those two.\n\nThe session therefore commits and pushes the nav work so far. It runs the prompt's `pass stop --reason scope` line and ends. It does not edit the dotfiles file, and it does not ask in chat, because no one reads a launched session's chat. If the hook is optional polish and the nav works without it, the session leaves the hook out. It builds the rest and files the hook through `standards:log-issue`.\n\n**What the PR says.**\n- The opening paragraph, written for people, says what landed.\n- `## Calls for Geoff` holds the `[advisor]` line for the button side.\n- If Geoff answers the hook question and the pass relaunches, `## Planning misses` records the question, his answer, and the plan item that should have covered the hook.\n- If the hook went to the backlog instead, the PR body lists it as a follow-up.\n\nI did not edit any file.",
+  "costUsd": 0.14264280000000001
+}

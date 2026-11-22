@@ -1,0 +1,15 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Geoff just typed: \"Approved, merge 412.\" Write out the exact commands you would run to merge it and clean up, in order. Don't run them.",
+  "started": "2026-11-21T22:40:59Z",
+  "seconds": 14.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "I haven't run anything. Here's the sequence, assuming the primary checkout is `~/Projects/example-site` and `main` is the default branch.\n\n1. Confirm no session is still using the worktree, and read the output before going on:\n   ```bash\n   claude-worktree-busy ~/Projects/example-site/.claude/worktrees/mobile-nav\n   ```\n\n2. Confirm the PR is open, its head is the worktree branch, and CI is green:\n   ```bash\n   gh pr view 412 --json state,headRefName,mergeable,reviewDecision,statusCheckRollup\n   gh pr checks 412 --watch\n   ```\n\n3. Confirm the worktree has no uncommitted changes:\n   ```bash\n   git -C ~/Projects/example-site/.claude/worktrees/mobile-nav status --short\n   ```\n\n4. Squash-merge the PR. I left out `--delete-branch` because git won't delete a branch that a worktree still has checked out:\n   ```bash\n   gh pr merge 412 --squash\n   ```\n\n5. Pull the merged `main` into the primary checkout:\n   ```bash\n   git -C ~/Projects/example-site pull --ff-only origin main\n   ```\n\n6. Remove the worktree. Git refuses if it finds changes, so there's no `--force`:\n   ```bash\n   git -C ~/Projects/example-site worktree remove .claude/worktrees/mobile-nav\n   ```\n\n7. Delete the local branch. Squash merges leave the branch unmerged from git's point of view, so `-d` would refuse. Step 2 has already confirmed the PR is in place, so I'd use `-D` after checking the merge state:\n   ```bash\n   gh pr view 412 --json state --jq .state\n   git -C ~/Projects/example-site branch -D worktree-mobile-nav\n   ```\n\n8. Delete the remote branch if GitHub didn't remove it, then prune stale refs:\n   ```bash\n   git -C ~/Projects/example-site push origin --delete worktree-mobile-nav\n   git -C ~/Projects/example-site fetch --prune\n   git -C ~/Projects/example-site worktree list\n   ```\n   The push fails harmlessly if the branch is already gone.\n\nChoices I made that you can change: squash rather than a merge commit, and a worktree removal after the merge rather than before it. If step 1 reports the worktree busy, or step 2 shows a failing check, I'd stop there and ask you before going further.",
+  "costUsd": 0.005250909999999999
+}

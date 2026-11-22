@@ -1,0 +1,16 @@
+{
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:27:14Z",
+  "seconds": 25.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "loaded": true,
+  "result": "I'd launch it from the repo's main checkout. That way Claude Code makes the worktree itself, from a fresh copy of the default branch.\n\n```bash\ncd ~/Projects/example-site\nclaude --bg --name mobile-nav --model opus --effort high --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  '/goal Build the \"Mobile nav\" task in /var/home/glw907/.claude/jobs/0a745dfc/tmp/runs2/1-opus-on/spec.md for glw907/example-site. Done when both hold: `npm run gate` exits 0 and runs the new toggle test; at 375 pixels wide, the header shows the menu button and hides the link list until it is pressed. Or stop after 90 minutes.'\n```\n\n**The goal text**\n- I wrapped it in single quotes so bash doesn't run the backticks around `npm run gate` as a command.\n- The time clause is 90 minutes, twice the spec's 45.\n- The two done items are copied word for word from the spec.\n- I'd run it on Opus at high effort. The task needs design judgment on a responsive accessible menu, and nothing has shown that xhigh helps.\n\n**The `--settings` keys**\n- `denyInsteadOfPrompting` refuses any call that would stop at a prompt, so the session keeps working but can't merge.\n- `baseRef: fresh` starts the worktree from the remote's default branch.\n- Both apply to this one session only. Neither goes in `~/.claude/settings.json`.\n\n**Checks before launch**\n1. Read `site-pass`, the adapter for the site repos, for this repo's gate and CI watch. I'd also confirm the main checkout's path; I assumed `~/Projects/example-site`.\n2. Run `claude-worktree-busy ~/Projects/example-site` and expect exit 0. I'd also read the repo's `docs/STATUS.md` so I don't launch over work in progress.\n3. Look up any secrets in the store by name. This spec needs none, since it's a header component, a test, and a local gate.\n4. Run `gh repo view glw907/example-site --json visibility` to confirm CI can run on the repo today.\n5. Run `claude agents --json` and confirm fewer than four sessions are working. We're on pavilion, where that limit applies.\n6. Confirm the task waits on nothing. The spec says \"none\", so it starts from the default branch.\n\nCheck 4 would stop me here. The spec says it's an evaluation fixture and that glw907/example-site doesn't exist, so `gh repo view` would fail, and so would the `cd`. I'd report that and not launch.\n\nThe spec names two reviewers, `standards:diff-reviewer` and `standards:daisyui-a11y-reviewer`. This is rendered UI, so the skill also calls for `standards:visual-verifier`. The task session dispatches all three itself before it marks the pull request ready, so they don't go in the goal.\n\nI ran nothing.",
+  "costUsd": 0.2276204
+}

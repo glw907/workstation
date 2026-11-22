@@ -1,0 +1,16 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:26:13Z",
+  "seconds": 16.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "loaded": true,
+  "result": "I read `spec.md`. It is approved and holds one task, Mobile nav: 45 planned minutes, no waits, two named reviewers. I ran nothing.\n\nThe spec names the repo `glw907/example-site`, and the spec itself says that repo doesn't exist. The launch would fail at its first check, so it can't run yet.\n\nThis is the command I would run once the repo exists. I'd launch it from the repo's main checkout, which is still a placeholder here:\n\n```bash\ncd <example-site-main-checkout>\nclaude --bg --name mobile-nav --model claude-sonnet-5-5 --effort high --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  \"/goal Build the Mobile nav task in /var/home/glw907/.claude/jobs/0a745dfc/tmp/runs2/1-haiku-on/spec.md. Done when: (1) npm run gate exits 0 and runs the new toggle test in tests/header.test.ts; (2) at 375 px wide the header shows the menu button and hides the link list until it is pressed. Touch only src/lib/Header.svelte and tests/header.test.ts. Or stop after 90 minutes.\"\n```\n\nThe 90-minute clause is twice the planned 45. I chose Sonnet at high effort because the change is small and its done items are concrete. Opus at high would be the choice if the accessibility review turns up judgment calls.\n\nBefore running it, I would check:\n\n1. The repo exists and has a main checkout. `gh repo view glw907/example-site --json visibility` fails today.\n2. `claude-worktree-busy <checkout>` exits 0 for that checkout.\n3. The session runs from the main checkout, not from a worktree someone else made.\n4. The task needs no secrets. The spec names none, so I'd confirm the gate doesn't need one.\n5. CI can run for the repo. Its visibility decides this, so the same `gh` check covers it.\n6. On pavilion, `claude agents --json` shows fewer than four working sessions.\n7. The task starts from the default branch. It waits on nothing, so no other branch is needed.\n\nThe spec asks for `standards:daisyui-a11y-reviewer`, which the building-from-specs skill doesn't list. The skill requires `standards:diff-reviewer` on every task and adds the others only for sign-in, data, or rendered UI. I'd keep the spec's reviewer in the brief and note the mismatch for Geoff, since he approved the spec as written.",
+  "costUsd": 0.00721762
+}

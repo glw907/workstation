@@ -1,0 +1,15 @@
+{
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Write a bash one-liner that prints the ten largest files under the current directory, with their sizes.",
+  "started": "2026-11-21T23:04:52Z",
+  "seconds": 9.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "```bash\nfind . -type f -printf '%s\\t%p\\n' | sort -rn | head -n 10 | numfmt --field=1 --to=iec\n```\n\nThis prints a size and a path on each line, largest first:\n\n```\n1.2G\t./videos/raw.mkv\n340M\t./backups/db.tar.gz\n...\n```\n\n`find -printf '%s'` gives each file's size in bytes, so `sort -rn` compares exact numbers. After that, `numfmt` turns only the first column into a readable size like `1.2G`. File names with spaces come through fine because a tab separates the size from the path.\n\nIf you want byte counts, drop the `numfmt` stage. A file name with a newline in it would break across two lines, but that rarely happens.",
+  "costUsd": 0.15733819999999998
+}

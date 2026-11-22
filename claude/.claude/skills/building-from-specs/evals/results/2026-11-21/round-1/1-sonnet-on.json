@@ -1,0 +1,16 @@
+{
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "The spec in spec.md is approved. Launch its task \"Mobile nav\" as a background task session. Don't run anything: write out the exact launch command you would use, and what you would check before running it.",
+  "started": "2026-11-21T22:18:52Z",
+  "seconds": 12.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "loaded": true,
+  "result": "I haven't opened spec.md, so the repo, the done items, and the planned minutes are placeholders below. Nothing has been run.\n\n**Launch command**\n\nRun it from the repo's main checkout, not a worktree, so Claude Code makes the task's worktree itself.\n\n```bash\ncd <main checkout of the repo spec.md names>\n\nclaude --bg --name mobile-nav --model <model> --effort <effort> --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  \"/goal Build the task 'Mobile nav' from <absolute path to spec.md>. Done when: <done item 1, word for word>; <done item 2, word for word>; <...>; the repo gate passes, CI is green, and a fresh diff-reviewer subagent has reviewed the branch against these items; the work ends in a ready pull request, or stop after <2 x planned minutes> minutes\"\n```\n\nI would fill the placeholders from the spec:\n\n- **Done items:** copied word for word from the \"Mobile nav\" task. I don't paraphrase them, because the reviewer reads against Geoff's approved wording.\n- **Time clause:** twice the task's planned minutes. A 75-minute task gets `or stop after 150 minutes`.\n- **Model and effort:** Sonnet if the task is mechanical edits. Opus at high if it needs layout or interaction judgment. The spec may set this.\n- **Review:** a rendered-UI task also gets `standards:visual-verifier`, so I would add that to the goal.\n\n**Checks before running it**\n\n1. **The spec itself.** Confirm the task's name, done items, and planned minutes, and which repo it lives in. I would read the repo's adapter skill (`site-pass` for the site repos) for its gate and CI watch.\n2. **Dependencies.** If \"Mobile nav\" needs another task's work, that work must already be merged. The task starts from the default branch, never from another task's branch.\n3. **Busy checkout.** `claude-worktree-busy <checkout>` must exit 0.\n4. **Secrets.** Every secret the task needs is in the store, checked by name.\n5. **CI.** `gh repo view <owner/repo> --json visibility` shows whether CI can run today.\n6. **Session count.** `claude agents --json` must show fewer than four sessions working on pavilion.\n7. **Settings.** The `--settings` JSON stays on the command line only. Neither key goes into `~/.claude/settings.json`.\n\nIf any check fails, I stop and tell you. I don't work around it.",
+  "costUsd": 0.1835774
+}

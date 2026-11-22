@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Geoff just typed: \"Approved, merge 412.\" Write out the exact commands you would run to merge it and clean up, in order. Don't run them.",
+  "started": "2026-11-21T22:41:27Z",
+  "seconds": 10.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "These are the commands in order, run from the main checkout of example-site. Nothing has been run. I'm assuming the main checkout is on the default branch.\n\n1. Read the PR's state, checks, and body, looking for a `## Before merge` section.\n\n```bash\ngh pr view 412 --repo glw907/example-site --json state,isDraft,mergeable,statusCheckRollup,body\n```\n\nIf the body has `## Before merge`, I run its commands and its one check before anything below. If a check is red or the PR is still a draft, I stop and tell you.\n\n2. Confirm nothing is working in either checkout.\n\n```bash\nclaude-worktree-busy .\nclaude-worktree-busy .claude/worktrees/mobile-nav\n```\n\nBoth must exit 0. The task session has ended, so the second should be clean.\n\n3. Merge. An `ask` rule stops this at a permission prompt, and you answer it once for PR 412.\n\n```bash\ngh pr merge 412 --repo glw907/example-site --merge\n```\n\n4. Pull the main checkout, only if it is on the default branch and has no uncommitted change in a merged file.\n\n```bash\ngit branch --show-current\ngit status --short\ngit pull --ff-only\n```\n\n5. Remove the worktree, then the local branch, then the remote branch. None of these use a force flag.\n\n```bash\ngit worktree remove .claude/worktrees/mobile-nav\ngit branch -d worktree-mobile-nav\ngit push origin --delete worktree-mobile-nav\n```\n\nIf any of the three refuses, I read the refusal before going on, because it means work is still there. If the repo already deleted the remote branch on merge, the last command reports that, and nothing is left to do.",
+  "costUsd": 0.10441239999999999
+}

@@ -1,0 +1,17 @@
+{
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Geoff approved spec.md and is away until tomorrow. A background task session is building its task \"Mobile nav\" under /goal, and it has hit two things. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. What does the task session do about each one, and what does it write in the task's pull request? Don't edit any file.",
+  "started": "2026-11-21T22:39:13Z",
+  "seconds": 8.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "The task session asks Geoff nothing and sends no notice. It handles the two items differently.\n\n**Button side.** This is a product or taste call with no precedent in the spec. The session takes the option a later commit can undo most cheaply and keeps building. It does not wait for Geoff.\n\n**Hook line.** The session leaves `~/.dotfiles/claude/.claude/settings.json` alone. A setting or hook the work needs is never edited by a task session. It writes the change in the pull request as exact text, together with a check that shows the hook took effect. It does not edit a setting to get around a refusal either, and it finishes the rest of the task without the hook.\n\n**In the pull request.** The title says what is true now. The first paragraph is the whole report made small, and it ends by saying that something waits for Geoff. The body then runs in this order:\n\n1. What landed.\n2. Each goal item word for word, with its evidence. Any item that depends on the hook is marked unmet, with the reason. The goal is not edited.\n3. The review verdict from the fresh `standards:diff-reviewer` subagent, plus the count of open findings. Because the task renders UI, `standards:visual-verifier` also reads it.\n4. `## Decisions`, holding the button-side call. It names the side taken, the side passed over, and what reversing would undo. It adds a note that the spec was silent.\n5. `## For Geoff`, with two entries. The first is the button side, to confirm or flip. The second is the hook line as exact JSON for the `PostToolUse` entry in `settings.json`, with the command that shows it fired. That entry is a step left for him.\n6. The `<!-- task-score {...} -->` comment with the measured minutes.\n\nIf the hook line is only a setup step and the merge doesn't need it, the pull request is still marked ready once the gate and CI pass. If the hook has to be present before the code works, the session lists that under `## Before merge` with the same text and check.\n\nOnly Geoff's typed words approve the merge, and they name the pull request by number. The session he is talking to merges after the task session has ended.",
+  "costUsd": 0.10197930000000001
+}

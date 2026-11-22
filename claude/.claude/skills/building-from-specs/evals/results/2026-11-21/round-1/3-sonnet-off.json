@@ -1,0 +1,16 @@
+{
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Geoff just typed: \"Approved, merge 412.\" That is pull request 412 in glw907/example-site. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Write out the exact commands you would run to merge it and clean up, in order. Don't run them.",
+  "started": "2026-11-21T22:22:46Z",
+  "seconds": 19.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core"
+  ],
+  "loaded": false,
+  "result": "These are the commands in order. I haven't run any of them. I assumed the main checkout is `~/Projects/example-site`, and `pass-core` doesn't say the real path.\n\n**1. Check the PR is ready (read-only).**\n```bash\ngh pr view 412 --repo glw907/example-site --json state,mergeStateStatus,statusCheckRollup,body\ngh pr checks 412 --repo glw907/example-site\n```\nChecks must be green and the whole-branch review accepted with no open finding. If either fails, I stop and tell you.\n\n**2. Run any `## Before merge` section.** If the body has one, I run its commands in order and then its one check. Then I remove the section from the body:\n```bash\ngh pr view 412 --repo glw907/example-site --json body --jq .body > /tmp/pr412-body.md\n# edit out the \"## Before merge\" section from /tmp/pr412-body.md\ngh pr edit 412 --repo glw907/example-site --body-file /tmp/pr412-body.md\n```\nI'd also withdraw any queue document that holds the PR. I don't know that subcommand's syntax, so I'd read `approval-queue --help` first.\n\n**3. Land it.** `gh pr merge` is denied by `claude-merge-guard`, so this is the only merge path. `land` takes the PR reference and one sentence, which I'd base on your message.\n```bash\napproval-queue land glw907/example-site#412 \"Geoff approved in terminal: merge 412.\"\n```\n\n**4. Check the main checkout is safe to pull.**\n```bash\ngit -C ~/Projects/example-site branch --show-current\ngit -C ~/Projects/example-site status --porcelain\nclaude agents --json\nclaude-worktree-busy ~/Projects/example-site\n```\nThe checkout must be on its default branch, with no uncommitted change in a file the merge touched, and no live session. If any of those fails, I report the checkout as stale, offer to pull once the blocker clears, and never force it. Cleanup would still run.\n\n**5. Pull.**\n```bash\ngit -C ~/Projects/example-site pull --ff-only\n```\n\n**6. Remove the worktree and branch, with no force flag.**\n```bash\nclaude-worktree-busy ~/Projects/example-site/.claude/worktrees/mobile-nav\ngit -C ~/Projects/example-site worktree remove ~/Projects/example-site/.claude/worktrees/mobile-nav\ngit -C ~/Projects/example-site branch -d worktree-mobile-nav\n```\nThe task session has ended, so `ExitWorktree` doesn't apply. If the tree is dirty, the branch shows as unmerged, or a session is live in the worktree, I leave it in place and report one line. The `branch -d` can also refuse after a squash merge, and I'd report that and not use `-D`.\n\n**7. Update STATUS.** If `docs/STATUS.md` lists #412 as an open decision, I'd clear it. That's a hand-over change, so it commits directly to the default branch after the adapter's gate (`bash scripts/gate.sh` if this is a dotfiles-style repo, otherwise per `site-pass`).",
+  "costUsd": 0.1420111
+}

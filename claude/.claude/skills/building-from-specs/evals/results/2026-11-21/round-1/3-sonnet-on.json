@@ -1,0 +1,16 @@
+{
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" That is pull request 412 in glw907/example-site. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Write out the exact commands you would run to merge it and clean up, in order. Don't run them.",
+  "started": "2026-11-21T22:22:35Z",
+  "seconds": 10.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "loaded": true,
+  "result": "Nothing below has been run. The main checkout path is my assumption (`~/Projects/example-site`), so check it before using these.\n\n**Before the merge**\n\n```bash\ncd ~/Projects/example-site\nclaude-worktree-busy ~/Projects/example-site\nclaude-worktree-busy ~/Projects/example-site/.claude/worktrees/mobile-nav\ngh pr view 412 --repo glw907/example-site --json state,isDraft,mergeable,statusCheckRollup,body\n```\n\nBoth busy checks should exit 0, which confirms the task session has ended. In the JSON, the PR should be open and not a draft, with no red check. I'd also read the body for a `## Before merge` section. If there is one, I run its commands and its check before the merge.\n\n**Merge**\n\n```bash\ngh pr merge 412 --repo glw907/example-site --merge\n```\n\nAn `ask` rule stops this at a permission prompt, and you answer it once for PR 412. I leave off `--delete-branch` so the cleanup below stays in the order the procedure sets.\n\n**Update the main checkout**\n\nRun these only if the first prints the default branch, the second prints nothing for any merged file, and the third exits 0.\n\n```bash\ngit -C ~/Projects/example-site branch --show-current\ngit -C ~/Projects/example-site status --porcelain\nclaude-worktree-busy ~/Projects/example-site\ngit -C ~/Projects/example-site pull --ff-only\n```\n\n**Clean up, in this order, with no force flags**\n\n```bash\ngit -C ~/Projects/example-site worktree remove .claude/worktrees/mobile-nav\ngit -C ~/Projects/example-site branch -d worktree-mobile-nav\ngit -C ~/Projects/example-site push origin --delete worktree-mobile-nav\n```\n\nIf any of the three refuses, there is still unmerged or uncommitted work in it. I stop and read the refusal instead of forcing it.\n\n**Afterward**\n\nI update `docs/STATUS.md` in the main checkout, since the session you're talking to keeps that file. I would not commit it until you say so.",
+  "costUsd": 0.1065915
+}

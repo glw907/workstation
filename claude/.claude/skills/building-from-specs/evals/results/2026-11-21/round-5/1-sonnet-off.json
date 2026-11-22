@@ -1,0 +1,17 @@
+{
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:59:21Z",
+  "seconds": 17.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core"
+  ],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "I read `spec.md` and the `pass-core` launch rules. I ran nothing.\n\n**The task.** \"Mobile nav\" is one task in `glw907/example-site`. It takes 45 minutes and waits for nothing. A build session adds a menu button to `src/lib/Header.svelte` and a toggle test in `tests/header.test.ts` for widths below 640 pixels. The reviewers are `standards:diff-reviewer` and `standards:daisyui-a11y-reviewer`. It is done when `npm run gate` exits 0 and runs the new test, and the 375-pixel header shows the button and hides the links until pressed.\n\n**The command.** `pass-core` \"Launch\" gives this form, run from the main checkout of the repo:\n\n```\nclaude --bg --model sonnet --effort medium --advisor fable --name example-site-mobile-nav \"$(cat <prompt file>)\"\n```\n\nThe session name is `<project>-<pass>`. I took the pass slug to be `mobile-nav`, so the name is `example-site-mobile-nav`. The spec doesn't name a pass slug, so that part is a guess. The prompt goes before any `--add-dir`.\n\n**Checks before running it:**\n\n1. **Prompt file.** The spec names no prompt file and no committed plan. I need a committed launch prompt carrying the goal, scope, plan path, checkout, and push target, and telling the session to send its PR through `approval-packet`. I'd write and commit that first.\n2. **Pre-flight.** Every `## Pre-flight` item in the plan must be done and checked. The spec has none, so I'd confirm that is intended.\n3. **Worktree busy.** Run `claude-worktree-busy <path>` and read the status docs, per the global rule on one executor per worktree. Also check `claude agents --json` for a live session already on this repo or named `example-site-mobile-nav`.\n4. **Checkout state.** The main checkout must be on its default branch. After a fetch, `git -C <repo> rev-list --count HEAD..origin/<default>` must print 0.\n5. **Worktree ignore.** If `git -C <repo> check-ignore -q .claude/worktrees/x` fails, append `.claude/worktrees/` to the file that `git -C <repo> rev-parse --path-format=absolute --git-path info/exclude` names.\n6. **Plan review class.** The spec doesn't state a risk class. It looks `ordinary`, so no pre-code review is needed. The close needs one whole-branch `standards:diff-reviewer` read, plus the a11y reviewer the spec names. I'd confirm no `auth-data` path is touched.\n\n**After launching.** I'd read `~/.claude/jobs/<id>/state.json`. If `needs` is `\"send a prompt to start\"`, the launch failed, and I'd end the stray job with `claude stop <id>`.\n\n**Two questions.** Where does the repo live locally? The spec gives only `glw907/example-site`. And is `mobile-nav` the pass slug you want in the session name?",
+  "costUsd": 0.1432052
+}

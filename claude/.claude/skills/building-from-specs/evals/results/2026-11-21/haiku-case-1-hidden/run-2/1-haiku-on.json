@@ -1,0 +1,16 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "setup": "skill copy in a gitignored .claude/ folder, out of Glob's view",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "Nothing has been run. This is the launch I would use for \"Mobile nav,\" with the checks to make first.\n\n```bash\ncd <example-site main checkout> && claude --bg --name mobile-nav --model claude-opus-5-5 --effort high --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  \"/goal Follow /var/home/glw907/.claude/jobs/0a745dfc/tmp/hidden-1/p/spec.md, task \\\"Mobile nav\\\" (45 planned minutes). Done when: (1) npm run gate exits 0 and runs the new toggle test; (2) at 375 pixels wide, the header shows the menu button and hides the link list until it is pressed. Or stop after 90 minutes.\"\n```\n\nMy choices in that command:\n\n- **Model and effort.** I chose Opus at high. The task includes accessibility decisions for the menu button, which is judgment work. Sonnet at high would be the cheaper option if Geoff prefers it.\n- **Time clause.** Twice the 45 planned minutes gives 90.\n- **Spec path.** The spec lives in this job folder, outside the repo, so the session reads it by absolute path. If Geoff wants the spec in the repo, it needs its own commit first.\n\nChecks before running it:\n\n1. Find the example-site main checkout. I don't know its path from here, and the launch must start there so Claude Code makes the worktree itself.\n2. Run `claude-worktree-busy <checkout>` and confirm it exits 0.\n3. Confirm the default branch is clean and current. The spec says this task waits for nothing, so it can start from `main` now.\n4. Check secrets. The spec names none, but confirm `npm run gate` needs none.\n5. Run `gh repo view glw907/example-site --json visibility` and confirm CI can run today.\n6. Run `claude agents --json` on pavilion and confirm fewer than four sessions are working.\n7. Read the repo's skill before the first step. This is a SvelteKit site repo, so `site-pass` is the likely adapter.\n8. Confirm the reviewer `standards:daisyui-a11y-reviewer` exists. It is not in the skill list I can see, so the spec's reviewer line may need a fix before launch.\n9. Note that the rendered header is UI work. The building-from-specs rules then add `standards:visual-verifier` to the reviewers, on top of the two the spec names.",
+  "costUsd": 0.0036953
+}

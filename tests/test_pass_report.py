@@ -236,6 +236,18 @@ def test_score_line_beats_backfill_row(tmp_path):
     assert "PRs with no score: 0" in out
 
 
+def test_task_score_comment_is_read_like_a_pass_score(tmp_path):
+    data = fixture("score_wins.json")
+    body = data["prs"]["alpha"][0]["body"]
+    data["prs"]["alpha"][0]["body"] = body.replace("pass-score", "task-score")
+    assert "task-score" in data["prs"]["alpha"][0]["body"]
+    out = report(tmp_path, data).stdout
+    assert "| Planned path (min) | 2 | 150.0 | 200.0 | 300.0 |" in out
+    assert "| Actual / planned | 2 | 0.5 | 0.5 | - |" in out
+    assert "| Fix rounds | 2 | 2.0 | 3.0 | 4.0 |" in out
+    assert "PRs with no score: 0" in out
+
+
 def test_malformed_jsonl_line_is_skipped_and_counted(tmp_path):
     run = report(tmp_path, fixture("malformed.json"))
     assert run.returncode == 0

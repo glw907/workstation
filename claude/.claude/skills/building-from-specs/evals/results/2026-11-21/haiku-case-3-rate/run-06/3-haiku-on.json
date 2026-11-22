@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T22:57:26Z",
+  "seconds": 13.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "I haven't run anything. Here is the merge and cleanup sequence for PR 412, in order. `<main>` is the path to the `example-site` main checkout. I don't know it from this session, so I'll locate it before running anything.\n\n1. Confirm the task session has ended:\n   `claude agents --json`\n   The `mobile-nav` session should not be listed.\n\n2. Read PR 412's body and check for a `## Before merge` section. If one exists, run its commands and its check. If not, skip this step.\n   `gh pr view 412 --repo glw907/example-site --json body`\n\n3. Confirm the main checkout is safe to pull into:\n   `claude-worktree-busy <main>`\n   This must exit 0.\n\n4. Confirm the main checkout is on the default branch with no uncommitted changes:\n   `git -C <main> branch --show-current`\n   `git -C <main> status --porcelain`\n\n5. Merge the pull request:\n   `gh pr merge 412 --repo glw907/example-site --merge`\n   An `ask` rule will stop this at a permission prompt. That prompt is Geoff's to answer.\n\n6. Pull the merged default branch into the main checkout:\n   `git -C <main> pull --ff-only`\n\n7. Remove the task's worktree, without force:\n   `git -C <main> worktree remove <main>/.claude/worktrees/mobile-nav`\n   If git refuses, the worktree holds work. I'll read the refusal and report it rather than force it.\n\n8. Delete the local branch, without force:\n   `git -C <main> branch -d worktree-mobile-nav`\n\n9. Delete the remote branch, without force:\n   `git -C <main> push origin --delete worktree-mobile-nav`\n\nOnce you say go, I'll start with step 1 and find the main checkout path first.",
+  "costUsd": 0.00629471
+}

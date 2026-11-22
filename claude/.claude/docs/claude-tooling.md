@@ -10,6 +10,7 @@ machine.** The manifests record intent; the script reports what happened.
 | Piece | Lives at | Manifest | Applied by |
 | --- | --- | --- | --- |
 | Skills (authored here) | `~/.dotfiles/claude/.claude/skills/<name>/` (stowed) | the directory itself | stow |
+| Process skill `building-from-specs` (spec, task session under `/goal`, fresh review, pull request) | `~/.dotfiles/claude/.claude/skills/building-from-specs/` (stowed), with its evaluations in `evals/evals.json` and their results under `evals/results/<date>/` | the directory itself | stow |
 | Skills (vendored, third party) | same directory | `~/.claude/tooling/vendored-skills.json` (stowed) | `claude-tooling-sync update-skills` |
 | Skills and agents (authored in a project repo) | project scope: `.claude/skills/cairn-writing-docs` and `.claude/agents/docs-fact-checker.md` in `~/Projects/cairn-cms`, owned by that repo | the directory | Claude Code, in a session started in that repo |
 | Agents | `~/.dotfiles/claude/.claude/agents/<name>.md` (stowed) | the directory itself | stow |

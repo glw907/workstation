@@ -1,0 +1,17 @@
+{
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff approved spec.md and is away until tomorrow. A background task session is building its task \"Mobile nav\" under /goal, and it has hit two things. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. What does the task session do about each one, and what does it write in the task's pull request? Don't edit any file.",
+  "started": "2026-11-21T22:38:42Z",
+  "seconds": 12.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "**Menu button side (left or right):** The task session doesn't ask and doesn't stop. The spec is silent, so the session treats this as a product or taste call with no precedent. It picks one side, preferring the one a later commit could flip with the fewest changed lines. It doesn't guess at Geoff's preference, and it doesn't wait for him.\n\n**Hook line in `~/.dotfiles/claude/.claude/settings.json`:** The session leaves that file alone. The skill's rule for a setting or hook the work needs is to write the change into the pull request as exact text, along with the check that shows it took effect. The session doesn't edit the file or run the stow step.\n\n**What goes in the pull request:**\n\n- **`## Decisions`:** The menu side. It records that the spec doesn't settle it, the side taken, the side passed over, and what reversing would undo (the lines that would change).\n- **`## For Geoff`:** The same side choice, so he sees it when he reviews. It also lists the hook step as left for him.\n- **`## Before merge`:** Because the hook change lives outside what a plain merge applies, the pull request carries this section. It holds the exact JSON for the `PostToolUse` entry, the command that adds it to `settings.json`, and one check that shows the hook is present afterward.\n\nThe pull request also gets the usual parts: the goal items with evidence, the review verdict, and the task-score comment. Geoff approves the merge by number, and the session he's talking to runs the `## Before merge` steps before it merges.",
+  "costUsd": 0.00609675
+}

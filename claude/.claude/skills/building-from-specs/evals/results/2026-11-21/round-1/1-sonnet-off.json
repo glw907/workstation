@@ -1,0 +1,14 @@
+{
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "The spec in spec.md is approved. Launch its task \"Mobile nav\" as a background task session. Don't run anything: write out the exact launch command you would use, and what you would check before running it.",
+  "started": "2026-11-21T22:19:05Z",
+  "seconds": 11.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "loaded": false,
+  "result": "I haven't opened spec.md, `pass-core`, or its adapters, so the command below is the shape I'd use and not a verified one. The launcher's exact name and flags come from `pass-core`, and I would confirm them before running anything.\n\n**Checks before launching (all read-only)**\n\n1. Read spec.md. Confirm \"Mobile nav\" is a task there, that its status is approved, and that it names the repo, branch, and gate.\n2. Load `pass-core` and the repo's adapter (`site-pass` or `cairn-pass`, depending on the repo). Confirm they define the background launch form and the launch prompt the session should receive.\n3. Run `claude-worktree-busy <worktree-path>` and read the repo's STATUS. The task must not already be in flight, and no other executor may hold the worktree.\n4. Check that the worktree is clean, on the right base branch, and that the spec is committed there. A background session can't read an uncommitted spec from another checkout.\n5. Check that the session will have what it needs: the gate command works from the worktree root, and any secrets come from the usual stores.\n6. Read `cc-desk-work` if the launch prompt will name it, so the session reports its PR and questions the right way.\n\n**Launch command (template)**\n\n```bash\ncd <worktree-path> && claude -p \\\n  --model claude-opus-5-5 \\\n  --effort high \\\n  \"Run task 'Mobile nav' from spec.md (approved). Follow pass-core and <adapter>. Record state in STATUS. Run the gate bare before opening a PR. Put judgment calls in the PR's ## Decisions.\" \\\n  > ~/.claude/jobs/mobile-nav.log 2>&1 &\n```\n\nThree things in it are guesses I'd settle first. The first is whether this repo uses a dedicated launcher instead of bare `claude -p`. The second is the effort flag's real spelling. The third is the model: I chose Opus because a UI build involves judgment, but a spec that fully pins down the task could run on Sonnet. The prompt also has to carry whatever the adapter says a fresh session needs, with no assumed context, since the session starts cold.\n\nTell me to proceed and I'll do the checks, correct the command to match what `pass-core` says, and run it.",
+  "costUsd": 0.0852631
+}

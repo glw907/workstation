@@ -1,0 +1,15 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:36:42Z",
+  "seconds": 25.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": true,
+  "loaded": true,
+  "result": "I read `spec.md`. It is approved, and it holds one task: \"Mobile nav,\" 45 minutes, in `glw907/example-site`, with no task to wait for. I ran nothing. The launch pattern comes from the `building-from-specs` skill beside the spec.\n\n**Launch command**\n\nThe spec doesn't name the main checkout's path, so `<main-checkout>` is a placeholder I would fill in first.\n\n```bash\ncd <main-checkout>   # main checkout of glw907/example-site, on its default branch\nclaude --bg --name mobile-nav --model claude-opus-5-5 --effort high --permission-mode auto \\\n  --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true},\"worktree\":{\"baseRef\":\"fresh\"}}' \\\n  \"/goal Build task 'Mobile nav' from /var/home/glw907/.claude/jobs/0a745dfc/tmp/runs3/1-haiku-off/spec.md. Done when: (1) src/lib/Header.svelte has a menu button below 640px that opens and closes the link list; (2) tests/header.test.ts has a test that the button toggles the list; (3) npm run gate exits 0 and runs the new toggle test; (4) at 375px wide the header shows the menu button and hides the link list until it is pressed. Or stop after 90 minutes.\"\n```\n\nI'd use Opus at high effort because the task includes an accessibility judgment about the menu button. The time clause is twice the planned 45 minutes.\n\n**Checks before running**\n\n1. `claude-worktree-busy <main-checkout>` exits 0.\n2. The spec names no secret. I'd confirm that the task needs none.\n3. `gh repo view glw907/example-site --json visibility` answers, and CI runs for that repo today. A session can't mark its pull request ready on red CI.\n4. This host is pavilion, so `claude agents --json` should show fewer than four working sessions.\n5. The main checkout is on the default branch and clean.\n\n**Gaps to resolve before launch**\n\n- The spec names `standards:daisyui-a11y-reviewer`. I can't find that reviewer in the skills I can see, so I'd confirm it exists before the review step relies on it.\n- The done items check rendered output at 375px, but the spec lists no visual reviewer. The skill says rendered UI also gets `standards:visual-verifier`. Adding it is a method call I can make, and I'd record it under the pull request's Decisions.\n- `example-site` isn't one of the repos `site-pass` covers, so I'd find out whether `npm run gate` is documented for it. The skill also says a command must run once in Claude Code before a spec names it, so that run needs to be confirmed.\n\nIf you want me to launch it, I'll fill in the checkout path and run these checks first.",
+  "costUsd": 0.008637200000000001
+}

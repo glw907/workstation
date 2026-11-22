@@ -1,0 +1,14 @@
+{
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Write a bash one-liner that prints the ten largest files under the current directory, with their sizes.",
+  "started": "2026-11-21T22:24:22Z",
+  "seconds": 7.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "loaded": false,
+  "result": "```bash\nfind . -type f -printf '%s\\t%p\\n' | sort -rn | head -n 10 | numfmt --to=iec --field=1 -d$'\\t'\n```\n\nThis prints the ten largest regular files under the current directory, largest first, with sizes in human-readable form (KiB, MiB, and so on). It uses apparent file size, not disk usage. Hidden files are included, and the `-printf` option needs GNU `find`, which Fedora ships.",
+  "costUsd": 0.00448531
+}

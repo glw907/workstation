@@ -1,0 +1,17 @@
+{
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Geoff approved spec.md and is away until tomorrow. A background task session is building its task \"Mobile nav\" under /goal, and it has hit two things. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. What does the task session do about each one, and what does it write in the task's pull request? Don't edit any file.",
+  "started": "2026-11-21T22:51:14Z",
+  "seconds": 9.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "The task session asks Geoff nothing and waits for nothing. It handles each item without stopping, and the pull request records both.\n\n**Menu button side.** This is a taste call with no precedent in the spec. The session takes one option and carries on. When it can't choose, it picks the option a later commit undoes most cheaply. It lists the side it built, the side it passed over, and what reversing would undo. If an existing header convention or one of Geoff's own words settles it, the session follows that and quotes the source. Anything not in Geoff's words is not a ruling.\n\n**The PostToolUse hook line.** The session does not edit `~/.dotfiles/claude/.claude/settings.json`. A setting, hook, or permission rule the work needs is written into the pull request as exact text, along with the check that shows it took. It does not edit the file even if that is the only way past a refusal. It finishes everything else in the task. If a goal item depends on the hook, that item is marked unmet with the reason. The session does not drop the item or edit the goal to fit.\n\n**The pull request.** The body follows `written-for-people.md`. Its title says what is true now. The first paragraph is the whole report made small and ends on whether anything waits for Geoff, which here it does.\n\n- **What landed:** the mobile nav as built, with the menu button on the side the session chose.\n- **Goal items:** each one word for word, with evidence. Any item that needs the hook is marked unmet.\n- **Review verdict:** the verdict from the fresh `diff-reviewer` subagent and the count of open findings. The `visual-verifier` also reads this one, since it is rendered UI.\n- **`## Decisions`:** the menu side, as a taste call. It names the option taken, the option passed over, and what reversing would undo.\n- **`## For Geoff`:**\n  - the menu-side choice, so he can see it;\n  - the hook line, as exact JSON for the PostToolUse entry, with the check that proves it took, such as a tool call that fires it;\n  - any unmet goal item that depends on the hook.\n- **Score comment:** the `<!-- task-score {...} -->` line with the measured minutes.\n\nThe pull request opens as a draft on the first push. It is marked ready only once the gate and CI are green and the review is done. The session then writes its report and ends in the same turn. It never merges. Geoff approves by number when he is back, and the session he is talking to merges it.",
+  "costUsd": 0.1028873
+}

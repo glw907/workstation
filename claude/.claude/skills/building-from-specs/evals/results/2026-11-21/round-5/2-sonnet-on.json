@@ -1,0 +1,17 @@
+{
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Geoff approved spec.md and is away until tomorrow. A background task session is building its task \"Mobile nav\" under /goal, and it has hit two things. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. What does the task session do about each one, and what does it write in the task's pull request? Don't edit any file.",
+  "started": "2026-11-21T23:01:23Z",
+  "seconds": 10.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "The task session asks Geoff nothing and waits for nothing. It handles the two items differently, and the pull request records both.\n\n**Menu button side (left or right).** This is a product or taste call with no precedent, since the spec is silent. The session takes the option a later commit can undo most cheaply, builds the task with it, and moves on. If it can't tell which is cheaper, it picks the more conventional placement. It does not stop to ask. The pull request records it under `## Decisions` and again under `## For Geoff`. Each entry names the side taken, the side passed over, and what reversing would undo (for example, one CSS or markup change in the header component plus any test that asserts the position).\n\n**PostToolUse hook line in `~/.dotfiles/claude/.claude/settings.json`.** The session leaves that file alone. A hook is a setting the work needs, so it is not the session's to edit, and it must not edit around a refusal either. It finishes the rest of the task and puts the change in the pull request as exact text. That text is the full JSON line or block for the PostToolUse entry. Beside it goes the check that shows the hook took, such as the command to run and the output to expect. Anything in the build that depends on the hook is listed as a step left. Because the line has to be applied by hand, the pull request also gets a `## Before merge` section with the exact commands and that one check.\n\n**The pull request itself.** It opens as a draft on the first push and is marked ready only when the gate passes and a fresh `standards:diff-reviewer` subagent has reviewed the branch against the goal. If CI or the review is not clean, it stays a draft with what remains written inside it. The body has these parts:\n\n1. A first paragraph that makes the whole report small and ends on whether anything waits for Geoff. Here something does: the hook line and the button-side call.\n2. What landed.\n3. Each goal item word for word, with its evidence.\n4. The review verdict and the count of open findings.\n5. `## Decisions`, which holds the button-side call, with the passed-over option and what reversing would undo.\n6. `## For Geoff`, which holds the button-side choice he should look at, plus the hook change not applied and any goal item the missing hook leaves unmet.\n7. `## Before merge`, which holds the hook text and its check.\n8. The `<!-- task-score {...} -->` comment for the measured minutes.\n\nThe session writes this report and ends in the same turn. It does not edit STATUS. Geoff reads the pull request tomorrow, approves it by number in his own session, and that session runs the `## Before merge` steps and does the merge.",
+  "costUsd": 0.10366130000000001
+}

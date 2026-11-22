@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T22:53:13Z",
+  "seconds": 8.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "Nothing has run yet. These are the commands, in order, from the \"Merging\" section of `building-from-specs`.\n\n**Preconditions, checked before step 1** (read-only):\n\n- Confirm the Mobile nav task session has ended. `claude agents --json` shows whether it is still listed.\n- Read the PR body for a `## Before merge` section.\n\n**Commands:**\n\n1. Run the commands listed under `## Before merge` in PR 412, then the one check that shows they worked. If the section is absent, skip this step. I haven't read the PR body, so I don't know which case applies.\n\n2. Merge:\n   ```bash\n   gh pr merge 412 --repo glw907/example-site --merge\n   ```\n   An `ask` rule stops this at a permission prompt, which you answer once for this PR.\n\n3. Pull the main checkout. This runs only if the checkout is on the default branch, has no uncommitted change in a merged file, and `claude-worktree-busy` exits 0:\n   ```bash\n   claude-worktree-busy <main-checkout>\n   git -C <main-checkout> pull --ff-only\n   ```\n\n4. Clean up, in this order, with no force flags:\n   ```bash\n   git -C <main-checkout> worktree remove .claude/worktrees/mobile-nav\n   git -C <main-checkout> branch -d worktree-mobile-nav\n   git -C <main-checkout> push origin --delete worktree-mobile-nav\n   ```\n   If any of these refuses, work is still there. I read the refusal and don't override it.\n\n`<main-checkout>` is a placeholder. I haven't confirmed the path of the example-site main checkout, and I'd resolve it before running step 3.\n\nSay go and I'll start with the preconditions.",
+  "costUsd": 0.1018847
+}

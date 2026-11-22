@@ -1,0 +1,55 @@
+[
+  {
+    "skills": [
+      "building-from-specs"
+    ],
+    "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+    "files": [
+      "evals/files/spec.md"
+    ],
+    "expected_behavior": [
+      "Gives a `claude --bg` command that sets `--permission-mode auto`.",
+      "The command's `--settings` value sets `permissions.denyInsteadOfPrompting` to true and `worktree.baseRef` to `fresh`.",
+      "The `/goal` condition ends with a time clause of 90 minutes, twice the task's 45.",
+      "Names `claude-worktree-busy` among the checks before the launch."
+    ]
+  },
+  {
+    "skills": [
+      "building-from-specs"
+    ],
+    "query": "Geoff approved spec.md and is away until tomorrow. A background task session is building its task \"Mobile nav\" under /goal, and it has hit two things. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. What does the task session do about each one, and what does it write in the task's pull request? Don't edit any file.",
+    "files": [
+      "evals/files/spec.md"
+    ],
+    "expected_behavior": [
+      "Does not ask Geoff a question or wait for his answer on either point.",
+      "Picks one side for the button and goes on, choosing the option cheapest to undo, and records the option taken, the option passed over, and what reversing would undo in the pull request.",
+      "Leaves settings.json unedited and writes the hook change in the pull request as exact text, with a check that shows it took."
+    ]
+  },
+  {
+    "skills": [
+      "building-from-specs"
+    ],
+    "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+    "files": [
+      "evals/files/spec.md"
+    ],
+    "expected_behavior": [
+      "Merges with `gh pr merge 412 --repo glw907/example-site --merge`, with no `--delete-branch` flag.",
+      "Pulls the main checkout with `git pull --ff-only`.",
+      "Removes the worktree before it deletes the local branch, and deletes the remote branch last with `git push origin --delete worktree-mobile-nav`.",
+      "Uses no force flag on any command."
+    ]
+  },
+  {
+    "skills": [],
+    "query": "Write a bash one-liner that prints the ten largest files under the current directory, with their sizes.",
+    "files": [],
+    "expected_behavior": [
+      "Gives one command line that lists files by size and keeps the ten largest.",
+      "Does not load the building-from-specs skill."
+    ]
+  }
+]

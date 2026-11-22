@@ -1,0 +1,18 @@
+{
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Geoff approved spec.md and is away until tomorrow. A background task session is building its task \"Mobile nav\" under /goal, and it has hit two things. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. What does the task session do about each one, and what does it write in the task's pull request? Don't edit any file.",
+  "started": "2026-11-21T22:52:08Z",
+  "seconds": 35.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core",
+    "cc-desk-work"
+  ],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "The task session handles the two differently. The menu button side is a call it makes itself and flags. The hook line is a hard stop.\n\n**Menu button side.** This is a taste call the spec doesn't settle, so it doesn't stop the work (Geoff, 2026-11-14). The session first reads the plan's `## Rulings`, the design, and any earlier PRs in the round. Then it calls the advisor tool once for this question and takes whichever side the advisor picks. The session never makes the choice on its own judgment. Then it keeps building.\n\n**The hook line.** A new line in `~/.dotfiles/claude/.claude/settings.json` falls under \"What always stops\" in `advisor.md`, as work beyond the approved scope: it lives in a second repo and adds a setting that `spec.md` doesn't list. The advisor can't clear that, so the session doesn't ask it to and doesn't touch the file. It stops this way:\n\n1. It commits and pushes the nav work it has, so a relaunch picks up from the branch.\n2. It opens a draft PR if there isn't one yet.\n3. It writes the stop: the question, what it tried, the choices it sees, and a recommendation. Where that goes depends on how the session was launched. If its launch prompt names `cc-desk-work`, it runs the prompt's `pass stop` line with reason `scope`. Otherwise the \"Until cc-desk runs\" rules apply, and it writes the stop under \"Open decisions\" in the repo's `docs/STATUS.md` on the branch.\n4. It ends. It doesn't ask in chat or run `notify-send`.\n\nIf the hook line really belongs to this work, it becomes its own `~/.dotfiles` change through `claude-infra`, once Geoff approves it.\n\n**The pull request.** The draft PR carries the standard evidence lines:\n\n- `Round: <id>`\n- `Pass: <name>`\n- `Review:`, filled in once the closing review runs\n- `Calls: 1`\n\nUnder `## Calls for Geoff` goes one line that opens `[advisor]`. It names the side taken and the side passed over, and says what switching back would undo. That's probably a CSS and markup swap in the header component, plus its screenshots. The same choice also goes under `## Decisions`.\n\n`## Planning misses` stays empty for the menu side. A question the advisor answers never reaches Geoff, so it doesn't count as a miss. The hook question will count as one if Geoff ends up answering it: his answer gets recorded there next to the plan item that should have covered it. The session doesn't write `## Acceptance` and the closing sections until it's relaunched after his ruling.",
+  "costUsd": 0.33072239999999997
+}

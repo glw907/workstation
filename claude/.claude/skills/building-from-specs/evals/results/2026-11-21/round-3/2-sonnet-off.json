@@ -1,0 +1,18 @@
+{
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Geoff approved spec.md and is away until tomorrow. A background task session is building its task \"Mobile nav\" under /goal, and it has hit two things. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. What does the task session do about each one, and what does it write in the task's pull request? Don't edit any file.",
+  "started": "2026-11-21T22:39:22Z",
+  "seconds": 19.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core",
+    "cc-desk-work"
+  ],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "The two cases get different treatment: the menu button side is a flagged call the session takes and builds on, and the hook is a stop.\n\n**Menu button side (left or right)**\n\nThis is a product or taste call with no precedent. It is not on the \"What always stops\" list, so the session keeps going.\n\n1. It reads what Geoff has already ruled: the plan's `## Rulings`, the round design, and any dated rule. This could settle it, for example an existing header convention on the site.\n2. If nothing settles it, it calls the advisor tool once with the question, what it tried, and the options. If the session has no advisor, or the call errors, it asks Fable through one Agent call instead. It never answers the question itself.\n3. It takes the advisor's choice, builds the nav that way, and does not wait for Geoff.\n\nIn the PR, a line opening `[advisor]` goes under `## Calls for Geoff`. It names the option taken, the option passed over, and what reversing the choice would undo (likely one flex-order change and its screenshot). The `Calls:` line counts it as 1. The PR opens with a short paragraph for people, then what landed, `## Decisions`, `## Planning misses` and the score. Because a call is flagged, the ready report carries `--calls 1`, so the check asks Geoff before it merges. If the spec should have named the side, that also goes under `## Planning misses`.\n\n**The PostToolUse hook line in `~/.dotfiles/claude/.claude/settings.json`**\n\nThis is a stop, for two reasons.\n\n- **Another repo.** The file lives in `~/.dotfiles`, not the repo this task builds in. \"Another repo\" is work beyond the approved scope, and the advisor clears none of those.\n- **Not a direct change.** A new hook is a new trigger in a runner path. The direct-change exemption covers wording only, so the session does not edit the file.\n\nThe session finishes every part of the nav that doesn't depend on the hook. It commits and pushes, so a relaunch picks up from the branch. Then it stops with the `scope` reason from its launch prompt and ends. If it was not launched by cc-desk, it writes the question under \"Open decisions\" in STATUS with a recommendation, then ends.\n\nBecause it stops, the PR is not reported ready yet. When Geoff rules and the session is relaunched, the PR names the hook under `## Decisions` with his ruling quoted. The change itself goes through `claude-infra`, after `claude-worktree-busy` on the dotfiles checkout, and passes `bash scripts/gate.sh` there.\n\nIf the approved design already named the hook, it is in scope. The session then makes the change in a dotfiles worktree and notes it in `## Decisions`.\n\nI changed no files.",
+  "costUsd": 0.14199680000000003
+}

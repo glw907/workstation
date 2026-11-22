@@ -29,7 +29,7 @@ PR_LIST_CAP = 300
 ARCHIVE = "archive-2026-11.tar.gz"
 DEFAULT_BRANCHES = {"main", "master"}
 SCORE_KEYS = ("planPathMin", "actualPathMin", "fixRounds", "reds", "attended", "escapes")
-SCORE_RE = re.compile(r"<!--\s*pass-score\s+(\{.*?\})\s*-->")
+SCORE_RE = re.compile(r"<!--\s*(?:pass|task)-score\s+(\{.*?\})\s*-->")
 MISS_TAGS = (
     "mechanism", "file-list", "permission", "design-gap", "stale-fact",
     "owner-call", "no-answer", "conflict", "estimate", "ambiguous",

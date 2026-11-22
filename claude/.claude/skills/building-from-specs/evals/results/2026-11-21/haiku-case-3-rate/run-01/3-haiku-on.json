@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T22:56:15Z",
+  "seconds": 12.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "Nothing has run yet. This is the sequence, in order:\n\n1. **Confirm the task session has ended.** Merging waits for that. I haven't checked its state.\n\n2. **Read PR 412's body for a `## Before merge` section.** If it has one, run its commands and their check first. I haven't read the body, so I don't know whether it has one.\n\n3. **Merge the pull request:**\n   ```bash\n   gh pr merge 412 --repo glw907/example-site --merge\n   ```\n   An `ask` rule may stop this at a permission prompt. Geoff answers it once.\n\n4. **Check that the main checkout is safe to pull:**\n   ```bash\n   claude-worktree-busy <main-checkout-path>\n   git -C <main-checkout-path> status --short\n   git -C <main-checkout-path> branch --show-current\n   ```\n   The pull goes ahead only if `claude-worktree-busy` exits 0, the branch is the default branch, and no merged file has uncommitted changes.\n\n5. **Pull the main checkout:**\n   ```bash\n   git -C <main-checkout-path> pull --ff-only\n   ```\n\n6. **Remove the worktree:**\n   ```bash\n   git -C <main-checkout-path> worktree remove .claude/worktrees/mobile-nav\n   ```\n   This has no force flag. A refusal means work is still in the worktree, so I'll read the message before doing anything else.\n\n7. **Delete the local branch:**\n   ```bash\n   git -C <main-checkout-path> branch -d worktree-mobile-nav\n   ```\n   This uses lowercase `-d`, which refuses unless the branch is merged. It is merged once step 3 lands.\n\n8. **Delete the remote branch:**\n   ```bash\n   git -C <main-checkout-path> push origin --delete worktree-mobile-nav\n   ```\n   If GitHub already deleted the remote branch on merge, this step will report that it is gone. That is expected, so I'll read the output rather than force anything.\n\nTwo things are still unknown. I don't know where the main checkout lives, because this session is not inside a git repo, so `<main-checkout-path>` is a placeholder. I also haven't confirmed the task session has ended. Tell me the checkout path and say go, and I'll run the steps in order and stop at any refusal.",
+  "costUsd": 0.00623921
+}

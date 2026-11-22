@@ -1,0 +1,14 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:26:30Z",
+  "seconds": 17.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "loaded": false,
+  "result": "I read `spec.md`. It's approved (Geoff, 2026-11-21) and has one task, **Mobile nav**: no waits, 45 minutes, against `glw907/example-site`. The spec also says the repo doesn't exist, and it calls itself a fixture for `building-from-specs` evaluations.\n\nI can't give you an exact launch command. The spec names the repo, task, files, and reviewers, but no launcher, model, or effort. I also haven't checked which launcher this workstation uses, and I ran nothing, so I won't guess flag names. The command needs this shape, with placeholders to fill in:\n\n```\n<launcher> --repo glw907/example-site --task \"Mobile nav\" --minutes 45 \\\n  --model <model> --effort <effort> --background --brief <brief-file>\n```\n\nBefore running it:\n\n1. **Confirm the repo is real.** The spec says `glw907/example-site` doesn't exist. If this is still a fixture, nothing should launch against it. If it's a real target, it has to be cloned before the session starts.\n2. **Check the worktree is free.** Run `claude-worktree-busy <path>` on the path the session will enter, and read the repo's STATUS. Don't race another executor.\n3. **Confirm the reviewers load.** `standards:diff-reviewer` and `standards:daisyui-a11y-reviewer` aren't in the skill list I have here. Verify both resolve before the brief names them.\n4. **Check the gate.** `npm run gate` should exist in `package.json`, and it should run `tests/header.test.ts` so the new toggle test counts toward the done item.\n5. **Name a model and effort.** The spec doesn't pick them. By the global rules, Sonnet fits the markup and test edits, and Opus fits review judgment. The dispatch has to name both.\n6. **Arm the unattended guards.** 45 minutes is past the 30-minute line, so read `~/.claude/docs/unattended-work-guards.md` and arm it before launch. I haven't read that doc in this session.\n7. **Write the brief for a reader with no context.** Include the 640px breakpoint, the two files, the 375px check, and both done items copied from the spec.",
+  "costUsd": 0.00614208
+}

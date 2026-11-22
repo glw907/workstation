@@ -1,0 +1,17 @@
+{
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Read spec.md in this folder; Geoff has approved it. Then write out the exact command you would use to launch its task \"Mobile nav\" as a background task session, and what you would check before running it. Don't run anything.",
+  "started": "2026-11-21T22:37:24Z",
+  "seconds": 19.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "pass-core"
+  ],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "The spec doesn't give a launch command. The command below comes from `pass-core/references/planner.md` \"Launch\", with the spec's values filled in.\n\n## Command\n\nRun it from the main checkout of `glw907/example-site`:\n\n```\nclaude --bg --model sonnet --effort medium --advisor fable --name example-site-mobile-nav \"$(cat <prompt file>)\"\n```\n\nTwo parts are my reading, not stated outright:\n\n- **Name:** `<project>-<pass>` is the repo basename plus the plan slug. I took the slug from the task name, \"Mobile nav\", so it is `mobile-nav`.\n- **Model and effort:** Sonnet at medium is the default executor setting. The spec doesn't mark this task as judgment work, so I kept it.\n\nI can't fill in `<prompt file>`. The spec names no prompt file, and the skill says a launch prompt lives in a committed file. That file should carry the goal, the scope, the plan path, the checkout, the push target, and the `approval-packet` hand-over instruction. If it doesn't exist yet, the planner has to write and commit it before this launch.\n\n## Checks before running\n\n1. **Busy check.** Run `claude-worktree-busy <path to example-site>`, and also look at `claude agents --json` for a live session on that repo. A non-zero exit ends the launch.\n2. **Status docs.** Read the repo's `docs/STATUS.md` for open decisions or a session already on this pass.\n3. **Pre-flight.** Confirm every item in the plan's `## Pre-flight` list is done and checked. The spec has no plan or Pre-flight list, so I'd confirm one exists.\n4. **Default branch.** Confirm the main checkout is on its default branch. After a fetch, `git -C <repo> rev-list --count HEAD..origin/<default>` must print 0.\n5. **Worktree ignore.** If `git -C <repo> check-ignore -q .claude/worktrees/x` fails, append `.claude/worktrees/` to the file that `git -C <repo> rev-parse --path-format=absolute --git-path info/exclude` names.\n6. **Workspace trust.** If no session has opened this directory before, expect the trust prompt. The launch must not print \"Workspace not trusted\".\n7. **Usage ceiling.** If a conductor is involved, `round-run.md` reads weekly usage with `claude -p \"/usage\" --model haiku < /dev/null`. At 85 percent or more, or if the figure can't be read, the launch is held. A single-task round has no conductor, so this probably doesn't apply.\n8. **Reviewer names.** The spec names `standards:diff-reviewer` and `standards:daisyui-a11y-reviewer`. I can't confirm from here that the second agent exists, so I'd check it before the close needs it.\n9. **Prompt placement.** The prompt goes before any `--add-dir`, because `--add-dir` is variadic.\n\n## After the launch\n\nRead `~/.claude/jobs/<id>/state.json`. If `needs` is `\"send a prompt to start\"`, the launch failed. End it with `claude stop <id>`.",
+  "costUsd": 0.1616793
+}

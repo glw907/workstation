@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff just typed: \"Approved, merge 412.\" Pull request 412 in glw907/example-site is the \"Mobile nav\" task's pull request, built from the approved spec in spec.md. Its task session has ended, and its worktree is at .claude/worktrees/mobile-nav on the branch worktree-mobile-nav. Before you run anything, list the exact commands the merge and its cleanup take, in order, and stop there.",
+  "started": "2026-11-21T22:47:41Z",
+  "seconds": 17.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": false,
+  "loaded": true,
+  "result": "Nothing has run. Here are the commands in order. `<checkout>` is the main checkout's path, which I still need to find, since this directory isn't a git repo.\n\n1. Read the PR body and check status. If the body has a `## Before merge` section, run its commands and their check before step 3.\n   ```bash\n   gh pr view 412 --repo glw907/example-site --json body,state,mergeStateStatus,statusCheckRollup\n   ```\n2. Confirm the main checkout is free.\n   ```bash\n   claude-worktree-busy <checkout>\n   ```\n3. Merge. An `ask` rule stops this at a permission prompt, which Geoff answers once.\n   ```bash\n   gh pr merge 412 --repo glw907/example-site --merge\n   ```\n4. Pull the main checkout. Run this only if it is on the default branch and no merged file has uncommitted changes.\n   ```bash\n   git -C <checkout> pull --ff-only\n   ```\n5. Remove the worktree. No `--force`.\n   ```bash\n   git -C <checkout> worktree remove <checkout>/.claude/worktrees/mobile-nav\n   ```\n6. Delete the local branch. Lowercase `-d` makes git refuse if the branch isn't merged.\n   ```bash\n   git -C <checkout> branch -d worktree-mobile-nav\n   ```\n7. Delete the remote branch. No force flag.\n   ```bash\n   git -C <checkout> push origin --delete worktree-mobile-nav\n   ```\n\nIf any step is refused, I'll read the refusal and stop rather than force past it. Say go and I'll start at step 1.",
+  "costUsd": 0.006568930000000001
+}

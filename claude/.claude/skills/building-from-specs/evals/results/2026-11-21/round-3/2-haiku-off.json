@@ -1,0 +1,15 @@
+{
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Geoff approved spec.md and is away until tomorrow. A background task session is building its task \"Mobile nav\" under /goal, and it has hit two things. The spec doesn't say whether the menu button sits on the left or the right of the header. The work also needs a new PostToolUse hook line in ~/.dotfiles/claude/.claude/settings.json. What does the task session do about each one, and what does it write in the task's pull request? Don't edit any file.",
+  "started": "2026-11-21T22:38:55Z",
+  "seconds": 18.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": false,
+  "loaded": false,
+  "result": "The task session doesn't stop for either item. Geoff is away, and the global rules stop a pass early only for a pass-core judgment call: an irreversible act, a secret, overspend, an auth-data question, or a scope change. Neither item is one of those. I haven't opened spec.md or the task's STATUS for this answer, so if its launch prompt says something different, that wins.\n\nOn the header, the session first checks the existing header component and any sibling site's header, and matches whichever side the current design uses. If the repo has no precedent, it picks a side and records why. It doesn't ask Geoff. The spec was approved, and the choice is a single CSS change to flip.\n\nOn the hook, the session loads the `claude-infra` skill first, since the global rules route every change to Claude Code tooling through it. It edits the dotfiles copy at `~/.dotfiles/claude/.claude/settings.json`, never the linked file. It runs the dotfiles gate (`bash scripts/gate.sh` from the checkout root) and stages settings.json by name. A PostToolUse hook runs for every session on the machine, so the session treats it as a tooling change, not a task-local one.\n\nFor the pull request, the session writes the usual body plus a `## Decisions` section. Each entry names the reading taken and the evidence for it:\n\n- The header side, with the precedent it matched or the reason it picked one, and that flipping it is a one-line change.\n- The new PostToolUse line, what it runs, that it affects every session, and that it went through `claude-infra`.\n- Any other judgment call made along the way.\n\nIf the hook change lives in a different repo than the task, the session opens it as its own pull request in dotfiles and cross-links the two. It reports both as ready through `cc-desk-work` and leaves them for Geoff to review. It doesn't write an approval-queue document, because `pass-core` says the cc-desk path overrides that.",
+  "costUsd": 0.00554611
+}
