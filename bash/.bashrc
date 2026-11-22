@@ -135,6 +135,11 @@ export SUDO_ASKPASS="$HOME/.local/bin/claude-askpass"
 claude() {
     local args=("$@")
 
+    # /home is a symlink to /var/home here, and Claude Code keys a project's
+    # memory folder by the path it starts from. Resolve the link so both
+    # spellings land in one folder.
+    cd -P .
+
     case "$1" in
         # Subcommands take their own flags; never inject --chrome into them.
         mcp|config|plugin|update|doctor|install|setup-token|migrate-installer) ;;
