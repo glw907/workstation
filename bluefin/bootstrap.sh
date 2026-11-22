@@ -306,17 +306,10 @@ setup_stow() {
 }
 
 setup_projects_repos() {
-    echo "== setup: initiatives and approval-queue clones =="
-    local repo
-    for repo in initiatives approval-queue; do
-        if [[ ! -d "$HOME/Projects/$repo/.git" ]]; then
-            mkdir -p "$HOME/Projects" || return 1
-            gh repo clone "glw907/$repo" "$HOME/Projects/$repo" || return 1
-        fi
-    done
-    # Each repo owns its install step; one that has not landed yet is skipped.
-    if [[ -f "$HOME/Projects/approval-queue/scripts/install.sh" ]]; then
-        bash "$HOME/Projects/approval-queue/scripts/install.sh" || return 1
+    echo "== setup: initiatives clone =="
+    if [[ ! -d "$HOME/Projects/initiatives/.git" ]]; then
+        mkdir -p "$HOME/Projects" || return 1
+        gh repo clone glw907/initiatives "$HOME/Projects/initiatives" || return 1
     fi
 }
 

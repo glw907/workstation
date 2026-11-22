@@ -275,7 +275,7 @@ the rest unless the step says it is a hard stop.
    session (`claude --bg`) can't show the trust prompt: it exits with
    "Workspace not trusted". Geoff runs `claude` once in each repo a
    background session will start in, accepts the prompt, and exits. On
-   2026-10-13 this blocked the drafter conductor's first launch.
+   2026-10-13 this blocked the drafter work's first launch.
 7. Mint this machine's SSH key and register it with GitHub:
    ```bash
    [ -f ~/.ssh/id_ed25519 ] || ssh-keygen -t ed25519 -C "glw907@pavilion" -N "" -f ~/.ssh/id_ed25519
@@ -477,7 +477,7 @@ next setup.
 
 | Missing | Why it mattered | Fix |
 |---|---|---|
-| Claude Code workspace trust for `~/Projects/cairn-cms` (found 2026-10-14, drafter pass 5) | `claude --bg` refuses to launch in an untrusted folder, so the conductor couldn't start the cairn executor until Geoff ran `claude` there | In Part 3, run `claude` once in each repo under `~/Projects/` and accept the trust prompt |
+| Claude Code workspace trust for `~/Projects/cairn-cms` (found 2026-10-14, drafter work) | `claude --bg` refuses to launch in an untrusted folder, so a session couldn't start the cairn task session until Geoff ran `claude` there | In Part 3, run `claude` once in each repo under `~/Projects/` and accept the trust prompt |
 | Auto-mode trust and allow rules in the live `~/.claude/settings.json` (found 2026-10-17) | The classifier blocked cross-repo pushes, a worktree rebase onto main, and a merge Geoff had directed, and each fix needed his approval mid-task | The rules now ship in the tracked `settings.json` (workstation fbf3919 and #89). Run `claude-tooling-sync apply` after every pull, then check `claude auto-mode config` as Part 2 step 10 says |
 | A Playwright browser for cairn-cms (found 2026-10-14, drafter pass 5) | Two of cairn's fast-lane suites skipped locally; CI still ran them | Run `npx playwright install chromium` in `~/Projects/cairn-cms` after `npm ci` |
 
