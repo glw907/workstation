@@ -42,7 +42,8 @@
       "license": "MIT",
       "installed": "2026-09-13",
       "_why": "Vale's official skills, vendored instead of the plugin because the plugin's edit hook duplicates the workstation vale-hook.",
-      "home": "standards"
+      "home": "standards",
+      "description": "Run Vale in GitHub Actions, a pre-commit hook, or another runner. Use when the user says \"add vale to CI\", \"run vale on PRs\", \"add a pre-commit hook\", or \"make the build fail on style errors\"."
     },
     "vale-fix": {
       "repo": "vale-cli/agent-tools",
@@ -63,7 +64,8 @@
       "commit": "5e8704f5c07a",
       "license": "MIT",
       "installed": "2026-09-13",
-      "home": "standards"
+      "home": "standards",
+      "description": "Install Vale, write a .vale.ini, sync styles, and get a first run. Use when the user says \"set up vale\", \"add vale\", \"add prose linting\", or \"lint our docs\" in a repository that has no Vale config yet."
     },
     "vale-triage": {
       "repo": "vale-cli/agent-tools",
@@ -73,7 +75,8 @@
       "commit": "5e8704f5c07a",
       "license": "MIT",
       "installed": "2026-09-13",
-      "home": "standards"
+      "home": "standards",
+      "description": "Turn a large first Vale run into a decision per rule — fix, downgrade, or switch off. Use when the user says \"too many alerts\", \"where do we start\", \"vale is too noisy\", or has just added Vale to an existing corpus."
     },
     "vale-vocab": {
       "repo": "vale-cli/agent-tools",
@@ -83,7 +86,8 @@
       "commit": "5e8704f5c07a",
       "license": "MIT",
       "installed": "2026-09-13",
-      "home": "standards"
+      "home": "standards",
+      "description": "Add project terms to a Vale vocabulary so spell check accepts them. Use when the user says \"vale doesn't know our product name\", \"stop flagging this word\", or spelling alerts are firing on correct terms."
     },
     "brainstorming": {
       "repo": "obra/superpowers",
@@ -104,7 +108,8 @@
       "installed": "2026-10-19",
       "path": "skills/receiving-code-review",
       "_why": "How to weigh review findings before acting on them (38 runs in the 30 days to 2026-10-19), vendored so the superpowers plugin can stay off.",
-      "home": "standards"
+      "home": "standards",
+      "description": "Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation"
     }
   }
 }
