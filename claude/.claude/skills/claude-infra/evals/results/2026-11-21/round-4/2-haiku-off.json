@@ -1,0 +1,33 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:30:35Z",
+  "seconds": 8.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"rm -rf|PreToolUse|\\\"deny\\\"\", \"path\": \"/var/home/glw907/.claude\", \"glob\": \"settings*.json\", \"output_mode\": \"content\", \"-n\": true}"
+    }
+  ],
+  "result": "I didn't check your existing settings: the search of `~/.claude` was refused, so I can't say whether a rule already exists. Nothing was changed.\n\n**Recommendation: a `PreToolUse` hook in `settings.json`, with a deny rule as a backup.**\n\n- **A `PreToolUse` hook on the Bash tool is the right place.** It runs in the harness before each Bash call and can refuse it. It matches on the command text, so it covers every Bash call, including ones from subagents, and the model can't talk its way past it. Your workstation rule is \"no exceptions,\" and only the harness enforces that.\n- **A `permissions.deny` rule** such as `Bash(rm -rf *)` is simpler, but weaker. Permission rules are prefix-style patterns on the command string. They miss `rm -fr`, `rm -r -f`, `/bin/rm`, `command rm`, and anything that puts the path in a variable. A hook can parse the command with a regex or a small script and catch those variants. If you want the simpler route, use the deny rule and accept the gaps.\n- **CLAUDE.md is guidance, not enforcement.** The model reads it and usually follows it, but nothing stops a call that ignores it. Put the rule here too, so the reason is visible to a session, but don't rely on it alone.\n- **A skill is the wrong place.** Skills load only when their description matches the task, so a `rm -rf` call in an unrelated session would never see it.\n\nThe hook would block any command where `rm` has a recursive flag and the target is under `/var/home/glw907` or uses `~` or `$HOME`. Because \"home folder\" is ambiguous, I'd confirm the exact scope before writing it. Should it cover only the home directory itself, or everything under it?\n\nTo set this up, I'd use the `update-config` skill for the `settings.json` change and `claude-infra` for anything that touches Claude Code tooling. I'd also check for an existing hook or deny rule first, which needs read access to `~/.claude`.",
+  "costUsd": 0.00124506
+}

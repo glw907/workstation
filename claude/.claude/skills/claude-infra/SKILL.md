@@ -22,12 +22,12 @@ the inventory are in `~/.claude/docs/claude-tooling.md`.
    fact that applies every turn.** Anthropic's features overview
    (<https://code.claude.com/docs/en/features-overview>): "If a rule must hold every time, make
    it a hook rather than a prompt instruction." And: "Put it in a skill if it's reference
-   material Claude needs sometimes". A rule that must hold never goes in CLAUDE.md: Claude reads
-   it as context, and nothing enforces it. An answer that only advises on a home names the same
-   page.
+   material Claude needs sometimes". A rule that must hold never goes in CLAUDE.md, because
+   CLAUDE.md carries only a fact that applies every turn, as context nothing enforces. An answer
+   that only advises on a home names the same page.
 3. **Keep one home per rule. A skill or agent authored here is its own manifest, its
-   directory.** A vendored skill, a plugin, or a user-scope MCP server gets an entry in the
-   manifest file that the "Layout" table in `claude-tooling.md` names. Run
+   directory.** It gets no entry in a manifest file. Only a vendored skill, a plugin, or a
+   user-scope MCP server does, in the file the "Layout" table in `claude-tooling.md` names. Run
    `claude-tooling-sync verify` after.
 4. **Trace scope to a stated need.** Every change, and every spec or dispatch for one, makes only
    the change asked for, at the scope intended. The sources are Anthropic's prompting best

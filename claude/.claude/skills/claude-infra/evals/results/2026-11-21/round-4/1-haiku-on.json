@@ -1,0 +1,46 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:28:33Z",
+  "seconds": 11.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Where should a five-step cairn release checklist live on this workstation, and how would the change land? Plan only, no edits. The user keeps pasting the checklist into chat.\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"release\", \"path\": \"/var/home/glw907/.claude/skills/cairn-pass\", \"-i\": true, \"output_mode\": \"content\", \"-n\": true}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"cairn\", \"path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\", \"output_mode\": \"content\", \"-n\": true}"
+    }
+  ],
+  "result": "The checklist should become a skill. I have not read the checklist's five steps, and I could not check the existing `cairn-pass` skill or `claude-tooling.md`: reads of both were refused by the permission prompt. The plan below rests on the `claude-infra` rules, so verify the two points marked at the end.\n\n**Where it lives**\n\n- **Home: a new skill, `cairn-release`, in `~/.claude/skills/cairn-release/`.** The features-overview guidance is to put reference material that Claude needs sometimes in a skill. A release cut is that kind of procedure: it runs occasionally, not every turn, so it does not belong in CLAUDE.md.\n- **Not CLAUDE.md:** it would load into every session and nothing would enforce it.\n- **Not a hook:** the steps need judgment and the release is not a per-action check. If one step must always hold (for example, \"tag only after the gate passes\"), that one check can become a hook later as a separate change.\n- **Repo-specific detail:** if the steps depend on the cairn-cms repo's own files, such as version bumps, changelog paths, or tag format, those facts go in that repo's docs. The skill then points to them. This keeps one home per rule.\n- **Link to `cairn-pass`:** `cairn-pass` already holds the cairn-cms gate and checklists. If it already has a release section, move that section into the new skill and leave a one-line pointer, so the procedure has one home.\n\n**How the change lands**\n\n1. Read the checklist you keep pasting, and the existing `cairn-pass` text, to confirm the steps and any overlap.\n2. Draft `cairn-release/SKILL.md` with the five steps, in the skill's own directory. Its description should say when to load it, for example \"cutting a cairn-cms release, tagging, or publishing a release\".\n3. Record the skill in the manifest named in the \"Layout\" table of `claude-tooling.md`, then run `claude-tooling-sync verify`.\n4. Run the audits: `/skill-doctor` and Anthropic's `skill-creator`.\n5. Commit the dotfiles change through a PR. The commit body cites the Anthropic skill guidance. Because this is a new skill, it is not a one-sentence direct change, so it goes through `building-from-specs`. Geoff approves the spec and then the PR by number.\n\n**Open points for you**\n\n- Confirm the five steps, or paste them into a file for me to read, so the draft matches what you actually do.\n- Confirm whether `cairn-pass` already covers releases. If it does, the new skill replaces that section rather than adding a second copy.",
+  "costUsd": 0.0023582300000000002
+}

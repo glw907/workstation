@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:32:10Z",
+  "seconds": 6.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    }
+  ],
+  "result": "**Put it at user scope, not in ecxc-ski's `.mcp.json`.**\n\n- **Why:** The `claude-infra` skill says everything the cairn-family stack shares (Svelte, Playwright, DaisyUI) is user scope and recorded in the manifest. A repo's `.mcp.json` carries only what that repo alone needs. Every cairn site uses Svelte, so a Svelte docs server is stack-wide.\n- **Skill first, server second:** The same skill says to take a skill first when a library offers both, and a server only for on-demand retrieval or tools a skill can't carry. Svelte docs lookup is on-demand retrieval, so a server fits. Check whether a vendored Svelte skill already covers it before adding one.\n- **Reach limit:** An MCP server reaches only the main loop and unrestricted agents. Agents with a fixed tool list won't see it. If a reviewer or builder subagent needs the docs, it needs a skill on its `tools` line or a `skills:` preload instead.\n- **Recording it:** Add an entry to the manifest file that the \"Layout\" table in `~/.claude/docs/claude-tooling.md` names. Run `claude-tooling-sync verify`, then commit the dotfiles. Restart at a session boundary, since a restart loads new servers.\n- **Landing it:** This goes through a PR whose commit messages and body cite the guidance page (<https://code.claude.com/docs/en/features-overview>), unless it counts as a \"Direct change\" under `building-from-specs`.\n\nI changed nothing and didn't open `claude-tooling.md`, so I haven't checked whether a Svelte server or skill is already in the manifest. I'd check that before adding anything.",
+  "costUsd": 0.0201204
+}

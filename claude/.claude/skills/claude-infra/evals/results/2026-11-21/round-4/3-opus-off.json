@@ -1,0 +1,38 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:32:40Z",
+  "seconds": 18.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*/.mcp.json\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"svelte\", \"path\": \"/var/home/glw907/.claude.json\", \"-i\": true, \"output_mode\": \"content\", \"head_limit\": 20}"
+    }
+  ],
+  "result": "I'd put it in each Svelte repo's `.mcp.json`. That means all of them, not only ecxc-ski, and not one workstation-wide entry.\n\n**Why per-repo:**\n- **Both hosts get it.** A server added for all projects (\"user scope\") is stored in `~/.claude.json`. That file holds Claude Code's own state, so it isn't stowed from `~/.dotfiles`, and an entry added there on thinkpad-x1 wouldn't reach pavilion. A checked-in `.mcp.json` travels with git to every checkout and worktree on both machines.\n- **It loads only where it's useful.** A workstation-wide entry would also load in dotfiles, household-it, and the Go tool repos, where Svelte docs are just noise.\n- **It's versioned with the code.** The entry is reviewed in a PR and stays matched to the Svelte version that repo uses.\n- **The cost of repeating it is small.** The official Svelte server is a docs-only remote endpoint with no credentials, so it's the same few lines in each repo and nothing secret gets committed.\n\n**Where it goes:** ecxc-ski, 907-life, aksailingclub-org, cairn-pub, and the cairn-cms engine, since engine work is Svelte too.\n\n**Process:** this is a change to Claude Code tooling, so it goes through the `claude-infra` skill. Across five repos it's spec-sized work, not a direct change.\n\n**The alternative:** if you'd rather have one source of truth, the `standards` plugin could bundle the server. It already carries the Svelte skills and would reach both hosts, but it would load in every session where the plugin is on, which brings back the noise problem.\n\nI wasn't allowed to read `~/Projects` or `~/.claude.json`, so I haven't seen what ecxc-ski's `.mcp.json` already contains or whether a Svelte server is configured anywhere yet. I didn't change anything.",
+  "costUsd": 0.04552400000000001
+}

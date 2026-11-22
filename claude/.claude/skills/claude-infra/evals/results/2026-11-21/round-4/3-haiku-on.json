@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:31:52Z",
+  "seconds": 8.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Question: should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites (907-life, aksailingclub-org, cairn-pub) also use Svelte. Answer only; do not change anything.\"}"
+    }
+  ],
+  "result": "**Recommendation: user scope, in the workstation manifest, not ecxc-ski's `.mcp.json`.**\n\n- **Why not ecxc-ski's `.mcp.json`:** A repo's `.mcp.json` should carry only what that repo alone needs. Svelte is shared by all four cairn-family sites (ecxc-ski, 907-life, aksailingclub-org, cairn-pub), so it belongs at user scope.\n- **Where to record it:** Add it to the manifest named in the \"Layout\" table of `~/.claude/docs/claude-tooling.md`. I didn't open that manifest, so I can't give you its exact filename. After the entry is added, `claude-tooling-sync verify` checks it.\n- **Skill before server:** If the Svelte documentation source also ships as a plugin skill, take the skill first. A server is the choice only for on-demand retrieval or tools a skill can't carry. The workstation already has Svelte skills (`svelte-conventions`, `svelte-check`), so check for overlap before adding a server.\n- **Reach:** An MCP server reaches only the main loop and unrestricted agents. If you want a fixed-tool-list agent to use the docs, the skill route is the one that works.\n- **Activation:** New servers load at a session restart. Restart at a session boundary, not mid-run.\n- **Credentials:** If the server needs a key, the value stays as `${VAR}` in the manifest and resolves from `~/.local/secrets`. Nothing goes in `.mcp.json`.\n\nI made no changes. If you want it added, say so and I'll do the manifest entry, the sync check, and the commit.",
+  "costUsd": 0.00161186
+}

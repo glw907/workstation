@@ -1,0 +1,38 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:28:45Z",
+  "seconds": 12.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude\", \"glob\": \"**/{SKILL.md,*.md}\", \"output_mode\": \"files_with_matches\", \"head_limit\": 50}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn*/**/{RELEASE*,release*,CHANGELOG*}\", \"path\": \"/var/home/glw907/Projects\"}"
+    }
+  ],
+  "result": "I couldn't finish the survey. Reads under `~/.claude` and `~/Projects` were denied, and I don't have your five steps in this conversation. So this plan rests on the workstation rules in CLAUDE.md and the skill list, not on the files themselves.\n\n**Where it should live**\n\n- **Primary: the `cairn-pass` skill.** It is the workstation overlay for cairn-cms work, and the repo-adapter convention says `cairn-pass` holds each repo's gate and checklists. A release checklist fits there, as its own \"Release cut\" section, loaded when a session is asked to cut a release.\n- **If the five steps are really the cairn-cms repo's own procedure** (things anyone on the project would run, not just Geoff's workstation), the cleaner home is that repo's docs, such as a `RELEASING.md`, with `cairn-pass` pointing to it in one line. That avoids two copies drifting apart.\n- **Not** a new skill unless the release work grows past a checklist. One section in an existing skill is enough.\n\n**How the change would land**\n\n1. **Confirm the source.** Check whether the five steps already exist in a file, and whether they are repo-specific or workstation-specific. This decides between the two homes above. This is the one question for you.\n2. **Route through `claude-infra`.** CLAUDE.md says changes to Claude Code tooling, including skills, go through that skill.\n3. **Edit the dotfiles copy, not the link.** If the skill is stowed from `~/.dotfiles`, the edit goes there. I need to confirm that stow path before editing.\n4. **Run the gate.** `bash scripts/gate.sh` from the `~/.dotfiles` checkout root, then `stow -R` if the skill is linked.\n5. **Work in a branch and open a PR.** Geoff approves the PR by number, and only this session merges it. The change is a skill section, so it is more than a one-line edit and should follow `building-from-specs`.\n6. **Once merged,** future sessions get the checklist when they load `cairn-pass` for a release, and you stop pasting it into chat.\n\nNothing has been edited. Tell me where the five steps are written today, or grant read access to `~/.claude` and `~/Projects/cairn*`, and I'll finish the survey and give you a concrete diff plan.",
+  "costUsd": 0.00163028
+}

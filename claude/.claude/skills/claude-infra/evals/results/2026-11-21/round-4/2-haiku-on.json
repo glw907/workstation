@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:30:25Z",
+  "seconds": 10.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Question: where should a rule live that blocks every Bash call running `rm -rf` on a home folder, with no exceptions? Answer only; change nothing.\"}"
+    }
+  ],
+  "result": "**Put it in a PreToolUse hook on the Bash tool, in `settings.json`.** Don't put it in CLAUDE.md or a skill.\n\n**Why a hook:** Anthropic's features overview says that if a rule must hold every time, it should be a hook rather than a prompt instruction. A hook runs before the tool call, so the model can't talk its way past it. CLAUDE.md is context Claude reads and may not follow, so it can't enforce \"no exceptions.\" A skill only loads when invoked, so it wouldn't cover a Bash call made in any other context.\n\n**How it would work:**\n\n1. **The check script** goes in `~/.dotfiles/bin/.local/bin/`, per the workstation convention. It's a one-file helper, so stdlib-only Python run as `python3 -I` is the right form. It reads the hook's JSON on stdin and exits 2 to block. Then `stow -R bin`.\n2. **The hook entry** goes in `settings.json` with matcher `Bash`. Use the `update-config` skill for the edit itself.\n3. **Record it** in the hooks inventory in `~/.claude/docs/claude-tooling.md`, then run `claude-tooling-sync verify` and commit the dotfiles. That's the single home for the rule, not memory.\n\n**Design points for \"no exceptions\":**\n\n- **Match by intent, not the literal string.** `rm -rf ~`, `rm -fr ~`, `rm -r -f ~`, `rm --recursive --force ~`, `rm -rf \"$HOME\"`, `rm -rf /var/home/glw907/...`, and `rm -rf ~/x` all need to block. A regex on `rm -rf` alone would miss most of them.\n- **Fail closed on variables.** If the target is an unresolved `$VAR` or a command substitution, block it. The hook can't know where that expands.\n- **Define \"home folder\" concretely.** Cover `~`, `$HOME`, and the real home path (`/var/home/glw907`), including anything beneath them.\n- **Also consider `find … -delete` and `shred`.** They're the same kind of destructive call against home, so you'll likely want them covered too. Confirm that's in scope before I write it.\n\n**Why not a `permissions.deny` rule:** a deny rule matches command prefixes, so `Bash(rm -rf *)` is easy to get around with reordered flags or a `$HOME` target. A hook can check the parsed arguments, which is what this rule needs.\n\nIf you want this, say so and I'll write the script, the settings entry, and the inventory line. I changed nothing for this answer.",
+  "costUsd": 0.0018382200000000002
+}

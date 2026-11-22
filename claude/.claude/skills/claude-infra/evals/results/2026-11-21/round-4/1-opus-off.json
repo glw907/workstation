@@ -1,0 +1,44 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:30:02Z",
+  "seconds": 22.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/**\", \"path\": \"/var/home/glw907/.claude/skills\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/claude-infra/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\"}"
+    }
+  ],
+  "result": "I can't recommend a final location without seeing the checklist, and I couldn't read `~/.claude/skills` from this session. What I could read is the workstation's `cairn-pass` skill. It has no release section, and it sets a rule that decides the question: the repo's own skill \"holds what a clone needs,\" and `cairn-pass` \"adds only Geoff's operation.\" So most likely the checklist splits in two.\n\n**Where it lives**\n\n1. **Steps any clone of cairn-cms would follow** (version bump, changelog, tag, publish, verify). These go in the cairn-cms repo, as a release section or a reference file in its `.claude/skills/cairn-running-passes` skill. That skill already holds the close checklist, so a release checklist fits beside it. If cutting a release is separate from closing a pass, a small `cairn-release` skill in the same `.claude/skills/` folder works too. Either way you get it by asking for a release, or by typing `/cairn-release`, instead of pasting it.\n2. **Steps that only apply to your setup** (which host, a credential pulled through `claude-pass`, a `ci-green` watch, how the packet reaches you). These go in a short \"Release\" heading in the workstation `cairn-pass` skill. It would point at the repo checklist and add only those steps.\n\nIf all five steps would make sense to any clone, the second part goes away and the checklist lives only in the repo.\n\n**How it lands**\n\n- **Repo part:** a cairn-cms change under `building-from-specs`. Since you'd be giving me the exact text, it probably counts as a \"Direct change\": a branch in its own worktree (after `claude-worktree-busy`), `cairn-run-gate` on the light lane, a draft PR watched with `ci-green`, and a merge only after you approve that PR by number.\n- **Workstation part:** this is Claude Code tooling, so it goes through the `claude-infra` skill. The skill file is most likely stowed from `~/.dotfiles`, in which case the edit goes in the dotfiles copy rather than the link. It ships as a `dotfiles-pass` change gated by `bash scripts/gate.sh`, with its own PR for you to approve.\n- **Check:** in a fresh session, ask it to cut a release without pasting anything, and confirm all five steps show up.\n\nTo finish the plan I need the five steps. Paste them once and I'll say which go in the repo and which in `cairn-pass`. If you'd rather, I can also look for them in the cairn-cms checkout and in `cairn-running-passes` itself.",
+  "costUsd": 0.0610382
+}

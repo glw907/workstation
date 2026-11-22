@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:32:16Z",
+  "seconds": 9.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Add it once at user scope on this workstation, not in ecxc-ski's `.mcp.json`.\n\n- **Reach:** The Svelte docs server isn't specific to ecxc-ski. A user-scope entry covers ecxc-ski, 907-life, aksailingclub-org, cairn-pub and the cairn-cms engine with one change. Per-repo `.mcp.json` files would mean four or five copies to keep in sync.\n- **Fit:** `.mcp.json` is checked in and shared with anyone who clones the repo. This server is a personal dev aid, and it would also trigger a project-approval prompt in each repo.\n- **Cost:** User scope loads the server's tool definitions in every session, including non-Svelte repos. If that bothers you, the alternative is a project-scope entry in only the Svelte repos, accepting the duplication.\n- **Setup:** I'd use `claude mcp add --scope user`, with the official Svelte server (remote at `https://mcp.svelte.dev/mcp`, or the local `@sveltejs/mcp` package via mise's Node). That writes to `~/.claude.json`, which isn't stowed. Following your rule that config lives in `~/.dotfiles`, I'd also record the command in the dotfiles repo so a rebuild or the other host (thinkpad-x1 or pavilion) reproduces it.\n\nI haven't checked whether a Svelte MCP is already configured anywhere. Say so if you want me to check and then make the change.",
+  "costUsd": 0.0122034
+}

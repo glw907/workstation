@@ -1,0 +1,33 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:31:33Z",
+  "seconds": 18.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"PreToolUse|\\\"deny\\\"|rm -rf\", \"path\": \"/var/home/glw907/.claude/settings.json\", \"output_mode\": \"content\", \"-A\": 6}"
+    }
+  ],
+  "result": "I couldn't look at your current hooks because reading `~/.claude/settings.json` was declined. So this answer is about the mechanism, not your existing config. I changed nothing.\n\n## Answer: a PreToolUse hook in `~/.claude/settings.json`\n\nIt shouldn't go in CLAUDE.md or a skill. Both are text the model reads, and the model can misread them, forget them, or reason its way around them. \"No exceptions\" needs something the harness enforces, and a hook is that.\n\n**Why the other options fall short:**\n\n- **CLAUDE.md** loads every session, but it's guidance. It can lose force after context compaction, and it has no effect on a subagent or session that doesn't load it. It also blocks nothing on its own.\n- **A skill** is weaker still. It only loads when it's triggered, so a session that never invokes it never sees the rule.\n- **A `permissions.deny` rule** (for example `Bash(rm -rf ~*)`) is enforced, but it matches command text by prefix. `rm -fr`, `rm -r -f`, `/bin/rm -rf`, `rm -rf \"$HOME\"`, `rm -rf /var/home/glw907`, `cd ~ && rm -rf .`, or `bash -c '...'` would all get past it. A deny rule is a fine extra layer but can't be the rule itself.\n- **A PreToolUse hook on `Bash`** runs before every Bash call, in every session and subagent, in every permission mode, including bypass. It sees the full command as JSON on stdin. If it exits with code 2 (or returns a `deny` decision), the call is blocked and the reason goes back to the model. Your workstation already uses this pattern: the hook that refuses whole-tree `git add` works the same way.\n\n## How it would fit your setup\n\n- **Script location:** following your conventions, it would be a script in `~/.dotfiles` (stowed into place), called from the `hooks.PreToolUse` entry with matcher `Bash` in the stowed `~/.claude/settings.json`. Per your CLAUDE.md, the change would go through `claude-infra`, and the dotfiles gate would apply.\n- **Language:** parsing the hook's JSON input points to stdlib-only Python run as `python3 -I`, per your tool-language rule.\n- **What it should catch:** any recursive force delete in any flag form (`-rf`, `-fr`, `-r -f`, `--recursive --force`), split on `&&`, `;`, `|` and subshells. The target counts if it resolves to a home folder: `~`, `~user`, `$HOME`, `${HOME}`, `/home/*`, `/var/home/*` (the real path on Bluefin, where `/home` is a symlink), and relative targets like `.` after a `cd ~`.\n- **When unsure, block:** if the command can't be parsed confidently, for example `eval` or a variable it can't expand, the hook should refuse. A rule with no exceptions should fail closed.\n\n## Limits worth knowing\n\n- The hook only covers Claude Code's Bash tool. It does nothing about `rm -rf ~` typed in your own terminal, or a script Claude writes that you run later outside the harness. If you want that covered too, the defense is OS-level: backups or snapshots, not a Claude setting.\n- A determined indirection, such as a script file that does the delete and is then run, can still get past text inspection. To narrow that gap, the hook could also refuse running freshly written scripts that contain such a delete, but no text check is airtight.\n\nIf you want it built, say so and I'll take it through `claude-infra`.",
+  "costUsd": 0.0418872
+}

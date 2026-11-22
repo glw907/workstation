@@ -1,0 +1,42 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:31:12Z",
+  "seconds": 20.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Where should a rule live that blocks every Bash call running `rm -rf` on a home folder, no exceptions? Answer only, change nothing.\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"PreToolUse|rm -rf|rm\\\\s\", \"path\": \"/var/home/glw907/.claude/settings.json\", \"output_mode\": \"content\"}"
+    }
+  ],
+  "result": "Neither. Put it in a **PreToolUse hook** on the Bash tool, set in your user-scope `settings.json`.\n\n**Why not CLAUDE.md or a skill.** Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>) says: \"If a rule must hold every time, make it a hook rather than a prompt instruction.\" Claude reads CLAUDE.md as context, and a skill only loads when it seems relevant. Both are advice the model can misread, forget after compaction, or never load. Nothing enforces them, so neither can give you \"no exceptions.\"\n\n**Why a hook works.** A PreToolUse hook (<https://code.claude.com/docs/en/hooks>) runs in the harness before every Bash call. It sees the full command and can deny it by exiting with code 2 or by returning a `permissionDecision` of `deny`. It runs on every Bash call, in every permission mode and every subagent, whatever the model thinks it's doing.\n\n**How it would land here:**\n- **The hook script:** `~/.dotfiles/bin/.local/bin/`, stowed with `stow -R bin`. It should be stdlib-only Python run as `python3 -I`, because it has to parse the hook's JSON input.\n- **The hook entry:** the dotfiles copy of `~/.claude/settings.json` under `hooks.PreToolUse`, matcher `Bash`. User scope makes it cover every repo, not just one project.\n- **The process:** a PR that cites the hooks page, per `claude-infra`. The `update-config` skill handles writing the settings entry.\n\n**Two limits to know about:**\n1. **A string match can be dodged.** Any check on the command text can be beaten by variables (`rm -rf \"$D\"`), `eval`, `find -delete`, a script file that does the delete, or flag forms like `-r -f` and `--recursive --force`. The hook should normalize those forms and fail closed: if it can't tell where an `rm` with recursive and force flags points, it blocks. It still can't see inside a script Claude writes and then runs.\n2. **The model can't bypass it, but the platform has a stronger layer.** The hook alone already enforces the rule against Claude. For a hard guarantee against the clever cases above, add Claude Code's sandbox filesystem restrictions (<https://code.claude.com/docs/en/sandboxing>) as a second layer. Those are enforced by the operating system, not by matching text. A `permissions.deny` rule like `Bash(rm -rf ~*)` is prefix-matched and easy to get around, so treat it as extra protection at most, never as the rule itself.\n\nI didn't change anything. I also didn't confirm what your current `settings.json` holds, because reading it needed a permission you hadn't granted. If you want this built, I'd check that file first for an existing Bash PreToolUse hook to extend rather than duplicate.",
+  "costUsd": 0.0677614
+}
