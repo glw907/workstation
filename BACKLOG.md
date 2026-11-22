@@ -10,6 +10,8 @@
 
 ## Medium
 
+- [ ] **#114** Guard the `cd` in the spec-writing proof scripts `#bug` `#workstation` `#initiative:claude-config-alignment` *(2026-11-22)*
+  Each `claude/.claude/skills/building-from-specs/evals/files/spec-writing/*/proof.sh` runs `cd "$1"` at line 4 with no `|| exit 1`, and two run `cd "$w"` the same way. If a `cd` fails, the trap check runs in the wrong folder and can report a trap in place that isn't. `scripts/check.sh` `check_shellcheck` excludes SC2164 for these 16 files only, because any edit to them changes the suite hash and makes the 2026-11-22 baseline stale. Add `|| exit 1` to each `cd` and drop the exclusion in the same change as the next full spec-writing run, which records a new baseline. Found by pull request 266.
 - [ ] **#113** Drop the deleted `approval-packet` skill from Vale's config `#improvement` `#workstation` `#initiative:claude-config-alignment` *(2026-11-22)* *(swept 2026-11-22)*
   `vale/.config/vale/.vale.ini:13-16` still names "the approval-packet models" in a comment and globs `**/skills/approval-packet/references/*.md`. The skill is gone, so the glob matches nothing and the comment names a retired word. The `**/*.queue.md` glob stays, since `written-for-people.md` step 2 names pages that way. Left alone, the next retired-words search over `vale/` prints these lines. Found by the first "Retiring the old process" pull request, whose searches leave `vale/` out.
 - [ ] **#111** Carry the cairn front-door "one section per read" rule into cairn-cms `cairn-writing-docs` `#improvement` `#workstation` *(2026-11-21)*
