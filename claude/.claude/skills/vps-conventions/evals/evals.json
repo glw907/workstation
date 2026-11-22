@@ -1,0 +1,40 @@
+[
+  {
+    "skills": ["vps-conventions"],
+    "query": "backup.service in this folder runs our nightly backup on the AlmaLinux VPS, and a timer fires it. The backup script takes a lock so two runs never overlap. Read the unit and tell me where the lock file should live and what the service unit should carry. Give the revised unit text; don't edit the file.",
+    "files": ["evals/files/backup.service"],
+    "expected_behavior": [
+      "Puts the lock file on a persistent path such as `StateDirectory=` or `/var/lib/<name>`, and says not to put it in a `RuntimeDirectory=`.",
+      "The service unit carries `NoNewPrivileges=yes`, `PrivateTmp=yes`, and `ProtectSystem=strict` with `ReadWritePaths=` for its write targets.",
+      "Says each `ReadWritePaths=` directory must exist before the unit starts, so the deploy or provision step creates it."
+    ]
+  },
+  {
+    "skills": ["vps-conventions"],
+    "query": "user-data.yaml in this folder is the cloud-init file that provisions our RHEL-family VPS boxes. Read it. We want to add the `jq` package to it. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; don't edit the file.",
+    "files": ["evals/files/user-data.yaml"],
+    "expected_behavior": [
+      "Says cloud-init runs only at first boot, so running boxes need a live remediation.",
+      "Says the change lands in the same commit as the runbook's presence-gate update.",
+      "Checks the package name against the target repos with a container command such as `podman run --rm almalinux:10 dnf -q list jq`."
+    ]
+  },
+  {
+    "skills": ["vps-conventions"],
+    "query": "Read prune-uploads.timer in this folder. It will run a weekly prune of old upload files on one of our servers, but its service isn't written yet. Until then I delete the old files with an ssh command, and auto mode keeps denying it. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+    "files": ["evals/files/prune-uploads.timer"],
+    "expected_behavior": [
+      "Says auto mode ignores ssh allow rules, so a rule would not let the step run.",
+      "Moves the step into a reviewed script in the repo that takes its targets as arguments and prints them before it acts.",
+      "Gives that script an exact `permissions.allow` rule, landed through review with the script."
+    ]
+  },
+  {
+    "skills": [],
+    "query": "What does `git rebase --onto` do? Give one short example.",
+    "files": [],
+    "expected_behavior": [
+      "Explains `git rebase --onto` with an example, without loading the vps-conventions skill."
+    ]
+  }
+]

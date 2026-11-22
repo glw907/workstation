@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:37:36Z",
+  "seconds": 21.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Plan only. Nothing has been run.\n\n## What goes in the archive\n\nOne file, `<project>-<date>.tar.age`, encrypted with the workstation age key:\n\n- **Repo:** `git bundle create --all`, which takes every ref, stashes included. A bundle doesn't carry uncommitted work, so each worktree's `git status` must be clean first. I'd commit leftover work to a branch rather than drop it. Dropping is Geoff's call.\n- **D1 database:** a full SQL export of schema and data. This is the only database, so it's the main data artifact.\n- **Issues and PRs:** JSON from `gh`, including comments.\n- **Worker config:** a JSON snapshot of the deployed Worker (routes, custom domains, bindings, compatibility settings) taken from the Cloudflare API. The repo's wrangler file can drift from what's deployed, so the repo copy alone isn't enough.\n- **R2:** nothing, unless the inventory finds a bucket. A demo with one D1 likely has none.\n- **Never:** secret values. Secret names can go in the retirement record.\n\nGaps in the skill's list that I'd add:\n- **Releases:** release notes and any assets aren't in a git bundle. Export them as JSON and download the assets.\n- **Export time:** record when the D1 export ran, since it's a snapshot.\n\n## How the archive is proven\n\nAll of this runs before Geoff's approval, and nothing is deleted until it passes:\n\n1. **Hash:** compute the sha256 of the `.tar.age` file.\n2. **Decrypt test:** restore to a scratch directory using the actual age identity from the store. This proves the key needed later can decrypt the file, not only that encryption succeeded.\n3. **Bundle:** `git bundle verify`, then clone from the restored bundle. Compare its refs against the live repo's refs from the inventory, including stashes.\n4. **D1:** load each SQL export into a fresh SQLite file. Fail on any load error or any empty table. Compare row counts with live D1 counts taken at export time.\n5. **JSON:** parse every issues, PRs, releases, and Worker-config file. Fail on any parse error.\n6. **Copies:** place the file in `~/Documents/retired-projects/` and in `servers-archive/retired-projects/` in R2. Run `rclone check` on the R2 copy against the local one, and compare sha256 of both.\n7. **Record:** write the sha256 into the retirement record and the `README.md` row from step 5.\n\n**Stop conditions:** a failed or empty export, a bundle that fails verify, a mismatched ref, a row-count difference, a JSON parse error, a hash mismatch, or a non-empty `rclone check` diff.\n\n## Open decisions for Geoff\n\n- **Uncommitted work:** commit it to a branch (my recommendation) or drop it.\n- **Live writes:** if the Worker still takes writes, anything written after the export is lost at teardown. Either pause writes before exporting, or accept the snapshot and say so in the record. I'd recommend pausing first.",
+  "costUsd": 0.00580807
+}

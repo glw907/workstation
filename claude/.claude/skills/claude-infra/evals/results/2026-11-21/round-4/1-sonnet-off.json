@@ -1,0 +1,38 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:29:12Z",
+  "seconds": 12.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/**\", \"path\": \"/var/home/glw907/.dotfiles\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"release\", \"path\": \"/var/home/glw907/.claude/skills\", \"-i\": true, \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "I couldn't read `~/.dotfiles` or `~/.claude/skills`, so this plan comes from your CLAUDE.md alone. I haven't checked the existing skill files, and I've marked the steps that depend on them.\n\n## Where it should live\n\n**A new `cairn-release` skill, or a \"Cutting a release\" section inside `cairn-pass`.** My recommendation is the section in `cairn-pass`, unless the existing skill is already long. The reasons:\n\n- Your CLAUDE.md describes `cairn-pass` as the cairn-cms overlay and says it holds \"each repo's gate and checklists.\" A release checklist is that kind of content.\n- A skill loads on demand when its description matches. A description that says \"cutting, tagging, or publishing a cairn release\" will load the checklist when you say that, so you stop pasting it.\n- It shouldn't go in CLAUDE.md. That file loads every session, and the checklist only matters for release work.\n- It shouldn't go in the cairn-cms repo's own docs if it uses workstation-specific steps such as `claude-pass`, `~/.local/secrets`, or the CI watch wrapper. Steps that apply to anyone cutting a release could go in the repo instead, with the skill pointing to them.\n\nIf the checklist runs past about 30 lines, or has its own scripts, make it a separate `cairn-release` skill. `cairn-pass` would then link to it.\n\n## How the change would land\n\n1. **Check the process.** CLAUDE.md says tooling changes go through the `claude-infra` skill. That skill isn't in my available list, so I'd confirm how it works before starting.\n2. **Check for a busy worktree.** Run `claude-worktree-busy` on `~/.dotfiles` and read its status docs.\n3. **Edit the dotfiles copy.** The skills are probably stowed from `~/.dotfiles`, and the rule is to edit that copy, never the link. I'd verify where `cairn-pass` really lives before editing.\n4. **Write the checklist.** I need your five steps. Paste them once more and they go in verbatim. I'd add an updated `description:` in the frontmatter so the skill triggers on release phrasing. The prose follows the `writing-voice` skill: no em dashes, imperative steps.\n5. **Run the gate.** Run `bash scripts/gate.sh` from the dotfiles checkout or worktree root, bare, with no `tail` or `head`.\n6. **Open a PR.** This is more than a one-sentence change, so it follows `building-from-specs`: a short spec, a fresh review, and a pull request. I'd merge only after you approve the PR by number. If you'd rather treat it as a \"Direct change,\" say so.\n7. **Re-stow if needed.** Run `stow -R` only if the skill is a new directory that isn't linked yet.\n\n## Open question\n\nShould the checklist be a section in `cairn-pass` or a separate skill? I'd go with the section unless the five steps turn out to be long. Tell me which, and paste the steps, and I'll start.",
+  "costUsd": 0.0210816
+}

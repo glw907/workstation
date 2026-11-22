@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:18:30Z",
+  "seconds": 11.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Question only, no changes: where should a rule that blocks every Bash call running `rm -rf` on a home folder live (CLAUDE.md, a skill, a hook, a permission deny, or elsewhere)?\"}"
+    }
+  ],
+  "result": "**Recommendation: a `PreToolUse` hook on the Bash tool, in the settings file that the dotfiles manage.** Don't put it in CLAUDE.md, and don't rely on a skill.\n\nAnthropic's features overview says that \"if a rule must hold every time, make it a hook rather than a prompt instruction\" (https://code.claude.com/docs/en/features-overview). This rule must hold every time.\n\n- **Hook (chosen):** The harness runs it before each Bash call and can refuse the call. Nothing in the model's reasoning can skip it, and no allow rule overrides a hook's deny. It is the only option here that enforces the block.\n- **Permission deny rule:** Also enforced, but it matches command prefixes or globs. `rm -r -f`, `/usr/bin/rm`, `rm -rf \"$HOME\"` after an assignment, or a path built from a variable can slip past it. Use it only as a second layer if you want one.\n- **CLAUDE.md:** Claude reads it as context, and nothing enforces it. It can say the rule, but it can't guarantee the block. CLAUDE.md is the wrong home for a rule that must hold.\n- **Skill:** Loaded only when Claude decides it's relevant, so it doesn't fire on every call. Wrong home for this rule.\n\n**Where it lands**\n\n- The hook config goes in `~/.dotfiles`, stowed, and gets an entry in the manifest named in `~/.claude/docs/claude-tooling.md`. Then run `claude-tooling-sync verify` and commit the dotfiles. Per the workstation rules, the hook script itself goes in `~/.dotfiles/bin/.local/bin/` and is stowed with `stow -R bin`. Any settings change is written with the `update-config` skill.\n- Whether a hook is the right home is a placement decision. Writing it is a separate change, which I haven't made.\n\n**Things to decide before building it**\n\n1. **Matching is text-based.** A hook sees the command string, so it can't fully know what `rm` resolves to at runtime. It should deny any `rm` with recursive and force flags whose target is `~`, `$HOME`, `/var/home/glw907`, or a variable or glob it can't resolve. Deciding that a variable or glob counts as \"a home folder\" is the policy call you'd need to make, and it will sometimes over-block.\n2. **Scope.** \"Every Bash call, no exceptions\" means the hook has no exemption list. If you want a way past it for a real cleanup, that needs a deliberate, separate step, not a carve-out in the hook.\n3. **Settings scope.** A user-level hook covers every session on this machine. A project-level one covers only that repo. For a workstation-wide rule, user scope is right, and it should be in the dotfiles copy of the settings file, not the linked copy.\n4. **Managed settings.** If your Claude Code install supports a managed (admin-level) settings file, that's stronger still, since a user can't edit it away. I haven't checked whether this install uses one.\n\nIf you want this built, tell me the matching policy from point 1 and I'll write the hook through the normal flow.",
+  "costUsd": 0.00489908
+}

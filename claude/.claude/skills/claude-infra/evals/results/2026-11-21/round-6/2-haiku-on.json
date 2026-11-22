@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:55:16Z",
+  "seconds": 10.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Question: where should a rule that blocks every Bash call running `rm -rf` on a home folder (no exceptions) live: CLAUDE.md, a skill, or elsewhere? Answer only, no changes.\"}"
+    }
+  ],
+  "result": "**Recommendation: a PreToolUse hook on the Bash tool in `settings.json`, not CLAUDE.md or a skill.**\n\n- **Why a hook:** Anthropic's features overview says that if a rule must hold every time, it should be a hook rather than a prompt instruction (https://code.claude.com/docs/en/features-overview). A hook runs on every Bash call and can deny it before it executes. \"No exceptions\" is a claim only a hook can keep.\n- **Why not CLAUDE.md:** It is a request that nothing enforces. It belongs there only for facts that apply every turn, such as which host this is. A blocking rule is not one of those.\n- **Why not a skill:** A skill is loaded only when Claude decides it needs the reference material, so it can't block a call that Claude decides to make anyway.\n- **Simpler partial option:** A `permissions.deny` entry such as `Bash(rm -rf ~*)` also blocks, but it matches prefixes. It misses `rm -fr`, `rm -r -f`, `$HOME`, and `/var/home/glw907`. The hook can parse the command and cover those forms.\n\n**Limits to know before building it:**\n- A string-matching hook can be evaded by `eval`, by a path assembled at runtime, or by `find ... -delete`. It catches the direct forms, not a determined bypass.\n- It can't always tell whether a path is a home folder, especially when it's a variable.\n\n**Question before I build it:** Does \"home folder\" mean only `~` and `/var/home/glw907` themselves, or any path under them, such as `~/Projects/foo`? The hook's match depends on the answer.\n\nI have changed nothing. When you say go, I'll write the hook with the `update-config` skill, put it in the dotfiles copy of `settings.json` (per the layout in `claude-tooling.md`), and run `claude-tooling-sync verify`.",
+  "costUsd": 0.0018633200000000001
+}

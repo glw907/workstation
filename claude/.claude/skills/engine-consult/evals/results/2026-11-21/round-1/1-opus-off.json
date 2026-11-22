@@ -1,0 +1,27 @@
+{
+  "skillName": "engine-consult",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I'm about to write a spec in ~/Projects/ecxc-ski for a gear-booking page that needs a new custom field type in the cairn admin. Before I write it, what engine-consultation steps does the spec need, and what exactly goes in its header? Answer only; don't write or change any file.",
+  "started": "2026-11-22T01:55:04Z",
+  "seconds": 31.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "building-from-specs",
+    "site-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "result": "I've read the spec and site-pass skills and searched for the engine-consult protocol. I couldn't read the protocol itself, so this answer has a gap, explained at the end.\n\n## Engine-consultation steps\n\n1. **Run the `engine-consult` enumeration before the spec is approved.** You're adding a custom field type to the cairn admin, which is engine work, so the spec has to count up what it needs from cairn-cms. If that run is skipped and the spec is committed without either header line below, site-pass makes you run it before the first task. Doing it now avoids that.\n2. **Write a consultation brief if anything needs the engine.** A new admin field type almost certainly does. The brief lives in cairn-cms under `docs/internal/consultations/`. A cairn session checks that folder first for briefs that are still waiting on a verdict.\n3. **Use `~/.claude/docs/engine-ui-mechanics.md` for the field type itself.** It covers any UI behavior that belongs to the engine rather than the site, and a custom admin field type is one.\n4. **Don't wait on the engine work inside the site tasks.** A task only starts after the work it depends on has merged. If cairn-cms has to ship the field type first, that is its own task, or a cairn-cms spec. The ecxc-ski task that uses it waits for it, and the spec gives the merge order.\n5. **Log engine gaps for cairn.** Anything cairn should take on goes under \"Cairn backlog\" in the PR body, checked against cairn-cms. A cairn session files it in cairn-cms's `BACKLOG.md`.\n6. **Fix cairn-cms docs that don't match reality.** If a docs page turns out to be wrong during the work, fix it on a `site-docs/ecxc-ski-<pass>` branch off cairn-cms `main`. The fix merges by PR before the site work closes, and you follow the steps in `~/Projects/cairn-cms/.claude/skills/cairn-writing-docs/SKILL.md`.\n\n## The header\n\nsite-pass sets exactly two things for the header:\n\n- **One of these, never both:**\n  - a link to the consultation brief in cairn-cms `docs/internal/consultations/`, which is the case you're in, or\n  - the line `no engine asks`.\n- **A `Sources consulted` line**, which the `engine-consult` run produces.\n\nThe rest of the spec's required content (intent in your words, approaches considered, labeled sources, assumptions with their probes, a file list from searches with hit counts, tasks with minutes and reviewers, merge order, backlog-sweep verdicts, and Claude's calls) comes from `building-from-specs`. That skill doesn't say it belongs in the header.\n\n## The gap\n\nI couldn't read the `engine-consult` protocol. It isn't among the skills in this session, and reading `~/.claude` and `~/Projects` needs permission I don't have. So I don't know its exact enumeration steps, the brief's format, or how a `Sources consulted` line should be worded. If you allow reads of `~/Projects/cairn-cms` and `~/.claude/docs/engine-ui-mechanics.md`, I'll fill those in.",
+  "costUsd": 0.4149358000000001
+}

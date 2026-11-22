@@ -1,0 +1,19 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T02:23:45Z",
+  "seconds": 12.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "`/retire-project` is not installed in this session, so I treated this as a plain request. I ran no lookups and deleted nothing. Everything below is a plan to confirm before any step runs.\n\n## Dry-run plan: retire `site-staging`\n\n**Not yet known, and to be checked live when you approve execution:** the D1 database's name and ID, the custom domain, the site repo, whether any other Worker binds the same D1, and whether the Worker has routes, cron triggers, or secrets.\n\n### Step 0: Inventory (read-only, after your go-ahead)\n- Read `~/.claude/docs/cloudflare-estate-inventory.md` to find the Worker's account and the credential to use.\n- Fetch the Worker's settings: D1 bindings, custom domains, routes, cron triggers, and secret names.\n- Find every other Worker that binds the same D1 database. If one exists, stop and ask you before going further.\n- Confirm the domain's DNS record and any Access application that covers it.\n\n### Step 1: Back up the D1 database\n- Export the full database with `wrangler d1 export`, written to a new file in a private location outside any repo.\n- Verify the export by row counts or a schema check. A failed export stops the plan.\n\n### Step 2: Detach the custom domain\n- Remove the Worker's custom domain binding. Workers-domain writes go through curl with `$CLOUDFLARE_API_TOKEN` from `~/.local/secrets`, because the MCP token is read-only for these.\n- Confirm the domain no longer resolves to the Worker. Check whether the DNS record was removed or is left dangling, and remove any leftover record only after you approve it.\n\n### Step 3: Delete the Worker\n- Delete `site-staging`. Routes and cron triggers go with it.\n- Its secrets are not touched by this step. They are reviewed in Step 5.\n\n### Step 4: Delete the D1 database\n- Run only after Step 3 is confirmed and the export is verified.\n- Confirm no Worker still binds it.\n\n### Step 5: Clean up records\n- Check Proton Pass (`claude-pass`) for any credential tied to this staging site. Mark it retired, and do not delete it unless you say so.\n- Update the registry and the household runbook entries for the domain and the staging site (`runbook` skill).\n- Remove the staging entry from the site repo's config, if one exists, through a normal commit.\n\n### Confirmation gates\nThe plan has three points where I stop and wait for you:\n1. Before Step 2 (domain detach): the live inventory from Step 0 is shown to you.\n2. Before Step 3 (Worker delete): the Step 1 export is verified and shown to you.\n3. Before Step 4 (D1 delete): you confirm the D1 name and that the backup is safe to keep.\n\nDeleting the D1 database is the step that cannot be undone. The export from Step 1 is the only copy after that point.\n\nSay the word and I'll start with Step 0, the read-only inventory.",
+  "costUsd": 0.00454391
+}

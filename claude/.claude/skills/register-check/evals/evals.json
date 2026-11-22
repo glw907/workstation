@@ -1,0 +1,41 @@
+[
+  {
+    "skills": ["register-check"],
+    "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+    "files": ["evals/files/draft.md"],
+    "expected_behavior": [
+      "Reports findings organized by the review's gates (mechanical, register, logic and facts, links), or says which gates could not run here.",
+      "Separates findings Claude would fix from those that are Geoff's call.",
+      "Flags the unsupported claim about the 2019 release and ten thousand sites as needing a source or proof.",
+      "Edits no file."
+    ]
+  },
+  {
+    "skills": ["register-check"],
+    "query": "draft.md here is a cairn docs page that Geoff will read next. Give it the full four-gate prose review before he does, and report what you find. Findings only, no edits.",
+    "files": ["evals/files/draft.md"],
+    "expected_behavior": [
+      "Reports findings organized by the review's gates (mechanical, register, logic and facts, links), or says which gates could not run here.",
+      "Flags the \"Click here\" link text.",
+      "Edits no file."
+    ]
+  },
+  {
+    "skills": ["register-check"],
+    "query": "Geoff asked for a register check on draft.md in this folder. Propose rewrites for what you find, but don't apply any.",
+    "files": ["evals/files/draft.md"],
+    "expected_behavior": [
+      "Flags the contrast frame in \"isn't just a content system, it's\" and proposes a rewrite.",
+      "Separates findings Claude would fix from those that are Geoff's call.",
+      "Edits no file."
+    ]
+  },
+  {
+    "skills": [],
+    "query": "How many words are in draft.md in this folder? Just give me the count.",
+    "files": ["evals/files/draft.md"],
+    "expected_behavior": [
+      "Gives a word count, without loading the register-check skill."
+    ]
+  }
+]

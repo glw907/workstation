@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T02:27:52Z",
+  "seconds": 13.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`/retire-project` isn't installed in this session, so it didn't run. I'm treating this as a plain planning request, and nothing below has been run.\n\n## What goes in the archive\n\nOne directory, with a manifest listing each file's sha256:\n\n1. **D1 export** of the live database: `wrangler d1 export <db> --remote`, once with schema and data, once schema-only. It is a plain SQL file, so it needs no Cloudflare to read.\n2. **The repo**: a `git bundle --all` (every branch and tag), plus the working-tree files that aren't tracked, if any.\n3. **Config and migrations**: `wrangler.jsonc`, the `migrations/` folder, and the D1 binding details (database name, UUID, account, location).\n4. **A retirement note** (`RETIRED.md`): what the demo was, why it was retired, and the date. It also lists every Cloudflare resource that pointed at it: Worker, routes or custom domains, DNS records, and Access apps. It lists secret names only, never values.\n5. **Credential map**: the Proton Pass item names and the age-store names the demo used, so they can be revoked.\n\n## How the archive is proven before any deletion\n\n1. **Verify the bundle**: run `git bundle verify`, then clone it into a new empty directory and confirm the HEAD commit matches the original.\n2. **Restore the export into a scratch database**: load the SQL into a fresh local D1 or a temp sqlite file, in a separate directory.\n3. **Compare live against restored**:\n   - the table and index list from `sqlite_master`\n   - the row count for every table\n   - a per-table content hash (hash of an ordered dump), run on both sides\n   \n   Any mismatch stops the process.\n4. **Re-read the manifest from the stored copy**: copy the archive to its final home, then run `sha256sum -c` there. It has to pass against the copy, not the source. The archive should sit in a second location, such as another disk or backup, so it doesn't share a failure with the original.\n5. **Check the inventory**: look at `cloudflare-estate-inventory.md` and the registry for anything else that references the demo's database, Worker, or tokens.\n\nD1 Time Travel is not part of the proof. It is a short-retention restore window and disappears with the database.\n\n## Then deletion, behind a confirmation\n\n1. Show a dry-run list: every resource to delete, with its ID. Geoff gives the go-ahead on that list.\n2. Delete in order: routes and DNS, then the Worker, then the D1 database, then revoke the tokens and secrets. Retire the repo last (archive it on GitHub, or delete it if Geoff prefers).\n3. After each step, check that the resource is gone through the API.\n4. Record the retirement in the registry and inventory, and note the archive's location in `RETIRED.md`.\n\n## Open question for Geoff\n\nWhere should the archive live? I'd check the household backup layout first. If it names a place, I'd use it, and if not I'd ask.",
+  "costUsd": 0.0877564
+}

@@ -1,0 +1,40 @@
+[
+  {
+    "skills": ["engine-consult"],
+    "query": "I'm about to write a spec in ~/Projects/ecxc-ski for a gear-booking page that needs a new custom field type in the cairn admin. Before I write it, what engine-consultation steps does the spec need, and what exactly goes in its header? Answer only; don't write or change any file.",
+    "files": [],
+    "expected_behavior": [
+      "Gives the header lines `**Engine consultation:**` (either \"no engine asks.\" or a link to the filed brief) and `**Sources consulted:**`.",
+      "Says a consultation brief is filed engine-side under `docs/internal/consultations/` in cairn-cms, with per-item fields that include the site's fallback if declined.",
+      "Names the `engine-triage` agent as the one that argues the brief's items against the standard."
+    ]
+  },
+  {
+    "skills": ["engine-consult"],
+    "query": "A background task session in ~/Projects/907-life has just started on an approved spec whose header has no engine consultation line, and the task builds against the cairn admin's media picker. What should that task session do before its first build step, and where does it record what it did? Answer only; change nothing.",
+    "files": [],
+    "expected_behavior": [
+      "Says the task session runs the engine-contact enumeration before its first build step.",
+      "Says it records the consultation line it would add under its pull request's `## Decisions`.",
+      "Does not have the task session stop to ask Geoff or wait for him."
+    ]
+  },
+  {
+    "skills": ["engine-consult"],
+    "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+    "files": [],
+    "expected_behavior": [
+      "Says the work runs as a small engine task now, from the same site session, rather than as a separate queued spec.",
+      "Orders the close as the engine merge and release before the site merge, with `npm run link:consumer -- <site-dir> --restore` between them.",
+      "Says the accept's ledger entry stays open until the consuming site task closes it with a seam-fit report."
+    ]
+  },
+  {
+    "skills": [],
+    "query": "Explain the difference between `git merge` and `git rebase` in two short paragraphs, with one sentence on when to prefer each.",
+    "files": [],
+    "expected_behavior": [
+      "Explains both commands and when to prefer each, without loading the engine-consult skill."
+    ]
+  }
+]

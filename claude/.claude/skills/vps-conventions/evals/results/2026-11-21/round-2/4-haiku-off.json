@@ -1,0 +1,26 @@
+{
+  "skillName": "vps-conventions",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "What does `git rebase --onto` do? Give one short example.",
+  "started": "2026-11-22T02:40:17Z",
+  "seconds": 3.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`git rebase --onto <newbase> <upstream> <branch>` replays only the commits in `<upstream>..<branch>` on top of `<newbase>`. Use it to move a branch that was built on the wrong base, or to cut out a range of commits from the middle of a history.\n\nExample: `topic` was branched off `feature`, but it should sit on `main`:\n\n```bash\ngit rebase --onto main feature topic\n```\n\nGit takes the commits that are on `topic` but not on `feature`, replays them onto `main`, and leaves `topic` pointing at the result. `feature` is unchanged.",
+  "costUsd": 0.0034341700000000003
+}

@@ -1,0 +1,19 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T02:12:20Z",
+  "seconds": 13.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "**Put it in a PreToolUse hook on the Bash tool, registered in your user-level `~/.claude/settings.json`. Not in CLAUDE.md or a skill.**\n\n**Why not CLAUDE.md or a skill**\n\nBoth are advice the model reads, so they can only make me less likely to run the command. A skill is weaker still, because it only loads when something triggers it. \"No exceptions\" needs enforcement by the harness, which runs the check whether or not I read or remember the instruction. Hooks fit that, and you already rely on one for this kind of rule: the hook that refuses whole-tree `git add` and `git commit -a`.\n\n**Why a hook, not just a permissions deny rule**\n\nA `permissions.deny` entry like `Bash(rm -rf ~*)` is also enforced, but it matches command text by prefix or pattern. It misses many forms of the same command:\n- `rm -fr`, `rm -r -f`, `rm --recursive --force`\n- `$HOME`, `~`, `~/`, `/var/home/glw907`, `/home/glw907`\n- `cd ~ && rm -rf *`\n- the command buried in a `&&` chain or a subshell\n\nA hook receives the full command as JSON. A short script can split it into segments, check for `rm` with recursive and force flags, and resolve each target path. Resolving matters on Bluefin, where `/home` is a symlink to `/var/home`. If the target is `$HOME` or a home directory, the script exits 2 with a reason, and the call is blocked. Hooks and deny rules both still fire under permissive modes, so this holds even if you later loosen the permission mode.\n\n**Where it lives on this workstation**\n\n- Put the script in `~/.dotfiles/bin/.local/bin/` and run `stow -R bin`.\n- Put the hook registration in the dotfiles copy of the settings, not the stowed link.\n- Because it changes Claude Code tooling, it goes through the `claude-infra` skill and the dotfiles gate (`bash scripts/gate.sh`).\n- A user-level hook covers every repo and worktree. A project-level one would not.\n\n**Two caveats**\n\n1. **\"No exceptions\" is only as strong as the parsing.** A hook can't catch every indirect route, such as `eval \"$cmd\"`, a variable holding the path, `find ~ -delete`, or `python -c \"shutil.rmtree(...)\"`. I'd have it block the direct `rm` forms and also fail closed on anything it can't resolve, such as an unexpanded variable in an `rm -rf` target. A deny rule can sit alongside as a second layer.\n2. **The scope needs your call.** Do you mean `$HOME` itself only, or anything under it, like `~/Projects/foo`? The second reading would block ordinary cleanups, including scratch dirs under this job's path. I'd suggest blocking `$HOME` itself and its immediate children. Deeper paths would need a separate rule.\n\nI haven't looked at your current `settings.json` or hooks, so I can't say whether a Bash hook already exists to extend. Tell me the scope and I can draft the script and registration as a spec.",
+  "costUsd": 0.07949529999999999
+}

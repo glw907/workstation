@@ -1,0 +1,22 @@
+{
+  "skillName": "vps-conventions",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "We want to add the `jq` package to the cloud-init user-data.yaml that provisions our RHEL-family VPS boxes. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; change nothing.",
+  "started": "2026-11-22T02:02:39Z",
+  "seconds": 23.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "result": "I couldn't find the file. Nothing in this directory matches `*user-data*`, and I don't have permission to read `~/Projects`. So this is the general RHEL-family plan, not one tied to your repo. If you grant read access, I can check it against the actual file and your host list.\n\n## 1. Check the package name first\n\nRun this on one existing box, or on a fresh instance built from the same image and release:\n\n```bash\ndnf info jq                                  # name, version, and which repo has it\ndnf repoquery --whatprovides /usr/bin/jq     # confirms the package that ships the binary\ndnf repolist                                 # confirms that repo is enabled\n```\n\nWhat to expect:\n- **RHEL, Rocky and Alma 8, 9 and 10:** the package is `jq` from the **AppStream** repo. That repo is on by default, so you don't need EPEL.\n- **RHEL 7 and CentOS 7:** `jq` lives only in EPEL. If anything that old is still running, cloud-init would have to add EPEL first.\n- **RHEL proper (not Rocky or Alma):** AppStream only resolves if the box is registered with a subscription. A box that isn't registered at boot fails to install the package.\n\nCheck the name on every major release you run, because cloud-init fails the install if the name doesn't resolve.\n\n## 2. The user-data change\n\nAdd `jq` to the existing `packages:` list. Then check the file with `cloud-init schema -c user-data.yaml` (`cloud-init schema --config-file` on older versions). Keep `package_update: true` if it's already there.\n\n## 3. The servers already running don't get it from this change\n\ncloud-init's package module runs **once per instance**, on first boot. Editing the user-data, or even changing it at the provider, does nothing on a box that has already booted. Many providers only apply new user-data when you rebuild the server anyway.\n\nSo existing boxes need a separate step:\n\n```bash\nsudo dnf install -y jq\n```\n\nRun it over SSH, or from whatever tool you already use on the fleet (an Ansible ad-hoc command or a playbook task). It's safe to run again, since dnf does nothing if `jq` is already installed.\n\n**Don't** use `cloud-init clean && reboot` (or `--reboot`) to force a re-run. That re-runs every first-boot module: SSH host keys get regenerated, users and `write_files` get applied again, and so on. That's far more risk than one package is worth.\n\n## 4. Verify\n\n- **Existing boxes:** run `rpm -q jq && jq --version` on each.\n- **A new box built from the updated user-data:** run `cloud-init status --long` and check that it says `done` with no errors, then search `/var/log/cloud-init-output.log` for `jq`, then run `rpm -q jq`.\n\n## 5. Keeping them in sync\n\nFrom now on, every package added to user-data needs this same manual step on the running fleet. If that happens often, the cleaner fix is a package list that your config management applies to all boxes, new and old. cloud-init would then only do first-boot work.",
+  "costUsd": 0.2083832
+}

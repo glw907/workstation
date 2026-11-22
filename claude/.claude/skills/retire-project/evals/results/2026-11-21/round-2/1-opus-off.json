@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:05:54Z",
+  "seconds": 21.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"site-staging|retire\", \"path\": \"/var/home/glw907/.claude/docs\", \"output_mode\": \"content\", \"-i\": true, \"head_limit\": 40}"
+    }
+  ],
+  "result": "`/retire-project` isn't installed in this session, so it did not run. Below is the dry-run plan written by hand. I made no live calls and deleted nothing. I also couldn't read the local estate inventory (`~/.claude/docs/cloudflare-estate-inventory.md`) because that read was declined. So every ID and name in angle brackets is a placeholder that step 0 fills in.\n\n## Dry run: retire `site-staging`\n\n### 0. Inventory (read-only, the first thing a real run does)\n- **Worker:** `wrangler deployments list --name site-staging`, and its bindings from the repo's `wrangler.toml` or the API. Note every binding (D1, KV, R2, secrets, Durable Objects, service bindings), not just the ones you named.\n- **D1:** `wrangler d1 info <db-name>` gives the database's UUID, size, and last-write time.\n- **Custom domain:** `GET /accounts/<acct>/workers/domains?service=site-staging` gives the hostname, zone, and domain ID.\n- **Dependents:** check for anything still pointing at the Worker or the hostname:\n  - service bindings from other Workers\n  - cron triggers and routes\n  - Access applications on the hostname\n  - CI workflows that deploy `site-staging`\n  - DNS records beyond the custom-domain record\n  - links in the site repo's docs or README\n- **Secrets:** run `wrangler secret list --name site-staging` and record the names only. Find each one's source in the age store, `~/.local/secrets`, and Proton Pass, so none of them is left orphaned.\n\n**Gate:** stop if a production Worker binds to this D1 database or this Worker, or if the hostname is shared.\n\n### 1. Back up first (reversible)\n- `wrangler d1 export <db-name> --remote --output site-staging-<date>.sql`. Store the file somewhere durable that you choose, not in this scratch directory.\n- Save the Worker's current script and its config (bindings and vars) alongside it.\n- D1 Time Travel only covers about 30 days and stops applying once the database is deleted. The export is the real backup.\n\n### 2. Cut traffic (reversible)\n- Detach the custom domain: `DELETE /accounts/<acct>/workers/domains/<domain-id>` with curl and `$CLOUDFLARE_API_TOKEN`, because the MCP token can't write Workers domains.\n- Confirm the hostname no longer serves the Worker, and that Cloudflare removed the DNS record it manages for the domain.\n- Optional soak: leave the Worker up with no route for a short window and watch for complaints or errors.\n\n### 3. Remove CI and secrets\n- Remove or disable the GitHub Actions workflow and the deploy job that target `site-staging`, through a PR in the site repo.\n- Delete the Actions secrets that only this staging deploy used.\n- Retire the Worker's secrets at their sources. Mark or remove the Proton Pass items through `claude-pass`, and the age-store entries.\n\n### 4. Delete (irreversible: needs your explicit go-ahead)\n- `wrangler delete --name site-staging`\n- `wrangler d1 delete <db-name>`\n- Any other resources from step 0 that only staging used, such as KV namespaces or R2 buckets.\n\n### 5. Close out the records\n- Update the estate inventory doc and any household-it runbook entry, through the `runbook` skill.\n- Remove the staging references from the site repo's docs and `wrangler.toml`, for example an `[env.staging]` block.\n- If the site has an initiative record, log the retirement there with `log-project`.\n\n### Rollback\n| After step | How to undo |\n|---|---|\n| 2 | Re-attach the custom domain. |\n| 3 | Restore the workflow from git and re-set the secrets from the store. |\n| 4 | Redeploy the saved script and recreate the D1 database with `wrangler d1 execute <db-name> --remote --file site-staging-<date>.sql`. The new database gets a new UUID, so bindings need updating. |\n\nWhen you want it run for real, say so. I'll do step 0 read-only and come back with the filled-in names before anything in steps 2 to 4 changes.",
+  "costUsd": 0.17791800000000002
+}

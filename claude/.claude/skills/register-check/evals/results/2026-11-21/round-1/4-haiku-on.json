@@ -1,0 +1,22 @@
+{
+  "skillName": "register-check",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "How many words are in draft.md in this folder? Just give me the count.",
+  "started": "2026-11-22T02:22:39Z",
+  "seconds": 6.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Read"
+  ],
+  "result": "76",
+  "costUsd": 0.0045670400000000005
+}

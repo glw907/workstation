@@ -97,9 +97,9 @@ regenerate the index with `scripts/index`. Commit the record and the index
 together on a branch, and open a PR rather than pushing to main. If backlog items
 changed in another repo (new `#initiative:<id>` tags), commit that file there.
 
-A pass writes its record once, when the planner commits the design, plan, and prompts, and not
-again at each task. A status change, such as a pass landing or the initiative closing, still goes
-through this skill.
+A spec writes its record once, when the session that wrote it commits the spec, and not again at
+each task. A status change, such as a task's pull request merging or the initiative closing, still
+goes through this skill. Specs and tasks follow `building-from-specs`.
 
 ## Notes
 

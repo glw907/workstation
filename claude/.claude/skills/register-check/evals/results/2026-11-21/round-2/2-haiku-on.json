@@ -1,0 +1,60 @@
+{
+  "skillName": "register-check",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "draft.md here is a cairn docs page that Geoff will read next. Give it the full four-gate prose review before he does, and report what you find. Findings only, no edits.",
+  "started": "2026-11-22T02:58:19Z",
+  "seconds": 21.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "register-check"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/register-check"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"register-check\", \"args\": \"draft.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"draft.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \".vale.ini\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/draft.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \".claude/**/*\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"cairn-register-editor|docs-register\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on\", \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "The four-gate review of `draft.md` ran, but only partly. Gate 1 (Vale and tellgrader) never ran, and Gate 2 (the register editor) was a manual read against the standard, not the editor's briefs. The review ran in this tree, which has no `.vale.ini`, no `cairn-register-editor` agent, and no `docs-register.md`. Nothing was edited.\n\n**Fix before Geoff reads it**\n\n1. **Contrast frame** (\"isn't just a content system, it's a seamless way to publish\"). This is an \"isn't just X, it's Y\" construction, and it has a comma splice. Delete it, or state the fact: \"Cairn publishes a page from the admin.\"\n2. **Connector opener** (\"Moreover, it empowers every editor...\"). Cut the sentence.\n3. **Virtue and marketing claims** (\"empowers every editor to ship robust, world-class pages in minutes\"). These are unsupported (\"every editor\", \"in minutes\") and use slop vocabulary. The next paragraph already shows the real flow, so cut this.\n4. **Link text** (\"Click here to read more about builds\"). \"Click here\" breaks the link-text rule, and the link has no target. Use something like \"For details, see [How builds work]\", pointing at the real builds page. The reviewer did not invent a URL, so one needs to be supplied.\n5. **Unlinked vendor name** (\"Cloudflare\" at first mention). Link it only if house style links vendors. This one is borderline.\n\n**Needs Geoff's call or a source (Gate 3)**\n\n6. **\"first released in 2019\"** and **\"used by over ten thousand sites.\"** Nothing in this tree supports either. The site count is the more likely fabrication. Keep them only with a source. Otherwise cut the paragraph, which is also off-topic for a task page.\n7. **\"about a minute later.\"** This depends on the build time. Measure it or cite the documented time, or write \"when the build finishes.\"\n8. **\"select **Publish**\".** Confirm the button label matches the admin UI exactly.\n\n**Not checked**\n\n- Sibling pages (README, why-cairn, editor-welcome, docs index) are not in this tree, so internal links and cross-page consistency are unverified.\n- Vale and tellgrader did not run, so Gate 1 has no mechanical result.\n\nThe reviewer's suggested rewrite of the opening is:\n\n```\n# Publishing a page\n\nTo publish a page, open the admin, choose the page, and select **Publish**. The site rebuilds on\nCloudflare, and the new version goes live when the build finishes. For details, see [link to the builds page].\n```\n\nFor a complete review, rerun `register-check` in the cairn repo, where Vale, tellgrader, and the register editor are available. Items 4, 7, and 8 need answers before the rewrite can be finalized.",
+  "costUsd": 0.07496405
+}

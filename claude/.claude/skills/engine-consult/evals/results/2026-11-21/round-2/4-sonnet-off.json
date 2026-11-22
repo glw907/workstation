@@ -1,0 +1,26 @@
+{
+  "skillName": "engine-consult",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Explain the difference between `git merge` and `git rebase` in two short paragraphs, with one sentence on when to prefer each.",
+  "started": "2026-11-22T02:46:11Z",
+  "seconds": 3.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`git merge` combines two branches by creating a new merge commit that has both histories as parents. The existing commits stay untouched, so the history shows exactly what happened and when, including the points where branches diverged and rejoined. `git rebase` instead replays your branch's commits one by one on top of another branch's tip, rewriting them as new commits with new hashes. The result is a straight, linear history, but the original commits are replaced.\n\nPrefer merge for shared or public branches, where you must not rewrite commits others may have based work on. Prefer rebase for cleaning up your own local feature branch before sharing it, so the history stays linear.",
+  "costUsd": 0.0652055
+}

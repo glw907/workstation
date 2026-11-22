@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Auto mode keeps denying an ssh command that deletes old upload files on one of our servers. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+  "started": "2026-11-22T02:03:13Z",
+  "seconds": 7.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "**Don't add a broad ssh allow rule.** An `ssh` allow rule lets any remote command run without a prompt, not just the cleanup. Auto mode is denying this because it's a remote, irreversible delete, and a blanket rule would also cover commands you never reviewed.\n\nBetter options, from most to least preferred:\n\n1. **Split the job into a dry run and a delete.** Claude runs a read-only listing first (matching paths, count, total size, oldest and newest dates). You review that output, then approve the delete as a separate step. This follows your rule to show a dry run before any destructive op.\n2. **Use a narrow wrapper script.** Put a small script in `~/.dotfiles/bin/.local/bin/` that takes no free-form input. It would hard-code the host and upload directory, require an age threshold, default to dry-run, and delete only with an explicit flag. Then allow only that script by name in settings.json. This is the most durable fix because each future cleanup is reviewed once, not every time.\n3. **Run the delete yourself.** If it's a one-off, run the reviewed command in your own terminal. That avoids a permission rule entirely.\n\nBefore any of these, confirm two things: the delete doesn't remove files that something still references, and there's a backup or retention rule for uploads. If you share the exact command and the denial text, I can say which option fits it better. I haven't changed anything.",
+  "costUsd": 0.00432262
+}

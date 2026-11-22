@@ -1,0 +1,37 @@
+{
+  "skillName": "proton-pass",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I need to store a new Resend API key that the 907-life Worker uses. Which Proton Pass vault does it go in, what should the item be titled, and how would Claude write it without the value reaching the transcript? Plan only; don't run anything.",
+  "started": "2026-11-22T02:47:18Z",
+  "seconds": 19.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"proton-pass\"}"
+    }
+  ],
+  "result": "**Vault:** `Projects`. The skill's vault map puts Resend and the sites there, Claude has editor access to it, and projects get folders rather than vaults. So the item goes in the `907-life` folder inside `Projects`.\n\n**Title:** `Resend API key (907-life)`. The naming rule is system, then secret, then scope, with the scope in a trailing parenthesis. A secret field on the item gets a sentence-case title, such as `API key`.\n\n**Note** (technical vaults use the full template; keep only the lines a source supports):\n```\nFor: Sending mail from the 907-life site\nUsed by: 907-life Worker (Workers secret <name from wrangler config>)\nRotate: <only if Resend's docs or the repo say>\nRecovery: Resend dashboard, regenerate under the Resend account item\nReviewed: 2026-11-21\n```\n\n**How Claude would write it without the value reaching the transcript:**\n\n1. **Get the value from you.** Claude launches `secret-receive RESEND_API_KEY`, and you type the key into its dialog, not into chat. `Projects` is a vault Claude's agent can reach, so the `--pass` variant isn't needed.\n2. **Record it in the age store.** CLAUDE.md says a new long-lived secret starts in the workstation age store, not as a loose file or only a `wrangler secret put`. So the value goes through `~/.dotfiles/scripts/secrets/secret-set.sh`.\n3. **Check for duplicates.** Before creating anything, Claude looks in `Projects` for an existing Resend key item, reading names and field types only. If one exists, this is a rotation, and Claude would recreate that item rather than add a second one.\n4. **Create the Proton Pass item.** Claude builds a JSON template with the title, the note, and the key in `extra_fields` as `{\"kind\": \"hidden\", \"title\": \"API key\", \"value\": ...}`. The value is filled in from the store inside a pipe, never typed into the command. The template then goes in on stdin:\n   ```\n   CLAUDE_PASS_REASON=\"store new Resend API key for 907-life Worker\" \\\n     claude-pass item create login --vault-name Projects --from-template -\n   ```\n   `item update --field` is ruled out because it puts the value in the command line. If `item create` can't target a folder, a following `claude-pass folder move` or `item move` puts the item in `907-life`. I'd check the exact flag before running it.\n5. **Push it to the Worker.** Claude pipes the value from the age store into `wrangler secret put <NAME>` in the 907-life repo, so it goes in on stdin and never appears in the command or the output.\n6. **Verify by name only.** Claude confirms the item exists and has the `API key` field, and that `wrangler secret list` shows the secret. Neither check displays the value.\n\nProton throttles an agent's logins after about four quick calls, so Claude keeps the `claude-pass` calls few and spaces them out. If a login fails, it waits 25 minutes before trying again. None of this needs `pass-sitting`, since it's one new item and not a bulk edit. Nothing has been run.",
+  "costUsd": 0.1842016
+}

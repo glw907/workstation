@@ -1,0 +1,37 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:52:09Z",
+  "seconds": 12.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/4-haiku-off\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"{README*,wrangler.*,package.json,*.md}\", \"path\": \"/var/home/glw907/Projects\"}"
+    }
+  ],
+  "result": "I haven't changed anything. This directory is a scratch folder with no repo in it, and I don't have access to `~/Projects` yet, so I can't see the demo site's stack. The plan below is generic, and I'd firm it up once I can read the repo.\n\n**Before any teardown**\n1. Identify the repo and what it runs on: host (Cloudflare Workers or Pages, another platform), custom domains, DNS records, mail routes, Access apps, scheduled jobs, Workers secrets, Actions secrets, and any Google Sheets or Apps Script.\n2. Check the inventory docs. The `runbook` skill routes DNS and mail questions, and `~/.claude/docs/cloudflare-estate-inventory.md` covers the resources and tokens before anything gets touched.\n3. Decide with Geoff what the shutdown means: a 410 or redirect, or the domain lapses. Also decide whether the repo gets archived (recommended) or deleted, and whether data is kept.\n\n**Teardown, roughly in this order**\n1. Export any data that must survive (D1, KV, R2, Sheets). Take a snapshot first.\n2. Stop traffic: remove the custom domains and routes, then the DNS records that only the demo used.\n3. Remove scheduled triggers and cron jobs, and any uptime alerts that would now fire.\n4. Delete the Worker or Pages project, and the D1, KV, and R2 resources once the export is verified.\n5. Revoke the demo's tokens and API keys. Remove the Workers and Actions secrets. Update the matching Proton Pass items through `claude-pass`, and don't delete them until the revocation is confirmed.\n6. Remove Access apps and any Apps Script or clasp projects tied to the demo.\n7. Archive the GitHub repo, or delete it once Geoff confirms.\n8. Remove the local clone under `~/Projects` after running `claude-worktree-busy` on its path.\n9. Close its record in `~/Projects/initiatives` with `log-project`, if it has one.\n\n**Confirmations needed from Geoff** (these are hard to reverse, so I'd wait for his go-ahead on each)\n- Deleting the Worker, the data stores, the domain records, or the repo\n- Revoking tokens\n- Letting the domain lapse\n\nThe `maintenance-mode` skill covers finished projects that stay live. A shutdown is a separate step, so it doesn't apply directly, but it may help with the close-out.\n\nTo turn this into a concrete checklist, I need the repo's location. Once you grant access to `~/Projects`, or point me to the repo, I'll inventory what it actually uses.",
+  "costUsd": 0.00176386
+}

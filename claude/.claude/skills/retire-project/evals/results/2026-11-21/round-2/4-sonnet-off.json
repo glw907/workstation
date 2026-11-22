@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:10:27Z",
+  "seconds": 9.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "I don't know which demo site this is yet, so this is a generic outline based on how your estate is set up. Tell me which one and I'll check it against `~/.claude/docs/cloudflare-estate-inventory.md`, the runbook, and the repo itself. I'd change nothing until you approve.\n\n**1. Inventory (read-only)**\n- Find where it's hosted (Worker, Pages, or something else) and which routes, custom domains and DNS records point at it.\n- List what hangs off it: D1, KV, R2, Durable Objects, Access apps, Turnstile widgets, email routing, and scheduled triggers.\n- List its secrets in Workers secrets, Actions secrets, `~/.local/secrets`, the age store and Proton Pass items.\n- Check what else references it: other repos, links from live sites, the runbook, initiatives, and dotfiles manifests.\n- Run `claude-worktree-busy` on the repo, and check for open PRs, unmerged branches, and uncommitted or unpushed work.\n\n**2. Preserve anything worth keeping**\n- Take a final backup of any data in D1, KV or R2 that you might want later.\n- Make sure the repo has no unique content, such as notes or assets that exist nowhere else.\n\n**3. Take it offline (reversible steps first)**\n- Remove the DNS records and custom-domain routes. I'd do this first and wait briefly to confirm nothing breaks.\n- Delete the Worker or Pages project, then the Access apps and Turnstile widgets.\n- Delete the data stores last, once the backup is confirmed.\n\n**4. Clean up credentials**\n- Revoke or delete any tokens made just for this site.\n- Remove its Workers and Actions secrets.\n- Remove the age store entries.\n- Retire or archive the Proton Pass items.\n\n**5. Retire the repo**\n- Archive the GitHub repo, which is reversible, rather than deleting it. Disable its Actions and Dependabot or Renovate first.\n- Remove the local clone from `~/Projects/` and any worktrees.\n- Delete its Claude project memory and any related scheduled routines.\n\n**6. Update the records**\n- Remove or update the runbook and estate inventory entries.\n- Close the initiative record with `log-project`.\n- Reconcile the manifests with `check-drift`.\n\nEach destructive step (3 to 5) would get a dry-run listing and your go-ahead before I run it. Does that fit, and which site is it?",
+  "costUsd": 0.07483150000000001
+}

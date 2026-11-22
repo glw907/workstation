@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T04:02:40Z",
+  "seconds": 10.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Question only, no changes: where should a rule that blocks every Bash call running `rm -rf` on a home folder live (CLAUDE.md, a skill, a hook, or a permission deny)? Geoff wants it blocked with no exceptions.\"}"
+    }
+  ],
+  "result": "**Recommendation: a `PreToolUse` hook on the Bash tool.** It belongs in `~/.claude/settings.json` (user scope) so it applies to every session on this workstation.\n\n**Why a hook:** Anthropic's features overview says that if a rule must hold every time, it should be a hook rather than a prompt instruction (https://code.claude.com/docs/en/features-overview). A hook runs on each Bash call and can deny it with exit code 2, so the block doesn't depend on Claude remembering the rule.\n\n**Why not the other options:**\n- **CLAUDE.md:** It is read as guidance, and nothing enforces it. A \"no exceptions\" rule there is only a request. CLAUDE.md should hold facts that apply every turn, such as which host this is.\n- **A skill:** Skills are reference material Claude loads when it needs them. They don't intercept commands, so this would not block anything.\n- **A `permissions.deny` rule:** It is enforced, but it matches command text. It is easy to get around with `rm -fr`, `rm -r -f`, `\\rm`, or a variable such as `rm -rf \"$D\"`. It can serve as a backup for the obvious forms, but it shouldn't be the main control.\n\n**What the hook would do:**\n- Match Bash commands containing `rm` with recursive and force flags, in any order or spelling.\n- Deny when a target is a home folder: `~`, `~/`, `$HOME`, `${HOME}`, `/var/home/glw907` (and its subdirectories, if you want the rule broader than the root), and `/home/*`.\n- Print a short reason on stderr so Claude knows why it was blocked.\n\n**Limits to know about:**\n- Parsing shell text can't catch every form. For example, `D=$HOME; rm -rf \"$D\"` may get through unless the hook also flags expansions of home-related variables. The hook can be strict and deny anything it can't resolve when `rm -rf` appears, which is safer but may block some legitimate commands.\n- The hook guards against Claude's Bash tool calls only. It doesn't stop you from running the command in your own terminal.\n- It is local to this workstation. It won't follow the repo if you clone it elsewhere.\n\n**Next step if you want it:** I'd add a user-scope `PreToolUse` hook script in `~/.dotfiles/bin/.local/bin/` (per the dotfiles rules, stowed with `stow -R bin`), wire it through the `update-config` skill, and add a `permissions.deny` backup for the plain `rm -rf ~` forms. I'd then test it with harmless commands and report the results. Say the word and I'll build it. I haven't changed anything yet.",
+  "costUsd": 0.00179922
+}

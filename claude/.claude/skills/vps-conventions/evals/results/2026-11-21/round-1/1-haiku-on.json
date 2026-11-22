@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I'm writing a systemd service and timer for a nightly backup script on our AlmaLinux VPS. It needs a lock file so two runs never overlap. Where should the lock file live, and what should the service unit carry? Answer with the unit text; don't create or change any file.",
+  "started": "2026-11-22T01:59:40Z",
+  "seconds": 11.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "**Lock location:** `/run/backup-nightly/backup.lock`. `/run` is a tmpfs, so a stale lock can't survive a reboot. Don't use `/tmp`, which is world-writable and open to symlink tricks. `RuntimeDirectory=` creates the directory with the right owner each run.\n\n**Mechanism:** use `flock(1)` rather than a \"file exists\" check. The kernel releases the lock when the process exits, even after a crash, so nothing is left stale.\n\n**Service unit** (`/etc/systemd/system/backup-nightly.service`):\n\n```ini\n[Unit]\nDescription=Nightly backup\nWants=network-online.target\nAfter=network-online.target\n\n[Service]\nType=oneshot\n# User=backup\nRuntimeDirectory=backup-nightly\nRuntimeDirectoryMode=0750\n# -n: exit at once if another run holds the lock, instead of queueing\nExecStart=/usr/bin/flock -n /run/backup-nightly/backup.lock /usr/local/sbin/backup-nightly.sh\n# flock exits 1 when it skips a run; count that as success, not a failure\nSuccessExitStatus=1\nTimeoutStartSec=6h\n```\n\nNotes:\n\n- **systemd already blocks overlap** for a `Type=oneshot` unit that is still active, so the timer alone won't start a second copy. The lock covers runs started outside systemd, such as a manual `systemctl start` racing a script run by hand.\n- **If you also run the script by hand,** put the same lock inside the script so both paths share it:\n  ```bash\n  exec 9>/run/backup-nightly/backup.lock\n  flock -n 9 || { echo \"backup already running\" >&2; exit 1; }\n  ```\n  Create `/run/backup-nightly` first, or let the service create it. The `flock` in `ExecStart` and the in-script lock use the same file, so they exclude each other.\n- **`SuccessExitStatus=1` hides a skipped run as success.** Remove it if you want skipped runs to show as failed in `systemctl status`.\n- **The timer unit is separate.** It needs `OnCalendar=` and `Unit=backup-nightly.service` (or the matching `.timer` name). I haven't written it here since you asked only for the service.\n\nI haven't created or changed any file.",
+  "costUsd": 0.004333750000000001
+}

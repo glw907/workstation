@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:46:16Z",
+  "seconds": 13.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Dry run only: nothing was looked up live and nothing was deleted.**\n\n`/retire-project` isn't installed in this session, so I treated your message as a plain request and wrote the plan by hand. The steps below are what I would run, in order, once you approve. Each live check is a step to run then, not something I've checked now.\n\n## Scope\n- Worker: `site-staging`\n- D1 database bound to it (name not yet confirmed)\n- One custom domain attached to it (name not yet confirmed)\n\n## Plan\n\n**Phase 0: Read-only checks (no changes)**\n1. Confirm `site-staging` is the staging Worker for the site and not a production one with a similar name. Check its repo's `wrangler.toml`, and whether any CI workflow deploys to it.\n2. List its bindings. Confirm the D1 database is bound only to this Worker. If another Worker or a cron uses that D1, stop and ask.\n3. Confirm the custom domain and what it resolves to. Check for any other DNS record, route, or Access application pointing at it.\n4. Check the estate inventory (`~/.claude/docs/cloudflare-estate-inventory.md`) and the household-it runbook for entries about this staging site, and for any credential that exists only for it.\n5. Check whether anything else still depends on the staging URL, such as links, test accounts, or docs.\n\n**Phase 1: Backup (reversible)**\n6. Export the D1 database to a local file with `wrangler d1 export`. Keep it outside the repo. Verify the file is non-empty and that the row counts look right.\n\n**Phase 2: Stop traffic (reversible)**\n7. Detach the custom domain using the Workers domains API via curl with `$CLOUDFLARE_API_TOKEN` from `~/.local/secrets`. The MCP token is read-only for Workers-domain writes, so don't use it here. Remove the DNS record only if it is a leftover that the domain removal didn't clean up.\n\n**Phase 3: Delete (irreversible, each step needs your go-ahead)**\n8. Delete the Worker with `wrangler delete --name site-staging`. Always pass `--name`.\n9. Delete the D1 database only after the backup in step 6 is verified.\n10. Remove the Worker's secrets with the Worker. Leave the age-store and Proton Pass entries alone. Report them as stale but don't delete them unless you ask.\n\n**Phase 4: Clean up references (reversible, via commit)**\n11. Remove the staging config from the site repo (`wrangler.toml` env block, CI workflow) in a branch and pull request, not a direct push.\n12. Update the estate inventory and runbook entries.\n\n**Verification**\n13. Confirm the Worker, D1, and domain return not-found through the API, and that the domain no longer resolves.\n\n## Open questions before execution\n- Which site repo owns `site-staging`?\n- Should the D1 backup be kept, and for how long?\n- Should the Proton Pass items for the staging site be retired too, or kept for reference?\n\nOnce you confirm the site and approve Phase 0, I'll run the read-only checks and report back before any change is made.",
+  "costUsd": 0.00133036
+}

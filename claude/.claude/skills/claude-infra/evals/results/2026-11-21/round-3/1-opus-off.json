@@ -1,0 +1,53 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:18:03Z",
+  "seconds": 26.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/skills\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*release*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-off\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \".claude/skills/*/SKILL.md\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-off\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \".claude/skills/**/SKILL.md\", \"path\": \"/var/home/glw907/Projects/cairn-cms\"}"
+    }
+  ],
+  "result": "I couldn't open the cairn-cms checkout (permission was denied on `~/Projects/cairn-cms`), so I haven't confirmed whether it already has a release doc. Checking that is the first step below. The rest of this plan comes from how the `cairn-pass` skill splits the work.\n\n## Where it should live\n\n**As a skill in the cairn-cms repo**, under `.claude/skills/` in that checkout. That's where `cairn-running-passes` already lives. You could add it as a section of `cairn-running-passes` or as its own `cairn-release` skill. I'd make it its own skill, with a description like \"Use when cutting, tagging, or publishing a cairn release.\" That way it loads whenever a release comes up, and you don't have to paste it.\n\nThe reason it belongs in the repo: `cairn-pass` says the repo skill holds \"what a clone needs,\" and the workstation overlay adds \"only Geoff's operation.\" Release steps describe the repo, so any clone or worktree should have them.\n\n**One exception:** if any step only makes sense on this workstation, it goes in the `cairn-pass` overlay as a short \"Release\" heading that points to the repo skill. Examples would be a `claude-pass` credential lookup, a `ci-green` watch, or a `cairn-run-gate` lane.\n\n**Places it shouldn't go:**\n- **Memory:** that's for facts and preferences, not procedures the repo can record.\n- **CLAUDE.md:** it would load in every session in every repo just to serve one occasional task.\n- **A loose doc under `~/.claude/docs`:** nothing would load it automatically.\n\n## How the change would land\n\n1. **Find what already exists.** Search the cairn-cms checkout and `cairn-running-passes` for any existing release steps, so the new skill replaces or links them instead of duplicating them. I'd need read access to `~/Projects/cairn-cms` for this.\n2. **Split the five steps** into repo-general and workstation-only, as above.\n3. **Write a short spec under `building-from-specs`.** Adding a new skill is more than a one-sentence change, so it doesn't qualify as a direct change. The spec would have one task in cairn-cms, plus a second small one in `cairn-pass` if anything belongs in the overlay. Your global CLAUDE.md also sends Claude Code tooling changes through `claude-infra`, but that skill isn't in this session's list. The build session would need to find it, or you'd confirm that the spec flow is enough.\n4. **Build it as a cairn pass.** Work happens in a worktree and runs the gate through `cairn-run-gate`. A fresh subagent reviews the skill against the spec, it goes up as a draft PR with a `ci-green` watch, and it merges only after you approve the PR by number.\n5. **Test that it triggers.** In a fresh cairn-cms session, ask \"cut a release\" without pasting anything and check that the skill loads and walks through all five steps.\n\nBefore I can write the spec, I need two things from you: the five steps as you paste them, and read access to the cairn-cms checkout for step 1.",
+  "costUsd": 0.201697
+}

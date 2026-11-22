@@ -1,0 +1,27 @@
+{
+  "skillName": "register-check",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "draft.md here is a cairn docs page that Geoff will read next. Give it the full four-gate prose review before he does, and report what you find. Findings only, no edits.",
+  "started": "2026-11-22T02:17:33Z",
+  "seconds": 34.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "standards:content-review",
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Bash",
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "**Four-gate review of `draft.md`: it fails the unverified-claims gate, and the banned-word gate is a probable hit. No edits made.**\n\nI read the file (10 lines) and the quoted lines match. Limits: I could not read the Google developer-docs voice file, the cairn docs overlay, or the shared content-method file, because read access to the workstation docs folder was denied. The banned-word and style findings below rest on the writing-voice shape rules and Google developer-docs conventions, not on those exemplars. Vale did not run.\n\n**Gates**\n\n- **Banned words: probable hit.** \"seamless\", \"robust\", \"world-class\", \"empowers\", and the connective \"Moreover\" are standard tells. The method's list was not readable, so confirm against it.\n- **Unverified or false claims: hit.** Findings 4 to 6. Nothing in the draft or the workstation supplies a source for them.\n- **Safety or standard-of-care promise:** none.\n- **Cost misstatement:** none.\n- **`[ASK]` markers:** none. The unverified claims would ship without one.\n\n**Findings, cheapest fix first**\n\n1. **Line 7, \"Click here to read more about builds.\"** Non-descriptive link text, and no link is actually attached. Google's rule is descriptive link text. Replace with \"Read how builds work,\" with that phrase as the link.\n\n2. **Lines 3 to 4, the opener and \"Moreover, it empowers every editor to ship robust, world-class pages in minutes.\"** Banned connective, puffery, and an unsupported speed claim. The how-to paragraph already shows the process. Delete the sentence.\n\n3. **Line 3, \"Cairn isn't just a content system, it's a seamless way to publish.\"** This is the \"isn't just X, it's Y\" contrast frame, plus banned \"seamless\". It states no fact. Open with what the reader does, for example \"Publishing a page takes three steps.\"\n\n4. **Line 7, \"the new version is live about a minute later.\"** A timing promise with no source. Build time varies with site size. Keep \"goes live when the build finishes,\" and add \"about a minute\" only if a source confirms it. Otherwise mark `[ASK: typical build time]`.\n\n5. **Line 9, \"Cairn was first released in 2019.\"** Unverified and externally checkable. Mark `[ASK: first release year, with source]` or cut it. I have no evidence it is false, so I would not call it a fabrication.\n\n6. **Line 9, \"used by over ten thousand sites.\"** Unverified, and the highest-risk figure in the draft. The earlier content-review run called it likely fabricated and said Cairn has only a handful of house sites. I could not check that from here, so treat the figure as unverified rather than false. Cut it or mark `[ASK: verified site count and source]`.\n\n7. **Lines 9 to 10, the closing history line.** It reads as a tagline and ends the page on boasting rather than on the action. End on the Publish step or the builds link, and drop the history claim.\n\n**Possible rewrite once the gates clear** (the source facts are unchanged, the claims are cut or flagged)\n\n> To publish a page, open the admin, choose the page, and select **Publish**. The site rebuilds on Cloudflare, and the new version goes live when the build finishes. [Read how builds work.]\n\nRe-run Vale and check the method's banned-word list before this ships, since neither was available here.",
+  "costUsd": 0.08015682
+}

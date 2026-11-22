@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:04:44Z",
+  "seconds": 15.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Dry run: retire `site-staging`\n\n`/retire-project` is not installed in this session, so I treated this as a plain request. I did not run any live lookups or commands, and nothing was deleted. The plan below comes from general Cloudflare knowledge. Every name, ID, and binding has to be confirmed against the live account at execution time.\n\n## Unknowns to resolve first\n\n- The custom domain's hostname. You said \"one custom domain\" but didn't name it.\n- The D1 database name and ID, and the binding name the Worker uses for it.\n- Which repo holds the Worker's `wrangler.toml`, so its config can be cleaned up afterward.\n- Whether the staging hostname is behind a Cloudflare Access app.\n- Whether any other Worker or site calls `site-staging` through a service binding or a URL.\n- Whether the D1 data should be kept as a backup, and where it should go.\n\n## Steps, in order\n\n**1. Inventory (read-only, at execution)**\n- Confirm the Worker exists and list its custom domains, routes, bindings, cron triggers, and secrets.\n- Check the D1 database's size and whether anything else binds to it.\n- Check for a DNS record on the hostname and for an Access app that covers it.\n- Read `~/.claude/docs/cloudflare-estate-inventory.md` before touching any token or credential, as CLAUDE.md requires.\n\n**2. Dependency check**\n- Search the repos and the runbook for `site-staging`, its hostname, and its database name.\n- Confirm no other Worker has a service binding to it.\n- If anything depends on it, stop and report before continuing.\n\n**3. Backup (reversible step)**\n- Export the D1 database to a file outside any repo, for example with `wrangler d1 export <db> --remote --output <path>`.\n- Save a snapshot of the Worker's config and the custom-domain mapping.\n- The export contains site data, so store it with the same care as personal data and keep it out of git.\n\n**4. Stop traffic**\n- Remove the custom domain binding. The Workers Domains API is a write the MCP token can't do, so use curl with `$CLOUDFLARE_API_TOKEN` from `~/.local/secrets`.\n- Remove the Access app for the hostname if there is one.\n\n**5. Delete the Worker**\n- Run `wrangler delete --name site-staging`, and confirm it leaves no routes or domains behind. The `--name` flag is required so the folder's config doesn't pick the wrong Worker.\n- Worker secrets go with the Worker. Proton Pass items stay put: flag any staging credentials to you and don't delete them.\n\n**6. Delete the D1 database (irreversible)**\n- Run `wrangler d1 delete <db>` only after the backup from step 3 is verified.\n\n**7. Clean up**\n- Delete any DNS record left on the hostname.\n- Remove the Worker and D1 config from the repo, and update the estate inventory, runbook, and any initiative or backlog entries.\n\n## Gates\n\n- Steps 4 through 6 are destructive. Each one needs your go-ahead after the inventory and backup results are in front of you.\n- The D1 deletion can't be undone. Once the backup is verified, it is the point of no return.\n\n## What I need from you\n\n1. The hostname and the D1 database name, or permission to look them up at execution time.\n2. Whether to keep the D1 export, and where it should go.\n3. Go-ahead to proceed to steps 1 through 3 (read-only inventory and backup) when you're ready. I'll stop before steps 4 through 6 for a separate confirmation.",
+  "costUsd": 0.00483597
+}

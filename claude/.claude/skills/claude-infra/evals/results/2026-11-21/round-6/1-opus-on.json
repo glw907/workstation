@@ -1,0 +1,55 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:54:23Z",
+  "seconds": 27.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Plan only, no edits: Geoff keeps pasting the same five-step checklist for cutting a cairn release into chat. Where should it live and how would the change land?\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/**\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/pass-core/references\", \"output_mode\": \"content\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"~/.claude/skills/cairn-pass/*\"}"
+    }
+  ],
+  "result": "I didn't edit anything. I also couldn't check two things that affect the plan: the `cairn-pass` skill isn't in this scratch checkout, and you haven't given me the checklist text yet.\n\n## Where it should live\n\nMake it a skill you start yourself: **`/cairn-release`**, saved as `.claude/skills/cairn-release/SKILL.md` in the cairn-cms repo.\n\n- **A skill, not a CLAUDE.md line.** Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>) says reference material Claude \"needs sometimes\" belongs in a skill. CLAUDE.md is only for facts that matter on every turn, and a release checklist matters only when you cut a release. Skills are documented at <https://code.claude.com/docs/en/skills>.\n- **Only you start it.** I'd set `disable-model-invocation: true` so the skill runs only when you type `/cairn-release`, which is what pasting the checklist does now. Claude won't decide to start a release on its own.\n- **Saved in the cairn-cms repo, not your user folder.** Only cairn-cms uses the checklist, and our rules put repo-specific tooling in the repo. One exception: if a step uses something that exists only on this workstation, like the lane-aware gate wrapper, that step belongs in `cairn-pass`. The cairn-cms skill would then point to it instead of keeping a second copy.\n- **Hooks only if a step must never be skipped.** For example, \"never tag without a green gate\" could be enforced by a hook instead of just being written down. Everything else stays in the skill.\n\n## How the change lands\n\n1. Run `claude-worktree-busy` on cairn-cms and read its STATUS.\n2. A new skill is bigger than a one-sentence change, so it follows `building-from-specs`. The spec has one task: add the skill with your five steps exactly as you paste them. Nothing else goes in, and any extras get noted under \"Later\".\n3. A fresh session builds the skill under `/goal`, and a fresh subagent checks it against the spec.\n4. The PR's commits and description cite the skills page above. A skill we write ourselves doesn't need a manifest entry, but `claude-tooling-sync verify` still runs.\n5. The audit is `/skill-doctor` and Anthropic's `skill-creator`, and their output goes in the PR.\n6. You approve the PR by number and I merge it. Skills load right away, so no restart is needed.\n\n## What I need from you\n\nPaste the five-step checklist one more time, and say whether you want any step enforced by a hook rather than written into the skill.",
+  "costUsd": 0.09166540000000001
+}

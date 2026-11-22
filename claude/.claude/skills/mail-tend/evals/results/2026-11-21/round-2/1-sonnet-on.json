@@ -1,0 +1,51 @@
+{
+  "skillName": "mail-tend",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I tagged three messages Misfiled in Hylki. They're newsletters from news.example.org that keep landing in my Inbox. What would you change so this stops? Plan it out, but change nothing on ward yet.",
+  "started": "2026-11-22T03:11:48Z",
+  "seconds": 14.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"roles/mail-filters/data/*\", \"path\": \"/var/home/glw907/Projects/household-it\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"example\\\\.org\", \"path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters\", \"output_mode\": \"content\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"^## .*(mail-filters|quick lane)\", \"path\": \"/var/home/glw907/Projects/household-it/docs/systems/mail.md\", \"output_mode\": \"content\", \"-i\": true}"
+    }
+  ],
+  "result": "I couldn't diagnose anything yet. Reads of `~/Projects/household-it` were denied, and I have no shell here, so I couldn't run the `ssh ... mail-filters export` that lists the tagged messages. Nothing has been read or changed on ward, and the plan below comes from the mail-tend skill, not from your data.\n\n**What I expect the cause to be**\n\nA newsletter from a sender no rule knows reads as personal mail and falls through to the Inbox. The usual causes are:\n- `news.example.org` has no row in `categories.tsv`.\n- The newsletter has no `List-*`, `Precedence` or provider stamp header, so the script can't tell it is bulk mail.\n- The mail is forwarded through a SimpleLogin alias, so the From is at `simplelogin.co`. If so, the row must name the real sender, never `simplelogin.co`.\n\nI'll confirm which one it is from the three messages' headers and the preview verdict.\n\n**Plan**\n\n1. **Diagnose (read-only).**\n   - Run `claude-worktree-busy` on household-it, then cut a worktree from its default branch.\n   - List all `Misfiled` messages with `mail-filters export geoff`, and again with `--junk`.\n   - Check that all three are from `news.example.org` and find their Message-IDs.\n   - Run `scripts/mail-filters.sh preview` to see which step filed each one.\n   - Count how many other Inbox messages share the sender or cause, and report that number.\n2. **Fix with a data edit, not a rule change.** I'd add a `news.example.org` row to `categories.tsv`, in whichever newsletter or list category the file already uses. A single row fits here, so it should not need a template change. If the preview shows a header-based rule gap instead, I'd bring you a one-paragraph design before touching `geoff.sieve.in`.\n3. **Test.** Run `tests/sieve-run/run.sh` and the preview, read the move plan, and run the full gate with `bash scripts/check.sh </dev/null`.\n4. **Land it.**\n   - Commit the one data file by name and push to `main`.\n   - Run `scripts/apply.sh ward --apply`, then `--check`.\n   - Run `scripts/ward-mail-sort.sh install` and confirm its hash equals the plan's `script_sha256`.\n   - These are the only steps that change ward.\n5. **Report.** I'd give the plan's counts per destination and name the three messages. You would clear the `Misfiled` tag in Hylki yourself, because no helper removes it.\n6. **Re-sort only if you ask.** Existing newsletters stay in the Inbox unless you ask for a re-sort. If you do, I'd confirm the counts with you first, since a plan over 20 moves asks.\n\n**What I need from you:** permission to read `~/Projects/household-it`, and a shell for the ssh read on ward. Once I have both, I'll finish step 1 and confirm the exact row before you approve step 4.",
+  "costUsd": 0.10376959999999999
+}

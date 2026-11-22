@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T02:53:33Z",
+  "seconds": 15.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Use a `PreToolUse` hook on the `Bash` tool.** That's the only option here that the harness enforces. The other places are advisory.\n\n- **CLAUDE.md** is context the model reads and usually follows. Nothing stops it from running the command, so it can't guarantee \"no exceptions.\" It's still useful as a backstop: one line stating the rule keeps the model from looking for workarounds and explains the block when it fires.\n- **A skill** loads only when invoked, so it can't block anything on its own.\n- **A `PreToolUse` hook** runs before every Bash call, and a nonzero exit or a `deny` decision stops the call. A hook in `settings.json` applies in every project and isn't a matter of model judgment.\n\n**Recommended setup:**\n\n1. **A hook script** that reads the command from the hook's JSON input and denies it when it runs `rm` with recursive and force flags against a home target. Targets to cover: `~`, `~/...`, `$HOME`, `/home/glw907`, and `/var/home/glw907` (on Bluefin `/home` points to `/var/home`). Parse the flags properly so `rm -fr`, `rm -r -f`, and `rm --recursive --force` are all caught. Don't add an override variable, since that would be an exception. Put it in `~/.dotfiles/bin/.local/bin/` as stdlib-only Python run with `python3 -I`, then `stow -R bin`, per your dotfiles rules.\n2. **The hook entry** in your user `settings.json`, which is stowed from `~/.dotfiles`. Edit the dotfiles copy, not the symlink:\n   ```json\n   {\n     \"hooks\": {\n       \"PreToolUse\": [\n         {\n           \"matcher\": \"Bash\",\n           \"hooks\": [\n             { \"type\": \"command\", \"command\": \"python3 -I ~/.local/bin/block-home-rm.py\" }\n           ]\n         }\n       ]\n     }\n   }\n   ```\n3. **`permissions.deny` entries** such as `Bash(rm -rf ~/*)` and `Bash(rm -rf $HOME*)` as a cheap first layer. Their pattern matching is prefix-based, so they miss reorderings and variants. Treat them as backup, not the rule.\n4. **One CLAUDE.md line** stating the rule and pointing to the hook.\n\n**Limits you should know about:**\n\n- A command-text hook can't see what a script or interpreter does internally. `python3 -c \"shutil.rmtree(...)\"` or a script that runs `rm` gets through. Blocking that would need filesystem-level controls.\n- Claude could edit the hook or settings file itself. Settings edits normally prompt, but the only tamper-proof option is a managed policy at `/etc/claude-code/managed-settings.json`. On Bluefin, `/etc` changes go through `~/.dotfiles/bluefin/etc/` first, and that needs root.\n\n**Next step:** CLAUDE.md says changes to Claude Code tooling go through the `claude-infra` skill. I don't see that skill in my available list, so I'd check it exists before editing. I haven't changed anything, and I haven't read your existing `settings.json` or hooks. If you want, I can start with the hook script and its tests, then wire it into settings after you approve.",
+  "costUsd": 0.00467337
+}

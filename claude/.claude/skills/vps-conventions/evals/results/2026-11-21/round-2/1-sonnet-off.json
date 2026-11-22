@@ -1,0 +1,38 @@
+{
+  "skillName": "vps-conventions",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "backup.service in this folder runs our nightly backup on the AlmaLinux VPS, and a timer fires it. The backup script takes a lock so two runs never overlap. Read the unit and tell me where the lock file should live and what the service unit should carry. Give the revised unit text; don't edit the file.",
+  "started": "2026-11-22T02:36:15Z",
+  "seconds": 14.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-off/backup.service\"}"
+    }
+  ],
+  "result": "The lock file belongs where the unit already points it, `/run/app-backup/backup.lock`. The unit has two gaps around that path, and a few other settings are missing.\n\n**Where the lock lives**\n\n`/run` is a tmpfs, so a crash or reboot can't leave a stale lock behind. `RuntimeDirectory=app-backup` makes systemd create `/run/app-backup` before `ExecStart`. The script should take the lock with `flock` on that path, which the kernel releases when the process dies. It shouldn't test for the file's existence. The unit has no `User=`, so it runs as root and can write there. `/tmp` is the wrong place because other users can tamper with it, and `/var/lib` is wrong because a lock must not survive a reboot.\n\n**What the unit should carry**\n\n- **`RuntimeDirectoryPreserve=yes`:** By default systemd deletes `/run/app-backup` when the oneshot stops. Suppose someone runs the script by hand while the timer run is ending. Then a later run could create a new lock file with a different inode and lock it while the old one is still held. Keeping the directory avoids that.\n- **`RuntimeDirectoryMode=0700`:** Only root needs the directory.\n- **`Wants=network-online.target`:** `After=` only orders units. Without `Wants=`, nothing pulls the target in.\n- **`TimeoutStartSec`:** A oneshot has no start timeout by default. A hung backup would hold the lock forever, and every later timer run would skip or queue behind it. The value below is a placeholder, so set it to something comfortably above your longest normal run.\n- **`[Install]`:** I left it out, since the timer fires the service and nothing needs to enable it.\n\nSystemd won't start a second instance of the same unit while one runs. The `flock` in the script is what covers a manual run overlapping a timer run.\n\n**Revised unit**\n\n```ini\n[Unit]\nDescription=Nightly backup of the app data\nWants=network-online.target\nAfter=network-online.target\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/app-backup\nRuntimeDirectory=app-backup\nRuntimeDirectoryMode=0700\nRuntimeDirectoryPreserve=yes\nEnvironment=BACKUP_LOCK=/run/app-backup/backup.lock\nTimeoutStartSec=4h\n```\n\nI haven't seen `/usr/local/bin/app-backup`, so I can't confirm it actually uses `flock` on `$BACKUP_LOCK`. If it checks whether the file exists instead, that is the bug to fix first. If you point me at the script, I'll check it.",
+  "costUsd": 0.08686490000000001
+}

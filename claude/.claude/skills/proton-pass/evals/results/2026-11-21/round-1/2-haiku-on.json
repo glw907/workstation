@@ -1,0 +1,19 @@
+{
+  "skillName": "proton-pass",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "claude-pass just failed with \"Agent login failed\" after I ran four item views in a row, and the token itself is fine. What's going on, and what should happen next? Answer only.",
+  "started": "2026-11-22T02:06:23Z",
+  "seconds": 4.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "This is most likely a sign-in throttle. Proton Pass rate-limits repeated logins, and four quick item reads probably tripped it, so \"Agent login failed\" reflects the lockout, not a bad token. I haven't checked this against the logs.\n\nNext: stop reading items for a while rather than retrying in a loop, since retries can extend the lockout. Then load the `proton-pass` skill, which covers sign-in throttles and the `claude-pass` procedures. Once the throttle clears, batch any remaining reads into one session and confirm the token still works with a single read.",
+  "costUsd": 0.0035213500000000003
+}

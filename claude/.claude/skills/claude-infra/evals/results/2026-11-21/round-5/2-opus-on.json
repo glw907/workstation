@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:43:35Z",
+  "seconds": 18.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Answer only, change nothing: where should a rule go that blocks every Bash call running `rm -rf` on a home folder, no exceptions? CLAUDE.md, a skill, or elsewhere?\"}"
+    }
+  ],
+  "result": "**Neither. It should be a `PreToolUse` hook on the `Bash` tool, set in user-scope `settings.json`.**\n\n**Why not CLAUDE.md:** Claude reads CLAUDE.md as context, but nothing enforces it. Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>) says: \"If a rule must hold every time, make it a hook rather than a prompt instruction.\" A rule with no exceptions is exactly that kind of rule. Claude can misread, forget, or argue its way around a line in CLAUDE.md, and a long session can lose it to compaction.\n\n**Why not a skill:** The same page says a skill is for \"reference material Claude needs sometimes.\" A skill loads only when Claude decides to load it, so it's weaker than CLAUDE.md for this job.\n\n**Why a hook:** The harness runs it before every Bash call, whatever Claude intends. It reads the command from the hook input on stdin. If the command matches, it exits with code 2 (or returns a `deny` decision), the call is blocked, and Claude sees the reason. Put in user scope, it covers every repo, every session, and subagents, on both thinkpad-x1 and pavilion.\n\n**How it would land, if you want it built:**\n- **Where to edit:** the dotfiles copy of `~/.claude/settings.json`, never the stowed link. Back it with a reviewed script in the dotfiles.\n- **Getting the entry right:** the built-in `update-config` skill handles the mechanics of writing the hook entry.\n- **Review:** it would go through a PR that cites the features-overview URL, per `claude-infra`.\n\n**Two design points the hook needs to get right:**\n1. **Match loosely, not on one exact string.** `rm -rf ~` has many forms that a narrow pattern misses:\n   - `rm -r -f`, `rm -fr` and `--recursive --force`\n   - `$HOME`, `/home/*` and `/var/home/*` (on Bluefin, `/home` is a symlink to `/var/home`)\n   - `cd ~ && rm -rf .`\n   - `sudo rm -rf …`\n   \n   A permission `deny` rule matches command prefixes, so it would miss most of these. That makes it a useful extra layer but not a replacement for the hook.\n2. **Decide what \"a home folder\" covers.** It could mean the home root only, or anything under it, such as `~/Projects/foo/node_modules`. Blocking everything under `~` would also block routine cleanup inside your repos. If you mean the root of any user's home, the rule stays narrow and holds with no exceptions. That's a scope call for you to make.\n\nI haven't changed anything.",
+  "costUsd": 0.0563464
+}

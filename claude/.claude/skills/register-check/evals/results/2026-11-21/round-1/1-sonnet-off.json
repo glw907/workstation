@@ -1,0 +1,26 @@
+{
+  "skillName": "register-check",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+  "started": "2026-11-22T02:16:02Z",
+  "seconds": 13.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Bash",
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "I couldn't load the register docs. Reading `~/.claude/docs/voice/` and `~/.claude/docs/` was denied, and Bash is disabled, so `tellgrader` and Vale didn't run. This is a manual check of `draft.md` against the `writing-voice` router's shape rules, facts discipline and em-dash policy. I didn't edit the file.\n\n**Register:** `draft.md` is a cairn page about publishing, written for editors. That points to the Microsoft-based editor standard, or Google if it belongs in `docs/admin/`. Which one applies decides how some findings below should be fixed. Tell me which and I'll check against the real exemplars.\n\n**Findings, most serious first**\n\n1. **Unsupported claims (line 9).** \"First released in 2019\" and \"used by over ten thousand sites\" are specifics with no source. The facts-discipline rule treats these as fabrications. Cite a source or cut the line. It also doesn't belong on a how-to page.\n2. **Promotional filler (lines 3-4).** The sentence \"Cairn isn't just a content system, it's a seamless way to publish\" is a contrast frame. \"Moreover\" is a connector opener. \"Empowers\", \"seamless\", \"robust\" and \"world-class\" are slop vocabulary. \"In minutes\" is an unverified claim, and it is also inconsistent with the \"about a minute\" on line 7. This paragraph carries no information, and the page works without it.\n3. **Vague link text (line 7).** \"Click here to read more about builds\" breaks both Google and Microsoft guidance. The link text should name the destination, and it should be a real link, not bare text. \"Click\" is also device-specific.\n4. **Shape: the steps are in a paragraph (line 6).** Open the admin, choose the page and select **Publish** is a sequence of actions, so it should be a numbered list.\n5. **\"About a minute later\" (line 7).** This is an unverified timing. Confirm it or soften it. The \"Cloudflare\" detail is fine if it's accurate, but an editor-facing page may not need it.\n6. **Register drift.** The page opens as marketing copy, moves to a runbook, then ends on a trivia line. A page should have one register.\n7. **Headings.** The H1 \"Publishing a page\" is fine. Google prefers task headings in the imperative or gerund form, so it passes either way.\n\n**Clean:** no em dashes, no scaffold headers (\"Overview\" and similar), no bolded-lead bullets, and the bold **Publish** for the UI label is correct.\n\n**What an edit would do:** delete the opener, turn the steps into a numbered list, give the link real text, and drop or source line 9. The result is about two sentences plus the list. Say so if you want me to apply it, or to rerun once I can read the register docs.",
+  "costUsd": 0.11893190000000001
+}

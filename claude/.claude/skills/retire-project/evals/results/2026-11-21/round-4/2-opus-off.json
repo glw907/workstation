@@ -1,0 +1,49 @@
+{
+  "skillName": "retire-project",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "/retire-project the club's old domain, which nothing uses any more. What happens to the domain itself? Plan only; change nothing.",
+  "started": "2026-11-22T03:37:08Z",
+  "seconds": 27.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "runbook"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"runbook\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/Projects/household-it/README.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/cloudflare-estate-inventory.md\"}"
+    }
+  ],
+  "result": "I couldn't confirm which domain you mean or what's attached to it. `/retire-project` isn't installed in this session, and the two files that would tell me were blocked by permission prompts: `~/Projects/household-it/README.md` (the runbook map) and `~/.claude/docs/cloudflare-estate-inventory.md`. So this plan doesn't use any real records yet. Nothing was changed.\n\n## What happens to the domain itself\n\nThis is the one decision that's yours, and it's the part with lasting risk. My recommendation is to **keep the domain registered with auto-renew on, and retire everything that runs on it.**\n\nThe reason is that a lapsed domain that used to belong to an organization often gets bought by someone else. Whoever buys it can:\n- receive mail still sent to the old club addresses\n- request password resets for any account that was set up with an old-domain email\n- run a site under the club's old name that old links and search results still point to\n\nA renewal costs little compared with any of those.\n\n**If you'd rather let it go**, it's safe only after every login and recovery address on the domain has moved to the new one. Even then, I'd keep it for a year of renewals as a waiting period first.\n\n## The retirement plan (if we keep the domain)\n\n1. **Inventory (read only).** List the DNS zone, Workers routes and custom domains, Pages projects, Email Routing rules, Access apps, and any tokens scoped to the zone. Also search the repos (for example `aksailingclub-org`) and `household-it` for the domain name. This step proves \"nothing uses it\" rather than assuming it.\n2. **Accounts check.** Find every account whose login or recovery email is on the old domain and move it to the new domain. This has to happen before mail is shut off.\n3. **Web.** Replace whatever still serves the site with a single redirect rule sending every path to the new domain with a 301.\n4. **Mail.** Remove the routing rules and publish records that tell the world the domain sends and receives no mail: a null MX (`0 .`), SPF `v=spf1 -all`, and DMARC `p=reject`. That stops anyone spoofing it.\n5. **Clean up.** Delete the DNS records nothing needs any more, the unused Workers, Pages projects or routes, and the zone-scoped tokens. The Proton Pass items get a note saying they're retired rather than being deleted outright. I'd show a dry run before each delete.\n6. **Registrar.** Confirm auto-renew and the transfer lock are on, and that the renewal goes to a card or account that will still exist. If the registrar is Cloudflare, the zone has to stay on Cloudflare, so we couldn't delete the zone even if we wanted to.\n7. **Record it.** Mark the domain's page in `household-it` as retired, with its new status, and run the repo gate (`scripts/check.sh`) in the same pull request.\n\nUnder the global rules, this is big enough to be written as a spec for you to approve before anything is built.\n\n## What I need from you\n\n1. **Which domain**, or permission to read the two files above so I can find it and fill in the real inventory.\n2. **Keep it or let it lapse.** My recommendation is to keep it.",
+  "costUsd": 0.0744554
+}

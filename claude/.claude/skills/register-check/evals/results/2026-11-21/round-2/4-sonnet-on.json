@@ -1,0 +1,38 @@
+{
+  "skillName": "register-check",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "How many words are in draft.md in this folder? Just give me the count.",
+  "started": "2026-11-22T03:03:29Z",
+  "seconds": 7.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Bash",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"wc -w < draft.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/4-sonnet-on/draft.md\"}"
+    }
+  ],
+  "result": "77",
+  "costUsd": 0.0787578
+}

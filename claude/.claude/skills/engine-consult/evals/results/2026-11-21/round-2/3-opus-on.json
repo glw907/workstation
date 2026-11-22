@@ -1,0 +1,37 @@
+{
+  "skillName": "engine-consult",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+  "started": "2026-11-22T02:44:53Z",
+  "seconds": 17.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"engine-consult\"}"
+    }
+  ],
+  "result": "Because the item is small and additive, it doesn't get its own cairn-cms spec. The same aksailingclub-org session that ran the consultation builds it as a small engine task now. The engine change merges and releases before the site task that needs it can merge. Here is the order:\n\n**Before touching cairn-cms**\n1. Write the accept verdict into the brief at `~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-aksailingclub-org-<spec>.md`. Include its shape notes (the export in a form any site could use, not just the sailing club) and the sequencing call (\"small engine task now\").\n2. Add one entry to `~/Projects/cairn-cms/docs/internal/engine-rulings.md`, copying the template in that file's header. The entry stays **open** for now.\n\n**The engine task (cross-repo checklist, in order)**\n3. Run `claude-worktree-busy` on the path, then read `~/Projects/cairn-cms/docs/STATUS.md` to make sure no one has claimed the work.\n4. Create a fresh worktree off cairn `main`. List it in STATUS.md's active worktrees before the first commit.\n5. Follow STATUS.md's conventions. A new export affects consumers, so the changelog entry needs a `Consumers must:` line.\n6. Build it under `building-from-specs` with `cairn-pass` for the gate: one session, the fast lane per step, then a review of the whole branch by a fresh subagent.\n7. Run `npm run check:close`, the full gate list (it includes `check:surface` and `check:symbols`, which matter most for a new export).\n8. While the engine branch is in progress, the site worktree uses it through `npm run link:consumer -- <site-dir>`. That lets the site task build against the new export before release.\n\n**The ordered close**\n9. The engine PR merges to cairn `main`, but only after Geoff approves it by number.\n10. Release by following `cairn-cms/.claude/skills/cairn-releasing/SKILL.md`. The change has to be on the npm registry, because a site branch can't merge while it depends on a local `file:` link.\n11. Run `npm run link:consumer -- <site-dir> --restore` from the cairn checkout, and point the site at the released version.\n12. The site PR merges, again only after Geoff approves it by number.\n\n**Closing the ruling**\n13. The site task that uses the export closes the open ledger entry with a one-line seam-fit report: either \"fit as designed\" or the backlog items it turned up. That way the seam is never left untested against its real user.\n\n**Two cases that change the plan:**\n- If the work turns out to be more than a step or two, or it breaks public surface, it stops being a small task now. It gets queued as its own cairn-cms spec, and the site's fallback (field 4 of the brief) becomes the sanctioned interim state, with a recorded trigger for when to retire it.\n- Anything else the site task discovers mid-build is filed with the same four-field item format and goes back through `engine-triage`. It isn't added to this engine task.\n\nI haven't changed anything. This plan comes from the `engine-consult` skill's sequencing rule and its cross-repo checklist. I didn't open the brief, the ledger, or STATUS.md, so I haven't checked the specific item against them.",
+  "costUsd": 0.1818996
+}

@@ -1,0 +1,46 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T02:55:04Z",
+  "seconds": 11.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \".mcp.json\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \".mcp.json\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)svelte\", \"path\": \"/var/home/glw907/.claude\", \"output_mode\": \"files_with_matches\", \"head_limit\": 50}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/.mcp.json\"}"
+    }
+  ],
+  "result": "I couldn't check your existing config. Reads of `~/Projects` and `~/.claude` were denied, and the working directory has no `.mcp.json`. So this answer rests on how MCP scopes work, not on what's already set up.\n\n**Recommendation: add it at user scope, not in ecxc-ski's `.mcp.json`.**\n\n- **Why user scope:** A Svelte docs server doesn't depend on any one site. Putting it in user scope makes it available in ecxc-ski, 907-life, aksailingclub-org, and cairn-pub with one change and no per-repo commits.\n- **Why not `.mcp.json`:** That file is committed to the repo and applies to anyone who clones it. Adding it there means repeating the entry in all four site repos, and it still only helps ecxc-ski until you do.\n- **Where the change lives:** Your CLAUDE.md says config belongs in `~/.dotfiles` and that Claude Code tooling changes go through the `claude-infra` skill. So the user-scope entry should be made in the dotfiles copy of the config, through that skill, not by editing the live file.\n\n**Caveats:**\n- I'm relying on memory that Svelte publishes an official MCP server with a docs lookup. Confirm the package name and its current setup before adding it.\n- If a Svelte docs server is already configured somewhere, such as in ecxc-ski's `.mcp.json` or your user config, you'd want to avoid a duplicate. Granting read access to `~/Projects/ecxc-ski` and `~/.claude` would let me check that.\n- If you want the server only in ecxc-ski for now, the project `.mcp.json` is a reasonable choice. Migrating it to user scope later is a small change.\n\nI didn't change anything.",
+  "costUsd": 0.00484635
+}

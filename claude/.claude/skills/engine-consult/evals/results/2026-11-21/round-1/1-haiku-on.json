@@ -1,0 +1,25 @@
+{
+  "skillName": "engine-consult",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I'm about to write a spec in ~/Projects/ecxc-ski for a gear-booking page that needs a new custom field type in the cairn admin. Before I write it, what engine-consultation steps does the spec need, and what exactly goes in its header? Answer only; don't write or change any file.",
+  "started": "2026-11-22T01:53:41Z",
+  "seconds": 9.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "For a gear-booking page that adds a custom field type to the cairn admin, the spec needs a consultation brief, not the \"no engine asks\" line. A new field type presses the admin surface, which the enumeration treats as an engine edge.\n\n**Steps before the spec is written**\n\n1. **Enumerate engine contact.** For each thing the spec builds, ask whether it presses an engine edge: admin surface, engine CSS, an exported component's contract, auth, or any seam. Here, the field type and anything it exposes to the admin count.\n2. **Read the sources.** Before writing, read the exports under `~/Projects/cairn-cms/src/lib` (doc comments), the packaged `skills/`, and the code at the commit. Also read the open engine items in `~/Projects/cairn-cms/BACKLOG.md`. Record what you covered for the `Sources consulted` line.\n3. **File the brief.** Read the \"The standard\" section of `~/Projects/cairn-cms/.claude/agents/engine-triage.md` first. Then file `~/Projects/cairn-cms/docs/internal/consultations/2026-11-21-ecxc-ski-<spec>.md`, with one `### <item slug>` section per item and four fields: what the site builds, the engine edge (with `file:line` where known), evidence for the any-site case, and the site's fallback if declined with its rough size.\n4. **Triage.** A fresh read-only Opus subagent runs the `engine-triage` instructions against the brief, the rulings ledger (`~/Projects/cairn-cms/docs/internal/engine-rulings.md`), and the spec. The spec-writing session adjudicates each verdict (accept, decline, or defer), records the verdicts in the brief, and appends one ledger entry per ruled item, copying the format from the ledger's template.\n\n**Spec header**\n\nThe header carries exactly one engine-consultation line plus the sources line. For this spec it is the brief link:\n\n```markdown\n**Engine consultation:** [2026-11-21-ecxc-ski-<spec>.md](<link to the filed brief>)\n**Sources consulted:** <exports and skill references read, plus the open engine items found, or \"none\">\n```\n\nThe \"no engine asks\" form is only for specs that press no engine edge.\n\n**Check and task wiring**\n\n- Run `grep -c -E '^\\*\\*(Engine consultation|Sources consulted):\\*\\* ' <spec>`. It should print `2`.\n- List that check as a done item in the spec's first task, so the task session and its reviewer run it again.\n- If a task session finds the check failing, it runs the enumeration before its first build step and records the line under its PR's `## Decisions`.",
+  "costUsd": 0.006195530000000001
+}

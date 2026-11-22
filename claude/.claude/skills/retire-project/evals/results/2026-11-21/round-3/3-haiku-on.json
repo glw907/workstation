@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:25:23Z",
+  "seconds": 16.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Plan only. Nothing has been run.**\n\n## What goes in the archive\n\nThe archive is one file, `<project>-<date>.tar.age`, encrypted to the workstation age key. It holds:\n\n- **Repo:** `git bundle create --all`. Stashes and unpushed branches come along because `--all` covers every ref. Before bundling, commit or drop any uncommitted work in each worktree, since a bundle carries none of it.\n- **D1:** one SQL export of the database, schema and data, via `wrangler d1 export --remote`.\n- **Issues and PRs:** JSON from `gh issue list --state all` and `gh pr list --state all`, plus releases if any exist.\n- **Worker config:** `wrangler.toml` or `.jsonc`, including the D1 binding, routes, and compatibility settings.\n- **Manifest (my addition):** a `MANIFEST.txt` listing each file with its size and row counts, plus secret *names* from `wrangler secret list`. Never a secret value.\n\nThe inventory decides whether R2, KV, or Queues belong here. A demo repo most likely has none.\n\n## How the archive is proven before anything is deleted\n\n1. **Bundle:** run `git bundle verify`. Clone the bundle into a scratch directory, then compare its refs (`git for-each-ref`) with the source repo's. Any mismatch stops the run.\n2. **D1:** load the SQL export into a fresh SQLite database with no errors. Compare per-table row counts with live counts taken at export time. A failed or empty export stops the run.\n3. **Issues and PRs:** each JSON file parses (`python3 -I -m json.tool`), and its record count matches what `gh` reports.\n4. **Decrypt test:** decrypt the `.tar.age` into scratch. This exercises the key, so the restore check doesn't depend on the source tree. Then rerun checks 1 to 3 on the decrypted copy.\n5. **Copies:** store the file at `~/Documents/retired-projects/` and at `servers-archive/retired-projects/` in R2. Confirm the R2 copy with `rclone check` against the local file.\n6. **Record:** the file's sha256 goes in the retirement record and in the `README.md` row.\n\nNo teardown starts until every check passes. The dry run comes next, and Geoff approves each delete by typing his approval.\n\n## Open points for Geoff\n\n- **Empty table:** if the demo D1 has no rows, the empty-export stop will trigger. The rule is strict on purpose. Skipping the check or recording a zero-row export is a call for you, and I'd recommend recording the schema and an explicit note rather than skipping the check.\n- **Age identity:** the decrypt test needs the private key reachable on this workstation. I'd confirm that before relying on the archive.",
+  "costUsd": 0.00519407
+}

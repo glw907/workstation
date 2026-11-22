@@ -1,0 +1,42 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:54:07Z",
+  "seconds": 15.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"release\", \"path\": \"/var/home/glw907/.dotfiles\", \"glob\": \"**/cairn*/**\", \"-i\": true, \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \".claude/skills/*/SKILL.md\", \"path\": \"/var/home/glw907/Projects/cairn-cms\"}"
+    }
+  ],
+  "result": "My reads of `~/.claude`, `~/.dotfiles` and `~/Projects/cairn-cms` were denied. This plan comes from your CLAUDE.md and the skill list, not from the files, so I haven't confirmed the paths below.\n\n**Where it should live**\n\nThe checklist belongs in the `cairn-pass` skill, as its own reference file linked from `SKILL.md`. For example, `references/release.md`.\n\n- `cairn-pass` already covers the gate, the CI watch and closing a pass, so a release fits there.\n- I'd widen its `description` trigger to include \"cut a release\" and \"release cairn\". That way a fresh session loads the checklist without you pasting it.\n- I wouldn't make a separate `cairn-release` skill unless the checklist grows past about a page. A second skill just adds another description to keep in sync.\n\nThe one exception is any step that is about the repo, not this workstation, such as version bump rules, changelog format or tag naming. That part belongs in the cairn-cms repo (a `RELEASING.md` or similar), so CI and other contributors can see it. The skill would then hold only the workstation overlay and point to that file. Once you tell me the five steps, I can sort them into the two groups.\n\n**How the change would land**\n\n1. Run `claude-worktree-busy` on `~/.dotfiles` and read its status docs. I'm assuming `~/.claude/skills` is stowed from there, which I'd confirm first.\n2. Make the edits in the dotfiles copy, never the stowed link. That means a new `references/release.md` and a short pointer plus the trigger change in `SKILL.md`.\n3. If the skill isn't in the dotfiles, I'd route the edit through the `claude-infra` skill, per your CLAUDE.md. It isn't in my skill list this session.\n4. Run `bash scripts/gate.sh` from the checkout or worktree root, run bare. Then `stow -R` for the affected package if the link needs refreshing.\n5. This is small and fully specified, so it should qualify as a direct change under `building-from-specs` \"Direct changes\". It would be one commit in the imperative mood, with files staged by name. If the dotfiles repo requires a PR, I'd open one and you'd approve it by number.\n6. Check it worked by starting a fresh session and saying \"cut a cairn release\". It should load the checklist without a paste.\n\n**What I need from you**\n\nPaste the five steps one last time. Also tell me whether cairn-cms already has a release doc I should link to, not duplicate.",
+  "costUsd": 0.0270456
+}

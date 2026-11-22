@@ -1,0 +1,21 @@
+{
+  "skillName": "vps-conventions",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "We want to add the `jq` package to the cloud-init user-data.yaml that provisions our RHEL-family VPS boxes. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; change nothing.",
+  "started": "2026-11-22T02:01:54Z",
+  "seconds": 11.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob"
+  ],
+  "result": "I found no user-data.yaml or related files in this directory, so this plan rests on general cloud-init behavior. The file's real shape may change some steps.\n\n## Why existing servers need separate handling\n\ncloud-init's `packages:` module runs on first boot only. Editing user-data.yaml changes what new boxes get. Running boxes never re-read it, so they need a separate change.\n\n## Plan\n\n**1. Check the package name first (no changes)**\n- On one running box, run `dnf info jq` or `dnf repoquery jq`. This confirms the name, the version, and which repo supplies it.\n- On RHEL 8/9 and Rocky/Alma, `jq` lives in AppStream. On older EL7 and some minimal images it comes from EPEL. If `dnf info` finds nothing, check `dnf repolist` for EPEL. If EPEL is needed, the user-data must enable it first, with `epel-release` ahead of `jq` in `packages:`.\n- Run the check on one box per distro and major version you use, because the answer can differ between them.\n- Confirm the boxes can reach their repos: mirrors, a proxy, or a satellite.\n\n**2. Edit user-data.yaml (new boxes)**\n- Add `jq` to the `packages:` list. Keep the cloud-init schema valid and check it with `cloud-init schema --config-file user-data.yaml`.\n- If your `packages:` list is empty or absent, also consider whether `package_update: true` is set, so the metadata is fresh.\n- Test by booting one throwaway VPS from the new file. Then run `rpm -q jq` and `jq --version` on it.\n\n**3. Roll the package out to running boxes**\nChoose one route based on what you already use:\n- **Config management** (Ansible, Salt, Puppet): add `jq` to the shared package role, then run it across the fleet. This is the best route, because it also covers future drift. Ansible's `dnf` module with `state: present` is idempotent.\n- **No config management**: run `sudo dnf install -y jq` over SSH, in a loop or with a parallel runner. Start with one canary box, then run it in small batches.\n- **Not recommended**: `cloud-init clean` plus a re-run. It re-triggers first-boot modules such as host keys, users, and SSH config, which is risky on live servers.\n\n**4. Verify and record**\n- Run `rpm -q jq` across the fleet and compare against the inventory to find any box that failed or was unreachable.\n- Make sure the user-data list and the fleet package role don't disagree on the package list, so the two paths stay in step.\n- Put the change in a commit or pull request that notes both paths, so future provisioning matches the running servers.\n\n## Open questions\n- Do you have config management for the existing boxes, or is it SSH only?\n- Which distros and versions are in the fleet (RHEL, Rocky, Alma, Oracle)? That decides whether EPEL matters.\n- Where does user-data.yaml live? I found nothing in this directory. Point me to the repo and I can tailor the plan to the real file.",
+  "costUsd": 0.0941187
+}

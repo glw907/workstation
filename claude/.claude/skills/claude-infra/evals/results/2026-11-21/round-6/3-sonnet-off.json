@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:57:12Z",
+  "seconds": 8.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Add it once at user scope, not in ecxc-ski's `.mcp.json`.\n\n- **Four repos need it.** ecxc-ski, 907-life, aksailingclub-org and cairn-pub are all SvelteKit, so a per-repo entry would be four copies to keep in step. A user-scope entry (`claude mcp add --scope user`) is one entry that covers them all.\n- **The docs server isn't tied to any repo.** It serves Svelte and SvelteKit documentation and isn't configured per project, so the checked-in file gains nothing from holding it.\n- **The cost is small.** Non-Svelte projects such as dotfiles and household-it would also load its tool descriptions. That is a small amount of context.\n- **Process.** Changes to Claude Code tooling go through the `claude-infra` skill, so run it there. I haven't checked whether this workstation tracks user-scope MCP config in `~/.dotfiles`. `~/.claude.json` isn't stowed, so if you want the entry reproducible across thinkpad-x1 and pavilion, the skill should say where it gets recorded.\n\nUse a per-repo `.mcp.json` only if you want the server to travel with a repo, for example for other contributors or CI. For a solo workstation that isn't the case here.",
+  "costUsd": 0.011643400000000002
+}

@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:37:58Z",
+  "seconds": 15.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "The `/retire-project` command isn't installed in this session, so I treated your message as a plain request. Nothing has been run, and I didn't open the docs the plan refers to.\n\n## What goes in the archive\n\n**Repo**\n- A git bundle of all refs (`git bundle create` with `--all`), plus a tarball of the working tree at the final commit.\n- A record of the remote URL, default branch, tags, and the final commit SHA.\n- Any open issues or PRs exported to plain text, since they won't survive the repo being retired.\n\n**D1 database**\n- A schema dump and a full data dump, both from the remote database, taken after writes stop.\n- The database name and UUID, the migrations directory at its final state, and row counts for every table.\n\n**Worker and routing**\n- The `wrangler` config, the deployed Worker name, the final deployment or version ID, and the routes and custom domains it served.\n- DNS records, Access apps, and any other Cloudflare objects that point at it, from `~/.claude/docs/cloudflare-estate-inventory.md`.\n\n**Secrets**\n- Secret names only, from `wrangler secret list`. Values are never copied into the archive. They stay in the age store and Proton Pass, and I'd retire them through the flow in `secrets.md`.\n\n**Records**\n- A manifest with the retirement date, reason, what was deleted, and how to restore it.\n- A matching entry in the runbook (household-it), and the initiative record closed through `log-project`.\n\n## How the archive is proven before anything is deleted\n\n1. **Checksums.** Generate a SHA-256 for every archive file and store the manifest inside the archive.\n2. **Git bundle check.** Run `git bundle verify`, clone from the bundle into a fresh directory, and confirm the HEAD SHA and tree hash match the original.\n3. **D1 restore drill.** Load the data dump into a scratch local D1 and compare every table's row count and an ordered-row hash against the remote database. The scratch database is the only thing I'd delete in this step.\n4. **Restore check.** Rebuild the Worker from the archived config in a scratch location, without deploying it, to confirm the config is complete.\n5. **Review gate.** Show you the manifest, the counts, and the hashes. Deletion is irreversible, so I'd wait for your explicit go-ahead.\n\n## Deletion order\n\n1. Remove DNS records, routes, and Access apps, and confirm the endpoint stops answering.\n2. Delete the Worker.\n3. Delete the D1 database last, since it can't be recovered.\n4. Archive the GitHub repo rather than deleting it, so it stays reversible.\n5. Verify afterward: `wrangler d1 list` no longer shows the database, the inventory and registry are updated, and the secrets are retired in the store.\n\n**Choices I'd make, which you can redirect:**\n- Hold the Worker disabled for a set period before deleting the D1 database. The length is your call; I'd suggest 30 days.\n- Use a direct change with confirmation, not a full spec. This is a one-off ops task, not a feature.\n\n**Open questions for you:**\n- Where should the archive live? I haven't found a location named in the docs yet. I'd check the inventory first and propose one if none is named.\n- Is the holding period acceptable, and what length do you want?",
+  "costUsd": 0.0015892399999999998
+}

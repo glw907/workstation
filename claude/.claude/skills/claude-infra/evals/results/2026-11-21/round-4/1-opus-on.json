@@ -1,0 +1,63 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:29:25Z",
+  "seconds": 36.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/**\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/pass-core/references\", \"output_mode\": \"content\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/SKILL.md\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)direct change\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/building-from-specs\", \"output_mode\": \"content\", \"-A\": 12}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)^#+ .*direct|lands directly\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills\", \"output_mode\": \"content\", \"-A\": 10}"
+    }
+  ],
+  "result": "**Recommendation:** make the checklist a skill in the cairn-cms repo, at `.claude/skills/cairn-release/SKILL.md`, and set it so it runs only when you invoke it as `/cairn-release`. It shouldn't go in CLAUDE.md or memory.\n\n## Why a skill\n\n- **Not CLAUDE.md.** Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>) says: \"Put it in a skill if it's reference material Claude needs sometimes\". A release checklist is needed only when you cut a release. CLAUDE.md is for facts that apply on every turn.\n- **Not memory.** The workstation's `claude-infra` skill says a rule reaches an agent only through a skill, an agent definition, a tool, or CLAUDE.md. Memory holds only a preference or the reason behind a ruling.\n- **Project scope, not user scope.** `claude-infra` uses user scope for things the whole stack shares and project scope for things that belong to one repo. Cutting a cairn release belongs to cairn-cms, so the skill should travel with that repo. `cairn-pass` stays the workstation's add-on to the pass process and doesn't take on release steps. The exception is any step that is truly about this workstation, such as which secret or wrapper to use. That step goes in `cairn-pass` with a one-line pointer to the new skill.\n- **Only you can trigger it.** A release has effects you can't take back: tags, publishing, a GitHub release. So the frontmatter should set `disable-model-invocation: true`. That stops Claude from starting a release just because the skill seems relevant, which is how Anthropic's skills page (<https://code.claude.com/docs/en/skills>) treats deploy-style workflows. The skill body is your five steps, with exact commands where a step has one.\n- **A hook only if a step must never be skipped.** If one step has to hold every time, such as \"the gate is green before `git tag`\" or \"no `npm publish` outside the release flow\", the features overview says to make it a hook rather than an instruction. That would be a `PreToolUse` hook in cairn-cms's `.claude/settings.json`, written using `update-config`. The other steps stay in the skill. I wouldn't add a hook unless one of your five steps is in that category.\n\n## How it lands\n\n1. Before writing the skill, check that the five steps don't repeat anything cairn-cms already documents, such as its pass docs, a `RELEASING.md`, or the changesets snapshot rule in `pass-core`'s planner reference. Each rule should live in one place: where a step already exists, the skill points to it rather than copying it.\n2. Make a cairn-cms worktree after `claude-worktree-busy`, add only `.claude/skills/cairn-release/SKILL.md` (plus the optional `cairn-pass` pointer), and open a PR. The commit message and PR body cite the skills and features-overview URLs. A skill the repo authors counts as its own record, so no manifest entry is needed. Run `claude-tooling-sync verify` anyway, then `/skill-doctor` and `skill-creator` as the audit.\n3. You approve the PR by number and the session you're talking to merges it. Skills load live, so the next release just uses `/cairn-release`, with no restart.\n\nI couldn't open `building-from-specs` \"Direct changes\" in this scratch copy. Since you're supplying the content as written, I expect it qualifies as a direct change through a PR rather than needing a full spec, but I haven't confirmed that.\n\nTo build it, I need the five steps pasted once more, and to know whether any of them must never be skipped (that decides the hook).",
+  "costUsd": 0.1243736
+}

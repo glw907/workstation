@@ -1,0 +1,42 @@
+{
+  "skillName": "proton-pass",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "claude-pass just failed with \"Agent login failed\" after I ran four item views in a row, and the token itself is fine. What's going on, and what should happen next? Don't run claude-pass again yet.",
+  "started": "2026-11-22T02:48:27Z",
+  "seconds": 10.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"Agent login failed|rate.?limit|login failed\", \"path\": \"/var/home/glw907/.claude\", \"-i\": true, \"output_mode\": \"content\", \"head_limit\": 40}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/claude-pass*\", \"path\": \"/var/home/glw907/.dotfiles\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/proton-pass/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    }
+  ],
+  "result": "I can't say for certain. My reads of `~/.claude` and `~/.dotfiles` were blocked on permissions, so I haven't seen the `claude-pass` script, the `proton-pass` skill or `secrets.md`. What follows is inference, not verified.\n\n**Likely cause:** a login rate limit, not a bad credential.\n- Your token works, and the error is \"Agent login failed\" rather than an item-not-found or permission error.\n- It showed up on the fifth call, right after four views in a row.\n- If `claude-pass` signs in again on each call, four back-to-back logins can trip Proton's auth throttling. A throttled login looks like a failed login even with a valid token.\n- Retrying immediately would likely fail again and could extend the throttle.\n\n**What should happen next:**\n1. Wait a few minutes without calling `claude-pass`.\n2. Read the `claude-pass` script and the `proton-pass` skill (or `secrets.md`) to confirm whether it logs in per call and whether it documents a throttle or a session-reuse option. This is the step I need read access to `~/.claude` and `~/.dotfiles` for.\n3. After the wait, make one `claude-pass` call as a test. If it works, that confirms throttling.\n4. From then on, fetch several items in one invocation, or reuse a session if the tool supports it. Don't chain single-item views.\n5. If a single call after a long wait still fails, the cause is something else, such as an expired or revoked agent session. In that case, follow the failure path in `secrets.md`.\n\nIf you approve read access to those two directories, I'll do step 2 now. I won't run `claude-pass` until you say so.",
+  "costUsd": 0.081087
+}

@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:50:33Z",
+  "seconds": 11.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Plan: retire a small demo repo with one D1 database\n\nNothing runs from this plan. The inventory comes first, and nothing is deleted until the archive is proven and Geoff approves.\n\n## Before the archive: inventory (read-only)\n\n- Repo: unpushed branches, stashes, each worktree's `git status`, open PRs and issues, and Actions secrets. Also check whether another session is working it.\n- D1: confirm the database is sole-owner. No other Worker may bind it. If one does, it is shared and stays.\n- Other Cloudflare items: Worker, custom domain, DNS, Builds trigger, and any R2, KV or Turnstile. A demo may own none of these, but the inventory has to show that.\n- Vendors and secrets: `wrangler secret list` and the registry.\n- References: grep `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, the initiatives repo and the registry.\n\n## What goes in the archive\n\nOne age-encrypted file, `<project>-2026-11-21.tar.age`, encrypted to the workstation key. It holds:\n\n1. A `git bundle create --all`, verified with `git bundle verify`. Uncommitted work in any worktree is committed or dropped first, because a bundle doesn't carry it.\n2. A D1 export through `wrangler d1 export`, covering schema and data. The skill asks for every D1 export, so this is one file here.\n3. Issues and PRs as JSON.\n4. The Worker config (`wrangler.toml` or `wrangler.jsonc`).\n5. R2 objects only if the inventory finds a bucket.\n\nIt holds no secret values, only names, which the registry already records.\n\n## How the archive is proven before any delete\n\n1. Make the archive.\n2. Restore it in a new, empty scratch directory. Keep scripts elsewhere, pass paths as arguments, and run any Python with `-I`.\n3. Decrypt it with the workstation key and extract it.\n4. Clone the bundle and confirm the branches and HEAD match the repo.\n5. Load the D1 SQL export into a fresh SQLite database. It must load without errors and contain every table with rows.\n6. Stop if the export fails or is empty.\n7. Store the file at `~/Documents/retired-projects/` and at `servers-archive/retired-projects/` in R2. Confirm the R2 copy with `rclone check`.\n8. Record the sha256 in the retirement record.\n\nI'd add one check the skill doesn't spell out. Compare the restored SQLite row counts per table against the live D1, so a silently truncated export can't pass. Say if you'd rather I leave it out.\n\n## After the proof\n\nOnly then does the approval step happen. In your terminal, I'll list each delete by id, with a question and a recommendation for each irreversible step. Teardown, with an inventory recheck per id, then runs in this order:\n\n1. Take traffic off (domain and DNS).\n2. Delete the Worker.\n3. Delete the D1 database.\n4. Stop vendors and revoke keys at their issuers.\n5. Delete the GitHub repo and the local checkout.\n\nThe close step clears references, closes the initiative, adds the README row, and shows the Cloudflare inventory empty.",
+  "costUsd": 0.0866015
+}

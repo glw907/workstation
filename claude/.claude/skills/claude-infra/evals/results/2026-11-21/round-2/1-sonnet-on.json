@@ -1,0 +1,56 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T02:51:56Z",
+  "seconds": 14.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"release\", \"path\": \"/var/home/glw907/.claude/skills\", \"-i\": true, \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \".claude/skills/*/SKILL.md\"}"
+    }
+  ],
+  "result": "I couldn't read `~/.claude/docs/claude-tooling.md` or the existing `cairn-pass` skill, so this plan rests on the `claude-infra` text alone. Two points below depend on files I haven't seen.\n\n## Where it lives\n\n**A skill, not CLAUDE.md and not a hook.** Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>) says to \"put it in a skill if it's reference material Claude needs sometimes\". A cairn release is needed only sometimes, so a CLAUDE.md line would load every turn for nothing. A hook is for a rule that must hold every time, and a checklist you want followed on request isn't that.\n\n**Which skill:** the first thing to check is whether `cairn-pass` already has a release or close section. If it does, add the five steps there, because the rule says one home per rule. If it has none, make a new skill, which I'd call `cairn-release`. Its description would say \"Use when cutting a cairn release\" so it triggers on the phrase you already type. A new skill is its own manifest, its directory, so no other manifest entry is needed.\n\nI'd lean toward the new skill. `cairn-pass` is the gate wrapper and CI watch, and a release is a distinct event. If `cairn-pass` already covers part of it, `cairn-release` would point to that section instead of copying it.\n\n## How it lands\n\n1. **Cite the guidance.** Use the features-overview URL above in the commit messages and PR body.\n2. **Check what's there.** Confirm no existing skill or the `claude-tooling.md` inventory already holds these steps.\n3. **Write `SKILL.md`.** Put it in the skill directory with frontmatter (`name`, a \"Use when…\" description) and your five steps. Any step that is really a command should call the existing script or tool, not restate it. The `writing-voice` skill applies, and the `vale-hook` and `tellgrader` save hooks will check the prose.\n4. **Verify.** Run `claude-tooling-sync verify`, then `/doctor prompt-audit`, `/skill-doctor`, and `skill-creator`. Their output is the audit.\n5. **Land it through a PR.** `building-from-specs` allows a direct change only when it's fully specified and one sentence. A new skill is bigger than that, so I'd open a PR from a worktree after running `claude-worktree-busy`. The PR needs the `~/.dotfiles` gate (`bash scripts/gate.sh`) if the skill lives there. Skills load live, so no restart is needed.\n\n## What I need from you\n\n- The five steps, since I only have your description of them.\n- Permission to read `~/.claude/docs/claude-tooling.md` and the `cairn-pass` skill. I need those to confirm the actual skill directory (I suspect it's under `~/.dotfiles`, stowed) and to settle the new-skill-or-extend question.\n\nNothing has been edited.",
+  "costUsd": 0.0996402
+}

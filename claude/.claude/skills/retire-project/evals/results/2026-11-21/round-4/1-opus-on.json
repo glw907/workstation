@@ -1,0 +1,35 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:34:42Z",
+  "seconds": 26.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\", \"args\": \"Audience: Geoff, in his terminal. A dry-run retirement plan with approval questions.\"}"
+    }
+  ],
+  "result": "I wrote this as a dry run only. I looked nothing up live and deleted nothing. That means every id below is a placeholder, so this can't yet be the approval document the procedure calls for, because that document lists each delete by its real id. The first step that touches anything is the read-only inventory in step 1. Once it runs, the placeholders get real values and the questions below can be answered.\n\n## 1. Inventory (read-only)\n\n| Item | What to find | Owner, probably |\n|---|---|---|\n| Worker `site-staging` | script name, routes, bindings, `wrangler secret list` names | sole owner |\n| D1 database | name and UUID from the Worker's binding | sole owner, if no other Worker binds it |\n| Custom domain | hostname, zone, custom-domain id, any DNS records | the hostname is sole owner; the zone is probably shared with the live site |\n| Other bindings | R2, KV, Queues, Turnstile widget, Access app, Workers Builds trigger | check each one |\n| Vendors | API keys or numbers named in the secret list or the registry | check each one |\n| Repo | whether staging has its own repo or lives in the site's repo | probably shared, so it stays |\n| References | grep `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, the initiatives repo, and the registry for `site-staging` and the hostname | anything that uses staging as a test target needs a new target |\n\n## 2. Archive and prove it\n\n1. Commit or drop any uncommitted staging work in each worktree.\n2. If staging has its own repo, run `git bundle create --all` and verify it. If it shares the site's repo, there is no bundle, since the repo stays.\n3. Export the D1 database to SQL and stop if the export fails or comes out empty.\n4. Save the Worker config and the secret names, never the values. If staging has its own repo, also save its issues and PRs as JSON.\n5. Pack all of that into `site-staging-<date>.tar.age` with the workstation key.\n6. Restore into scratch: decrypt, clone the bundle if there is one, and load the SQL into SQLite.\n7. Store the file at `~/Documents/retired-projects/` and at `servers-archive/retired-projects/` in R2, then confirm the R2 copy with `rclone check`.\n8. Record the sha256.\n\n## 3. Questions for you\n\nYour typed answer approves each one.\n\n**Q1. Remove the custom domain `<hostname>` (id `<custom-domain-id>`) and its DNS records from `<zone>`.**\nOptions: remove it, or keep the hostname pointed somewhere else. I recommend removing it. A hostname left pointing at a deleted Worker is a dangling record.\n\n**Q2. Delete the Worker `site-staging`.**\nOptions: delete it, or keep it with no route. I recommend deleting it once the archive is proven.\n\n**Q3. Delete the D1 database `<name>` (`<uuid>`).**\nOptions: delete it, or keep it. I recommend deleting it after the SQLite restore passes, and only if no other Worker binds it.\n\n**Q4. Delete each other sole-owner resource the inventory turns up (Turnstile, Builds trigger, R2, KV), listed by id.**\nI recommend deleting each one that is sole-owner. Anything shared stays.\n\n**Q5. Revoke each vendor key at its issuer, then remove it from the store, the registry, and the `Projects` vault through `claude-pass`.**\nI recommend revoking them all. Deleting a Worker secret does not revoke the key.\n\n**Q6. The domain's fate is your call.**\nIf the custom domain is a hostname on the live site's zone, the zone stays and nothing is parked, because Q1 already covers it. If it is a separate registered domain that only staging used, the plan is to park it and let it lapse:\n\n- Email Routing off, in the dashboard\n- `MX 0 .`\n- `v=spf1 -all`\n- `v=DMARC1; p=reject;` at the apex\n- auto-renew off\n\nKeep renewing it only if you name a use for it.\n\n## 4. Teardown order, after approval\n\nBefore each delete, I rerun the inventory for that id and stop if it's no longer sole-owner.\n\n1. Remove the custom domain and DNS records (Q1).\n2. Delete the Worker (Q2), then Turnstile, the Builds trigger, D1 (Q3), and R2 (Q4).\n3. Revoke vendor keys and clean up the store, the registry, and the vault (Q5).\n4. Park the domain, if Q6 applies.\n5. Delete the GitHub repo and local checkout only if staging has its own repo. Otherwise skip this step, and remove only staging's config and workflows from the site repo through a normal PR.\n\n## 5. Close\n\n1. Clear the references found in step 1.\n2. Close the initiative.\n3. Add a row to the `README.md` beside the archives with the date, sha256, and what went.\n4. Rerun the Cloudflare inventory for these ids and show it empty.\n\nThe next step is to run the read-only inventory and send you this same plan with real ids filled in. Should I go ahead?",
+  "costUsd": 0.22526179999999998
+}

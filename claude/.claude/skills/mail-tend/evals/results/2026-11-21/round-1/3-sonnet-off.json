@@ -1,0 +1,40 @@
+{
+  "skillName": "mail-tend",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Why is this in Junk? It's from my dentist's office, appointments@smiledental.example, and it's a real appointment reminder. Diagnose it and say what you'd change. Plan only; change nothing.",
+  "started": "2026-11-22T02:34:11Z",
+  "seconds": 11.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "runbook"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"runbook\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/Projects/household-it/README.md\"}"
+    }
+  ],
+  "result": "I couldn't diagnose this yet. The read of `~/Projects/household-it/README.md` was denied. It's the only map of the mail setup, and the runbook skill says to answer from those pages, not from memory. I haven't looked at the message or any filter config, and nothing has changed.\n\n**What I need from you (either one):**\n- Grant read access to `~/Projects/household-it`, and I'll find the mail-route page and the Junk rules.\n- Or paste the message's full headers. The headers alone may be enough.\n\n**Plan once I can read them:**\n1. **Find the mailbox and filter.** Use the household-it page for the mail route to see which address `appointments@smiledental.example` mail reaches. Then see what does the Junk filing: a server-side Sieve rule, the provider's spam filter, or a mail client rule.\n2. **Read the headers for the cause.** The usual reasons a real appointment reminder lands in Junk are:\n   - **SPF, DKIM or DMARC fails.** Dental offices often send through a scheduling vendor, not their own domain, so authentication fails or doesn't align with `smiledental.example`.\n   - **Spam score.** Reminder templates with a short link, a tracking pixel or an all-image body tend to score high.\n   - **A local rule.** A filter that matches words like \"appointment\" or \"confirm\", or the sender's domain, could be catching it.\n   - **Forwarding.** If the mail is forwarded, the forwarder can break SPF and then the final filter judges it as unauthenticated.\n3. **Say which one it is.** I'd point to the specific header line or rule that did it.\n\n**What I'd likely change, depending on the cause:**\n- **Local or Sieve rule at fault:** fix or narrow the rule.\n- **Authentication failure:** add an allow rule for the sender's address, plus the vendor's sending domain if it differs. Don't loosen the global spam threshold.\n- **Forwarding break:** note it as a route fix in household-it.\n- **Any change:** update that system's page in household-it in the same pull request, as the runbook requires.\n\nI'll make no changes until you've seen the diagnosis and approved the fix.",
+  "costUsd": 0.0812794
+}

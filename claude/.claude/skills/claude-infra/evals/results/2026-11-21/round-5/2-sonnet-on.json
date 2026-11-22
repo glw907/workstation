@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:43:09Z",
+  "seconds": 11.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    }
+  ],
+  "result": "**Put it in a hook, not CLAUDE.md or a skill.**\n\nAnthropic's features overview (<https://code.claude.com/docs/en/features-overview>) says: \"If a rule must hold every time, make it a hook rather than a prompt instruction.\" Your `claude-infra` skill applies that directly. A rule that must hold never goes in CLAUDE.md, because CLAUDE.md is context that nothing enforces.\n\n**Why not the other two**\n- **CLAUDE.md** is advice the model reads. It can be misread, outweighed by other instructions, or lost in a long session. \"No exceptions\" can't be met by advice. CLAUDE.md should carry only facts that apply every turn.\n- **A skill** loads only when it's invoked. It is reference material for \"sometimes\", and a destructive-command rule can't depend on Claude remembering to load it. Subagents with fixed tool lists also won't see it.\n\n**What the hook should be**\n- A `PreToolUse` hook matching `Bash`. It inspects the command and exits with code 2 (or returns a deny decision) when it sees `rm -rf` aimed at a home folder. That covers the main loop and subagents, and it ignores permission mode.\n- It should be set in user scope (`~/.claude/settings.json`), so it applies in every repo and worktree, including background sessions. The hook script itself belongs in `~/.dotfiles` and gets stowed, per your config convention.\n- The `update-config` skill handles the settings.json mechanics. `claude-infra` only decides the home.\n\n**Where a pattern match will be weak**\n\"Home folder\" takes many spellings: `~`, `~/`, `$HOME`, `/var/home/glw907`, `/home/glw907` (a symlink on Bluefin), globs like `~/*`, flag variants (`-fr`, `-r -f`, `--recursive --force`), and `rm` wrapped in `bash -c`, `sudo`, `xargs`, or `find -delete`. The script should normalize these and resolve paths with `realpath` before comparing. \"Is this target the home directory or something under it\" is the rule you want to state first, because it decides whether `rm -rf ~/Projects/tmp/foo` is blocked. You said \"on a home folder\", so I read that as the home directory and everything in it. Say so if you meant only the home directory itself.\n\n**Limit of the guarantee**\nA hook only sees Bash tool calls. It can't stop `rm -rf` from a script that Claude writes and then runs, so the script's contents are never inspected. If you want that gap closed too, a second layer would help: a `permissions.deny` entry such as `Bash(rm -rf ~*)` as a backstop. Deny rules are prefix patterns, so they are easy to bypass and not enough alone.\n\n**How it would land**\nIt goes through a PR that cites the features-overview URL in the commit and body, then `claude-tooling-sync verify`. I'd also test the hook against the spellings above before relying on it. I haven't changed anything. Tell me to go ahead and I'll build it.",
+  "costUsd": 0.024583999999999998
+}

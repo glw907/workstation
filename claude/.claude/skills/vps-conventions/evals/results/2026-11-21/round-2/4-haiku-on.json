@@ -1,0 +1,26 @@
+{
+  "skillName": "vps-conventions",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "What does `git rebase --onto` do? Give one short example.",
+  "started": "2026-11-22T02:40:12Z",
+  "seconds": 4.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`git rebase --onto <newbase> <upstream> [<branch>]` replays a range of commits onto a different base. It takes the commits reachable from `<branch>` but not from `<upstream>`, and reapplies them on top of `<newbase>`. Plain `git rebase <upstream>` is the same thing with `<newbase>` set to `<upstream>`.\n\nExample: `feature` was branched from `dev`, but it should be based on `main` instead:\n\n```bash\ngit rebase --onto main dev feature\n```\n\nGit takes the commits on `feature` that aren't in `dev`, then replays them onto `main`. The result is `feature` on `main`, without `dev`'s commits.",
+  "costUsd": 0.0034906700000000004
+}

@@ -1,0 +1,38 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T04:04:56Z",
+  "seconds": 19.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*/.mcp.json\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"mcpServers\", \"path\": \"/var/home/glw907/.claude.json\", \"output_mode\": \"content\", \"-A\": 3, \"head_limit\": 60}"
+    }
+  ],
+  "result": "I'd put it in neither ecxc-ski's `.mcp.json` nor your global user config. Define it once and turn it on only in the Svelte repos.\n\n- **Not ecxc-ski's `.mcp.json` alone.** 907-life, aksailingclub-org, cairn-pub and cairn-cms would each need their own copy of the same entry, and those copies would drift apart.\n- **Not user scope** (`claude mcp add --scope user`, which writes to `~/.claude.json`). That would load it in every session, including dotfiles, household-it and the Go tools, where it only adds tool noise. `~/.claude.json` is also a state file Claude Code keeps rewriting, so it can't be managed from `~/.dotfiles` the way your other config is.\n- **Recommended: a plugin, enabled per repo.** The Svelte team publishes a Claude Code plugin (`sveltejs/ai-tools`). It bundles their remote docs MCP server (`https://mcp.svelte.dev/mcp`) and some Svelte skills. Add the marketplace once. Then turn the plugin on in each Svelte repo's `.claude/settings.json` under `enabledPlugins`. That's one definition, updated by the Svelte team, active only where it applies, and recorded in each repo. If you'd rather not depend on another vendor's marketplace, put the same MCP entry in your own `standards` plugin and enable it the same way.\n\nTwo more things:\n- Check what the plugin's skills do before turning them on. They may overlap with `standards:svelte-check` and `standards:svelte-conventions`, so you might enable only the MCP part or keep your own skills as the rule.\n- When you make the change, it should go through the `claude-infra` skill, since it changes Claude Code tooling.\n\nI couldn't confirm your current setup: reading `~/Projects/*/.mcp.json` and `~/.claude.json` needed permissions I didn't have. If any repo already has a Svelte MCP entry, replace it with the plugin rather than running both.",
+  "costUsd": 0.04670400000000001
+}

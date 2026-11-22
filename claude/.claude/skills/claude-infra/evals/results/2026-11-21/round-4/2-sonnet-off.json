@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:30:56Z",
+  "seconds": 15.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Put it in a PreToolUse hook on the Bash tool, registered in user-level `~/.claude/settings.json`. Don't put it in CLAUDE.md or a skill.**\n\n**Why not CLAUDE.md or a skill**\n- Both are advisory. They shape what I choose to do, but nothing enforces them. \"No exceptions\" needs enforcement that doesn't depend on my judgment, including in a subagent or a background session that never loaded the skill.\n- A skill is also on-demand. It only helps if it happens to load.\n\n**Why a hook**\n- The harness runs the hook before the call, and exit code 2 blocks it. This holds in every permission mode and for subagents.\n- The hook can normalize the command before judging it. `rm -rf ~`, `rm -fr $HOME`, `rm -r -f /home/glw907`, `rm -rf /var/home/glw907/*` and `rm --recursive --force \"$HOME\"` all mean the same thing. On Bluefin `/home` is a symlink to `/var/home`, so several spellings reach the same directory.\n- This workstation already has a hook that refuses whole-tree `git add`, so the pattern exists.\n\n**Why not a `permissions.deny` rule alone**\n- Deny patterns like `Bash(rm -rf ~*)` match on the command text. They miss reordered flags, `$HOME`, the absolute path, `cd ~ && rm -rf .`, and `bash -c '...'`.\n- A deny rule is fine as a cheap second layer, but it can't be the whole rule.\n\n**How it should be built on this workstation**\n- The script goes in `~/.dotfiles/bin/.local/bin/`, then `stow -R bin`. Per your conventions it's stdlib-only Python run as `python3 -I`, since it parses the command.\n- The hook registration lands in settings through the `update-config` and `claude-infra` skills. Changes to Claude Code tooling go through `claude-infra`.\n- The `~/.dotfiles` gate is `bash scripts/gate.sh`. The script should have tests for the spellings above plus cases that must stay allowed.\n\n**Decision for you: what \"a home folder\" means.** I'd block targets that resolve to the home directory itself, its parent, or `/`, and the glob forms of those (`~/*`, `~/.*`). I'd allow `rm -rf ~/Projects/x/node_modules`, which is routine cleanup. If you mean \"anything under home\", that blocks ordinary work and you'd end up bypassing it, so I'd recommend against it.\n\n**Limits of \"no exceptions\"**\n- The hook only sees the command string. It can't see what a script it launches does internally, such as `python -c \"shutil.rmtree(...)\"`, `find ~ -delete`, or a Makefile target running `rm -rf`.\n- I can add the obvious cases (`find -delete`, `shutil.rmtree` on home). Anything stronger needs filesystem-level protection, such as a snapshot or backup, which is a separate decision.\n\nI didn't read your existing `settings.json` or hooks, so I haven't checked how the current git hook is wired. I changed nothing.",
+  "costUsd": 0.0203242
+}

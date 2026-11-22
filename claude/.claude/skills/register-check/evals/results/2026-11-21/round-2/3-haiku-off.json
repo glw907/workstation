@@ -1,0 +1,49 @@
+{
+  "skillName": "register-check",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Geoff asked for a register check on draft.md in this folder. Propose rewrites for what you find, but don't apply any.",
+  "started": "2026-11-22T03:01:27Z",
+  "seconds": 17.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-off/draft.md\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\", \"args\": \"Register check on draft.md: a short docs page, \\\"Publishing a page\\\", for editors using the Cairn admin. Propose rewrites only; do not edit the file.\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/voice/editor.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/docs-register.md\", \"path\": \"/var/home/glw907/Projects\"}"
+    }
+  ],
+  "result": "I couldn't read the house references for this check. Reads of `~/.claude/docs/voice/editor.md` and the cairn-cms editor brief were not granted, so I judged the draft against Microsoft's editor-copy standard from general knowledge. The cairn overlay may add rules I haven't applied. Nothing in `draft.md` was changed.\n\n**Findings**\n\n1. **Lines 3-4, the opening paragraph.** \"Isn't just a content system, it's a seamless way to publish\" is a contrast frame, and \"Moreover,\" \"seamless,\" \"robust, world-class,\" and \"empowers\" are promotional filler. An editor reading a task page needs the task, not a pitch. \"In minutes\" is also a timing claim the draft doesn't support, so I left it out of the rewrite.\n2. **Line 6, the steps.** \"Open the admin, choose the page, and select Publish\" is a sequence of actions in a paragraph. It belongs in a numbered list.\n3. **Line 7, \"Click here.\"** Link text should name its destination. \"Click here\" is a known accessibility and scanning problem.\n4. **Line 9, the release and adoption stats.** This sentence is off-topic for a task page, and the figures are unsourced in this context. Drop it here. If it's wanted on the site, it belongs on an about or overview page with a source.\n5. **Heading.** \"Publishing a page\" is a noun phrase. Microsoft favours task headings, so \"Publish a page\" fits better. Sentence case is already correct.\n\n**Proposed rewrite**\n\n```markdown\n# Publish a page\n\n1. In the admin, open the page you want to publish.\n2. Select **Publish**.\n\nThe site rebuilds on Cloudflare, and the new version goes live about a minute later. For more on\nhow builds work, see [Site builds](LINK).\n```\n\nNotes on the rewrite:\n- The three original steps are kept as stated: open the admin, choose the page, select Publish. I merged \"open the admin\" and \"choose the page\" into one step, since the original gives no separate reason for them. If you want them kept apart, use three steps.\n- `LINK` is a placeholder. The draft names no target for \"builds,\" so I didn't invent one.\n- The opening sentence is removed rather than replaced. The heading already says what the page covers.",
+  "costUsd": 0.00632342
+}

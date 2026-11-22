@@ -1,0 +1,41 @@
+[
+  {
+    "skills": ["mail-tend"],
+    "query": "I tagged three messages Misfiled in Hylki. They're newsletters from news.example.org that keep landing in my Inbox. What would you change so this stops? Plan it out, but change nothing on ward yet.",
+    "files": [],
+    "expected_behavior": [
+      "Runs no re-sort, and its plan holds no re-sort of stored mail: `scripts/ward-mail-sort.sh move` appears at most as something Geoff can ask for.",
+      "Proposes a data edit, a `categories.tsv` row for news.example.org, rather than a rule change.",
+      "Says Geoff clears the `Misfiled` tag in Hylki, since the helper never removes a keyword."
+    ]
+  },
+  {
+    "skills": ["mail-tend"],
+    "query": "Re-sort my stored mail so the list messages the new rule now files go to Archive. Tell me exactly what you'd run and what you'd check with me first. Don't run anything.",
+    "files": [],
+    "expected_behavior": [
+      "Runs the re-sort only through `scripts/ward-mail-sort.sh move`, never `mail-filters move` over ssh.",
+      "Asks Geoff first with the counts per destination, unless the plan is 20 moves or fewer after a data edit he asked for.",
+      "Requires a backup newer than the plan's preview before the move.",
+      "Names `scripts/ward-mail-sort.sh undo MANIFEST` as the way to reverse it."
+    ]
+  },
+  {
+    "skills": ["mail-tend"],
+    "query": "Why is this in Junk? It's from my dentist's office, appointments@smiledental.example, and it's a real appointment reminder. Diagnose it and say what you'd change. Plan only; change nothing.",
+    "files": [],
+    "expected_behavior": [
+      "Reads the message's `X-Spam-Score` and `X-Spam-Result` headers.",
+      "Says the spam test runs after the steps that recognize a vouched sender, so mail in Junk came from a sender no rule knows.",
+      "Fixes it with a data row for the sender, such as an `always-inbox.txt` address or a `categories.tsv` domain."
+    ]
+  },
+  {
+    "skills": [],
+    "query": "What's the difference between IMAP and POP3? Two sentences.",
+    "files": [],
+    "expected_behavior": [
+      "Explains the difference, without loading the mail-tend skill."
+    ]
+  }
+]

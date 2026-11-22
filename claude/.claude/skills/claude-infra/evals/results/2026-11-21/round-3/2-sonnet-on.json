@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:18:53Z",
+  "seconds": 11.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    }
+  ],
+  "result": "**Put it in a hook, not CLAUDE.md or a skill.** A hook is the one home that holds every time.\n\n**Why a hook.** Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>) says: \"If a rule must hold every time, make it a hook rather than a prompt instruction.\" You want no exceptions, so that line decides it.\n\n**Why not CLAUDE.md.** CLAUDE.md carries facts that apply every turn. Claude reads it as context, and nothing enforces it. A line there would make a `rm -rf ~` less likely, but a model can still misread or ignore it. That is a request, not a block. It would also be one more line in a file that is already long.\n\n**Why not a skill.** A skill is reference material Claude loads when it needs it. It only loads when a task matches its description, so it can't stop a call that never triggered it. It also doesn't reach subagents with fixed tool lists unless they preload it.\n\n**What the hook looks like.**\n- A `PreToolUse` hook matched on `Bash`. It reads the command from stdin JSON and exits with code 2 (or returns a deny decision) when the command is `rm` with recursive and force flags aimed at a home path.\n- Parse it for real, not with one regex. It should catch flag variants (`-rf`, `-fr`, `-r -f`, `--recursive --force`), `$HOME`, `~`, `~/`, `/var/home/glw907` and `/home/...`, plus the same command inside `sudo`, `bash -c`, `xargs` and `find -delete`.\n- Hooks run before the permission mode is applied. A deny from one holds even under auto mode or when the user has allowed the command.\n- Put it in user-scope `~/.claude/settings.json` so it covers every repo and worktree. A project-level hook would leave other repos unprotected. Subagents are also bound by it.\n\n**Mechanics.**\n- Use the built-in `update-config` skill to write the settings entry, per the `claude-infra` procedure.\n- Keep the script in `~/.dotfiles` (Bash, since it's glue). Stow it, and edit the dotfiles copy, not the link.\n- Record it in its manifest per the \"Layout\" table in `~/.claude/docs/claude-tooling.md`, then run `claude-tooling-sync verify`.\n- Land it through a PR that cites the features-overview URL, and run the audits (`/doctor prompt-audit`, `/skill-doctor`).\n\n**Limits to know about.**\n- A hook only sees Claude's Bash tool calls. It does not stop `rm -rf` run from your own terminal or from a script that Claude runs. Obfuscated forms, such as a script that builds the path at runtime, can slip past a command-text check.\n- For a stronger guarantee, add a permission `deny` rule such as `Bash(rm -rf ~*)` in settings as a second layer, since deny rules also hold regardless of mode. Treat it as a backstop. Prefix patterns are easy to get around, so the hook does the real work.\n- If you ever need a one-off exception, you would edit the hook yourself. That fits \"no exceptions\" for Claude.\n\nI changed nothing. If you want it built, say so and I'll start with the `update-config` mechanics and write the script and its tests.",
+  "costUsd": 0.0876625
+}

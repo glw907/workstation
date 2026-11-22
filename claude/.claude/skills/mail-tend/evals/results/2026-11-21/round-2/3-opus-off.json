@@ -1,0 +1,45 @@
+{
+  "skillName": "mail-tend",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Why is this in Junk? It's from my dentist's office, appointments@smiledental.example, and it's a real appointment reminder. Diagnose it and say what you'd change. Plan only; change nothing.",
+  "started": "2026-11-22T03:15:53Z",
+  "seconds": 19.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "runbook"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"runbook\", \"args\": \"Diagnose why a real appointment reminder from appointments@smiledental.example landed in Junk; plan only, change nothing.\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/Projects/household-it/README.md\"}"
+    }
+  ],
+  "result": "I haven't diagnosed it yet. I was blocked before I could look at anything.\n\n**What happened:**\n\n- The household mail setup is documented in `~/Projects/household-it`, so I tried to read its `README.md` to find the page for your mail system. The permission prompt for that read was declined, so I don't know which provider, filters or Junk rules your mail goes through.\n- I also don't have the message. The working directory has no copy of it, and I can't see your mailbox from here.\n\nWithout those two things I'd only be guessing, and I'd rather not hand you a guess as a diagnosis.\n\n**What I need, either one:**\n\n1. **Read access to `~/Projects/household-it`** (the README and the mail system page it links to). That tells me where filtering happens and how to pull the message's headers safely.\n2. **The message's raw headers**, pasted in or saved to a file. Your mail client's \"Show original\" or \"View source\" option shows them. The important parts are the `Authentication-Results`, `Received-SPF`, `DKIM-Signature` lines and any spam-score or filter header (`X-Spam-*`, `X-Rspamd-*` or similar).\n\n**What I'll check once I have them:**\n\n- **The sender's email security (SPF, DKIM, DMARC).** Dentist reminders are usually sent by a booking service for the office. If that service isn't authorised in smiledental's DNS, or signs the mail with its own domain, the checks fail and the mail looks forged. That's the most common cause, and the fix is on the dentist's side.\n- **The spam score.** I'll see which rules fired, such as link-heavy content, a shared sending IP, or a tracking domain.\n- **Your own rules.** I'll look for a filter, blocklist entry or earlier \"mark as spam\" that caught this address or the booking service.\n\n**What I'd likely change, depending on the cause:**\n\n- If the sender's checks failed, I'd add a narrow allow rule for `appointments@smiledental.example` that only applies when DKIM passes for the expected domain. I'd avoid allowing the whole domain or skipping the checks. I'd also tell the office, because the real fix is in their DNS.\n- If the checks passed but the spam score was high, I'd add the same narrow allow rule and mark the message \"Not junk\".\n- If one of your own rules caught it, I'd narrow or remove that rule.\n\nIn every case the change would also update that system's page in `household-it`. I haven't changed anything. Grant the read, or send the headers, and I'll do the actual diagnosis.",
+  "costUsd": 0.17891079999999998
+}

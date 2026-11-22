@@ -1,0 +1,42 @@
+{
+  "skillName": "proton-pass",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I want to move about 30 Proton Pass items between vaults and rename some of them. Can Claude just do this with claude-pass? How should it go? Plan only; don't run anything.",
+  "started": "2026-11-22T02:50:02Z",
+  "seconds": 24.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"proton-pass\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.dotfiles/bin/.local/bin/pass-sitting\", \"limit\": 60}"
+    }
+  ],
+  "result": "No. Claude shouldn't make these changes through `claude-pass`. The `proton-pass` skill says moves and renames in bulk belong to Geoff, through `pass-sitting` under his own login, after a dry run. `claude-block-pass` refuses every form of `pass-sitting` when Claude tries it. Even apart from that rule, `claude-pass` is the wrong tool for this job:\n\n- **Visibility:** Claude's agents can only see five vaults: Infrastructure, Age key, Projects, ASC and Test accounts. They can't see any item in Private, Cathy & Geoff, Family, Parents or Proton recovery.\n- **Throttle:** Proton limits an agent's logins after about four quick calls. With 30 moves plus the renames, the calls would have to be spaced about 150 seconds apart, which is over an hour of background work. That's exactly what a sitting is built to avoid.\n\n## How it should go\n\n1. **Build the list.** It needs one row per item: where it is now, which vault it goes to, and the new title if it gets one.\n   - For items in the five vaults Claude can see, Claude reads the item lists with `claude-pass item list`. The output goes to a file so titles don't appear in the chat.\n   - For items in vaults only you can see, you'd give Claude those rows.\n2. **Check each row against the rules.**\n   - **Vault:** each item goes in the narrowest vault that holds everyone who signs in to it. Money and medical accounts lean to Cathy & Geoff unless a kid uses them.\n   - **Title:** the service's name as people say it, never a domain. A qualifier goes in one trailing parenthesis, and only when a vault holds more than one account at the service. Keys and secrets are named system, then secret, then scope, for example `R2 backup secret (orpheus, read-only)`.\n   - Claude flags any row where your choice and the rules disagree, one question at a time.\n3. **Check who loses or gains access.**\n   - Moving an item out of a vault Claude can see cuts off any script or deploy that reads it. Claude checks the item's \"Used by\" note line and searches the repos and the secrets registry for the item's name.\n   - Moving an item into one of those vaults gives the agents access to it. Claude points out any of those so you can confirm.\n   - A renamed item that is referred to by its title somewhere gets that reference updated in the same change.\n4. **Write the sitting file.** Claude writes one JSON line per move or rename, in the format shown at the top of `bin/.local/bin/pass-sitting`. (I couldn't open that file just now because the read permission was declined, so I'll read it when writing the file.)\n5. **You run it** in a Ptyxis terminal, not through `!`:\n   - `pass-sitting FILE` is the dry run. Read what it plans to do.\n   - `pass-sitting --apply FILE` makes the changes.\n6. **Check the result.**\n   - Claude runs `check-drift --titles` on its five vaults. It reports a count, and the titles go to a private findings file.\n   - If a reference was updated in step 3, the repo's gate runs on that change.\n\nNothing about access grants changes, so the grant map stays as it is.\n\nTo start, either send me the list of items and where each should go, or tell me which vaults the items are in now. If they're all in vaults Claude can see, I'll draft the list myself.",
+  "costUsd": 0.20140339999999998
+}

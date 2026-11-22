@@ -1,0 +1,33 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T04:03:45Z",
+  "seconds": 16.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"PreToolUse|rm -rf|\\\"deny\\\"\", \"path\": \"/var/home/glw907/.claude/settings.json\", \"output_mode\": \"content\", \"-C\": 3}"
+    }
+  ],
+  "result": "Put it in neither. Make it a **PreToolUse hook** in your user-level Claude Code settings (`~/.claude/settings.json`). Edit the copy in `~/.dotfiles` and stow it, as with your other config.\n\n**Why not CLAUDE.md or a skill:** both are text I read and try to follow. Neither can block anything. A rule in CLAUDE.md can be misread, or lost when the context is summarized. A skill only loads when its description matches the task, so it would rarely load at the moment a cleanup command runs. A rule you want enforced \"no exceptions\" can't depend on the model remembering it.\n\n**Why a hook:** the harness runs it, not me. A PreToolUse hook on the `Bash` tool gets each command before it runs. If it exits with code 2, the call is refused and the reason is shown to me. I can't override it, and it applies in every session and every repo on the machine.\n\n**What the hook should check:**\n- Every way of writing the same command: `rm -rf`, `rm -fr`, `rm -r -f`, `rm --recursive --force`, and `rm` called through `sudo`, `command`, or `\\rm`.\n- Every way of naming a home folder: `~`, `~/`, `$HOME`, `${HOME}`, `/home/<user>`, and `/var/home/<user>` (on Bluefin, `/home` is a symlink to `/var/home`). Also `~other`, and a bare `/home` or `/var/home`.\n- Commands hidden inside others, like `bash -c \"...\"`, `xargs rm`, or `find ... -delete`. Text matching will never catch every form. Match broadly and refuse anything unclear rather than trying to parse shell exactly.\n\n**A second layer:** add `permissions.deny` entries such as `Bash(rm -rf ~*)` in the same settings file. They're easy to get around with a slightly different spelling, so treat them as extra protection, not the main guard.\n\n**Limits:** this blocks only my Bash calls. It doesn't stop a script I run that deletes files itself, and it doesn't cover your own terminal. If you want protection from any source, the real answer is backups or snapshots of your home folder.\n\nYour CLAUDE.md says changes to Claude Code tooling go through the `claude-infra` skill. That skill isn't in this session's skill list, so the session that builds the hook needs to find it first. I changed nothing. I also couldn't check whether a similar hook already exists, because reading `~/.claude/settings.json` was denied.",
+  "costUsd": 0.037639200000000005
+}

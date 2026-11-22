@@ -1,0 +1,9 @@
+[Unit]
+Description=Weekly prune of old upload files
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+
+[Install]
+WantedBy=timers.target

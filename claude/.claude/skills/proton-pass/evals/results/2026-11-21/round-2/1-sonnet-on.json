@@ -1,0 +1,37 @@
+{
+  "skillName": "proton-pass",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I need to store a new Resend API key that the 907-life Worker uses. Which Proton Pass vault does it go in, what should the item be titled, and how would Claude write it without the value reaching the transcript? Plan only; don't run anything.",
+  "started": "2026-11-22T02:46:55Z",
+  "seconds": 10.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"proton-pass\"}"
+    }
+  ],
+  "result": "**Vault:** `Projects`. The vault map lists Resend there, alongside cairn, the sites, npm, Anthropic, Twilio and the technical identity's vendor accounts. Its readers are Geoff and Claude (editor), which is what the Worker's key needs. Within `Projects`, put it in the 907-life folder. I'd confirm that folder's exact name with `claude-pass folder list` before writing, since I haven't looked.\n\n**Title:** The skill names a key as system, then secret, then scope, with the scope in one trailing parenthesis. That gives `Resend API key (907-life Worker)`. The skill's own example is `R2 backup secret (orpheus, read-only)`, so a permission level could also go in the scope, for example `(907-life Worker, sending only)`. I'd add that only if the key is restricted. The title must not be a domain or a generic name like \"API key\".\n\n**Note:** `Projects` is a technical vault, so the note carries the full template, each line only where I have a source for it:\n- `For`: sending mail from the 907-life Worker.\n- `Used by`: the 907-life Worker. I'd confirm the Workers secret name from the repo.\n- `Rotate`, `Recovery`, `Mask`, `Reviewed`: only if there is a source.\n\n**Writing it without the value reaching the transcript:**\n1. Run `secret-receive RESEND_API_KEY`, which Claude launches itself. Its dialog takes the value from Geoff, who never pastes it into chat. Per the CLAUDE.md secrets rule, a new long-lived secret originates in the workstation age store through `~/.dotfiles/scripts/secrets/secret-set.sh`, not as a loose file. I'd read `secrets.md` for the exact hand-off from `secret-receive` into the age store and on to `claude-pass`.\n2. Build the item template JSON with the value injected inside a script, so it never appears in argv or in output. The template carries the title, the note, and the key as a hidden custom field: `extra_fields: [{\"kind\":\"hidden\",\"title\":\"Token\",\"value\":...}]`. The field title is \"Token\" in sentence case.\n3. Pipe it on stdin: `CLAUDE_PASS_REASON=\"store Resend key for 907-life Worker\" claude-pass item create login --vault-name Projects --from-template -`. The value goes on stdin only, never in argv.\n4. Check the result by reading field names and types only, never values.\n5. Set the Worker's runtime secret from the same store, not by `wrangler secret put` alone.\n\n**Cautions:**\n- Check for an existing Resend item first with `item list`, so I don't duplicate it. If one exists, I'd write a new note above the old one rather than over it.\n- Proton throttles an agent's logins after about four quick calls. I'd keep the calls few, and if I see \"Agent login failed\", wait 25 minutes and then space calls 150 seconds apart.\n- `item update --field` puts the value in argv, so I wouldn't use it for the key.\n\nI haven't run anything.",
+  "costUsd": 0.0870828
+}

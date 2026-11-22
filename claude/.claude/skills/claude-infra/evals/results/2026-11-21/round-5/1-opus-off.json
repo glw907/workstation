@@ -1,0 +1,45 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:42:23Z",
+  "seconds": 24.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/Projects/cairn-cms\", \"glob\": \"*.md\", \"head_limit\": 40}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\", \"args\": \"Planning question only, no edits: where should a recurring five-step cairn release checklist live? Show what this skill covers about releases.\"}"
+    }
+  ],
+  "result": "I couldn't confirm what's already in the repo. Reads outside this scratch directory weren't permitted, so I haven't seen the cairn-cms checkout or whether it has a release doc. The only thing I could load was the workstation `cairn-pass` skill, and it says nothing about releases.\n\n## Where it should live\n\n**Recommendation: a repo skill in the cairn-cms checkout**, at `.claude/skills/cairn-releasing/SKILL.md`. Its description should trigger on \"cut a release\", \"tag a version\" and \"publish cairn\".\n\n- **It belongs with the repo.** Release steps describe how cairn-cms works, not how this workstation works. `cairn-pass` makes that split explicit: the repo's skills hold what any clone needs, and the overlay holds only Geoff's operation. A repo skill is versioned with the code it describes and loads in any session that opens the checkout.\n- **It's a skill, not a doc or a memory entry.** It loads on its own when you mention a release, so you stop pasting it. Memory is only for facts, not procedures, and a doc under `docs/` doesn't load unless something points to it.\n- **Some steps may be workstation-only.** Steps that use this machine's tools (for example `cairn-run-gate`, `ci-green`, a secret from `~/.local/secrets`, or the approval packet) would go in a short `## Release` section added to the workstation `cairn-pass` skill. That section would point to the repo skill, the same way the overlay already points to `cairn-running-passes`.\n- **Check this before adding a skill:** if releases always happen when a pass closes, the steps may fit better as part of the close checklist in `cairn-running-passes`. Releases that happen on their own schedule should get their own skill.\n\n## How it would land\n\n1. **Route it through `claude-infra`.** CLAUDE.md requires that for changes to Claude Code tooling, and both a new skill and an edit to `cairn-pass` count. That skill isn't in this session's list, so a session that has it would do this.\n2. **Check that the worktree is free.** Run `claude-worktree-busy` on the cairn-cms checkout and read STATUS so this doesn't collide with a pass in flight.\n3. **Decide whether a spec is needed.** If your five steps are copied in word for word, this is a \"Direct changes\" case under `building-from-specs`: no spec, just a branch with the new skill file. If the steps need rewording or splitting between the repo and the overlay, it needs a short spec you approve first.\n4. **Build it.** Work in a `.claude/worktrees/<name>` worktree. Write the skill text with the `writing-voice` skill, aimed at a Claude session that's cutting a release. Run the gate through `cairn-run-gate`. This is likely the light lane, since it's only docs.\n5. **Open a PR.** Open a draft PR in cairn-cms, watch CI with `ci-green`, and have a fresh subagent review it. Send it to you for approval, and merge only after you approve it by PR number. Any workstation-only steps go to the `cairn-pass` overlay as a separate change.\n\n## What I need from you\n\nPaste the five steps once more, or let me read the cairn-cms checkout. Then I can say which steps belong in the repo skill and which belong in the overlay.",
+  "costUsd": 0.0679172
+}

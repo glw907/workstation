@@ -1,0 +1,42 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T02:28:29Z",
+  "seconds": 32.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)retire|decommission|archive\", \"path\": \"/var/home/glw907/.claude\", \"glob\": \"{docs,skills}/**/*.md\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)retire|decommission|archiv\", \"output_mode\": \"content\", \"-C\": 2}"
+    }
+  ],
+  "result": "I found no retirement procedure on the workstation. The closest skill is `maintenance-mode`, and it covers a project going quiet, not one being removed. So this plan comes from first principles, and nothing has been run.\n\n## The rule behind the plan\n\nDeleting a D1 database also deletes its Time Travel history. After that, the archive is the only copy left. So the archive gets restored and checked against the live database before anything is deleted, and Geoff gives a separate go-ahead for the deletion itself.\n\n## What goes in the archive\n\nOne directory per project, named `<project>-retired-2026-11-21/`:\n\n| Item | How it's made | Why |\n|---|---|---|\n| `repo.bundle` | `git bundle create repo.bundle --all` | Every branch, tag, and commit in one file that works without GitHub. |\n| `d1-<name>.sql` | `wrangler d1 export <name> --remote --output=…` | The schema and data as plain SQL that any SQLite can load. |\n| `d1-<name>.schema.sql` | `--no-data` export | Lets you diff the schema without reading the data. |\n| `d1-<name>.counts.tsv` | Row count for each table from the remote database, taken at freeze time | The baseline the restore check compares against. |\n| `cloudflare.json` | API reads of the Worker's settings, bindings, routes, custom domains, cron triggers, DNS records, and any Access app | Rebuilds the deployment's wiring if the project ever comes back. |\n| `secrets.txt` | `wrangler secret list` (names only, no values) | Records which secrets existed. The values stay in the age store or Proton Pass until retirement removes them deliberately. |\n| `README.md` | Written by hand | What the project was, the retirement date, how to restore it, and the list of everything deleted. |\n| `SHA256SUMS` | `sha256sum` over everything above | Catches a corrupted copy later. |\n\nThe archive never holds secret values or a `.env` file with real values.\n\n## Order of work\n\n1. **Inventory.** Look up every resource tied to the project: the Worker or Pages project, D1, DNS, Access, tokens, GitHub Actions secrets, and any Proton Pass items. Check the Cloudflare estate inventory doc and the runbook while doing this.\n2. **Freeze writes.** Put the Worker into a read-only state, or remove its route, so the export is a consistent snapshot. Record the D1 Time Travel bookmark at that moment as a fallback while the database still exists.\n3. **Build the archive** as listed in the table above.\n4. **Prove the archive.** Nothing is deleted until every check below passes:\n   - `sha256sum -c SHA256SUMS` passes.\n   - `git bundle verify repo.bundle` passes, and a fresh `git clone repo.bundle` shows the same `HEAD` and branch list as the remote.\n   - The SQL export loads into a new empty SQLite file (`sqlite3 restore.db < d1-<name>.sql`) without errors.\n   - Every table's row count in the restored file matches `counts.tsv` exactly.\n   - The schema in the restored file's `sqlite_master` matches the remote's.\n   - For each table, a hash of all rows ordered by primary key matches the same query run against the remote. Row counts can't catch changed values; this check does.\n   - The archive is copied to its long-term home, and checksum verification is run again on that copy, not on the local one.\n5. **Approval.** Geoff gets the check results and the exact list of resources to delete, as a dry run, and gives an explicit go-ahead.\n6. **Delete, in dependency order.** First the Worker, its routes and domains, and any Access app. Then the D1 database, then DNS records. Then the project's API tokens and Actions secrets. Then its Proton Pass and age-store items, revoked first and then removed. Last, archive the GitHub repo or delete it.\n7. **Record.** Close the initiative record with `log-project`, update the runbook if household infrastructure referenced the project, and update the estate inventory.\n\n## Before I can turn this into a spec\n\nI need one decision from Geoff: **where the archive lives long-term**, and whether the GitHub repo is archived as read-only or deleted. My recommendation is to archive the repo read-only, since that costs nothing and the bundle is the real backup either way, and to keep the archive directory in storage Geoff already backs up offsite.",
+  "costUsd": 0.2418776
+}

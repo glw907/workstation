@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:38:41Z",
+  "seconds": 23.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "For a small demo repo with one D1 database, the archive is one file, and nothing gets deleted until a scratch restore of it works and Geoff has approved each delete. I ran nothing.\n\n## What goes in the archive\n\nOne age-encrypted file, `<project>-2026-11-21.tar.age`, encrypted to the workstation key. It holds:\n\n1. **A git bundle of every ref**, made with `git bundle create <project>.bundle --all` and checked with `git bundle verify`. A bundle carries commits only, so first:\n   - In each worktree, commit or drop any uncommitted work, based on its `git status`.\n   - Turn each stash you want to keep into a branch. `--all` keeps only the newest stash, not the older entries.\n   - Push or bundle any local branches that were never pushed.\n2. **The D1 export**: `wrangler d1 export <db> --remote --output <db>.sql`, which includes the schema and the data.\n3. **R2 objects**: none expected. The step 1 inventory confirms that, and the retirement record says \"none\" rather than leaving it blank.\n4. **Issues and PRs as JSON**: `gh issue list --state all` and `gh pr list --state all`, with comments, saved as `issues.json` and `prs.json`.\n5. **Worker config**: the deployed `wrangler.toml` or `wrangler.jsonc`, plus a list of secret *names* from `wrangler secret list`. Secret values never go in the archive.\n\nI'd also add a `MANIFEST` listing each file's sha256, so a later restore can check each part on its own.\n\n## How the archive is proven\n\nThese steps run before the approval step, so nothing can be deleted until all of them pass:\n\n1. **Check the export.** The SQL file must not be empty and must contain `CREATE TABLE` lines. A failed or empty export stops the retirement. One known way it fails: `wrangler d1 export` doesn't handle virtual tables such as FTS5. If the inventory finds any, that's a stop to resolve first.\n2. **Restore into a scratch directory** (a fresh `mktemp -d`):\n   - Decrypt with `age -d` and unpack the tar.\n   - Clone the bundle with `git clone <project>.bundle`, and check that its branches and HEAD match the repo's.\n   - Load the dump with `sqlite3 restore.db < <db>.sql`, which must exit 0. My own addition: compare each table's row count with the live database through `wrangler d1 execute --remote --command \"SELECT count(*) FROM <t>\"`.\n   - Parse both JSON files with `jq` to confirm they're well formed.\n3. **Store two copies**: one in `~/Documents/retired-projects/` and one in R2 at `servers-archive/retired-projects/`. `rclone check` must show the local file and the R2 copy match.\n4. **Record the file's sha256** (from `sha256sum`) in the retirement record. It later goes in the `README.md` row beside the archives.\n\n## After the proof\n\nNext comes the dry run for Geoff, listing each delete by its id: the custom domain and DNS records, the Worker, the D1 database, and the GitHub repo. Each one is a question with a recommendation, and only his typed answer approves it. Teardown follows the skill's order: traffic comes off before the Worker goes, and the inventory is rerun for each id right before it's deleted.",
+  "costUsd": 0.18715779999999999
+}

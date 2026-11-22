@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:26:06Z",
+  "seconds": 13.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`/retire-project` isn't installed in this session, so it didn't run. I treated your message as a plain request and ran nothing. If you want the command itself, it would need to be added as an organization plugin or a project skill.\n\n## What goes in the archive\n\nOne directory, with a manifest at its root:\n\n1. **Repo**: a `git bundle` of all branches and tags, so full history survives. It also holds the working tree if there are uncommitted or ignored files worth keeping (not `node_modules` or `.env`).\n2. **D1 export**: the schema and data from `wrangler d1 export --remote`, as one `.sql` file. I'd also take a schema-only export, because it's easier to read later.\n3. **Deployment record**: the `wrangler` config, the D1 database name and ID, the Worker or Pages project names, routes, custom domains, DNS records, and any Access apps. These are the things deletion has to cover, and the archive records what they were.\n4. **Secret names only**: the Workers secret names and the Proton Pass item names. Values never go in the archive.\n5. **MANIFEST**: a `sha256sum` line for each file, the date, a row count per D1 table, the git HEAD hash, and a short README on how to restore.\n\n## How the archive is proven before deletion\n\nEverything runs in new, empty directories, with scripts kept elsewhere.\n\n1. **Bundle**: `git bundle verify`, then clone it into an empty directory. Check that HEAD matches the manifest, `git fsck` is clean, and the branch and tag lists match the original.\n2. **D1 restore test**: import the `.sql` into a fresh local D1 (`wrangler d1 execute --local`) in a scratch project. Then compare it with the live remote:\n   - The table and index lists match.\n   - Per-table row counts match.\n   - A content hash per table matches, computed by the same ordered query on both sides.\n3. **Checksums**: verify the manifest's `sha256sum` after the archive is copied to its final home, not just before. Keep a second copy somewhere independent of the workstation.\n4. **Dependents check**: grep the other repos and the Cloudflare account for the database ID, Worker name, and domain, so nothing live still points at them.\n5. **Freeze**: confirm nothing writes to the database between the export and the deletion. If anything can write, take the export again.\n\n## Deletion, only after the proof passes\n\n1. Show a dry-run list of everything to be deleted, with names and IDs.\n2. Wait for your go-ahead, since this can't be undone.\n3. Delete in this order: routes, DNS, and Access apps first, then the Worker or Pages project, then the D1 database last, then the repo. Last, remove the secrets and the Proton Pass items.\n4. Check that the resources are gone, and record the retirement (the `log-project` initiative record, if one exists).\n\nThe location of the second archive copy is the one call for you.",
+  "costUsd": 0.0176023
+}

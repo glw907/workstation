@@ -1,0 +1,38 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:20:55Z",
+  "seconds": 19.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*/.mcp.json\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"svelte\", \"path\": \"/var/home/glw907/.claude\", \"glob\": \"*.{json,md}\", \"-i\": true, \"head_limit\": 30}"
+    }
+  ],
+  "result": "I recommend adding it to the `.mcp.json` of each Svelte repo: ecxc-ski, 907-life, aksailingclub-org, cairn-pub, and probably cairn-cms. It shouldn't go in ecxc-ski alone, and I wouldn't make it a workstation-wide server either.\n\nI couldn't read `~/Projects` or `~/.claude` because permission wasn't granted. So this is based on how Claude Code's MCP scopes work, not on your current config files.\n\n**Why each repo's `.mcp.json`:**\n- **It follows the worktrees.** Your passes run in fresh worktrees. A server in `.mcp.json` is in git, so every worktree and fresh session gets it. A \"local\" server (`claude mcp add` with no scope) is stored in `~/.claude.json` under one checkout's path, so new worktrees won't see it.\n- **It only loads where it's useful.** A \"user\" server (`--scope user`) loads in every session, including dotfiles and household-it, where Svelte docs add nothing and its tool definitions use up context.\n- **It's versioned with the code.** It's the same pattern as the Svelte skills (`svelte-check`, `svelte-conventions`), which belong to the Svelte repos, not to the whole machine.\n\n**Two things to watch:**\n- **First-use approval:** Claude Code asks you to approve a project `.mcp.json` server the first time it appears. A background session can't answer that prompt, so pre-approve the server with `enabledMcpjsonServers` in each repo's checked-in `.claude/settings.json`. Otherwise the server may silently not load in unattended runs.\n- **Process:** Your CLAUDE.md sends Claude Code tooling changes through the `claude-infra` skill. That skill isn't available in this session, so check it before making the change. It may already prefer a scope.\n\nUser scope would only make sense if you wanted the server in every session on the machine. With five Svelte repos out of many, per-repo is the better fit. Nothing was changed.",
+  "costUsd": 0.1706298
+}

@@ -1,0 +1,28 @@
+{
+  "skillName": "register-check",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Geoff asked for a register check on draft.md in this folder. Propose rewrites for what you find, but don't apply any.",
+  "started": "2026-11-22T02:21:07Z",
+  "seconds": 25.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "register-check",
+    "register-check"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/register-check"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "The register check found six things to fix in `draft.md`, and I changed none of them. Only a manual read ran. Vale, `tellgrader` and the register-editor agent weren't available, and there are no sibling docs in this folder. Re-run the mechanical gates from the repo root before relying on this.\n\n**Proposed rewrites**\n\n1. **Lines 3-4, \"Cairn isn't just a content system, it's a seamless way to publish.\"**\n   - It uses the \"isn't just X, it's Y\" frame, the marketing word \"seamless\", and a comma splice.\n   - Cut it, because the page's real content starts at line 6.\n\n2. **Lines 3-4, \"Moreover, it empowers every editor to ship robust, world-class pages in minutes.\"**\n   - It opens with a connector word (\"Moreover\"), uses empty praise (\"empowers\", \"robust\", \"world-class\"), and makes an unsupported \"in minutes\" claim.\n   - Cut it. If an intro is wanted, use: \"Publishing rebuilds the site from the saved page.\"\n\n3. **Line 7, \"Click here to read more about builds.\"**\n   - \"Here\" is not a descriptive link anchor, and there is no link target.\n   - Replace it with \"See [how builds work](…)\" if a sibling page exists. Otherwise cut it. Don't invent a URL.\n\n4. **Line 9, \"Cairn was first released in 2019 and is used by over ten thousand sites.\"**\n   - Both facts are unsourced, and the sentence is promotional on a task page.\n   - Cut it.\n\n5. **Line 6, \"live about a minute later.\"**\n   - The timing has no source in the draft.\n   - Replace it with \"the new version goes live when the build finishes\", unless a build time is documented.\n\n6. **Line 6, \"Cloudflare\".**\n   - The first mention has no link.\n   - Link it once to its official docs, if the name stays. The URL needs verifying first.\n\n**Your call, Geoff**\n- **2019 and ten thousand sites:** only you can say whether these are true or sourced. My default is to cut them. If they stay, they need a source and a home on an about page, and they must agree with the README, why-cairn, editor-welcome and the docs index. I couldn't check those pages from here.\n- **Opening on the steps:** whether the page should open directly with the steps is a taste call.\n\nLine 6's steps (\"open the admin, choose the page, and select **Publish**\") are fine. With every fix applied, that one sentence is nearly all that remains of the page.",
+  "costUsd": 0.22141149999999998
+}

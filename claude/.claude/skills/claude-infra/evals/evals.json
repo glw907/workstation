@@ -1,0 +1,39 @@
+[
+  {
+    "skills": ["claude-infra"],
+    "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+    "files": [],
+    "expected_behavior": [
+      "Makes it a skill, since it is a procedure Claude needs only sometimes.",
+      "Gives it one home, says what records it (a skill authored here is its own manifest, its directory), and runs `claude-tooling-sync verify` after.",
+      "Lands it through a pull request that cites the Anthropic page it follows, unless it qualifies as a direct change."
+    ]
+  },
+  {
+    "skills": ["claude-infra"],
+    "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+    "files": [],
+    "expected_behavior": [
+      "Makes it a hook, because a rule that must hold every time belongs in a hook rather than a prompt instruction.",
+      "Cites an Anthropic page, such as the features overview or the hooks docs, for that choice.",
+      "Says CLAUDE.md carries only a fact that applies every turn, so it is the wrong home for this rule."
+    ]
+  },
+  {
+    "skills": ["claude-infra"],
+    "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+    "files": [],
+    "expected_behavior": [
+      "Puts it at user scope with its manifest entry, because the cairn-family stack shares it.",
+      "Says a repo's `.mcp.json` carries only what that repo alone needs."
+    ]
+  },
+  {
+    "skills": [],
+    "query": "Explain what a Python list comprehension is, with one short example.",
+    "files": [],
+    "expected_behavior": [
+      "Explains list comprehensions with an example, without loading the claude-infra skill."
+    ]
+  }
+]

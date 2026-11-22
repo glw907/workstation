@@ -1,0 +1,29 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T02:09:23Z",
+  "seconds": 14.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra",
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "result": "**Recommendation:** put the checklist in the cairn-cms repo as a project skill, at `.claude/skills/<release-slug>/SKILL.md` next to the existing `cairn-running-passes` skill. Name it for the trigger you'd type, such as `cairn-release`. Its description should say \"use when cutting a cairn release,\" so a session loads it without you pasting anything.\n\n**Why this home:**\n- The steps are specific to the cairn-cms repo. `claude-infra` says repo-specific tooling goes at project scope, not user scope.\n- A procedure you need only sometimes is reference material, so it belongs in a skill, not in CLAUDE.md, which should hold only facts that apply every turn.\n- `cairn-pass` says it \"adds only Geoff's operation\" and leaves the repo's own procedures to the repo skill. A release checklist fits there, not in `cairn-pass`.\n- A rule reaches an agent only through a file the agent loads. Pasted chat text reaches nothing after the session ends, which is why you keep re-pasting it.\n\n**How the change would land:**\n1. Write the five steps into the new `SKILL.md` in the cairn-cms checkout. Keep the steps in the file as written, with no added scope.\n2. Run `/skill-doctor` and Anthropic's `skill-creator` on the new skill, as `claude-infra` step 6 requires.\n3. Open a PR in cairn-cms. Cite the features-overview URL in the commit body. A new skill is more than a one-sentence change, so it does not qualify for direct landing under `building-from-specs`.\n4. Optional: add one line to `cairn-pass`'s close section pointing at the release skill, if a release ever follows a pass close.\n5. Merge only after you approve the PR by number.\n\nIf the checklist should instead apply to every repo, the home changes to a user-scope skill under `~/.claude/skills/`. Its manifest entry goes in `claude-tooling.md`, followed by `claude-tooling-sync verify` and a dotfiles commit. I don't think that fits, since the steps are cairn-specific.\n\n**What I could not check:** Read access to `~/Projects/cairn-cms` and `~/.claude/docs` was not granted, so I did not confirm whether a release procedure already exists in the repo, or what the `cairn-running-passes` close checklist says. I also have not seen the five steps themselves. If you grant read access to the cairn-cms checkout, I can check for an existing release doc before you approve the plan. If you'd rather not, paste the five steps once into the plan, and I will carry them into the skill from there.",
+  "costUsd": 0.00674076
+}

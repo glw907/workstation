@@ -1,0 +1,47 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:28:58Z",
+  "seconds": 14.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"release\", \"path\": \"/var/home/glw907/.claude\", \"glob\": \"**/*.md\", \"output_mode\": \"files_with_matches\", \"head_limit\": 30}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\"}"
+    }
+  ],
+  "result": "**Recommendation: a skill, in the cairn-cms repo, with a small hook only if one step must never be skipped.**\n\nI couldn't read `~/.claude/docs/claude-tooling.md` or search `~/.claude` for existing release coverage, because both reads were denied. The plan rests on the `claude-infra` skill alone. Step 1 below covers the checks I couldn't run.\n\n**Why a skill**\n- The `claude-infra` skill ranks homes as hook, then skill or agent, then CLAUDE.md. CLAUDE.md carries only a fact that applies every turn, and a release checklist applies only when cutting a release.\n- Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>) says: \"Put it in a skill if it's reference material Claude needs sometimes\". It also says a rule that must hold every time should be a hook.\n- A pasted checklist is a procedure Claude needs on demand, so it is a skill. A skill loads live, so no restart is needed.\n\n**Where it lives**\n- **First choice:** make it a `cairn-release` skill. Alternatively, fold it into `cairn-pass` as a \"Release\" section.\n- **Why that scope:** `cairn-pass` already holds the cairn-cms gate, the CI watch and the launch conventions. A release is a cairn-cms-only procedure. Fold it in only if the five steps are short and always follow a pass close. Otherwise a separate skill keeps `cairn-pass` lean.\n- **Not a repo `CLAUDE.md` or a memory:** CLAUDE.md is the wrong tier, and memory holds only preferences that no file can.\n- **Hook:** add one only if a step is a hard precondition. An example is refusing a tag push unless the gate passed. I'd decide that after seeing the five steps, and `update-config` would handle the mechanics.\n\n**How the change lands**\n1. **Check for overlap.** Grep `cairn-pass`, the cairn-cms repo docs and `claude-tooling.md` for an existing release procedure. Keep one home per rule, so extend that procedure rather than duplicate it.\n2. **Get the checklist.** I need the five steps in your words. Where a step is a command Claude could run (tag, publish, changelog), the skill says to run it. It never hands you a command to paste.\n3. **Write the skill.** It has a frontmatter `description` that triggers on \"cut a release\" and \"release cairn\". Its body is the five steps in order. Before drafting I load `writing-voice`, since a skill is prose. The `vale-hook` and `tellgrader` save hooks then check it.\n4. **Record it.** A skill authored here is its own manifest, so its directory is the record. Then run `claude-tooling-sync verify`.\n5. **Land it through a PR.** The commits and PR body cite the features-overview URL above. This is more than a one-sentence change, so `building-from-specs` applies unless it meets \"Direct changes\". Commits are imperative, files are staged by name, and the `~/.dotfiles` gate (`bash scripts/gate.sh`) runs if the skill is stowed from there.\n6. **Audit.** Run `/doctor prompt-audit`, `/skill-doctor` and Anthropic's `skill-creator`.\n\n**Open question for you:** should this fold into `cairn-pass` or be its own skill? My lean is its own skill, unless a release always ends a pass. If you paste the five steps one last time, I can draft it.",
+  "costUsd": 0.033343899999999996
+}

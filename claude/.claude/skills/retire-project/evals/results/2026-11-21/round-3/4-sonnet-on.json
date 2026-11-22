@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:27:22Z",
+  "seconds": 9.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "I don't know which site this is yet, so this is the general shape, based on how your estate is set up. Nothing has been changed.\n\n**1. Inventory first (read-only)**\n- Read `~/.claude/docs/cloudflare-estate-inventory.md` and run `claude-worktree-busy` on the repo, so no other session is mid-work in it.\n- List what the demo owns:\n  - Cloudflare resources: Worker or Pages project, custom domain or DNS records, D1/KV/R2, Access apps, Turnstile widgets.\n  - Credentials: Workers secrets, GitHub Actions secrets, entries in the age store and `~/.local/secrets`, Proton Pass items, and any test accounts in `~/.claude/docs/test-accounts.md`.\n  - Repo extras: Dependabot or Renovate, CI, the GitHub Pages or deploy environment.\n- Check for dependents: other sites or repos that link to it, embed it, or share its bindings, plus any `runbook` or household-it entries that mention it.\n\n**2. Decide what to keep**\n- Anything worth reusing (a pattern, content, a design) gets pulled into another repo or a note.\n- Choose between archiving the repo on GitHub (reversible, read-only) and deleting it (permanent). I'd archive first and delete later if ever.\n\n**3. Tear down, with a dry run before each destructive step**\n- Remove the Cloudflare side: the custom domain and DNS records first, then the Worker or Pages project, then the storage resources and any Access app.\n- Revoke or delete the secrets in every store: Workers, Actions, the age store, and Proton Pass. If a token was scoped only to this site, revoke it.\n- Archive or delete the repo. Remove the local checkout and any worktrees from `~/Projects/`.\n\n**4. Clean up the workstation records**\n- Drop it from any dotfiles or manifests that mention it, and from `~/Projects/initiatives` via `log-project` (close the record).\n- Remove any CLAUDE.md or skill references, such as `site-pass` lists, through `claude-infra`.\n- Update the runbook and household-it docs if they list it.\n\n**5. Verify**\n- Confirm the domain no longer resolves or serves, the Cloudflare account shows no leftover resources, and no secret names remain in any store.\n\nThe destructive steps (Cloudflare deletions, secret revocation, repo delete) are the ones I'd confirm with you before running. Which site and repo is it? Once I know, I can run the inventory and turn this into a concrete checklist.",
+  "costUsd": 0.012443200000000001
+}

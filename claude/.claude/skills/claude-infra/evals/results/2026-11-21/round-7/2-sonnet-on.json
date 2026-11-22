@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T04:03:02Z",
+  "seconds": 9.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    }
+  ],
+  "result": "**Put it in a hook, not CLAUDE.md or a skill.** A hook is a `PreToolUse` hook on the Bash tool, configured in `settings.json`.\n\nThis follows Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>): \"If a rule must hold every time, make it a hook rather than a prompt instruction.\"\n\n**Why not CLAUDE.md.** There are two reasons:\n- CLAUDE.md carries only a fact that applies every turn, such as which host this is. A block-with-no-exceptions rule isn't a fact like that.\n- Nothing enforces a rule written there. It's a request the model can misread, forget, or talk itself out of. You said \"no exceptions\", and that needs enforcement.\n\n**Why not a skill.** A skill is reference material Claude loads when it's relevant. A skill may never load at the moment a destructive command is about to run, so it can't give a guarantee either.\n\n**Why a hook works.** The harness runs it before every Bash call, whatever the model decided. A hook script can inspect the command and exit with a blocking code (exit 2, with a reason on stderr), and the call never runs. Your workstation already does this: a hook refuses whole-tree `git add` in a primary checkout.\n\n**Design points for the hook:**\n- **Match more than the literal string `rm -rf ~`.** The hook has to catch `$HOME`, `/var/home/glw907`, `~/`, `~/.*`, `rm -fr`, `rm -r -f`, `--recursive --force`, and `sudo rm`. It also needs to catch targets that resolve to the home folder, such as a symlink or a `cd ~ && rm -rf .`.\n- **Fail closed.** If the hook can't parse the command, it should block rather than allow.\n- **Add a deny rule as a second layer.** A `permissions.deny` entry such as `Bash(rm -rf ~*)` blocks the obvious forms. Patterns are easy to sidestep, so use it as a backstop to the hook, not instead of it.\n- **Scope.** User scope (`~/.claude/settings.json`) so it covers every repo. A project-level setting would miss sessions started elsewhere.\n- **Dotfiles.** On this workstation the script lives in `~/.dotfiles/bin/.local/bin/`, stowed, and the settings change lands via the dotfiles repo. The `update-config` skill handles the `settings.json` mechanics.\n- **Limit.** A hook only governs Claude's Bash tool. It does nothing for commands you type in your own terminal or for scripts that something else runs.\n\nThe `claude-infra` skill says a change like this goes through a PR citing that Anthropic page. I changed nothing, as you asked. If you want it built, say so and I'll do it that way.",
+  "costUsd": 0.02392
+}

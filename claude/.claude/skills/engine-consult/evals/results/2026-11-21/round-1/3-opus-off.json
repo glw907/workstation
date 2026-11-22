@@ -1,0 +1,26 @@
+{
+  "skillName": "engine-consult",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+  "started": "2026-11-22T01:58:15Z",
+  "seconds": 53.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "result": "**Short version:** the engine export lands first, as its own small cairn-cms pass that ends in a merged PR and a release. The site task runs after that, in a separate aksailingclub-org pass, and builds on the published engine version. The two never share a round or a branch.\n\nI read the workstation skills but couldn't read cairn-cms itself: permission was denied for `~/Projects/cairn-cms` and `~/.claude`. So I haven't seen `engine-consult`, the protocol for consultation briefs. The first two steps below follow what the workstation skills say about it, not the protocol text.\n\n## Sequence\n\n1. **Record the verdict in cairn-cms.** A cairn-cms session first looks in `docs/internal/consultations/` for briefs whose verdicts aren't recorded yet (`cairn-pass`). Recording the triage agent's accept on aksailingclub-org's brief is the first write. Anything the agent declined stays in the brief with its reason.\n\n2. **Put the item on the engine's queue.** It goes in cairn-cms's `BACKLOG.md`, and STATUS's next action names the plan for it. The site never files engine work in cairn-cms itself: per `site-pass`, a cairn session does the filing.\n\n3. **Run it as a small cairn-cms pass, not a direct change.** A new export adds public surface, which fails one of the `building-from-specs` \"Direct changes\" tests. So even at about one step, it gets:\n   - a design or spec (cross-repo material goes in `~/Projects/initiatives/<id>/`)\n   - a one-task plan with a minute estimate and a `## Pre-flight` list\n   - a build session in a `.claude/worktrees/<name>` worktree, gated with `cairn-run-gate` and the fast lane from `gate-tier.mjs --fast`\n   - CI on the draft PR as the full suite, watched with `ci-green <sha> --pr <n> --wait`\n   - a fresh reviewer subagent, then the PR\n\n   It's a one-pass round: no conductor, no order table.\n\n4. **Land it and release it.** Because the export is purely additive, it should be a minor bump. If the close packet's `Calls: none`, with no `## Before merge` section and no `auth-data` path, `approval-packet` step 1 lets the session land it. Otherwise Geoff approves the PR by number. Either way, the merging session is the one Geoff is talking to. The site needs a real published version: a `dev` snapshot is only for test runs, never something a site pins.\n\n5. **Then the site pass.** The aksailingclub-org plan header links the consultation brief, which is required instead of the line \"no engine asks\". Its first task bumps the cairn-cms dependency to the release through `standards:dependency-upgrade`. The task that needs the export comes after that bump, and the pass follows `site-pass` as usual: `npm run check` plus the touched tests, then CI on the PR with `gh pr checks --watch`.\n\n## Why this order\n\n- **Rounds stay in one repo** (`round.md`), so the engine change and the site change can't be passes in one round. The dependency between them is handled by sequencing, not an order table.\n- **The site task depends on the engine change**, because it can't compile without the export. Under the `round-run.md` rule, a pass that builds on another waits for it, so the site task is blocked until step 4 finishes.\n- **Every PR's base is its repo's default branch**, so the site never builds on an unmerged cairn-cms branch or a local link.\n\nIf the site pass has tasks that don't use the export, they can run in parallel with the engine pass. Only the task that needs the export, and anything after it, has to wait for the release.\n\nTo check steps 1 and 2 against the real `engine-consult` text and the actual brief, I need read access to `~/Projects/cairn-cms`.",
+  "costUsd": 0.4744302
+}

@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:22:25Z",
+  "seconds": 12.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Dry run: retire `site-staging`\n\nNothing was looked up or deleted. Every id below is a placeholder to fill from the live inventory in step 1. Each delete re-checks that item is still sole-owner just before it runs.\n\n## 1. Inventory (read-only, to run after you approve)\n\n| Item | Id to fill | Sole-owner check |\n|---|---|---|\n| Worker `site-staging` | script name | Does production bind to it (service binding, route, Queue consumer)? |\n| D1 database | `<d1-uuid>` | Is any other Worker bound to it? Is it a copy of production data? |\n| Custom domain | `<hostname>` | Is it a subdomain of a zone that stays, or its own registered domain? |\n| DNS records for the hostname | `<record-ids>` | Does anything else point at them? |\n| Worker secrets | `wrangler secret list` names | Is each credential shared with production or other projects? |\n| Builds trigger, Turnstile, KV, R2, Access app, Email Routing | none expected | Confirm none exist. |\n| Repo | none expected | Confirm the staging Worker has no repo or branches of its own, or that the repo is shared with the site and stays. |\n| References | grep results | Check `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, initiatives, and the registry. Anything that uses staging as a test target needs a new target. |\n\nAnything marked shared stays.\n\n## 2. Archive and prove it\n\nCreate `site-staging-2026-11-21.tar.age`, encrypted with the workstation key. It holds:\n- The D1 export (SQL), plus the Worker config (`wrangler` config and bindings list).\n- A verified `git bundle --all` and issue/PR JSON, but only if the project has its own repo.\n- No secret values.\n\nThen prove it:\n1. Decrypt it in a scratch directory.\n2. Load each SQL export into SQLite and check the row counts.\n3. Store it at `~/Documents/retired-projects/` and at `servers-archive/retired-projects/` in R2, and confirm the R2 copy with `rclone check`.\n4. Record the sha256.\n\nA failed or empty export stops the run.\n\n## 3. Questions for your approval\n\nEach needs your typed answer.\n\n1. **Delete D1 `<d1-uuid>` after the archive restores cleanly.** Options: delete, or keep for now. I recommend delete.\n2. **Delete Worker `site-staging`** after its domain and DNS are removed. Options: delete, or keep. I recommend delete.\n3. **The domain `<hostname>`.** The plan is to take it off the Worker and delete its DNS records.\n   - If it is a subdomain of a zone you keep, only the records go.\n   - If it is its own registered domain with no use, it lapses: auto-renew off, and parked until expiry. Parked means Email Routing off (you do this in the dashboard), `MX 0 .`, `v=spf1 -all`, and `v=DMARC1; p=reject;` at the apex.\n   - Keep renewing only if you name a use for it, and a kept domain gets the same parking records.\n   - What is its use, if any?\n4. **Credentials.** Revoke each key at its issuer, since deleting a Worker secret revokes nothing. Then remove them from the store and registry, and trash the Proton Pass `Projects` folder entry through `claude-pass`. Any shared credential stays.\n\n## 4. Teardown order (after approval)\n\n1. Remove the custom domain and its DNS records.\n2. Delete the Worker, then the Builds trigger, Turnstile, and R2 if any exist, then D1.\n3. Revoke vendor keys, then clean the stores, registry, and Proton Pass.\n4. Lapse the domain, or park it, per your answer to question 3.\n5. Delete the repo and the local checkout with its worktrees, if the project had its own.\n\n## 5. Close\n\n- Clear the references found in step 1.\n- Close the initiative.\n- Add a row to the archive `README.md` with the date, sha256, and what went.\n- Rerun the Cloudflare inventory and show it empty.\n\nTwo things only you can supply: whether the domain has a use, and whether any D1 data matters beyond staging. Say the word and I'll run step 1 live.",
+  "costUsd": 0.0880775
+}

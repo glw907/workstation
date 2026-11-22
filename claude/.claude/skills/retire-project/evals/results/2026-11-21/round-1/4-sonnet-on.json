@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T02:29:29Z",
+  "seconds": 8.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Here is the rough shape. I haven't looked at any files yet, because I don't know which site you mean.\n\n**1. Inventory (read-only)**\n- Find the repo in `~/Projects/` and check `claude-worktree-busy` for open worktrees or sessions.\n- Check for open PRs, unmerged branches, and anything worth keeping, such as content, assets, or snippets other sites reuse.\n- Read `~/.claude/docs/cloudflare-estate-inventory.md` and the `runbook` skill for what the site depends on: Workers or Pages project, custom domain and DNS records, Access policies, D1, KV, R2, and Turnstile.\n- Check whether other sites, mail routes, or redirects point at it.\n- List its credentials: Workers secrets, Actions secrets, entries in `~/.local/secrets` or the age store, and Proton Pass items.\n\n**2. Decisions that are yours**\n- Whether the domain is released, parked, or redirected elsewhere.\n- Whether any data needs exporting before deletion.\n- Whether the repo is archived on GitHub or deleted outright. I'd recommend archiving, since it's reversible.\n\n**3. Teardown, in order**\n1. Take the site offline: remove the custom domain route and DNS records, then delete the Worker or Pages project.\n2. Delete the data stores, after any export.\n3. Revoke or delete its tokens and secrets: Workers secrets, Actions secrets, the age store, and the Proton Pass items.\n4. Archive or delete the GitHub repo and cancel any CI or Dependabot.\n5. Delete the local checkout and worktrees after confirming nothing is unpushed.\n\n**4. Bookkeeping**\n- Update the `log-project` initiative record, the runbook or estate inventory, and any `STATUS` or maintenance-mode entry.\n- Remove any dotfiles or manifest references, then run `check-drift`.\n\nEvery destructive step would get a dry run and your go-ahead first, as your preferences require. The Cloudflare deletions and the repo deletion can't be undone.\n\nWhich site and repo is it? With that I can run the read-only inventory and turn this into a concrete checklist.",
+  "costUsd": 0.0800524
+}

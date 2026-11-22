@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:05:14Z",
+  "seconds": 10.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`/retire-project` isn't installed in this session, so I treated this as a plain request. Nothing below was looked up or run. Every name beyond `site-staging` is a placeholder to confirm live before anything executes.\n\n## Dry-run plan: retire `site-staging`\n\n**Unknowns to resolve first (read-only)**\n1. Custom domain hostname and its zone (`<hostname>`).\n2. D1 database name and ID, from the Worker's `wrangler` config bindings.\n3. Other bindings on the Worker (KV, R2, queues, cron triggers, service bindings) and any other Worker that binds to `site-staging` or this D1.\n4. Whether the hostname is referenced elsewhere: production config, redirects, Access apps, email routing, the Cloudflare estate inventory (`~/.claude/docs/cloudflare-estate-inventory.md`), and the household-it runbook.\n5. Whether the D1 holds data worth keeping.\n\n**Steps, in order**\n1. **Export the D1.** Run `wrangler d1 export <db> --remote --output <dir>/<db>-final.sql`. Keep the file until Geoff says to drop it. This is the only copy once step 5 runs.\n2. **Detach the custom domain.** Remove `<hostname>` from the Worker's custom domains (Workers-domain write, so curl with `$CLOUDFLARE_API_TOKEN` from `~/.local/secrets`, since the MCP token is read-only). Then check for a leftover DNS record for the hostname and remove it only if it's orphaned.\n3. **Remove any Access app** covering the hostname (also a curl write).\n4. **Delete the Worker.** Run `wrangler delete --name site-staging`. This also drops its Worker secrets (`wrangler secret list --name site-staging` first, to record names, never values).\n5. **Delete the D1.** Run `wrangler d1 delete <db>`, only after steps 1 to 4 succeed and the export is verified non-empty.\n6. **Clean up records.**\n   - Remove the staging entry from the estate inventory and the household-it registry.\n   - Remove the age-store and Proton Pass entries for any staging-only secrets (via `claude-pass`).\n   - Remove the CI deploy job, Actions secrets, and `wrangler` config for staging in the site repo.\n   - Update the site's docs and STATUS.\n\n**Gates before executing**\n- Each destructive step shows its exact command and target, then waits for your go-ahead.\n- Steps 4 and 5 are irreversible, so I'd want an explicit yes after the export is verified.\n- Since the repo cleanup in step 6 is more than a one-sentence change, it would go through `building-from-specs` as a spec and PR.\n\n**Open question for you:** which site and repo is this, so I know where the config and docs live?",
+  "costUsd": 0.0782335
+}

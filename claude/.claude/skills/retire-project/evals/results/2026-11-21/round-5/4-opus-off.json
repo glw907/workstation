@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:52:58Z",
+  "seconds": 14.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Shutting it down means working through the places the site lives, in order from easy to undo to impossible to undo. I haven't looked at anything yet because I don't know which demo site this is. Once you name it, I can turn this into a real checklist against your Cloudflare account, GitHub, and the household-it runbook.\n\n**1. Take stock (read-only)**\n- **Hosting:** find the Worker or Pages project, plus anything tied to it: custom domains, routes, KV, D1, R2, Durable Objects, queues, cron triggers, Access apps.\n- **DNS:** list the records pointing at it, and check whether the domain or subdomain is used for anything else. Check whether the domain is one you pay to renew.\n- **Secrets:** list the Worker secrets, entries in `~/.local/secrets`, the age store, and Proton Pass items. Check whether any API token was made only for this site.\n- **Repo:** look at GitHub Actions and their secrets, deploy keys, webhooks, Dependabot, and any open PRs or issues.\n- **Outside services:** check analytics, uptime checks, Turnstile widgets, and email routing.\n- **Workstation:** look for local clones, worktrees, references in `initiatives`, any `maintenance-mode` enrollment, runbook entries, and links from your other sites.\n- **Data:** decide whether anything in D1, KV, or R2 is worth exporting before it goes.\n\n**2. Take it offline but keep it recoverable**\n- Export whatever data you want to keep.\n- Unbind the custom domain, or put a redirect or 410 page in front, then let it sit for a while to see if anything breaks.\n- Turn off the CI deploys and scheduled workflows.\n\n**3. Delete (needs your OK on each step, with a dry-run list first)**\n- Delete the Worker or Pages project and its storage.\n- Delete the DNS records, and let the domain lapse if it's only used for this site.\n- Revoke the site's API tokens and remove its secrets from every store. Archive its Proton Pass items rather than deleting them, since Pass is the record of every credential.\n- Archive the GitHub repo rather than deleting it. Archiving keeps the history and is easy to undo. Delete it only if you specifically want it gone.\n- Remove the local clones.\n\n**4. Clean up the records**\n- Update the runbook and the Cloudflare estate inventory.\n- Close the initiative, if there is one.\n- Run `check-drift` to confirm nothing still points at the site.\n\nThere are a few decisions for you before step 3:\n- Archive or delete the repo? I'd archive it.\n- Keep or drop the domain?\n- Does any data need keeping?\n\nTell me which site it is and I'll do the step 1 inventory, still read-only, so you can see the real list before anything changes.",
+  "costUsd": 0.028659600000000004
+}

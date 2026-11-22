@@ -1,0 +1,42 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T02:52:11Z",
+  "seconds": 13.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/**\", \"path\": \"/var/home/glw907/.claude/skills\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"release\", \"path\": \"/var/home/glw907/.claude/skills\", \"-i\": true, \"output_mode\": \"count\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/**\", \"path\": \"/var/home/glw907/.dotfiles\"}"
+    }
+  ],
+  "result": "I couldn't read `~/.claude/skills` or `~/.dotfiles` (permission wasn't granted), so this plan rests on your CLAUDE.md and the skill list. I haven't verified any file layout.\n\n## Where it should live\n\n**In the `cairn-pass` skill, as a release section or a reference file next to it.**\n\n- CLAUDE.md says `cairn-pass`, `site-pass` and `dotfiles-pass` \"hold each repo's gate and checklists\". A cairn release checklist is that kind of content.\n- `cairn-pass` already loads when a session plans, executes or closes a cairn-cms pass. A release is the natural end of a pass, so the checklist would load at the moment you now paste it.\n- Keep `CLAUDE.md` for rules that apply everywhere. Five steps for one repo would add noise to every session.\n- Don't use a memory file. Memory is for facts about you and your preferences, and a procedure that should run the same way each time belongs in a skill.\n- A separate `cairn-release` skill is worth it only if the steps grow past about a page or you want to trigger them on \"cut a release\". Otherwise, avoid a second skill that overlaps `cairn-pass`.\n\nIf the repo has its own release script, the checklist's executable steps should live there as a Bash script that the skill points to. The skill then holds only the judgment steps, such as what to verify and when to stop.\n\n## How the change would land\n\nCLAUDE.md routes changes to Claude Code tooling through the `claude-infra` skill. It isn't in my skill list, so I'd start by finding out whether it's reachable. Expect these steps:\n\n1. **Preflight.** Run `claude-worktree-busy ~/.dotfiles` and read its status docs, so I don't race another session.\n2. **Locate the source.** The skills are most likely stowed from `~/.dotfiles`, and CLAUDE.md says to edit the dotfiles copy, never the link. I'd confirm where `cairn-pass` really lives and whether a release section already exists.\n3. **Spec or direct change.** This is bigger than a one-sentence change, so it would follow `building-from-specs`: a short spec, a task session under `/goal`, a fresh-subagent review against the spec, and a PR. If `claude-infra` or `building-from-specs` \"Direct changes\" treats a skill-file addition as small, it could land directly.\n4. **Write it.** I'd load `writing-voice` first and use no em dashes. The checklist would be five imperative steps, each with its command and its pass condition. The `cairn-pass` description would gain \"cutting a release\" as a trigger phrase so it loads on its own.\n5. **Gate.** Run `bash scripts/gate.sh` from the checkout or worktree root, bare and unpiped.\n6. **Land it.** Open a PR, stage files by name, write imperative commit messages, and put the judgment calls in `## Decisions`. Only the session you're talking to merges, and only after you approve the PR by number.\n7. **Verify.** In a fresh session, say \"cut a cairn release\" and confirm that the skill loads and the checklist drives the work.\n\n## What I need from you\n\nPaste the five steps once more, and tell me whether any step is a command I could script. Also say whether I may read `~/.claude/skills` and `~/.dotfiles` so I can confirm the real layout before writing a spec.",
+  "costUsd": 0.0849663
+}

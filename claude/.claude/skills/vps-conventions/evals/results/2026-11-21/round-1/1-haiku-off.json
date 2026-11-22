@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I'm writing a systemd service and timer for a nightly backup script on our AlmaLinux VPS. It needs a lock file so two runs never overlap. Where should the lock file live, and what should the service unit carry? Answer with the unit text; don't create or change any file.",
+  "started": "2026-11-22T01:59:51Z",
+  "seconds": 12.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "**Where the lock lives:** `/run`, not `/var/lock` or the backup directory. `/run` is tmpfs, so a stale lock can't survive a reboot, and systemd can create a private directory there for the service. Use `RuntimeDirectory=` so the service user can write to it without root.\n\n**What the unit carries:** the lock comes from `flock(1)` in `ExecStart`, not from a lock file whose existence means \"locked.\" The kernel drops an `flock` lock when the process exits, even after a crash, so nothing is left stale. `-n` makes a second run fail immediately instead of queuing behind the first.\n\nTwo notes:\n- A `Type=oneshot` unit that is already active won't start a second time from the timer, so the timer alone already prevents overlap. The `flock` covers runs started outside systemd, if the script ever runs that way.\n- `-E 75` makes a skipped run exit 75, which `SuccessExitStatus=75` treats as success. A skipped run then doesn't show as a failure. The script's own exit codes must avoid 75.\n\n**`/etc/systemd/system/nightly-backup.service`**\n\n```ini\n[Unit]\nDescription=Nightly backup\nWants=network-online.target\nAfter=network-online.target\n\n[Service]\nType=oneshot\nUser=backup\nGroup=backup\n# Creates /run/nightly-backup owned by User, removed when the unit stops\nRuntimeDirectory=nightly-backup\nRuntimeDirectoryMode=0750\nExecStart=/usr/bin/flock -n -E 75 /run/nightly-backup/nightly-backup.lock /usr/local/sbin/nightly-backup.sh\nSuccessExitStatus=75\nTimeoutStartSec=6h\nNice=10\nIOSchedulingClass=idle\n```\n\n**`/etc/systemd/system/nightly-backup.timer`**\n\n```ini\n[Unit]\nDescription=Run nightly backup at 02:30\n\n[Timer]\nOnCalendar=*-*-* 02:30:00\nRandomizedDelaySec=10min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n```\n\n`Persistent=true` runs a missed job once after the server comes back up. Enable it with `systemctl enable --now nightly-backup.timer`.\n\nFor manual runs, use `systemctl start nightly-backup.service` rather than calling the script directly. That keeps one entry point and one lock path. I haven't created or changed any files, and I haven't tested these units on the VPS.",
+  "costUsd": 0.004507250000000001
+}

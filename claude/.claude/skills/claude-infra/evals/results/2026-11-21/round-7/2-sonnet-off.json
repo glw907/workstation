@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T04:03:12Z",
+  "seconds": 14.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Put it in a PreToolUse hook on the Bash tool, registered in `settings.json`. Don't use CLAUDE.md or a skill for it.**\n\n**Why not CLAUDE.md or a skill**\n\nBoth are instructions I read and weigh, so they're advisory. They can be misread, lose out to another instruction, or drop out of context after a compaction. \"No exceptions\" needs something the harness enforces before the command runs, whatever I decide.\n\n**Why a hook**\n\n- A PreToolUse hook runs on every Bash call and can exit with a block, so I never get to run the command.\n- It still fires in permissive permission modes, in subagents, and in background sessions.\n- It can normalize the command before judging it. That covers `rm -rf`, `rm -fr`, `rm -r -f`, `--recursive --force`, and a target written as `~`, `$HOME`, `/var/home/glw907`, or `/home/glw907`. On Bluefin `/home` is a symlink to `/var/home`, so the hook must resolve both spellings.\n\n**Where it lives on this workstation**\n\n- **Script:** `~/.dotfiles/bin/.local/bin/`, then `stow -R bin`. Your rules call for a script that parses a command to be stdlib-only Python run as `python3 -I`, since this is more than glue.\n- **Registration:** the user-level `~/.claude/settings.json`, next to the hook that already refuses `git add -A`. A project-level file would only cover that one project.\n- **Hardening option:** `/etc/claude-code/managed-settings.json`, which user and project settings can't override. Per your rules, it lands in `~/.dotfiles/bluefin/etc/` first.\n- **Process:** changes to Claude Code tooling go through the `claude-infra` skill, so I'd use that when building it.\n\n**A `permissions.deny` rule as a complement**\n\nA rule like `Bash(rm -rf ~*)` is cheap and also enforced. But it matches command text, so it misses `$HOME`, `rm -fr`, absolute paths, and `bash -c \"...\"`. Use it as a second layer, not the main control.\n\n**What no hook can catch**\n\nA hook sees only the command string. It won't see `rm -rf` inside a script I run, `find ~ -delete`, or `python -c \"shutil.rmtree(...)\"`. For real \"no exceptions\" coverage, I'd have the hook block those patterns too, and I'd treat the home directory's own protections, such as backups or a sandbox that mounts it read-only, as the final backstop.\n\n**One decision for you**\n\nShould \"a home folder\" mean only the home directory itself (`~`, `/var/home/glw907`), or anything beneath it, such as `~/Projects/foo/node_modules`? Blocking everything beneath it would stop routine cleanup like removing build directories. I'd suggest blocking the home directory itself, its direct children, and the other users' homes, and allowing deeper paths. You decide how strict that line should be.\n\nIf you want it built, say so and I'll start with the hook script and a dry run against sample commands.",
+  "costUsd": 0.0181242
+}

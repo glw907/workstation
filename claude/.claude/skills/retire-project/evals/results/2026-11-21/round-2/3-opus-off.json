@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:09:29Z",
+  "seconds": 20.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"retire-project|retire a project|retirement\", \"path\": \"/var/home/glw907/.claude\", \"glob\": \"*.md\", \"output_mode\": \"files_with_matches\", \"head_limit\": 20}"
+    }
+  ],
+  "result": "`/retire-project` isn't installed in this session, so it didn't run. I also couldn't check `~/.claude` for a written retirement procedure because that read wasn't permitted. What follows is my own plan, not a house procedure. Nothing has been run.\n\n## What goes in the archive\n\nOne directory per project, for example `retire-<repo>-2026-11-21/`, containing:\n\n1. **The repo.** A `git bundle create repo.bundle --all`, which keeps every branch, tag, and the full history. Add a plain tarball of the working tree only if there are files git ignores that are worth keeping, such as local fixtures.\n2. **The D1 database, in two forms:**\n   - A SQL dump from `wrangler d1 export <db> --remote --output=d1.sql`. It holds schema and data, and you can read it and replay it.\n   - The schema on its own (`--no-data`), so the structure can be read without the rows.\n   - The migrations folder is already in the bundle, but record the applied migration list too (`wrangler d1 migrations list <db> --remote`), since that shows what production actually ran.\n3. **The Cloudflare config that dies with the Worker.** The `wrangler.toml` as deployed. Worker settings: routes, custom domains, cron triggers, bindings. Any DNS records that point at it. The Access application, if there is one. These are exported as JSON from the API.\n4. **Secret names only, never values.** The output of `wrangler secret list --name <worker>`, plus the matching Proton Pass item titles and age-store names. Then you can retire or keep those credentials on purpose rather than leaving them orphaned.\n5. **GitHub metadata that doesn't travel in git.** Open and closed issues and PRs, plus Actions secret names, exported through `gh`.\n6. **A `MANIFEST.md`.** What each file is, its SHA-256, the source (account, database ID, commit SHA), the date, and how to restore it.\n\nThe archive goes to the backup target already in use, not a new vendor, with a second copy kept locally until the deletions are done.\n\n## How the archive is proven before anything is deleted\n\nThe gate is that the archive restores cleanly and the restored data matches the live source. It isn't enough that the files exist.\n\n1. **Checksums.** Recompute the SHA-256 of every file in the stored copy and compare it with the manifest. This proves the files reached the backup intact.\n2. **Repo restore.** Run `git bundle verify repo.bundle`, then clone from the bundle into a scratch directory. Check that every branch and tag tip matches `git ls-remote` on the live remote.\n3. **D1 restore.** Replay `d1.sql` into a throwaway local database (`wrangler d1 execute <scratch> --local --file=d1.sql`, or plain `sqlite3`). Then compare it with the live remote database:\n   - The table list and schema are identical.\n   - The row count of every table matches.\n   - A content check per table matches, for example a hash over the rows ordered by primary key, run on both sides.\n\n   A dump that imports without errors but is missing a table fails this step.\n4. **Freeze before the final export.** Undeploy the Worker or switch it to read-only first, so no writes land between the export and the deletion. If a write could have happened after step 3, re-export and re-verify.\n5. **Sign-off.** I record the verification results in the manifest. Deletion waits for your explicit go-ahead.\n\n## Deletion order, after proof and approval\n\nDelete from the outside in, so a mistake can still be caught:\n\n1. DNS and routes\n2. The Worker\n3. The D1 database (there's an optional cooling-off period here; D1 Time Travel won't help once the database is deleted)\n4. Credentials, rotated or retired in Proton Pass and the stores\n5. The GitHub repo, archived first and deleted later if you want that\n\nBefore each destructive step I'd show a dry run of the exact command.\n\nOne decision is yours: archive the GitHub repo (read-only, reversible) or delete it. I'd archive it, since a small demo costs nothing to keep.",
+  "costUsd": 0.17361559999999998
+}

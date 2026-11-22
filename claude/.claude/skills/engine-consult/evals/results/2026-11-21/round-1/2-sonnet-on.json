@@ -1,0 +1,25 @@
+{
+  "skillName": "engine-consult",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "A background task session in ~/Projects/907-life has just started on an approved spec whose header has no engine consultation line, and the task builds against the cairn admin's media picker. What should that task session do before its first build step, and where does it record what it did? Answer only; change nothing.",
+  "started": "2026-11-22T01:55:56Z",
+  "seconds": 6.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "The task session runs the engine-contact enumeration before its first build step. It does this because the spec fails the consultation check (`grep -c -E '^\\*\\*(Engine consultation|Sources consulted):\\*\\* ' <spec>` should print 2).\n\n**The enumeration**\n- For each thing the spec will build, ask whether it presses an engine edge. These edges include the admin surface, engine CSS, an exported component's contract, auth, and any seam.\n- The media picker is part of the cairn admin, so it almost certainly presses an edge. Expect a consultation brief rather than the cheap \"no engine asks\" outcome.\n- The session should first read the exports and skill references the spec builds on, and the open engine items in `~/Projects/cairn-cms/BACKLOG.md`.\n- If the enumeration finds engine asks, the brief is filed engine-side at `~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-907-life-<spec>.md`. It uses the four-field item schema. Each item is argued against the `engine-triage` standard. That agent runs as a fresh read-only Opus subagent, which reads `engine-rulings.md` first.\n\n**Where it records**\n- The task session records the line it would add to the spec header under its pull request's `## Decisions` section. That line is either `**Engine consultation:** no engine asks.` or a link to the filed brief, together with the `**Sources consulted:**` line.\n- If it files a brief, the brief and the triage verdicts live in that one consultation document. Each ruled item also gets one ledger entry in `engine-rulings.md`.\n\nThe task session does not edit the approved spec header itself.",
+  "costUsd": 0.10568419999999999
+}

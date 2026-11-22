@@ -1,0 +1,22 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T02:12:53Z",
+  "seconds": 22.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "result": "It goes in neither one. It belongs in a **PreToolUse hook** in your user-level Claude Code settings (`~/.claude/settings.json`), with the hook script and settings file kept in `~/.dotfiles` and stowed like your other config.\n\n**Why not CLAUDE.md or a skill.** Both are text the model reads and tries to follow. Neither one makes the harness block anything. A skill only loads when its description matches the task, so it might not even be in context when a risky command comes up. CLAUDE.md is always loaded, but it's still only an instruction, and a long session or a misread situation can wear it down. \"No exceptions\" needs something the model can't skip.\n\n**Why a hook.** Claude Code runs a PreToolUse hook on every Bash call before the command executes. The hook gets the full command as JSON on stdin, and exiting with code 2 blocks the call. The model never makes that decision. Hooks run in every session and every permission mode, including bypass mode.\n\n**Why not only a `permissions.deny` rule.** A rule like `Bash(rm -rf ~:*)` matches the literal command text, so small variations get past it:\n- `rm -fr ~`, `rm -r -f ~`, `rm --recursive --force ~`\n- `rm -rf $HOME`, `rm -rf /var/home/glw907`, `rm -rf /home/glw907` (on Bluefin, `/home` is a symlink to `/var/home`, so you need to cover both)\n- `cd ~ && rm -rf .`, `rm -rf ~/`, `rm -rf ~/*`\n\nA hook script can split the command, find any `rm` with both the recursive and force flags, expand `~` and `$HOME`, resolve each target path, and block if a target is a home folder. A deny rule is still worth adding as a cheap backstop.\n\n**Where \"no exceptions\" has limits, and what covers them:**\n1. **Scope.** `~/.claude/settings.json` applies to every project, but a project's `.claude/settings.json` could add hooks or loosen permissions. If you want a rule that nothing can override, put it in managed settings (`/etc/claude-code/managed-settings.json`), which sit above user and project settings. Following your `/etc` convention, that file would live in `~/.dotfiles/bluefin/etc/` first.\n2. **Indirection.** A hook only sees the Bash command line. It can't see a script that runs `rm -rf` inside itself, `find ~ -delete`, or Python's `shutil.rmtree`. For a real guarantee, add Claude Code's sandbox with filesystem write limits. Then writes outside the allowed paths fail at the OS level, whatever command causes them.\n\n**Recommendation:** Use a managed-settings PreToolUse hook on `Bash` that parses the command and resolves its targets. Add a matching deny rule as a backstop and turn on the sandbox for the cases the hook can't see. On this workstation, setting it up goes through the `claude-infra` skill (your CLAUDE.md routes Claude Code tooling changes there) and `update-config` for the settings syntax.\n\nI tried to read `~/.claude/settings.json` and `/etc/claude-code/` to see whether you already have a hook or deny rule like this, but both reads were denied. So I don't know what's there now. I changed nothing.",
+  "costUsd": 0.20687060000000002
+}

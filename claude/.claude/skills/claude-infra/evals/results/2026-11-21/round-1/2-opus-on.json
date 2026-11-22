@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T02:12:34Z",
+  "seconds": 18.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Grep",
+    "Skill"
+  ],
+  "result": "Neither. It should be a **PreToolUse hook on the Bash tool**, registered in your user-scope `~/.claude/settings.json` (the copy in `~/.dotfiles`, which Stow links into place). I haven't changed anything. I also couldn't check whether a hook like this already exists, because reading `~/.claude` wasn't permitted.\n\n**Why a hook.** The workstation's `claude-infra` skill ranks the possible homes as hook first, then skill, then CLAUDE.md. It quotes Anthropic's features overview (https://code.claude.com/docs/en/features-overview): \"If a rule must hold every time, make it a hook rather than a prompt instruction.\" \"No exceptions\" means the rule must hold every time.\n\n- **CLAUDE.md** is a prompt instruction. The model usually follows it, but nothing enforces it, so a wrong reading or a long session could still let the command run.\n- **A skill** loads only when it seems relevant. It's for reference material Claude needs sometimes, so it's the wrong place for a guard.\n- **A hook** is run by the harness, not by Claude. It checks every Bash call before it runs and can refuse it by exiting with code 2. Claude can't skip it or forget it.\n\n**Why not just a `permissions.deny` rule.** A deny rule like `Bash(rm -rf ~:*)` matches by command prefix. These variants would all get past it:\n- `rm -fr ~`\n- `rm -r -f /var/home/glw907`\n- `cd ~ && rm -rf .`\n- `rm -rf \"$HOME\"`\n- `sudo rm -rf …`\n- `find ~ -delete`\n\nA hook can parse the command and catch these: flag order, `$HOME`, `~`, `/var/home/*`, `/home/*`, symlinked paths, and `rm` hidden behind `sudo`, `xargs`, `bash -c` or `&&`. A deny rule is fine as an extra layer, but it can't be the guarantee.\n\n**User scope.** Your rule covers every home folder in every repo, so it belongs in user settings, not a project `.claude/settings.json`.\n\n**How it would land, when you want it:**\n1. Write the check as a script in `~/.dotfiles/bin/.local/bin/`. It would be stdlib Python run as `python3 -I`, since it has to parse the command.\n2. Register it through the `update-config` skill.\n3. Add it to the manifest listed in `~/.claude/docs/claude-tooling.md` and run `claude-tooling-sync verify`.\n4. Land it through a PR that cites the features-overview URL.\n5. Test that it refuses the variants above and still allows `rm -rf ~/Projects/foo/build`, unless you'd rather block anything under home too.\n\nThat last point is the one decision I need from you. Does \"a home folder\" mean only the home directory itself (`~`, `/var/home/<user>`), or everything inside it as well?",
+  "costUsd": 0.1951216
+}

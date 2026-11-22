@@ -1,0 +1,33 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:55:27Z",
+  "seconds": 11.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"PreToolUse|rm -rf|Bash\\\\(rm\", \"path\": \"/var/home/glw907/.claude\", \"glob\": \"settings*.json\", \"output_mode\": \"content\", \"-n\": true}"
+    }
+  ],
+  "result": "**Short answer: a `PreToolUse` hook in settings.json is the right place. CLAUDE.md and skills can't enforce this.**\n\n**Why not CLAUDE.md or a skill**\n\n- CLAUDE.md is guidance the model reads and usually follows. It is not enforced, so a rule that must hold \"with no exceptions\" can be missed under pressure or in a long session.\n- A skill loads only when it's invoked or matches a task. A Bash rule that should apply to every command has nothing to match against.\n\n**Why a hook**\n\nA `PreToolUse` hook with `matcher: \"Bash\"` runs a command before every Bash call and can block it. The harness runs it, not the model, so the model can't talk its way past it. Exit code 2 blocks the call and returns the reason to Claude.\n\n**Why not a permission deny rule**\n\nA `permissions.deny` entry such as `Bash(rm -rf:*)` is a prefix match on the command text. It misses `rm -fr`, `rm -r -f`, `rm --recursive --force`, `/bin/rm`, `command rm`, and `find ... -delete`. Deny rules are a useful backstop, but not a complete block.\n\n**What the hook has to do**\n\n1. Parse the command, not just grep the string. Split on `;`, `&&`, `||`, `|`, and newlines, and handle `sudo`, `env`, `xargs`, and `command` wrappers.\n2. Treat any `rm` with both recursive and force flags (`-r`, `-R`, `--recursive`, combined like `-rf`, `-fr`, `-Rf`) as a match. Be strict about the target: block if it resolves to `~`, `$HOME`, `/var/home/glw907`, or any path under it. Since \"no exceptions\" is the requirement, consider blocking all `rm -rf` on any path under `$HOME`.\n3. Fail closed. If the hook can't parse the command, block it.\n\n**Limits to be honest about**\n\n- The hook sees only the literal command string. A script, `python -c \"shutil.rmtree(...)\"`, or `find -exec rm` can still delete files. Closing those gaps means blocking interpreters or using a sandbox, which is a bigger change.\n- A hook can be removed by editing settings.json. If you want it to survive a session edit, put it in a managed settings file or in the dotfiles copy that Stow links, which the CLAUDE.md says to edit.\n\n**Recommended placement**\n\n- Hook: `~/.dotfiles/` (edit the dotfiles copy, stow it), wired in `settings.json` under `hooks.PreToolUse`. Write the script in `~/.dotfiles/bin/.local/bin/` as a stdlib-only Python file run with `python3 -I`, per your tooling rules.\n- Optional backstop: a `permissions.deny` entry for `Bash(rm -rf ~:*)` and `Bash(rm -rf $HOME:*)`.\n- CLAUDE.md: one line stating the rule, so the model doesn't try the blocked command in the first place. This is documentation, not enforcement.\n\nI didn't inspect your current settings. The read of `~/.claude` was denied, so I couldn't check for an existing `PreToolUse` hook or deny rules. I changed nothing. If you want, I can draft the hook script and the settings entry for your review. The `update-config` skill covers the settings edit, and `claude-infra` governs changes to Claude Code tooling.",
+  "costUsd": 0.00158986
+}

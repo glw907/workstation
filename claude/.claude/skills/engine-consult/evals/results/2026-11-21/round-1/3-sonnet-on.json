@@ -1,0 +1,25 @@
+{
+  "skillName": "engine-consult",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+  "started": "2026-11-22T01:57:32Z",
+  "seconds": 10.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "An accepted item of about one additive step runs as a small engine task now, from the same site session, and lands in cairn-cms before the site task that consumes it. It does not queue as its own cairn-cms spec. Both sizing criteria in `engine-consult` (\"Sequencing accepted work\") point the same way: it is additive, and it is one step or two. This is the plan, with nothing run yet.\n\n**Before the engine work**\n1. The brief and the engine-triage verdict are already one document at `~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-aksailingclub-org-<spec>.md`. The site spec links to it.\n2. I adjudicate the verdict and record it in that brief.\n3. I append one ledger entry to `~/Projects/cairn-cms/docs/internal/engine-rulings.md`, copying the format from the fenced template in the ledger's header. The entry stays open until the consuming site task lands.\n4. I confirm the site spec header carries both required lines: `**Engine consultation:**` linking the brief, and `**Sources consulted:**`. Then I run `grep -c -E '^\\*\\*(Engine consultation|Sources consulted):\\*\\* ' <spec>` and expect 2.\n\n**Engine task, from the site session** (cross-repo checklist)\n1. Run `claude-worktree-busy` on the cairn worktree path. Read `~/Projects/cairn-cms/docs/STATUS.md` for any claim on this work.\n2. Create a fresh worktree off cairn `main`. Register it in STATUS's active-worktree list before the first commit.\n3. Read STATUS again and honor the changelog `Consumers must:` convention. A purely additive export likely needs no consumer action, but I'd confirm that.\n4. Build under `building-from-specs` with `cairn-pass`: one session, the fast lane for the single step, then the whole-branch review by a fresh subagent.\n5. Run `npm run check:close` bare, so it covers `check:comments`, `check:tiers`, `check:surface`, `check:snippets`, `check:transcripts` and `check:symbols`. The new export will most likely trip `check:surface` and `check:symbols`, so its doc comment and surface listing have to be right.\n\n**Ordered close**\n1. Merge the engine PR to cairn `main`. Only the session Geoff is talking to merges, and only after he approves the PR by number.\n2. Follow `~/Projects/cairn-cms/.claude/skills/cairn-releasing/SKILL.md` so the change is on the registry. A site branch can't merge on a `file:` pin.\n3. From the cairn checkout, run `npm run link:consumer -- <aksailingclub-org dir> --restore`.\n4. Merge the site task.\n\n**While the site task is in development**\n- It consumes the engine through `npm run link:consumer -- <site-dir>`.\n\n**After the site task lands**\n- The site task closes the open ledger entry with a one-line seam-fit report. That is either \"fit as designed\" or the backlog items it found.\n- Anything the site task finds mid-build goes through the reactive-harvest path: the same four-field item schema, triaged by the same agent against the same ledger.\n\n**Dependency**\n- The site task can't merge until the engine change is released. The site's order of work is therefore engine step, release, then site task.\n\n**If the work grows**\n- If it turns out to break public surface or add a subsystem, it stops being a small task. It then queues as its own cairn-cms spec, with the site's fallback as the sanctioned interim and a recorded retirement trigger.\n\nTwo things I'd check at the start: which site spec and brief this is, and whether any session already holds a cairn-cms claim.",
+  "costUsd": 0.11256640000000001
+}

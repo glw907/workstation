@@ -1,6 +1,6 @@
 # Apps Script through clasp
 
-`clasp` 3.4.1 (github.com/google/clasp). Run it from the script's directory; it reads
+Tested with `clasp` 3.4.1 (github.com/google/clasp). Run it from the script's directory; it reads
 `.clasp.json` there.
 
 ## Commands

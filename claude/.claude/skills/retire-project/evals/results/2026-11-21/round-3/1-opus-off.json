@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:23:18Z",
+  "seconds": 26.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"site-staging|retire\", \"path\": \"/var/home/glw907/.claude/docs\", \"-i\": true, \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "`/retire-project` isn't installed in this session, so it didn't run. Below is the plan written by hand. I looked nothing up: I asked once to read the local docs folder, you declined, and I made no live calls. Every name in angle brackets is a placeholder to fill in during step 1. Nothing has been deleted.\n\n## Retiring `site-staging` (dry run)\n\n**Order:** check what depends on it, back up the data, remove the domain, delete the Worker, delete the database, then clean up the records. Removing the domain first takes staging offline while everything can still be put back. The database goes last because deleting it can't be undone.\n\n### 1. Check what depends on it (read-only)\n- **Worker:** confirm `site-staging` exists. Note its custom domains, any routes, cron triggers, queue consumers, secrets (`wrangler secret list --name site-staging`) and the database it's bound to.\n- **Custom domain:** list the account's Workers custom domains (`GET /accounts/<acct>/workers/domains`). Record the domain ID and hostname for `<staging-host>`.\n- **Database:** `wrangler d1 info <db-name>`. Check that no other Worker binds the same database, especially production. If one does, stop here.\n- **Service bindings:** check that no other Worker calls `site-staging` through a service binding.\n- **Other references to `<staging-host>`:**\n  - Access applications\n  - Turnstile widget hostnames\n  - DNS records outside the domain's own record\n  - CI workflows that deploy to staging\n  - Repo config: `wrangler.toml` environments, `.github/workflows`\n\n### 2. Back up the database\n- `wrangler d1 export <db-name> --remote --output=site-staging-d1-2026-11-21.sql`\n- Check that the file isn't empty and has the expected tables. Store it wherever the project keeps backups.\n- Point-in-time restore only works while the database exists. After deletion, this export is the only copy.\n\n### 3. Remove the custom domain\n- `DELETE /accounts/<acct>/workers/domains/<domain-id>` with curl and `$CLOUDFLARE_API_TOKEN`. CLAUDE.md says Workers-domain writes need this token, because the MCP token is read-only.\n- Cloudflare manages the DNS record and certificate for the domain, so this should remove them too. Check afterwards that `<staging-host>` no longer resolves to the Worker.\n- **Undo:** re-attach the domain to the Worker.\n\n### 4. Delete the Worker\n- `wrangler delete --name site-staging --dry-run`, then run it again without `--dry-run`.\n- Its secrets, version history and triggers go with it. Remove any routes found in step 1 first.\n- **Undo:** redeploy from the repo and put the secrets back from the store they came from.\n\n### 5. Delete the database\n- `wrangler d1 delete <db-name>`. It asks for confirmation; don't pass `-y`.\n- **Can't be undone.** The only recovery is creating a new database and importing the backup from step 2.\n\n### 6. Clean up the records\n- **Repo:**\n  - Remove the staging environment and database binding from the wrangler config.\n  - Remove the staging deploy workflow and its Actions secrets.\n  - Remove any Access application or Turnstile hostname for `<staging-host>`.\n- **Credentials:** delete or archive staging-only tokens in `~/.local/secrets`, the age store and Proton Pass (through `claude-pass`). Remove any staging-only API token from the account.\n- **Docs:** update `~/.claude/docs/cloudflare-estate-inventory.md` and the household-it runbook. If the project is tracked in initiatives, note the retirement there.\n\n### Decision needed before running\nWhether to keep the backup from step 2 long-term or throw it away once the deletions check out. My recommendation is to keep it: it's small, and it's the only copy of the data.\n\nSteps 3 to 5 need your go-ahead. Step 1 changes nothing, so I can run it whenever you like and turn the placeholders into real names and IDs.",
+  "costUsd": 0.058924399999999995
+}

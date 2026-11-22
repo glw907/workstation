@@ -1,0 +1,33 @@
+{
+  "skillName": "vps-conventions",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "user-data.yaml in this folder is the cloud-init file that provisions our RHEL-family VPS boxes. Read it. We want to add the `jq` package to it. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; don't edit the file.",
+  "started": "2026-11-22T02:38:39Z",
+  "seconds": 15.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-off/user-data.yaml\"}"
+    }
+  ],
+  "result": "## Plan for adding `jq`\n\n`user-data.yaml` is short: it sets `package_update: true`, installs `git`, `podman`, and `rsync`, and enables `podman.socket` in `runcmd`.\n\n### 1. Check the package name first\n\nRun these on one live box, or on a container of the same release (for example `podman run --rm registry.access.redhat.com/ubi9/ubi`, using the major version your VPSes run):\n\n```bash\ndnf info jq                    # Is it there, which version, which repo\ndnf provides /usr/bin/jq       # Which package ships the binary\ndnf repolist                   # Which repos the box has enabled\n```\n\nI expect the package to be called `jq`, from AppStream on RHEL, Rocky, and Alma 8 and later. Two things to check:\n\n- **Which repo it comes from.** If `dnf info` shows it coming from EPEL, the cloud-init file must enable EPEL first. Right now it doesn't.\n- **Every OS version you run.** If your boxes run different major versions, check each one.\n\n### 2. Change the file (for new boxes)\n\nAdd `- jq` to the `packages:` list. You don't need to change anything else, because `package_update: true` already refreshes the package metadata.\n\n### 3. Install it on the boxes already running\n\nEditing the file does nothing for running boxes. Cloud-init's `packages` module runs once per instance, on first boot. Rebooting won't re-apply it, and on most VPS providers neither will changing the user-data. You need to install it on each box yourself:\n\n```bash\nfor h in host1 host2 ...; do ssh \"$h\" 'sudo dnf install -y jq && jq --version'; done\n```\n\nIf you use Ansible, use an ad-hoc `ansible all -b -m dnf -a 'name=jq state=present'` or add it to a playbook. Don't run `cloud-init clean` and reboot to force a re-run. That re-runs every per-instance module, including SSH host keys and users, which is far riskier than one `dnf install`.\n\n### 4. Confirm it worked\n\n- **Running boxes:** `rpm -q jq` on each one. The loop above prints `jq --version`.\n- **New boxes:** provision one test box from the updated file, then check `rpm -q jq` and `cloud-init status --long`. Look for no errors in `/var/log/cloud-init-output.log`.\n\n### Also worth checking\n\n- **The provider's copy.** If your provider stores user-data per template or per account, update that copy too, not just this file.\n- **New boxes only:** list the boxes now so none gets missed in step 3.\n\nI don't know which RHEL-family release your boxes run or how you reach them (plain SSH or a config tool), so step 3 uses plain SSH. Tell me which you use and I'll make it fit.",
+  "costUsd": 0.1580528
+}

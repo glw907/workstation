@@ -1,0 +1,69 @@
+{
+  "skillName": "register-check",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "draft.md here is a cairn docs page that Geoff will read next. Give it the full four-gate prose review before he does, and report what you find. Findings only, no edits.",
+  "started": "2026-11-22T02:58:41Z",
+  "seconds": 25.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "standards:content-review"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/draft.md\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-off\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"standards:content-review\", \"args\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-off/draft.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-off/draft.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"/var/home/glw907/.claude/plugins/cache/glw907-standards/standards/61f996aa3eb3/skills/content-draft/references/web-content-method.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/{docs/content-guide.md,.vale.ini}\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/plugins/cache/glw907-standards/standards/61f996aa3eb3/skills/content-draft/references/web-content-method.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-off/draft.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/content-review/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    }
+  ],
+  "result": "The four-gate review is only partly done. The shared method file and the banned-word list could not be read, because the sandbox denied access to `~/.claude`. Gate 1 (banned words) and the site-guide rules are therefore unverified. I made no edits.\n\n**Gate status**\n\n| Gate | Status |\n|---|---|\n| 1. Banned words and phrases | Unverified. The list was not readable, so the reviewer guessed at it. |\n| 2. Unverified or false claims | Hits (findings 3 to 5) |\n| 3. Safety or standard-of-care promises | Clear |\n| 4. Site-guide rules and budgets | Skipped. There is no `docs/content-guide.md` or `.vale.ini` in this directory. |\n\nVale was not run. The \"Cost misstatement\" row in the review output is not one of the four gates, so I left it out.\n\n**Findings, cheapest fix first**\n\n1. **Line 7, \"Click here to read more about builds.\"** Non-descriptive link text, and no link target is shown. Use the destination's name as the link text, for example \"How builds work\". This also fails accessibility checks.\n2. **Line 3, \"Moreover,\"** A filler transition, and likely on the banned list. Delete it.\n3. **Lines 3 to 4, the opening paragraph.** \"Isn't just X, it's Y\" is a structural tell. \"Seamless\", \"empowers\", \"robust\" and \"world-class\" are promotional. \"In minutes\" conflicts with line 7, which says about a minute. The paragraph has no concrete content, and the page works without it. Delete it, or keep a lead that states what an editor does.\n4. **Line 9, \"first released in 2019 and is used by over ten thousand sites.\"** An adoption figure with no source in the material I have. It is also off-topic for a how-to page. Delete it, or move it to an About page once a primary source confirms it.\n5. **Lines 6 to 7, \"live about a minute later.\"** A specific timing claim with no source. Check it against measured build times, and give a range if the time varies.\n\nOnce the lead and closing line are removed and the link text and timing are fixed, the page should clear gates 2 and 3. Gate 1 still needs a check against the real banned list.\n\n**To finish the review:** grant read access to `~/.claude` (or give me the path to the content-review method file and the banned list), and I will rerun all four gates. I did not load the `writing-voice` standard for this docs page, which may also apply.",
+  "costUsd": 0.07121752
+}

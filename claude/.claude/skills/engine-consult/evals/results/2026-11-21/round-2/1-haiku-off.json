@@ -1,0 +1,54 @@
+{
+  "skillName": "engine-consult",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I'm about to write a spec in ~/Projects/ecxc-ski for a gear-booking page that needs a new custom field type in the cairn admin. Before I write it, what engine-consultation steps does the spec need, and what exactly goes in its header? Answer only; don't write or change any file.",
+  "started": "2026-11-22T02:40:52Z",
+  "seconds": 12.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "building-from-specs",
+    "site-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"site-pass\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"engine-consult|Sources consulted|no engine asks\", \"path\": \"/var/home/glw907/Projects/ecxc-ski\", \"output_mode\": \"content\", \"-n\": true}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"engine-consult|Sources consulted|no engine asks\", \"path\": \"/var/home/glw907/.claude\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-off/.claude/skills/building-from-specs/references/writing-a-spec.md\"}"
+    }
+  ],
+  "result": "I couldn't confirm the exact engine-consultation steps. The `engine-consult` skill isn't in my available skills, and reading ecxc-ski's files was denied, so I couldn't check its CLAUDE.md or STATUS. I wrote and changed nothing.\n\n**What the loaded skills do say:**\n\n- **Header, from `site-pass`:** the plan header (not the spec's) carries exactly one of two things: a consultation-brief link, or the line \"no engine asks\". It also carries a \"Sources consulted\" line. Both come from `engine-consult`. A committed plan with neither gets the enumeration run before its first task.\n- **Spec contents, from `building-from-specs` \"What a spec carries\":** nothing there is specific to engine consultation. The spec needs its intent, approaches and the pick, sourced practice, assumptions, a search-based file list, per-task commands checked against the denials log, tasks with goals and minutes, and a list of Claude's calls. The \"Before approval\" section also says to check the spec's start conditions against live sessions and to read the other repo's STATUS if the spec changes that repo's work.\n\n**Why this change likely needs consultation:** a new field type in the cairn admin changes cairn-cms, which is the engine, not just ecxc-ski. So I'd expect the answer to be a consultation brief link, not \"no engine asks\". The spec is also cross-repo, so per `site-pass` it lives in `~/Projects/initiatives/<id>/`, not in ecxc-ski's `docs/`. Any UI mechanic that belongs to the engine follows `~/.claude/docs/engine-ui-mechanics.md`.\n\n**To settle the open parts,** either grant read access to `~/Projects/ecxc-ski` and `~/.claude`, or tell me the path to `engine-consult`. Then I can give you the exact steps and the header format for the spec itself.",
+  "costUsd": 0.006899970000000001
+}

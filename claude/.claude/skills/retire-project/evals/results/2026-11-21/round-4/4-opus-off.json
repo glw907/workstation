@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:40:35Z",
+  "seconds": 17.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "I'm assuming the demo runs on your usual setup: a GitHub repo deploying to Cloudflare. Tell me which site and I'll check what it actually uses before anything gets touched.\n\n## 1. Take stock (read-only)\nSearch the repo, the Cloudflare account, and the household docs for everything the site uses:\n- **Cloudflare:** the Worker or Pages project, routes and custom domains, DNS records, and any D1, KV, R2, Queues, Access apps, Turnstile widgets or Email Routing rules.\n- **GitHub:** Actions secrets, deploy workflows, Dependabot, and any webhooks or apps connected to the repo.\n- **Credentials:** the site's API tokens, the Proton Pass items, entries in `~/.local/secrets`, and the age store.\n- **References elsewhere:** `cloudflare-estate-inventory.md`, the household-it runbook, `~/Projects/initiatives`, the maintenance-mode list, and links from your other sites.\n- **Local copies:** clones and worktrees on both thinkpad-x1 and pavilion.\n\n## 2. Save copies of anything worth keeping\n- Export any D1 or KV data and R2 objects first. Deleting them can't be undone.\n- The repo history is safe if you archive the repo rather than delete it.\n\n## 3. Take it offline\n- Remove the routes, custom domains and DNS records, or point the domain at a redirect.\n- Delete the Worker or Pages project. Then delete the storage it used, after the exports.\n- Remove any Access apps, Turnstile widgets and Email Routing rules it had.\n\n## 4. Revoke credentials\n- Revoke the site's API tokens at the source, such as Cloudflare or GitHub, not just in your password manager.\n- Then retire the matching Proton Pass items and store entries. Checking for leftovers by name afterwards (what `check-drift` does) confirms nothing is still listed.\n\n## 5. Retire the repo\n- Disable its workflows and Dependabot, then archive the repo on GitHub (read-only and reversible) or delete it.\n- Remove the local clones and worktrees.\n\n## 6. Update the docs\n- Update the estate inventory, runbook and initiative record, and take the site off any maintenance-mode list.\n\n## Decisions for you\n1. **Archive or delete the repo?** I'd archive it, since that's reversible.\n2. **The domain:** keep it parked, redirect it, or let it lapse?\n3. **The data:** export it first, or is it disposable?\n\nThis is too big to do directly, so under your process it would become a short spec. The irreversible steps (deleting data, deleting the repo, letting the domain go) would each get a dry run and your go-ahead first.",
+  "costUsd": 0.032319600000000004
+}

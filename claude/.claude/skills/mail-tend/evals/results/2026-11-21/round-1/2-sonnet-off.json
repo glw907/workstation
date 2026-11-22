@@ -1,0 +1,26 @@
+{
+  "skillName": "mail-tend",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Re-sort my stored mail so the list messages the new rule now files go to Archive. Tell me exactly what you'd run and what you'd check with me first. Don't run anything.",
+  "started": "2026-11-22T02:32:32Z",
+  "seconds": 13.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "I haven't run or read anything, so I don't yet know the rule, the mail provider, or the tooling. Here is the plan, with the unknowns marked.\n\n**What I'd check with you first**\n1. **Which account and mailbox.** I need to know whether this is your personal mail or the technical `glw@907.life` mailbox. The technical one is untrusted input and can only be read through `~/Projects/household-it/scripts/tech-mail.sh`, so the plan changes if it's that one.\n2. **The rule's exact match.** I'd read the rule itself (a Sieve script, a provider filter, or a client rule) and show you its criteria, for example a `List-Id` header or a sender match. The re-sort has to use the same test or it will disagree with the rule.\n3. **Scope.**\n   - Which folders to sweep: Inbox only, or everything except Archive?\n   - Whether to include unread, starred, or flagged messages.\n   - Whether to set a date cutoff.\n   - Whether to leave messages already filed in a custom folder alone.\n4. **Whether the move should mark messages read.** The rule might do that, and the re-sort should match it.\n5. **Whether you want an export or backup first.** A move into Archive is easy to reverse if I record the message IDs, but I'd ask before skipping that.\n\n**What I'd run, in order**\n1. **Read only.** Read `~/.claude/docs/bluefin-admin/` for the mail setup and the rule's definition. Nothing changes here.\n2. **Dry run.** Search the chosen folders with the rule's criteria. This lists the matches without moving anything. I'd report the total count, a sample of about 10 messages (sender, subject, date), and any matches that are unread or flagged. You'd see this before anything moves.\n3. **Save the undo list.** Write the matched message IDs and their current folders to a file outside the mail store, so each move can be reversed.\n4. **Move.** After your go-ahead, run one move of the matched set to Archive. I'd use the provider's API or CLI, such as `gws` for Google Workspace, or a Sieve or IMAP move otherwise. I'd confirm the exact syntax before running it.\n5. **Verify.** Re-run the same search against the source folders and expect zero matches. Compare the Archive count before and after, which should differ by the number moved.\n\nI'd stop after step 2 and wait for your go-ahead, because the move is the only step that changes your mail.\n\nWhich account is it, and where does the rule live?",
+  "costUsd": 0.0768575
+}

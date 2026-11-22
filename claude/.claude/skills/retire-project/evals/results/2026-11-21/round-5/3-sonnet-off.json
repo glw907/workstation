@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:50:45Z",
+  "seconds": 16.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`/retire-project` isn't installed in this session, so I'm treating this as a plain planning request. Nothing has run, and I haven't looked at the repo. Names like the D1 binding and the Worker below are placeholders I'd read from `wrangler.toml`.\n\n## What goes in the archive\n\nOne directory, `<project>-archive-2026-11-21/`, holding:\n\n1. **Git history.** `git bundle create` with `--all`, so every branch and tag is included. Add a tarball of any untracked but wanted files, such as local config without secrets.\n2. **D1 export.** `wrangler d1 export <db> --remote --output=db.sql` gives schema plus data. Also save the D1 database name and ID, and the row count per table taken at export time.\n3. **Cloudflare inventory.** A JSON or markdown record of the Worker name, routes or custom domains, the D1 binding, DNS records, and any Access app. I'd pull these through the API and wrangler, not copy them from memory.\n4. **Secret names, never values.** List the Worker secrets (`wrangler secret list`) and where each originates. Values stay in the age store or Proton Pass, and those entries get retired separately.\n5. **`RETIRED.md`.** Why it was retired, the date, what existed, and the exact steps to restore: re-create the D1, import the SQL, redeploy.\n6. **`SHA256SUMS`** covering every file above.\n\n## How the archive is proven before deletion\n\nEach check runs in a new, empty directory, with scripts kept elsewhere and Python run with `-I`.\n\n1. **Bundle.** Run `git bundle verify`, clone it into an empty directory, and confirm `HEAD` and the branch SHAs match the live repo.\n2. **Database restore.** Import `db.sql` into a fresh local D1 (`wrangler d1 execute --local --file`) or a scratch SQLite file. Compare table list, schema, and per-table row counts against the live remote. For anything non-trivial, also compare a content hash from an ordered `SELECT` on each side.\n3. **Checksums.** Run `sha256sum -c SHA256SUMS` after copying the archive to its final location, so the proof covers the stored copy and not just the working one.\n4. **Second copy.** Store it in two places, one of them in the household backup path. Verify the second copy's checksums too.\n5. **Restore dry run on paper.** Walk through `RETIRED.md` against the archive to confirm every step it names has a file behind it.\n\nIf any check fails, nothing is deleted. I'd fix the archive and re-prove it.\n\n## Deletion, only after the proof\n\n1. Show a dry-run list of exactly what will go: Worker, routes, D1 database, DNS records, Access app, Worker secrets, the GitHub repo (archive or delete), and registry or store entries. I'd ask for your go-ahead on that list, since the D1 delete is irreversible and takes its Time Travel history with it.\n2. Delete in dependency order: routes and Worker, then the D1 database, then DNS and Access, then secrets.\n3. Confirm each deletion with a read-back that returns not-found.\n4. Update the estate inventory, the secret registry, and the Proton Pass items. Close the initiative record through `log-project`.\n\nThree things would change the plan, and you'd need to tell me which apply: whether the database holds anything beyond demo data, whether the repo should be archived or deleted on GitHub, and where the offsite copy should live.",
+  "costUsd": 0.0203023
+}

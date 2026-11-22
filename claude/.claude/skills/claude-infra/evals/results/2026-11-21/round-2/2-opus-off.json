@@ -1,0 +1,33 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T02:54:34Z",
+  "seconds": 18.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"PreToolUse\", \"path\": \"/var/home/glw907/.claude/settings.json\", \"output_mode\": \"content\", \"-A\": 12}"
+    }
+  ],
+  "result": "It belongs in neither. Make it a **PreToolUse hook** on the `Bash` tool, registered in your user-level `~/.claude/settings.json`. Edit the copy in `~/.dotfiles`, since that's where config lives here.\n\n**Why CLAUDE.md and skills can't do it**\n\n- **CLAUDE.md** is guidance the model reads. It shapes what I choose to do, but nothing enforces it. I could misread it, lose it to context compaction, or weigh it against another instruction. \"No exceptions\" needs something that doesn't depend on my judgment.\n- **A skill** is weaker still. It loads only when a task seems to match it, so a session that never invokes it never sees the rule.\n\n**Why a hook works**\n\n- The harness runs a PreToolUse hook before every Bash call, whatever the model thinks. The hook script gets the command as JSON on stdin. If it exits with code 2 (or returns a `deny` decision), the call is refused and the reason goes back to me.\n- Your workstation already uses this. The rule that refuses whole-tree `git add` and `git commit -a` is a hook, not a CLAUDE.md line.\n- A hook in user-level settings covers every project, worktree and background session on the host. Since it's in dotfiles and stowed, both thinkpad-x1 and pavilion get it.\n\n**Why not just a `permissions.deny` rule**\n\nA deny rule like `Bash(rm -rf ~*)` is worth adding as a cheap first layer, but it matches the command text by prefix. It misses variants such as `rm -r -f`, `rm -fr`, `/bin/rm`, `$HOME`, `/var/home/glw907`, `cd ~ && rm -rf .`, `sudo rm`, or a chained `foo; rm -rf ~/`. A hook can parse the command, expand `~` and `$HOME`, resolve paths, and check each segment of a chain. So the hook should be the real guard.\n\n**Limits to know**\n\n- The hook covers Claude Code's Bash tool only. It doesn't cover a script that Claude runs which does the deletion itself, or anything you run in Ptyxis.\n- \"A home folder\" needs a definition. Is it only `/var/home/*` and its `/home` symlink, or anything inside them? Blocking anything inside would also stop routine cleanups like `rm -rf ~/.cache/foo`. That's your call before anything is built.\n- Don't rely on a hook alone for backups. Keep your existing backups as the real protection.\n\n**How it would get built**\n\nYour CLAUDE.md sends changes to Claude Code tooling through the `claude-infra` skill, though it isn't in this session's skill list. In practice it would be a small script in `~/.dotfiles/bin/.local/bin/`, Bash or `python3 -I` since it parses JSON, plus a `hooks.PreToolUse` entry with `matcher: \"Bash\"`, then `stow -R bin` and the dotfiles gate.\n\nAs you asked, I changed nothing. I also couldn't confirm your current hook setup, because reading `~/.claude/settings.json` needed a permission this session doesn't have.",
+  "costUsd": 0.1643434
+}

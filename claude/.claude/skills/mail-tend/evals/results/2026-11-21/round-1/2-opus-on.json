@@ -1,0 +1,37 @@
+{
+  "skillName": "mail-tend",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Re-sort my stored mail so the list messages the new rule now files go to Archive. Tell me exactly what you'd run and what you'd check with me first. Don't run anything.",
+  "started": "2026-11-22T02:32:45Z",
+  "seconds": 22.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\", \"args\": \"Plan only, do not run: re-sort stored mail so list messages the new rule now files go to Archive. Describe exact commands and the checks to confirm with Geoff first.\"}"
+    }
+  ],
+  "result": "Nothing has been run. Here is the plan, following the `mail-tend` re-sort procedure. All commands run from a household-it worktree cut from `main`.\n\n## Before I start\n\n1. `claude-worktree-busy ~/Projects/household-it`, then read the status docs, so I don't race another session.\n2. Make sure the new rule is live on ward. It should already be merged to `main`. Then:\n   - `scripts/apply.sh ward --check`\n   - `scripts/ward-mail-sort.sh install`. The hash it prints must match the `script_sha256` in the next preview's plan header. If it doesn't, I stop: the plan would be sorting against a different script than the one ward runs.\n\n## 1. Build the plan\n\n```\nscripts/mail-filters.sh preview\ntail -n +2 $XDG_RUNTIME_DIR/mail-filters/move-plan.jsonl | jq -r '\"\\(.from) -> \\(.to)\"' | sort | uniq -c\n```\n\nIf the preview fails with \"No space left on device\", I'd delete only the old `run*` directories under `$XDG_RUNTIME_DIR/mail-filters/`, never the live plan.\n\n**What I'd check myself:** every line should be `<list folder or Inbox> -> Archive`. Anything else would mean the new rule reaches further than intended, and I'd stop and bring it to you before asking to move anything. That includes moves to Inbox, out of Junk, to another category folder, or to Deleted Items. I'd also stop if the counts don't match what the rule should catch, since you may have tidied mail in Hylki yourself.\n\n## 2. What I'd check with you first\n\n- **The move itself.** A re-sort like this will be well over 20 messages, so I'd send one line with the counts per destination, for example: \"3,380 list messages to Archive, nothing else moves. Go?\" I wouldn't move anything until you said yes.\n- **Deleted Items.** If any lines go to Deleted Items, I'd ask about those separately, whatever their size. If you decline them, I'd drop those lines from the plan. Without `--trash`, the runner refuses a plan that contains any of them.\n- **Backup timing.** The move needs a backup newer than the preview. You can wait for the nightly one, which finishes around 03:30 Alaska time. Or I can start one now, which stops Stalwart for a few seconds:\n  ```\n  ssh -o BatchMode=yes geoff@ward.907.life sudo systemctl start servers-backup.service\n  ```\n  I'd ask which you want.\n\n## 3. Run it (after your yes)\n\n```\nscripts/ward-mail-sort.sh move\n```\n\nI'd run this outside 03:20 to 04:00 Alaska time, and within 24 hours of the preview, after which the plan expires. I'd add `--trash` only if you had agreed to Deleted Items moves. I'd never call `mail-filters move` over ssh directly.\n\nIf the move left a list folder empty:\n\n```\nscripts/ward-mail-sort.sh prune\n```\n\nThis removes every empty user folder, not just the one the move emptied. A folder comes back when its next message arrives.\n\n## 4. Report back\n\nI'd tell you how many messages moved and how many were skipped. Messages filed in two folders never move. I'd also give you the manifest path and the folder counts that changed. To reverse the whole move:\n\n```\nscripts/ward-mail-sort.sh undo MANIFEST\n```\n\nSay go and I'll start with the checks and the preview, then come back with the counts line before anything moves.",
+  "costUsd": 0.2017176
+}

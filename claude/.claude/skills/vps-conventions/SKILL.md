@@ -1,12 +1,16 @@
 ---
 name: vps-conventions
-description: Use when writing or modifying systemd units (services, timers, path units), cloud-init user-data, provisioning or deploy scripts, or anything that places files, locks, or directories on a Linux VPS (AlmaLinux/RHEL-family). Also use when choosing where a lock file, temp file, or state file lives, or when a unit fails with mount-namespacing or missing-directory errors. Also use when auto mode denies an ssh step to a server, or before adding an ssh allow rule.
+description: Holds the judgment calls for systemd units, cloud-init, and deploy scripts on a RHEL-family VPS. Use when writing or changing systemd units (services, timers, path units), cloud-init user-data, or provisioning and deploy scripts, or anything that places files or locks on a Linux VPS. Also use when choosing where a lock, temp, or state file lives, when a unit fails with mount-namespacing or missing-directory errors, when auto mode denies an ssh step, or before adding an ssh allow rule.
+paths:
+  - "**/*.service"
+  - "**/*.timer"
+  - "**/user-data.yaml"
 ---
 
 # VPS conventions
 
 Rules for box-side infrastructure on this workstation's estates (dubplate and
-successors). Not a general sysadmin reference — `man systemd.exec` exists.
+successors). Not a general sysadmin reference: `man systemd.exec` exists.
 This skill holds the judgment calls that generic references skip, each one
 paid for by a production failure.
 
@@ -21,8 +25,8 @@ paid for by a production failure.
 - **A lock file in a RuntimeDirectory is a bug.** The directory vanishes
   between runs (interactive tools die on `exec N>` under `set -e`), and
   systemd deletes the lock file at unit stop, so a long-lived holder keeps
-  an unlinked inode while the next run locks a fresh file — mutual
-  exclusion silently lost. Locks go on a persistent path, and the acquirer
+  an unlinked inode while the next run locks a fresh file, and mutual
+  exclusion is silently lost. Locks go on a persistent path, and the acquirer
   `mkdir -p`s the parent first (self-healing beats lifecycle coupling).
 - **RuntimeDirectory is not reference-counted across units.** Two units
   naming the same directory: the first to stop removes it. Never share one
@@ -32,7 +36,7 @@ paid for by a production failure.
 
 Every service unit carries `NoNewPrivileges=yes`, `PrivateTmp=yes`, and
 `ProtectSystem=strict` with explicit `ReadWritePaths=` for its real write
-targets — including template units (`foo@.service`) and OnFailure helpers,
+targets, including template units (`foo@.service`) and OnFailure helpers,
 which are the ones that get forgotten. Timers carry `RandomizedDelaySec`;
 know that `Persistent=true` fires missed runs at boot.
 
@@ -41,13 +45,13 @@ know that `Persistent=true` fires missed runs at boot.
   unit's own script cannot create it; the deploy/provision step pre-creates
   it, and the deploy comment names every unit that depends on it.
 - New directories under `/var/lib` on an SELinux-enforcing box inherit
-  `var_lib_t` — fine for unconfined services, but verify once on the first
+  `var_lib_t`. That is fine for unconfined services, but verify once on the first
   real deploy rather than assuming.
 
 ## Path units and triggers
 
-`PathChanged=` fires on close-after-write; `PathModified=` on every write —
-choose deliberately for `touch`-style triggers. The path unit deactivates
+`PathChanged=` fires on close-after-write; `PathModified=` on every write.
+Choose deliberately for `touch`-style triggers. The path unit deactivates
 while its service runs and re-arms on exit: events coalesce to at most one
 follow-up, and events in the re-arm gap are lost. A path-unit trigger is
 therefore only acceptable with a timer backstop. The trigger directory must
@@ -61,7 +65,7 @@ to `user-data.yaml` reaches existing boxes only via a live remediation, and
 the change lands in the same commit as the runbook's presence-gate update,
 so a fresh provision and the gate can't drift apart. Before adding a
 package to a `set -e` first-boot script, prove it exists in the target
-repos (`podman run --rm almalinux:10 dnf -q list <pkg>`) — a guessed
+repos (`podman run --rm almalinux:10 dnf -q list <pkg>`): a guessed
 package name bricks first boot unattended. Order runcmd so an optional
 repo's failure can't take down packages that don't need it.
 
@@ -69,7 +73,7 @@ repo's failure can't take down packages that don't need it.
 
 Idempotent, with a `--check` mode preserved for every step. Know your
 manifest semantics: rsync exits 23 on a missing source, so a deleted file
-still listed in a manifest array aborts the whole deploy — manifest edits
+still listed in a manifest array aborts the whole deploy, so manifest edits
 land in the same commit as the deletion. Stage remote files via `mktemp`,
 never fixed `/tmp` names. Pin and checksum anything piped to a root shell.
 
@@ -90,7 +94,7 @@ models.
 
 `systemd-analyze verify` on every unit in the repo gate. A unit that cannot
 be verified in CI is reviewed by reading the scripts it runs and declaring
-its write targets — "argued statically" is acceptable, "assumed" is not.
+its write targets. "Argued statically" is acceptable, "assumed" is not.
 
 ## Common mistakes
 

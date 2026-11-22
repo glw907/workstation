@@ -1,0 +1,25 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T02:13:41Z",
+  "seconds": 7.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "**Put it at user scope, not in ecxc-ski's `.mcp.json`.**\n\nThe `claude-infra` skill settles this. It says \"User scope for stack-wide, project scope only for repo-specific. Everything the cairn-family stack shares (Svelte, Playwright, DaisyUI) is user scope and in the manifest.\" Svelte is named there. A repo's `.mcp.json` carries only what that repo alone needs. Since the other cairn sites use Svelte too, a Svelte docs server is stack-wide. Putting it in ecxc-ski would mean copying it into every site.\n\nIf you add it:\n\n- **Scope:** register it at user scope, for example with `claude mcp add --scope user`.\n- **Manifest:** add its entry to the tooling manifest in the same session, and run `claude-tooling-sync verify` afterward. The layout table in `~/.claude/docs/claude-tooling.md` says which manifest. Commit the dotfiles.\n- **Skill first:** the skill's rule is \"take the skill first and the server for on-demand retrieval.\" An MCP server reaches only the main loop and unrestricted agents. Subagents with a fixed tool list can't use it. If a Svelte docs skill would cover the need, prefer that, and keep the server for on-demand lookups.\n- **Restart:** a new server loads on restart, so restart at a session boundary, not mid-run.\n- **Process:** the change itself goes through a PR that cites the Anthropic guidance URL.\n\nI didn't open `claude-tooling.md` or check whether a Svelte server is already registered. Check the manifest for an existing entry first, since Svelte is named as shared stack. I changed nothing.",
+  "costUsd": 0.0961456
+}

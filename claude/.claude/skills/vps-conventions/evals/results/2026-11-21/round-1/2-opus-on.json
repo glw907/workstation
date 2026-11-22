@@ -1,0 +1,21 @@
+{
+  "skillName": "vps-conventions",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "We want to add the `jq` package to the cloud-init user-data.yaml that provisions our RHEL-family VPS boxes. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; change nothing.",
+  "started": "2026-11-22T02:02:20Z",
+  "seconds": 19.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob"
+  ],
+  "result": "I couldn't find a `user-data.yaml` in this working directory, and reading `~/Projects` needs a permission I don't have yet. So this plan is general, not tied to your file. I changed nothing.\n\n## 1. Check the package name first\n\nDo this on a running box of each distro and major version you run (for example RHEL 8 vs 9, Alma vs Rocky), because repos differ:\n\n```bash\ndnf info jq                    # is it available, and from which repo\ndnf repoquery --whatprovides /usr/bin/jq   # confirms the package that ships the binary\ndnf repolist                   # confirm that repo is enabled on a fresh image too\n```\n\nOn RHEL 8, RHEL 9 and their rebuilds, `jq` comes from the **AppStream** repo, so EPEL isn't needed. On EL7 it came from EPEL. If `dnf info` says the repo is something other than AppStream or BaseOS, the cloud-init file also has to enable that repo (`yum_repos:`) before `packages:` can install it.\n\n## 2. The cloud-init change itself\n\n- Add `jq` under the existing `packages:` list.\n- Validate the file before you use it: `cloud-init schema --config-file user-data.yaml`. Add `--annotate` to see exactly where any error is.\n- On the next new box, confirm it worked with `cloud-init status --long`, `rpm -q jq`, and a check of `/var/log/cloud-init-output.log` for dnf errors.\n\n## 3. Servers already running won't get it from cloud-init\n\nThe `packages:` module runs once per instance, on first boot. Editing user-data doesn't touch boxes that are already up. Even if you change the user-data in the provider's panel, those boxes won't re-read it. So the running fleet needs a separate step:\n\n- **Recommended:** install it through whatever already manages those boxes. If that's Ansible, use `ansible all -b -m ansible.builtin.dnf -a \"name=jq state=present\"`, or add the same task to your playbook. If nothing manages them, run `ssh <host> sudo dnf install -y jq` on each one.\n- **Don't** run `cloud-init clean && reboot` to force a re-run. It re-runs every first-boot module (users, SSH host keys, write_files, runcmd) and can break a box that's in use.\n- Afterwards, check every host with `rpm -q jq` and `jq --version`.\n\n## 4. Keep the two paths in step\n\nFrom now on, the user-data covers new boxes and your config tool or a manual step covers existing ones. Put any later package additions in both places, or make the config tool the single source, so new and old boxes don't drift apart.\n\nIf you point me at the repo holding `user-data.yaml` and tell me how the boxes are managed today, I can make this plan specific to them.",
+  "costUsd": 0.186616
+}

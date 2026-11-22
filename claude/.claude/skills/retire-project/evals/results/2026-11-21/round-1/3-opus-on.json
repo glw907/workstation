@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T02:28:06Z",
+  "seconds": 22.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Archive plan for a small demo repo with one D1 database\n\nNothing has been run. `<project>`, `<db>`, and `<owner/repo>` stand in for names the read-only inventory in step 1 will fill in.\n\n## Before packing\n\n- **Worktrees:** in each one, commit or drop any uncommitted work, because a git bundle doesn't carry it. Turn any stash into a branch so it shows up as a named ref.\n- **Inventory check:** confirm the D1 database is the only data store. If the inventory finds an R2 bucket or KV namespace, it goes into the archive too.\n- **Row counts:** record a count for each D1 table from the live database, read-only: `wrangler d1 execute <db> --remote --command \"SELECT count(*) FROM <table>\"`. The restore test checks against these numbers.\n\n## What goes in the archive\n\nThe file is `<project>-<date>.tar.age`, encrypted to the workstation age key.\n\n| File | Source | Pre-pack check |\n|---|---|---|\n| `repo.bundle` | `git bundle create repo.bundle --all` | `git bundle verify repo.bundle` passes, and its refs match the inventory's branches and tags |\n| `<db>.sql` | `wrangler d1 export <db> --remote --output <db>.sql` | Not empty, and has a `CREATE TABLE` for every table |\n| `issues.json`, `prs.json` | `gh issue list` and `gh pr list --state all --json ...` for `<owner/repo>` | Each parses with `jq` |\n| `wrangler.jsonc` (or `.toml`) | The Worker config from the repo | Present |\n\nSecret values never go in. Secret names are already recorded in the store and the registry.\n\n## How the archive is proven\n\nEvery check below must pass before anything reaches you for approval. Any failure stops the retirement, and nothing gets deleted.\n\n1. **Stop on a bad export.** If the D1 export fails or comes back empty, the retirement stops there. This also covers a database with FTS5 virtual tables, which `wrangler d1 export` can't export.\n2. **Restore into scratch.** In a fresh `mktemp -d`:\n   - Decrypt the file with the workstation identity and untar it.\n   - `git clone repo.bundle` into the scratch directory, then confirm the branches and the latest commit match the inventory.\n   - `sqlite3 restored.db < <db>.sql` must exit cleanly, and each table's row count must match the live counts recorded earlier.\n   - `jq` parses both JSON files.\n3. **Store two copies.**\n   - One at `~/Documents/retired-projects/`.\n   - One at `servers-archive/retired-projects/` in R2. `rclone check` must report no differences between the local and R2 copies.\n4. **Record the hash.** The file's `sha256sum` goes in the retirement record, which is the `README.md` row beside the archives.\n\n## After the proof\n\nOnly after all of that does the dry run reach your terminal, listing each delete by its id (Worker, D1 database, DNS records, repo). Each delete waits for your typed approval. Teardown runs in the skill's order, and each id's inventory is rerun just before it's deleted.",
+  "costUsd": 0.1963288
+}

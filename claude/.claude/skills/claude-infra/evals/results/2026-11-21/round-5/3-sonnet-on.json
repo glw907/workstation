@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:44:36Z",
+  "seconds": 7.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    }
+  ],
+  "result": "On this workstation, user scope, not ecxc-ski's `.mcp.json`.\n\n**Why:** The `claude-infra` rules say everything the cairn-family stack shares (Svelte, Playwright, DaisyUI) belongs at user scope and in the manifest. A repo's `.mcp.json` carries only what that repo alone needs. Since the other cairn sites use Svelte too, a Svelte docs server in ecxc-ski's `.mcp.json` would be duplicated per repo and would drift.\n\n**Before adding it:**\n- **Skill first.** The same rules say to take a skill first when a library offers both. A server fits only when you want on-demand retrieval or tools a skill can't carry. If the Svelte docs are mainly reference material, a skill may be enough. A server is justified if you want live lookups.\n- **Reach.** An MCP server reaches only the main loop and unrestricted agents. Fixed-tool-list subagents, such as a reviewer dispatched against a spec, won't see it. If they need Svelte docs, they need a skill on their `tools` line or a `skills:` preload.\n- **Recording.** A user-scope MCP server gets an entry in its manifest. The \"Layout\" table in `~/.claude/docs/claude-tooling.md` names the file. After adding it, run `claude-tooling-sync verify` and commit the dotfiles. Any rule of use goes in the skills or agents that use it, or in the inventory in `claude-tooling.md`.\n- **Vendor and credentials.** Use the official Svelte MCP server if one fits, since it's the vendor already in use for this stack. It needs no credentials. If one ever did, the values would stay as `${VAR}` references resolved from `~/.local/secrets`.\n- **Landing.** The change goes through a PR that cites the Anthropic guidance URL, unless it meets \"Direct changes\". A restart loads the new server, so do it at a session boundary.\n\nThe guidance page is <https://code.claude.com/docs/en/features-overview>. I changed nothing.",
+  "costUsd": 0.0207364
+}

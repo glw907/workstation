@@ -1,0 +1,42 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:09:50Z",
+  "seconds": 13.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/4-haiku-on\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/cloudflare-estate-inventory.md\"}"
+    }
+  ],
+  "result": "I couldn't identify the site from here. The working directory is a scratch folder with no repo in it, and reads of `~/Projects` and the Cloudflare inventory doc were denied. So this is a generic plan built from the workstation rules. Tell me the repo name or hostname and I'll make it specific.\n\n**Shutdown plan (nothing changed)**\n\n1. **Identify the footprint.** Find the repo, its hostnames, and where it runs (Pages, Worker, static host, or a server). List its DNS records, Access apps, redirects, mail routes, and any cron or backup jobs. The `runbook` skill routes to the household DNS, mail, and backup references, and `~/.claude/docs/cloudflare-estate-inventory.md` covers the Cloudflare side.\n\n2. **Check for dependents.** Look for other sites, links, or email that point at the demo. Check for Turnstile keys, Email Routing rules, or OAuth redirect URIs that would break.\n\n3. **Keep what matters.** Snapshot any D1, KV, or R2 data and export the repo's content before anything is deleted. Deletion of data is the one step that can't be undone.\n\n4. **Archive before deleting.** Archive the GitHub repo first. Archiving is reversible; deleting is not. Delete only after you've confirmed nothing depends on it.\n\n5. **Credentials.** List the secrets with `wrangler secret list` and the CI secrets in the repo settings. Revoke tokens scoped only to this site. Mark the Proton Pass items as retired through `claude-pass`, and don't delete them. Never print values.\n\n6. **Shutdown sequence:**\n   - Put up a \"retired\" page, or a redirect if there's a successor.\n   - Remove the DNS records and Access apps.\n   - Delete the Worker or Pages project, then its storage.\n   - Remove the Dependabot or Renovate config, and close any open PRs and issues.\n   - Archive the repo.\n   - Close the matching `log-project` record, if one exists.\n\n7. **Confirm each destructive step.** Show a dry run and get your go-ahead before each delete. The Cloudflare deletes and the data removal in step 3 need that most.\n\n**Decisions for you:**\n- Retire with a page, a redirect, or a plain 404?\n- Keep the data, or delete it along with the site?\n- Archive or fully delete the repo?\n\nGive me the repo name or hostname, and say whether I may read `~/Projects` and the Cloudflare inventory doc. I'll then turn this into a concrete, checked inventory.",
+  "costUsd": 0.0049309
+}

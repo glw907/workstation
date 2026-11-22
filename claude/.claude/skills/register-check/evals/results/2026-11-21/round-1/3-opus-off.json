@@ -1,0 +1,24 @@
+{
+  "skillName": "register-check",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Geoff asked for a register check on draft.md in this folder. Propose rewrites for what you find, but don't apply any.",
+  "started": "2026-11-22T02:22:15Z",
+  "seconds": 23.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Read",
+    "Skill"
+  ],
+  "result": "I didn't apply any of these. I checked the draft against the Microsoft Writing Style Guide, which the voice router assigns to editor-facing product copy. The page tells an editor how to do something in the admin with no terminal step, so that's its audience. I couldn't open the editor exemplar file (`~/.claude/docs/voice/editor.md`) because permission was denied, so this check uses the Microsoft guide alone.\n\n## Findings\n\n**Lines 3–4: the opening paragraph is ad copy, not instructions.** This is the main register problem.\n- \"isn't just a content system, it's...\" is a stock \"not X, it's Y\" sales line, and the comma between the two halves should be a full stop.\n- \"Moreover\" is a stiff way to start a sentence and doesn't link to anything before it.\n- \"seamless\", \"empowers\", \"robust\" and \"world-class\" are hype words that tell the reader nothing.\n- \"ship ... pages in minutes\" is a claim the page never backs up.\n\nProposed: cut the paragraph. If the page needs an opening line, use a plain one:\n> Publishing a page makes your latest changes live on the site.\n\n**Line 6: the steps run together in a paragraph.** The register here is right, and \"select\" is the verb Microsoft recommends. But a sequence of steps should be a numbered list. Proposed:\n> 1. Open the admin.\n> 2. Choose the page.\n> 3. Select **Publish**.\n>\n> The site rebuilds on Cloudflare, and the new version is live about a minute later.\n\n**Line 7: \"Click here to read more about builds.\"**\n- Microsoft says not to use \"click here\" as link text. The link text should say where it goes.\n- \"Click\" also clashes with \"select\" two lines up.\n- The line has no link target at all.\n\nProposed, with the target left for Geoff to fill in rather than guessed:\n> To learn how builds work, see [About builds](TODO).\n\n**Line 9: the 2019 release and \"over ten thousand sites\".**\n- This is product history on a how-to page, so the page slips from instructions into a sales pitch.\n- I can't verify either fact.\n- Microsoft prefers \"more than\" over \"over\" for numbers.\n\nProposed: move it to an about page, or cut it. If it stays somewhere, write \"more than ten thousand sites\" and confirm both facts first.\n\n**Line 1: the heading (minor).** \"Publishing a page\" is acceptable. \"Publish a page\" is the usual form for a task heading in both Microsoft and Google docs. This one is optional.\n\n## The whole page with every proposal\n\n```markdown\n# Publish a page\n\nPublishing a page makes your latest changes live on the site.\n\n1. Open the admin.\n2. Choose the page.\n3. Select **Publish**.\n\nThe site rebuilds on Cloudflare, and the new version is live about a minute later. To learn how\nbuilds work, see [About builds](TODO).\n```\n\nGeoff needs to decide two things: where the builds link points, and whether the history line goes on an about page or gets cut.",
+  "costUsd": 0.23413300000000004
+}

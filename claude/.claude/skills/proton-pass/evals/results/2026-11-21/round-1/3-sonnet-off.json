@@ -1,0 +1,21 @@
+{
+  "skillName": "proton-pass",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I want to move about 30 Proton Pass items between vaults and rename some of them. Can Claude just do this with claude-pass? How should it go? Plan only; don't run anything.",
+  "started": "2026-11-22T02:07:52Z",
+  "seconds": 16.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob"
+  ],
+  "result": "Probably yes, but I haven't confirmed it. My read of `claude-pass` and the `proton-pass` skill was denied, and I haven't run anything. I don't know yet whether `claude-pass` exposes move and rename. If it doesn't, that gap is the first thing to settle.\n\n**Plan**\n\n1. **Check capability (read-only).** Read the `claude-pass` source and the `proton-pass` skill. Confirm it can list vaults and items, move an item to another vault, and change a title. If a verb is missing, I'd tell you instead of falling back to bare `pass-cli`, which the rules forbid.\n2. **Get the mapping from you.** I need, for each item, the target vault and the new title, or a rule I can apply. Those are your calls. A table or a short rule list works.\n3. **Inventory (read-only).** List the vaults and the ~30 items by title, ID, vault and type, with no secret values. Save that as a before-snapshot.\n4. **Build a manifest.** One row per item: ID, current vault, target vault, old title, new title. I'd flag the following:\n   - Name collisions in the target vault.\n   - Moves out of a shared vault, which change who can see the item.\n   - Items with TOTP, passkeys or attachments, which may not survive a move.\n   - Anything that looks up an item by name. I'd grep `~/.local/secrets`, the registry, the `household-it` runbook and the scripts for the old titles. A rename could break those lookups.\n5. **Dry run and your go-ahead.** I print the manifest as a plan and wait for you to approve it.\n6. **Pilot one low-stakes item.** I move and rename it, then re-list to check it. I'd look specifically at whether the move keeps the item ID. If the CLI copies and deletes, IDs change and anything referencing them breaks.\n7. **Run the rest in order.** I'd stop on the first failure and re-list after each item or small group. The run is safe to repeat, because I skip rows already in their final state.\n8. **Final check.** I compare the live state against the manifest, then update any references found in step 4. Rollback is the reversed manifest.\n\nOne thing I need from you: should I treat a failed pilot (for example, a move that changes IDs) as a stop and ask, or proceed if nothing references those IDs? I'd stop by default.",
+  "costUsd": 0.1001802
+}

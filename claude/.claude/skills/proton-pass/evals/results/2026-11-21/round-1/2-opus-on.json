@@ -1,0 +1,25 @@
+{
+  "skillName": "proton-pass",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "claude-pass just failed with \"Agent login failed\" after I ran four item views in a row, and the token itself is fine. What's going on, and what should happen next? Answer only.",
+  "started": "2026-11-22T02:06:48Z",
+  "seconds": 8.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "Proton is throttling the agent's sign-ins. Each `claude-pass` call signs in as the host's agent, and Proton starts refusing after about four quick sign-ins. When the token is good, \"Agent login failed\" means that throttle, not a credential problem.\n\nWhat should happen next:\n\n1. **Stop calling `claude-pass` for 25 minutes.** Retrying now only extends the throttle. Don't rotate, renew, or re-grant the token; nothing is wrong with it.\n2. **After the wait, leave 150 seconds between calls.**\n3. **Run any chain longer than a few minutes in the background**, with its output going to a file. Keep secret values in files or pipes, never the transcript.\n4. **If `check-drift` runs during the throttle,** its `pass-access` sign-ins will fail and it will warn about it. Rerun with `PASS_ACCESS_SKIP=1` to skip those sign-ins.",
+  "costUsd": 0.1883286
+}

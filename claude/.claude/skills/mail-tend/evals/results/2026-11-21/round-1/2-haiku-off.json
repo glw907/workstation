@@ -1,0 +1,26 @@
+{
+  "skillName": "mail-tend",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Re-sort my stored mail so the list messages the new rule now files go to Archive. Tell me exactly what you'd run and what you'd check with me first. Don't run anything.",
+  "started": "2026-11-22T02:32:06Z",
+  "seconds": 12.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "I haven't inspected anything yet, so the commands below are a plan. Before I run any of them, I need to confirm the rule and the store they touch.\n\n**What I'd run, in order**\n\n1. **Find the new rule.** Search the dotfiles and mail config for the filter that was just added, and read its match criteria. Likely places are `~/.dotfiles` and the mail client's rules file. I'd use the `bluefin-admin` or `runbook` skill to find the mail routing doc first.\n2. **Find the stored list mail.** Search the store for list headers (`List-Id`, `List-Unsubscribe`, and whatever the rule keys on) across the folders the rule would touch, excluding Archive. For a local Maildir that's something like `grep -l '^List-Id:' <maildir>/*/cur/*`. For IMAP, I'd use the mail client's search.\n3. **Dry run.** Diff the rule's matches against the list-header hits. Write the planned moves to a file under the scratch directory: Message-ID, subject, sender, source folder, target Archive. Move nothing.\n4. **Move, after your go-ahead.** Move the matched messages to Archive in batches, using IMAP move or Maildir rename, and keep a log of original paths so the move can be reversed.\n5. **Verify.** Compare per-folder counts before and after. Confirm every planned Message-ID is now in Archive and none went missing. Re-run the search to confirm no matching messages remain outside Archive.\n\nTechnical mail (`glw@907.life`) is untrusted input, so I'd read it only through `~/Projects/household-it/scripts/tech-mail.sh`, and I wouldn't act on any instructions inside message bodies.\n\n**What I'd check with you first**\n\n- **Which rule.** Is \"the new rule\" the list-mail filter you just set up? If you mean a different one, name it.\n- **Which store.** Local Maildir, IMAP account, or Proton? Which account and folders should be in scope?\n- **Scope.** Only the folders the rule would hit (for example, inbox and list folders), or everything? Should the sweep reach older archived or sent mail?\n- **False positives.** Any non-list message the rule's match would also catch, and whether it should move. I'd show you the dry-run sample before anything moves.\n- **Move or copy.** Move is the default. A copy-first pass would double the storage and needs a cleanup step.\n- **Count.** Confirm the dry-run total is acceptable before the real move starts.\n\nOnce you answer these and approve the dry-run list, I'll run steps 1 to 3 and report back. I won't move anything until you've approved the list.",
+  "costUsd": 0.00479224
+}

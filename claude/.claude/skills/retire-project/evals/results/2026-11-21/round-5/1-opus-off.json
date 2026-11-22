@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:47:28Z",
+  "seconds": 23.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"retire|site-staging\", \"path\": \"/var/home/glw907/.claude/docs\", \"-i\": true, \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "`/retire-project` isn't installed in this session, so it didn't run. Below is the plan written out by hand, as a dry run. I looked nothing up live and changed nothing. I also wasn't allowed to read `~/.claude/docs`, so this plan doesn't use the estate inventory. Where it says `<db-name>`, `<staging-domain>`, or `<account-id>`, that's a value I haven't checked.\n\n## Dry run: retire `site-staging`\n\n### 1. Inventory (read-only, run first when this goes live)\n- **Worker config:** read the site repo's `wrangler.toml` (or `.jsonc`) for the `site-staging` env. List every binding: D1, KV, R2, Queues, Durable Objects, service bindings, cron triggers, and vars.\n- **Custom domain:** find `<staging-domain>` and its domain ID with `GET /accounts/<account-id>/workers/domains`. Also check for routes and a `workers.dev` subdomain.\n- **D1:** run `wrangler d1 info <db-name>` to get its ID and size, and confirm only this Worker binds it.\n- **Inbound dependents:** check whether another Worker has a service binding to `site-staging`, and whether anything else uses the D1 database.\n- **Surrounding pieces:**\n  - leftover DNS records for `<staging-domain>`\n  - any Cloudflare Access app on it\n  - the Worker's secrets (`wrangler secret list --name site-staging`)\n  - CI workflows that deploy staging, and their Actions secrets\n  - entries in the age store, `~/.local/secrets`, and Proton Pass\n  - mentions in repo docs and the estate inventory\n\n**Gate:** if anything outside this Worker depends on it, stop and report to you.\n\n### 2. Back up\n- `wrangler d1 export <db-name> --remote --output=<backup-path>/site-staging-<date>.sql`\n- Save a copy of the Worker config and its list of secret names (names only).\n- D1 Time Travel won't help once the database is deleted, so this export is the only way back.\n\n### 3. Turn off what deploys it\n- Remove or disable the staging deploy job in CI first, so a push can't bring the Worker back.\n\n### 4. Delete, in this order\n1. **Custom domain:** `DELETE /accounts/<account-id>/workers/domains/<domain-id>`, sent with curl and `$CLOUDFLARE_API_TOKEN`. The MCP token is read-only for Workers-domain writes.\n2. **Worker:** `wrangler delete --name site-staging`\n3. **D1:** `wrangler d1 delete <db-name>`, only after the Worker is gone and the backup is verified.\n4. **Leftovers:** delete any DNS record or Access app still pointing at `<staging-domain>`.\n\n### 5. Clean up records\n- Remove the staging env block from `wrangler.toml`, plus its CI secrets.\n- Retire any staging-only credentials in the stores and in Proton Pass. If a credential is shared with production, leave it.\n- Update the estate inventory and any docs that name `site-staging`.\n\n### 6. Verify\n- `<staging-domain>` no longer resolves to a Worker.\n- `site-staging` is missing from `wrangler deployments` and the Workers list.\n- `<db-name>` is missing from `wrangler d1 list`.\n- Production for the site still works.\n\n### Points of no return\n- Step 4.3 can only be undone with the export from step 2.\n- Steps 4.1 and 4.2 can be undone by redeploying and re-attaching the domain.\n\nWhen you want it run for real, say so and I'll start with the read-only inventory and report back before deleting anything.",
+  "costUsd": 0.05368839999999999
+}

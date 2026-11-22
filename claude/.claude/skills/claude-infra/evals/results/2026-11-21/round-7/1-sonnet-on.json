@@ -1,0 +1,47 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T04:01:10Z",
+  "seconds": 13.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"release\", \"path\": \"/var/home/glw907/.claude/skills\", \"-i\": true, \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/SKILL.md\", \"path\": \"/var/home/glw907\"}"
+    }
+  ],
+  "result": "**Recommendation: make it a skill, either a new `cairn-release` skill or a \"Cutting a release\" section in `cairn-pass`.**\n\nI couldn't read `~/.claude/skills` or search `~/` (permission wasn't granted). So I haven't checked whether `cairn-pass` already covers releases or what the skill layout looks like. Check that first.\n\n**Why a skill**\n\nThe `claude-infra` skill ranks homes as hook, then skill or agent, then CLAUDE.md. Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>) puts it this way: \"Put it in a skill if it's reference material Claude needs sometimes\". A release checklist is needed only when a release is cut, so a skill fits.\n\n- **Not CLAUDE.md.** It carries only a fact that applies every turn, and a checklist is not one. Nothing enforces a rule written there either.\n- **Not a hook by default.** A hook is right only for a step that must hold every time and can be checked mechanically, such as refusing a tag when the gate hasn't passed. Look through the five steps for one like that. If there is one, it becomes a small hook or a gate-script check, and the rest stays in the skill.\n- **Not memory.** Memory holds only a preference that no file can.\n\n**Which skill**\n\n- **New `cairn-release` skill.** Pick this if the checklist is self-contained. Its description would trigger on \"cut a release\", \"tag\", or \"publish\" for cairn-cms.\n- **A section in `cairn-pass`.** Pick this if releases are the tail end of a pass. That skill already holds the gate wrapper, the CI watch and Geoff's launch conventions.\n- **One home only.** Don't do both. If `cairn-pass` already has a partial release section, extend it.\n\n**How the change lands**\n\n1. **Cite the guidance.** Name the features-overview URL above before writing anything.\n2. **Write the skill.** A skill authored here is its own manifest, so it gets no manifest entry. I'd write the five steps from your pasted version, with exact commands and the gate it runs. I need that checklist from you, since I haven't seen it.\n3. **Edit in the dotfiles copy.** The skill directory lives in `~/.dotfiles` and is stowed. I'd edit that copy and never the link.\n4. **Open a PR.** The commit messages and body cite the guidance URL. This is more than a one-sentence change, so it doesn't qualify for a direct landing under `building-from-specs`. Because it's a skill, I'd run it through `building-from-specs`: a spec for you to approve, a build session, a review subagent, then a pull request you approve by number.\n5. **Run the checks.** After the edit I'd run `claude-tooling-sync verify` and `bash scripts/gate.sh` from the dotfiles root. The audit is `/skill-doctor`, `/doctor prompt-audit` and Anthropic's `skill-creator`. The save hooks `vale-hook` and `tellgrader` check the prose. Skills load live, so no restart is needed.\n\n**What I need from you:** the five steps as you paste them today, and a choice between a new skill and a `cairn-pass` section. Once the permission is granted I can check for existing release content first.",
+  "costUsd": 0.0334886
+}

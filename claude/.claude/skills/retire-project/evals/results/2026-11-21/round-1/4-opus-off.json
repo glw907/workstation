@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T02:30:08Z",
+  "seconds": 14.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "This is a rough plan for your setup. I haven't checked anything or changed anything. You didn't name the site, so the inventory step comes first.\n\n## 1. Inventory (read-only)\n- **Repo:** GitHub remote, Actions workflows, Actions secrets, Dependabot/Renovate config, open PRs and issues, any other worktrees under `~/Projects/`.\n- **Cloudflare:** the Worker or Pages project, routes and custom domains, DNS records, Access apps, and any bound D1, KV, R2, Queues or Durable Objects. Check `wrangler secret list` and `~/.claude/docs/cloudflare-estate-inventory.md`.\n- **Credentials:** API tokens scoped to this site, Workers secrets, Proton Pass items, entries in `~/.local/secrets` and the age store, and test accounts in `~/.claude/docs/test-accounts.md`.\n- **Records that mention it:** initiatives in `~/Projects/initiatives`, the household-it runbook, maintenance-mode lists, `check-drift` grant legs, and any monitors or alerts.\n\n## 2. Keep what's worth keeping\n- Export any data in D1, KV or R2 before deleting it.\n- Archive the GitHub repo rather than deleting it. Archiving is reversible and keeps the history. Deleting is not.\n\n## 3. Take it offline (outward-facing, so you confirm each step)\n- Remove the custom domain or route, then delete the Worker or Pages project.\n- Delete the DNS records. If the domain existed only for this demo, decide whether to let it expire.\n- Remove any Access apps and policies.\n\n## 4. Revoke and clean up\n- Revoke tokens used only by this site, and remove its Actions secrets and Workers secrets.\n- Retire its Proton Pass items under the vault rules, and drop it from the store, the registry and the grant map so `check-drift` stays clean.\n- Delete the storage resources once the exports are confirmed.\n\n## 5. Close the records\n- Close the initiative record, take the site off any maintenance-mode list, update the runbook, and remove the local checkout.\n\n**Irreversible steps:** deleting the repo (if you choose that over archiving), deleting stored data, and letting the domain lapse. Everything else can be rebuilt.\n\nWhich site is it? Once I know, I can run the inventory read-only and give you an exact checklist. Because the work spans several systems, that checklist would go through the `building-from-specs` skill as a short spec for you to approve before anything changes.",
+  "costUsd": 0.1630528
+}

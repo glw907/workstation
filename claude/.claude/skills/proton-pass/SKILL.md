@@ -1,6 +1,6 @@
 ---
 name: proton-pass
-description: Use for any work on Proton Pass vaults, items, grants, or credentials on this workstation: which vault an item belongs in, how to name it and write its note, reading or writing an item through claude-pass, a sign-in throttle, the grant map and check-drift's legs, the item-title lint, a new credential or mask, or a bulk vault edit that Geoff runs through pass-sitting.
+description: Holds the Proton Pass vault map, the naming rules, and the claude-pass procedures on this workstation. Use for any work on Proton Pass vaults, items, grants, or credentials: which vault an item belongs in, how to name it and write its note, reading or writing an item through claude-pass, a sign-in throttle, the grant map and check-drift's legs, the item-title lint, a new credential or mask, or a bulk vault edit that Geoff runs through pass-sitting.
 ---
 
 # Proton Pass
@@ -36,7 +36,8 @@ signs in to it, and money or medical accounts lean to `Cathy & Geoff` unless a k
 
 A title is the service's name as people say it, never a domain. A qualifier goes in one trailing
 parenthesis, only when one vault holds more than one account at the service, usually the username
-or whose it is. A key or secret is named system, then secret, then scope. No generic titles.
+or whose it is. A key or secret is named system, then secret, then scope, with the scope in the
+trailing parenthesis: `R2 backup secret (orpheus, read-only)`. No generic titles.
 A custom field's title is sentence case, as Proton Pass shows its own fields ("Token",
 "Recovery codes"), never lowercase or a variable name (Geoff, 2026-11-07).
 

@@ -1,0 +1,47 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:53:54Z",
+  "seconds": 12.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn*/SKILL.md\", \"path\": \"/var/home/glw907/.dotfiles\"}"
+    }
+  ],
+  "result": "The checklist belongs in a skill, and I'd extend `cairn-pass` rather than create a new one. I couldn't read `~/.claude/docs/claude-tooling.md` or `~/.dotfiles` (permission wasn't granted), so the paths below come from the `claude-infra` skill and your CLAUDE.md, not from checking the disk.\n\n**Where it lives**\n\n- **Why a skill:** `claude-infra` ranks homes as hook, then skill or agent, then CLAUDE.md. A hook is for a rule that must hold every time. A five-step checklist you want recalled when you cut a release is reference material Claude needs sometimes, so it goes in a skill. CLAUDE.md is only for facts that apply every turn, and this isn't one. Anthropic's features overview says this at <https://code.claude.com/docs/en/features-overview>.\n- **Why `cairn-pass`:** it already covers the cairn-cms gate wrapper and CI watch, so release steps fit there. I'd add them as a \"Cutting a release\" section, or as a `release.md` reference file that `SKILL.md` points to if the five steps run long. That keeps one home per rule and doesn't add a skill that competes with `cairn-pass` for the same trigger.\n- **Trigger:** extend the `cairn-pass` description so it also fires on \"cut a release\", \"release cairn\", and \"tag a version\".\n- **Hook option:** if any step must never be skipped, such as running the gate before tagging, that step should be a hook or a script, not prose. I'd ask you which steps are hard rules. The rest stays in the skill.\n\n**How the change lands**\n\n1. **Work in the dotfiles, not a link.** Per your rules, the copy under `~/.dotfiles` is the one to edit, and it is stowed into `~/.claude/skills/`. I'd confirm the exact path with `claude-tooling-sync` or the layout table in `claude-tooling.md` before touching anything.\n2. **Check for conflicts first.** Run `claude-worktree-busy` on the dotfiles checkout, then work in a worktree.\n3. **Write the section.** Take the five steps as you've been pasting them, and keep the scope to those five. Any extras I think of go under \"Later\", not in the change.\n4. **Manifest:** none is needed. A skill authored here is its own manifest, its directory. Then run `claude-tooling-sync verify`.\n5. **Prose checks:** the save hooks (`vale-hook` and `tellgrader`) run automatically on skills.\n6. **Audit:** run `/doctor prompt-audit`, `/skill-doctor`, and `skill-creator`.\n7. **Gate and PR:** run `bash scripts/gate.sh` bare from the worktree root. Then open a PR whose commits and body cite the features-overview URL above. Adding a section to an existing skill is more than a one-sentence change, so I wouldn't land it directly. I'd say so in the PR and wait for your approval by number before merging.\n\nPaste the five steps and tell me which, if any, are hard rules. I'll build it from there once you give the go-ahead and grant read access to `~/.claude/docs` and `~/.dotfiles`.",
+  "costUsd": 0.0326596
+}

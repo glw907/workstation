@@ -1,0 +1,28 @@
+{
+  "skillName": "register-check",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+  "started": "2026-11-22T02:15:38Z",
+  "seconds": 23.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "register-check",
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/register-check"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "The register check on `draft.md` is done. I edited nothing. It was a manual read only: the forked session had no shell or agent dispatch, so Vale, `tellgrader`, the register editor and the fact-checker did not run. There is also no `.vale.ini` or cairn codebase in this folder. Re-run it from the cairn-cms repo root before relying on it.\n\n**Facts and logic**\n1. **\"Cairn was first released in 2019 and is used by over ten thousand sites.\"** Neither claim has a source in the draft, so it reads as fabrication. It is also off-topic for a publishing how-to. Cut it unless you supply verified numbers.\n2. **\"the new version is live about a minute later.\"** This is an unverified timing, and it's your call. Check it against a real build. If it isn't verified, use: \"The site rebuilds on Cloudflare and the new version goes live when the build finishes.\"\n3. **\"The site rebuilds on Cloudflare.\"** I couldn't check this against the codebase, README, why-cairn or docs index for consistency with other hosting claims.\n\n**Register**\n4. **\"Cairn isn't just a content system, it's a seamless way to publish.\"** This is a contrast frame and a comma splice, and \"seamless\" is marketing. Delete it and open with the procedure.\n5. **\"Moreover, it empowers every editor to ship robust, world-class pages in minutes.\"** It has a connector opener, slop vocabulary (\"empowers\", \"robust\", \"world-class\"), and an unsupported \"in minutes\". Delete the whole paragraph.\n6. **\"Click here to read more about builds.\"** \"Click here\" is a banned link anchor. Use a descriptive one, such as \"For details, see [how builds work](...)\". The target page needs checking, and I did not invent a URL.\n7. **Shape.** The procedure should be a numbered list: open the admin, choose the page, select **Publish**. The bold on the UI label **Publish** is correct and stays.\n\n**Links**\n8. Link Cloudflare at its first mention, but only to a verified URL.\n9. I couldn't confirm that a builds page exists for the link in finding 6.\n\n**Not flagged:** \"Select **Publish**\" reads as a plain, correct instruction.\n\n**Who decides**\n- **Mine to fix:** findings 1 (the sentence cut), 4, 5, 6 (the anchor wording) and 7.\n- **Your call:** finding 2, plus the 2019 and ten-thousand-site claims if you want them kept with sources.\n\nAfter the cuts the page would be:\n- the heading\n- the three-step numbered procedure\n- \"The site rebuilds on Cloudflare. The new version goes live when the build finishes. For details, see [builds page].\"\n\nDo you want me to apply these edits?",
+  "costUsd": 0.19451190000000002
+}

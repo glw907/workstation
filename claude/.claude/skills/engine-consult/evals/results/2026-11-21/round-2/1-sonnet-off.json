@@ -1,0 +1,67 @@
+{
+  "skillName": "engine-consult",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I'm about to write a spec in ~/Projects/ecxc-ski for a gear-booking page that needs a new custom field type in the cairn admin. Before I write it, what engine-consultation steps does the spec need, and what exactly goes in its header? Answer only; don't write or change any file.",
+  "started": "2026-11-22T02:41:16Z",
+  "seconds": 16.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "building-from-specs",
+    "site-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"site-pass\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/{writing-a-spec.md,engine-consult*,engine-ui-mechanics.md}\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/references/writing-a-spec.md\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-off/.claude/skills\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-off/.claude/skills/building-from-specs/references/writing-a-spec.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/engine-consult*/**\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-off/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"engine-consult|Sources consulted|no engine asks\", \"path\": \"/var/home/glw907/Projects/ecxc-ski\", \"output_mode\": \"content\", \"head_limit\": 40}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/engine-consult/**\", \"path\": \"/var/home/glw907/Projects\"}"
+    }
+  ],
+  "result": "I can answer only part of this from what I could read, and I stopped short of guessing the rest.\n\n**What the header carries**\n\n`site-pass` says the plan header carries exactly one of these:\n- a link to a consultation brief, or\n- the line \"no engine asks\".\n\nIt also carries a \"Sources consulted\" line. Both come from the `engine-consult` skill.\n\nA committed plan with neither one gets the enumeration run before its first task. The plan, spec, and archive paths come from ecxc-ski's `CLAUDE.md` or `docs/STATUS.md`. The usual place is `docs/{plans,specs}/`.\n\nYour gear-booking page needs a new custom field type in the cairn admin. That is an engine ask, so the header should link a consultation brief, not say \"no engine asks\". That is my reading of `site-pass`, and it has no rule for this exact case.\n\n**Engine-consultation steps**\n\nI can't give you the exact steps. `site-pass` points to `engine-consult`, but that skill isn't in this session's skill list, and I found no copy under the project's `.claude`. My searches of `~/.claude` and `~/Projects` were blocked by permissions, so I couldn't check there. If you grant read access, or tell me where `engine-consult` lives, I'll read it and give you the real steps.\n\nThese parts of the process are documented:\n- **Backlog sweep:** the spec runs the `standards:backlog-sweep` scoped sweep and lists the verdicts.\n- **Cairn backlog:** the pass lists the cairn backlog items it found, verified against cairn-cms. A cairn session files them in cairn-cms's `BACKLOG.md`.\n- **Engine UI mechanics:** a UI mechanic that belongs to the engine follows `~/.claude/docs/engine-ui-mechanics.md`. I haven't read it.\n- **Cairn docs:** if a cairn-cms docs page diverges from reality, fix it on a `site-docs/<site>-<pass>` branch off cairn-cms `main`.\n- **Other repos:** a spec that changes another repo's work names the sessions working there and reads that repo's STATUS on the day it is approved.\n\n**The rest of the spec**\n\nFrom `references/writing-a-spec.md`, the spec also needs these items:\n- Intent in your words, with goals, non-goals, and what counts as failure.\n- Approaches considered, with the pick.\n- Sources, each mechanism labeled documented, community, assembled or invented.\n- Assumptions that more than one task rests on, each with a probe or source.\n- A file list built from searches, with hit counts.\n- Task commands checked against the last 30 days of the denials log.\n- Tasks, each with a goal, files, reviewers, minutes, and dependencies. The least-proven assumption goes first, and the spec gives a merge order.\n- A list of the calls Claude made.\n\nFor this spec, the reviewers should include `standards:svelte-reviewer`, `standards:web-auth-security-reviewer` (anything under `src/routes/admin/**` is auth-data), and `standards:daisyui-a11y-reviewer`. The close review loads those by path. Rendered UI also gets `standards:visual-verifier`.",
+  "costUsd": 0.13130719999999999
+}

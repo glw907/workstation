@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:55:51Z",
+  "seconds": 16.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Put it in a PreToolUse hook on Bash, backed by a `permissions.deny` rule. Don't use CLAUDE.md or a skill for this.\n\n**Why not CLAUDE.md or a skill**\n\nBoth are instructions I read and weigh. They shape behavior but don't enforce it. A long context, a compaction, a subagent that never loaded them, or a command assembled indirectly can all get past them. \"No exceptions\" needs something the harness runs before the command does, whatever I decide.\n\n**What to use**\n\n1. **PreToolUse hook on `Bash`.** This is the real enforcement. The harness runs a script on every Bash call and a deny result blocks it. Blocking holds in every permission mode, including bypass. The script can normalize the command before matching, which a deny rule can't.\n2. **`permissions.deny` rules** in user-level `~/.claude/settings.json`, for example `Bash(rm -rf ~*)`. They are cheap and visible, but they match command text by pattern. Treat them as a second layer.\n\n**Where it lives on this workstation**\n\n- Put the hook in user settings, so it applies to every repo and project settings can't loosen it. If you want it to be unoverridable, managed settings is the stricter tier.\n- The hook script goes in `~/.dotfiles/bin/.local/bin/`, then `stow -R bin`. The settings edit also lands in the dotfiles copy if `settings.json` is stowed. Check that first.\n- Your CLAUDE.md says Claude Code tooling changes go through the `claude-infra` skill, and the dotfiles gate (`bash scripts/gate.sh`) applies. A one-line CLAUDE.md note pointing at the hook is fine as documentation, but it isn't the control.\n\n**What the hook has to handle**\n\n\"On a home folder\" is where bypasses hide:\n\n- **Path forms:** `~`, `$HOME`, `${HOME}`, `/home/glw907` and `/var/home/glw907`. On Bluefin `/home` is a symlink to `/var/home`, so these are the same directory.\n- **Subpaths and globs:** `~/*`, `~/.config`, `~/Projects` and similar. Decide whether \"a home folder\" means the home root only or anything under it. Blocking everything under `$HOME` would also block routine cleanups like `rm -rf ~/Projects/x/node_modules`.\n- **Flag variants:** `-fr`, `-r -f`, `--recursive --force`, and `rm` behind `sudo`, `command`, `env`, `xargs` or `bash -c`.\n- **Indirect forms:** `cd ~ && rm -rf .` or `rm -rf *` after a `cd`. A text matcher can't resolve these. A conservative hook blocks recursive `rm` when the working directory is home or the target resolves to it.\n- **Other deleters:** `find ~ -delete`, `rsync --delete` and `shred`. They aren't `rm -rf`, so say whether you want them covered.\n\nNo hook can promise to catch every possible command, such as one built from an encoded string. It can block every realistic form of `rm -rf` on home, which is what you're after. Backups and snapshots remain the real protection against a mistake that slips through.\n\n**Decision for you:** whether \"home folder\" means only the home root and its direct children, or the whole tree under it. That sets how strict the hook is and how often it gets in your way. I'd start with the home root, its direct children and dotdirs, and anything that resolves to them. I'd leave deeper project paths alone.\n\nIf you want it built, say so. It would go through `claude-infra`, with a short test list of allowed and blocked commands.",
+  "costUsd": 0.020174200000000003
+}

@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Explain what a Python list comprehension is, with one short example.",
+  "started": "2026-11-22T04:05:19Z",
+  "seconds": 2.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "A Python list comprehension is a compact way to build a new list by looping over an iterable and, optionally, filtering or transforming each item in one expression. It replaces a longer `for` loop that appends to a list.\n\nExample:\n\n```python\nsquares_of_evens = [n * n for n in range(10) if n % 2 == 0]\nprint(squares_of_evens)  # [0, 4, 16, 36, 64]\n```\n\nThe general form is `[expression for item in iterable if condition]`. The `if` clause is optional.",
+  "costUsd": 0.00030536
+}

@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T02:53:49Z",
+  "seconds": 12.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    }
+  ],
+  "result": "**Put it in a hook, not CLAUDE.md or a skill.** A `PreToolUse` hook on the `Bash` tool, registered in `settings.json`, is the right home.\n\n**Why**\n\n- The `claude-infra` skill ranks the homes as hook, then skill or agent, then CLAUDE.md. It quotes Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>): \"If a rule must hold every time, make it a hook rather than a prompt instruction.\"\n- CLAUDE.md is read as context and nothing enforces it. Claude can misread or skip a line there, or lose it after compaction. That doesn't meet \"no exceptions\".\n- A skill is reference material Claude loads only when it's relevant. A rule that must hold on every Bash call can't depend on a skill being invoked.\n- A hook runs in the harness, outside the model. It sees the command string before execution and can refuse it with a block decision (exit code 2, or a `deny` decision in its JSON output) whatever Claude intended.\n\n**Shape of the rule**\n\n- Scope: the hook inspects `tool_input.command` for `rm` with recursive and force flags (`-rf`, `-fr`, `-r -f`, `--recursive --force`) whose target resolves to a home directory. That covers `~`, `$HOME`, `/var/home/glw907` and `/home/glw907`, and it should treat `~/` with no subpath as the home folder itself.\n- Path resolution: normalize the target before matching, since a plain string match is easy to slip past. Expand `~` and `$HOME`, collapse `..`, and follow symlinks. On this machine `/home` is a symlink to `/var/home`, so both spellings need to match. Decide whether \"a home folder\" means only the directory itself, or anything under it. Under a literal \"no exceptions\" reading, a rule for subpaths would block routine cleanups like `rm -rf ~/Projects/x/node_modules`. I'd block the home directory itself and any other user's home, and ask you about subpaths.\n- Limits: a pattern-matching hook cannot catch every route. Examples are a script that runs `rm -rf`, `find -delete`, `bash -c \"$(...)\"` and variable indirection. It closes the direct case reliably. For a hard guarantee, pair it with a `permissions.deny` rule, such as `Bash(rm -rf ~*)`, as a second layer. Those prefix rules are also bypassable, so the hook is the stronger of the two.\n- Placement: user scope, since the rule applies to every repo. The script would go in `~/.dotfiles` and be stowed, consistent with your config conventions, and the hook entry goes in the user-level `settings.json`. The `update-config` skill handles the mechanics of that entry.\n\n**If you later build it**, `claude-infra` also requires:\n\n- citing the Anthropic hooks page in the commit and PR body,\n- adding the manifest entry and running `claude-tooling-sync verify`,\n- landing the change through a PR, unless it meets the \"Direct changes\" bar in `building-from-specs`.\n\nI changed nothing. Two questions would settle the spec: does \"home folder\" include subpaths, and should the hook also block indirect routes like `find -delete` or `rm -rf` inside a script?",
+  "costUsd": 0.08789680000000001
+}

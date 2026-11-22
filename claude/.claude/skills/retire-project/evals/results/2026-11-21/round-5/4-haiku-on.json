@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:51:55Z",
+  "seconds": 13.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*\"}"
+    }
+  ],
+  "result": "I didn't change anything. This directory is a scratch folder, not the demo repo, so the plan below is generic. Tell me the repo path and site name and I can make it specific.\n\n**Rough plan**\n\n1. **Inventory (read-only).** List everything the site touches:\n   - Hosting: Worker or Pages project, custom domains, routes, cron triggers.\n   - DNS records and any mail routing for its subdomain.\n   - Storage: R2 buckets, D1, KV, Durable Objects, and whether any hold data people care about.\n   - Cloudflare Access apps and policies, email routing rules, monitors or alerts.\n   - Secrets: `wrangler secret list`, `~/.local/secrets`, CI secrets, and Proton Pass items.\n   - Repo: GitHub settings, webhooks, deploy keys, Actions, and the local clone under `~/Projects/`.\n   - Tracking: any initiative record, backlog entry, or backup job that names it.\n\n   Sources: `~/.claude/docs/cloudflare-estate-inventory.md`, and the `runbook` skill for DNS, mail, and backup questions.\n\n2. **Decide the end state with you.** Options are: static \"closed\" page, redirect to another site, or 404. Also whether the repo is archived (recommended, keeps history) or deleted, and whether the subdomain is released or kept pointing somewhere harmless.\n\n3. **Show a dry run before any destructive step.** A list of every resource to delete, retire, or keep, for your approval.\n\n4. **Teardown, in this order:**\n   1. Swap the live site for the end state you chose (redirect or closed page).\n   2. Remove the custom domain or route.\n   3. Remove only the DNS records the demo owns.\n   4. Export any data you want to keep, then delete storage.\n   5. Delete the Worker or Pages project.\n   6. Remove Access apps, mail rules, monitors, and cron.\n   7. Revoke site-scoped API tokens. Retire the Proton Pass items through `claude-pass`, not `pass-sitting`. Remove the local secrets and `wrangler secret` entries.\n   8. Final repo backup, then archive on GitHub. Remove its webhooks, deploy keys, and Actions secrets. Delete the local clone only after the backup checks out.\n   9. Update the initiative record and any backup or dashboard lists, then run `check-drift`.\n\n5. **Verify.** The URL returns the expected 404 or redirect. DNS no longer resolves to the old target. The Worker or Pages project is gone from the list. No alerts are firing. Backups no longer include the repo.\n\n**Irreversible parts, which need your explicit go-ahead:** deleting storage with data, deleting the repo (issues and PRs go with it), deleting Proton Pass items, and releasing a domain name.\n\n**What I need from you:**\n- Which repo and site this is.\n- Whether it stores any data worth exporting.\n- Whether the domain should show a closed page, redirect somewhere, or go dark.\n- Archive or delete for the repo.",
+  "costUsd": 0.0017855599999999998
+}

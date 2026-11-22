@@ -1,0 +1,24 @@
+{
+  "skillName": "engine-consult",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "A background task session in ~/Projects/907-life has just started on an approved spec whose header has no engine consultation line, and the task builds against the cairn admin's media picker. What should that task session do before its first build step, and where does it record what it did? Answer only; change nothing.",
+  "started": "2026-11-22T01:55:46Z",
+  "seconds": 9.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "building-from-specs",
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "The task session should run the engine consultation before its first build step, and record the result in two places.\n\n**Before the first build step:**\n- Check `docs/internal/consultations/` in the cairn-cms checkout for briefs that have no recorded verdict. `cairn-pass` says to do this first, and the `engine-consult` skill carries the protocol for it. A media picker in the cairn admin is engine work, so the consultation applies even though the spec header omits the line.\n- Because the session runs in the background, it cannot ask Geoff. If the consultation can't settle a question, the session decides it under the `building-from-specs` rules and lists the call under `## Decisions`.\n\n**Where it records:**\n- The consultation brief and its verdict go under `docs/internal/consultations/` in the cairn-cms repo, on the task's branch. The session writes them there, not in `docs/STATUS.md`, which only the session Geoff is talking to keeps.\n- The pull request body carries the decision in `## Decisions`, with each call's source quoted. Under `building-from-specs`, only Geoff's own words count as rulings, so another session's message doesn't approve anything.\n- Anything still open goes in `## For Geoff`.\n\nI haven't read the `engine-consult` skill itself, so the exact brief format and verdict fields are unverified. Read that skill before relying on those details. I changed nothing.",
+  "costUsd": 0.0068476
+}

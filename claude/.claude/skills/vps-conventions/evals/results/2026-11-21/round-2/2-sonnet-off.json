@@ -1,0 +1,33 @@
+{
+  "skillName": "vps-conventions",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "user-data.yaml in this folder is the cloud-init file that provisions our RHEL-family VPS boxes. Read it. We want to add the `jq` package to it. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; don't edit the file.",
+  "started": "2026-11-22T02:38:08Z",
+  "seconds": 11.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-off/user-data.yaml\"}"
+    }
+  ],
+  "result": "I read `user-data.yaml`. It's a short `#cloud-config` file. It sets `package_update: true`, installs `git`, `podman` and `rsync`, and runs `systemctl enable --now podman.socket`.\n\n## Why the edit alone isn't enough\n\ncloud-init's `packages` module runs once per instance, on first boot. Adding `jq` to the file only affects servers created from it afterwards. The servers already running won't see it. Don't run `cloud-init clean` or re-run the modules on them as a shortcut. That re-runs the whole config, including `runcmd`, and can reset other first-boot state.\n\n## Plan\n\n1. **Check the package name first.** Don't assume it, because the repos differ by release.\n   - On one server of each RHEL-family flavor and major version you run (RHEL, Alma, Rocky, and so on), run `dnf info jq`. Also run `dnf repoquery --whatprovides '*/bin/jq'` to confirm which package ships the binary.\n   - On RHEL, Alma and Rocky 8 and later, `jq` should be in AppStream under that exact name. On EL7 it comes from EPEL, which the file doesn't enable. If any EL7 boxes remain, decide whether to add EPEL or drop them from scope.\n   - Also run `dnf install --assumeyes --setopt=tsflags=test jq`, or a throwaway container of the same image, to confirm the install resolves. A bad package name makes cloud-init log an error and carry on, so new servers would silently lack `jq`.\n2. **Edit the file.** Add `  - jq` to `packages`. Keep the list alphabetical (`git`, `jq`, `podman`, `rsync`).\n3. **Roll out to the running servers separately.** Run `sudo dnf install -y jq` over SSH on each one. The install is idempotent, so it's safe to repeat. Use whatever fleet tooling you already have (Ansible, a host list with a loop, and so on). Do one host first, then the rest, and finish with `jq --version` on each.\n4. **Verify the new-server path.** Provision a throwaway instance from the updated file. Check `jq --version` and `grep -i jq /var/log/cloud-init.log` for errors.\n5. **Update any other copy of the provisioning list**, such as a Terraform or image-build template, if one exists. I haven't looked for one.\n\n## Open question\n\nHow do you reach the existing servers today (Ansible, a host list, or manual SSH)? That decides how I'd write step 3.",
+  "costUsd": 0.0788224
+}

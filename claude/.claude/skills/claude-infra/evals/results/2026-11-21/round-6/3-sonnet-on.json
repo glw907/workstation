@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:57:06Z",
+  "seconds": 6.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    }
+  ],
+  "result": "**Put it at user scope on this workstation, not in ecxc-ski's `.mcp.json`.**\n\n- The `claude-infra` skill says the cairn-family stack's shared pieces (Svelte, Playwright, DaisyUI) go at user scope and in the manifest. A repo's `.mcp.json` carries only what that repo alone needs. Since the other cairn sites use Svelte too, it belongs at user scope.\n- Take the skill first and the server second. Check whether the standards plugin's `svelte-conventions` or `svelte-check` skills, or a vendored Svelte skill, already cover what you want. The Svelte docs server is for on-demand retrieval the skill can't carry.\n- An MCP server reaches only the main loop and unrestricted agents. Agents with a fixed tool list won't see it, so a dispatch brief can't rely on it.\n- If you add it, record it in the user-scope MCP manifest, which the \"Layout\" table in `~/.claude/docs/claude-tooling.md` names. Then run `claude-tooling-sync verify`, commit the dotfiles, and restart at a session boundary.\n- Land it through a PR that cites the guidance URL, `https://code.claude.com/docs/en/features-overview`, unless it qualifies as a direct change.\n\nI haven't read `claude-tooling.md`, so I haven't confirmed the manifest's exact filename. I changed nothing.",
+  "costUsd": 0.0192744
+}

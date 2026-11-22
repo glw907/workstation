@@ -1,0 +1,22 @@
+{
+  "skillName": "register-check",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "How many words are in draft.md in this folder? Just give me the count.",
+  "started": "2026-11-22T02:22:53Z",
+  "seconds": 7.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Bash",
+    "Read"
+  ],
+  "result": "77\n\nThat's the `wc -w` style count, where the `#` in the heading counts as a word. Without it the count is 76. I counted by hand because the shell tool is disabled in this session.",
+  "costUsd": 0.09365
+}

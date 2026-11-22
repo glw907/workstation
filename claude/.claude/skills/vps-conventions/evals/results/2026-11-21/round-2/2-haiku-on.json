@@ -1,0 +1,51 @@
+{
+  "skillName": "vps-conventions",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "user-data.yaml in this folder is the cloud-init file that provisions our RHEL-family VPS boxes. Read it. We want to add the `jq` package to it. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; don't edit the file.",
+  "started": "2026-11-22T02:37:27Z",
+  "seconds": 15.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/vps-conventions"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/user-data.yaml\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"vps-conventions\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/CLAUDE.md\"}"
+    }
+  ],
+  "result": "Plan only. I haven't edited `user-data.yaml`.\n\n**What the file does now:** It sets `package_update: true`, installs `git`, `podman`, and `rsync`, then runs `systemctl enable --now podman.socket`. No changes are needed to the file's structure. `jq` is one more line under `packages`.\n\n**Step 1: Check the package name before editing**\n\nThe boxes are RHEL-family, but I don't know which distro or major version they run. Confirm that first, then check against that exact image:\n\n```bash\n# on a live box: which OS and version\ncat /etc/os-release\n\n# against a matching image, using the same repos first boot will see\npodman run --rm almalinux:10 dnf -q list jq\npodman run --rm almalinux:10 dnf -q info jq\n```\n\nUse the image that matches the boxes. If they're Rocky or RHEL, swap the image. I expect `jq` to be in BaseOS, but the check decides it, not my memory. A wrong name would fail first boot unattended, so this check is required before the edit.\n\n**Step 2: Edit the file**\n\nAdd `- jq` under `packages:`. Since this is a `packages:` entry and not a `runcmd` step, a failure won't affect the optional-repo ordering concern in the skill.\n\n**Step 3: Update the presence gate in the same commit**\n\ncloud-init runs only on first boot. The runbook has a presence gate that checks for the packages on the boxes, and it needs `jq` added in the same commit so a fresh provision and the gate can't drift apart. I didn't find that gate in this folder. It is in the household-it runbook (the `runbook` skill routes to it), and I'd locate it before editing.\n\n**Step 4: Fix the servers already running**\n\nEditing `user-data.yaml` does nothing for existing boxes. Each one needs a live remediation:\n\n- A reviewed script in the repo that takes the target hosts as arguments, prints them before acting, supports `--check`, and runs `dnf install -y jq` only where `rpm -q jq` fails. It uses `sudo -A` per the sysadmin prefs.\n- Run it with a dry run (`--check`) first, then for real.\n- Auto mode ignores ssh allow rules, so if the classifier blocks the ssh step, the fix is an exact `permissions.allow` rule for that script's invocation shape, landed with the script.\n\n**Step 5: Verify**\n\n- `rpm -q jq` on every box.\n- The presence gate passes.\n- Optionally, a fresh first-boot test on a throwaway box, if you want proof that the cloud-init path works.\n\n**Decisions I'm making:**\n- Use `almalinux:10` as the check image unless you tell me the boxes run something else.\n- Put the remediation script in the repo, not an ad hoc ssh loop.\n\n**What I need from you:** the go-ahead to run the package check (it pulls an image, so it needs network), and the host list for the live remediation. I won't touch the live servers until you confirm.",
+  "costUsd": 0.0064257
+}

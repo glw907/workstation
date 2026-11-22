@@ -12,8 +12,7 @@ always-on `writing-voice` output style carries the audience-invariant core: vary
 idea per sentence, avoid the AI-writing tells. This skill is the router. Name the audience, open the
 register or conventions skill that holds its standard and exemplars, and follow the shape rules below. Load it
 before drafting anything longer than a paragraph, and imitate the standard's canonical exemplars
-rather than reaching for more rules. The model generalizes from a good example better than from a
-rule list, so the exemplars are the stronger attractor. This router is the entry point to the
+rather than reaching for more rules. This router is the entry point to the
 authoring charter (`~/.claude/docs/authoring-charter.md`).
 
 ## Pick the standard
@@ -80,12 +79,6 @@ brevity as permission to deliver less than the brief asked for.
 Before drafting a page for an outside reader, settle what the page must carry, who reads it,
 and what its type does not already cover, because prose work on a page whose shape is wrong
 is wasted. For a cairn page, the `cairn-writing-docs` skill holds the steps.
-
-Draft one section per read for the cairn front door only (`why-cairn.md`, `docs/README.md`, the
-arm READMEs); a front-door page is never drafted end to end in an autonomous run: stop after each
-section and let a reader see it before the next one starts. An unread run is how a page can pass
-every mechanical gate and still fail the reader who opens it first. Every other page, including a
-cairn narrative arm, is drafted whole by its chain.
 
 ## The em dash
 

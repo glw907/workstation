@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T02:27:27Z",
+  "seconds": 14.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "The `/retire-project` command isn't installed in this session, so I'm treating your message as a plain request. This is a plan only. I didn't run anything or open a repo. The working directory isn't a git repository, so this is the generic plan. Point me at the repo and I'll check it against this list.\n\n## What goes in the archive\n\n1. **Repo history:** a `git bundle --all` file (all branches and tags), plus the remote URL and the commit SHA of HEAD.\n2. **D1 database:** a full export (`wrangler d1 export <name> --remote`) with schema and data, and a separate schema-only file. Record the database name and UUID.\n3. **Deployment config:** `wrangler.jsonc`, bindings, routes, and custom domains. Also the DNS records and Access applications that point at the project, and the deployed Worker source if one is live.\n4. **Secrets:** names only, from `wrangler secret list`, with the store location of each value (Proton Pass item or the age store). No values go in the archive.\n5. **Manifest and README:** SHA-256 for every file, the export's row count per table, the commit SHA, the date, and a short restore note.\n\nWhere the archive lives is your call. The archive should sit outside the repo and outside the database being retired.\n\n## How the archive is proven before anything is deleted\n\n1. **Bundle:** `git bundle verify`. Then clone from the bundle and confirm the HEAD SHA and tree match the live repo.\n2. **D1 export:** the export command must exit 0. Restore the export into a throwaway local D1 and compare the schema, the row count per table, and an ordered content hash per table against the remote database. Any mismatch stops the process.\n3. **Checksums:** after the files are copied to their final location, run `sha256sum -c` against the manifest. Check the copied files, not the originals.\n4. **Restore check:** from the archive alone, confirm the bundle clones and the restored database answers the app's main read queries.\n5. **Your sign-off:** deletion is irreversible, so I stop and show you the verification results before any delete.\n\n## Deletion order, after sign-off\n\n1. Stop traffic: remove the routes, custom domain, and Access app. Keep the DNS record list in the manifest.\n2. Delete the Worker.\n3. Delete the D1 database. Treat the export as the only copy from this point.\n4. Remove the project's credentials from Proton Pass and the stores, checking each by name.\n5. Archive the GitHub repo rather than deleting it.\n6. Update the initiative record and the household-it runbook.\n\nBefore touching any token, I'd read `~/.claude/docs/cloudflare-estate-inventory.md`, as the CLAUDE.md requires.\n\n## Open decisions for you\n\n- Where the archive lives, and whether it's encrypted.\n- Whether the database should stay read-only for a holding period before deletion.\n- Whether the repo should be archived on GitHub or deleted outright.",
+  "costUsd": 0.00505924
+}

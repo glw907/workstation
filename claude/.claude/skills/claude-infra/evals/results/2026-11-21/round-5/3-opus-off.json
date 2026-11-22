@@ -1,0 +1,38 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:45:09Z",
+  "seconds": 19.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*/.mcp.json\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"svelte\", \"path\": \"/var/home/glw907/.claude/settings.json\", \"-i\": true, \"output_mode\": \"content\"}"
+    }
+  ],
+  "result": "I'd put it in **each Svelte repo's own `.mcp.json`**, not only ecxc-ski's, and not at user scope. That means ecxc-ski, 907-life, aksailingclub-org, cairn-pub, and the cairn-cms engine.\n\n**Why each repo's `.mcp.json`:**\n- **Both hosts get it.** The file is committed, so `git pull` brings it to thinkpad-x1 and pavilion, and to every worktree.\n- **It stays out of repos that aren't Svelte.** Sessions in `~/.dotfiles`, household-it, or initiatives never load Svelte tool definitions.\n- **It matches the cairn layout.** The engine and every site are SvelteKit, so they should all get the same docs tool. Adding it only to ecxc-ski would leave the others behind and invite drift.\n\n**Why not user scope** (`claude mcp add --scope user`, stored in `~/.claude.json`):\n- It would load in every session on the machine, including the many that aren't Svelte work.\n- `~/.claude.json` is Claude Code's own changing state file, not something stowed from `~/.dotfiles`. So it wouldn't reach the other host unless someone set it up there by hand. That goes against \"config lives in `~/.dotfiles`.\"\n\n**Practical notes:**\n- Use the official Svelte server. Its remote endpoint (`https://mcp.svelte.dev/mcp`) needs no local install or Node version pinning. Each repo's entry is then a few identical lines.\n- Claude Code asks you once per project to approve a server from `.mcp.json`, so expect one prompt per repo on each host.\n- Your CLAUDE.md sends changes to Claude Code tooling through the `claude-infra` skill. In each site repo, the edit would go through `site-pass`, or `cairn-pass` for the engine, like any other change.\n\nI couldn't check what's there now: reading `~/Projects` and `~/.claude/settings.json` needs permissions I don't have. If some repos already have a `.mcp.json`, this is one new entry in each. If a Svelte server is already set up at user scope, I'd move it into the repos for the reasons above.",
+  "costUsd": 0.045708
+}

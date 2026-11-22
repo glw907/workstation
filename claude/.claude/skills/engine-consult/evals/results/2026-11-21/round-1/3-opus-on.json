@@ -1,0 +1,25 @@
+{
+  "skillName": "engine-consult",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+  "started": "2026-11-22T01:57:58Z",
+  "seconds": 16.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "This is a step-sized, additive accept, so it doesn't get its own cairn-cms spec. It runs now as a small engine task, launched from the same aksailingclub-org session that wrote the site spec. The engine change lands and gets released first. The site task is built against it in the meantime and merges last.\n\n**Before building**\n1. **Record the verdict.** The session writing the spec writes the accept, with its shape notes and the \"small engine task now\" sequencing call, into the brief at `~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-aksailingclub-org-<spec>.md`. It also adds one ledger entry to `docs/internal/engine-rulings.md`, copied from the template in the ledger's header. That entry stays open.\n2. **Check nobody else has the work.** Run `claude-worktree-busy` on the cairn worktree path, and read `~/Projects/cairn-cms/docs/STATUS.md` for an existing claim.\n3. **Claim it.** Create a fresh worktree off cairn `main` and register it in STATUS's active-worktree list before the first commit.\n\n**Building the engine task**\n4. **Build it by the normal process.** It follows `building-from-specs` with `cairn-pass`: one session, the fast lane per step, and a whole-branch review by a fresh subagent. Because the export is consumer-facing, the changelog entry carries a `Consumers must:` line.\n5. **Run the full gate.** `npm run check:close` runs the whole gate list, including `check:surface`, `check:symbols` and `check:snippets`.\n6. **Build the site task alongside it.** While the engine work is in progress, the site uses the unreleased export through `npm run link:consumer -- <aksailingclub-org dir>`.\n\n**The ordered close**\n7. **Merge the engine pull request to `main`.** Like any pull request, this waits for you to approve it by number.\n8. **Release it.** Follow `~/Projects/cairn-cms/.claude/skills/cairn-releasing/SKILL.md`. The export has to be on the registry, because a site branch can't merge while pinned to a local `file:` path.\n9. **Repin the site.** Run `npm run link:consumer -- <site-dir> --restore` from the cairn checkout and bump the site to the released version.\n10. **Merge the site pull request**, again on your approval by number.\n11. **Close the ruling.** The site task closes the ledger entry with a one-line seam-fit report: either \"fit as designed\" or the backlog items it found. That proves the export works for the consumer it was built for.\n\nThe main risk is order. If the site merges before the engine release, it's left on a `file:` pin, and the skill forbids exactly that. If the export turns out to need a breaking change or a new subsystem, it leaves this path and becomes a queued cairn-cms spec. The site's declared fallback then becomes the sanctioned interim, with a recorded trigger for retiring it.\n\nI worked this out from the `engine-consult` skill and changed nothing. I didn't open the brief, the ledger or STATUS, so the export's name and any existing worktree claims haven't been checked.",
+  "costUsd": 0.2015936
+}

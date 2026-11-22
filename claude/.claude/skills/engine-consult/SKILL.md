@@ -1,27 +1,26 @@
 ---
 name: engine-consult
-description: Use when authoring a pass plan in ecxc-ski, 907-life, aksailingclub-org, cairn-pub, or any other repo whose pass builds against the cairn engine; when a pass starts on a committed plan whose header carries no consultation line; or whenever the work involves a "consultation", an "engine ask", or a request to "consult the engine" before building against a cairn surface.
+description: Guides the consultation between a cairn-consuming site and the cairn engine before the site builds against an engine surface. Use when writing a spec in ecxc-ski, 907-life, aksailingclub-org, cairn-pub, or another repo that builds against the cairn engine; when a task starts on a spec that fails the consultation check; or when the work involves a "consultation", an "engine ask", or a request to "consult the engine".
 ---
 
 # Engine consultation
 
-The pre-pass exchange between a cairn-consuming site and the engine. The site files what
-its pass will press on the engine before the pass builds, the `engine-triage` agent argues
-each item against the standard, and accepted work lands ahead of the site task that
-needs it. It replaces reactive harvesting, in which a site hand-rolled around an engine
-gap and filed a staging doc, and the engine absorbed the finding only after the workaround
-had shipped, so the site paid for the workaround and the engine paid again to replace it.
+The exchange between a cairn-consuming site and the engine, before the site's spec is built.
+The site files what its work will press on the engine, the `engine-triage` agent argues each
+item against the standard, and accepted work lands ahead of the site task that needs it.
+Specs and tasks follow `building-from-specs`.
 
 ## When it fires (both hooks)
 
-**Authoring-time enumeration.** The engine-contact enumeration runs whenever a site pass's
-plan is authored, immediately before the plan is written, in whichever session authors it. For each thing the pass will build, the author
-asks whether it presses an engine edge (admin surface, engine CSS, an exported component's
-contract, auth, any seam). Exactly two outcomes: a consultation brief, or a recorded
-one-line "no engine asks" in the plan header. The null outcome is deliberately cheap.
+**Spec-time enumeration.** The engine-contact enumeration runs whenever a site's spec is
+written, immediately before the spec is written, in whichever session writes it. For each thing
+the spec will build, the author asks whether it presses an engine edge (admin surface, engine
+CSS, an exported component's contract, auth, any seam). Exactly two outcomes: a consultation
+brief, or a recorded one-line "no engine asks" in the spec header. The null outcome is
+deliberately cheap.
 
-The plan header carries exactly one of the two engine-consultation lines, plus the
-sources-consulted line, so the backstop can match on it:
+The spec header carries exactly one of the two engine-consultation lines, plus the
+sources-consulted line, so the check can match on it:
 
 ```markdown
 **Engine consultation:** no engine asks.
@@ -29,34 +28,38 @@ sources-consulted line, so the backstop can match on it:
 **Sources consulted:** <exports and skill references read, or "none">
 ```
 
-Before the plan is written, the author's pre-plan read names the exports and skill references the
-pass builds on (the doc comments under `~/Projects/cairn-cms/src/lib` and the packaged `skills/`, with the code at the commit), and the open engine items in
+Before the spec is written, the author's read names the exports and skill references the
+spec builds on (the doc comments under `~/Projects/cairn-cms/src/lib` and the packaged `skills/`, with the code at the commit), and the open engine items in
 `~/Projects/cairn-cms/BACKLOG.md`, so a hole the last site could not
-close reaches this plan. The plan header's `**Sources consulted:**` line records that read: the
+close reaches this spec. The spec header's `**Sources consulted:**` line records that read: the
 exports and references it covered and the open engine items it found (or "none" for either).
 
-**Pass-start backstop, for the resumed path.** After reading the plan and before the first
-implementer dispatch: if the plan header carries neither a consultation-brief link nor the
-"no engine asks" line, the enumeration runs now and the line is appended to the committed
-plan. The check is a blocking precondition on the first dispatch.
+**The consultation check.** The spec author runs it before the spec goes to Geoff, and lists
+it among the done items of the spec's first task, so the task session and its reviewer run it
+again. Done item: `grep -c -E '^\*\*(Engine consultation|Sources consulted):\*\* ' <spec>` prints 2.
+
+**Task-start backstop.** A task session whose spec fails the check runs the enumeration
+before its first build step, and records the line it would add under its pull request's
+`## Decisions`. When the enumeration finds an engine ask, the task session takes the author's
+place: it files the brief, runs the triage, and builds on the verdicts without waiting for Geoff.
 
 ## Repos bound
 
-Any repo whose pass builds against the engine: the three sites (ecxc-ski, 907-life,
-aksailingclub-org), cairn-pub, and future consumers, wherever the plan is
-authored.
+Any repo whose work builds against the engine: the three sites (ecxc-ski, 907-life,
+aksailingclub-org), cairn-pub, and future consumers, wherever the spec is
+written.
 
 ## The brief
 
-One document per consulting pass, filed engine-side at
-`~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-<site>-<pass>.md` (the site
-plan links to it; the brief and the engine's verdicts are one document). Per item, four
+One document per consulting spec, filed engine-side at
+`~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-<site>-<spec>.md` (the site
+spec links to it; the brief and the engine's verdicts are one document). Per item, four
 fields:
 
 ```markdown
 ### <item slug>
 
-1. **What the pass builds:** <the site feature, one paragraph>
+1. **What the site builds:** <the site feature, one paragraph>
 2. **The engine edge it presses:** <surface, `file:line` where known>
 3. **Evidence for the any-site case:** <recurrence, measurements, prior instances>
 4. **The site's fallback if declined:** <the hand-roll, with its rough size>
@@ -74,22 +77,22 @@ each item is written against the gate it will meet.
 
 ## Triage mechanics
 
-Dispatch a fresh read-only subagent pinned to `claude-opus-5-5` whose instructions are the body of
+Dispatch a fresh read-only Opus subagent whose instructions are the body of
 `~/Projects/cairn-cms/.claude/agents/engine-triage.md` (a session in a site repo does not load that
 repo agent by name), with the absolute paths to the brief, the rulings ledger
-(`~/Projects/cairn-cms/docs/internal/engine-rulings.md`), and the site plan. It reads the
+(`~/Projects/cairn-cms/docs/internal/engine-rulings.md`), and the site spec. It reads the
 ledger first, so a settled ruling is cited rather than re-argued, then argues each item
-against the standard. The planning session adjudicates its verdicts, records them in the brief
+against the standard. The session writing the spec adjudicates its verdicts, records them in the brief
 document itself, and appends one ledger entry per ruled item, copying the entry format
 from the fenced template in the ledger's own header rather than reconstructing it (two of
 its fields are conditional, audit-tier ones consultation entries usually omit).
 
 ## The three verdicts
 
-- **Accept**: with shape notes (the any-site form, re-derived) and a sequencing call (mini
-  pass now, or queued engine pass with the fallback sanctioned interim and a retirement
+- **Accept**: with shape notes (the any-site form, re-derived) and a sequencing call (a small
+  engine task now, or a queued engine spec with the fallback sanctioned interim and a retirement
   trigger). An accept's ledger entry stays open until the consuming site task lands; the
-  consuming pass closes it with a one-line seam-fit report (fit as designed, or the
+  consuming task closes it with a one-line seam-fit report (fit as designed, or the
   backlog items found), so a seam landed ahead of its consumer is never left unproven.
 - **Decline**: with a recorded reason, into the ledger. The site's declared fallback is
   thereby sanctioned as the proper end state, not debt.
@@ -98,25 +101,25 @@ its fields are conditional, audit-tier ones consultation entries usually omit).
 
 ## Sequencing accepted work
 
-Accepted work sized at a task or two and additive runs as a mini engine pass now, from
+Accepted work sized at a step or two and additive runs as a small engine task now, from
 the same site session (checklist below). Anything that breaks public surface or adds a
-subsystem queues as its own cairn-cms-launched pass; the site's fallback is sanctioned
+subsystem queues as its own cairn-cms spec; the site's fallback is sanctioned
 interim state with a recorded retirement trigger. The size threshold and the session
 threshold are the same line.
 
-## Cross-repo mini-pass checklist
+## Cross-repo engine task checklist
 
 A site-launched session does not auto-load cairn's context. In order:
 
-1. **One-executor check** before touching cairn: `claude-worktree-busy <worktree path>`, then a
+1. **One-session check** before touching cairn: `claude-worktree-busy <worktree path>`, then a
    read of `~/Projects/cairn-cms/docs/STATUS.md` for a claim on the work.
 2. **Fresh worktree off cairn `main`**, and register it in cairn `docs/STATUS.md`'s
    active-worktree list before the first commit, so a second session's STATUS read sees
    the claim.
 3. **Read `~/Projects/cairn-cms/docs/STATUS.md`** and honor the changelog
    `Consumers must:` convention for any consumer-facing change.
-4. **The lean pass loop** per `cairn-pass`: one executing session, pair subagents where files are
-   disjoint, the fast lane per task, and the whole-branch close review.
+4. **Build by `building-from-specs`**, with `cairn-pass` for the gate and checklists: one
+   session, the fast lane per step, and the whole-branch review.
 5. **Run the full gate list by name**: cairn-cms's `npm run check:close` runs it, including
    `check:comments`, `check:tiers`, `check:surface`, `check:snippets`,
    `check:transcripts`, and `check:symbols`.
@@ -128,12 +131,6 @@ A site-launched session does not auto-load cairn's context. In order:
 
 ## The reactive-harvest fallback
 
-Consultation cannot foresee what a pass discovers while building. File each mid-pass
-discovery with the same four-field item schema. Its later triage runs through the same
+Consultation cannot foresee what a task discovers while building. File each discovery made
+mid-task with the same four-field item schema. Its later triage runs through the same
 `engine-triage` agent against the same ledger.
-
-## First run
-
-If the rulings ledger carries no protocol post-mortem entry, the first live consultation
-appends a short one; the consultation that appends it then deletes this section from this
-skill.

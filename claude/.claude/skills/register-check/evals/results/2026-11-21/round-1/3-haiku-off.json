@@ -1,0 +1,25 @@
+{
+  "skillName": "register-check",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Geoff asked for a register check on draft.md in this folder. Propose rewrites for what you find, but don't apply any.",
+  "started": "2026-11-22T02:20:49Z",
+  "seconds": 17.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "I reviewed `draft.md` and did not change it. One gap first: I couldn't load the repo's editor register (`~/.claude/docs/voice/editor.md`) because the read was denied. The findings below use the Microsoft Writing Style Guide principles that the router names for editor copy. Treat them as provisional until the cairn editor brief is checked.\n\n**Findings**\n\n1. **Lines 3–4, marketing opening.** \"Cairn isn't just a content system, it's a seamless way to publish\" is a contrast frame, and \"seamless\" is filler. \"Moreover\" is a connector with nothing to connect. \"Empowers every editor\" and \"robust, world-class pages in minutes\" are promotional claims. The draft gives no source for \"in minutes\" or \"world-class.\" The page is a how-to, so one register should carry it, and the marketing register doesn't belong here.\n   - *Proposed:* Delete both sentences. Start with the task.\n\n2. **Line 6, steps written as a sentence.** \"Open the admin, choose the page, and select Publish\" is a sequence of actions. The shape rules call for a numbered list.\n   - *Proposed:*\n     ```\n     To publish a page:\n\n     1. In the admin, open the page.\n     2. Select **Publish**.\n     ```\n\n3. **Line 6, \"choose the page.\"** \"Choose\" is vague for a navigation step. \"Open\" matches the admin's wording, though I haven't checked the UI label.\n   - *Proposed:* included in item 2.\n\n4. **Line 7, \"Click here.\"** Link text should name the destination (Microsoft: descriptive link text). I can't write the real title without the target page.\n   - *Proposed:* `For more about builds, see [build title](link).` Fill in the real title and link.\n\n5. **Line 7, \"The site rebuilds on Cloudflare.\"** Editors don't need the hosting vendor to publish, and the vendor name adds a fact the editor can't act on. Keep it only if the page needs to explain where the site runs.\n   - *Proposed:* `The site rebuilds, and the new version is live about a minute later.`\n   - *Check:* \"about a minute\" is not in anything I was given. Confirm it before it ships.\n\n6. **Line 9, off-topic and unsourced.** The founding year and the \"over ten thousand sites\" figure have nothing to do with publishing, and I can't verify either number from the draft. This is the marketing register again, in a how-to page.\n   - *Proposed:* Delete the line. If Geoff wants it on a front-door page, that page is the place for it.\n\n**Proposed rewrite (whole page, not applied)**\n\n```\n# Publishing a page\n\nTo publish a page:\n\n1. In the admin, open the page.\n2. Select **Publish**.\n\nThe site rebuilds, and the new version is live about a minute later.\n\nFor more about builds, see [build title](link).\n```\n\n**Open items**\n\n- Confirm \"about a minute\" and the link target.\n- Check the rewrite against the cairn editor brief once the read permission is granted. I haven't run Vale.",
+  "costUsd": 0.00703849
+}

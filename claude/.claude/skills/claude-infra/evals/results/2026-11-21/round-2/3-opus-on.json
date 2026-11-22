@@ -1,0 +1,42 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T02:55:32Z",
+  "seconds": 13.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)svelte\", \"path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\", \"output_mode\": \"content\"}"
+    }
+  ],
+  "result": "It belongs at user scope, recorded in the workstation's user-scope MCP manifest. It should not go in ecxc-ski's `.mcp.json`.\n\n**Why:** The `claude-infra` skill says: \"User scope for stack-wide, project scope only for repo-specific. Everything the cairn-family stack shares (Svelte, Playwright, DaisyUI) is user scope and in the manifest. A repo's `.mcp.json` carries only what that repo alone needs.\" Svelte is used by ecxc-ski, 907-life, aksailingclub-org, cairn-pub, and the cairn engine. If you put the server in one repo, the others won't have it, and you'd end up keeping copies in sync.\n\n**Before adding the server:**\n- **Check for a skill first.** The skill says that when a library offers both a skill and a server, take the skill first. Add the server only for on-demand doc lookup or tools a skill can't provide. The reason is reach: an MCP server is only available to the main session and to subagents with no tool restrictions. Subagents with a fixed tool list, like the site-pass reviewers, can't use it.\n- **Check what's already installed.** Svelte may already be covered in the manifest or the inventory in `~/.claude/docs/claude-tooling.md`. I couldn't confirm this because reading that file needed a permission you haven't granted, so check it before adding anything.\n\n**How it would land:**\n1. Add an entry to the user-scope MCP manifest named in the \"Layout\" table of `claude-tooling.md`. Any env values stay in `${VAR}` form.\n2. Run `claude-tooling-sync verify`.\n3. Commit the dotfiles through a PR that cites https://code.claude.com/docs/en/features-overview.\n4. Restart at a session boundary so the new server loads.\n\nI made no changes.",
+  "costUsd": 0.17319939999999998
+}

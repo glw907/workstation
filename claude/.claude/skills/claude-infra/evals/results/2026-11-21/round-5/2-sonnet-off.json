@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:43:20Z",
+  "seconds": 14.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Put it in a `PreToolUse` hook on the Bash tool, in your user-level `~/.claude/settings.json`. Don't put it in CLAUDE.md or a skill.\n\n**Why not CLAUDE.md or a skill**\n\nBoth are advisory. They are text I read and weigh, and a long session, a compaction, or a subagent that never loaded them can drop them. \"No exceptions\" needs enforcement, not guidance. A skill is worse still, because it only loads when its description matches the task.\n\n**Why a hook**\n\n- The harness runs the hook, not me, so it fires on every Bash call in every project and in subagents.\n- It still fires in bypass-permissions mode and in background sessions, where nobody is there to decline a prompt.\n- Exit code 2 (or a JSON `permissionDecision: \"deny\"`) blocks the call, and the stderr message tells me why, so I don't retry the same command.\n\n**Why not only a `permissions.deny` rule**\n\nA pattern like `Bash(rm -rf ~*)` is a prefix match, so it misses many spellings:\n- `rm -fr` and `rm -r -f`\n- `--recursive --force`\n- `$HOME`, `/var/home/glw907` and `/home/glw907` (a Bluefin symlink)\n- `cd ~ && rm -rf *`\n- a trailing `/`, or `~/.*`\n\nYou can add a deny rule as a cheap second layer. The hook should be the real gate.\n\n**How I'd build it**\n\n- A small script that tokenizes the command, treats any `rm` with both recursive and force flags in any spelling, expands `~` and `$HOME`, and resolves symlinks. It blocks if a target is the home directory itself or a direct glob of it.\n- Per your rules, it goes in `~/.dotfiles/bin/.local/bin/` as stdlib-only Python run with `python3 -I` (this is parsing, so Bash is the wrong tool). Then `stow -R bin`, and the hook is registered in the dotfiles copy of `settings.json`. The `claude-infra` skill governs this, and `update-config` covers the hook syntax.\n- Test it with a dry set of command strings before enabling it, since nothing here should actually delete anything.\n\n**Limits**\n\nA hook sees only the command string. It can't catch `find ~ -delete`, `python -c \"shutil.rmtree(...)\"`, or a script that runs the `rm` internally. Only a sandbox or filesystem permissions would close those. The hook covers the literal case you described.\n\n**One question for you**\n\nDoes \"a home folder\" mean only the home directory itself and its direct contents (`~`, `~/*`, `$HOME/.*`), or anything under it? I'd read it as the first, because `rm -rf ~/Projects/foo/node_modules` is routine. Blocking everything under home would stop normal build cleanup. Tell me which you want before I build it.",
+  "costUsd": 0.018284200000000004
+}

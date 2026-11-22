@@ -1,0 +1,51 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:56:55Z",
+  "seconds": 10.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/.mcp.json\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \".mcp.json\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"svelte\", \"path\": \"/var/home/glw907/.claude\", \"output_mode\": \"files_with_matches\", \"glob\": \"*.{json,md}\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/Projects/ecxc-ski/.mcp.json\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/bluefin-admin/software-tiers.md\"}"
+    }
+  ],
+  "result": "I couldn't answer this from the files. Reads of `~/Projects/ecxc-ski/.mcp.json`, `~/.claude`, and the bluefin-admin docs were all refused for lack of permission, so I haven't seen the current `.mcp.json` or any existing user-level MCP config. I didn't change anything.\n\nMy recommendation is to add it at user scope, not in ecxc-ski's `.mcp.json`.\n\n- **Why user scope:** All four Svelte sites (ecxc-ski, 907-life, aksailingclub-org, cairn-pub) would benefit, and a docs lookup needs no project secret. A project `.mcp.json` would have to be copied into each repo and kept in sync.\n- **Why not ecxc-ski's `.mcp.json`:** That file is checked into one repo and shared with anyone who clones it. Putting a workstation tool there pushes it onto collaborators and the other sites don't get it.\n- **How:** Changes to Claude Code tooling go through the `claude-infra` skill, so that's the route to take. It would be a `claude mcp add --scope user` entry for the official Svelte MCP server. I believe the package is `@sveltejs/mcp`, but I haven't verified the name or launch command. Check it before adding.\n\nKeep ecxc-ski's `.mcp.json` only if its contents already show a project-specific reason, such as a pinned version the repo depends on.\n\nTo confirm, grant read access to `~/Projects/ecxc-ski/.mcp.json` and `~/.claude/` and I'll check what's already configured. Then I can recommend whether anything needs to change.",
+  "costUsd": 0.0018547300000000002
+}

@@ -1,0 +1,37 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:39:35Z",
+  "seconds": 12.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/cloudflare-estate-inventory.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/bluefin-admin/secrets.md\"}"
+    }
+  ],
+  "result": "I couldn't read the two workstation docs that cover this (the Cloudflare estate inventory and the secrets flow). Permission to read files outside this scratch directory was denied, so the plan below comes from the house rules in CLAUDE.md. Nothing has been changed.\n\n**Which site?** Tell me the repo name and I can make this a concrete inventory. Two questions also shape the plan:\n- Do you want it gone, or just quiet? If it stays live but untouched, `maintenance-mode` is the lighter option.\n- Should the domain be released, or does it point somewhere else now?\n\n**Rough plan for full shutdown**\n\n1. **Inventory (read-only).** List everything the site touches:\n   - Cloudflare: Worker or Pages project, custom domains and DNS records, Access apps and policies, D1/KV/R2 resources, Workers secrets.\n   - GitHub: repo, Actions secrets, Dependabot or Renovate config, scheduled workflows.\n   - Credentials: each Proton Pass item and any `~/.local/secrets` entries, checked by name only.\n   - Household: mail routes, DNS, or alerts that reference it (via the `runbook` skill).\n   - Local: clones, worktrees (`claude-worktree-busy` before touching one), and any mentions in initiatives or backlog.\n\n2. **Confirm with you.** Deletions and data removal need your go-ahead. I'd bring you the inventory with a recommended keep/delete for each item.\n\n3. **Preserve first.** Export any D1, KV, or R2 data you want to keep. Tag the final commit. Archive the GitHub repo rather than deleting it, unless you say otherwise.\n\n4. **Take it down, in dependency order.**\n   - Remove the DNS records and custom domains so traffic stops.\n   - Delete the Access apps and policies.\n   - Delete the Worker or Pages project.\n   - Delete the Cloudflare data resources once exported.\n   - Remove the Actions and Workers secrets.\n   - Revoke any token that existed only for this site.\n   - Mark or retire the Proton Pass items per the proton-pass naming rules, not by deleting them outright.\n\n5. **Clean up locally.** Remove the local clone and any stale references in dotfiles, household-it, or the initiatives log.\n\n6. **Verify.** Confirm the URL no longer serves, the Worker is gone from the account, the repo shows as archived, and nothing in the inventory is still live.\n\n**Open decisions for you:** keep or delete the data, archive or delete the repo, release or keep the domain, and quiet or fully remove.",
+  "costUsd": 0.00164876
+}

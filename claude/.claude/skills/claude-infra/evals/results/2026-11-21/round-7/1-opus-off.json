@@ -1,0 +1,49 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T04:02:09Z",
+  "seconds": 30.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/**\", \"path\": \"/var/home/glw907/.claude/skills\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/skills\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)releas\", \"path\": \"/var/home/glw907/Projects/cairn-cms\", \"glob\": \"{.claude/**,docs/internal/**,RELEASING*,CONTRIBUTING*}\", \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "The checklist should become a skill in the cairn-cms repo, so a session loads it whenever you say \"cut a release\" and you stop pasting it. The one exception is any step that only works on your workstation; that piece goes in the `cairn-pass` overlay.\n\n## Where it lives\n\n**Recommended: a `cutting-a-release` skill in the cairn-cms checkout's `.claude/skills/`.** Its description would name the triggers (\"cut a release\", \"tag a version\", \"publish cairn\"). `cairn-pass` already draws this line: the repo's own skills hold what any clone of cairn-cms needs, and the overlay holds only how you operate. Steps like bumping the version, writing the changelog, tagging, publishing and checking CI belong to the repo. Putting them there also keeps the checklist versioned with the code it describes, so a change to the release process updates the checklist in the same PR.\n\nIf `cairn-running-passes` already has a close or release section, a short \"Release\" section there could replace the new skill. I'd still pick a separate skill: a release isn't a pass, and the skill's description is what lets it trigger without you naming it.\n\n**Split off any workstation-only steps.** If a step uses your tooling (`ci-green`, `cairn-run-gate`, an approval packet, a credential from `claude-pass`), it goes in a short \"Release\" heading in the `cairn-pass` overlay. The overlay lives in `~/.dotfiles` and is stowed into `~/.claude/skills/`. That heading would just add your operation on top of the repo skill.\n\n**Not these:**\n- **Global `CLAUDE.md`:** it loads in every session in every repo.\n- **Memory:** it's for facts the repo can't record, and a procedure is exactly what the repo can record.\n\n## How it lands\n\n1. **Check for an existing release doc first.** My reads of `~/.claude/skills/` and `~/Projects/cairn-cms` were refused, so I couldn't check for an existing release doc or how `cairn-running-passes` is laid out. That check comes before writing anything.\n2. **Spec it.** A new skill is more than a one-sentence change, so it follows `building-from-specs`. The spec holds your five steps word for word, what triggers the skill, and how the steps split between repo and overlay. Your global `CLAUDE.md` also says changes to Claude Code tooling go through `claude-infra`, and a skill is tooling. That skill isn't loaded in this session, so its rules still need checking.\n3. **Build in cairn-cms.** A fresh session builds the task in a cairn-cms worktree under `/goal`, following `cairn-pass`. It runs the gate through `cairn-run-gate` and watches CI on the draft PR with `ci-green`. A fresh subagent then reviews the result against the spec, and you approve the PR by number.\n4. **Build the overlay piece, if there is one.** It goes through `dotfiles-pass` in `~/.dotfiles`: run `bash scripts/gate.sh`, then `stow -R` the skills package, in its own PR.\n5. **Test it.** A fresh session told only \"cut a release\" should load the skill without being pointed at it.\n\n**What I need from you:** paste the checklist one last time. With the five steps I can sort them into repo and workstation steps and write the spec.",
+  "costUsd": 0.0853562
+}

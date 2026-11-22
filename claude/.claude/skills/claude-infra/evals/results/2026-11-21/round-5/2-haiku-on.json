@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:42:48Z",
+  "seconds": 9.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Question: where should a rule live that blocks every Bash call running `rm -rf` on a home folder, with no exceptions? Answer only; change nothing.\"}"
+    }
+  ],
+  "result": "**Put it in a hook, not CLAUDE.md or a skill.** A rule that has to hold every time is a hook. Anthropic's features overview says so directly: \"If a rule must hold every time, make it a hook rather than a prompt instruction\" (<https://code.claude.com/docs/en/features-overview>).\n\n- **Hook (recommended):** a `PreToolUse` hook with matcher `Bash`. The harness runs it on every Bash call, and it can block the call before it runs. \"No exceptions\" only holds in a hook. A prompt instruction can be ignored, and a skill loads only when Claude decides to use it.\n- **CLAUDE.md:** wrong home. It is advisory context that nothing enforces. Use it only for a fact that applies every turn, and this isn't one.\n- **Skill:** wrong home. It's for reference material Claude needs sometimes, not a guard that must always run.\n- **Permission deny rule** (for example `Bash(rm -rf ~*)`): a quick partial measure, but prefix matching is easy to slip past (variables, `$HOME`, subshells, `eval`), so it's weaker than a hook that inspects the command.\n\n**Where it would land:**\n- The hook command goes in the user-scope `settings.json`. That file is stowed from `~/.dotfiles`, so the edit goes in the dotfiles copy, never the link. The guard script itself would sit in `~/.dotfiles/bin/.local/bin/`, then `stow -R bin`.\n- Record it in the tooling manifest described in `~/.claude/docs/claude-tooling.md`, then run `claude-tooling-sync verify` and commit the dotfiles.\n- Use the `update-config` skill for the settings.json mechanics.\n- Hooks load at session start, so the guard applies from the next session.\n\n**What the hook has to decide:** \"home folder\" needs a definition. The script should block `rm -rf` whose target resolves to `~`, `$HOME`, `/var/home/glw907`, or any path under them. It should also deny when the target is a variable or an expansion it can't resolve, since that's the usual bypass. Even so, a text check on a shell command can't catch everything (for example, a script that runs `rm -rf` internally). That's a limit of any Bash-level guard, so a hook is strong but not airtight.\n\nI haven't changed anything. If you want it built, I'd write the guard script first, test it against sample commands, then wire the hook through `update-config` and land it through the dotfiles gate.",
+  "costUsd": 0.00166652
+}

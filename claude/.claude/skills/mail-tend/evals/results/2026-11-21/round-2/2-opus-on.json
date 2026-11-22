@@ -1,0 +1,37 @@
+{
+  "skillName": "mail-tend",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Re-sort my stored mail so the list messages the new rule now files go to Archive. Tell me exactly what you'd run and what you'd check with me first. Don't run anything.",
+  "started": "2026-11-22T03:13:48Z",
+  "seconds": 22.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\"}"
+    }
+  ],
+  "result": "Here's the plan. I haven't run any of it. It all goes from a household-it worktree cut from `main`, after `claude-worktree-busy ~/Projects/household-it` comes back clear.\n\n**1. Confirm the new rule is what's live on ward**\n\nThe re-sort files mail by whatever script ward is running. If the rule hasn't been merged and installed, the plan won't include the list messages at all.\n\n- `git log origin/main -- roles/mail-filters/` to see that the rule's merge is on `main`.\n- `scripts/apply.sh ward --check` to see that ward matches `main`.\n- `scripts/ward-mail-sort.sh install`. The hash it prints must match the `script_sha256` in the plan header from step 2.\n\nIf the rule hasn't landed, I stop and tell you, because it has to merge first.\n\n**2. Build the plan**\n\n- `scripts/mail-filters.sh preview`. It reads headers only, covering the Inbox, Archive, user folders and Junk. If the tmpfs is full, I'd delete only the old `run*` directories under `$XDG_RUNTIME_DIR/mail-filters/`.\n- Then count the moves per destination:\n  ```\n  tail -n +2 $XDG_RUNTIME_DIR/mail-filters/move-plan.jsonl | jq -r '\"\\(.from) -> \\(.to)\"' | sort | uniq -c\n  ```\n- I'd also check that every line is a list message going to Archive. Anything else gets flagged.\n\n**3. What I'd check with you first (one line in chat)**\n\nThe skill skips this question only for a plan of 20 moves or fewer that follows a data edit. This is a rule change, so I ask whatever the size:\n\n- **The counts per destination**, for example \"N list messages to Archive, nothing else moves. Go?\"\n- **Any move to Deleted Items** needs your yes on its own. If you say no, I remove those lines from the plan, because a plan that still has them is refused whole without `--trash`.\n- **Anything outside the rule's reach**, such as Junk messages leaving Junk or mail moving between folders the rule doesn't touch. I'd name those messages rather than move them quietly.\n- **Counts that don't match what I expect.** You tidy mail in Hylki and webmail yourself, so I'd ask before treating a difference as a fault.\n- **The backup.** The move needs a backup newer than the preview. I'd propose starting one now, which stops Stalwart for a few seconds, rather than waiting for the nightly one around 03:30 Alaska time. The plan expires 24 hours after the preview.\n\n**4. After your go-ahead**\n\n1. `ssh -o BatchMode=yes geoff@ward.907.life sudo systemctl start servers-backup.service`, then confirm it finished.\n2. `scripts/ward-mail-sort.sh move`, without `--trash` unless you agreed to Deleted Items moves. Nothing runs between 03:20 and 04:00 Alaska time.\n3. `scripts/ward-mail-sort.sh prune`, only if the move emptied a folder. A pruned folder comes back when its next message arrives.\n\nI'd never call `mail-filters move` or `undo` directly over ssh. `ward-mail-sort.sh` is the only path for changing the mailbox.\n\n**5. Report back**\n\nYou'd get the moved and skipped counts, the manifest path, and the folder counts that changed. `scripts/ward-mail-sort.sh undo MANIFEST` reverses the whole move.\n\nSay go and I'll start with steps 1 and 2. Then I'll come back to you with the counts before anything moves.",
+  "costUsd": 0.20208500000000001
+}

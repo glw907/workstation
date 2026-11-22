@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:25:55Z",
+  "seconds": 10.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Plan: retire a small demo repo with one D1 database\n\nNothing has been run. Archiving and proof come first, and nothing is deleted until you approve the dry run.\n\n## Before the archive: inventory (read-only)\n\nI list everything the project owns and mark each item sole-owner or shared. I'd check:\n\n- **Repo:** unpushed branches, stashes, each worktree's `git status`, open PRs and issues, releases, Actions secrets, and other sessions working it (`claude-worktree-busy`).\n- **Cloudflare:** the Worker, the D1 database, and any custom domain, DNS records, R2, KV, Queues, Turnstile or Builds triggers. For a demo these are probably empty, but the inventory confirms it rather than assuming.\n- **Vendors and references:** `wrangler secret list` and the registry, plus a grep of `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md` and the initiatives repo for use as a test target.\n\nA shared item stays.\n\n## What goes in the archive\n\nOne file, `<project>-2026-11-21.tar.age`, encrypted with the workstation age key:\n\n- **Git history:** `git bundle create --all`, verified with `git bundle verify`. Uncommitted work in any worktree is committed or dropped first, since a bundle doesn't carry it.\n- **D1:** a full `wrangler d1 export` of the one database, schema and data.\n- **R2 objects:** only if the inventory finds any.\n- **Metadata:** issues and PRs as JSON, and the Worker config (`wrangler.toml` or `wrangler.jsonc`).\n- **No secret values.** Names only, if anything.\n\n## How the archive is proven\n\n1. **Stop conditions.** The export fails, or it comes back empty, or the bundle fails verification. Any of these halts the retirement.\n2. **Restore in scratch.** Decrypt into a new, empty directory, kept separate from my scripts.\n3. **Check the bundle.** Clone it and confirm the branches and the head commit match the source repo.\n4. **Check the D1 export.** Load the SQL into SQLite, then compare table list and row counts against the live D1 database.\n5. **Store two copies.** One goes in `~/Documents/retired-projects/` and one in `servers-archive/retired-projects/` in R2. `rclone check` confirms the R2 copy matches.\n6. **Record the hash.** The file's sha256 goes in the retirement record.\n\n## What comes after\n\nI put a dry run in your terminal, listing each delete by its id. Each irreversible step is a question with options and a recommendation, and only your typed words approve it. Teardown then follows the skill's order, with a re-inventory of each id before it is deleted:\n\n1. Take traffic off.\n2. Delete the Worker, then D1.\n3. Stop vendors and clear the secrets.\n4. Decide the domain's fate, if there is one. That call is yours.\n5. Delete the GitHub repo and the local checkout.\n\nClose-out clears the references, closes the initiative, adds the README row, and shows the Cloudflare inventory empty.\n\nQuestions for you:\n\n- Which project is it?\n- Does it have a domain?",
+  "costUsd": 0.0854815
+}

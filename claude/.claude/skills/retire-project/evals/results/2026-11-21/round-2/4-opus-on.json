@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:10:37Z",
+  "seconds": 17.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"demo\", \"path\": \"/var/home/glw907/.claude/docs\", \"-i\": true, \"output_mode\": \"content\", \"head_limit\": 40}"
+    }
+  ],
+  "result": "I couldn't check which demo site this is, because reading `~/.claude/docs` was declined. So this plan is general to how your setup works, not checked against the real site. Nothing was changed.\n\n## Rough shutdown plan\n\n**1. Inventory (read-only)**\n- Find every place the site lives: the Worker or Pages project, custom domains and routes, DNS records, and any D1, KV, R2, Durable Objects or Queues it uses. The Cloudflare estate inventory doc is the starting point.\n- Find its secrets: Workers secrets (`wrangler secret list --name <worker>`), GitHub Actions secrets, entries in `~/.local/secrets` and the age store, and Proton Pass items.\n- Find its accounts and tokens: any scoped Cloudflare API token, deploy keys, OAuth apps, analytics, uptime monitors and mail routes.\n- Check whether anything else depends on it: links from other sites, shared tokens, cairn consumers, and backlog or initiative records that mention it.\n\n**2. Archive before deleting**\n- Export any data you want to keep (a D1 dump, R2 objects) to a known location.\n- Archive the GitHub repo rather than deleting it. Archiving is reversible and keeps the history. Deleting is a separate, later decision.\n\n**3. Take it offline (the reversible steps first)**\n- Remove the custom domain or route, or put up a redirect or a short \"retired\" page if the URL was ever public.\n- Disable the CI deploy workflow so a stray push can't bring it back.\n\n**4. Tear down (hard to reverse; each step gets a dry run and your go-ahead)**\n- Delete the Worker or Pages project and its storage resources.\n- Remove its DNS records, or the zone if the domain was only for this site, and decide whether to keep or let lapse any domain registration.\n- Revoke its scoped tokens and deploy keys, delete its Workers and Actions secrets, and remove its entries from the secret stores. Then mark or retire the Proton Pass items per the vault rules, and run `check-drift` so the store legs agree.\n\n**5. Local and records cleanup**\n- Remove the local checkout and any worktrees, after `claude-worktree-busy` shows none are in use.\n- Update the Cloudflare inventory, the household-it runbook, and any initiative or backlog records to show it's retired.\n\n## What I need from you\n\n1. **Which site and repo?** With that, I can do the read-only inventory and turn this into a concrete list.\n2. **Archive or delete the repo?** I'd recommend archiving.\n3. **Domain:** keep it, redirect it, or let it lapse?\n\nSince this is bigger than a one-line change, the actual teardown would go through a short spec you approve first.",
+  "costUsd": 0.16308540000000002
+}

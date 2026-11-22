@@ -1,0 +1,27 @@
+{
+  "skillName": "engine-consult",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I'm about to write a spec in ~/Projects/ecxc-ski for a gear-booking page that needs a new custom field type in the cairn admin. Before I write it, what engine-consultation steps does the spec need, and what exactly goes in its header? Answer only; don't write or change any file.",
+  "started": "2026-11-22T01:53:51Z",
+  "seconds": 16.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "building-from-specs",
+    "site-pass",
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "result": "I could not give you the engine-consultation steps or the exact header. The protocol lives in `engine-consult`, which sits in cairn-cms's skills, and reading that directory and `ecxc-ski/CLAUDE.md` was refused because read permission hasn't been granted. The answer below comes from the skills I could read.\n\n**Where the spec goes:** cross-repo specs live in `~/Projects/initiatives/<id>/`, not in the ecxc-ski repo (`site-pass`, `cairn-pass`). A custom field type in cairn admin changes cairn-cms, so this spec is cross-repo.\n\n**Cross-repo steps the spec needs:**\n- Name the sessions currently working in cairn-cms and ecxc-ski, and read cairn-cms's `docs/STATUS.md` on the day you approve the spec (`writing-a-spec.md` \"Before approval\").\n- Check `docs/internal/consultations/` in cairn-cms for briefs with unrecorded verdicts before the spec relies on any engine behavior (`cairn-pass`).\n- Run the scoped `standards:backlog-sweep` and list its verdicts in the spec. Approving the spec approves those backlog edits (`writing-a-spec.md`).\n\n**Header content:** the spec-writing reference doesn't define a header. Its required contents are the intent in Geoff's words (goals, non-goals, failure conditions), the approaches with the pick, sources labeled by mechanism, assumptions with probes, the file list with search hit counts, commands checked against the denials log, tasks (goal, files, reviewers, minutes, dependencies), and a list of Claude's calls. The closest header rule I found is `site-pass`'s plan header: exactly one of a consultation-brief link or the line \"no engine asks\", plus a \"Sources consulted\" line from `engine-consult`. That rule is for plans, and I haven't confirmed that the spec header follows it.\n\nTo give you the exact steps and header, I need read access to `~/Projects/cairn-cms/.claude/skills/` (for `engine-consult`) and `~/Projects/ecxc-ski/CLAUDE.md`. Grant that and I'll answer from those files. I haven't written or changed anything.",
+  "costUsd": 0.009301240000000002
+}

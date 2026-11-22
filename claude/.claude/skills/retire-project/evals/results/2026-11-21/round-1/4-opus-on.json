@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T02:29:47Z",
+  "seconds": 20.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Shutting it down comes in four phases. The order matters because the early steps can be undone and the later ones can't. I haven't looked at anything yet. Tell me which site it is and I'll make a real inventory for it, changing nothing.\n\n## 1. List everything the site touches (read-only)\n\n- **Cloudflare:** the Worker or Pages project, routes and custom domains, DNS records, any Access application, and storage bindings (D1, KV, R2, Durable Objects). Also its Workers secrets and any API token made just for its deploys. `~/.claude/docs/cloudflare-estate-inventory.md` is the starting map.\n- **GitHub:** Actions secrets, deploy keys, webhooks, Dependabot or Renovate, branch protection, and open PRs or issues.\n- **Credentials:** its Proton Pass items, entries in `~/.local/secrets` and the age store, and any test accounts in `~/.claude/docs/test-accounts.md`.\n- **Records that mention it:** the household-it runbook, an initiatives record, the maintenance-mode list, monitoring and alerts, and mail routing if it has an address.\n- **Inbound links:** other repos or sites that link to it, use its API, or import it (for example, a cairn consumer list).\n- **Local copies:** the clone in `~/Projects/` and any worktrees.\n\n## 2. Keep what's worth keeping\n\n- Tag the final commit.\n- Export any D1, KV, or R2 data you might want later.\n- Note where the domain registration stands.\n\n## 3. Take it down, easiest to undo first\n\n1. **Remove it from the web.** Detach the custom domain, or redirect it, so it stops serving. You can undo this, so it's worth waiting a few days to see whether anything complains.\n2. **Delete the Worker or Pages project and its storage.** You can't undo this.\n3. **Revoke credentials.** That means its own API tokens and deploy keys. Then retire its Proton Pass items and remove the local secret entries.\n4. **Archive the GitHub repo.** Archiving makes it read-only and can be reversed. Deleting it can't.\n5. **Remove the local clone and worktrees.**\n\n## 4. Update the records\n\nUpdate the estate inventory, the runbook, and the manifests that `check-drift` checks. If it has an initiatives record, close it, and take it off the maintenance-mode list.\n\n## Decisions for you\n\n- **Repo:** archive it (my recommendation) or delete it?\n- **Domain:** if it's dedicated to this site, keep it registered so nobody else picks it up, or let it lapse?\n- **Old URL:** redirect somewhere, or let it stop resolving?\n- **Data:** keep an export, or discard it?\n\nThis is bigger than a one-line change, so the actual work would go through a short spec under `building-from-specs`, with the delete steps confirmed before they run.",
+  "costUsd": 0.1767728
+}

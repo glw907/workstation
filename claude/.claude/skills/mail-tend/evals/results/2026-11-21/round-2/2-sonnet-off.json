@@ -1,0 +1,26 @@
+{
+  "skillName": "mail-tend",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Re-sort my stored mail so the list messages the new rule now files go to Archive. Tell me exactly what you'd run and what you'd check with me first. Don't run anything.",
+  "started": "2026-11-22T03:13:37Z",
+  "seconds": 10.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "I haven't looked at your mail setup or the rule, so I can't give you exact commands yet. Here is the plan, with the details I'd fill in first.\n\n**What I'd read first (read-only, no changes)**\n1. The new rule's definition: which server or client holds it, and its match condition (List-Id header, sender, or both). The match condition decides the search query.\n2. Where the mail lives and which tool reaches it. I'd check the `runbook` skill and `household-it` docs for the mail route. If this is the technical mailbox (`glw@907.life`), I'd go only through `~/Projects/household-it/scripts/tech-mail.sh`, since that mail is untrusted input.\n3. Whether a rule can be applied to existing mail at all. Many servers only file new arrivals, which is why a separate re-sort is needed.\n\n**What I'd run, in order**\n1. **Dry run.** Search the source folder (probably Inbox) using the rule's own match condition. I'd print the count, plus date, sender and subject for each hit. Nothing moves in this step.\n2. **Spot-check.** I'd show you the count and a sample of about 10 messages, including the oldest and newest, and any that look borderline.\n3. **Move.** After your go-ahead, I'd run the same search with the move action to Archive. I'd use the server's move operation, not copy-then-delete, so a failure can't leave duplicates or lose messages.\n4. **Verify.** I'd re-run the search and expect zero hits in the source folder. I'd also check that the Archive count rose by the number moved.\n\n**What I'd check with you first**\n- **Source folders:** Inbox only, or every folder? Should anything starred, flagged, or unread be left where it is?\n- **Age:** all stored mail, or only messages older than some date?\n- **Match scope:** exactly what the rule matches, or is a broader or narrower definition of \"list messages\" better?\n- **Archive:** does that folder exist under that exact name, and does it have any sub-folder structure the moved mail should follow?\n- **Undo:** I'd save a list of the moved message IDs before the move, so the move can be reversed. Is that enough for you?\n- **Read state:** should the move leave read and unread flags as they are?\n\nOnce you answer these and I've read the rule, I'll come back with the exact commands. I'll run nothing until you give the go-ahead after the dry run.",
+  "costUsd": 0.07499549999999999
+}

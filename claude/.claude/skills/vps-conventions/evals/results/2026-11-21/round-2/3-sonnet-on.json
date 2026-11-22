@@ -1,0 +1,47 @@
+{
+  "skillName": "vps-conventions",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Read prune-uploads.timer in this folder. It will run a weekly prune of old upload files on one of our servers, but its service isn't written yet. Until then I delete the old files with an ssh command, and auto mode keeps denying it. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+  "started": "2026-11-22T02:39:16Z",
+  "seconds": 8.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/vps-conventions"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"prune-uploads*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/prune-uploads.timer\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"vps-conventions\"}"
+    }
+  ],
+  "result": "**No, don't add an ssh allow rule.** It wouldn't work. Auto mode ignores ssh allow rules, even narrow prefixes, so the classifier would still judge each `ssh` command on its own and keep denying it. A broad rule like `ssh host *` would also be a bad idea if it did work.\n\n**What to do instead:**\n\n1. **Wrap the deletion in a reviewed script in the repo.**\n   - It takes its targets as arguments, such as the upload directory and the age cutoff.\n   - It prints exactly what it will delete before it acts.\n   - It refuses anything ambiguous: a leading-dash argument, a pattern, or a path outside the uploads directory.\n   - It does one thing only.\n   - The skill cites household-it's `scripts/ward-mail-delete.sh` and `scripts/mx-switch.sh` as models.\n2. **Give the script an exact `permissions.allow` rule for each invocation shape.** Exact rules for repo scripts do run in auto mode. Land the script and its rule together, through review.\n3. **Reuse the script as the service.** `prune-uploads.timer` has no service yet. The same reviewed logic can become the `ExecStart=` of `prune-uploads.service` on the server. Then the weekly run needs no ssh at all, and your manual ssh step goes away.\n\nService and timer notes from the same conventions:\n- **Service hardening:** it needs `NoNewPrivileges=yes`, `PrivateTmp=yes`, and `ProtectSystem=strict`. `ReadWritePaths=` must name the uploads directory, and that directory has to exist on the host before the unit starts.\n- **Timer:** it lacks `RandomizedDelaySec`, which the conventions want on every timer. `Persistent=true` is fine, but it fires a missed run at boot.\n- **Gate:** run `systemd-analyze verify` on the unit files.\n\nI changed nothing. If you want, I can draft the script, its allow rule, and the service unit.",
+  "costUsd": 0.0918196
+}

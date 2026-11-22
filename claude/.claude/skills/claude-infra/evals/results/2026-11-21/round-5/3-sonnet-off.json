@@ -1,0 +1,42 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:44:44Z",
+  "seconds": 10.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"/var/home/glw907/Projects/*/.mcp.json\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"svelte\", \"path\": \"/var/home/glw907/.claude.json\", \"output_mode\": \"count\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"mcp\", \"path\": \"/var/home/glw907/.claude/settings.json\", \"output_mode\": \"content\", \"-i\": true}"
+    }
+  ],
+  "result": "**Recommendation: add it once at user scope, not in ecxc-ski's `.mcp.json`.**\n\nI couldn't read `~/Projects` or your Claude config (permission wasn't granted), so I haven't seen the current `.mcp.json` files. This answer rests on your CLAUDE.md and on what you said about the sites.\n\n- **One place covers every site.** ecxc-ski, 907-life, aksailingclub-org and cairn-pub are all SvelteKit repos. A user-scope entry (`claude mcp add --scope user ...`) means each of them gets the server without four copies that can drift apart.\n- **It isn't specific to ecxc-ski.** A project `.mcp.json` is checked in and shared, so it should hold what that repo needs. The Svelte docs server isn't a property of ecxc-ski. If it lived there, the other sites would either lack it or each need their own copy.\n- **The config belongs in `~/.dotfiles`.** Your rule is that config is kept there and stowed. The user-scope MCP config lives in `~/.claude.json`, which Claude Code rewrites itself, so Stow can't manage it. The practical route is to record the `claude mcp add` command in a dotfiles bootstrap script, so a fresh host (`thinkpad-x1` or `pavilion`) gets the same setup.\n- **Changes to Claude Code tooling go through the `claude-infra` skill.** The change itself is more than a one-sentence edit, so it should follow that skill and the spec flow.\n\n**When a per-repo entry would make sense:** only if you want collaborators or CI to get the server too. That doesn't apply here, since these are your own sites on your own workstation.\n\n**Check before adding.** You may already cover Svelte docs another way. The `standards:svelte-check` and `standards:svelte-conventions` skills exist, but neither supplies documentation lookup. If a Svelte or SvelteKit docs server is already in your user config, adding another would duplicate it.\n\nIf you grant read access to `~/Projects` and `~/.claude.json`, I can confirm what's currently configured. I wouldn't change anything.",
+  "costUsd": 0.018180799999999997
+}

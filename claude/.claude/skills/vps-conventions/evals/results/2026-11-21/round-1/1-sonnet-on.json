@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I'm writing a systemd service and timer for a nightly backup script on our AlmaLinux VPS. It needs a lock file so two runs never overlap. Where should the lock file live, and what should the service unit carry? Answer with the unit text; don't create or change any file.",
+  "started": "2026-11-22T02:00:04Z",
+  "seconds": 12.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "**Where the lock lives:** `/run/lock/nightly-backup.lock`. `/run` is a tmpfs, so no stale lock survives a reboot. The `/var/lock` path on AlmaLinux is a symlink to it. Use `flock(1)` on the file rather than checking whether the file exists. The kernel drops the lock when the process dies, so a crash or OOM kill can't leave a stuck lock.\n\nsystemd already refuses to start a oneshot service that is still running, so the timer alone won't overlap runs. The `flock` guard also covers a manual run of the script or a second unit.\n\n`/etc/systemd/system/nightly-backup.service`:\n\n```ini\n[Unit]\nDescription=Nightly backup\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nUser=root\nExecStart=/usr/bin/flock --nonblock --conflict-exit-code 75 /run/lock/nightly-backup.lock /usr/local/sbin/nightly-backup.sh\n# Exit 75 (EX_TEMPFAIL) means another run held the lock: not a failure\nSuccessExitStatus=75\nTimeoutStartSec=4h\nNice=10\nIOSchedulingClass=idle\nPrivateTmp=true\nProtectSystem=strict\nReadWritePaths=/run/lock /var/backups\n```\n\nAdjust `ReadWritePaths` to wherever the script writes. Drop the hardening lines if the script needs broader access.\n\n`/etc/systemd/system/nightly-backup.timer`:\n\n```ini\n[Unit]\nDescription=Run nightly backup\n\n[Timer]\nOnCalendar=*-*-* 02:30:00\nRandomizedDelaySec=10min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n```\n\nNotes:\n\n- **`--nonblock`:** a second run exits at once instead of queuing behind the first.\n- **`SuccessExitStatus=75`:** a skipped run isn't logged as a failed unit. Remove it if you want skips to alert.\n- **`Persistent=true`:** a run missed while the VPS was down starts at boot.\n- **Enable:** `systemctl daemon-reload && systemctl enable --now nightly-backup.timer`.\n- **Non-root service:** `/run/lock` may not be writable. Use `RuntimeDirectory=nightly-backup` and put the lock at `/run/nightly-backup/lock` instead.\n- **SELinux:** a file in `/run/lock` carries the right label by default, so no policy change is needed.",
+  "costUsd": 0.0876838
+}

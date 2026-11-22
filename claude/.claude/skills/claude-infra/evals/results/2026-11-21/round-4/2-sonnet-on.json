@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:30:44Z",
+  "seconds": 11.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    }
+  ],
+  "result": "**Neither CLAUDE.md nor a skill. Put it in a hook.** That means a `PreToolUse` hook on the `Bash` tool, which you configure in `settings.json`.\n\n**Why:**\n- You said \"every call, no exceptions\". That is a rule that must hold every time. Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>) says: \"If a rule must hold every time, make it a hook rather than a prompt instruction.\"\n- A line in CLAUDE.md is context Claude reads. Nothing enforces it, so a long session, a subagent, or a misread could still run the command.\n- A skill is reference material Claude needs sometimes. It loads only when invoked, so it can't give a guarantee either.\n- A hook runs in the harness, outside the model. It inspects the command before the call executes and can refuse it, which is the only form that meets \"no exceptions\".\n\n**Shape of the hook:**\n- Match `Bash` calls whose command has `rm` with recursive and force flags in any spelling (`-rf`, `-fr`, `-r -f`, `--recursive --force`).\n- Match targets that resolve to a home folder: `~`, `$HOME`, `/var/home/glw907`, `/home/...`, with or without a trailing slash or `/*`, and other users' homes too.\n- Exit with code 2 and a reason on stderr, which blocks the call and tells Claude why.\n- The matching has to be careful. A simple string match is easy to bypass with variable expansion, `cd ~ && rm -rf .`, `sudo`, `bash -c \"...\"`, or `find ... -delete`. It should resolve paths where it can, and fail closed on a command it can't parse. Decide whether \"a home folder\" means the home directory itself or anything beneath it. `rm -rf ~/Projects/foo/node_modules` is routine, and \"no exceptions\" read literally would block it.\n- Add a `permissions.deny` rule for `Bash(rm -rf ~*)` as a second layer. It is cheap, but prefix patterns are easy to evade, so the hook is the real control.\n\n**Where it lives on this workstation:**\n- Your dotfiles hold the settings, per your \"edit the dotfiles copy, never the link\" rule. The hook script goes in `~/.dotfiles/bin/.local/bin/` as a stdlib-only Python helper run as `python3 -I`, per your tool-language rule. That fits because it parses JSON from stdin and goes past trivial glue.\n- Register it in user-scope `~/.claude/settings.json` so it covers every repo and worktree. A project-scope setting would cover only one repo.\n- The `update-config` skill handles the `settings.json` mechanics.\n- It also needs an entry in the tooling manifest (`~/.claude/docs/claude-tooling.md` names it), followed by `claude-tooling-sync verify`. The change lands through a PR that cites the Anthropic page above.\n- A one-line mention in CLAUDE.md is optional. It would only tell Claude the block exists so it doesn't retry. It is a convenience and must not be the enforcement.\n\n**Limits:** a hook only sees Claude's Bash tool calls. It doesn't stop `rm -rf` in your own terminal or from scripts Claude runs indirectly (a script that itself calls `rm -rf \"$HOME/...\"`). The hook can't read inside those. If you want that covered too, add a check in the scripts themselves.\n\nI changed nothing. If you want the hook built, say so and I'll follow the spec flow, since this is more than a one-sentence change.",
+  "costUsd": 0.025922
+}

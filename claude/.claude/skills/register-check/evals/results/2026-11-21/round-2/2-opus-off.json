@@ -1,0 +1,62 @@
+{
+  "skillName": "register-check",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "draft.md here is a cairn docs page that Geoff will read next. Give it the full four-gate prose review before he does, and report what you find. Findings only, no edits.",
+  "started": "2026-11-22T03:00:22Z",
+  "seconds": 42.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\", \"args\": \"Review draft.md, a cairn docs page, with the full four-gate prose review. Findings only, no edits.\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-off/draft.md\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"four[- ]gate|four hard gates|four gates\", \"path\": \"/var/home/glw907/.claude\", \"output_mode\": \"files_with_matches\", \"glob\": \"!projects/**\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"four[- ]gate|four hard gates|four gates\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-off\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-off\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"gate\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-off/.claude/skills/survey/writing\", \"output_mode\": \"content\", \"-i\": true}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-off/.claude/skills/survey/writing/technical-doc-web.md\"}"
+    }
+  ],
+  "result": "I couldn't find the four-gate checklist itself. It probably lives in cairn-cms's `cairn-writing-docs` skill (`references/docs-register.md`), and that repo isn't in this scratch directory. My permission to read `~/.claude` was also denied. So I reviewed `draft.md` against what I could read: the writing-voice router's shape and facts rules, and the Google web-docs register. I grouped the findings under four checks of my own: facts, standard, AI tells, and shape. Please check them against the real gates, especially the cairn docs voice overlay, which I couldn't open.\n\nThe page has one usable sentence, line 6. Everything else should be cut or rewritten.\n\n## Facts (claims that need checking or cutting)\n\n- **`draft.md:9`**: \"first released in 2019\" and \"used by over ten thousand sites\" aren't supported by anything I can see. Treat both as made up unless someone can confirm them. Either way they don't belong on a how-to page. Cut the line.\n- **`draft.md:4`**: \"in minutes\" is a claim nobody has measured. It also blurs the \"about a minute\" in line 7.\n- **`draft.md:7`**: Check \"rebuilds on Cloudflare\" and \"about a minute later\" against how cairn actually publishes. This is the one specific the reader will rely on, so it has to be right.\n\n## Standard (Google developer docs, or Microsoft if this is an editor page)\n\n- **Which standard applies is open.** Opening the admin and selecting **Publish** is a task done only in the interface. If the page lives in `docs/editors/`, it follows Microsoft plus the editor brief. If it's in `docs/admin/`, it follows Google plus the cairn overlay. The findings below hold either way.\n- **`draft.md:7`**: \"Click here to read more about builds\" breaks both standards. Link text should name where it goes, for example \"For more on builds, see [Builds](…)\". There's also no actual link in the file. \"Click\" also clashes with \"select\" on line 6. Both guides prefer \"select\".\n- **`draft.md:1`**: Google writes task headings in the imperative (\"Publish a page\"), not the -ing form.\n- **`draft.md:9`**: \"is used by\" is passive voice. This goes away if the line is cut.\n\n## AI tells\n\n- **`draft.md:3`**: \"isn't just a content system, it's…\" is a \"not just X, it's Y\" contrast frame. It's also a comma splice.\n- **`draft.md:3-4`**: \"seamless\", \"empowers\", \"robust\", and \"world-class\" are marketing words both standards tell you to cut. This paragraph matches the register's example of what not to write almost exactly.\n- **`draft.md:3`**: \"Moreover\" is a connector at the start of a sentence.\n\n## Shape\n\n- **The page doesn't start with the task.** Lines 3-4 are a sales pitch in front of the procedure. Removing them makes line 6 the opening, which is what Google asks for.\n- **`draft.md:6`**: Three steps in a row are written as one sentence. The router's rule is that a sequence of steps is a numbered list: open the admin, choose the page, select **Publish**.\n- **The page stops after the button.** Once the key facts are confirmed, it should tell the reader how to check that the page is live, and what happens if the rebuild fails. Don't fill this in with guesses. Get the answers from someone who knows, or from the cairn code.\n\nI didn't edit anything.",
+  "costUsd": 0.28154940000000006
+}

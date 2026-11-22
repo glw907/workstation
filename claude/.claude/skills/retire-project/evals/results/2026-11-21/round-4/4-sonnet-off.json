@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:40:07Z",
+  "seconds": 8.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Here's a rough plan. I haven't looked at anything yet, and I don't know which site it is. Once you name it, I'll check the Cloudflare estate inventory and the repo to turn this into specifics.\n\n**1. Inventory (read-only)**\n- Find what the site runs on. Likely a Cloudflare Worker or Pages project, plus a custom domain or subdomain, DNS records, and possibly D1, KV, or R2 bindings.\n- Find what else points at it: Access applications, Turnstile widgets, email routing, and links from other sites.\n- Find the credentials tied to it: Workers secrets, GitHub Actions secrets, the age store, and Proton Pass items.\n- Check the repo for open PRs and issues, CI schedules, Dependabot or Renovate, and any worktrees or sessions in use (`claude-worktree-busy`).\n\n**2. Keep what's worth keeping**\n- Export any data you might want from D1, KV, or R2.\n- Note any code or content worth reusing elsewhere.\n\n**3. Take the site down (reversible steps first)**\n- Remove the DNS records and the custom-domain route.\n- Delete the Access app and any Turnstile widget.\n- Delete the Worker or Pages project, then the D1, KV, and R2 resources, once the data is exported or confirmed disposable.\n\n**4. Clean up credentials and records**\n- Revoke or delete its secrets: Workers secrets, Actions secrets, the age store entry, `~/.local/secrets` lines, and the Proton Pass items.\n- Update the estate inventory and any runbook or registry entries.\n- Remove its entry from the dotfiles or manifests if it has one.\n- Close out its initiative record if one exists (`log-project`).\n\n**5. Retire the repo**\n- Disable CI and scheduled workflows.\n- Archive the GitHub repo. This is reversible, and I'd recommend it over deleting.\n- Delete the local checkout and worktrees under `~/Projects/` only after the archive.\n\n**Confirmation points**\n- I'd show a dry-run list of exactly what gets deleted before steps 3 to 5, per your destructive-op rule.\n- Deleting data resources and the repo are the irreversible steps. I'd ask for your go-ahead before each of those.\n\nWhich site and repo is it? Also, is archiving the repo fine, or do you want it deleted outright?",
+  "costUsd": 0.0114732
+}

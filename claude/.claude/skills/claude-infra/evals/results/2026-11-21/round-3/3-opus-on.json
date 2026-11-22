@@ -1,0 +1,42 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:20:38Z",
+  "seconds": 16.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Where should a Svelte documentation MCP server live: ecxc-ski's .mcp.json, or elsewhere? Other cairn sites also use Svelte. Answer only, change nothing.\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)svelte|mcp\", \"path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\", \"output_mode\": \"content\"}"
+    }
+  ],
+  "result": "It shouldn't go in ecxc-ski's `.mcp.json`. Add it at user scope and record it in the user-scope MCP manifest.\n\n- **Why not ecxc-ski's `.mcp.json`:** the claude-infra rules use user scope for anything the whole cairn-family stack shares, and they name Svelte, Playwright and DaisyUI as examples. A repo's `.mcp.json` holds only what that one repo needs, and its CLAUDE.md says so. ecxc-ski, 907-life, aksailingclub-org and cairn-pub all use Svelte, so the server belongs to the stack rather than to ecxc-ski. If you put it in ecxc-ski's file, the other sites would need their own copies.\n- **Check for a skill first:** when a library offers both a skill and a server, the rule is to take the skill and add the server only for on-demand doc lookups or tools a skill can't provide. The reason is reach: an MCP server reaches only the main loop and agents with no tool restrictions. A subagent with a fixed tool list never sees it. A skill reaches such a subagent if its `tools` line includes `Skill` or its frontmatter preloads the skill under `skills:`. So the server makes sense only if you want live doc lookups that the `standards:svelte-*` skills you already have don't cover.\n- **If you add it:** it gets one entry in the user-scope MCP manifest, and `claude-tooling-sync verify` runs afterward. Any usage rule goes into the skills or agents that use the server, or the inventory in `~/.claude/docs/claude-tooling.md`, not into memory. The server loads only after a restart, so restart between sessions rather than during a run.\n\nThe source is Anthropic's features overview (https://code.claude.com/docs/en/features-overview), the page the claude-infra skill cites for these choices. I couldn't open `claude-tooling.md` because reading it wasn't permitted, so I haven't checked whether a Svelte server or skill is already listed there. I changed nothing.",
+  "costUsd": 0.18153799999999998
+}

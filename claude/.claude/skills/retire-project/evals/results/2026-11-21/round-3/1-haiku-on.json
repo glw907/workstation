@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:21:52Z",
+  "seconds": 22.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Dry run: retire `site-staging`\n\nNothing was looked up or changed. Items marked `<...>` are placeholders until the live inventory runs.\n\n**Reading I took:** this retires only the staging environment: the Worker `site-staging`, its D1 database, and one custom domain. The site, its repo, and its production Worker stay. So step 5's repo deletion and the local checkout removal don't apply. If you meant to retire the whole site, tell me and I'll expand the plan.\n\n**Open:** which site this staging Worker belongs to. I need its repo name to check the repo for shared code, worktrees, and references.\n\n## 1. Inventory (read-only, runs first in the real run)\n\n| Item | Sole owner or shared? | What the live check looks for |\n|---|---|---|\n| Worker `site-staging` | Likely shared with the site's production build | Routes, Builds triggers, `wrangler secret list --name site-staging` (names only) |\n| D1 `<db-name>` / `<db-id>` | Sole owner only if no other Worker binds it | Bindings on every Worker in the account; table row counts for the export |\n| Custom domain `<hostname>` | Depends on whether it's an apex or a subdomain of a live domain | Its DNS records, registrar expiry and auto-renew, other records on the zone |\n| Vendors | To check | Keys or services named in the registry for this Worker; a Turnstile widget or Access app on the staging host |\n| Repo | Shared | Unpushed branches, stashes, worktrees with uncommitted changes, `claude-worktree-busy <path>`, open `claude agents` sessions |\n| References | To check | Grep `~/.dotfiles`, `~/.claude/docs`, the site's `CLAUDE.md`, the initiatives repo, and the registry. Any note that uses staging as a test target needs a new target. |\n\n## 2. Archive and prove\n\n- One file, `site-staging-<date>.tar.age`, encrypted with the workstation key. It holds:\n  - the D1 SQL export\n  - the Worker config: bindings, routes, domain, compatibility settings\n  - a `git bundle create --all` of the site repo, which is harmless to include even though the repo stays\n- Secret values are never archived. Only names are recorded.\n- Restore test in a scratch directory: decrypt, clone the bundle, load the SQL into SQLite. Stop on an empty or failed export.\n- Store at `~/Documents/retired-projects/` and `servers-archive/retired-projects/` in R2. Confirm the R2 copy with `rclone check`.\n- Record the sha256 in the retirement record.\n\n## 3. Approval questions (asked in your terminal, one per irreversible step)\n\n1. **Domain fate.** Options:\n   - (a) Lapse: auto-renew off, parked until expiry. Parking means Email Routing off in the dashboard, `MX 0 .`, `v=spf1 -all`, and `v=DMARC1; p=reject;` at the apex.\n   - (b) Keep renewing, only if you name a use for it.\n   - **Recommendation: (a)**, unless you name a use. If the hostname is a subdomain of a live domain, parking doesn't apply to it. Only its DNS records come out.\n2. **Delete D1 `<db-name>`** after the archive is verified. **Recommendation: yes.**\n3. **Delete Worker `site-staging`** after its domain and DNS are removed. **Recommendation: yes.**\n4. **Revoke vendor keys** named in the inventory, at each issuer. **Recommendation: yes.** Deleting a Worker secret revokes nothing.\n5. **Archive location.** **Recommendation: both** the local folder and the R2 copy, as the skill specifies.\n\nOnly your typed words approve each step.\n\n## 4. Teardown order (real run only)\n\n1. Remove the custom domain and its DNS records.\n2. Delete Worker `site-staging`. Rerun its inventory check first. Turnstile, Builds triggers, R2, KV, and Queues come out only if the inventory finds them sole-owned.\n3. Delete D1 `<db-name>`.\n4. Revoke vendor keys at their issuers. Remove the secrets from the store and the registry through `claude-pass`.\n5. Apply the domain decision from question 1.\n\nNot in this run: deleting the repo, its local checkout, or trashing the project folder in the Projects vault. The site still uses them.\n\n## 5. Close\n\n- Clear the references found in step 1.\n- Add a row to `README.md` beside the archives: date, sha256, and what was removed (`site-staging` Worker, D1 database, domain).\n- Rerun the Cloudflare inventory and show that the Worker, D1 database, and domain records are gone.\n\n## Decisions I need from you\n\n1. Which site this is.\n2. Whether the partial reading above is right.\n3. The domain: a named use, or approve the lapse.",
+  "costUsd": 0.00596437
+}

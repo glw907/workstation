@@ -1,0 +1,44 @@
+{
+  "skillName": "register-check",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Geoff asked for a register check on draft.md in this folder. Propose rewrites for what you find, but don't apply any.",
+  "started": "2026-11-22T03:02:51Z",
+  "seconds": 25.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-off/draft.md\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\", \"args\": \"register check on draft.md; propose rewrites only, do not apply\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/voice/editor.md\"}"
+    }
+  ],
+  "result": "I checked `draft.md` against Microsoft Writing Style Guide editor copy. It's a walkthrough for editors that uses only the admin interface, so that's the standard that applies. I didn't edit the file. I also couldn't compare it with the house editor examples in `~/.claude/docs/voice/editor.md`, because reading that file needs a permission that wasn't granted. The findings below are based on the Microsoft guide and the house shape rules only.\n\n## Findings\n\n**1. Lines 3–4 are marketing copy, not instructions.**\n- \"isn't just a content system, it's a seamless way to publish\" uses the \"not just X, it's Y\" pattern, a common sign of machine-written text. It's also two sentences joined by only a comma.\n- \"Moreover\" is a linking word used just to start a sentence, another of those signs.\n- \"seamless\", \"empowers\", \"robust\", and \"world-class\" are hype words. Microsoft's guide asks for plain, useful text.\n- \"in minutes\" is a speed claim the page never backs up.\n\nProposed: cut the paragraph. The heading already tells the reader what the page is for. If you want a lead-in, use something plain and factual:\n\n> You can publish a page from the admin. Publishing rebuilds the site with your changes.\n\n**2. Line 6 puts a sequence of steps in a paragraph.** The house rules say steps that happen in order go in a numbered list. \"Select\" is the right verb in Microsoft style, so keep it.\n\n**3. Line 7 says \"Click here\".** Microsoft style says not to use \"click here\" as link text, and it prefers \"select\" over \"click\". The link text should name where it goes.\n\nProposed: `For more about builds, see [How builds work](LINK).` The draft has no link or page title, so both are placeholders for you to fill in.\n\n**4. Line 9 is history and a usage number, not instructions.** It changes the page from steps to sales pitch partway through. I also can't verify \"first released in 2019\" or \"over ten thousand sites\" from anything here, so they shouldn't go out unchecked.\n\nProposed: cut it from this page. If it belongs somewhere, it's an About page, with a source for the number.\n\n**5. Minor: the heading.** \"Publishing a page\" is fine, but Microsoft style usually titles a task page with a verb, like \"Publish a page\". Mentioning Cloudflare is also detail an editor doesn't need. \"The site rebuilds\" says enough.\n\n## Full proposed rewrite\n\n```markdown\n# Publish a page\n\n1. Open the admin.\n2. Choose the page.\n3. Select **Publish**.\n\nThe site rebuilds, and the new version is live about a minute later. For more about builds, see\n[How builds work](LINK).\n```\n\nThis keeps every fact in the draft except the marketing claims and the history line. It adds no new facts apart from the link placeholder.",
+  "costUsd": 0.20652960000000004
+}

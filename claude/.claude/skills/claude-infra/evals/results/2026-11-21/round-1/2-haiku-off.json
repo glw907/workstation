@@ -1,0 +1,19 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T02:11:56Z",
+  "seconds": 10.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "**Recommendation: a `PreToolUse` hook on the Bash tool in your Claude Code settings.** CLAUDE.md and skills can't enforce \"no exceptions.\"\n\n- **CLAUDE.md** is guidance the model reads and usually follows. It is not a gate, so it can't guarantee the block.\n- **A skill** loads only when its description matches the task. An `rm -rf` on a home folder could come up in any session, so a skill would often not be in play.\n- **A hook** runs on every matching tool call before it executes, whatever the model decides. It can deny the call and return a reason to the model. That is the only option here that is deterministic.\n\n**Why not just a permission deny rule?** `permissions.deny` with patterns like `Bash(rm -rf ~*)` is a useful first layer, but it matches prefixes. It misses `rm -fr`, `rm -r -f`, `rm --recursive --force`, `/var/home/glw907`, `$HOME`, and `cd ~ && rm -rf .`. A hook can parse the command, so it's stronger. You could use both: the deny rule for the obvious forms and the hook as the real check.\n\n**What the hook should do:**\n- Match any `rm` with both recursive and force flags, in any order or spelling.\n- Resolve targets against `~`, `$HOME`, `/var/home/glw907`, and `/home/glw907`, and treat a path under any of them as a home folder.\n- Deny when a target is a variable or glob it can't resolve, or fail closed. That is a judgment call. Failing closed blocks some harmless commands too.\n- Return a clear reason, so the model stops and asks you instead of retrying a variant.\n\n**Limits to know about:**\n- It covers the Bash tool only. `shutil.rmtree` in Python, `find -delete`, `perl`, or a Write-tool edit can still remove files. Covering those would mean blocking the interpreters or relying on OS-level protection, which is a bigger change.\n- A session can edit the settings file, so the hook doesn't protect against a session that decides to disable it. Keeping the settings file under your dotfiles and under review helps there.\n\n**Where it lives:** The hook is Claude Code tooling, so under your CLAUDE.md it goes through the `claude-infra` skill. The `update-config` skill can write the `settings.json` entry. A hook script, if one is needed, belongs in `~/.dotfiles/bin/.local/bin/` (stowed with `stow -R bin`), with the settings entry pointing at it.\n\nI changed nothing. I haven't checked your current settings or whether any hook already exists. If you want to go ahead, I'd start with `claude-infra` to confirm where the settings file lives and how it's managed, then write the hook and a test set of commands it should block and allow.",
+  "costUsd": 0.00416805
+}

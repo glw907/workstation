@@ -1,0 +1,26 @@
+{
+  "skillName": "mail-tend",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Why is this in Junk? It's from my dentist's office, appointments@smiledental.example, and it's a real appointment reminder. Diagnose it and say what you'd change. Plan only; change nothing.",
+  "started": "2026-11-22T02:33:45Z",
+  "seconds": 12.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "I haven't looked at the message. I can't open your mailbox from here, and `tech-mail.sh` is only for technical mail. So this is a plan based on the usual causes, and the headers will settle it.\n\n**Most likely causes, in order:**\n\n1. **Failed sender authentication.** The message may fail SPF, DKIM, or DMARC alignment, which is common when a practice sends reminders through a scheduling vendor's servers instead of its own domain. Junk filters weigh this heavily.\n2. **Sending infrastructure with a bad reputation.** Shared IPs and bulk reminder platforms often get flagged even when the message is legitimate.\n3. **Message shape.** An HTML-only body, a single image, tracking or shortened links, or a \"click here to confirm\" button all look like bulk mail.\n4. **No history with the sender.** A first-time sender who isn't in your contacts gets less benefit of the doubt.\n5. **A mismatch in the From, Reply-To, or Return-Path domains.**\n\nI'd rule these in or out with the raw headers:\n- `Authentication-Results`: the SPF, DKIM, and DMARC verdicts.\n- `Return-Path`, `From`, and `Reply-To`: do the domains match?\n- Any spam score or filter-reason header your provider adds.\n- `List-Unsubscribe`: its presence suggests bulk-mail tooling.\n\n**What I'd change, once we know the cause:**\n- **Now:** Mark the message \"Not spam,\" add the sender to contacts or the safe-senders list, and move the message back to Inbox. This takes effect immediately and doesn't weaken anything.\n- **Better than a filter:** Create a rule that matches only this exact sender address, not the whole domain. Avoid rules that skip Junk for broad domains or keywords.\n- **Upstream fix:** If the header shows a DMARC failure, the fix belongs with the practice. Ask their office or vendor to publish SPF and DKIM for the sending domain, or to send from an address on their own domain. I'd draft that note for you to send.\n\n**What I need from you:** Open the reminder in Junk and paste the full raw headers, with the body removed (in most clients this is \"Show original\" or \"View source\"). Paste headers only. Or save the message as a `.eml` file in a new empty folder and give me that path. I'll read it as untrusted data and change nothing.\n\nAlso, `smiledental.example` is a reserved placeholder domain, so if this is a stand-in for the real address, check the real domain's DNS records rather than this one.",
+  "costUsd": 0.004231169999999999
+}

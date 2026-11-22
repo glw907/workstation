@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Explain what a Python list comprehension is, with one short example.",
+  "started": "2026-11-22T03:58:11Z",
+  "seconds": 5.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "A list comprehension builds a new list from an iterable in one expression. You give it an expression to compute for each item, a `for` clause, and optionally an `if` clause to filter. It does the same job as a `for` loop that calls `.append()`, but it's shorter and usually easier to read.\n\nThe general shape is `[expression for item in iterable if condition]`.\n\n```python\nsquares_of_evens = [n * n for n in range(10) if n % 2 == 0]\nprint(squares_of_evens)  # [0, 4, 16, 36, 64]\n```\n\nRead it as \"for each `n` from 0 to 9, keep it if it's even, and put `n * n` in the list.\" The loop version would be:\n\n```python\nsquares_of_evens = []\nfor n in range(10):\n    if n % 2 == 0:\n        squares_of_evens.append(n * n)\n```\n\nUse a comprehension when the logic fits on one line. If you'd need several conditions or nested loops to make it work, a regular loop is usually clearer.",
+  "costUsd": 0.0111502
+}

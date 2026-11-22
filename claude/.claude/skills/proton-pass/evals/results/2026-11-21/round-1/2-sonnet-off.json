@@ -1,0 +1,19 @@
+{
+  "skillName": "proton-pass",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "claude-pass just failed with \"Agent login failed\" after I ran four item views in a row, and the token itself is fine. What's going on, and what should happen next? Answer only.",
+  "started": "2026-11-22T02:06:40Z",
+  "seconds": 7.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "I haven't checked the docs or the wrapper, so this is an inference, not a confirmed diagnosis.\n\n**Likely cause:** a rate limit on Proton's login endpoint, not a bad token. If each `claude-pass` call logs in as the agent from scratch, four views in a row make four logins in quick succession. Proton throttles that pattern and rejects the next login. The error text, \"Agent login failed\", reports the failed step and doesn't say the credential was refused. A working token that fails right after a burst points to throttling.\n\n**What should happen next:**\n1. Stop retrying. Further attempts during the throttle window usually extend it.\n2. Wait several minutes, then try one `claude-pass` view. If it works, the throttle was the cause.\n3. If it still fails after a longer wait, the cause is something else. Check the `proton-pass` skill and `~/.claude/docs/bluefin-admin/secrets.md` for a documented cooldown or session-reuse step. I'd also look at the wrapper to see whether it caches a session between calls.\n4. Going forward, batch lookups into as few `claude-pass` calls as possible, or reuse one session, instead of one call per item.\n\nIf you want, I can read the wrapper and the skill to confirm whether it logs in on every call and what cooldown is documented.",
+  "costUsd": 0.0707053
+}

@@ -1,0 +1,26 @@
+{
+  "skillName": "vps-conventions",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "What does `git rebase --onto` do? Give one short example.",
+  "started": "2026-11-22T02:40:21Z",
+  "seconds": 3.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`git rebase --onto <newbase> <upstream> [<branch>]` replays the commits after `<upstream>` (up to `<branch>`, or HEAD) onto `<newbase>`. It lets you move a range of commits to a different base than the one they started from.\n\n**Example:** `feature` was branched off `next`, but you want it based on `main` instead.\n\n```\nmain:     A---B\n               \\\nnext:           C---D\n                     \\\nfeature:              E---F\n```\n\n```\ngit rebase --onto main next feature\n```\n\nThis takes the commits in `next..feature` (E and F) and replays them onto `main`:\n\n```\nmain:     A---B---E'---F'\n               \\\nnext:           C---D\n```\n\n`feature` now sits on `main` without carrying `next`'s commits C and D.",
+  "costUsd": 0.0661775
+}

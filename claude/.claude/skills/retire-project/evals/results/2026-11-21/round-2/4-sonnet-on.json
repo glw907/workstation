@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:10:17Z",
+  "seconds": 9.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "I don't know which demo site this is yet, so this is the general shape for this estate. Naming the site lets me check the details against its repo and the Cloudflare inventory.\n\n**1. Inventory (read-only)**\n- Look in the repo for `wrangler.toml`, `.github/workflows`, and the Pages, Workers or custom-domain config. These show everything the site is attached to.\n- Check `~/.claude/docs/cloudflare-estate-inventory.md` and the `runbook` skill for other pieces: DNS records, Access apps, D1, KV or R2 bindings, Workers secrets, and Email Routing addresses.\n- Check Proton Pass (via `claude-pass`) and `~/.local/secrets` for credentials tied to it, by name only.\n- Look for references from other repos, such as links, redirects, or a sitemap entry on a live site.\n\n**2. Decide what to keep**\n- Back up any data worth keeping before anything is deleted: a final repo archive or tag, and D1 or R2 exports.\n- Choose whether the old URL should return a redirect or a 410, or simply go dark.\n\n**3. Take down the live parts (outward-facing, so each step needs your go-ahead)**\n- Remove the Worker or Pages project and its custom-domain route.\n- Remove or repoint the DNS records. Remove any Access application.\n- Delete bound resources (D1, KV, R2) only after the backup is confirmed.\n- Delete Workers secrets and revoke any site-specific API tokens.\n- Remove the GitHub Actions secrets and any deploy keys.\n\n**4. Retire the credentials and records**\n- Delete or archive the Proton Pass items, and remove any entries from the age store.\n- Update the runbook and the inventory doc.\n- Update `~/.dotfiles` manifests if the site had any installs or config there.\n- If the site was tracked as an initiative, close it with `log-project`.\n\n**5. Retire the repo**\n- Archive the GitHub repo first, since that is reversible. Delete it later only if you want that.\n- Remove the local checkout in `~/Projects/`, after `claude-worktree-busy` shows no live session and there are no unpushed branches or stashes.\n- Remove it from any status docs, pass lists, or CI watches that name it.\n\n**6. Verify**\n- Confirm the domain resolves as intended and nothing returns a surprise 5xx.\n- Confirm no other site still links to it or loads assets from it.\n\nSteps 3 and 5 are the hard-to-reverse parts, so I'd show a dry-run list of exactly what gets removed before running any of them. Which site is it?",
+  "costUsd": 0.0755915
+}

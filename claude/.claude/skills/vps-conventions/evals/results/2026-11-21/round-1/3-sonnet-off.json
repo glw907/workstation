@@ -1,0 +1,19 @@
+{
+  "skillName": "vps-conventions",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Auto mode keeps denying an ssh command that deletes old upload files on one of our servers. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+  "started": "2026-11-22T02:03:30Z",
+  "seconds": 10.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "No, don't add a general `ssh` allow rule. A rule like `Bash(ssh:*)` would let any remote command through, including destructive ones, and the denial is the check doing its job on a delete you haven't yet authorized.\n\nWhat to do instead:\n\n1. **Dry run first.** Have Claude run the same command with `-print` in place of `-delete` or `rm`, for example `ssh host 'find /path/uploads -type f -mtime +90 -print'`. That is read-only, so it should pass. Check that the list contains only what you expect.\n2. **Authorize the one deletion.** Once the list looks right, say go ahead and let Claude run the exact delete. Your approval of that specific command is what the classifier was missing. Your own instructions say to show a dry run before a destructive op, so this is the same flow.\n3. **If it recurs, take it off the interactive path.** Don't widen permissions. Either:\n   - Put the cleanup on the server as a `systemd-tmpfiles` age rule or a timer. This is best, because no ssh session is involved at all.\n   - Or wrap it in a fixed script with a hard-coded path and age, and allow only that exact invocation, such as `Bash(ssh host /usr/local/bin/clean-uploads)`. A narrow rule like this is acceptable. A wildcard is not.",
+  "costUsd": 0.0832498
+}

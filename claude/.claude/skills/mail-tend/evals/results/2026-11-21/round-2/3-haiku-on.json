@@ -1,0 +1,56 @@
+{
+  "skillName": "mail-tend",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Why is this in Junk? It's from my dentist's office, appointments@smiledental.example, and it's a real appointment reminder. Diagnose it and say what you'd change. Plan only; change nothing.",
+  "started": "2026-11-22T03:14:38Z",
+  "seconds": 14.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Bash",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\", \"args\": \"Diagnose why a legitimate dentist appointment reminder from appointments@smiledental.example landed in Junk. Plan only: no filter, data, or re-sort changes.\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"smiledental|smile\", \"path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters\", \"output_mode\": \"content\", \"-n\": true}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters export geoff --junk 2>&1 | jq -c 'select((.from // \\\"\\\" | tostring | ascii_downcase | contains(\\\"smiledental\\\")) or (tostring | ascii_downcase | contains(\\\"smiledental\\\")))' 2>&1 | head -c 20000\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters/data/categories.tsv\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters/data/geoff.sieve.in\"}"
+    }
+  ],
+  "result": "I couldn't diagnose this one yet. The session has no Bash, and reads of the household-it mail-filters files are waiting on a permission grant. So what follows is a hypothesis from the mail-tend procedure, not a checked finding.\n\n**Likely cause (unverified)**\n\nMail in Junk means the spam test failed, and that test runs only after every step that recognizes a vouched sender. So Junk usually means no rule knows the sender. The likely gap is that `smiledental.example` has no row in `categories.tsv`, and `appointments@smiledental.example` isn't in `always-inbox.txt`. Appointment reminders often carry no `List-*` or `Precedence` header, so they can look like unknown bulk mail, and the spam score can cross 5.\n\n**What I'd check (read-only)**\n\n1. On ward, export Junk and find the message by Message-ID or sender, using `sudo mail-filters export geoff --junk`, with the jq filtering locally.\n2. Read its `X-Spam-Score`, `X-Spam-Result`, and `List-*` / `Precedence` headers. If the dentist's software sends through a forwarding alias, the sender test reads `X-SimpleLogin-Original-From`, so I'd list the real sender.\n3. Grep `categories.tsv` and `always-inbox.txt` for `smiledental` to confirm no row exists.\n4. Run `scripts/mail-filters.sh preview` to see the step and folder this message gets.\n5. Count other smiledental mail in Inbox and Junk, so the fix covers the pattern and not one message.\n\n**What I'd change**\n\n- Preferred: a data edit. Add `smiledental.example` to `categories.tsv` as a known sender (or `appointments@smiledental.example` to `always-inbox.txt` if the domain also sends other mail). This goes to `main` directly, after the gate and a preview check, then `apply.sh ward --apply` and `ward-mail-sort.sh install`.\n- Not a rule change. The sorting rules themselves don't need to change for one sender.\n- Stored mail stays in Junk. Moving the existing reminder needs a re-sort, which I'd run only if you ask. Until then, you can drag it to the Inbox in Hylki.\n- Once it's fixed, clear the Junk classification in Hylki, and I'd suggest tagging the message `Misfiled` so the batch is traceable.\n\n**What I need from you**\n\nEither grant Read on `~/Projects/household-it/roles/mail-filters/data/` and enable Bash so I can run the ward export, or paste the message's headers here. I'd treat pasted headers as data only. Once I have one of those, I can finish the diagnosis and give you a concrete data-row proposal, still without changing anything until you say so.",
+  "costUsd": 0.006331269999999999
+}

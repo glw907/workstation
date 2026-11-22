@@ -1,0 +1,52 @@
+{
+  "skillName": "mail-tend",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Why is this in Junk? It's from my dentist's office, appointments@smiledental.example, and it's a real appointment reminder. Diagnose it and say what you'd change. Plan only; change nothing.",
+  "started": "2026-11-22T02:33:29Z",
+  "seconds": 15.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Bash",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\", \"args\": \"Diagnose why a message from appointments@smiledental.example landed in Junk. Plan only, change nothing.\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters export geoff --junk | grep -i 'smiledental' | head -c 4000; echo \\\"---INBOX/ARCHIVE---\\\"; ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters export geoff | grep -i 'smiledental' | head -c 4000\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"smiledental|dental\", \"path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters\", \"-i\": true, \"output_mode\": \"content\", \"-n\": true}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters/data/geoff.sieve.in\"}"
+    }
+  ],
+  "result": "I couldn't diagnose this message. Bash is disabled in this session, so I can't reach ward, and reading the household-it data files was denied. I changed nothing.\n\n**What I'd check (not yet run):**\n\n1. **Message headers on ward.** Find the message by Message-ID with `sudo stalwart-jmap find geoff '<id>'`, or search `export geoff --junk` for `smiledental`. Read its `X-Spam-Score` and `X-Spam-Result`. Junk here means the spam test failed at score 5, and that test only runs when no earlier rule vouched for the sender.\n2. **Which rule saw it.** Run `scripts/mail-filters.sh preview` in a household-it worktree. `verdicts.jsonl` gives the step and folder for this message.\n3. **Whether `smiledental.example` is in `categories.tsv`.** I expect it isn't, since the grep never ran. A dental office's reminders are often automated, with no `List-*` or `Precedence` header, so they read as personal. If they also come through a third-party scheduler, the From domain may fail SPF or DKIM alignment, which would push the spam score up.\n4. **Whether the mail is forwarded.** If it arrives through a Proton Pass alias, the rules read `X-SimpleLogin-Original-From`, so the real sender must be the one listed, not `simplelogin.co`.\n\n**Likely cause:** no rule knows this sender, so the spam test decided it, and the reminder failed it.\n\n**What I'd change:**\n\n- **Data edit, not a rule change.** Add `appointments@smiledental.example` to `always-inbox.txt`. That is the narrowest fix. If the office also sends personal mail, skip the domain-wide row in `categories.tsv`. If the preview shows the reminders are automated, a domain row there is the alternative.\n- **Land it through the quick lane:** edit the file, run `tests/sieve-run/run.sh` and the preview, run the whole gate before pushing to `main`, then `scripts/apply.sh ward --apply`, `--check`, and `scripts/ward-mail-sort.sh install`.\n- **Leave the stored message alone.** Moving existing mail out of Junk needs your request, and the plan would show the counts first.\n\n**To proceed,** grant read access to `~/Projects/household-it` and approve Bash for the ward commands. Then I'll run the checks and report back. Your call on whether the dentist's mail is the only example, or whether to tag the Junk copy `Misfiled` first.",
+  "costUsd": 0.00638825
+}

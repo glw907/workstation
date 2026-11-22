@@ -1,0 +1,37 @@
+{
+  "skillName": "engine-consult",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+  "started": "2026-11-22T02:43:54Z",
+  "seconds": 11.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"engine-consult\"}"
+    }
+  ],
+  "result": "Plan only. I haven't changed anything.\n\nThe accepted item is a small additive export, so it runs as an engine task now, from the same site session, before the site task that consumes it. The site task then builds against the unreleased export through a local link. The site merges last, after the engine is released.\n\n**Sequence**\n\n1. **Claim the work.** Run `claude-worktree-busy` on the cairn-cms worktree path, then read `~/Projects/cairn-cms/docs/STATUS.md` for any existing claim.\n2. **Make a fresh worktree off cairn `main`** and add it to the active-worktree list in `docs/STATUS.md` before the first commit, so a second session sees the claim.\n3. **Read `STATUS.md`** and check for `Consumers must:` lines, since the export is a consumer-facing change and needs a changelog entry.\n4. **Build the export** under `building-from-specs`, with `cairn-pass` for the gate: one session, fast lane per step, then a whole-branch review by a fresh subagent.\n5. **Run `npm run check:close`** on the branch. It covers `check:comments`, `check:tiers`, `check:surface`, `check:snippets`, `check:transcripts`, and `check:symbols`.\n6. **Close the engine side in order:**\n   - Merge the engine change to `main`.\n   - Follow `cairn-releasing`, so the change is on the registry. A site branch cannot merge on a `file:` pin.\n   - Run `npm run link:consumer -- <site-dir> --restore` from the cairn checkout.\n   - Merge the site.\n\n**During development**\n\nThe site task runs `npm run link:consumer -- <site-dir>` to consume the export before the release. Its spec header carries the consultation line that links to the brief, and its first task includes the done item `grep -c -E '^\\*\\*(Engine consultation|Sources consulted):\\*\\* ' <spec>` printing 2.\n\n**Ledger**\n\nThe accept entry in `docs/internal/engine-rulings.md` stays open until the site task lands. The site task closes it with a one-line seam-fit report: \"fit as designed\" or the backlog items it found. This keeps the export from being left unproven.\n\n**Constraints and open points**\n\n- If the export grows past one or two steps or touches public surface, it leaves this path and queues as its own cairn-cms spec. The site keeps its declared fallback as interim state, with a retirement trigger recorded.\n- I haven't read `cairn-releasing/SKILL.md`, `STATUS.md`, or the `engine-triage` agent file. This plan follows the `engine-consult` skill's text, so the release steps should be checked against those files before the work starts.",
+  "costUsd": 0.00510761
+}

@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:08:14Z",
+  "seconds": 16.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Plan only. Nothing has been run.** I haven't inspected the repo, so step 1 of the skill (the inventory) still has to confirm the list below.\n\n## What goes in the archive\n\nOne file, `<project>-<date>.tar.age`, encrypted with the workstation age key:\n\n- **Git bundle:** `git bundle create --all`. This carries every branch, tag, and stash ref. Any uncommitted work in a worktree must be committed or dropped first, since a bundle doesn't carry it. Dropping needs Geoff's typed approval.\n- **D1 export:** one SQL dump of the database with `wrangler d1 export --remote`, containing schema and data.\n- **Issues and PRs:** JSON from `gh`. I'd also include releases, since the inventory lists them.\n- **Worker config:** the wrangler config file, plus a snapshot of bindings, routes, custom domains, and the D1 database id.\n- **Excluded:** secret values, always. Secret names can go in the retirement record. R2 objects only if the inventory finds an R2 bucket, which a one-D1 demo likely doesn't have.\n\n## How the archive is proven before anything is deleted\n\nRestore runs in a scratch directory. The live project is not touched.\n\n1. **Verify the bundle:** `git bundle verify` must pass.\n2. **Check the export is non-empty:** a zero-byte file or a missing table stops the run.\n3. **Restore the archive:**\n   - Decrypt the `.tar.age`.\n   - Clone from the bundle and confirm its refs and HEAD match the live repo.\n   - Load the SQL dump into a fresh SQLite database.\n   - Compare per-table row counts against live D1. I'd add this check, because a clean load alone doesn't show the data is complete.\n4. **Store two copies:** `~/Documents/retired-projects/`, and R2 at `servers-archive/retired-projects/`. Run `rclone check` to confirm the R2 copy matches the local file.\n5. **Record the sha256:** put it in the retirement record and in the new README row.\n\nAny failure stops the run. Nothing is deleted until all five steps pass and Geoff approves the dry run.\n\n## Questions for Geoff, later\n\n- Commit or drop any uncommitted work?\n- If the project has a domain: keep, park, or let it lapse?",
+  "costUsd": 0.00526837
+}

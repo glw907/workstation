@@ -1,0 +1,25 @@
+{
+  "skillName": "proton-pass",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I want to move about 30 Proton Pass items between vaults and rename some of them. Can Claude just do this with claude-pass? How should it go? Plan only; don't run anything.",
+  "started": "2026-11-22T02:07:39Z",
+  "seconds": 12.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "proton-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/proton-pass"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "**Short answer: no, not as a bulk job.** The skill's rule is that moves, renames, notes, trashes and grants go through `pass-sitting` under your login, after a dry run. Claude never runs it, and `claude-block-pass` refuses every form of it. Claude can write the sitting file, and you run it.\n\nA second limit is that Claude's agent sees only five vaults: `Infrastructure`, `Age key`, `Projects`, `ASC` and `Test accounts`. Items in `Private`, `Cathy & Geoff`, `Family` or `Parents` can't be read or moved by `claude-pass` at all. And the throttle (about four quick logins, then a 25-minute lockout) makes 30 individual calls impractical anyway.\n\n## Plan\n\n1. **Get the list from you.** I need each item's current vault, its destination, and any new title. A table or a rough list is enough. I'd also like to know which vaults are involved, because that decides whether Claude can even read the items.\n\n2. **Check the destinations (read-only, within the throttle).** For items in the five Claude-visible vaults, I'd run `claude-pass vault list` and `claude-pass item list`, spaced out and run in the background with output written to a file. That gives me real item and vault IDs, and it catches typos or duplicate titles before anything changes. I'd set `CLAUDE_PASS_REASON` for each call. Items outside those vaults would have to come from you, or from a `pass-sitting` dry run.\n\n3. **Apply the vault map.** For each move, I'd check the destination against the tiebreaker: the narrowest vault that holds everyone who signs in, with money and medical accounts leaning to `Cathy & Geoff`. I'd flag any move that widens or narrows who can see an item. That is your call, so I'd list those separately.\n\n4. **Apply the naming rules to the renames.**\n   - The title is the service's name as people say it, never a domain.\n   - A qualifier goes in one trailing parenthesis, and only when the vault holds more than one account at that service.\n   - Keys and secrets are named system, then secret, then scope.\n   - No generic titles.\n   \n   I'd flag collisions that the destination vault would create.\n\n5. **Write the sitting file.** I'd read the shape from the header of `bin/.local/bin/pass-sitting`, then write one JSON line per move or rename into a file under a scratch directory. No values appear anywhere, only IDs and titles.\n\n6. **Hand off to you.** I'd ask for your go-ahead, then give you the two commands to run in a Ptyxis terminal, not through `!`:\n   - `pass-sitting FILE` (the dry run; you read it with me, line by line)\n   - `pass-sitting --apply FILE`\n\n7. **Verify afterward.** I'd re-list the Claude-visible vaults to confirm the moves and titles. Then I'd run `check-drift --titles` for the title lint, and `check-drift` if any move changed what an agent can reach. If it did, the grant map `secrets/proton-grants.tsv` needs an update, and grants change only by your hand.\n\nTwo things to confirm before I start: whether any of the 30 items are in vaults Claude can't see, and whether any move crosses into or out of `Infrastructure`, `Projects` or `ASC`. Those would change what the agent can see.",
+  "costUsd": 0.09952530000000001
+}

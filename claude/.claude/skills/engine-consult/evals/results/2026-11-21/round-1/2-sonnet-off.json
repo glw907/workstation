@@ -1,0 +1,25 @@
+{
+  "skillName": "engine-consult",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "A background task session in ~/Projects/907-life has just started on an approved spec whose header has no engine consultation line, and the task builds against the cairn admin's media picker. What should that task session do before its first build step, and where does it record what it did? Answer only; change nothing.",
+  "started": "2026-11-22T01:56:02Z",
+  "seconds": 11.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "result": "Before its first build step, the task session runs the `engine-consult` enumeration. A committed plan whose header has neither a consultation-brief link nor the line \"no engine asks\" gets that run first (`site-pass` SKILL.md:16-19). The cairn admin's media picker is engine UI, so the enumeration will probably find real asks. In that case the session should also follow `~/.claude/docs/engine-ui-mechanics.md`.\n\nIt records the result in the spec's header, the approved plan or spec file named in 907-life's `CLAUDE.md` or STATUS. The header gets exactly one of these:\n- a link to the consultation brief, or\n- the line \"no engine asks\".\n\nIt also gets a \"Sources consulted\" line from `engine-consult`.\n\nThree caveats:\n- **Skill not checked:** `engine-consult` isn't in my skill list, so I haven't read it and can't say how it works.\n- **Where briefs live:** I'm unsure where the brief itself is stored. `cairn-pass` mentions `docs/internal/consultations/` on the cairn-cms side.\n- **STATUS stays untouched:** The session doesn't write `docs/STATUS.md`, since `building-from-specs` reserves that file for the session Geoff is talking to.\n\nThe session asks Geoff nothing. It should also name the header edit and any engine asks in the PR's `## Decisions`, and it should list any \"Cairn backlog\" items under that heading in the PR body.",
+  "costUsd": 0.1348463
+}

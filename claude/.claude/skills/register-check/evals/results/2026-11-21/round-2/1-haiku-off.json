@@ -1,0 +1,38 @@
+{
+  "skillName": "register-check",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+  "started": "2026-11-22T02:56:49Z",
+  "seconds": 8.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-off/draft.md\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"register check|register-check|register_check\", \"path\": \"/var/home/glw907/.claude\", \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "I didn't find a skill or tool called \"register check\" in this environment, so I reviewed the file directly and didn't edit it. The file is 10 lines and reads like a short product or docs page. Its register is promotional in places and plain in others.\n\n**Findings**\n\n1. **Line 3, \"Cairn isn't just a content system, it's a seamless way to publish.\"** The \"isn't just X, it's Y\" construction is a marketing cadence. \"Seamless\" adds no information. Suggested: \"Cairn is a content system and a publishing tool.\"\n2. **Line 3, \"Moreover, it empowers every editor to ship robust, world-class pages in minutes.\"** Three register problems: \"Moreover\" is a formal connective that doesn't fit the rest of the page, \"empowers\" and \"world-class\" are puffery, and \"in minutes\" is an unsupported speed claim. Suggested: \"Editors can publish pages without help from a developer.\" (Only if that's true. If not, cut the sentence.)\n3. **Line 7, \"Click here to read more about builds.\"** The link text is generic, and \"click here\" is a register mismatch for docs. Name the destination, for example \"See [how builds work](...).\"\n4. **Line 9, \"Cairn was first released in 2019 and is used by over ten thousand sites.\"** The sentence is plain, which is the right register, but the usage figure has no source. If it's on a public page, confirm the number and date before publishing.\n5. **Line 6, \"The site rebuilds on Cloudflare and the new version is live about a minute later.\"** This is the strongest line: concrete and plain. \"About a minute\" is hedged appropriately.\n\n**Overall:** Lines 6 and 9 are in a clear, factual register. Line 3 switches to promotional language and should either be rewritten to match them or cut. Line 7 needs a descriptive link.\n\nIf you want the house standard applied rather than my general read, `standards:content-review` gate-checks website content against its own rules and takes a file path. It would need to be run with the apply option off.",
+  "costUsd": 0.00419999
+}

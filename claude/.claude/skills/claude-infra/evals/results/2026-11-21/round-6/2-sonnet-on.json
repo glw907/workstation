@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:55:39Z",
+  "seconds": 11.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    }
+  ],
+  "result": "**Put it in a hook: a `PreToolUse` hook on the Bash tool, registered in user-scope `settings.json`.** Not CLAUDE.md, and not a skill.\n\n**Why a hook**\n- You said \"no exceptions,\" so the rule must hold every time. Anthropic's features overview says: \"If a rule must hold every time, make it a hook rather than a prompt instruction.\" (<https://code.claude.com/docs/en/features-overview>)\n- A line in CLAUDE.md is only a request. The model reads it and usually follows it, but nothing enforces it. A skill has the same weakness. It is reference material Claude loads when it's relevant, so it may never load at the moment of the `rm`.\n- A hook runs in the harness, outside the model. It inspects the command before it executes and can deny it. That works the same in the main session, in subagents, and in background sessions that nobody is watching.\n\n**Shape of the hook**\n- Register it in user scope (`~/.claude/settings.json`, via dotfiles and stow per your conventions), so it covers every project. A project-scope hook would miss repos that don't carry it.\n- The script reads the command from the hook's JSON on stdin. It exits with code 2 and a stderr message to block the call, or returns a `permissionDecision: \"deny\"` result. The message tells Claude why, so it doesn't retry a variant.\n- A regex on `rm -rf` will miss variants, so the script should match the forms that reach a home folder:\n  - flag spellings: `-rf`, `-fr`, `-r -f`, `--recursive --force`\n  - target spellings: `~`, `$HOME`, `/var/home/glw907`, `/home/...`, `~/` with a trailing `*`, and the `/var/home` symlink path\n  - indirection: `cd ~ && rm -rf .`, `sudo rm`, `bash -c \"...\"`, `find ~ -delete`\n- Decide whether \"a home folder\" means only the top-level home or anything under it. Under `~/Projects/foo`, `rm -rf node_modules` is routine. If you meant \"home itself and its direct children\", the pattern is narrower than \"anything beneath home.\" That scope is your call.\n- Add `Bash(rm -rf ~*)`-style deny rules in `permissions.deny` as a second layer. They are cheap, but prefix matching is easy to bypass, so don't rely on them alone.\n\n**Process and limits**\n- Per the `claude-infra` skill, the mechanics of writing the hook into `settings.json` go through the built-in `update-config` skill. The change lands through a PR unless it qualifies as a direct change. The audit is `/doctor prompt-audit`, plus `claude-tooling-sync verify` if a manifest is touched.\n- A hook only covers Claude's Bash tool. It does nothing for your own terminal. If you want that protected too, use a shell-level guard such as a wrapper function or `alias rm`, plus a filesystem protection like `chattr +i`.\n- Even with a hook, a determined script (`python -c \"shutil.rmtree(...)\"`) can delete a home folder without matching `rm -rf`. The hook closes the obvious path. It is not a sandbox.\n\nI changed nothing. If you want it built, say which scope you mean (home itself only, or anything under it) and I'll write it through `update-config`.",
+  "costUsd": 0.025076
+}

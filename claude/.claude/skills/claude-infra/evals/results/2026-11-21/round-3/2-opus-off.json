@@ -1,0 +1,33 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:19:40Z",
+  "seconds": 19.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"PreToolUse|\\\"Bash\\\"|deny\", \"path\": \"/var/home/glw907/.claude/settings.json\", \"output_mode\": \"content\", \"-A\": 6}"
+    }
+  ],
+  "result": "**Short answer:** it goes in neither CLAUDE.md nor a skill. Put it in a **PreToolUse hook on the Bash tool**, registered in Claude Code's settings. If \"no exceptions\" has to hold even against a later edit to your own settings, register it in **managed settings** instead.\n\n**Why not CLAUDE.md or a skill**\n\nBoth are instructions that the model reads and usually follows. Neither one is enforced:\n- CLAUDE.md loads into context every session. It still competes with the task at hand, and a long session can compact it or lose track of it.\n- A skill only loads when it gets invoked. A session that never loads it never sees the rule.\n\nA guarantee with no exceptions has to come from the harness, not the model.\n\n**Why a hook rather than a permission deny rule**\n\n`permissions.deny` with something like `Bash(rm -rf ~:*)` is also enforced, but it matches on command prefixes. Many forms of the same command would get past it:\n- `rm -fr ~`, `rm -r -f ~`, `rm --recursive --force ~`\n- `/var/home/glw907`, `/home/glw907`, `$HOME`, `\"${HOME}/\"`\n- `cd ~ && rm -rf .`\n- `sudo rm -rf ...`\n- `bash -c '...'`, or the command inside `xargs` or `find -exec`\n\nA PreToolUse hook gets the full command as JSON on stdin and can normalize it before checking. It would split the command on `;`, `&&`, `|` and subshells, expand `~` and `$HOME`, resolve the path, and block it by exiting with code 2. It should fail closed, so a command it can't parse gets blocked rather than allowed. A deny rule is still worth adding alongside the hook as a cheap first layer.\n\n**Where it lives on this workstation**\n\n- **User level:** the `hooks` block in `~/.claude/settings.json`, with the script in `~/.dotfiles/bin/.local/bin/`. You edit the dotfiles copy, run `stow -R bin`, and gate with `bash scripts/gate.sh`. A short Bash script is enough. Your conventions call for stdlib Python (`python3 -I`) once the hook parses compound commands seriously.\n- **Strict \"no exceptions\":** `/etc/claude-code/managed-settings.json`, staged first in `~/.dotfiles/bluefin/etc/`. User and project settings can't override managed settings. Adding `allowManagedHooksOnly` would also stop a project-level config from replacing your hooks.\n\nUnder your CLAUDE.md, any change like this goes through the `claude-infra` skill. You likely already have this mechanism working: the hook that refuses whole-tree `git add` is the same pattern. I tried to read `~/.claude/settings.json` to confirm, but the read was declined, so I haven't checked.\n\nOne limit to know: the hook only covers Claude's Bash tool calls. It doesn't stop a script that some other process runs, or `rm -rf` typed in your own terminal. Protecting against those is a job for backups or filesystem snapshots, not Claude Code.\n\nNothing was changed.",
+  "costUsd": 0.16915539999999998
+}

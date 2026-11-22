@@ -1,0 +1,38 @@
+{
+  "skillName": "mail-tend",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Re-sort my stored mail so the list messages the new rule now files go to Archive. Tell me exactly what you'd run and what you'd check with me first. Don't run anything.",
+  "started": "2026-11-22T03:13:09Z",
+  "seconds": 15.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)(archive|list.?filter|sieve|mail rule|filter rule)\", \"path\": \"/var/home/glw907/.claude/docs\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-off\"}"
+    }
+  ],
+  "result": "I haven't run anything that changes mail. I also couldn't see your mail setup: reading `~/.claude/docs` was denied, and this scratch directory has no mail config or rule file. So the plan below is the shape of the work, and the exact commands depend on the answers to the questions at the end.\n\n**What I'd run, once the rule and account are known**\n\n1. **Read the rule.** Get its exact match conditions (for example `List-Id`, `List-Unsubscribe`, or a sender pattern) and the folder it files into. Read-only.\n2. **Dry run.** Search the folders the rule could have hit (Inbox plus any older folders) with the same conditions. Report the count and a sample of subjects and senders. Nothing moves.\n3. **Move.** For the confirmed set only, move each message to Archive with an IMAP `MOVE` (or the client's move action). I'd move, not copy-and-delete, so nothing is lost.\n4. **Verify.** Compare counts before and after. Archive should gain exactly the matched number, and the source folders should lose the same number. Re-run the search and confirm nothing that matches is left outside Archive.\n\n**What I'd check with you first**\n\n- **The rule itself:** is it server-side (Sieve or the provider's filters) or client-side? If it runs in the client, confirm it won't re-file messages after the move.\n- **Match precision:** do you want the exact set from the dry run, including any sender that shares a list's address but isn't a list? I'd show you the sample before moving.\n- **Scope:** Inbox only, or every folder? Should Sent and other non-inbox folders be excluded? Any age cutoff?\n- **Read state:** should unread matches move too, or only read ones?\n- **Archive semantics:** if this is Gmail, \"Archive\" means removing the Inbox label, not moving to a folder, so the steps change. Confirm the account type and that the Archive folder exists under that name.\n- **Go-ahead:** the dry run is read-only and I'd run it on your word. I'd stop before the move until you approve the count and sample.\n\nIf you tell me the mail account (or point me to the mail docs and grant read access), I can fill in the exact search and move commands and do the dry run.",
+  "costUsd": 0.00503696
+}

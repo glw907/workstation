@@ -1,0 +1,26 @@
+{
+  "skillName": "engine-consult",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I'm about to write a spec in ~/Projects/ecxc-ski for a gear-booking page that needs a new custom field type in the cairn admin. Before I write it, what engine-consultation steps does the spec need, and what exactly goes in its header? Answer only; don't write or change any file.",
+  "started": "2026-11-22T01:54:07Z",
+  "seconds": 11.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult",
+    "building-from-specs"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsUsed": [
+    "Skill"
+  ],
+  "result": "The gear-booking spec needs a consultation brief, not the \"no engine asks\" line. A new custom field type in the cairn admin presses the admin surface, and it may also press the field-type seam and engine CSS.\n\n**Steps, in order**\n\n1. **Read before writing.** Read the doc comments under `~/Projects/cairn-cms/src/lib` and the packaged `skills/` for the exports the spec builds on, with the code at the commit. Read the open engine items in `~/Projects/cairn-cms/BACKLOG.md`, in case a hole the last site couldn't close applies here. Also read the \"The standard\" section of `~/Projects/cairn-cms/.claude/agents/engine-triage.md`, so each item is written against the gate it will meet.\n2. **Run the enumeration.** For each thing the spec builds, ask whether it presses an engine edge (admin surface, engine CSS, an exported component's contract, auth, any seam). The field type is one item. Other parts of the page may add more.\n3. **File the brief** at `~/Projects/cairn-cms/docs/internal/consultations/2026-11-21-ecxc-ski-<spec>.md`. Each item gets a slug and four fields:\n   - What the site builds.\n   - The engine edge it presses, with `file:line` where known.\n   - Evidence for the any-site case.\n   - The site's fallback if declined, with its rough size.\n4. **Triage.** Dispatch a fresh read-only Opus subagent. Its instructions are the body of `engine-triage.md`. Give it the absolute paths to the brief, `~/Projects/cairn-cms/docs/internal/engine-rulings.md`, and the spec. It reads the ledger first, then argues each item.\n5. **Adjudicate.** Record each verdict in the brief itself: accept, decline, or defer. Append one ledger entry per ruled item, copying the fenced template in the ledger's header. An accept stays open until the consuming site task closes it with a one-line seam-fit report.\n6. **Sequence the accepts.**\n   - An additive accept of a step or two runs as a small engine task now, from the same session, under the cross-repo checklist. That checklist covers `claude-worktree-busy`, a fresh cairn worktree registered in STATUS, the cairn gate, and the ordered close ending in `link:consumer --restore`.\n   - Anything larger queues as its own cairn-cms spec. The site's fallback is then sanctioned interim state with a retirement trigger.\n7. **Run the check** before the spec goes to Geoff. List it among the done items of the spec's first task: `grep -c -E '^\\*\\*(Engine consultation|Sources consulted):\\*\\* ' <spec>` must print 2.\n\n**Header lines**\n\nThe header carries exactly one engine-consultation line, plus the sources line:\n\n```markdown\n**Engine consultation:** [<brief filename>](<link to the filed brief>)\n**Sources consulted:** <exports and skill references read, and the open BACKLOG.md engine items found, or \"none\" for either>\n```\n\nThe sources line must cover both halves of the read: the exports and references, and the open engine items.\n\nI loaded `building-from-specs` but didn't open its `references/writing-a-spec.md`. That file says what the rest of the spec carries, so check it for any other header fields.",
+  "costUsd": 0.1269992
+}

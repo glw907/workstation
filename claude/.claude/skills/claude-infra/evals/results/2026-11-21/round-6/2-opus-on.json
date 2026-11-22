@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:56:07Z",
+  "seconds": 18.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Where should a rule live that blocks every Bash call running `rm -rf` on a home folder, no exceptions? Answer only; change nothing.\"}"
+    }
+  ],
+  "result": "**It belongs in a hook: a `PreToolUse` hook on the `Bash` tool, set in your user-scope `settings.json`.** Not CLAUDE.md, and not a skill.\n\n**Why.** Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>) says: \"If a rule must hold every time, make it a hook rather than a prompt instruction.\" \"No exceptions\" is that kind of rule.\n\n- **CLAUDE.md** is part of the prompt. A rule there is only a request. Nothing checks it, and the model can miss it or misjudge it.\n- **A skill** loads only when Claude decides it's relevant. It's a home for reference material Claude needs sometimes, not for a guarantee.\n- **A hook** runs in the harness before every Bash call, whatever the model thinks. If the hook exits with code 2, or returns a `deny` decision, the call never runs (<https://code.claude.com/docs/en/hooks>). Only a hook enforces the rule.\n\n**Where on this workstation.**\n- Use user scope (`~/.claude/settings.json`) so the hook covers every repo and session, not just one project.\n- That file is stowed, so the edit goes into the `~/.dotfiles` copy, never the symlink.\n- The hook script goes in `~/.dotfiles/bin/.local/bin/`, followed by `stow -R bin`.\n- The `update-config` skill handles writing the hook entry. The change lands through a PR that cites the hooks page.\n\n**What the hook has to catch.** This is where \"no exceptions\" is actually won or lost:\n- **Flag spellings:** `rm -rf`, `-fr`, `-r -f`, `--recursive --force`, and `rm` hidden in `sudo`, `xargs`, `bash -c`, `&&`, or `;` chains.\n- **Ways to name home:** `~`, `$HOME`, `/var/home/glw907`, and `/home/glw907`. On Bluefin `/home` is a symlink to `/var/home`, so a check on `/home/...` alone misses the real path.\n- **Relative paths:** a target like `.` or `..` after a `cd ~`.\n\nSo the script should resolve each target to a real path and block if it is your home folder itself. It should also fail closed: if it can't parse a command that contains `rm` with recursive and force flags, it blocks.\n\n**Two supporting options, neither a replacement for the hook:**\n- **`permissions.deny` rules** such as `Bash(rm -rf ~*)` are easy to add as an extra layer. But they match a command prefix, so a reordered flag or a chained command gets past them.\n- **The Bash sandbox** blocks writes at the OS level, which is stronger than parsing a string. But protecting all of home from writes would also block ordinary work, so it doesn't fit this rule.\n\nI haven't changed anything.",
+  "costUsd": 0.0587864
+}

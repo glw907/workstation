@@ -1,0 +1,52 @@
+{
+  "skillName": "register-check",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "draft.md here is a cairn docs page that Geoff will read next. Give it the full four-gate prose review before he does, and report what you find. Findings only, no edits.",
+  "started": "2026-11-22T02:59:56Z",
+  "seconds": 25.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "register-check"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/register-check"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"register-check\", \"args\": \"draft.md (findings only, no edits)\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/draft.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"cairn-register-editor|docs-register\", \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "I ran the four-gate review on `draft.md` and made no edits. Two of the gates couldn't run properly in this scratch folder. It has no Vale config, no register-editor agent, no docs register file and no cairn codebase, so gates 1 and 2 were a manual read instead of tool runs. Gate 3 couldn't check any claim against the code. Running Vale in the real repo before Geoff reads it would settle gate 1.\n\n**Fixes to make:**\n\n1. **Line 3, \"Cairn isn't just a content system, it's a seamless way to publish.\"** It uses the \"not X, it's Y\" pattern, the virtue word \"seamless\", and a comma splice. Cut it and start the page at \"To publish a page\".\n2. **Lines 3-4, \"Moreover, it empowers every editor to ship robust, world-class pages in minutes.\"** \"Moreover\" is a filler opener, and \"empowers\", \"robust\", \"world-class\" and \"ship\" are marketing words. \"In minutes\" is also wrong: the page itself only says a page goes live about a minute after the rebuild. Cut the sentence, since the next paragraph already says what's true.\n3. **Line 7, \"Click here to read more about builds.\"** \"Here\" breaks the Google rule on link text, and the sentence doesn't link anywhere. Link a descriptive phrase like \"how builds work\" to the builds page, or cut it. I found no builds page to link to.\n4. **Line 9, \"first released in 2019 … used by over ten thousand sites.\"** The date and the site count have no source. They also don't belong on a how-to page. Cut the sentence, or move it to the README or the why-cairn page with a source.\n\n**Checks against the code (gate 3), none done:**\n- Whether the site really rebuilds on Cloudflare and goes live about a minute later.\n- Whether the admin button is labeled **Publish** and the steps are open the admin, choose a page, select Publish.\n- Whether the page agrees with the README, why-cairn, editor-welcome and the docs index. Those files aren't here.\n\n**Links (gate 4):**\n- The builds link from finding 3 is missing.\n- Cloudflare could link to its site where it first appears. That's optional on a how-to page.\n\n**For Geoff to decide:** whether the 2019 date and the ten-thousand-sites figure are real and should stay. Only he can confirm them.\n\n**Fine as written:** the instruction-style opening of paragraph two, and \"Select **Publish**\" with the UI label in bold.",
+  "costUsd": 0.22857529999999998
+}

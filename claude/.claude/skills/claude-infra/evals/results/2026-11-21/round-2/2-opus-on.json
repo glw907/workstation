@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T02:54:16Z",
+  "seconds": 17.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Placement question only, change nothing: where should a rule live that blocks every Bash call running `rm -rf` on a home folder, no exceptions?\"}"
+    }
+  ],
+  "result": "**It belongs in a hook. CLAUDE.md and a skill are both wrong for it.**\n\nSpecifically: a `PreToolUse` hook on the `Bash` tool in user-scope settings (`~/.claude/settings.json`). The hook reads the command and refuses it when it matches `rm -rf` aimed at a home folder.\n\n**Why a hook**\n\n- Anthropic's features overview (https://code.claude.com/docs/en/features-overview) says: \"If a rule must hold every time, make it a hook rather than a prompt instruction.\" \"No exceptions\" is that kind of rule.\n- **CLAUDE.md** is context Claude reads, and nothing enforces it. A model can misread it, lose it when the conversation is compacted, or reason its way around it. It's for facts that apply every turn, not for guarantees.\n- **A skill** is reference material that loads only when it's relevant. A safety block that may not load is not a block.\n- **A hook** runs in the harness, outside the model, before every Bash call (https://code.claude.com/docs/en/hooks). When it denies a call, the command never runs. That holds in every session, every subagent and every permission mode, including auto mode.\n\n**Scope and location**\n\n- It should be user scope, not project scope, because it has to cover every repo and every session on both hosts.\n- On this workstation, `~/.claude/settings.json` is stowed from `~/.dotfiles`. The change goes in the dotfiles copy, and the hook script goes in `~/.dotfiles/bin/.local/bin/`.\n\n**Two limits to plan for**\n\n1. **Matching the command text is best-effort.** A hook that pattern-matches can be dodged by `rm -r -f`, `cd ~ && rm -rf .`, `find ~ -delete`, a variable such as `$HOME`, or a script that does the deleting. The hook should split flags apart and resolve `~`, `$HOME` and `/var/home/*`. Even then it catches the forms you wrote it for, not every possible one.\n2. **A permissions `deny` rule is weaker than the hook.** It's also prefix matching, so it misses the same variants. It's fine as a second layer, but it can't replace the hook.\n\nIf you want a guarantee that doesn't depend on how the command is written, add Claude Code's sandbox (https://code.claude.com/docs/en/sandboxing) on top of the hook. It limits which paths Bash can write to at the OS level, so a write outside the allowed paths fails however it was disguised.\n\nI changed nothing. When you want it built, the next step is to write the hook through the `update-config` skill, add tests for the variants above, and land it as a dotfiles PR.",
+  "costUsd": 0.1781536
+}

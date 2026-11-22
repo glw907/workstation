@@ -1,0 +1,26 @@
+{
+  "skillName": "engine-consult",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "A background task session in ~/Projects/907-life has just started on an approved spec whose header has no engine consultation line, and the task builds against the cairn admin's media picker. What should that task session do before its first build step, and where does it record what it did? Answer only; change nothing.",
+  "started": "2026-11-22T01:56:28Z",
+  "seconds": 27.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "result": "Before its first build step, the session runs the `engine-consult` enumeration, and it records the result in its own pull request. Below is what that involves, but I couldn't read `engine-consult` itself, so its exact steps aren't confirmed.\n\n**Before the first build step**\n\n1. **Load the skills.** `building-from-specs` says to read the repo's skill before a task's first step. For 907-life that is `site-pass`, which loads `pass-core` first.\n2. **Run the enumeration.** `site-pass` (line 17) says a plan's header carries either a consultation-brief link or the line \"no engine asks\", plus a \"Sources consulted\" line. A committed plan with neither \"gets the enumeration run before the first task.\" This spec has neither, so the session runs it first. That means listing what the task needs from the cairn-cms engine, here the admin's media picker, and checking each item against the engine's current state.\n3. **Read the UI mechanics doc.** The media picker is a UI mechanic that belongs to the engine. `site-pass` points those to `~/.claude/docs/engine-ui-mechanics.md`, so the session reads that before deciding whether anything is an engine ask.\n4. **Don't ask Geoff.** A task session never asks. If the enumeration turns up a real engine ask, the session decides how the site handles it for now and goes on building. The ask itself is handed on, not raised as a question.\n\n**Where it records what it did**\n\n- **The spec header, on its own branch.** It adds the missing line: the brief link or \"no engine asks\", plus \"Sources consulted\". This fills a gap the process requires; it doesn't change the goal, which stays as approved.\n- **`## Decisions` in the pull request.** It records that it ran the enumeration because the header had no consultation line, quotes `site-pass` as the source, and gives the result.\n- **\"Cairn backlog\" in the pull request body.** Any engine ask goes here, checked against cairn-cms. A cairn session files it in cairn-cms's `BACKLOG.md`; the 907-life task session doesn't write there.\n- **`## For Geoff`.** Anything here he needs to see, such as a choice made in place of an engine ask.\n- **Not `docs/STATUS.md`.** A task session leaves it alone; only the session Geoff is talking to keeps it.\n\nThe skill files under `~/.claude` were blocked by permissions, so `engine-consult` and `engine-ui-mechanics.md` still need checking. I worked from the `site-pass` and `building-from-specs` copies in this scratch directory. Whether the header line is written into the spec itself, or only reported in the pull request, is the step most likely to differ from what `engine-consult` says.",
+  "costUsd": 0.3089502
+}

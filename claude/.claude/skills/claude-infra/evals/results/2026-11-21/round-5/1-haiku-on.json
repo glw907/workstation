@@ -1,0 +1,47 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:40:54Z",
+  "seconds": 16.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Where should a five-step cairn release checklist live? User pastes it into chat each time. Plan only, no edits.\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/skills/cairn-pass\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\"}"
+    }
+  ],
+  "result": "**Recommendation:** make the checklist a skill, not CLAUDE.md, a hook, or a memory. Put it in the `cairn-pass` skill if the release cut is a step of closing a pass. Otherwise make it a new `cairn-release` skill. I could not confirm which, because read access to the `cairn-pass` and `claude-tooling.md` files was denied in this session.\n\n**Why a skill:**\n- A release checklist is reference material Claude needs sometimes, which is the case the features overview gives for skills (https://code.claude.com/docs/en/features-overview).\n- CLAUDE.md is wrong because it is context that applies every turn and nothing enforces. Putting a release procedure there would load it into every session.\n- A hook is wrong for the whole checklist. It only fits one step that must hold every time, such as blocking a tag when the gate has not passed. If you want that, it is a separate hook decision.\n- Memory is wrong because the checklist is a repo procedure, not a fact about you.\n\n**Where it goes:**\n- **Existing `cairn-pass` skill:** add the checklist to its close checklist or a reference file it links to. Use this if a cairn release is always part of closing a pass.\n- **New `cairn-release` skill:** create a directory with a `SKILL.md`. Its description should name the trigger, \"cutting a cairn release\", so it loads when you ask for one. Use this if releases happen outside a pass.\n- Either way, the skill is its own manifest. It gets no entry in a manifest file, because only vendored skills, plugins, and user-scope MCP servers have one.\n\n**How the change lands:**\n1. Write the five steps into the skill, keeping only what the checklist says. Do not add extra steps.\n2. Commit it through a PR. The commit message is imperative and the PR body cites the skills guidance URL. The change is small enough to land directly under `building-from-specs` \"Direct changes\" only if that skill's rules say so. I did not verify that.\n3. Run `claude-tooling-sync verify` after the change.\n4. Run `/skill-doctor` on the new or edited skill and read its output.\n5. Skills load live, so no restart is needed.\n\n**Open items before any edit:**\n- Confirm whether a cairn release is part of closing a pass. That decides between the two homes.\n- Check whether the skill tree is stowed from `~/.dotfiles` or lives directly under `~/.claude`. That decides which repo the PR goes to.\n- Paste the five steps (or let me read them from wherever they are) so I can draft the skill text. I have not edited anything.",
+  "costUsd": 0.0029805200000000004
+}

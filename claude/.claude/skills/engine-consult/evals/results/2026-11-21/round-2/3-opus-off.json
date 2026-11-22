@@ -1,0 +1,75 @@
+{
+  "skillName": "engine-consult",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+  "started": "2026-11-22T02:45:11Z",
+  "seconds": 46.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "cairn-pass",
+    "building-from-specs"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\", \"args\": \"Plan only, change nothing: how does an engine-triage-accepted item (small additive engine export from aksailingclub-org's consultation brief) get sequenced and landed in cairn-cms relative to the site task that needs it?\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"engine-triage|engine-consult|consultation\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-off\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"engine-triage|engine-consult\", \"path\": \"/var/home/glw907\", \"output_mode\": \"files_with_matches\", \"glob\": \"*.md\", \"head_limit\": 30}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-off\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"consult|cross-repo|engine|triage|blocked on|depends on\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-off/.claude/skills\", \"output_mode\": \"content\", \"-i\": true}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-off/.claude/skills/pass-core/references/round-run.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-off/.claude/skills/pass-core/references/round.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-off/.claude/skills/pass-core/references/planner.md\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"release|snapshot|consumer|dist-tag|publish\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-off/.claude/skills\", \"output_mode\": \"content\", \"-i\": true}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\", \"args\": \"Plan only: sequencing a small additive cairn-cms engine export accepted from aksailingclub-org's consultation brief, relative to the site task that needs it. Need \\\"Direct changes\\\" and cross-repo ordering.\"}"
+    }
+  ],
+  "result": "Short version: build the export as its own cairn-cms task first, with its own PR. The site task in aksailingclub-org launches only after that PR has merged and a published engine version includes the export. I changed nothing.\n\n**Why it isn't a direct change.** It's small, but an export adds public surface to the engine. `building-from-specs` \"Direct changes\" rules that out (\"It adds no public surface, schema, command, or setting\"). So it needs a spec, a task, a review and a PR, even at one step.\n\n**The sequence**\n\n1. **Record the verdict.** The first thing a cairn-cms session does is check `docs/internal/consultations/` for briefs whose verdicts aren't recorded yet. It writes down the accepted verdict on aksailingclub-org's brief before planning, following the `engine-consult` protocol.\n2. **Write the spec in the initiative record.** The work spans two repos, so the spec goes in `~/Projects/initiatives/<id>/`, not in either repo. It names two tasks:\n   - the engine export task in cairn-cms;\n   - the site task in aksailingclub-org, listed as building on the engine task. That is a plain dependency, not an `(order)` one, because the site task uses what the engine task produces.\n\n   Geoff approves the spec before anything launches.\n3. **Build the engine task in cairn-cms.** It follows the `cairn-pass` rules:\n   - Launch from the main checkout once `claude-worktree-busy` exits 0, with `/goal` and a time clause at twice the planned minutes.\n   - Gate with `cairn-run-gate` over the fast-lane legs that `gate-tier.mjs --fast --range` prints. CI on the draft PR is where the full suite runs, watched with `ci-green <sha> --pr <n> --wait`.\n   - A fresh `standards:diff-reviewer` subagent reviews the branch against the goal before the PR is marked ready.\n4. **Merge the engine PR.** Geoff approves it by number, and only the session he's talking to merges it, after the task session has ended.\n5. **Get the export to the site.** The site reads the engine as a package, so merging alone isn't enough; a published version has to include the export.\n   - If the site task needs to test against it before a real release, publish a snapshot: a `dev` prerelease under a test dist-tag, with no release, rc tag or changelog heading (Geoff, 2026-11-09).\n   - For the site to actually land, move it onto a released version through `standards:dependency-upgrade`, which covers \"one package taken for a feature\".\n6. **Build the site task under `site-pass`.** It starts from aksailingclub-org's default branch, with the version bump either as its first step or as an earlier bump the task builds on. It ends in its own PR and needs its own approval by number.\n\n**What sets the order.** \"A task that needs another task's work waits until that work has merged.\" The two tasks are in different repos and share no files, so there's no merge conflict to manage. They don't run at the same time only because the site depends on the export.\n\n**What I couldn't check**\n- The `engine-consult` protocol and the repo's `cairn-running-passes` skill are in the cairn-cms checkout, which this session can't read. They may set how the verdict is recorded or route accepted items differently, and they would override step 1.\n- I don't know how cairn-cms cuts releases. Whether step 5 means waiting for the next scheduled release or cutting one for this export is Geoff's call on priority. The spec should ask him that before he approves it.",
+  "costUsd": 0.4086708
+}

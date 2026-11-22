@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:33:36Z",
+  "seconds": 23.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Dry run: retire `site-staging`\n\nNothing was looked up live, archived, changed, or deleted. Ids below are placeholders until the live inventory fills them in.\n\n## What I know from your request\n\n- Worker: `site-staging`\n- One D1 database: name and id not yet read\n- One custom domain: hostname not yet read\n- Owning site repo and project name: not stated\n\n## 1. Inventory (planned, not run)\n\n| Item | Status | What the live check must confirm |\n|---|---|---|\n| Worker `site-staging` | known | Routes and custom domain attachments; whether anything else references it |\n| D1 `<d1-id>` | placeholder | Whether it's shared with production or another Worker |\n| Custom domain `<hostname>` | placeholder | Its zone, other records on the zone, and whether the zone serves anything else |\n| DNS records for the host | unknown | Records the custom domain created, plus any others under that name |\n| Turnstile, Access, Email Routing, Builds triggers, R2, KV, Queues | unknown | Whether any of these point at this Worker or host |\n| Worker secrets | unknown | `wrangler secret list` names only; each one's issuer |\n| Repo, branches, stashes, worktrees, open PRs and issues | unknown | Repo name and whether another session is working it |\n| References | unknown | Grep of `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, the initiatives repo, and the registry |\n\nEach item gets marked sole-owner or shared. Shared items stay.\n\n## 2. Archive (planned, not run)\n\n- File: `<project>-2026-11-21.tar.age`, encrypted with the workstation key\n- Contents: `git bundle create --all` (verified), the D1 SQL export (stop if it fails or comes out empty), the Worker config, and issues and PRs as JSON. No secret values.\n- Restore test in scratch: decrypt, clone the bundle, load the SQL into SQLite.\n- Copies: `~/Documents/retired-projects/` and R2 `servers-archive/retired-projects/`, with `rclone check` on the R2 copy.\n- The file's sha256 goes in the retirement record.\n\n## 3. Approval questions (planned, not asked yet)\n\n1. **Domain fate for `<hostname>`.** My recommendation depends on the zone:\n   - If the zone serves only this host, park it (`MX 0 .`, `v=spf1 -all`, `v=DMARC1; p=reject;` at the apex, Email Routing off in the dashboard), turn auto-renew off, and let it lapse.\n   - If the zone serves other things, it isn't leaving. Remove only the staging record.\n   - Keep renewing only if you name a use.\n2. **Delete Worker `site-staging`.** Approve by typing it out.\n3. **Delete D1 `<d1-id>`.** Only after the export verifies.\n4. **Revoke vendor keys.** Listed individually once the inventory finds them. Deleting a Worker secret revokes nothing.\n5. **Delete the GitHub repo.** Recommended if it's private with one owner, after the archive is verified. Needs `gh auth refresh -s delete_repo`.\n6. **Delete the local checkout and worktrees.** Recommended after step 5.\n\n## 4. Teardown order (planned, not run)\n\nEach id is rechecked against the inventory before deletion. Stop if it's no longer sole-owner.\n\n1. Remove the custom domain and its DNS records.\n2. Delete Worker `site-staging`, then any Turnstile, Builds triggers, D1, and R2 that belong to it.\n3. Revoke vendor keys, remove the secrets from the store and registry, and trash the project's folder in the `Projects` vault through `claude-pass`.\n4. Park the domain as chosen in question 1.\n5. Delete the GitHub repo, then the local checkout and worktrees.\n\n## 5. Close (planned, not run)\n\nClear the references, close the initiative, add a row to the `README.md` beside the archives (date, sha256, what went), and rerun the Cloudflare inventory to show it empty.\n\n## Needed from you before a live run\n\n- Confirm the project name (the site, or the staging Worker) and the site repo.\n- Say whether I may start step 1, the live inventory. It's read-only, but you asked for no lookups in this run.",
+  "costUsd": 0.00602187
+}

@@ -1,0 +1,42 @@
+{
+  "skillName": "mail-tend",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Why is this in Junk? It's from my dentist's office, appointments@smiledental.example, and it's a real appointment reminder. Diagnose it and say what you'd change. Plan only; change nothing.",
+  "started": "2026-11-22T03:15:19Z",
+  "seconds": 13.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"smiledental\", \"path\": \"/var/home/glw907/.claude\", \"output_mode\": \"files_with_matches\", \"head_limit\": 20}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"junk|spam|sieve\", \"path\": \"/var/home/glw907/Projects/household-it\", \"-i\": true, \"output_mode\": \"files_with_matches\", \"head_limit\": 20}"
+    }
+  ],
+  "result": "I can't diagnose this yet, because I don't have the evidence. Here is what I tried and what I need.\n\n**What I checked**\n- The working directory has no message, headers, or mail config. It holds only skill files and a CLAUDE.md.\n- My reads of `~/.claude` and `~/Projects/household-it` were denied, so I couldn't look for filter rules or mail-routing docs.\n- I haven't read your mailbox. Your instructions limit technical mail to `tech-mail.sh`, and I don't know which account the dentist writes to.\n\n**Likely causes, most likely first**\n\nI haven't confirmed any of these.\n1. **Failed sender authentication.** Dental offices often send reminders through a scheduling vendor such as Weave, Solutionreach or Updox. The message is \"From\" `smiledental.example`, but SPF and DKIM pass for the vendor's domain, so DMARC fails alignment. This is the most common cause for real appointment reminders.\n2. **A local rule or Sieve filter.** An old rule could match words like \"appointment\", \"confirm\" or \"reminder\", or a whole-domain or TLD block.\n3. **Sender reputation.** The vendor's shared sending IP may be listed on a blocklist, or the message may have tracking links and little text.\n4. **Learned behavior.** If you or a client marked something similar as junk before, the filter may have learned it.\n\n**What I'd need**\n- The raw headers of that message: `Authentication-Results`, `Received-SPF`, `DKIM-Signature`, `Return-Path`, and any `X-Spam-*` or `X-Rspamd-*` lines. These usually name the cause directly.\n- Which mailbox and provider received it, and which client you read it in.\n\n**What I'd change, after confirming**\n- **If authentication failed:** add `appointments@smiledental.example` to the allowlist or safe-senders list. Don't allowlist the whole domain unless the headers show the vendor's domain is the real sender. Ask the office which vendor they use, since fixing their SPF/DKIM is their job.\n- **If a local rule caught it:** narrow or delete that rule.\n- **If it was a learned classification:** mark this message \"Not junk\" so the filter learns from it.\n\nPlease paste the headers or grant read access to the mail config. I'll then confirm the cause and give you exact edits. I won't change anything until you ask.",
+  "costUsd": 0.0884449
+}

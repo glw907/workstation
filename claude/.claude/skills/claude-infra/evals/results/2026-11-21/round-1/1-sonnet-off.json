@@ -1,0 +1,22 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T02:10:09Z",
+  "seconds": 14.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "result": "**Recommendation:** put the checklist in the `cairn-pass` skill as its own reference file, `releasing.md`, and have `cairn-pass`'s `SKILL.md` link to it from the close or release section. I couldn't read `~/.claude` (the read was denied), so this rests on your CLAUDE.md and the skill descriptions. The file paths below are unchecked.\n\n**Why `cairn-pass`**\n- Your CLAUDE.md says `cairn-pass` holds the repo's gate and checklists. A release is a cairn-cms close-out step, and it needs the same gate wrapper and CI watch that skill already describes.\n- Skills load on trigger, so \"cut a release\" would pull the checklist in without you pasting it.\n- I ruled out CLAUDE.md because it is global and loads every session. A cairn-only checklist would add noise to every other repo.\n- I ruled out a standalone `cairn-release` skill because the release procedure would drift apart from the gate and CI conventions in `cairn-pass`.\n- If the steps are meant for any contributor, not just Claude sessions, a `RELEASING.md` in the cairn-cms repo would be a better home. The skill would then point at it.\n\n**How the change would land**\n1. Run `claude-worktree-busy` on the dotfiles checkout and read its status docs. Then find where the skill's source lives. If `~/.claude/skills/cairn-pass` is a stow link into `~/.dotfiles`, edit the dotfiles copy and never the link.\n2. Load the `claude-infra` skill, since changes to Claude Code tooling go through it. Load `writing-voice` too, since the file is more than a paragraph.\n3. Add `releasing.md` with your five steps, written as imperative steps with the exact commands, plus a one-line link to it in `cairn-pass`'s `SKILL.md`. I'd also add a trigger phrase such as \"cut a release\" to the skill's description so it loads without prompting.\n4. Run `bash scripts/gate.sh` from the dotfiles worktree root, bare and not piped to `head` or `tail`.\n5. Commit with an imperative message, staging the files by name. Run `stow -R` if a new path needs linking. Open a PR, which you approve by number.\n\nThis is small and fully specified once I have the steps, so I'd treat it as a direct change under `building-from-specs` and skip a full spec.\n\n**What I need from you:** your five steps, ideally the last version you pasted. Please also confirm the checklist is for Claude sessions only, which means it goes in the skill, and not for human contributors too, which means `RELEASING.md` in the repo.",
+  "costUsd": 0.100262
+}

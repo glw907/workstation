@@ -1,0 +1,52 @@
+{
+  "skillName": "register-check",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+  "started": "2026-11-22T02:57:34Z",
+  "seconds": 26.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "register-check"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/register-check"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"register-check\", \"args\": \"draft.md apply=no\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/draft.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \".\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/survey/writing/editor.md\", \"output_mode\": \"count\"}"
+    }
+  ],
+  "result": "I ran the register check on `draft.md` without editing it. It found three problems that are mine to fix, two claims that need your call, and one optional link.\n\nThe tools didn't run, so I applied every gate by reading. The check had no shell, no `.vale.ini`, and no register-editor agent, so Vale and the claims verifier didn't run, and I had no sibling pages to compare against. Rerun it with the tools before treating these findings as final.\n\n**Mine to fix**\n1. **\"Cairn isn't just a content system, it's a seamless way to publish.\"** This is an \"isn't just X, it's Y\" frame, \"seamless\" is a marketing word, and the sentence is a comma splice. Fix: delete it.\n2. **\"Moreover, it empowers every editor to ship robust, world-class pages in minutes.\"** It opens on a connector word, uses three slop words (\"empowers\", \"robust\", \"world-class\"), and \"in minutes\" has no support. Fix: delete it, since paragraph 2 already says the page is \"live about a minute later\".\n3. **\"Click here to read more about builds.\"** \"Here\" doesn't tell the reader where the link goes. Fix: \"For how builds run, see [Builds](…).\" Only link it if a builds page exists; I found none in this folder.\n\n**Your call**\n4. **\"Cairn was first released in 2019 and is used by over ten thousand sites.\"** Neither number has a source, and the paragraph doesn't belong on a how-to page. Fix: cut it. If both numbers are true, they could go in the README or the why-cairn page instead.\n5. **\"about a minute later\"** This timing needs a measurement or documented behavior, and it should match what other pages say. I couldn't check either.\n\n**Optional**\n- The first mention of Cloudflare could link out, if a link would actually help the reader.\n\nThe steps in paragraph 2 are plain and concrete, so I left them alone. If you take all the fixes, the page becomes the heading, paragraph 2, and a reworded builds link. Paragraph 3 stays or goes depending on your answer to item 4.",
+  "costUsd": 0.22674660000000002
+}

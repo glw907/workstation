@@ -1,0 +1,38 @@
+{
+  "skillName": "retire-project",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "/retire-project the club's old domain, which nothing uses any more. What happens to the domain itself? Plan only; change nothing.",
+  "started": "2026-11-22T03:07:25Z",
+  "seconds": 23.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)old domain|former domain|legacy domain|sailing.*domain\", \"path\": \"/var/home/glw907/.claude/docs\", \"output_mode\": \"content\", \"head_limit\": 40}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    }
+  ],
+  "result": "I couldn't run the inventory. This session has no shell, and reading `~/.claude/docs` was refused, so I can't name the domain or query Cloudflare. The plan below is the skill's procedure applied to a domain with no Worker or app behind it, and I made no changes.\n\n## What happens to the domain itself\n\nThe plan doesn't delete or transfer the domain. Whether to keep it is your decision, and step 3 will ask you to choose between two options:\n\n- **A. Let it lapse.** Turn auto-renew off at the registrar. Until it expires, the domain stays parked (see below) so nobody can use it for mail spoofing. After expiry, anyone can register it.\n- **B. Keep it parked.** Keep renewing it so it stays parked for good.\n\n**My recommendation is A,** which is the skill's default when a domain has no use. Choose B only if the old name still reaches people: old flyers, links on other sites, or members who still send mail to old addresses. Once it lapses, a stranger can buy it and receive that traffic and mail as if they were the club. For a club that changed domains recently, renewing for a year or two before letting it go is cheap.\n\nUnder either option, parked means:\n\n- Email Routing off (only you can do this, in the dashboard; no workstation token can)\n- `MX 0 .` at the apex (null MX, RFC 7505)\n- `TXT \"v=spf1 -all\"` at the apex\n- `TXT \"v=DMARC1; p=reject;\"` at `_dmarc`\n- every other record removed\n\n## The plan, in order\n\n1. **Inventory (read-only).**\n   - **Cloudflare:** the zone's DNS records, Email Routing rules and destination addresses, any Worker custom domains or routes, Pages domains, Access apps, Turnstile widgets that list the hostname, and the registrar's expiry date and auto-renew setting. Mark each item as owned only by this domain or shared. Shared items stay. A Turnstile widget that also lists the new domain is the likely shared one.\n   - **References:** grep `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, the initiatives repo, and the secrets registry for the domain name. Also check the club site repo (`aksailingclub-org`) for redirects or canonical links that still point at it.\n2. **Archive.** With no repo or data, this is a DNS zone export (BIND file) and a JSON dump of the Email Routing rules. They go into `<domain>-2026-11-21.tar.age`, which gets a test decrypt and is stored in `~/Documents/retired-projects/` and in R2, checked with `rclone check`. Its sha256 goes in the record.\n3. **Approval.** I put a dry run in your terminal listing each record ID and rule ID to delete, plus the A or B question above. Nothing proceeds without your typed answer.\n4. **Teardown.** Before each delete I rerun the inventory for that ID and stop if it's now shared.\n   1. Remove any Worker custom domains or routes, then the DNS records that point at anything.\n   2. If any old addresses still forward to people, tell them before you turn Email Routing off.\n   3. Add the three parking records.\n   4. If you choose A, turn auto-renew off.\n   5. No vendors or keys to revoke, unless the inventory finds a mail or verification service tied to the domain.\n5. **Close.** Clear the references, add a row to the archive `README.md`, and rerun the inventory to show only the parking records left. If you choose A, a final check after the expiry date confirms it lapsed.\n\nTo start the inventory, I need the domain name and access to `~/.claude/docs`, plus a session with a shell to query Cloudflare. It's all read-only.",
+  "costUsd": 0.1959394
+}

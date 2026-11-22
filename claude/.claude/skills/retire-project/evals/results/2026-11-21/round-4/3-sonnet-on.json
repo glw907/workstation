@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:38:14Z",
+  "seconds": 11.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Plan: archive and proof for a small demo repo with one D1 database\n\nNothing has been run. This covers steps 1 to 3 of `retire-project`, up to the approval gate.\n\n## Before the archive: read-only inventory\n- Repo: unpushed branches, stashes, each worktree's `git status`, open PRs and issues, releases, Actions secrets, and any other session on it (`claude-worktree-busy`).\n- Cloudflare: the D1 database and any Worker, domain, DNS record, R2, KV or Turnstile widget bound to it. Mark each item sole-owner or shared. A shared item stays.\n- Vendors and references: `wrangler secret list` and the registry, plus a grep of `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md` and the initiatives repo. A note that uses the demo as a test target needs a new target.\n- Uncommitted work in any worktree gets committed or dropped first, because a bundle doesn't carry it.\n\n## What goes in the archive\nOne age-encrypted file, `<project>-2026-11-21.tar.age`, encrypted to the workstation key. It holds:\n1. **Git bundle.** `git bundle create --all`, checked with `git bundle verify`.\n2. **D1 export.** A full `wrangler d1 export` of the remote database, schema and data, as a SQL file. A schema-only export doesn't count.\n3. **Issues and PRs.** Both as JSON.\n4. **Worker config.** `wrangler.toml` or `wrangler.jsonc`, plus the D1 binding and database id.\n5. **R2 objects.** None, since the demo has no R2 bucket. The inventory confirms that.\n\nSecret values never go in. Only the names of the secrets are recorded.\n\n## How the archive is proven before anything is deleted\n1. **Export check.** Stop if the D1 export fails or is empty. Record each table's live row count at export time.\n2. **Scratch restore.** Work in a new, empty scratch directory, with scripts kept elsewhere and paths passed as arguments.\n   - Decrypt the file and extract it.\n   - Clone the bundle and check that the branches and HEAD match the repo.\n   - Load the SQL export into a fresh SQLite file.\n3. **Content match.** Compare the restored tables' row counts with the live D1 counts. Any mismatch fails the proof. Run any Python that reads the restored files with `python3 -I`.\n4. **Two stored copies.** Put one in `~/Documents/retired-projects/` and one in `servers-archive/retired-projects/` in R2. Confirm the R2 copy with `rclone check`.\n5. **Record.** The file's sha256 goes in the retirement record.\n\n## Then the approval gate\nNo deletion runs until the dry run is in front of Geoff in his terminal. It lists each delete by id (the repo, the D1 database id, and any Worker, domain or secret), and each irreversible step is a question with options and a recommendation. Only his typed words approve one. The teardown order is: take traffic off, delete the Worker and then D1, stop vendors, park domains, then delete the GitHub repo and local checkout. Before each delete, the inventory is rerun for that id.\n\nOne decision for Geoff is whether the demo has a domain. If it does, his call on its fate comes first. The default plan is to park it and let it lapse.",
+  "costUsd": 0.0852115
+}
