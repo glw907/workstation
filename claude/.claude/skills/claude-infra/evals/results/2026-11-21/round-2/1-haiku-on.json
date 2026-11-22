@@ -1,0 +1,42 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T02:51:30Z",
+  "seconds": 12.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra",
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\"}"
+    }
+  ],
+  "result": "**Recommendation:** put the checklist in a skill, not in chat, memory, or CLAUDE.md. The `claude-infra` skill sends reference material that Claude needs only sometimes to a skill ([features overview](https://code.claude.com/docs/en/features-overview)). A release checklist fits that. If one step must never be skipped, such as a gate, make that step a hook.\n\n**Where it goes depends on what the steps touch:**\n\n- **Only cairn-cms specifics** (its scripts, paths, `make` targets, or repo gate): put it in the repo's `cairn-running-passes` skill, in the cairn-cms checkout's `.claude/skills/`. `cairn-pass` already names that skill as the home for close checklists, so the release steps join the close checklist there. The change lands as a PR in the cairn-cms repo.\n- **Cross-repo workstation procedure** (it uses `gh`, `ci-green`, tagging conventions, or steps shared across the cairn family): write a user-scope skill in `~/.dotfiles`, stowed like the other skills, with an entry in the manifest in `~/.claude/docs/claude-tooling.md`. The change lands as a dotfiles PR.\n\n**How the change would land:**\n\n1. Confirm which case applies. I haven't read the cairn-cms repo's `cairn-running-passes` skill yet, and I don't have the five steps in this session.\n2. Write the skill with the steps as written, and make no other changes. Anything extra goes in a \"Later\" note.\n3. Run `claude-tooling-sync verify` for the manifest entry, if it's a dotfiles skill.\n4. Audit with `/skill-doctor` and Anthropic's `skill-creator`.\n5. Open the PR, with the guidance URLs in the body and the commit messages in the imperative.\n6. Skills load live, so the new skill is available in the next session without a restart.\n\n**What I need from you:** paste the five steps once, or tell me where they currently live. Then I can tell you which case applies and draft the placement. I haven't edited anything.",
+  "costUsd": 0.00531107
+}

@@ -1,0 +1,38 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T02:55:46Z",
+  "seconds": 19.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*/.mcp.json\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"svelte\", \"path\": \"/var/home/glw907/.claude/settings.json\", \"-i\": true, \"output_mode\": \"content\"}"
+    }
+  ],
+  "result": "I couldn't read any files: the reads of `~/Projects` and `~/.claude/settings.json` were blocked. So I haven't checked what's configured now, and this answer rests on how Claude Code scopes MCP servers and on this workstation's rules.\n\n**My recommendation: put it in each Svelte repo's `.mcp.json`, not in ecxc-ski's alone and not user-wide.** That means cairn-cms plus the four sites (ecxc-ski, 907-life, aksailingclub-org, cairn-pub).\n\nWhy per repo:\n- **It only loads where it helps.** A user-scope server (`claude mcp add --scope user`) starts in every session, including dotfiles, household-it, and the Go tools. Those sessions would carry Svelte tool definitions they never use.\n- **It's versioned and reaches both hosts.** `.mcp.json` is committed, so thinkpad-x1 and pavilion both get it through git. A user-scope server is stored in `~/.claude.json`, which is mutable app state rather than a stowed dotfile. It would have to be added by hand on each host and could drift.\n- **The copies are small.** Use the official remote server (`https://mcp.svelte.dev/mcp`, HTTP transport). Each copy is then about five lines with nothing to install, so having five of them costs little.\n- **Not ecxc-ski alone.** The question is which repos write Svelte, and that's all five. cairn-cms is where the most Svelte gets written.\n\n**The alternative:** Svelte also ships its MCP server as a Claude Code plugin together with Svelte skills. If you'd rather have one switch than five files, enable that plugin in each repo's `.claude/settings.json`. Turning it on user-wide in the stowed `~/.claude/settings.json` would make it global again, with the same cost as user scope.\n\nWhen you go ahead, the change should go through the `claude-infra` skill, since it changes Claude Code tooling. It should also be checked against the `standards:svelte-*` skills so the server's guidance and the house conventions don't conflict.",
+  "costUsd": 0.1689298
+}

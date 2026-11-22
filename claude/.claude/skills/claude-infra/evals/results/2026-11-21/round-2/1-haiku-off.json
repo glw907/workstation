@@ -1,0 +1,35 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T02:51:43Z",
+  "seconds": 12.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\"}"
+    }
+  ],
+  "result": "The checklist probably belongs in the cairn-cms repo, not on the workstation. Cairn-pass is Geoff's overlay for running passes. It holds no release steps, and its own text says the repo's `cairn-running-passes` skill holds the checklists, so a release checklist fits beside them.\n\n**Recommended location:** a repo skill in the cairn-cms checkout, `.claude/skills/cairn-release/SKILL.md`, with a one-line pointer from `cairn-running-passes`. Keeping it in the repo means every clone and every session gets it, and a release can't depend on what's in one machine's `~/.claude`. Its description should name the trigger (\"cut a release\", \"release cairn\") so a session loads it without being pasted the steps.\n\n**How it would land:**\n1. Confirm the five steps with me, and say whether any step needs something only this workstation has (Geoff's credentials, a local tool, a path under `~/`). If one does, the checklist, or that step, moves to a workstation skill instead, and changes to Claude Code tooling go through `claude-infra`.\n2. Write the skill and the pointer in a worktree of cairn-cms. A new skill file is small, but it changes how sessions behave, so it goes through `building-from-specs`: a short spec for Geoff's approval, one build task, a review against the spec, then a draft PR. Geoff merges by PR number.\n3. Nothing in `cairn-pass` changes. Its release-related behaviour already defers to the repo skill.\n\n**What I couldn't check:** this session is in a scratch directory, not the cairn-cms checkout, so I haven't read the existing `cairn-running-passes` file to see whether a release section is already there. Reading that file is the first step once you say we should proceed.\n\n**One thing I need from you:** the five steps themselves, or confirmation that none of them touches workstation-only credentials or tools. That decides between the repo and the workstation.",
+  "costUsd": 0.00484476
+}

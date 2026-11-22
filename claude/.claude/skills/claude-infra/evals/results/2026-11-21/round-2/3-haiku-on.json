@@ -1,0 +1,47 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T02:54:52Z",
+  "seconds": 11.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/.mcp.json\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"svelte\", \"path\": \"/var/home/glw907/.claude\", \"-i\": true, \"output_mode\": \"files_with_matches\", \"head_limit\": 50}"
+    }
+  ],
+  "result": "**Answer: put it at user scope, in the tooling manifest. Don't add it to ecxc-ski's `.mcp.json`.**\n\n- **Scope:** The workstation rule is that everything the cairn-family stack shares (Svelte, Playwright, DaisyUI) is user scope and gets a manifest entry. A repo's `.mcp.json` holds only what that one repo needs. Since 907-life, aksailingclub-org, and cairn-pub also use Svelte, a Svelte server in ecxc-ski's file would be the wrong home.\n- **Where the entry goes:** Add it to the user-scope MCP section of the manifest that `~/.claude/docs/claude-tooling.md` names in its \"Layout\" table. Then run `claude-tooling-sync verify` and commit the dotfiles change.\n- **Skill or server first:** Check for a vendored Svelte skill before adding a server. The rule is to take the skill first and use a server only for on-demand retrieval or for tools a skill can't carry. A server also reaches only the main loop and unrestricted agents, so if subagents with fixed tool lists need the docs, a skill is the better fit.\n- **Landing it:** This is a tooling change, so it goes through a PR that cites the guidance, unless it qualifies as a direct change. The server only loads after a restart, so do that at a session boundary.\n\n**Limits:** I couldn't read `claude-tooling.md`, the manifest, or ecxc-ski's `.mcp.json`, because read permission for `~/Projects` and `~/.claude` was not granted. The recommendation rests on the workstation rules. Before a change, confirm the manifest's exact user-scope section and whether ecxc-ski's file already has a Svelte entry that should move. I haven't changed anything.",
+  "costUsd": 0.00505363
+}

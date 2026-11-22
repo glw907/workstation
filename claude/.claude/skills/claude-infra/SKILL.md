@@ -3,8 +3,8 @@ name: claude-infra
 description: >
   Decides where a rule, hook, skill, agent, workflow, CLAUDE.md line, setting, MCP server, or
   plugin lives on this workstation, and how the change lands. Use when adding or changing any of
-  those, or the process skill `building-from-specs`. Also use when deciding whether a procedure
-  should become a skill.
+  those, or the process skill `building-from-specs`, and when asked where one should go, even to
+  answer without a change. Also use when deciding whether a procedure should become a skill.
 ---
 
 # Claude infrastructure changes
@@ -23,7 +23,8 @@ the inventory are in `~/.claude/docs/claude-tooling.md`.
    every time, make it a hook rather than a prompt instruction." And: "Put it in a skill if it's
    reference material Claude needs sometimes". CLAUDE.md carries only a fact that applies every
    turn, never a rule that must hold: Claude reads it as context, and nothing enforces it. An
-   answer that only advises on a home names the same page.
+   answer that only advises on a home names the same page, and when it turns down CLAUDE.md it
+   says both halves: what CLAUDE.md carries, and that nothing enforces it.
 3. **Keep one home per rule, with its manifest.** The "Layout" table in `claude-tooling.md` names
    each manifest. A skill or agent authored here is its own manifest, its directory; a vendored
    skill, a plugin, or a user-scope MCP server gets an entry in its manifest file. Run
@@ -69,7 +70,7 @@ a tool's NOTE before the next dispatch.
   hooks only (`vale-hook` and `tellgrader`), and `prose-voice-reviewer` runs on published pages.
 - Read a third-party skill before vendoring it. It is instructions injected into every
   future session. Check the license, the maintainer, and the text.
-- Every addition gets the manifest entry and, when a rule of use came with it,
+- Every addition is recorded in its manifest by step 3 and, when a rule of use came with it,
   that rule in its execution path (the agent definitions or skills that use the piece, else
   the inventory in `claude-tooling.md`), never a memory. Then `claude-tooling-sync verify` and
   commit the dotfiles.

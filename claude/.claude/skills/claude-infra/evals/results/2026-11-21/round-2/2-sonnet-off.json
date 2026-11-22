@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T02:54:01Z",
+  "seconds": 15.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Put it in a PreToolUse hook on the Bash tool, registered in your user-level `~/.claude/settings.json`. Neither CLAUDE.md nor a skill can enforce it.\n\n**Why not CLAUDE.md or a skill**\n\n- CLAUDE.md and skills are advisory text. The model reads them and usually complies, but nothing stops a call that ignores them. That includes a subagent that never loaded the skill, or a background session. \"No exceptions\" needs enforcement, not guidance.\n- A hook is run by the harness, not by me. It sees the actual command string before execution and can refuse it with exit code 2 and a reason, and I can't talk my way past it.\n\n**What the hook should do**\n\n- Parse the command rather than pattern-match one spelling. It should catch `rm` with any combination of `-r`, `-f`, `-rf`, `-fr`, `--recursive` and `--force`, including after `sudo`, inside `bash -c`, and after `&&` or `;`.\n- Resolve every target before comparing. On this Bluefin box `/home` is a symlink to `/var/home`, so the check has to treat `~`, `$HOME`, `${HOME}`, `/home/glw907`, `/var/home/glw907` and `/var/home/*` as the same place. Block a home directory itself and a bare `~/*` glob. Whether `~/Projects/foo` counts as \"a home folder\" is your call. I'd read your rule as the home directory itself, but say so if you mean everything beneath it.\n- Fail closed. If the target can't be resolved, such as an unexpanded variable, block it.\n\n**Supporting layer**\n\nA `permissions.deny` entry like `Bash(rm -rf ~*)` is worth adding as a second layer. Alone it is weak, because prefix patterns miss reordered flags, `$HOME`, absolute paths and wrapped shells. The hook is the real control.\n\n**Where it lives on this workstation**\n\n- Hooks and permissions go in `~/.claude/settings.json`, so they apply in every project and to subagents. Per your rules, edit the copy in `~/.dotfiles` and stow it, not the link.\n- The script goes in `~/.dotfiles/bin/.local/bin/`, then `stow -R bin`. By your language rules it's stdlib-only Python run as `python3 -I`, since it parses commands and will pass about 100 lines. Bash would get unwieldy.\n- Your CLAUDE.md says tooling changes go through the `claude-infra` skill, and `update-config` covers the settings.json edit. Since the change touches the dotfiles tree, it also needs `bash scripts/gate.sh`.\n- Add a short CLAUDE.md line pointing at the hook. That helps me explain a refusal, but it isn't the enforcement.\n\n**Limit to know about**\n\nA Bash hook only sees the command text. A script on disk that calls `rm -rf \"$HOME\"` internally, or `find ~ -delete`, `rsync --delete` or `python -c shutil.rmtree`, won't match. You can extend the hook to cover those patterns, but a literal \"no exceptions\" at the OS level would need something outside Claude Code, such as an immutable or bind-mounted home. I'd start with the hook and consider that only if you want the stronger guarantee.\n\nI've changed nothing. If you want it built, say so and I'll run it through `claude-infra`.",
+  "costUsd": 0.08001150000000001
+}

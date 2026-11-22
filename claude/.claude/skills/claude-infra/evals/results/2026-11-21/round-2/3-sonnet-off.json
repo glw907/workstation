@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T02:55:22Z",
+  "seconds": 9.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Put it at user scope on this workstation, not in ecxc-ski's `.mcp.json`.** I haven't opened any of the repos or configs, so this rests on what you've told me.\n\n- **Per-repo duplication.** All four SvelteKit sites (ecxc-ski, 907-life, aksailingclub-org, cairn-pub) would need the same entry, and the entries would drift. The server isn't specific to any one of them.\n- **A checked-in `.mcp.json` is a shared contract.** It should hold servers the project needs, such as one that talks to the site's own services. A docs lookup is a personal tooling preference. Committing it would also prompt anyone or anything else that opens the repo, including CI agents, to approve it.\n- **Svelte docs are about the workstation.** The same server serves every Svelte repo you open, including future ones, so one entry covers them all.\n\n**How to do it:** add it with `claude mcp add --scope user`, which writes to `~/.claude.json`. Changes to Claude Code tooling go through the `claude-infra` skill, so that is the route to use. `~/.claude.json` isn't a stowed dotfile. Per your config rules, record the entry somewhere under `~/.dotfiles` so a rebuild or the other host (thinkpad-x1 or pavilion) can reproduce it. Each host needs its own entry.\n\n**One caveat:** check whether the existing `standards:svelte-*` skills and the Svelte version's own docs already cover what you'd use the server for. If a skill already answers those questions, the server may not be needed.\n\nIf you want it added, say so and I'll do it through `claude-infra`.",
+  "costUsd": 0.0733795
+}

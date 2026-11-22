@@ -1,0 +1,46 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T02:52:54Z",
+  "seconds": 27.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/skills\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release|claude-infra|cairn-pass\", \"output_mode\": \"content\", \"path\": \".claude\"}"
+    }
+  ],
+  "result": "My recommendation is to make the checklist a reference file inside the `cairn-pass` skill, something like `cairn-pass/references/release.md`. Then add \"cutting a cairn release\" to the skill's description so it loads when you say \"cut a release.\" I haven't confirmed the details below: I was refused read access to `~/.claude`, and the copy of the skills in this scratch directory doesn't include `cairn-pass` or `claude-infra`.\n\n**Where it lives depends on what the five steps cover:**\n\n- **Workstation steps** (the gate wrapper, CI watch, how you launch sessions, your approval steps) go in `cairn-pass`. That skill's job is this workstation's layer on top of the cairn-cms pass process, so a release checklist fits beside its gate and close checklists.\n- **Repo steps** (changesets, version bump, tag, publish) belong in the cairn-cms repo's own docs or pass process. Every session and contributor would see them there, and `cairn-pass` would just link to them.\n- **A mix of both:** split the steps along that same line.\n\nDon't put it in memory or CLAUDE.md. Memory is for facts, not steps to follow. CLAUDE.md loads in every session, and this only matters when you're cutting a release.\n\n**How the change would land:**\n\n1. **Route it through `claude-infra`.** Your CLAUDE.md sends every change to Claude Code tooling through that skill. It should also say where the real copy of `cairn-pass` lives, probably `~/.dotfiles` or a tooling repo that `claude-tooling-sync` manages. The edit goes there, not to the stowed link.\n2. **Choose the process size.** If you give me the five steps word for word, the change is one new file plus one line in the description. That's small enough to land directly under `building-from-specs` \"Direct changes\". If the steps need rewording or splitting between the skill and the repo, it gets a short spec, which you approve before a task session builds it, a subagent reviews it, and it ends in a PR.\n3. **Write it** with the `writing-voice` agent-facing standard, since the reader is a Claude session. Make the steps numbered and imperative, with commands written out in full. Keep one existing rule consistent: tests publish a `dev` snapshot and never cut a release candidate (`writing-a-spec.md:42`, `planner.md:30`).\n4. **Check the result:** run the tooling gate and `claude-tooling-sync verify`, then open a fresh session, say \"cut a cairn release,\" and confirm the checklist loads without you pasting it.\n5. **Merge:** if it's a PR, it merges only after you approve it by number.\n\nOne question decides the location: do your five steps include repo commands like version, tag, or publish, or only workstation steps? If you paste the checklist once more, I can sort each step and tell you whether this can land directly.",
+  "costUsd": 0.2015438
+}
