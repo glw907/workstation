@@ -1,0 +1,49 @@
+{
+  "skillName": "engine-consult",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "A background task session in ~/Projects/907-life has just started on an approved spec whose header has no engine consultation line, and the task builds against the cairn admin's media picker. What should that task session do before its first build step, and where does it record what it did? Answer only; change nothing.",
+  "started": "2026-11-22T02:42:39Z",
+  "seconds": 10.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "building-from-specs",
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)engine consultation|consultation line|consult.*engine\", \"path\": \"/var/home/glw907/.claude\", \"output_mode\": \"content\", \"-n\": true, \"head_limit\": 60}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)engine consultation|consultation line\", \"path\": \"/var/home/glw907/Projects\", \"output_mode\": \"content\", \"-n\": true, \"head_limit\": 60}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\", \"args\": \"Answer only, change nothing: what should a background task session do before its first build step when the spec header has no engine consultation line and the task builds against the cairn admin media picker, and where is that recorded?\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\", \"args\": \"Answer only, change nothing: what should a background task session do before its first build step when the spec header has no engine consultation line and the task builds against the cairn admin media picker, and where is that recorded?\"}"
+    }
+  ],
+  "result": "Before its first build step, the task session should check `docs/internal/consultations/` in the cairn-cms checkout for briefs that have no recorded verdict. The `cairn-pass` skill says to do this first, and it names `engine-consult` as the skill that carries the protocol. If a brief is open, the session follows that protocol before it builds against the media picker. Verdicts are recorded in the consultation briefs in that same directory.\n\nI haven't confirmed the details. I didn't load `engine-consult`, so I can't say exactly what a verdict entry must contain. I also couldn't read the spec header rule. `building-from-specs` doesn't mention an engine consultation line, and my reads of `~/Projects` and `~/.claude` were denied, so I couldn't check the spec template or the cairn repo's `cairn-running-passes` skill. Whether a missing header line stops the session or only needs a note is therefore unverified. Loading `engine-consult` and reading the spec template would settle both points.",
+  "costUsd": 0.0060373200000000005
+}

@@ -1,0 +1,37 @@
+{
+  "skillName": "engine-consult",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+  "started": "2026-11-22T02:44:25Z",
+  "seconds": 10.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"engine-consult\"}"
+    }
+  ],
+  "result": "Here is the plan. Nothing has been changed.\n\n## Sequencing call\n\nAn accept sized at about one step and additive runs as a **small engine task now, from the same site session**. It lands in cairn-cms **before** the site task that needs it. It does not queue as a separate cairn-cms spec. The size threshold and the session threshold are the same line, so one step and additive means one session.\n\n## Order\n\n1. **Record the accept.** The session adjudicates the triage verdict and writes it into the brief at `~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-aksailingclub-org-<spec>.md`. It appends one ledger entry to `docs/internal/engine-rulings.md`, copying the format from the ledger's fenced template. The entry stays **open** until the site task lands.\n\n2. **Check the spec header.** The consultation line links the filed brief. The check `grep -c -E '^\\*\\*(Engine consultation|Sources consulted):\\*\\* ' <spec>` must print 2.\n\n3. **Run the cross-repo engine task** (the site session does not auto-load cairn context):\n   - Run `claude-worktree-busy <path>` and read `~/Projects/cairn-cms/docs/STATUS.md` for any claim on this work.\n   - Create a fresh worktree off cairn `main`. Register it in STATUS's active-worktree list **before the first commit**.\n   - Re-read STATUS. If the export is consumer-facing, follow the changelog `Consumers must:` convention.\n   - Build the one step by `building-from-specs`, using `cairn-pass` for the gate: one session, the fast lane for the step, then the whole-branch review by a fresh subagent against the spec.\n   - Run `npm run check:close` bare, not piped. It covers `check:comments`, `check:tiers`, `check:surface`, `check:snippets`, `check:transcripts` and `check:symbols`. A new export will most likely trip `check:surface`, `check:symbols` and `check:comments`, so give it a doc comment and the surface entries up front.\n   - During development, the site consumes it through `npm run link:consumer -- <site-dir>`.\n\n4. **Close in order.** The order is fixed because a site branch cannot merge on a `file:` pin.\n   1. Open the engine PR and wait for CI. Only the session Geoff is talking to merges, and only after he approves the PR by number. Hand it over through `approval-packet`.\n   2. Merge the engine branch to cairn `main`.\n   3. Follow `cairn-releasing/SKILL.md` so the change is on the registry.\n   4. Run `npm run link:consumer -- <site-dir> --restore` from the cairn checkout.\n   5. Build the site task against the released version. Merge the site PR after Geoff approves it by number.\n\n5. **Close the ledger entry.** The site task's PR adds a one-line seam-fit report, either \"fit as designed\" or the backlog items it found. This closes the open ledger entry, so the seam is not left unproven.\n\n## Contingencies\n\n- **Mid-build discoveries:** file them as new four-field items and triage them through `engine-triage` against the same ledger.\n- **If the work grows:** if the step turns out to break public surface or add a subsystem, stop and requeue it as its own cairn-cms spec. The site's fallback then becomes sanctioned interim state, with a recorded retirement trigger.\n\n## Open questions\n\n- I don't have the brief, the spec, or the verdict text. I haven't confirmed that the item is really one step and additive.\n- I haven't read cairn's STATUS or run the worktree-busy check, so I don't know whether anything else has claimed the work.",
+  "costUsd": 0.09069580000000001
+}

@@ -1,0 +1,42 @@
+{
+  "skillName": "engine-consult",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "A background task session in ~/Projects/907-life has just started on an approved spec whose header has no engine consultation line, and the task builds against the cairn admin's media picker. What should that task session do before its first build step, and where does it record what it did? Answer only; change nothing.",
+  "started": "2026-11-22T02:42:29Z",
+  "seconds": 9.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/engine-consult/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"engine-consult\"}"
+    }
+  ],
+  "result": "**Before its first build step,** the task session runs the engine-consultation enumeration itself. The spec has no `**Engine consultation:**` line, so it fails the consultation check, and the task-start backstop applies.\n\n1. **Enumerate engine contact.** For each thing the spec builds, ask whether it presses an engine edge: an admin surface, engine CSS, an exported component's contract, auth, or any seam. A build against the cairn admin's media picker presses an admin surface, so expect at least one engine ask.\n2. **If there's an ask, take the author's place.** The session files a consultation brief at `~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-907-life-<spec>.md`, with the four fields per item. Before filing, it reads the standard in the `engine-triage` agent definition (`.claude/agents/engine-triage.md`, \"The standard\" section) in the cairn-cms checkout.\n3. **Run the triage.** It dispatches a fresh read-only Opus subagent using the body of `engine-triage.md`, with absolute paths to the brief, the rulings ledger (`docs/internal/engine-rulings.md`), and the spec. The subagent reads the ledger first.\n4. **Adjudicate and record.** The session records the verdicts in the brief itself and appends one ledger entry per ruled item, copying the format from the ledger's fenced template.\n5. **Build on the verdicts without waiting for Geoff.** Accepted work sized at a step or two and additive runs as a small cairn task now, using the cross-repo checklist. Declines and defers still let the site proceed on its declared fallback.\n\n**Where it records what it did:**\n\n- **The PR's `## Decisions` section** gets the `**Engine consultation:**` line the session would add to the spec header, linking the filed brief. This is the record on the site side.\n- **The brief in cairn-cms** (`docs/internal/consultations/`) holds the items and verdicts.\n- **The rulings ledger** (`docs/internal/engine-rulings.md`) gets one entry per ruled item.\n\nI made no changes. I tried to read the cairn-cms skill files directly and was denied, so this answer comes from the `engine-consult` skill text.",
+  "costUsd": 0.005212540000000001
+}

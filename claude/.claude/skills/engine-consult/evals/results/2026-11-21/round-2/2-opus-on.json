@@ -1,0 +1,37 @@
+{
+  "skillName": "engine-consult",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "A background task session in ~/Projects/907-life has just started on an approved spec whose header has no engine consultation line, and the task builds against the cairn admin's media picker. What should that task session do before its first build step, and where does it record what it did? Answer only; change nothing.",
+  "started": "2026-11-22T02:43:13Z",
+  "seconds": 15.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"engine-consult\"}"
+    }
+  ],
+  "result": "The spec fails the consultation check: `grep -c -E '^\\*\\*(Engine consultation|Sources consulted):\\*\\* ' <spec>` won't print 2. So the **task-start backstop** in `engine-consult` applies.\n\n**Before the first build step**, the task session runs the engine-contact enumeration itself:\n\n1. **Read the sources.** It reads the engine exports and packaged skill references the task builds on. For the media picker, that's the doc comments under `~/Projects/cairn-cms/src/lib` and the `skills/` references, checked against the code at the pinned commit. It also reads the open engine items in `~/Projects/cairn-cms/BACKLOG.md`.\n2. **Ask the question for each thing the task builds:** does it press an engine edge? That means an admin surface, engine CSS, an exported component's contract, auth, or a seam. The media picker is an admin surface, so the answer probably isn't a trivial no.\n3. **Act on the outcome.** There are exactly two:\n   - **No engine asks:** it continues building.\n   - **An engine ask:** it takes the spec author's place and doesn't wait for Geoff:\n     - It reads \"The standard\" in `~/Projects/cairn-cms/.claude/agents/engine-triage.md`.\n     - It files the brief at `~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-907-life-<spec>.md`, with the four fields per item.\n     - It dispatches a fresh read-only Opus subagent whose instructions are that agent's body. The subagent gets the absolute paths to the brief, the rulings ledger (`docs/internal/engine-rulings.md`) and the site spec.\n     - It adjudicates the verdicts, writes them into the brief, and appends one ledger entry per ruled item, using the ledger's own template.\n     - It builds on the verdicts. A small, additive accept runs as an engine task now, following the cross-repo checklist. A larger one gets queued as its own cairn-cms spec, with the site's fallback sanctioned in the meantime. A decline makes the fallback the end state.\n\n**Where it records what it did:** it doesn't edit the spec header. It writes the line it would have added under its pull request's `## Decisions`. That's either `**Engine consultation:** no engine asks.` or a link to the filed brief, plus the `**Sources consulted:**` line. Any brief, verdicts and ledger entries live engine-side in the cairn-cms paths above.\n\nIf something comes up mid-build that the enumeration didn't foresee, it's filed in the same four-field format and goes through the same triage.",
+  "costUsd": 0.1775432
+}

@@ -1,0 +1,40 @@
+{
+  "skillName": "engine-consult",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+  "started": "2026-11-22T02:44:36Z",
+  "seconds": 17.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "cairn-pass",
+    "building-from-specs"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    }
+  ],
+  "result": "**Short version:** the engine export lands first as its own small cairn-cms pull request. The aksailingclub-org site task starts only after that pull request has merged, and after the export is published if the site installs the engine as a package. I read `cairn-pass` and `building-from-specs`. I did not read `pass-core`, the repo's `cairn-running-passes`, or `engine-consult`, and the checkout isn't in this directory, so the release step below is unchecked.\n\n**Sequence**\n\n1. **Record the verdict.** Before any engine work, record the triage verdict on the consultation brief in cairn-cms `docs/internal/consultations/`, following the `engine-consult` protocol. `cairn-pass` says to check for briefs with unrecorded verdicts first.\n2. **Write and approve a spec.** The export is a new public surface, so it fails the \"Direct changes\" test and can't land straight on the default branch. It needs a spec in `~/Projects/initiatives/<id>/` that Geoff approves.\n   - The spec has two tasks: the engine export (about one step, with its planned minutes) and the site task.\n   - The site task is marked as depending on the engine task.\n3. **Launch the engine task.** The session Geoff is talking to launches it from the cairn-cms main checkout.\n   - Pre-checks: `claude-worktree-busy` exits 0 for the checkout, no secrets are needed, CI can run, and fewer than four sessions are working if on pavilion.\n   - The launch is `claude --bg ... \"/goal <condition>\"` with the two per-session `--settings` keys.\n   - The goal names the spec path and task, lists the done items (the export exists, a test or type check covers it, docs if the surface requires them), and ends with a time clause at twice the planned minutes.\n   - The task starts from the default branch, in a fresh worktree.\n4. **Build and gate the engine task.** The session runs `cairn-run-gate` with the fast lane. It opens a draft pull request on its first push, and CI on that draft is the full-suite home, watched with `ci-green <sha> --pr <n> --wait`. A fresh `standards:diff-reviewer` subagent reviews the branch against the goal, and a red check or an open finding keeps the pull request from being marked ready.\n5. **Merge.** Geoff approves the pull request by number. The session he's talking to merges it after the task session has ended, then pulls the main checkout and removes the worktree and branches.\n6. **Publish or link the export.** If the site takes the engine through a version, the export has to be released or published first. That bump goes through `standards:dependency-upgrade`, and the release follows the cairn-cms pass close checklist. If the site links to the checkout locally, there is no release step. I'd confirm which one applies in `cairn-running-passes` and the site's `package.json` before launching.\n7. **Launch the site task.** Only after step 6, `site-pass` governs the task, and it starts from the aksailingclub-org default branch. It must not start from the engine branch, and it must not carry a local copy of the export \"until the engine catches up\". That keeps the site task from depending on code that hasn't merged.\n\n**Why they aren't parallel:** `building-from-specs` says a task that needs another task's work waits until that work has merged. Each task ends in its own pull request, so the two repos' pull requests merge in order and don't share a branch.\n\n**Open point for Geoff:** if the spec's minute estimate for the engine task is about one step, a background session on a short time clause is enough. Nothing else here needs his decision before the spec is approved.",
+  "costUsd": 0.1061893
+}

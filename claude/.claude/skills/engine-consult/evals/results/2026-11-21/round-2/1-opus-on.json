@@ -1,0 +1,37 @@
+{
+  "skillName": "engine-consult",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I'm about to write a spec in ~/Projects/ecxc-ski for a gear-booking page that needs a new custom field type in the cairn admin. Before I write it, what engine-consultation steps does the spec need, and what exactly goes in its header? Answer only; don't write or change any file.",
+  "started": "2026-11-22T02:41:33Z",
+  "seconds": 17.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"engine-consult\"}"
+    }
+  ],
+  "result": "A new custom field type in the cairn admin presses an engine edge (the admin surface, and probably a field-registration seam). So a one-line \"no engine asks\" won't do here. The spec needs a filed consultation brief and a triage before it goes to you.\n\n## Consultation steps, in order\n\n1. **Read the sources before writing the spec.**\n   - The doc comments for the field and admin exports under `~/Projects/cairn-cms/src/lib`.\n   - The packaged `skills/` references that cover admin fields.\n   - The open engine items in `~/Projects/cairn-cms/BACKLOG.md`. A custom-field hole that an earlier site couldn't close may already be logged there.\n2. **List the engine edges.** Go through each thing the spec builds and ask whether it touches the admin surface, engine CSS, an exported component's contract, auth, or another seam. The field type is certainly one item. Check the booking page's other parts too, such as auth for whoever books and how the page renders the field's data.\n3. **Read the standard** in the \"The standard\" section of `~/Projects/cairn-cms/.claude/agents/engine-triage.md`. Write each item against that gate.\n4. **File the brief** at `~/Projects/cairn-cms/docs/internal/consultations/2026-11-21-ecxc-ski-<spec>.md`. Each item gets four fields:\n   - What the site builds.\n   - The engine edge it presses, with `file:line` where you know it.\n   - Evidence that other sites need it too (recurrence, measurements, earlier cases).\n   - The site's fallback if the engine declines, with a rough size. If declined, that fallback becomes the accepted end state.\n5. **Run the triage.** Send a fresh read-only Opus subagent the body of `engine-triage.md`, plus absolute paths to the brief, `~/Projects/cairn-cms/docs/internal/engine-rulings.md` and the site spec.\n6. **Decide on the verdicts.** Record them in the brief itself. Add one ledger entry per item, copied from the fenced template in the ledger's header.\n7. **Act on each verdict:**\n   - **Accept, small and additive:** build it as an engine task first, using the cross-repo checklist in the skill. That means `claude-worktree-busy`, a worktree registered in cairn's STATUS, `npm run check:close`, then engine merge, release, `link:consumer --restore`, and only then the site merge. The ledger entry stays open until the ecxc-ski task reports how the seam fit.\n   - **Accept, but it breaks public surface or adds a subsystem:** it becomes its own cairn-cms spec. Your fallback is the approved stopgap until a recorded trigger retires it.\n   - **Decline or defer:** build the fallback. A defer records the evidence that would reopen it, usually a second site needing the same thing.\n8. **Run the consultation check** before the spec goes to you, and put it in the first task's done items: `grep -c -E '^\\*\\*(Engine consultation|Sources consulted):\\*\\* ' <spec>` must print `2`.\n\n## The header lines\n\nExactly these two lines, starting at the beginning of the line so the grep matches:\n\n```markdown\n**Engine consultation:** [2026-11-21-ecxc-ski-<spec>.md](<link to the filed brief>)\n**Sources consulted:** <exports and skill references read; open BACKLOG engine items found, or \"none\">\n```\n\nUse the linked-brief form, not `no engine asks.`, because this spec has at least one engine item. On the sources line, write \"none\" for either half that has nothing in it, for example when BACKLOG has no relevant open items.\n\nI didn't write or change any files.",
+  "costUsd": 0.1822292
+}

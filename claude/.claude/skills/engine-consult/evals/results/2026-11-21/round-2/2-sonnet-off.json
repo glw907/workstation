@@ -1,0 +1,62 @@
+{
+  "skillName": "engine-consult",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "A background task session in ~/Projects/907-life has just started on an approved spec whose header has no engine consultation line, and the task builds against the cairn admin's media picker. What should that task session do before its first build step, and where does it record what it did? Answer only; change nothing.",
+  "started": "2026-11-22T02:42:58Z",
+  "seconds": 15.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "building-from-specs"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"consultation|consult\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-off/.claude\", \"output_mode\": \"content\", \"-i\": true}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-off/.claude/skills\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"engine|media picker|Engine\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-off/.claude/skills\", \"output_mode\": \"content\", \"glob\": \"{building-from-specs,site-pass,pass-core}/**\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-off/.claude/skills/pass-core/references/advisor.md\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"header|cairn|picker|admin\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-off/.claude/skills/building-from-specs/references/writing-a-spec.md\", \"output_mode\": \"content\", \"-i\": true}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/{site-pass,cairn-pass}/**\", \"path\": \"/var/home/glw907\"}"
+    }
+  ],
+  "result": "I can't confirm a documented rule for this case. I searched the skills available to this session and found nothing about an \"engine consultation line\" in a spec header. I could not read `site-pass` or `cairn-pass`, which are the likeliest homes for it. The answer below is therefore what the documented process implies, not a quoted rule.\n\n**What the session should do before its first build step**\n- Read `site-pass`, since 907-life is a site repo. It holds the gate, the checklists and the risk-class path map.\n- Check what the spec says about consulting the cairn engine, because the task builds against the engine's admin media picker. A header with no consultation line means the spec doesn't record that the engine was consulted.\n- Not invent that consultation or write a line that claims it happened. Under `pass-core`'s advisor rules, a line opening `[advisor]` may only report what the advisor tool or a Fable dispatch actually returned in that transcript.\n- Consult the advisor, once per question, about the media picker's contract and any open engine questions:\n  - Call the advisor tool.\n  - If the session has no advisor tool, or the call errors, ask Fable through one Agent call in its place.\n  - Quote the relevant rulings from the spec and any dated rules into the question first, since a dispatch reads no transcript.\n- If the question is a product, taste or priority call with no precedent, take one option and go on. Choose the option a later commit undoes most cheaply.\n- Never ask Geoff a question or wait for a ruling. A task session in the background doesn't ask.\n- Don't edit the engine. Another repo is outside the goal unless the spec grants it, and work found beyond the goal goes to the backlog through `standards:log-issue`.\n\n**Where it records what it did**\n- In the draft pull request's `## Decisions` section, as a line opening `[advisor]` that quotes its source. That is the placement in `pass-core`'s advisor rules.\n- Anything that needs Geoff's attention also goes under `## For Geoff`. Under `building-from-specs`, that covers a product call with no precedent and a call the advisor couldn't settle. Each such line gives the option taken, the option passed over, and what reversing it would undo.\n- The session leaves `docs/STATUS.md` alone, because only the session Geoff is talking to keeps it.",
+  "costUsd": 0.13038719999999998
+}

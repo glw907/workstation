@@ -1,0 +1,57 @@
+{
+  "skillName": "engine-consult",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "The engine-triage agent accepted one item from aksailingclub-org's consultation brief: a small additive engine export, about one step of work. How does that accepted work get sequenced and landed in cairn-cms relative to the site task that needs it? Plan only; change nothing.",
+  "started": "2026-11-22T02:44:05Z",
+  "seconds": 18.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*consult*\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"engine-triage|aksailingclub\", \"path\": \"/var/home/glw907/Projects\", \"output_mode\": \"files_with_matches\", \"head_limit\": 50}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/{cairn-running-passes,consultations,*engine*}*\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*.md\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"consult|engine|cross-repo|upstream|depend|land\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-off/.claude/skills\", \"-i\": true, \"output_mode\": \"content\", \"-n\": true, \"head_limit\": 60}"
+    }
+  ],
+  "result": "I could not read the brief or the cairn-cms state, so this plan comes from the pass rules and not from the actual files. The working directory has no cairn-cms checkout, and reads under `~/Projects` were not granted. I changed nothing.\n\n**What I could not check**\n- `docs/internal/consultations/` in cairn-cms, for the brief and its verdict record.\n- STATUS, for the next action and the site task's id.\n- The initiative folder under `~/Projects/initiatives/`.\n\n**Plan**\n\n1. **Record the verdict first.** Before any planning, open the consultation brief in cairn-cms's `docs/internal/consultations/` and confirm the engine-triage acceptance is recorded there. If it isn't, record it. The `engine-consult` protocol covers the format. Also run `claude-worktree-busy` on the cairn-cms path before a session enters it.\n\n2. **Treat the export as its own cairn-cms pass.** The engine work lands in cairn-cms. The site task in aksailingclub-org consumes it. Keep it a separate pass even though it is one step, because it crosses repos and has its own PR.\n   - Planner writes the plan under `~/Projects/initiatives/<id>/`, with the consult verdict cited.\n   - A fresh executor session builds it under `/goal` in `.claude/worktrees/<name>`, following the repo's `cairn-running-passes` setup.\n   - Gate is `cairn-run-gate` on the fast lane, with full suite on CI.\n   - A fresh subagent reviews against the spec, then a draft PR goes up and `ci-green --pr <n> --wait` runs from the pass worktree.\n\n3. **Order it in the round.** In the round's order table, the site pass lists the engine pass under \"Depends on\", and the site pass is parked as `(order)` until the engine pass lands. Its planner reads the engine PR's `[advisor]` lines before planning. If the site work also touches a file the engine pass changes, it counts as dependent even if the table doesn't say so.\n\n4. **Land the engine pass first.** It lands when all of these hold:\n   - `Review:` reads `accept, open findings 0`.\n   - No check fails.\n   - `Calls: none`, with no `## Before merge` section.\n   - It is not waiting on a close packet.\n\n   Geoff approves the PR by number, then the session merges it and pulls the main checkout. If the engine pass needs a close packet, it holds every later landing in the round.\n\n5. **Then start the site pass.** It waits until the engine PR is merged and the new export is available to consume. If the site pulls the export as a dependency, that bump goes through `standards:dependency-upgrade`. The site pass then runs its own `site-pass` gate and CI, and its PR cites the engine PR number.\n\n**Open items for you**\n- Is the engine export part of the current round, or a standalone pass run before it?\n- How does aksailingclub-org get the export: a published package version, or a local link? That decides whether the site task waits on a release or only on the merge.\n\nIf you grant read access to `~/Projects`, or start the session in the cairn-cms checkout, I can check the brief, STATUS, and the round table and confirm or revise this order.",
+  "costUsd": 0.006961900000000001
+}

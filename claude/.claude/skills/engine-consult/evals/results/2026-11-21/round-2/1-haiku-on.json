@@ -1,0 +1,37 @@
+{
+  "skillName": "engine-consult",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I'm about to write a spec in ~/Projects/ecxc-ski for a gear-booking page that needs a new custom field type in the cairn admin. Before I write it, what engine-consultation steps does the spec need, and what exactly goes in its header? Answer only; don't write or change any file.",
+  "started": "2026-11-22T02:40:42Z",
+  "seconds": 9.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"engine-consult\", \"args\": \"Question from Geoff: writing a spec in ~/Projects/ecxc-ski for a gear-booking page that needs a new custom field type in the cairn admin. What engine-consultation steps does the spec need, and what goes in its header? Answer only; do not write or change any file.\"}"
+    }
+  ],
+  "result": "This spec needs a consultation brief, not the \"no engine asks\" line. A new custom field type in the cairn admin presses an admin-surface engine edge.\n\n**Steps before and while writing the spec**\n\n1. **Read before writing.** Read the exports and skill references the spec builds on: the doc comments under `~/Projects/cairn-cms/src/lib` and the packaged `skills/`, at the commit. Also read the open engine items in `~/Projects/cairn-cms/BACKLOG.md`. Record what you found for the `Sources consulted` line.\n2. **Read the standard.** Read \"The standard\" section of `~/Projects/cairn-cms/.claude/agents/engine-triage.md` so the brief is written against the gate its items will meet.\n3. **File the brief** at `~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-ecxc-ski-<spec>.md`. Each item gets four fields: what the site builds, the engine edge it presses (with `file:line` where known), evidence for the any-site case, and the site's fallback if declined with a rough size.\n4. **Run triage.** Dispatch a fresh read-only Opus subagent with the body of `engine-triage.md`, plus absolute paths to the brief, `docs/internal/engine-rulings.md`, and the spec. Adjudicate each verdict, write the verdicts into the brief, and append one ledger entry per ruled item using the template in the ledger's header.\n   - **Accept:** choose a shape and a sequencing call. Either a small engine task now, or a queued cairn-cms spec with the fallback as interim state and a retirement trigger. The consuming task closes the ledger entry with a seam-fit report.\n   - **Decline:** record the reason. The site's fallback becomes the sanctioned end state.\n   - **Defer:** record the evidence that would reopen it, usually a second consumer.\n\n**Spec header**\n\nThe header carries exactly these two lines, in this form, so the check can match them:\n\n```markdown\n**Engine consultation:** [<brief filename>](<link to the filed brief>)\n**Sources consulted:** <exports and skill references read, plus open engine backlog items found, or \"none\">\n```\n\nDon't include the \"no engine asks\" line in this spec.\n\n**Check before the spec goes to Geoff**\n\nRun `grep -c -E '^\\*\\*(Engine consultation|Sources consulted):\\*\\* ' <spec>`. It should print `2`. Also list that check as a done item in the spec's first task, so the task session and its reviewer run it again.\n\nIf a task session later finds this spec failing the check, it runs the enumeration itself, files the brief, runs triage, and builds on the verdicts without waiting for Geoff.",
+  "costUsd": 0.00503189
+}

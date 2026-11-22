@@ -1,0 +1,37 @@
+{
+  "skillName": "engine-consult",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "A background task session in ~/Projects/907-life has just started on an approved spec whose header has no engine consultation line, and the task builds against the cairn admin's media picker. What should that task session do before its first build step, and where does it record what it did? Answer only; change nothing.",
+  "started": "2026-11-22T02:42:50Z",
+  "seconds": 8.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "engine-consult"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/engine-consult"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"engine-consult\"}"
+    }
+  ],
+  "result": "**Before the first build step, the session runs the engine-contact enumeration.** This is the task-start backstop in the `engine-consult` skill.\n\n1. **Confirm the spec fails the check.** The check is `grep -c -E '^\\*\\*(Engine consultation|Sources consulted):\\*\\* ' <spec>`, which must print 2. This spec has no engine-consultation line, so it fails.\n\n2. **Run the enumeration.** For each thing the spec builds, ask whether it presses an engine edge: an admin surface, engine CSS, an exported component's contract, auth, or any seam. The media picker is a cairn admin surface, so it almost certainly does. Before answering, read the relevant exports and skill references under `~/Projects/cairn-cms/src/lib` and `skills/`. Also read the open engine items in `~/Projects/cairn-cms/BACKLOG.md`.\n\n3. **If it finds no engine ask,** it records the one-line \"no engine asks\" it would have put in the spec header.\n\n4. **If it finds an engine ask,** the task session takes the spec author's place and does not wait for Geoff:\n   - Read the standard in the \"The standard\" section of `~/Projects/cairn-cms/.claude/agents/engine-triage.md`.\n   - File a brief at `~/Projects/cairn-cms/docs/internal/consultations/YYYY-MM-DD-907-life-<spec>.md`. Each item has four fields: what the site builds, the engine edge it presses, the evidence for the any-site case, and the site's fallback if declined.\n   - Dispatch a fresh read-only Opus subagent with the body of `engine-triage.md` and the absolute paths to the brief, the rulings ledger (`~/Projects/cairn-cms/docs/internal/engine-rulings.md`) and the spec.\n   - Adjudicate the verdicts (accept, decline or defer). Record them in the brief itself and append one ledger entry per ruled item, copying the format from the ledger's header template.\n   - Build on those verdicts. Accepted work sized at a step or two runs as a small engine task, following the cross-repo checklist. Larger accepted work queues as its own cairn-cms spec, with the site's fallback as sanctioned interim state.\n\n**Where it records what it did:**\n- The line it would add to the spec header goes under the pull request's `## Decisions`.\n- The brief and the verdicts go in the brief document in cairn-cms.\n- The ledger entries go in `engine-rulings.md`.",
+  "costUsd": 0.08702560000000001
+}
