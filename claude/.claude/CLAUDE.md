@@ -86,6 +86,8 @@ token. Use an API or CLI first.
   `~/Projects/household-it/scripts/tech-mail.sh`.
 - Full flows, exceptions, and store order: `~/.claude/docs/bluefin-admin/secrets.md`. Test accounts:
   `~/.claude/docs/test-accounts.md`.
+- The Bash tool doesn't load `~/.bashrc`: source `~/.local/secrets` in the same command before reading a secret.
+- `wrangler secret put` always takes `--name <worker>`; without it the folder's `wrangler.toml` picks the Worker.
 
 ## Claude Code Agent Usage
 
