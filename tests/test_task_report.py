@@ -1,13 +1,11 @@
-"""Tests for pass-report, driven by canned gh answers from tests/fixtures/pass-report."""
+"""Tests for task-report, driven by canned gh answers from tests/fixtures/task-report."""
 
 import importlib.machinery
 import importlib.util
 import json
 import os
-import io
 import subprocess
 import sys
-import tarfile
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -15,12 +13,12 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "bin/.local/bin/pass-report"
-FIXTURES = ROOT / "tests/fixtures/pass-report"
-loader = importlib.machinery.SourceFileLoader("pass_report", str(SCRIPT))
-spec = importlib.util.spec_from_loader("pass_report", loader)
-pass_report = importlib.util.module_from_spec(spec)
-loader.exec_module(pass_report)
+SCRIPT = ROOT / "bin/.local/bin/task-report"
+FIXTURES = ROOT / "tests/fixtures/task-report"
+loader = importlib.machinery.SourceFileLoader("task_report", str(SCRIPT))
+spec = importlib.util.spec_from_loader("task_report", loader)
+task_report = importlib.util.module_from_spec(spec)
+loader.exec_module(task_report)
 
 
 def materialize(tmp_path, data):
@@ -33,22 +31,6 @@ def materialize(tmp_path, data):
         lines = [r if isinstance(r, str) else json.dumps(r) for r in data["records"]]
         (state / "cairn-run-gate").mkdir(parents=True)
         (state / "cairn-run-gate/runs.jsonl").write_text("\n".join(lines) + "\n")
-    if "decisions" in data:
-        (state / "approval-queue").mkdir(parents=True)
-        lines = [json.dumps(d) for d in data["decisions"]]
-        (state / "approval-queue/decisions.jsonl").write_text("\n".join(lines) + "\n")
-    if "archive" in data:
-        (state / "approval-queue").mkdir(parents=True, exist_ok=True)
-        body = "".join(json.dumps(d) + "\n" for d in data["archive"]).encode()
-        with tarfile.open(state / "approval-queue/archive-2026-11.tar.gz", "w:gz") as tar:
-            info = tarfile.TarInfo("decisions.jsonl")
-            info.size = len(body)
-            tar.addfile(info, io.BytesIO(body))
-    for doc, parts in data.get("store", {}).items():
-        folder = state / "approval-queue/store" / doc
-        folder.mkdir(parents=True)
-        for name, value in parts.items():
-            (folder / name).write_text(json.dumps(value))
     if "backfill" in data:
         back = home / "Projects/initiatives/dev-speed/research"
         back.mkdir(parents=True)
@@ -63,8 +45,8 @@ def report(tmp_path, data, *extra):
     log = tmp_path / "gh.log"
     env = {
         **os.environ,
-        "PASS_REPORT_GH": str(FIXTURES / "fake-gh"),
-        "PASS_REPORT_HOME": str(home),
+        "TASK_REPORT_GH": str(FIXTURES / "fake-gh"),
+        "TASK_REPORT_HOME": str(home),
         "XDG_CACHE_HOME": str(tmp_path / "cache"),
         "FAKE_GH_DATA": str(gh_data),
         "FAKE_GH_LOG": str(log),
@@ -93,8 +75,8 @@ def test_run_list_is_cached_across_runs(tmp_path):
     first = report(tmp_path, fixture("union.json"))
     env = {
         **os.environ,
-        "PASS_REPORT_GH": str(FIXTURES / "fake-gh"),
-        "PASS_REPORT_HOME": str(first.home),
+        "TASK_REPORT_GH": str(FIXTURES / "fake-gh"),
+        "TASK_REPORT_HOME": str(first.home),
         "XDG_CACHE_HOME": str(tmp_path / "cache"),
         "FAKE_GH_DATA": str(tmp_path / "gh.json"),
         "FAKE_GH_LOG": str(tmp_path / "gh.log"),
@@ -133,89 +115,15 @@ def test_worktree_gate_record_folds_into_its_repo(tmp_path):
 def test_pr_gate_seconds_is_a_plain_join(tmp_path):
     home, _ = materialize(tmp_path, fixture("gate_fold.json"))
     lines = (home / ".local/state/cairn-run-gate/runs.jsonl").read_text().splitlines()
-    records = [pass_report.parse_record(line) for line in lines]
-    pr = pass_report.build_pr("workstation", fixture("gate_fold.json")["prs"]["workstation"][0])
-    assert pass_report.pr_gate_seconds(pr, records, [pr], {"workstation"}, home) == 540
+    records = [task_report.parse_record(line) for line in lines]
+    pr = task_report.build_pr("workstation", fixture("gate_fold.json")["prs"]["workstation"][0])
+    assert task_report.pr_gate_seconds(pr, records, [pr], {"workstation"}, home) == 540
 
 
 def test_branch_join_and_dropped_record(tmp_path):
     run = report(tmp_path, fixture("gate_branch.json"))
     assert "| Local gates | 1 | 6.0 | 6.0 | 6.0 |" in run.stdout
     assert "Dropped gate records: 1" in run.stdout
-
-
-def test_decision_waits_use_anchorage_local_time(tmp_path):
-    run = report(tmp_path, fixture("waits.json"))
-    # 30 min in November (UTC-9) and 1 min on the real October line (UTC-8). A fixed UTC-9
-    # offset would turn the October wait negative.
-    assert "| Waiting on Geoff | 2 | 15.5 | 30.0 | 31.0 |" in run.stdout
-    assert "Negative waits dropped: 1" in run.stdout
-    assert "Listing full" not in run.stdout
-
-
-def test_archive_alone_gives_the_same_waits(tmp_path):
-    data = fixture("waits.json")
-    data["archive"] = data.pop("decisions")
-    run = report(tmp_path, data)
-    assert "| Waiting on Geoff | 2 | 15.5 | 30.0 | 31.0 |" in run.stdout
-    assert "Negative waits dropped: 1" in run.stdout
-    assert "not counted" not in run.stdout
-
-
-def _decision(action, at):
-    return {"action": action, "at": at}
-
-
-STORE = {
-    "repos": ["alpha", "beta"],
-    "store": {
-        # Sent back at 10:20, returned at 10:30, approved at 11:00: one 30 minute wait per PR.
-        "20261110-100000-aaaaaa": {
-            "meta.json": {"id": "x", "kind": "merge", "title": "t", "created": "2026-11-10T10:00:00Z", "versions": 2},
-            "heads.json": [
-                {"repo": "glw907/alpha", "number": 1, "head": "h1"},
-                {"repo": "glw907/beta", "number": 2, "head": "h2"},
-            ],
-            "decision-1.json": _decision("sendback", "2026-11-10T10:20:00Z"),
-            "decision-2.json": _decision("returned", "2026-11-10T10:30:00Z"),
-            "decision-3.json": _decision("approve", "2026-11-10T11:00:00Z"),
-        },
-        # The undo cancels the approve, so the document stands undecided.
-        "20261110-120000-bbbbbb": {
-            "meta.json": {"id": "x", "kind": "merge", "title": "t", "created": "2026-11-10T12:00:00Z", "versions": 1},
-            "heads.json": [{"repo": "glw907/alpha", "number": 3, "head": "h3"}],
-            "decision-1.json": _decision("approve", "2026-11-10T12:10:00Z"),
-            "decision-2.json": _decision("undo", "2026-11-10T12:11:00Z"),
-        },
-        "20261110-130000-cccccc": {
-            "meta.json": {"id": "x", "kind": "merge", "title": "t", "created": "2026-11-10T13:00:00Z", "versions": 1},
-            "heads.json": [{"repo": "glw907/alpha", "number": 4, "head": "h4"}],
-            "decision-1.json": _decision("approve", "2026-11-10T13:10:00Z"),
-        },
-        "20261110-140000-dddddd": {
-            "meta.json": {"id": "x", "kind": "design", "title": "t", "created": "2026-11-10T14:00:00Z", "versions": 1},
-            "decision-1.json": _decision("approve", "2026-11-10T14:05:00Z"),
-        },
-        "20261110-150000-eeeeee": {
-            "meta.json": {"id": "x", "kind": "report", "title": "t", "created": "2026-11-10T15:00:00Z", "versions": 1},
-            "decision-1.json": _decision("read", "2026-11-10T15:05:00Z"),
-        },
-    },
-}
-
-
-def test_store_waits_run_from_creation_or_return_to_the_standing_decision(tmp_path):
-    out = report(tmp_path, STORE).stdout
-    assert "| Waiting on Geoff | 2 | 20.0 | 30.0 | 40.0 |" in out
-    assert "| Waiting on Geoff | 1 | 30.0 | 30.0 | 30.0 |" in out
-    assert "- Design and decide documents decided: 1" in out.splitlines()
-    assert "Negative waits dropped: 0" in out
-
-
-def test_store_beside_the_archive_adds_to_old_waits(tmp_path):
-    data = {**STORE, "archive": fixture("waits.json")["decisions"]}
-    out = report(tmp_path, data).stdout
-    assert "| Waiting on Geoff | 4 | 20.0 | 30.0 | 71.0 |" in out
 
 
 def test_listing_of_300_prs_is_named_as_full(tmp_path):
@@ -266,11 +174,6 @@ def test_missing_state_files_are_named_in_the_footer(tmp_path):
     for name in ("runs.jsonl", "score-backfill.json"):
         assert any(l.startswith("- Not found: ") and l.endswith(name) for l in out.splitlines())
     assert "Not found: " + "~" not in out
-    assert not any("decisions.jsonl" in l and l.startswith("- Not found") for l in out.splitlines())
-    assert (
-        "- Waits before the new queue: not counted (no decisions.jsonl and no archive-2026-11.tar.gz)"
-        in out.splitlines()
-    )
 
 
 def test_missing_records_file_exits_2(tmp_path):
@@ -305,7 +208,7 @@ def test_rate_limited_repo_is_marked_partial(tmp_path):
 )
 def test_toplevel_mapping(top, want):
     home = Path("/h")
-    assert pass_report.repo_of_toplevel(top.format(h=home), home) == want
+    assert task_report.repo_of_toplevel(top.format(h=home), home) == want
 
 
 MISS_CLASSES = (
@@ -335,7 +238,7 @@ Miss lines: 15, in 3 of 7 merged PRs.
 
 # The misses.json report as it stood before the misses section, minus the Window line.
 OLD_REPORT = """\
-# Pass score report
+# Task score report
 
 
 ### alpha
@@ -360,10 +263,8 @@ OLD_REPORT = """\
 
 - Gate records read: ~/.local/state/cairn-run-gate/runs.jsonl
 - Not found: ~/.local/state/cairn-run-gate/runs.jsonl
-- Waits before the new queue: not counted (no decisions.jsonl and no archive-2026-11.tar.gz)
 - Not found: ~/Projects/initiatives/dev-speed/research/score-backfill.json
 - Dropped gate records: 0
-- Negative waits dropped: 0
 - Malformed lines or rows skipped: 0
 - PRs with no score: 6"""
 
@@ -417,4 +318,4 @@ def test_other_tables_do_not_change(tmp_path):
     ],
 )
 def test_miss_classes_follow_the_section_rules(body, want):
-    assert pass_report.miss_classes(body) == want
+    assert task_report.miss_classes(body) == want

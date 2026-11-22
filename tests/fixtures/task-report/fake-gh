@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Answer the gh calls pass-report makes from the JSON file named by FAKE_GH_DATA."""
+"""Answer the gh calls task-report makes from the JSON file named by FAKE_GH_DATA."""
 import json
 import os
 import sys
