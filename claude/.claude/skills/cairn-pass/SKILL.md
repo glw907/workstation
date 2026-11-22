@@ -1,30 +1,29 @@
 ---
 name: cairn-pass
 description: >
-  The workstation's overlay on the cairn-cms pass process: the lane-aware gate wrapper, the CI watch,
-  and Geoff's launch conventions. Use when planning, executing, resuming, or closing a cairn-cms
-  pass, or when a fresh cairn-cms session follows a STATUS launch prompt. For a consumer site's
-  pass use site-pass.
+  The workstation's facts for building work in cairn-cms: the lane-aware gate wrapper, the fast
+  lane, the CI watch, and where the repo's own process skill lives. Use with building-from-specs
+  when building, resuming, or reviewing a task in cairn-cms, when a cairn-cms session follows a
+  STATUS launch prompt, or when asked how to build the next piece of work there. For a consumer
+  site use site-pass.
 ---
 
 # Cairn pass
 
-Load `pass-core` first, then the repo's own `cairn-running-passes` skill (in the cairn-cms
-checkout's `.claude/skills/`). The repo skill holds what a clone needs: worktree setup, the fast
-lane, the full-suite home, the risk-class path map, the review checklists by path, and the close
-checklist. This skill adds only Geoff's operation. Cross-repo specs, plans, and research live in
-`~/Projects/initiatives/<id>/`. STATUS's next action names the plan; trust it. Check
-`docs/internal/consultations/` for briefs with unrecorded verdicts first (`engine-consult` carries
-the protocol).
+Load `building-from-specs` first; it holds the process: a spec Geoff approves, a fresh session per
+task under `/goal`, a fresh review, and a pull request. Then read the repo's own process skill in
+the cairn-cms checkout's `.claude/skills/`. That skill holds what a clone needs: worktree setup, the
+fast lane, the full-suite home, the risk-class path map, the review checklists by path, and the
+close checklist. This skill adds only Geoff's workstation.
 
-## Pair dispatch
+Cross-repo specs and research live in `~/Projects/initiatives/<id>/`. STATUS's next action names
+the spec; trust it. Check `docs/internal/consultations/` for briefs with unrecorded verdicts first
+(`engine-consult` carries the protocol).
 
-A pair dispatch prompt cites this heading and `pass-core` `references/executor.md` "Pairs", which
-holds the isolation, the `description`, and the git forms a pair avoids. The pair runs these from
-its own worktree, commits its task, and never pushes.
+## Gates
 
-**Gate**: `cairn-run-gate '<string>'` from the pass worktree, per `pass-core` "Gates". It wraps the
-committed fast lane with the shared lanes.
+**Gate**: `cairn-run-gate '<string>'` from the task's worktree. It wraps the committed fast lane
+with the shared lanes.
 
 **Fast lane**: `node scripts/checks/gate-tier.mjs --fast --range <base>..HEAD` prints the legs.
 Run them in order, each through `cairn-run-gate` with a leading `CAIRN_GATE_LANE=<lane>` lifted onto
@@ -34,9 +33,9 @@ workspace suite such as `npm test -w packages/create-cairn-site` is light, and t
 `npm test` drives Chromium and is never light.
 
 **Worktree setup**: The launch's `.claude/worktrees/<name>`, then the setup command the repo's
-`cairn-running-passes` skill names.
+process skill names.
 
-## Pass session
+## CI
 
 **Full-suite home**: CI on the draft PR. Local `TIER_GATES.full` runs only on `ci-green` exit 3. The
 gate runs no gitleaks scan, so there is no branch-history scan to owe.
@@ -44,9 +43,9 @@ gate runs no gitleaks scan, so there is no branch-history scan to owe.
 **CI watch**: `ci-green <sha> --pr <n> --wait` as a background Bash task, re-issued on 75; exit 0
 is green, 1 red, 2 missing, 3 unavailable, 4 held for approval: when the held run's triggering
 actor is the repo's own `github-actions[bot]`, run the approve command it prints and re-issue the
-watch; any other actor's held run stops the line for Geoff. Run it from the pass worktree so its CI
-line lands under the pass branch for `--records`. No task waits for CI before the next; a red stops
-the line.
+watch. Any other actor's held run is listed under `## For Geoff`. Run it from the task's worktree
+so its CI line lands under the task's branch for `--records`. A red check stops the work until its
+cause is fixed.
 
-**Packet**: `approval-packet` step 1 and `pass-core` "Close" say when a pass lands and when it
-sends a document.
+**Pull request**: `building-from-specs` "The pull request" says what the body carries and when it
+is marked ready.
