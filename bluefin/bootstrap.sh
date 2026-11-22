@@ -447,9 +447,9 @@ setup_zen_theme() {
         while IFS= read -r path; do
             [[ -d "$root/$path" ]] || continue
             mkdir -p "$root/$path/chrome" || return 1
-            ln -sfn "$theme_dir/userChrome.css" "$root/$path/chrome/userChrome.css" || return 1
-            ln -sfn "$theme_dir/theme" "$root/$path/chrome/theme" || return 1
-            ln -sfn "$BLUEFIN_DIR/zen/user.js" "$root/$path/user.js" || return 1
+            ln -sfT "$theme_dir/userChrome.css" "$root/$path/chrome/userChrome.css" || return 1
+            ln -sfT "$theme_dir/theme" "$root/$path/chrome/theme" || return 1
+            ln -sfT "$BLUEFIN_DIR/zen/user.js" "$root/$path/user.js" || return 1
             linked=$((linked + 1))
         done < <(sed -n 's/^Path=//p' "$root/profiles.ini")
     done
@@ -537,12 +537,11 @@ SELinux (brief: skipping this is a documented cause of broken logins):
 
 Browsers:
   - chrome://policy in Chromium shows the managed policies applied (Kagi
-    search and homepage, no Google telemetry, built-in password manager off).
-  - Geoff's own Chromium profile carries the Proton Pass extension
-    (ghmbeldphafepmbegfdlkpapadhbakde) and never Claude's; Claude's `Default`
-    profile carries only Claude's extension. Install each by hand: policy is
-    browser-wide and
-    cannot split them.
+    search and homepage, no Google telemetry, built-in password manager off,
+    no default-browser prompt).
+  - Chromium has one profile, `Default`, for development work. It carries
+    only the Claude extension, installed by hand: policy is browser-wide and
+    would reach every test browser too. Proton Pass and Floccus are in Zen.
   - `flatpak list | grep -i firefox` returns nothing: the
     preinstalled Flatpak builds are gone and the layered Chromium is what runs.
   - `xdg-settings get default-web-browser` prints zen.desktop. It prints
