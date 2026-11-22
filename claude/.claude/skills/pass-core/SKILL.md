@@ -27,9 +27,9 @@ references, or in `approval-packet` that sends him a document:
    in the repo's STATUS with a recommendation. After a stopping question it ends.
 3. A pull request with no call for him lands as `approval-packet` step 1 says.
 4. A pull request that needs his approve waits, named under "Open decisions". Once his message
-   in a terminal session approves it by number, that session lands it with `approval-queue
-   land`. It first runs any `## Before merge` steps and their check and removes that section
-   from the PR body, and withdraws any queue document holding the PR.
+   in a terminal session approves it by number, that session merges it with `gh pr merge`
+   behind the permission prompt. It first runs any `## Before merge` steps and their check and
+   removes that section from the PR body, and withdraws any queue document holding the PR.
 
 ## Lifecycle
 
@@ -132,9 +132,9 @@ go through `approval-packet` step 7.
 
 A pass's hand-over is the `approval-packet` skill. Its step 1 says when a pass sends nothing and lands. An adapter line that says every PR waits for Geoff yields to step 1.
 
-A PR merges only by `approval-queue land`, in any class, once its checks are green and its
-whole-branch review is accepted with no open finding. `claude-merge-guard` denies every GitHub
-CLI merge stage.
+A PR merges only by `gh pr merge` behind the permission prompt, run by the session Geoff is
+talking to, once its checks are green and its whole-branch review is accepted with no open
+finding.
 
 A PR must be safe under a plain merge followed by a pull; the executor makes it so where it can.
 When it cannot, the PR body carries a `## Before merge` section: the exact commands in order and

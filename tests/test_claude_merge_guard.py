@@ -1,7 +1,5 @@
 """Tests for the claude-merge-guard PreToolUse hook, driven by subprocess."""
 
-import importlib.machinery
-import importlib.util
 import json
 import os
 import subprocess
@@ -58,21 +56,18 @@ def run_hook(command):
         'echo "`gh pr merge 5`"',
     ],
 )
-def test_denies_every_merge_stage(command):
+def test_every_merge_stage_asks(command):
     result = run_hook(command)
     assert result.returncode == 0
     out = json.loads(result.stdout)["hookSpecificOutput"]
     assert out["hookEventName"] == "PreToolUse"
-    assert out["permissionDecision"] == "deny"
+    assert out["permissionDecision"] == "ask"
 
 
-def test_deny_message_names_replacements():
+def test_ask_message_names_no_retired_command():
     reason = json.loads(run_hook("gh pr merge 5").stdout)["hookSpecificOutput"]["permissionDecisionReason"]
-    assert "approval-queue merge <id>" in reason
-    assert "approval-queue land <owner/repo#n> <sentence>" in reason
-    assert "approval-packet" in reason
-    assert "--premerge-done" not in reason
-    assert "packet" not in reason.replace("approval-packet", "")
+    assert "Geoff answers this prompt" in reason
+    assert "approval-queue" not in reason
 
 
 @pytest.mark.parametrize(
@@ -110,11 +105,6 @@ def test_malformed_input_exits_zero():
 
 # The checks the cc-desk core spec adds. Every case passes a cwd, and the tests replace the
 # exempt list through the hook's environment, since their repos sit under /tmp.
-TODAYS_REASON = (
-    "Blocked: merge through approval-queue, never `gh pr merge`. Use `approval-queue merge <id>` for a "
-    "document Geoff approved, or `approval-queue land <owner/repo#n> <sentence>` for a PR that "
-    "needs no document; the `approval-packet` skill has the procedure."
-)
 GIT_ID = ["-c", "user.name=Test", "-c", "user.email=test@example.invalid", "-c", "commit.gpgsign=false"]
 
 
@@ -144,6 +134,17 @@ def run_in(command, cwd, exempt=""):
     return output["permissionDecisionReason"]
 
 
+def asks(command, cwd):
+    """Return whether the hook sends a command to a permission prompt."""
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT)],
+        input=json.dumps({"tool_input": {"command": command}, "cwd": str(cwd)}),
+        capture_output=True, text=True, check=False,
+    )
+    assert (result.returncode, result.stderr) == (0, "")
+    return json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"] == "ask"
+
+
 @pytest.fixture
 def repos(tmp_path):
     """Build a primary checkout on main, a worktree of it, an empty repo, and a plain folder."""
@@ -165,14 +166,6 @@ def repos(tmp_path):
             "root": tmp_path}
 
 
-def test_reason_matches_todays_text():
-    loader = importlib.machinery.SourceFileLoader("merge_guard", str(SCRIPT))
-    spec = importlib.util.spec_from_loader("merge_guard", loader)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    assert module.REASON == TODAYS_REASON
-
-
 @pytest.mark.parametrize("command", [
     "gh -R owner/repo pr merge 5",
     "gh --repo owner/repo pr merge 5 --squash",
@@ -182,8 +175,12 @@ def test_reason_matches_todays_text():
     "gh api repos/owner/repo/pulls/5/merge -X PUT",
     "gh api -XPUT repos/o/r/pulls/7/merge",
 ])
-def test_other_merge_spellings_get_todays_reason(command, tmp_path):
-    assert run_in(command, tmp_path) == TODAYS_REASON
+def test_other_merge_spellings_ask(command, tmp_path):
+    assert asks(command, tmp_path)
+
+
+def test_forced_push_beside_a_merge_is_denied(repos):
+    assert run_in("gh pr merge 5 --merge; git push -f origin main", repos["primary"]) is not None
 
 
 @pytest.mark.parametrize("command", [
@@ -401,9 +398,9 @@ def test_expansion_elsewhere_still_refused(command, repos):
     assert run_in(command, repos["primary"]) is not None
 
 
-def test_merge_inside_substitution_refused(tmp_path):
-    assert run_in('echo "$(gh pr merge 7)"', tmp_path) == TODAYS_REASON
-    assert run_in("x=$(gh pr merge 7)", tmp_path) == TODAYS_REASON
+def test_merge_inside_substitution_asks(tmp_path):
+    assert asks('echo "$(gh pr merge 7)"', tmp_path)
+    assert asks("x=$(gh pr merge 7)", tmp_path)
 
 
 def test_absolute_directory_read_without_cwd(repos):
