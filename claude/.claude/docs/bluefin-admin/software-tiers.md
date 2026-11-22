@@ -24,11 +24,11 @@ into `~/.local/kitty.app`, never layered, never Flatpak (native messaging and
 sandboxing concerns don't apply to a terminal, but the upstream installer is simply
 the right tier for a self-contained binary app with its own update mechanism).
 
-Zen Browser on thinkpad-x1 is a second exception. It installs from the upstream tarball
+Zen Browser is a second exception. It installs from the upstream tarball
 into `~/.local/zen` (`bootstrap.sh`, `setup_zen`) and updates itself. The Flatpak is out
 because `browsers.md` bans Flatpak browsers, and the tarball gives `policies.json` a
 writable home. Like kitty, it has no manifest line and no `check-drift` leg;
-`setup_zen` is the record.
+`setup_zen` is the record, and it pins the Adwaita theme's commit too (`browsers.md`).
 
 Homebrew has no Chromium formula/cask on Linux — confirmed dead end, do not
 retry `brew install chromium` or similar.

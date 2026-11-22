@@ -1,19 +1,31 @@
 # Browsers
 
 - **Zen Browser** (upstream tarball in `~/.local/zen`) is Geoff's daily browser on
-  thinkpad-x1 (Geoff, 2026-11-21). It is a Firefox fork, so Firefox add-ons install from
+  both hosts (Geoff, 2026-11-21). It is a Firefox fork, so Firefox add-ons install from
   addons.mozilla.org. `bluefin/zen/policies.json`, linked into the install's
   `distribution/` directory, carries every Chromium policy that has a Firefox equivalent
   (the home button, spell-check service, and background mode have none) and installs Proton
   Pass and Floccus. Zen's updater keeps the tarball current and leaves `distribution/`
-  alone. `bootstrap.sh` (`setup_zen`) installs it on thinkpad-x1 only. Claude never
+  alone. `bootstrap.sh` (`setup_zen`) installs it. Claude never
   drives Zen, since Anthropic ships no Firefox build of the Claude extension.
-- **Chromium** (layered RPM) is the daily browser on pavilion (Geoff, 2026-10-18; Firefox is
-  retired), and the browser Claude Code drives on both hosts. Two profiles split the roles: Geoff browses in his own profile, and
-  Claude Code drives the `Default` profile (the claude-in-chrome native-messaging
+- **Zen's Adwaita theme** is [ClixTW/zen-gnome-theme](https://github.com/ClixTW/zen-gnome-theme)
+  (MIT), a userChrome stylesheet (Geoff asked for an existing theme, 2026-11-21). Stock Zen
+  already follows the desktop's dark scheme, accent, and font; the theme adds Adwaita's
+  surfaces, icons, and controls. `setup_zen_theme` clones it to
+  `~/.local/share/zen-gnome-theme` at a pinned commit, then links `chrome/userChrome.css`,
+  `chrome/theme`, and `user.js` (from `bluefin/zen/user.js`, the three prefs the theme needs)
+  into each Zen profile. A profile exists only after Zen's first launch, so a new host runs
+  `bootstrap.sh setup` once more after it. Zen updates itself and the pin does not: when Zen's
+  chrome looks broken after an update, move the pin (the comment in `setup_zen_theme` says
+  how) or delete the two `chrome/` links to fall back to stock Zen.
+- **Chromium** (layered RPM) is the development browser and the one Claude Code drives on
+  both hosts (Geoff, 2026-11-21). It was pavilion's daily browser from 2026-10-18 until then,
+  and Firefox is retired. Two profiles split the roles: Geoff checks his development work in
+  his own profile, and Claude Code drives the `Default` profile (the claude-in-chrome native-messaging
   host, chrome-devtools MCP automation, and `chromium-shot`), so automation never
   runs beside his sessions or password manager. On pavilion no `Default` profile exists yet
-  (2026-11-18: `~/.config/chromium` holds only `Geoff`). A session there never falls back to
+  (2026-11-21: `~/.config/chromium` holds only `Geoff`, which carries the Claude extension
+  beside Proton Pass and Floccus). A session there never falls back to
   Geoff's profile, and a check that needs a real Chromium click is a `[you]` step until the
   profile is made. On thinkpad-x1 Chromium holds one profile, `Profile 1` (2026-11-21), which
   carries the Claude extension beside Proton Pass and Floccus from before the move to Zen.

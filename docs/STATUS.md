@@ -26,6 +26,8 @@ the `pavilion` desktop (Fedora 44 base, `bootc`/`ostree`). GNU Stow links tracke
   copies, since a live session held the main checkout. After `git -C ~/.dotfiles pull --ff-only`, run
   `rm ~/.local/share/applications/zen.desktop && cd ~/.dotfiles && stow -R applications`, then
   `ln -sf ~/.dotfiles/bluefin/zen/policies.json ~/.local/zen/distribution/policies.json`.
+  Then run `bash ~/.dotfiles/bluefin/bootstrap.sh setup` and restart Zen: `setup_zen_theme` links the Adwaita
+  theme pavilion got on 2026-11-21 into the profile.
 
 - **thinkpad-x1: restart the queue and move the household-it checkout.** Its first session pulls `~/.dotfiles` and `~/Projects/approval-queue`,
   then runs `approval-queue restart` (it names any old item still undecided and archives the old files

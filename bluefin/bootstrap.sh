@@ -238,10 +238,9 @@ setup_remove_conflicting_flatpaks() {
 
     # Hand the default-browser association to the layered Chromium RPM;
     # setting it explicitly covers a system where it pointed at Firefox.
-    # thinkpad-x1 browses in Zen, and setup_zen sets its default.
-    if [[ "$(hostname)" == thinkpad-x1 ]]; then
-        echo "thinkpad-x1: default browser left to setup_zen"
-    elif [[ -f /usr/share/applications/chromium-browser.desktop ]]; then
+    # setup_zen moves it to Zen later in the run, so Chromium holds it only
+    # when the Zen install fails.
+    if [[ -f /usr/share/applications/chromium-browser.desktop ]]; then
         xdg-settings set default-web-browser chromium-browser.desktop
         echo "default browser set to chromium-browser.desktop (layered RPM)"
     else
@@ -383,18 +382,14 @@ setup_kitty() {
     ln -sf "$HOME/.local/kitty.app/bin/kitten" "$HOME/.local/bin/kitten"
 }
 
-# Zen is Geoff's daily browser on thinkpad-x1 (Geoff, 2026-11-21); pavilion
-# stays on Chromium. It installs from the upstream tarball into ~/.local/zen,
-# where its built-in updater keeps it current. A Flatpak build is out (see
-# browsers.md), and the tarball gives policies.json a writable home in the
-# install's distribution directory, which updates leave alone. The policies
-# also install Proton Pass and Floccus.
+# Zen is Geoff's daily browser on both hosts (Geoff, 2026-11-21); Chromium
+# stays for development work. Zen installs from the upstream tarball into
+# ~/.local/zen, where its built-in updater keeps it current. A Flatpak build
+# is out (see browsers.md), and the tarball gives policies.json a writable
+# home in the install's distribution directory, which updates leave alone.
+# The policies also install Proton Pass and Floccus.
 setup_zen() {
-    echo "== setup: Zen Browser upstream tarball (thinkpad-x1 daily browser) =="
-    if [[ "$(hostname)" != thinkpad-x1 ]]; then
-        echo "not thinkpad-x1, skipping"
-        return
-    fi
+    echo "== setup: Zen Browser upstream tarball (daily browser) =="
     local zen_dir="$HOME/.local/zen"
     if [[ ! -x "$zen_dir/zen" ]]; then
         local tmp release url digest
@@ -424,6 +419,45 @@ for a in json.load(sys.stdin)["assets"]:
     # zen.desktop comes from the applications stow package.
     xdg-settings set default-web-browser zen.desktop
     echo "default browser set to zen.desktop"
+    setup_zen_theme
+}
+
+# Zen takes the desktop's dark scheme, accent, and font unaided, but paints its
+# sidebar near-black. ClixTW/zen-gnome-theme (MIT) restyles it as an Adwaita
+# app. The theme is a userChrome stylesheet, which lives in a profile, and Zen
+# creates a profile only on its first launch.
+setup_zen_theme() {
+    # Zen's updater can outrun this pin. To move it, read the upstream diff
+    # for any url() that leaves the theme directory, then change the commit.
+    local theme_rev=33c8da4f2cb1466a5b0a961620b8b11be4cc810a
+    local theme_dir="$HOME/.local/share/zen-gnome-theme"
+    if [[ ! -d "$theme_dir/.git" ]]; then
+        git clone -q https://github.com/ClixTW/zen-gnome-theme "$theme_dir" || return 1
+    fi
+    if ! git -C "$theme_dir" checkout -q --detach "$theme_rev" 2> /dev/null; then
+        git -C "$theme_dir" fetch -q origin || return 1
+        git -C "$theme_dir" checkout -q --detach "$theme_rev" || return 1
+    fi
+
+    # Zen keeps profiles under ~/.config/zen, or ~/.zen where an older
+    # install made that directory first.
+    local root path linked=0
+    for root in "$HOME/.config/zen" "$HOME/.zen"; do
+        [[ -f "$root/profiles.ini" ]] || continue
+        while IFS= read -r path; do
+            [[ -d "$root/$path" ]] || continue
+            mkdir -p "$root/$path/chrome" || return 1
+            ln -sfn "$theme_dir/userChrome.css" "$root/$path/chrome/userChrome.css" || return 1
+            ln -sfn "$theme_dir/theme" "$root/$path/chrome/theme" || return 1
+            ln -sfn "$BLUEFIN_DIR/zen/user.js" "$root/$path/user.js" || return 1
+            linked=$((linked + 1))
+        done < <(sed -n 's/^Path=//p' "$root/profiles.ini")
+    done
+    if [[ $linked -eq 0 ]]; then
+        echo "Zen has no profile yet: launch it once, then rerun bootstrap.sh setup for the theme"
+    else
+        echo "Adwaita theme linked into $linked Zen profile(s); restart Zen to load it"
+    fi
 }
 
 # Prints a --schemadir option for a schema that ships inside a GNOME Shell
@@ -511,15 +545,13 @@ Browsers:
     cannot split them.
   - `flatpak list | grep -i firefox` returns nothing: the
     preinstalled Flatpak builds are gone and the layered Chromium is what runs.
-  - `xdg-settings get default-web-browser` prints chromium-browser.desktop,
-    the layered RPM's desktop file under /usr/share/applications. On
-    thinkpad-x1 it prints zen.desktop instead.
-  - thinkpad-x1 only: setup_zen gates on the hostname, which a fresh install
-    sets after its first `setup` run. Rerun `bootstrap.sh setup` once the
-    hostname is thinkpad-x1, or Zen is skipped and Chromium stays the default.
-  - thinkpad-x1 only: about:policies in Zen lists the policies from
-    bluefin/zen/policies.json as active, and Proton Pass and Floccus appear
-    in about:addons.
+  - `xdg-settings get default-web-browser` prints zen.desktop. It prints
+    chromium-browser.desktop only when the Zen install failed; rerun
+    `bootstrap.sh setup` in that case.
+  - about:policies in Zen lists the policies from bluefin/zen/policies.json
+    as active, and Proton Pass and Floccus appear in about:addons.
+  - Zen's sidebar is Adwaita gray, not near-black. If it is near-black, Zen
+    had no profile when setup ran: rerun `bootstrap.sh setup`, restart Zen.
 
 Hylki (desktop mail client) and GNOME Online Accounts:
   - `flatpak list | grep -i thunderbird` returns nothing.
