@@ -1,0 +1,51 @@
+{
+  "skillName": "mail-tend",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I tagged three messages Misfiled in Hylki. They're newsletters from news.example.org that keep landing in my Inbox. What would you change so this stops? Plan it out, but change nothing on ward yet.",
+  "started": "2026-11-22T03:12:16Z",
+  "seconds": 20.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\", \"args\": \"Geoff tagged three messages Misfiled in Hylki: newsletters from news.example.org landing in Inbox. Plan the fix only; change nothing on ward yet.\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"example\\\\.org\", \"path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters\", \"output_mode\": \"content\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"roles/mail-filters/data/*\", \"path\": \"/var/home/glw907/Projects/household-it\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    }
+  ],
+  "result": "I couldn't look at anything yet. This session has no shell, so I can't ssh to ward to list the tagged messages. I also wasn't given read access to `~/Projects/household-it`. So I haven't seen the three messages or the current `categories.tsv`. The plan below follows the mail-tend procedure. Steps 1 and 2 are read-only. Nothing in it touches ward until step 4, and that waits for your go-ahead.\n\n## Plan\n\n**1. Confirm the batch and the cause (read-only)**\n- List every message tagged `Misfiled` by running `sudo mail-filters export geoff` (and `--junk`) over ssh and filtering on the keyword locally with jq. This shows whether the batch is just these three.\n- Run `scripts/mail-filters.sh preview` in a household-it worktree. For each message, `verdicts.jsonl` shows which of the template's nine steps put it in the Inbox.\n- The likely cause is one of two:\n  - **`news.example.org` isn't in `categories.tsv`.** This is the most common case.\n  - **The newsletters have no `List-*`, `Precedence`, or provider stamp header**, so the script reads them as personal mail.\n- I'll also check `always-inbox.txt` for a row that sends them to the Inbox. I'll check `X-SimpleLogin-Original-From` too: if they come through a Proton Pass alias, the sender to list is the real one, not `simplelogin.co`.\n- I'll count the other Inbox messages from that domain, so you know how far the pattern reaches.\n\n**2. Choose the fix**\n- **Expected: one data edit.** Add `news.example.org` to `categories.tsv` and send it to whichever folder holds your other newsletters. If you want a different folder, tell me which.\n- If the domain also sends mail you want in the Inbox, I'd add only the newsletter's From address instead.\n- If the cause turns out to be a rule gap rather than a missing sender, I'll bring you a one-paragraph design before changing anything. I don't expect that.\n\n**3. Test locally**\n- Run `tests/sieve-run/run.sh`, the preview, and the full gate (`bash scripts/check.sh </dev/null`).\n- Read the move plan's counts per destination and confirm that only `news.example.org` mail changes folder.\n\n**4. Land it (this is the step that changes ward)**\n- Commit the data file and push it to `main`.\n- Run `scripts/apply.sh ward --apply`, then `--check`.\n- Run `scripts/ward-mail-sort.sh install` and confirm the hash it prints matches the plan's `script_sha256`.\n\n**5. Afterwards**\n- New newsletters from `news.example.org` will be filed correctly.\n- The three already in your Inbox stay put unless you ask for a re-sort.\n- You clear the `Misfiled` tags yourself in Hylki, since no helper removes them.\n\nTo start, I need a session that can run shell commands and read household-it. Then I'll do steps 1 to 3 and come back with the cause and the move counts before anything lands on ward.",
+  "costUsd": 0.21404199999999998
+}

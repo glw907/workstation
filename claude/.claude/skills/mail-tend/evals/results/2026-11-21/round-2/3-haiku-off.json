@@ -1,0 +1,33 @@
+{
+  "skillName": "mail-tend",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Why is this in Junk? It's from my dentist's office, appointments@smiledental.example, and it's a real appointment reminder. Diagnose it and say what you'd change. Plan only; change nothing.",
+  "started": "2026-11-22T03:14:53Z",
+  "seconds": 12.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    }
+  ],
+  "result": "I couldn't diagnose this from the message itself. This working directory has no exported email or headers, only skill and config files, and I haven't searched your mail store. I changed nothing.\n\n**Likely causes, most to least likely**\n\n1. **Failed sender authentication.** Dental offices usually send reminders through a vendor (a practice-management or texting service), not from their own mail server. If the vendor's SPF, DKIM, or DMARC doesn't align with the `From` domain, providers route the mail to Junk.\n2. **Bulk-mail signals.** HTML-only bodies, heavy image or tracking-link content, or a missing `List-Unsubscribe` header can make a reminder look like marketing.\n3. **A learned or local rule.** You or someone with access may have marked a similar message as spam, or a filter may match on words like \"appointment,\" \"reminder,\" or \"unsubscribe.\"\n4. **New sender.** The address isn't in your contacts, so it gets no trust benefit.\n\n**Plan**\n\n- **Diagnose:** open the message's full headers (\"Show original\" or the equivalent) and read `Authentication-Results` for SPF, DKIM, and DMARC. Check the `Return-Path` and `Received` lines for the sending service, and look for a `X-Spam` or similar verdict. Then check whether earlier messages from this sender landed in Junk too, or only this one.\n- **Fix on your side:** mark it \"Not spam\" so the filter learns from it, add `appointments@smiledental.example` to contacts or the safe-sender list, and, if the provider supports it, create a rule that never sends that address to Junk. A rule keyed on the exact address is safer than one on keywords.\n- **Fix at the source, if it keeps happening:** ask the office which service sends their reminders and whether it has SPF and DKIM set up for their domain. A reminder that passes authentication and includes a plain-text part is far less likely to be filtered.\n\n**What I need from you:** which mail provider or client you use (for example Proton, Gmail, or Thunderbird), and either the raw headers of this message or a note of whether it's the first message from this sender in Junk. With the headers I can tell you which cause applies. I'd still make no changes until you approve them.",
+  "costUsd": 0.00462826
+}

@@ -1,0 +1,37 @@
+{
+  "skillName": "mail-tend",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Re-sort my stored mail so the list messages the new rule now files go to Archive. Tell me exactly what you'd run and what you'd check with me first. Don't run anything.",
+  "started": "2026-11-22T03:13:25Z",
+  "seconds": 11.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\"}"
+    }
+  ],
+  "result": "This is the plan. I haven't run anything.\n\n## What I'd check first\n\n1. **The rule has landed.** The re-sort follows the plan from the current script. So I'd confirm the new rule is committed on `main` and that `scripts/apply.sh ward --apply` and `--check` have passed. I'd also confirm that `scripts/ward-mail-sort.sh install` printed a hash equal to the plan header's `script_sha256`. If the rule isn't deployed yet, I'd land it through the skill's section 3 first.\n2. **Whether the rule fits the \"data edit\" or \"rule change\" path.** A change to `geoff.sieve.in` needs a branch, tests, and green CI before it merges. I'd confirm that is done.\n3. **Counts that I can't explain.** If the stored counts have moved and nothing I did moved them, I'd ask you before assuming a fault, since you tidy mail in Hylki yourself.\n\n## What I'd ask you\n\nOne line in chat with the counts per destination, for example \"N list messages to Archive, nothing else moves. Go?\" I'd ask unless the plan is 20 moves or fewer and follows a data edit you asked for. A re-sort this size almost certainly needs the question. Any line moving to Deleted Items would need its own explicit yes, whatever its size. If you decline those moves, I'd drop their lines from the plan first.\n\n## What I'd run, from the household-it checkout (in a worktree cut from `main`)\n\n1. `scripts/mail-filters.sh preview` builds the move plan.\n2. `tail -n +2 $XDG_RUNTIME_DIR/mail-filters/move-plan.jsonl | jq -r '\"\\(.from) -> \\(.to)\"' | sort | uniq -c` reads the plan so I can quote exact counts. If the preview fails with \"No space left on device\", I'd remove only the old `run*` directories under `$XDG_RUNTIME_DIR/mail-filters/`, never the live plan.\n3. A backup newer than the preview. Ward's nightly backup finishes around 03:30 Alaska time. For a fresher one, I'd run `ssh -o BatchMode=yes geoff@ward.907.life sudo systemctl start servers-backup.service`. It stops Stalwart for a few seconds, so I'd ask you first.\n4. `scripts/ward-mail-sort.sh move`, after your go-ahead. I'd use `move --trash` only if you'd agreed to Deleted Items moves. It won't run between 03:20 and 04:00 Alaska time, and the plan expires 24 hours after its preview.\n5. `scripts/ward-mail-sort.sh prune`, only if the move emptied a folder. It removes every empty user folder, and the script recreates one when its next message arrives.\n\nI'd never call `mail-filters move`, `undo`, or `folders --prune` over ssh directly. The skill says `ward-mail-sort.sh` is the only permitted path.\n\n## What I'd report afterward\n\n- Moved and skipped counts.\n- The manifest path.\n- Which folder counts changed.\n- That `scripts/ward-mail-sort.sh undo MANIFEST` reverses the move.\n- If any messages were from a `Misfiled` batch, their names, and that you clear the tag in Hylki, since no helper removes it.\n\nMessages that sit in two folders never move, so some list messages may be skipped.\n\nShould I start with the preview and the plan counts? That only reads, and it gives you the real number for the \"Go?\" question.",
+  "costUsd": 0.0948645
+}

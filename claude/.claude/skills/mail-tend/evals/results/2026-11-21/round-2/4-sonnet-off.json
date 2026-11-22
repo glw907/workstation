@@ -1,0 +1,26 @@
+{
+  "skillName": "mail-tend",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "What's the difference between IMAP and POP3? Two sentences.",
+  "started": "2026-11-22T03:16:21Z",
+  "seconds": 2.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "IMAP keeps your mail on the server and syncs it across devices, so folders, read status, and deletions look the same everywhere. POP3 downloads messages to a single device and (by default) removes them from the server, so it suits one-device use but leaves other devices out of sync.",
+  "costUsd": 0.0646355
+}

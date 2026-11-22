@@ -1,0 +1,47 @@
+{
+  "skillName": "mail-tend",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Why is this in Junk? It's from my dentist's office, appointments@smiledental.example, and it's a real appointment reminder. Diagnose it and say what you'd change. Plan only; change nothing.",
+  "started": "2026-11-22T03:15:06Z",
+  "seconds": 12.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Bash",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"claude-worktree-busy ~/Projects/household-it; ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters export geoff --junk | grep -i 'smiledental' | head -5\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"smiledental\", \"path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters\", \"-i\": true, \"output_mode\": \"content\"}"
+    }
+  ],
+  "result": "I couldn't look at the message. Bash is disabled in this session, so I couldn't reach ward. The read of `~/Projects/household-it/roles/mail-filters` was also denied. Everything below comes from the mail-tend skill's description of the sorting rules, not from your actual message or data files. Nothing was changed.\n\n## Likely cause\n\nMail lands in Junk only when no rule vouches for the sender. The spam test runs after every step that recognizes a trusted sender, and it is pass or fail at a Stalwart score of 5. So `smiledental.example` is almost certainly missing from `categories.tsv` and `always-inbox.txt`, and the message scored 5 or higher.\n\nAppointment reminders often score high. They are bulk mail from a scheduling platform, and they often lack DKIM or SPF alignment with the visible From.\n\nThe sender might also be a relay. A scheduling service can send on the office's behalf with its own domain in the envelope or in `Reply-To`. In that case the visible From isn't the domain the rules would see.\n\n## What I would check, read-only\n\n1. Find the message in Junk with `mail-filters export geoff --junk`. Read its `X-Spam-Score` and `X-Spam-Result` headers to see which tests fired.\n2. Grep `categories.tsv`, `always-inbox.txt`, `never-inbox.txt`, and `delete-senders.txt` for `smiledental`. A match in `never-inbox.txt` would change the diagnosis.\n3. Run `scripts/mail-filters.sh preview` and read the message's verdict.\n4. Count how many other messages from this sender sit in Junk, Inbox, and Archive, so the fix covers the whole pattern.\n\n## What I would change\n\nThis is a data edit, with no rule change. Add `appointments@smiledental.example` to `always-inbox.txt`, or the domain to `categories.tsv` if that fits your category scheme. An address row is narrower and the safer choice for a single office. If the headers show a relay, I would list the real sender instead.\n\nThen I would follow the skill's landing steps:\n\n1. Run `tests/sieve-run/run.sh`, the preview, and the whole gate.\n2. Push to `main`.\n3. Run `apply.sh ward --apply`, then `--check`.\n4. Run `ward-mail-sort.sh install` and confirm the printed hash equals the plan's `script_sha256`.\n\nI would not re-sort stored mail unless you ask. The existing reminder would stay in Junk until you move it or ask for a re-sort.\n\nIf you enable Bash and the read access, I can confirm the cause and fill in the counts before you approve the edit.",
+  "costUsd": 0.10078920000000001
+}

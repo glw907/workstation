@@ -1,0 +1,47 @@
+{
+  "skillName": "mail-tend",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Why is this in Junk? It's from my dentist's office, appointments@smiledental.example, and it's a real appointment reminder. Diagnose it and say what you'd change. Plan only; change nothing.",
+  "started": "2026-11-22T03:15:33Z",
+  "seconds": 20.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\", \"args\": \"Diagnose why appointments@smiledental.example (dentist appointment reminder) landed in Junk; plan only, change nothing.\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"smiledental|dental\", \"path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters\", \"output_mode\": \"content\", \"-i\": true}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"roles/mail-filters/data/*\", \"path\": \"/var/home/glw907/Projects/household-it\"}"
+    }
+  ],
+  "result": "I couldn't confirm the cause on the actual message. Reading `~/Projects/household-it` was declined, and this session has no shell, so I couldn't reach ward over ssh. What follows comes from how your filter script is built. I haven't checked it against the message's headers.\n\n## Likely cause\n\nYour script only sends mail to Junk when no rule recognizes the sender. The spam test runs after every step that recognizes a sender you've vouched for, and it fails anything Stalwart scores at 5 or above. So if this reminder is in Junk, there's probably no row for `smiledental.example` in `categories.tsv` and no row for `appointments@smiledental.example` in `always-inbox.txt`. Stalwart then scored it 5 or higher. Appointment-booking services are a common reason for that: they send \"from\" the practice's domain, and their authentication often doesn't line up.\n\n## What I'd check first (reading only)\n\n1. **Find the message in Junk.** Run `ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters export geoff --junk` and pick it out by its From address.\n2. **Read its spam headers.** `X-Spam-Score` shows how far over 5 it was. `X-Spam-Result` shows which checks added points, such as SPF, DKIM or DMARC failures, or a bad reputation for the sending service.\n3. **Check whether it came through a Proton Pass alias.** If the From is at `simplelogin.co`, the rule has to name the real sender in `X-SimpleLogin-Original-From`, not `simplelogin.co`.\n4. **Search the data files** for `smiledental` to confirm no row covers it.\n5. **Run `scripts/mail-filters.sh preview`** and read this message's line in `verdicts.jsonl` for the step and folder it reached.\n6. **See how far the problem reaches.** Count the other Junk messages from this domain or the same booking service, and list them in the report.\n\n## What I'd change\n\nThis needs a one-line data edit, not a change to the rules. It lands on `main` through the quick lane. Which file depends on what you want:\n\n- **Add `appointments@smiledental.example` to `always-inbox.txt`.** This is my recommendation if you want the reminders in your Inbox. It vouches for that one address and nothing else at the practice.\n- **Add `smiledental.example` to `categories.tsv` with a category** if you'd rather the practice's automated mail went to a folder instead of the Inbox.\n\nIf step 3 shows a booking service sending on the practice's behalf, the row still names the address you see in From.\n\nLanding it would mean:\n- running `tests/sieve-run/run.sh`, the preview and the full gate\n- committing and pushing to `main`\n- running `scripts/apply.sh ward --apply`, then `--check`\n- running `scripts/ward-mail-sort.sh install` and checking that its hash matches the plan's `script_sha256`\n\nThat fixes new mail only. The reminder already in Junk stays there unless you ask for a re-sort.\n\n## What I need from you\n\n- **File choice:** Inbox (`always-inbox.txt`) or a category folder (`categories.tsv`)?\n- **Access:** to run the diagnosis rather than reason from how the script works, I need read access to `~/Projects/household-it` and a session with a shell for the ssh steps.",
+  "costUsd": 0.20506660000000002
+}

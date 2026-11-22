@@ -1,0 +1,56 @@
+{
+  "skillName": "mail-tend",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I tagged three messages Misfiled in Hylki. They're newsletters from news.example.org that keep landing in my Inbox. What would you change so this stops? Plan it out, but change nothing on ward yet.",
+  "started": "2026-11-22T03:11:22Z",
+  "seconds": 11.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Bash",
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\", \"args\": \"Geoff tagged three messages Misfiled in Hylki. They're newsletters from news.example.org that keep landing in the Inbox. Diagnose and plan the fix. Plan only: make no changes on ward yet.\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters export geoff | jq -c 'select(.keywords | keys | map(ascii_downcase) | index(\\\"misfiled\\\"))' > /tmp/misfiled-inbox.jsonl; echo \\\"exit=$?\\\"; wc -l /tmp/misfiled-inbox.jsonl; cat /tmp/misfiled-inbox.jsonl\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls ~/Projects/household-it/roles/mail-filters/data/ 2>&1; cat ~/Projects/household-it/roles/mail-filters/data/categories.tsv 2>&1 | head -n 80; echo ---; grep -rn \\\"news.example.org\\\" ~/Projects/household-it/roles/mail-filters/data/ 2>&1\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"roles/mail-filters/data/*\", \"path\": \"/var/home/glw907/Projects/household-it\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"news\\\\.example\\\\.org|example\\\\.org\", \"path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters\", \"output_mode\": \"content\", \"-n\": true}"
+    }
+  ],
+  "result": "I couldn't diagnose this yet. Bash is disabled in this session, and reading the household-it checkout was denied, so I have no ward access and no local file access. Nothing has been changed on ward or in the repo.\n\n**What's blocked**\n- Finding the three tagged messages on ward (the `export geoff` + `jq` step).\n- Checking the sender and headers against `categories.tsv`, the preview's `verdicts.jsonl`, and the other data files.\n\n**Likely cause (unverified)**\nA newsletter from `news.example.org` landing in the Inbox usually means the sender's domain isn't in `categories.tsv`, or the mail lacks `List-*`, `Precedence`, or a provider stamp, so it reads as personal. The skill's fix for that is a data edit, not a rule change.\n\n**Planned fix, once I can read the repo and reach ward**\n1. Pull the three tagged messages' Message-IDs, headers, and sender, and check which step each one hit in `preview`.\n2. Count how many other Inbox messages share the same cause, so the fix's reach is known.\n3. Add a `categories.tsv` row for `news.example.org` in the matching newsletter category. If the list headers are missing, add an `always-inbox.txt` or `list-names.tsv` row instead, depending on what the verdicts show.\n4. Run the gate (`bash scripts/check.sh </dev/null`) and `scripts/mail-filters.sh preview`, then read the move plan.\n5. Commit to `main`, apply to ward, check, and reinstall the Sieve script. Stored mail stays where it is unless you ask for a re-sort. You clear the `Misfiled` tag in Hylki yourself.\n\n**What I need from you**\n- Permission to read `~/Projects/household-it` (or to enable Bash for this session), so I can check the repo and the ward export.\n- Confirmation that the planned data edit is the right direction once I've seen the headers.",
+  "costUsd": 0.0059999300000000005
+}
