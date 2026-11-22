@@ -1,0 +1,55 @@
+{
+  "skillName": "register-check",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+  "started": "2026-11-22T02:57:16Z",
+  "seconds": 17.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-off/draft.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"register\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-off/.claude\", \"-i\": true, \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"register\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-off/.claude/skills/survey/writing\", \"-i\": true, \"output_mode\": \"content\", \"-C\": 1}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-off/.claude/skills/survey/writing/editor.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-off/.claude/skills/survey/writing/writing-voice.md\"}"
+    }
+  ],
+  "result": "**Register check: `draft.md` (apply: no, file not edited)**\n\nI read this as editor documentation: a task page for a non-technical person using the admin. That puts it under the end-user register (`.claude/skills/survey/writing/editor.md`, Microsoft Writing Style Guide). The cairn-cms `docs-register.md` overlay isn't in this folder, so I checked against the base register only. I didn't run Vale.\n\n**Off-register (marketing and tells)**\n\n- **Lines 3-4:** \"isn't just a content system, it's a seamless way to publish\" is the contrast frame. \"Seamless\" is marketing.\n- **Line 3:** \"Moreover,\" opens with a connector. Start with the subject.\n- **Lines 3-4:** \"empowers every editor to ship robust, world-class pages in minutes\" is selling. The register says the reader is already here and nothing needs selling. \"Robust\" isn't exact here. \"World-class\" and \"in minutes\" are unverifiable claims. \"Ship\" is developer jargon for this reader.\n- **Line 9:** \"first released in 2019 and is used by over ten thousand sites\" is selling and has nothing to do with the task. Both figures are unverified. Cut the line, or confirm the figures before keeping any of it.\n\n**Task structure**\n\n- **Line 6:** The three actions (open the admin, choose the page, select Publish) are run together in one sentence. The register asks for a numbered list with one action per step.\n- **Line 6:** The page leads with the pitch instead of the task and its outcome. Start with \"To publish a page:\".\n- **Line 6:** \"The site rebuilds on Cloudflare\" explains how it works inside, which the reader doesn't need. Say what they see: the new version is live. Keep \"about a minute\" only if it's true.\n- **Missing:** There is no reassurance at the point of worry, such as what happens to the current live version while the rebuild runs. Add this only if you know the behavior. The register says not to fill in steps you can't verify.\n\n**Word choice and links**\n\n- **Line 7:** \"Click here to read more about builds\" has two problems. Microsoft uses \"select\", not \"click\". \"Click here\" is also bad link text, and it has no link target. Name the destination instead, for example \"Learn how builds work\", and link it.\n\n**Passes**\n\n- Second person and present tense on line 6.\n- Bold on **Publish** for the UI label.\n- No em dashes.\n\n**Net:** Only line 6 carries real content. Lines 3-4 and 9 should go, and line 6 should become a short numbered procedure with the outcome stated plainly. Tell me if you want me to apply that rewrite.",
+  "costUsd": 0.1305736
+}

@@ -1,0 +1,44 @@
+{
+  "skillName": "register-check",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Geoff asked for a register check on draft.md in this folder. Propose rewrites for what you find, but don't apply any.",
+  "started": "2026-11-22T03:02:11Z",
+  "seconds": 14.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-off/draft.md\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/voice/editor.md\"}"
+    }
+  ],
+  "result": "I read `draft.md` and checked it against the Microsoft Writing Style Guide, which is the standard for editor-facing how-to copy. I couldn't load `~/.claude/docs/voice/editor.md` because the read was denied, so I haven't checked it against the exemplars there. I also assumed the audience is editors, since the draft says \"every editor\" and \"open the admin\". If it's actually developer docs, the standard changes to Google's, and a few of these notes shift. I haven't changed the file.\n\n**Findings**\n\n1. **Lines 3-4, the marketing opener.** This is the main register problem. \"Isn't just X, it's Y\" is a contrast frame. \"Moreover\" is a connector opener. \"Seamless\", \"empowers\", \"robust\" and \"world-class\" are promotional words. \"In minutes\" is a claim the page never backs up. The paragraph sells the product on a page whose job is to tell an editor what to do.\n2. **Line 6, a sequence written as a paragraph.** The three actions should be a numbered list. The \"about a minute\" figure is the only timing the draft supports, and I've kept it as written. I couldn't verify it.\n3. **Line 7, \"Click here to read more about builds.\"** \"Click here\" is non-descriptive link text, and \"click\" assumes a mouse. \"Read more about\" is also filler.\n4. **Line 9, the release date and site count.** This is press-release content on a task page, which breaks the one-register-per-artifact rule. \"Over ten thousand sites\" is a number I can't verify from anything you gave me. I'd cut the line unless you have a source for it.\n5. **Line 1, the title.** Task headings in the Microsoft style take the imperative: \"Publish a page\".\n\n**Proposed rewrite**\n\n```markdown\n# Publish a page\n\n1. Open the admin.\n2. Choose the page.\n3. Select **Publish**.\n\nThe site rebuilds on Cloudflare, and the new version is live about a minute later. For details, see [How builds work](LINK).\n```\n\n`LINK` is a placeholder because the draft doesn't say where the builds page lives. If you want to keep a lead sentence, \"Publishing makes your changes live on the site.\" says the true part of the opener without the hype.\n\nDo you want me to apply this?",
+  "costUsd": 0.0999712
+}

@@ -1,0 +1,52 @@
+{
+  "skillName": "register-check",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+  "started": "2026-11-22T02:56:32Z",
+  "seconds": 17.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "register-check"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/register-check"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"register-check\", \"args\": \"draft.md, apply: no\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/draft.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"^\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on\", \"glob\": \".vale.ini\", \"output_mode\": \"count\"}"
+    }
+  ],
+  "result": "The register check on `draft.md` is done, with apply set to no. I did not edit the file.\n\n**Limits of this run:** the checkout has no `.vale.ini`, no `cairn-register-editor` agent, and no `docs-register.md`. There was also no shell, so Vale and `tellgrader` did not run. The first two gates were a manual read against the skill's named tells, not tool output. The logic and claims gate could not be checked against a codebase.\n\n**Fix these (ranked):**\n\n1. **Lines 3-4, \"Cairn isn't just a content system, it's a seamless way to publish.\"** This trips the \"isn't just X, it's Y\" pattern and the marketing word \"seamless,\" which are error-tier defects. It is also a comma splice. Cut it and open with the task, for example \"To publish a page, ...\"\n2. **Lines 3-4, \"Moreover, it empowers every editor to ship robust, world-class pages in minutes.\"** This has a connector opener, marketing words (\"empowers,\" \"robust,\" \"world-class\"), and an unsupported \"in minutes\" claim. Cut it. The later \"about a minute\" line already covers timing.\n3. **Line 7, \"Click here to read more about builds.\"** The link text \"here\" breaks the link-text rule, and there is no link at all. If a builds page exists, link a descriptive phrase such as \"Read how [builds work](...)\". Otherwise cut the sentence. I did not invent a URL.\n4. **Line 6, \"The site rebuilds on Cloudflare.\"** Cloudflare is a named entity with no link. Link it at first mention only if the link helps the reader. I did not supply a URL.\n\n**Geoff's call:**\n\n5. **Line 9, \"first released in 2019 and is used by over ten thousand sites.\"** This is a citation-shaped claim with no source. I could not verify either figure, and the site count looks like marketing inflation on a task page. Keep it only with a source or Geoff's confirmation. Otherwise cut it, or move it to a why-cairn page.\n6. **Lines 6-7, \"the new version is live about a minute later.\"** Keep it only if a measurement or documented deploy behavior supports it. Otherwise hedge or cut it.\n\n**Deliberately not flagged:** the instruction sentence on line 6 is plain, imperative, and bolds the UI label correctly. The H1 \"Publishing a page\" is a fine task title.\n\nIf the page keeps only the instruction sentence and a verified build-time claim, it is clean.",
+  "costUsd": 0.07942250000000001
+}

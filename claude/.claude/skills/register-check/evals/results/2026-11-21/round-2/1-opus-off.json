@@ -1,0 +1,44 @@
+{
+  "skillName": "register-check",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+  "started": "2026-11-22T02:58:00Z",
+  "seconds": 18.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\", \"args\": \"register check on draft.md, apply=no\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-off/draft.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/voice/editor.md\"}"
+    }
+  ],
+  "result": "I didn't edit the file. This is a register check on `draft.md`, which is an editor-facing walkthrough with UI steps only and no terminal step. That makes the standard the **Microsoft Writing Style Guide**, per the writing-voice router. The router points to `~/.claude/docs/voice/editor.md` for this register's examples, but the permission to read it was declined. So these findings rest on the Microsoft guide itself, not on the local brief.\n\n## Findings, most important first\n\n1. **Line 3, contrast frame.** \"Cairn isn't just a content system, it's a seamless way to publish\" is the \"not X, it's Y\" pattern, a common sign of AI writing. It's also a comma splice. Replace it with one plain sentence about what the page helps the reader do.\n\n2. **Lines 3–4, marketing words.** \"seamless\", \"empowers\", \"robust\" and \"world-class\" are promotional filler. Microsoft's guide asks for plain, specific words, and this sentence gives the reader nothing to act on. Cut it, or replace it with a fact.\n\n3. **Line 3, connector opener.** Starting a sentence with \"Moreover\" is too formal for editor copy and another AI-writing sign. Drop it.\n\n4. **Line 4, unsupported claim.** \"in minutes\" isn't backed by anything in the draft. Line 7 says the new version is live \"about a minute later,\" so the two statements also overlap.\n\n5. **Line 7, \"Click here.\"** Microsoft rules out \"click here\" as link text. The link should name where it goes, for example \"[Learn about builds](…)\". Microsoft also prefers \"select\" to \"click,\" and line 6 already uses \"select.\"\n\n6. **Line 6, sequence written as a paragraph.** \"open the admin, choose the page, and select **Publish**\" is a series of actions. The shape rules say a sequence of steps is a numbered list. Mixing \"choose\" and \"select\" is also inconsistent, so use \"select\" for both.\n\n7. **Line 9, facts to check.** \"first released in 2019\" and \"over ten thousand sites\" are specific claims with no source. Confirm them before publishing or cut them. The sentence is also off-topic for a how-to page about publishing.\n\n8. **Mixed register.** Lines 3–4 read like marketing, lines 6–7 like a procedure, and line 9 like an \"about us\" note. The shape rules call for one register per document. Only lines 6–7 belong on this page.\n\n## What's fine\n\nThe title, \"Publishing a page,\" uses the gerund form Microsoft recommends for task headings. **Publish** is correctly bold as a UI label. There are no em dashes, and the second paragraph is direct and in the second person.\n\nThe fix would keep the procedure in lines 6–7, turn it into a numbered list, fix the link text, and cut or verify lines 3–4 and 9. Say if you want me to apply it.",
+  "costUsd": 0.1921266
+}

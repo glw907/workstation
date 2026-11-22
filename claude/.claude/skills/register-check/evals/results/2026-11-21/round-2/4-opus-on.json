@@ -1,0 +1,33 @@
+{
+  "skillName": "register-check",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "How many words are in draft.md in this folder? Just give me the count.",
+  "started": "2026-11-22T03:03:44Z",
+  "seconds": 9.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/4-opus-on/draft.md\"}"
+    }
+  ],
+  "result": "**76 words.** I counted by hand because I had no shell to run `wc`. `wc -w` would report 77, since it also counts the `#` heading marker as a word.",
+  "costUsd": 0.14881
+}

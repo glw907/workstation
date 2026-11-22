@@ -1,0 +1,56 @@
+{
+  "skillName": "register-check",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Geoff asked for a register check on draft.md in this folder. Propose rewrites for what you find, but don't apply any.",
+  "started": "2026-11-22T03:01:04Z",
+  "seconds": 22.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "register-check"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/register-check"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"register-check\", \"args\": \"draft.md in /var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on. Propose rewrites for findings; do not apply any edits.\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/draft.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"vale|tellgrader\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on\", \"-i\": true, \"output_mode\": \"count\", \"glob\": \"draft.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/draft.md\"}"
+    }
+  ],
+  "result": "The register check is done and nothing was edited. Vale and the adversarial-edit agent did not run in this session, so the mechanical and register gates are a hand read, not a tool run. I re-read `draft.md` and the quoted lines match the file.\n\n**Findings**\n\n1. **Line 3, \"Cairn isn't just a content system, it's a seamless way to publish.\"** This is a contrast-frame construction with the marketing word \"seamless\". Rewrite: \"Publishing a page takes one action in the admin,\" or cut it and open with the procedure.\n\n2. **Line 4, \"Moreover, it empowers every editor to ship robust, world-class pages in minutes.\"** It has a filler connector (\"Moreover\"), marketing verbs and adjectives (\"empowers\", \"robust\", \"world-class\"), and an unsupported \"in minutes\". Rewrite: delete it. Line 7 already gives the real timing.\n\n3. **Lines 3–4 as a whole.** They announce value before the task. Rewrite: start the page at \"To publish a page, open the admin…\".\n\n4. **Line 9, \"Cairn was first released in 2019 and is used by over ten thousand sites.\"** Neither fact is sourced anywhere in this folder, and the sentence is off-topic for a task page. Rewrite: remove it, or keep it only with a source for each fact. This one is your call, since it is product history and a usage figure.\n\n5. **Line 7, \"about a minute later.\"** This is a timing claim with no measurement behind it. Confirm it against the deploy path, or write \"the new version goes live when the build finishes.\"\n\n6. **Line 7, \"Click here to read more about builds.\"** It fails the link-text rule (the link text should name its destination) and \"click\" is device-specific. Rewrite: \"For build details, see [How builds work](…)\", using the real sibling page path. I can't confirm the path from here, so I have not invented one.\n\n7. **Line 7, \"Cloudflare\" with no link.** Optional and low priority. Link it to Cloudflare's docs only if the page's link density allows it.\n\n**Not flagged:** the bold on **Publish** marks a UI label, which is correct. The procedural sentence on line 6 is clean and should be the opening.\n\n**Suggested clean version**\n\n```\n# Publishing a page\n\nTo publish a page, open the admin, choose the page, and select **Publish**. The site rebuilds on\nCloudflare, and the new version goes live when the build finishes. For build details, see [How builds work](…).\n```\n\nTwo things still need you: the 2019 and ten-thousand-site claims (line 9), and the path for the builds link. Once Vale and the register agent are available in this session, the mechanical and register gates should be rerun to confirm this read.",
+  "costUsd": 0.07404544
+}

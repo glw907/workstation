@@ -1,0 +1,52 @@
+{
+  "skillName": "register-check",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Run a register check on draft.md in this folder, with apply set to no. Report the findings; don't edit the file.",
+  "started": "2026-11-22T02:56:58Z",
+  "seconds": 17.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "register-check"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/register-check"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Bash",
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"register-check\", \"args\": \"draft.md apply=no\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/draft.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd /var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on; ls -a; which vale tellgrader; tellgrader --register docs draft.md 2>&1 | head -50\"}"
+    }
+  ],
+  "result": "**Register check on `draft.md` (apply=no, file not edited)**\n\nThe full four-gate pass couldn't run. Bash is disabled, so Vale and `tellgrader` didn't run. This folder also has no `.vale.ini`, no `cairn-register-editor` agent, no `docs-register.md`, and no codebase to check facts against. These findings come from a manual read, not tool output.\n\n**To fix**\n\n1. **\"Cairn isn't just a content system, it's a seamless way to publish.\"** This uses the \"isn't just X, it's Y\" contrast frame, and \"seamless\" is a marketing word. Cut the sentence, since the next paragraph already covers publishing.\n2. **\"Moreover, it empowers every editor to ship robust, world-class pages in minutes.\"** It has four tells: the opener \"Moreover\", the verb \"empowers\", and the adjectives \"robust\" and \"world-class\". Delete it. If a claim is wanted, use the page's own fact: the new version is live about a minute after you select Publish.\n3. **\"Click here to read more about builds.\"** \"Here\" is not a descriptive link text. Link a page title instead, for example \"For how builds work, see [Builds](builds.md)\". I can't confirm that page exists, so drop the sentence if it doesn't.\n4. **\"Cairn was first released in 2019 and is used by over ten thousand sites.\"** The date and the figure have no source, and the sentence is off-task for this page. Delete it, or source both facts and move them to a why-cairn or README page.\n\n**Your call**\n\n5. **Rebuild time.** Is \"about a minute\" measured? If not, soften it to \"usually within a few minutes\".\n6. **Cloudflare link.** Whether to link Cloudflare at first mention is optional. I couldn't verify a docs URL.\n\n**Not flagged**\n\nThe second paragraph's steps (\"open the admin, choose the page, and select **Publish**\") are plain task prose, so I left them alone.\n\nThe page is short and clean once findings 1, 2, and 4 go. To get the full pass, re-run it in the cairn repo with Bash and the agents available.",
+  "costUsd": 0.1431904
+}

@@ -1,0 +1,66 @@
+{
+  "skillName": "register-check",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "draft.md here is a cairn docs page that Geoff will read next. Give it the full four-gate prose review before he does, and report what you find. Findings only, no edits.",
+  "started": "2026-11-22T02:59:33Z",
+  "seconds": 22.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-off/draft.md\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"four (hard )?gates?\", \"path\": \"/var/home/glw907/.claude\", \"-i\": true, \"head_limit\": 20, \"output_mode\": \"content\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/{docs-register.md,written-for-people.md,technical-doc-web.md}\", \"path\": \"/var/home/glw907\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"four (hard )?gates?|gate\", \"-i\": true, \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"gate\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-off/.claude/skills/survey/writing\", \"-i\": true, \"output_mode\": \"content\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-off/.claude/skills/survey/writing/technical-doc-web.md\"}"
+    }
+  ],
+  "result": "I couldn't run the full four-gate review. I never found the gate definitions, so I didn't guess at their names or order.\n\n- The cairn-cms `docs-register.md` and the `cairn-writing-docs` skill aren't reachable from this session.\n- `standards:content-review` is the only skill that names four gates. It targets site content, not cairn docs.\n- Reads outside the working directory were denied.\n\nInstead I checked `draft.md` against the web-docs register (`technical-doc-web.md`) and the `writing-voice` shape and facts rules. I also don't know whether the page is developer or editor docs. The Google and Microsoft standards differ, so the register calls below may shift.\n\n**Facts: unverified specifics (highest risk)**\n- Line 9: \"first released in 2019\" and \"used by over ten thousand sites\" have no source in the draft. Confirm both or cut them.\n- Line 7: \"rebuilds on Cloudflare\" and \"live about a minute later\" state a platform and a timing. Confirm both.\n- Line 4: \"in minutes\" is another unsourced timing claim.\n- A page that tells editors what Publish does should be sure of those details. The reader will act on them.\n\n**Voice: marketing register**\n- Lines 3-4 are the off-voice pattern the register exists to prevent:\n  - \"isn't just X, it's Y\" is a contrast frame.\n  - \"Moreover\" is a connector opener.\n  - \"seamless\", \"empowers\", \"robust\" and \"world-class\" are marketing adjectives with no concrete claim behind them.\n- The opening should say what the page does. For example: \"This page shows how to publish a page from the admin.\" The register says to lead with the outcome.\n- Line 9 is also promotional. It is release history and a usage statistic on a how-to page, so it belongs on the front door or nowhere.\n\n**Shape and mechanics**\n- Lines 6-7 describe a sequence of actions (open the admin, choose the page, select Publish) in one sentence. A sequence should be a numbered list with one action per step.\n- Line 7: \"Click here to read more about builds\" has two problems:\n  - \"Click here\" is non-descriptive link text.\n  - It has no link target. It reads as a placeholder.\n  - Use descriptive link text such as \"For how builds work, see [Builds]\", and prefer \"select\" to \"click\".\n- Line 7 is also vague about what \"builds\" refers to.\n- Line 1: the heading is a gerund. Task headings are conventionally imperative: \"Publish a page\".\n\n**Gaps**\n- The page doesn't say what the reader sees after selecting Publish: a confirmation, a status or a progress indicator. I haven't invented any. Supply the facts, then add them. The register says to describe what the reader sees.\n- It doesn't say what happens if the build fails. Include that only if it's known.\n\n**Cleanliness**\n- No em dashes found.\n- Sentences are mostly short, but lines 3-4 are one long marketing sentence.\n\nOnce you point me to the gate definitions, or add the cairn-cms repo to scope, I can redo this against the exact gates.",
+  "costUsd": 0.1305105
+}
