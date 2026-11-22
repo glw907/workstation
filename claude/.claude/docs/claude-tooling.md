@@ -16,7 +16,9 @@ machine.** The manifests record intent; the script reports what happened.
 | Agents | `~/.dotfiles/claude/.claude/agents/<name>.md` (stowed) | the directory itself | stow |
 | Rules (path-scoped, loaded when a session touches a matching file) | `~/.dotfiles/claude/.claude/rules/<name>.md` (stowed to `~/.claude/rules/`) | the directory itself | stow |
 | Docs (this file and its siblings) | `~/.dotfiles/claude/.claude/docs/` (stowed) | the directory itself | stow |
-| Instructions (cross-repo reference docs, linked from consumer CLAUDE.md files) | `~/.dotfiles/claude/.claude/instructions/` (stowed) | the directory itself | stow |
+| Admin skill `bluefin-admin` (routes workstation admin work to one leaf of `docs/bluefin-admin.md`) | `~/.dotfiles/claude/.claude/skills/bluefin-admin/` (stowed) | the directory itself | stow |
+| Records (dated records, and `ai-operational-rules.md`, which no session loads) | `~/.dotfiles/claude/.claude/docs/record/` (stowed) | the directory itself | stow |
+| Retired-service reference `fastmail-api.md`, reached from `bluefin-admin/email.md` | `~/.dotfiles/claude/.claude/docs/` (stowed) | the file itself | stow |
 | Workstation `CLAUDE.md` | `~/.dotfiles/claude/.claude/` (stowed) | the file itself | stow |
 | `settings.json` (hooks, plugins, env) | tracked at `~/.dotfiles/claude/.claude/settings.json`, generated into `~/.claude/settings.json` (a real file, never stowed) | the tracked file | `claude-tooling-sync apply` |
 | Plugin `standards` (craft skills, reviewer agents, `running-passes`; a skill or agent a second repository needs) | `~/Projects/standards`, public `glw907/standards`, `plugins/standards/`; names are `standards:<name>` | `.claude-plugin/marketplace.json`, validated in its CI; vendored entries carry `"home": "standards"` in `vendored-skills.json` | `claude plugin install standards@glw907-standards`; auto-updates from `main`; `update-skills` opens a pull request there |

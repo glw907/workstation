@@ -595,3 +595,57 @@ def test_automode_unknown_entry_and_absent_record_print_unknown(tmp_path):
     assert "? entry 0 (No initiative named here.): unknown record" in out(proc)
     assert "? entry 1 (" in out(proc)
     assert proc.returncode == 0
+
+
+# ---- non-ASCII text survives each JSON write unescaped ----
+
+NON_ASCII = "Résumé — naïve"
+
+
+def stub_fetch_tools(tmp_path, claude_log):
+    """Put stub gh, stow, and claude binaries on PATH, so update-skills and apply run offline."""
+    bindir = tmp_path / "stubbin"
+    bindir.mkdir(exist_ok=True)
+    gh = bindir / "gh"
+    gh.write_text(
+        "#!/bin/sh\n"
+        'case "$*" in\n'
+        '  *commits/*) echo \'{"sha": "0123456789abcdef0123"}\' ;;\n'
+        '  *git/trees/*) echo \'{"tree": [{"path": "skills/x/SKILL.md", "type": "blob"}]}\' ;;\n'
+        "  *contents/*) printf -- '---\\nname: x\\ndescription: upstream\\n---\\n' ;;\n"
+        "  *) exit 1 ;;\n"
+        "esac\n")
+    stow = bindir / "stow"
+    stow.write_text("#!/bin/sh\nexit 0\n")
+    claude = bindir / "claude"
+    claude.write_text(f'#!/bin/sh\nprintf "%s\\n" "$@" >> "{claude_log}"\n')
+    for stub in (gh, stow, claude):
+        stub.chmod(0o755)
+    return f"{bindir}:{os.environ['PATH']}"
+
+
+def test_each_json_write_keeps_a_non_ascii_character_unescaped(tmp_path):
+    home = fixture_home(tmp_path)
+    tooling = home / ".dotfiles" / "claude" / ".claude" / "tooling"
+    manifest = tooling / "vendored-skills.json"
+    manifest.write_text(json.dumps(
+        {"skills": {"x": {**ENTRY, "description": NON_ASCII}}}, ensure_ascii=False))
+    (tooling / "mcp-servers.json").write_text(json.dumps(
+        {"servers": {"m": {"command": "m", "args": [NON_ASCII]}}}, ensure_ascii=False))
+    tracked_settings(home).write_text(json.dumps(
+        {"enabledPlugins": {}, "note": NON_ASCII}, ensure_ascii=False))
+    claude_log = tmp_path / "claude.log"
+    env = {"PATH": stub_fetch_tools(tmp_path, claude_log)}
+
+    proc = run("update-skills", "x", "--home", str(home), env=env)
+    assert proc.returncode == 0, out(proc)
+    text = manifest.read_text()
+    assert NON_ASCII in text and "\\u" not in text
+    assert json.loads(text)["skills"]["x"]["commit"] == "0123456789ab"
+
+    proc = run("apply", "--home", str(home), env=env)
+    assert proc.returncode == 0, out(proc)
+    text = live_settings(home).read_text()
+    assert NON_ASCII in text and "\\u" not in text
+    spec = claude_log.read_text()
+    assert NON_ASCII in spec and "\\u" not in spec
