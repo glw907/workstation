@@ -89,17 +89,6 @@
       "home": "standards",
       "description": "Add project terms to a Vale vocabulary so spell check accepts them. Use when the user says \"vale doesn't know our product name\", \"stop flagging this word\", or spelling alerts are firing on correct terms."
     },
-    "brainstorming": {
-      "repo": "obra/superpowers",
-      "branch": "main",
-      "commit": "22f0b463e7a5",
-      "license": "MIT",
-      "installed": "2026-11-17",
-      "path": "skills/brainstorming",
-      "_why": "Geoff's design-in-chat routine (10 runs in the 30 days to 2026-10-19), vendored so the superpowers plugin and its session-start hook can stay off.",
-      "description": "Explore a design with the user before building it: one question at a time, two or three approaches with a recommendation, then a written design for one approval. Use when new work's design is not settled yet, or when the user asks to brainstorm or think something through.",
-      "home": "standards"
-    },
     "receiving-code-review": {
       "repo": "obra/superpowers",
       "branch": "main",

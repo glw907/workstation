@@ -154,8 +154,9 @@ the diff, point the agents that need it at the skill file, commit skills and man
   `standards:tui-visual-verify`), then Charm's agent guide for the Crush UI (pinned in `standards:elm-conventions`),
   then the `tui-design` plugin. `tui-design` (gfargo, MIT) is consulted for layout and
   discoverability patterns; the house skills win on any conflict.
-- **Superpowers:** gone as a plugin (2026-11-10); two of its skills stay vendored
-  (`standards:brainstorming`, `standards:receiving-code-review`, MIT).
+- **Superpowers:** gone as a plugin (2026-11-10). `standards:receiving-code-review` stays
+  vendored from it (MIT). `standards:brainstorming` began as its skill and is now written
+  and tested in `glw907/standards`.
 - **Plugins:** frontend-design (Anthropic), cloudflare, tui-design, and standards (this
   workstation's portable skills and reviewers). The language servers are `typescript-lsp` and
   `gopls-lsp` (both from `claude-plugins-official`, with `gopls` in the Brewfile). A local

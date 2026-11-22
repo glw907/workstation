@@ -18,10 +18,14 @@ build.
 After a task misses its bar, the next spec reads that task's final artifacts against the code and traces each
 wrong claim to its source.
 
+When a brainstorm ends in a written design, that design is the spec. Write it once, by this guide, and bring
+it to Geoff once.
+
 ## What a spec carries
 
 - The intent in Geoff's words, with goals, non-goals, and what would make the work a failure.
 - The approaches considered, what each trades off, and the pick.
+- What happens when it goes wrong, and the number for each limit.
 - The published practice and vendor docs it draws on, with a label on each mechanism. Each label rests on a
   quoted source or on a probe and its output. Nothing says "expected".
 - Each assumption that more than one task rests on, with its probe or source.
