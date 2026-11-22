@@ -18,4 +18,20 @@ other=$(jq -nc '{tool_input: {file_path: "/tmp/other.md"}}' | "$SCRIPT")
 assert "$other" "" "silent outside memory"
 index=$(jq -nc --arg p "$HOME/.claude/projects/x/memory/MEMORY.md" '{tool_input: {file_path: $p}}' | "$SCRIPT")
 assert "$index" "" "silent on MEMORY.md"
+
+# /home links to /var/home, so one memory path has two spellings and the hook reminds on both.
+for p in /var/home/glw907/.claude/projects/x/memory/note.md /home/glw907/.claude/projects/x/memory/note.md; do
+  out=$(jq -nc --arg p "$p" '{tool_input: {file_path: $p}}' | HOME=/var/home/glw907 "$SCRIPT")
+  rc=$?
+  assert "$rc" "0" "exit 0 on $p"
+  case "$(jq -r '.hookSpecificOutput.additionalContext // empty' <<<"$out")" in
+    *"Memory write check"*) ;;
+    *) echo "FAIL: no reminder for $p"; fail=1 ;;
+  esac
+  case "$out" in *'"decision"'*|*'"permissionDecision"'*) echo "FAIL: the hook decides on $p"; fail=1 ;; esac
+done
+for p in /var/home/glw907/.claude/projects/x/memory/MEMORY.md /home/glw907/.claude/projects/x/memory/MEMORY.md; do
+  out=$(jq -nc --arg p "$p" '{tool_input: {file_path: $p}}' | HOME=/var/home/glw907 "$SCRIPT")
+  assert "$out" "" "silent on $p"
+done
 exit "$fail"

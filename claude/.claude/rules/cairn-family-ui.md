@@ -14,5 +14,6 @@ the pre-cut audit; the admin design system wins over both on conflict.
 `standards:visual-fidelity` skill at the start and gates on `standards:visual-verifier`. Nothing
 deploys to production without a full-page render read in the main loop.
 
-Cairn backlog items and engine-level UI mechanics follow `cairn-pass` and `site-pass`: a UI
-mechanic belongs to cairn, a design choice to the site.
+A cairn backlog item or an engine-level UI mechanic is built by `building-from-specs`, with
+`cairn-pass` or `site-pass` for the repo's gate: a UI mechanic belongs to cairn, a design choice
+to the site.

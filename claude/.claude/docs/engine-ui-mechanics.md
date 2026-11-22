@@ -1,6 +1,6 @@
 # Engine-level UI mechanics, every cairn site
 
-This holds CLAUDE.md's "Engine-level UI mechanics, every cairn site" section; CLAUDE.md keeps a pointer to it.
+This holds the "Engine-level UI mechanics, every cairn site" section that CLAUDE.md once carried. The `site-pass` skill points to it.
 
 Every cairn-cms site (aksailingclub-org, ecxc-ski, 907-life, later consumers), not one repo. A
 UI **mechanic** belongs to cairn; a design **choice** belongs to the site. A mechanic recurs in
