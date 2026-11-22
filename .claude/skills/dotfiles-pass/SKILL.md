@@ -4,14 +4,15 @@ description: >
   The workstation repo's facts (~/.dotfiles): its gate, its checks, which paths run unattended work
   or touch secrets, and how a merged change reaches the live machine, settings included. Use with
   building-from-specs when building, reviewing, or merging a task whose edits land in ~/.dotfiles
-  (skills, agents, workflows, scripts, settings, docs).
+  (skills, agents, scripts, settings, docs).
 ---
 
 # Dotfiles pass
 
 Load `building-from-specs` first; it holds the process. This skill holds the repo's facts.
-Dotfiles is a GNU Stow repo: `~/.claude` and `~/.local/bin` link into the main checkout, so a
-merge there is live on the machine once the main checkout pulls.
+Dotfiles is a GNU Stow repo: files under `~/.claude` and `~/.local/bin` link into the main
+checkout, so a change to a linked file is live once the main checkout pulls. An added or removed
+script or skill needs a restow, and the settings need a sync ("After a merge").
 
 ## Gate
 
@@ -43,7 +44,7 @@ task's worktree is the launch's `.claude/worktrees/<name>`, with no setup comman
 ## Paths
 
 These paths run unattended work, so `building-from-specs` "Direct changes" lets only a wording
-edit land there without a pull request: `claude/.claude/{skills,agents,workflows}/**`,
+edit land there without a pull request: `claude/.claude/{skills,agents}/**`,
 `claude/.claude/settings.json`, `claude/.claude/tooling/**`, `.claude/skills/**`, `scripts/**`,
 `tests/**`, and
 `bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-context-budget,claude-git-guard,claude-merge-guard,claude-tooling-sync,claude-worktree-busy,task-report}`.
@@ -58,8 +59,12 @@ A path in both lists takes the second.
 
 The session Geoff is talking to pulls the main checkout, then runs these in order.
 
-1. `stow -R bin` when the merge added or removed a script, so `~/.local/bin` links it or drops
-   its link. `find ~/.local/bin -xtype l` prints nothing after.
-2. `claude-tooling-sync apply`, then `claude-tooling-sync verify`, when the merge touched
+1. `stow -R bin` when the merge added, renamed, or removed a script, so `~/.local/bin` links it
+   or drops its link. `find ~/.local/bin -xtype l` prints nothing after.
+2. `stow -R claude` when the merge added, renamed, or removed a skill. Each skill is its own link
+   under `~/.claude/skills/`. `find ~/.claude/skills -xtype l` prints nothing after.
+3. `claude-tooling-sync apply`, then `claude-tooling-sync verify`, when the merge touched
    `claude/.claude/settings.json` or `claude/.claude/tooling/`. The live `~/.claude/settings.json`
-   is a generated file, never stowed, so it doesn't follow a pull.
+   is a generated file, never stowed, so it doesn't follow a pull. `apply` writes each tracked
+   top-level key over the live one and removes nothing, so delete from the live file each
+   top-level key the merge removed.
