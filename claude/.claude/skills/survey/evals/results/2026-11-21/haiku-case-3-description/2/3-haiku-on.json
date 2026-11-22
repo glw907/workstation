@@ -1,0 +1,20 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "started": "2026-11-22T00:50:18Z",
+  "seconds": 22.6,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "I haven't run anything yet. Here is what I'd do, in order.\n\n**1. Log the correction first.** The `survey` skill's Corrections section requires this before I redo the work.\n\nI'd write one file at `/var/home/glw907/Projects/survey-notes/corrections/<YYYY-MM-DD>T<HHMMSS>-pavilion.md`. The time comes from `date +%FT%H%M%S` when I write it, and the host is `pavilion` from `hostname -s`. The date is 2026-11-21.\n\nThe file opens with frontmatter:\n- `date: 2026-11-21`\n- `host: pavilion`\n- `repo:` the repo that holds the commit. This working directory isn't a git repo, so I'd locate the commit first.\n- `audience: commit message`\n- the register file, `commit-and-pr.md`\n\nThen four sections:\n- **Before:** \"This change seamlessly streamlines the gate.\"\n- **After:** \"This change makes the gate faster.\"\n- **Context:** the surrounding sentence only, with no secrets or personal details.\n- **Reason:** \"not stated.\" You gave the rewrite without a reason, so I won't supply one.\n\nThen these four commands, in this order:\n1. `git -C /var/home/glw907/Projects/survey-notes add corrections/<file>`\n2. `git -C /var/home/glw907/Projects/survey-notes commit -m \"Log a correction\" -- corrections/<file>`\n3. `git -C /var/home/glw907/Projects/survey-notes pull --rebase`\n4. `git -C /var/home/glw907/Projects/survey-notes push`\n\nIf `survey-notes` isn't cloned, I'd run `gh repo clone glw907/survey-notes` into that path first. A failed pull or push leaves the commit local, and I'd continue.\n\n**2. Redo the commit.** I'd find the repo, check the commit's position, and confirm whether it has been pushed.\n- If it's unpushed, I'd run `git commit --amend -m \"<new subject>\"`, after checking the body for the same phrase.\n- If it's pushed, the fix needs a force push. That reaches outside this machine, so I'd stop and ask before doing it.\n\nYour suggested wording is third person, \"makes.\" Our commit rule asks for the imperative mood, which gives \"Make the gate faster.\" Which do you want? I'll use your exact sentence only if you say so. The correction log records your wording either way.\n\nGive me the go-ahead, along with your answer on the mood, and I'll run the steps.",
+  "costUsd": 0.0029236
+}

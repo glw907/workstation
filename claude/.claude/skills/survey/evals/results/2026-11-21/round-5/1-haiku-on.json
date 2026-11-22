@@ -1,0 +1,21 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I'm starting a small internal tool: a daisyUI 5 app that isn't on cairn, with a list page and a settings form. Which of the house style's files do I pull in, what do I read before I lay out the pages, and where do the button and text colors come from? Answer here; don't write any code yet.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:29:44Z",
+  "seconds": 14.3,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "For a daisyUI 5 app outside cairn, pull in three files from the Survey release your project pins: `theme/survey.css` (the daisyUI theme), `theme/components.css` (component styling), and `theme/fonts.css` (font loading). Skip `theme/survey-vars.css`, which is for apps without daisyUI.\n\nRead these in order before you lay out either page:\n\n1. `DESIGN.md`, the principles and the token table, so the vocabulary is clear.\n2. The recipe for a plain app in `DESIGN.md`. It sets the page structure for the list page and the settings form. Follow it and name it in your change.\n3. The motion rules in `DESIGN.md`, which say which transitions to keep.\n\nThe color values come from `tokens.json`, the one source, and the build carries them into `theme/survey.css`. Your button and text colors arrive through daisyUI's own color roles, so `btn-primary` and the base-content text color pick up Survey's values with no literal in your CSS. I haven't checked which token fills which role. The token table in `DESIGN.md` gives that mapping, so confirm it there before you rely on it.\n\nDon't type a hex value into a project file, and don't edit a built file. If a color pairing fails contrast, the fix is a tuned value in Survey, and the change lists the old and new values. If you hit a gap before Survey ships a fix, log it to Survey's `BACKLOG.md` through `/log-issue`, then work around it in project CSS and name the backlog item in a comment.",
+  "costUsd": 0.00575419
+}

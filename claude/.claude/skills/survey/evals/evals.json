@@ -1,0 +1,41 @@
+[
+  {
+    "skills": ["survey"],
+    "query": "I'm starting a small internal tool: a daisyUI 5 app that isn't on cairn, with a list page and a settings form. Which of the house style's files do I pull in, what do I read before I lay out the pages, and where do the button and text colors come from? Answer here; don't write any code yet.",
+    "files": [],
+    "expected_behavior": [
+      "Names theme/survey.css, theme/components.css, and theme/fonts.css as the files a daisyUI app pulls in",
+      "Says to read DESIGN.md first and to pick the recipe there that matches this kind of app",
+      "Says each color comes from a Survey token (tokens.json or the theme's variables), never a literal value"
+    ]
+  },
+  {
+    "skills": ["survey"],
+    "query": "I just changed one color value in Survey's tokens.json. What do I run before I commit it, is the change a minor or a major version, and once it's merged should you go ahead and cut the release?",
+    "files": [],
+    "expected_behavior": [
+      "Says to run scripts/build after editing tokens.json and scripts/gate before the commit",
+      "Calls a changed value a minor version",
+      "Doesn't start a release on its own: says a release is cut only when the user asks for one, and names releasing.md as the file that holds the steps"
+    ]
+  },
+  {
+    "skills": ["survey"],
+    "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+    "files": [],
+    "expected_behavior": [
+      "Writes the log file in /var/home/glw907/Projects/survey-notes/corrections/, named <YYYY-MM-DD>T<HHMMSS>-<host>.md from date and hostname -s",
+      "Gives the file frontmatter with date, host, repo, and audience, then Before, After, Context, and Reason sections, with Reason \"not stated\" because the user gave none",
+      "Runs the skill's git commands on the survey-notes repo: add corrections/<file>, commit -m \"Log a correction\" -- corrections/<file>, pull --rebase, and push"
+    ]
+  },
+  {
+    "skills": ["survey"],
+    "query": "Write me a systemd service and timer pair that runs /usr/local/bin/nightly-backup every night at 2:00 local time, and say where each file goes.",
+    "files": [],
+    "expected_behavior": [
+      "Gives a .service unit that runs /usr/local/bin/nightly-backup and a .timer unit with OnCalendar set for 02:00 that starts it",
+      "Doesn't load the survey skill: no Skill call on it and no read of its SKILL.md"
+    ]
+  }
+]

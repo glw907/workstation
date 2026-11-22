@@ -1,0 +1,19 @@
+{
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I'm starting a small internal tool: a daisyUI 5 app that isn't on cairn, with a list page and a settings form. Which of the house style's files do I pull in, what do I read before I lay out the pages, and where do the button and text colors come from? Answer here; don't write any code yet.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:29:59Z",
+  "seconds": 15.9,
+  "exitCode": 0,
+  "listed": [],
+  "invoked": [
+    "standards:daisyui"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "The project folder is empty and has no `package.json`, so you'll be starting from scratch and need the install guide first.\n\n**Files to pull in.** Load the `standards:daisyui` skill. It points to the rest, and you need these parts:\n\n- `install/SKILL.md`, since nothing is installed yet. I didn't open this one, so I can't tell you its steps.\n- `usage/SKILL.md` and `colors/SKILL.md`, which you must read before writing any class names or colors.\n- `config/SKILL.md` only if you want a custom theme. The default enables `light` and `dark`, which may be enough for an internal tool.\n- The component guides for what you're building. For the list page, compare `table`, `list`, and `menu`. For the settings form, compare `fieldset`, `label`, `input`, `select`, `toggle`, `checkbox`, `validator`, and `button`. The skill says to read at least two candidates before picking one.\n\nFor the look itself, `frontend-design` gives aesthetic direction. `visual-fidelity` only applies if you're matching a reference design. `design-refinement` is for polishing a layout after its structure is approved. For any labels or help text on the pages, use `writing-voice`.\n\n**What to read before laying out the pages.** The usage rules say to use daisyUI classes first, then Tailwind utilities, and to avoid custom CSS when a class already covers the job. They also say to use the default variant (plain `btn`) unless someone asks for a color or variant. Layout that uses `flex` or `grid` needs responsive prefixes. The usage guide also says to skip the `bg-base-100 text-base-content` pair on `body` unless you need it.\n\n**Where button and text colors come from.** Colors come from the active theme, not from fixed values in your markup.\n\n- Semantic names such as `primary`, `base-100`, `base-200`, `base-300`, `base-content`, `error`, and their `-content` pairs change with the theme. Use these, for example `bg-primary` or `text-base-content/60`.\n- Button color is a semantic variant like `btn-primary`, but the colors guide says to use `primary` only once per page, on the most important element. Everything else stays on the base surfaces or the default button.\n- Body text uses `text-base-content`. The guide warns against Tailwind grays such as `text-gray-800`, because they become unreadable on a dark theme.\n- The Tailwind `dark:` prefix doesn't apply to daisyUI names. Don't use it with them.\n- Themes are enabled in CSS with `@plugin \"daisyui\" { themes: ...; }`. Each theme's color values are set either in a `@plugin \"daisyui/theme\"` block or by changing a built-in theme. You select a theme with `data-theme` on `<html>` or a nested element.",
+  "costUsd": 0.00736857
+}

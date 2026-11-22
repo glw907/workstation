@@ -26,12 +26,12 @@
     "survey": {
       "repo": "glw907/survey",
       "path": "skills/survey",
-      "branch": "v1.7.0",
-      "commit": "cab258deb7df",
+      "branch": "v2.0.0",
+      "commit": "885adb1f2ac1",
       "license": "none",
       "installed": "2026-11-11",
       "_why": "The house style skill. Its writing/ directory is the source of the writing-voice output style, the voice registers, and the authoring charter, which link into it; edit them in the Survey repo only.",
-      "note": "On this workstation, writing for Geoff follows ~/.claude/docs/voice/written-for-people.md, and nothing reads writing/approval-brief.md."
+      "note": "On this workstation, writing for Geoff follows ~/.claude/docs/voice/written-for-people.md."
     },
     "vale-ci": {
       "repo": "vale-cli/agent-tools",

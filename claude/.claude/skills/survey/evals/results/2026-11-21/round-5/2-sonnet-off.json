@@ -1,0 +1,17 @@
+{
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I just changed one color value in Survey's tokens.json. What do I run before I commit it, is the change a minor or a major version, and once it's merged should you go ahead and cut the release?",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:33:22Z",
+  "seconds": 24.9,
+  "exitCode": 0,
+  "listed": [],
+  "invoked": [],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "Run `scripts/build` first, then `scripts/gate`. The build regenerates `theme/survey.css`, `theme/survey-vars.css`, and the token table in `DESIGN.md` from `tokens.json`. The gate then checks that those files are current and that the theme still passes contrast. A changed color is the likeliest thing to trip the contrast check. Commit the regenerated files along with `tokens.json`, or `scripts/build --check` will fail as stale. Run `npm install` first if you haven't.\n\nThe change is a minor version. The CHANGELOG's own rule is that a changed value or rule is a minor, and a removed or renamed one is a major. You changed a value and didn't rename or remove a token, so it's a minor. In the same PR, bump `package.json` and move the CHANGELOG entry from Unreleased to a dated version.\n\nOn the release, I'd wait for your go-ahead. Cutting it publishes a `v<version>` tag and a GitHub release, and you can't quietly take either back. `scripts/release <version>` runs from a clean `main` after the PR merges. It re-runs the gate, tags, pushes, and creates the release with the Vale zip attached. Once the PR is merged I'll check that `main` is at `origin/main`, tell you the version I'm about to tag, and run it on your yes.\n\nI couldn't run anything this turn because Bash is disabled in this session. All of this comes from reading `scripts/build`, `scripts/gate`, `scripts/release`, and the README and CHANGELOG in the survey-pass-3 worktree. I couldn't find the `survey` skill's \"Releasing a change\" section on disk, so it may add steps I haven't seen.",
+  "costUsd": 0.2189034
+}

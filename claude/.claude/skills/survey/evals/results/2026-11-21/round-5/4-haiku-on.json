@@ -1,0 +1,19 @@
+{
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Write me a systemd service and timer pair that runs /usr/local/bin/nightly-backup every night at 2:00 local time, and say where each file goes.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:37:17Z",
+  "seconds": 10.9,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "Both files go in `/etc/systemd/system/`, the system unit directory. On this machine (pavilion, Bluefin DX), keep the source copies in `~/.dotfiles/bluefin/etc/systemd/system/` and link them into `/etc` from there, so the dotfiles copy stays the record.\n\n**`/etc/systemd/system/nightly-backup.service`**\n\n```ini\n[Unit]\nDescription=Nightly backup\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/nightly-backup\n```\n\n**`/etc/systemd/system/nightly-backup.timer`**\n\n```ini\n[Unit]\nDescription=Run nightly-backup every night at 02:00 local time\n\n[Timer]\nOnCalendar=*-*-* 02:00:00\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n```\n\n`OnCalendar` uses the system's local time zone, so 02:00 means 2:00 on the wall clock. `Persistent=true` makes systemd run a missed job at the next boot if the desktop was off at 2:00. Without it, a powered-down machine skips that night's backup.\n\nThe service has no `[Install]` section because the timer starts it. The timer's `Unit=` defaults to the service with the same name, so I left it out.\n\nThe service runs as root because no user was given. If the script should run as your user, add `User=glw907` under `[Service]`, and check that the script can write its destination as that user.\n\nTo turn it on, run `sudo systemctl daemon-reload` and then `sudo systemctl enable --now nightly-backup.timer`. Then `systemctl list-timers nightly-backup.timer` shows the next run time. I have not created or enabled these units. If you want me to write them into the dotfiles tree, link them, and enable the timer, say so.",
+  "costUsd": 0.00476011
+}

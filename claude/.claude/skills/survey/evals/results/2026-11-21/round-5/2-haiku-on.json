@@ -1,0 +1,21 @@
+{
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I just changed one color value in Survey's tokens.json. What do I run before I commit it, is the change a minor or a major version, and once it's merged should you go ahead and cut the release?",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:32:37Z",
+  "seconds": 7.0,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "Run `scripts/build` first, since it regenerates the built theme files from `tokens.json`. Then run `scripts/gate` before the commit. Never hand-edit a built file.\n\nThis is a minor version bump. A changed value or rule is minor, and only a removed or renamed token is major.\n\nI won't cut the release after the merge. Survey releases happen only when you ask for one, and the steps are in `releasing.md`. Tell me when you want it and I'll run them.",
+  "costUsd": 0.0049762899999999995
+}

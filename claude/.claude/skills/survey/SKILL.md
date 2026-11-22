@@ -1,10 +1,10 @@
 ---
 name: survey
-description: Use when building or styling any house tool's UI (a daisyUI theme, CSS variables, a recipe for the cairn admin, a cairn site, a plain app, or a theme-limited app), when asked where Survey's pieces live, or when Geoff corrects your wording. Survey is the house style; this skill says which file to read for the task.
+description: Routes house-tool UI work to the right Survey file, for a daisyUI theme, CSS variables, a recipe for the cairn admin, a cairn site, a plain app, or a theme-limited app. Survey is the house style, and this skill says where each of its pieces lives. It also holds the steps for logging a correction to Claude's wording. Use when building or styling any house tool's UI, when asked where Survey's pieces live, or when the user corrects or rewrites your wording in a commit, a doc, or a reply, before you redo the work.
 ---
 
 <!-- local-overlay -->
-On this workstation, writing for Geoff follows ~/.claude/docs/voice/written-for-people.md, and nothing reads writing/approval-brief.md.
+On this workstation, writing for Geoff follows ~/.claude/docs/voice/written-for-people.md.
 <!-- /local-overlay -->
 
 # Survey
@@ -20,7 +20,7 @@ Survey is the house style for every house tool. The repo is `glw907/survey`; a p
 | A daisyUI app | `theme/survey.css`, `theme/components.css`, `theme/fonts.css` |
 | An app with no daisyUI | `theme/survey-vars.css` and `theme/fonts.css` |
 
-Run `scripts/build` after editing `tokens.json`, and `scripts/gate` before a commit. A change to a value or a rule is a minor version, and a removed or renamed token is a major. `scripts/release <version>` tags and publishes once the changelog entry and `package.json` version are merged.
+Run `scripts/build` after editing `tokens.json`, and `scripts/gate` before a commit. A change to a value or a rule is a minor version, and a removed or renamed token is a major. A release is cut only when Geoff asks for one, and `releasing.md` holds its steps.
 
 ## Rules for working in a project
 
@@ -41,7 +41,6 @@ The house writing register lives in `skills/survey/writing/`. Every audience sta
 | `writing-voice.md` | The base rule and the tells that hold for every audience |
 | `authoring-charter.md` | Which standard each audience starts from, and who owns an overlay |
 | `agent-facing.md` | Prompts, skills, agent definitions, and other text a model reads |
-| `approval-brief.md` | The brief that opens a design, plan, or PR for approval |
 | `commit-and-pr.md` | Commit messages and pull request bodies |
 | `editor.md` | End-user and editor docs for a non-technical reader |
 | `technical-doc-go.md` | Developer docs for Go repos (Go comments take the go-conventions skill) |
@@ -71,21 +70,3 @@ A failed pull or push leaves the commit local. Go on; the next correction's push
 If `/var/home/glw907/Projects/survey-notes` is missing, run `gh repo clone glw907/survey-notes /var/home/glw907/Projects/survey-notes` first. If the clone or the write fails, say so and skip the log. Never write the file anywhere else.
 
 A Survey file, a PR body, or `CHANGELOG.md` never quotes a correction file, its Context, a private repo's name, a path, or a person. Write any example there fresh, to show the same pattern.
-
-## Releasing a change
-
-Use this sequence for a release and for the monthly review. `<version>` is the new version.
-
-1. In the Survey PR, run `npm version <version> --no-git-tag-version` and add a dated `CHANGELOG.md` entry.
-2. Build the workstation PR in its own worktree: `git -C /var/home/glw907/.dotfiles fetch -q origin && git -C /var/home/glw907/.dotfiles worktree add .claude/worktrees/survey-<version> -b survey-<version> origin/main`. Then vendor the skill there:
-   1. Push the Survey PR's branch. `fetch_skill` reads GitHub at the manifest's `branch`, so an unpushed fix vendors a stale head.
-   2. Make a scratch home: `S=$(mktemp -d); mkdir "$S/home"; ln -s <worktree> "$S/home/.dotfiles"`.
-   3. Run `rm -rf <worktree>/claude/.claude/skills/survey`, since `fetch_skill` never removes a file upstream dropped.
-   4. Set the `survey` entry's `branch` in `<worktree>/claude/.claude/tooling/vendored-skills.json` to the Survey PR's branch, run `<worktree>/bin/.local/bin/claude-tooling-sync update-skills --home "$S/home" survey`, then set `branch` to `v<version>`. The `commit` field keeps the head the files came from.
-   5. Check that `diff -r <survey worktree>/skills/survey <worktree>/claude/.claude/skills/survey` prints nothing.
-3. After approval, merge the Survey PR: `approval-queue merge <id>`. It stops with exit 2 at the workstation PR's `## Before merge`, as expected.
-4. Release from a fresh clone, never the main checkout: `R=$(mktemp -d); gh repo clone glw907/survey "$R/survey"`, then `npm ci` and `scripts/release <version>` in `$R/survey`. A fresh clone is on `main`, clean, and at `origin/main`, as `scripts/release` requires. Worktree isolation covers only the repo a session launched from and that repo's main checkout, so an isolated session can still release from the clone.
-5. Run the workstation PR's `## Before merge` check: `git -C "$R/survey" diff --quiet <vendored commit> v<version> -- skills/survey`. Then merge it with `approval-queue merge --premerge-done glw907/workstation#<n> <id>`.
-6. Pull `~/.dotfiles` and run `stow -R claude`. Check that `claude -p "/output-style"`, run from `/tmp`, lists `writing-voice (current)`. Then remove the worktree: `git -C /var/home/glw907/.dotfiles worktree remove .claude/worktrees/survey-<version>`.
-
-To roll back, pin the vendored entry to the previous tag and rerun the fetch in step 2.

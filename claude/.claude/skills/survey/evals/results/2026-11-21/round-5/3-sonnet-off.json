@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:35:28Z",
+  "seconds": 33.1,
+  "exitCode": 0,
+  "listed": [],
+  "invoked": [],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "I can't give you the exact file, name, or commands, because I can't find the procedure that defines them.\n\nYour style rules say to log a wording correction \"per the `survey` skill's 'Corrections' section.\" No `survey` skill is in my skill list, and `~/.claude/skills/survey/` and `~/.dotfiles` have no `skills/survey/SKILL.md`. The only \"survey\" hits are unrelated CSS packages in old job directories. A file name from me would be invented, and I won't give you one.\n\nHere is what I can say without guessing.\n\n**What I would log.** I'd record the correction in your words. Before: \"This change seamlessly streamlines the gate.\" After: \"This change makes the gate faster.\" The reason is that \"seamlessly streamlines\" is filler and the plain verb and measurable claim are what you want. I'd add the date, 2026-11-21, and the source, your correction on this commit message.\n\n**The commit.** This working directory isn't a git repository, so I can't see the commit you mean. I'd need the repo path. Once I have it, I'd run `claude-worktree-busy <path>` first and then `git log -1` to read the message. The redo is `git commit --amend` with the new wording, unless the commit is already pushed or merged. If it is, I'd ask you before rewriting history. Staging is by file name, and I'd run the gate bare before the amend. For `~/.dotfiles` that is `bash scripts/gate.sh`.\n\nWhere is the `survey` skill, or what path should I use for the log? Tell me the repo path and I'll proceed.",
+  "costUsd": 0.12042420000000001
+}

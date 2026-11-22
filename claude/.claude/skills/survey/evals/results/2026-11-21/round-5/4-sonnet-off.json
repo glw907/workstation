@@ -1,0 +1,19 @@
+{
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Write me a systemd service and timer pair that runs /usr/local/bin/nightly-backup every night at 2:00 local time, and say where each file goes.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:37:58Z",
+  "seconds": 15.3,
+  "exitCode": 0,
+  "listed": [],
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "Both files are system units. Their source of truth is `~/.dotfiles/bluefin/etc/systemd/system/`, and they run from `/etc/systemd/system/`.\n\n`nightly-backup.service`:\n\n```ini\n[Unit]\nDescription=Nightly backup\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/nightly-backup\nStateDirectory=nightly-backup\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectSystem=strict\n# Add the backup's destination here. The path must exist before the unit starts.\n# ReadWritePaths=/path/to/backup/destination\n```\n\n`nightly-backup.timer`:\n\n```ini\n[Unit]\nDescription=Run nightly-backup at 02:00\n\n[Timer]\nOnCalendar=*-*-* 02:00:00\nRandomizedDelaySec=5min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n```\n\nTo install them:\n\n1. Put both files in `~/.dotfiles/bluefin/etc/systemd/system/`, then copy them to `/etc/systemd/system/` the way your other `/etc` changes get applied.\n2. Run `sudo -A systemctl daemon-reload`.\n3. Run `sudo -A systemctl enable --now nightly-backup.timer`. Enable the timer only, never the service.\n4. Check with `systemctl list-timers nightly-backup.timer`.\n\n- **Time zone:** `OnCalendar` uses the system's local time zone, so 02:00 means local.\n- **Start time:** `RandomizedDelaySec=5min` means the run starts somewhere between 02:00 and 02:05. Set it to `0` if you need exactly 02:00.\n- **Missed runs:** `Persistent=true` runs a missed backup at the next boot, for example if the machine was off at 02:00.\n- **Hardening:** `ProtectSystem=strict` makes the filesystem read-only for the backup. I don't know where `nightly-backup` writes, so I left a placeholder `ReadWritePaths=` line. Uncomment it and fill it in with the real destination. `StateDirectory=` already covers `/var/lib/nightly-backup`, which is a good place for a lock file or run report.\n- **Verification:** run `systemd-analyze verify` on both files before installing them.\n\nIf the backup only touches files your user owns, you can use user units in `~/.config/systemd/user/` instead. Tell me and I'll adjust them.",
+  "costUsd": 0.10252080000000001
+}

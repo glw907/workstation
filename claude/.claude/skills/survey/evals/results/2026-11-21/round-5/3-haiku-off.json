@@ -1,0 +1,19 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:34:56Z",
+  "seconds": 13.9,
+  "exitCode": 0,
+  "listed": [],
+  "invoked": [
+    "survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "I can't carry out this redo from here yet. Three things block it:\n\n- **No commit to find.** This directory isn't a git repository, and a search for \"commit\" in it found nothing. I need the repo path, or you can confirm which checkout holds the commit.\n- **No log location.** The `survey` skill's Corrections section decides where corrections get logged, but that skill is disabled for model invocation, so I can't read it. I won't guess a file name. Tell me the path, or enable the skill for me and I'll follow its section.\n- **The wording breaks a rule.** Your version, \"This change makes the gate faster,\" is not in the imperative mood. The global CLAUDE.md requires imperative commit subjects, so I'd write something like `Make the gate faster`. I'd also check that the gate really is faster before the message says so. Otherwise the correction just replaces one unverified claim with another.\n\nOnce you give me the repo path and log location, this is the sequence I'd run:\n\n1. `git -C <repo> log -1 --format='%H%n%an%n%B'` to confirm the commit is HEAD and read its message.\n2. `git -C <repo> status` and `git -C <repo> branch -vv` to see whether the commit is pushed. If it is, amending means a force push, and I'd stop and ask you first.\n3. Time the gate before and after the change, so the message states a measured result.\n4. Write the new message to a file outside the repo, such as `/tmp/commit-msg.txt`, with the imperative subject, a body that cites the measurement, and no em dashes.\n5. `git -C <repo> commit --amend -F /tmp/commit-msg.txt`. This replaces the message only, and I'd run no `git add` or `git commit -a`.\n6. Append the correction to the log file you name, with the date, the original sentence, the corrected one, and the reason.\n7. Show you the final `git log -1` output and wait for your go-ahead before any push.\n\nSend me the repo path and the log location, and whether the commit has been pushed.",
+  "costUsd": 0.005457320000000001
+}

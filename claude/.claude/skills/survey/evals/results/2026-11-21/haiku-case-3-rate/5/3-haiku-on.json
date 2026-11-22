@@ -1,0 +1,18 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "started": "2026-11-22T00:49:29Z",
+  "seconds": 15.5,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "I haven't changed anything yet. Here's the plan, in order.\n\n1. **Find the commit.** This directory isn't a git repo, so I'd locate the checkout that holds the commit and run `git log -1 --format=%B` there to read the message as committed.\n\n2. **Check \"faster\" before I use it.** I'd time the repo's gate on the parent commit and on the bad commit (`time bash scripts/gate.sh`, run from the repo root on each checkout). The new message should claim only what the timings show. If the gate isn't faster, I'll tell you instead of rewording the claim.\n\n3. **Log the correction.** The writing-voice style says to log Geoff's wording corrections under the Corrections section of the `survey` skill. I haven't read that section, so I don't know the file's name or format yet. I'd read it, then add an entry with the date (2026-11-21), the original sentence (\"This change seamlessly streamlines the gate.\"), the replacement (\"This change makes the gate faster.\"), and the reason: \"seamlessly\" and \"streamlines\" are filler, and the sentence named no concrete change. I'd write the entry with the Edit tool, not the shell.\n\n4. **Redo the commit.** If it's the newest commit on its branch and hasn't been pushed, I'd run:\n   `git commit --amend -m \"Make the gate faster\" -m \"<body>\"`\n   The subject is imperative, and the body names the change that made the gate faster. If the commit has already been pushed, I'd stop and ask before amending, since rewriting pushed history affects anyone who pulled it.\n\n5. **Verify and commit the log.** I'd confirm the new message with `git log -1 --format=%B` and check it for an em dash. If the log file sits in a different repo, I'd stage it by name with `git add <path>` and commit it separately. I won't use `git add -A` or `git commit -a`.",
+  "costUsd": 0.0017487599999999998
+}

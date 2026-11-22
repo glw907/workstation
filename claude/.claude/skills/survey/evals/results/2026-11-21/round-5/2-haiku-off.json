@@ -1,0 +1,17 @@
+{
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I just changed one color value in Survey's tokens.json. What do I run before I commit it, is the change a minor or a major version, and once it's merged should you go ahead and cut the release?",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:32:45Z",
+  "seconds": 28.1,
+  "exitCode": 0,
+  "listed": [],
+  "invoked": [],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "**Before you commit:** Survey is at `~/Projects/survey`, not in this session's folder. I couldn't run git here, so I haven't seen your diff or confirmed which token you changed.\n\n1. Run `npm install` if `node_modules` is stale.\n2. Run `scripts/build`. It regenerates `theme/survey.css`, `theme/survey-vars.css`, and the token table in `DESIGN.md` from `tokens.json`. Commit those files with the token change.\n3. Run `scripts/gate`. It fails if a built file is stale, and it fails on any theme contrast finding.\n\n**Version:** A changed value is a minor bump, per the rule at the top of `CHANGELOG.md`. The current version is 1.7.0, so this would be 1.8.0. It becomes a major only if you removed or renamed a token.\n\n**Release:** I wouldn't cut it without your go-ahead. Projects pin tags, so a release reaches every consumer. The steps are:\n\n1. A PR bumps `package.json` to 1.8.0 and adds a dated `[1.8.0]` entry under \"Changed\" in `CHANGELOG.md`. The `[Unreleased]` section is empty today, so that entry needs writing.\n2. After you approve and the PR merges, run `scripts/release 1.8.0` from a clean `main` at `origin/main`. It runs the gate, tags `v1.8.0`, and publishes the GitHub release. It refuses to run if the version or changelog entry is missing.\n\nI can open the version-bump PR now and leave the merge and the release for you to approve.",
+  "costUsd": 0.012654130000000001
+}

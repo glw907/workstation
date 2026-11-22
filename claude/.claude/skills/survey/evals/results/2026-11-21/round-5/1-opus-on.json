@@ -1,0 +1,21 @@
+{
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I'm starting a small internal tool: a daisyUI 5 app that isn't on cairn, with a list page and a settings form. Which of the house style's files do I pull in, what do I read before I lay out the pages, and where do the button and text colors come from? Answer here; don't write any code yet.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:31:30Z",
+  "seconds": 23.6,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "You want Survey's **Plain app** recipe in `DESIGN.md`, which covers a small daisyUI app that isn't on cairn.\n\n**Files to pull in.** Install Survey by git tag with `npm install github:glw907/survey#v<version>`. Alongside it, install `daisyui`, `tailwindcss`, and the three Fontsource packages that `fonts.css` imports. In your entry stylesheet, import Tailwind and turn on the daisyUI plugin. Then import these three files in this order:\n\n1. `survey/theme/fonts.css`\n2. `survey/theme/survey.css`\n3. `survey/theme/components.css`\n\nYou don't need `survey-vars.css`, which is only for apps that can't run daisyUI. If the app is Svelte and uses icons, also install `@lucide/svelte`.\n\n**What to read first.** Read `DESIGN.md` before you lay anything out. These sections matter most for a list page and a settings form:\n\n- **Principles and Tokens**, for type, shape, and spacing. Interface text is set in Karla. Fields and buttons have a 3px radius and boxes have 4px.\n- **Recipes → Plain app** and the **Cairn admin** recipe it builds on. Build screens from stock daisyUI components. A save confirms with a toast, and lists and forms appear in place with no arrival animation.\n- **Signature details.** A long alphabetical list can take `site-index-rail`, and `site-contour-rule` can divide list groups. Cancel is a plain `btn btn-ghost`, and a destructive button is `btn btn-outline btn-error`.\n- **Icons**, for which actions get one. The settings icon is Lucide's `settings` and Add is `plus`. Don't put an icon on every button in a row.\n- **Motion.** Keep daisyUI's stock transitions, and use the motion tokens for any transition you write yourself.\n\n**Where button and text colors come from.** Every value comes from `tokens.json`. The build turns it into the `survey` and `survey-dark` daisyUI themes inside `survey.css`, so never edit a built file. You don't set colors on buttons yourself. daisyUI's semantic classes read the theme variables:\n\n- `btn-primary` uses `--color-primary` for the fill and `--color-primary-content` for the text. Each daisyUI color (secondary, accent, error, and the rest) comes as the same fill-and-text pair.\n- Body text is `--color-base-content`. Secondary text and placeholders are `--color-muted`.\n- Inputs and selects get their background and border from `--site-field-bg` and `--site-field-border`.\n\nLight is the default. Dark follows `prefers-color-scheme` without any setup, so only set `data-theme` if you have to force one scheme. Any CSS you write for the app should use the tokens, such as `var(--color-muted)` or `var(--spacing-8px)`, never literal values. If a color pair fails contrast, or Survey doesn't style a state you need, log it in Survey's `BACKLOG.md` and work around it in your project's CSS.",
+  "costUsd": 0.26866860000000004
+}

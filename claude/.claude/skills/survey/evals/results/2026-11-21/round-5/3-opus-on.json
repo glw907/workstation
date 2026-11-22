@@ -1,0 +1,21 @@
+{
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:36:03Z",
+  "seconds": 19.3,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "I log the correction to Survey's corrections repo before I touch the commit. Then I redo the commit.\n\n**The file.** It goes in `/var/home/glw907/Projects/survey-notes/corrections/`. Its name comes from `date +%FT%H%M%S` and `hostname -s`, so it will be `2026-11-21T<HHMMSS>-pavilion.md`. If that directory's repo is missing, I first run `gh repo clone glw907/survey-notes /var/home/glw907/Projects/survey-notes`. If the clone or the write fails, I tell you and skip the log. I never write the file anywhere else.\n\n**What goes in it:**\n\n```markdown\n---\ndate: 2026-11-21T<HH:MM:SS>\nhost: pavilion\nrepo: <the repo holding the commit>\naudience: commit message\nregister: commit-and-pr.md\n---\n\n## Before\n\nThis change seamlessly streamlines the gate.\n\n## After\n\nThis change makes the gate faster.\n\n## Context\n\n<the commit's subject line, so the sentence can be placed>\n\n## Reason\n\nnot stated\n```\n\nYou didn't give a reason, so the Reason section says \"not stated.\" I won't add one of my own, even though \"seamlessly\" and \"streamlines\" are both on the slop list. My working directory isn't a git repo, so I'll fill in `repo` and the subject line from the repo where the commit actually lives. Context holds only that one line, with no secrets or anyone's personal data.\n\n**The commands.** I run them in the same turn, word for word, so they match the allow rules:\n\n1. `git -C /var/home/glw907/Projects/survey-notes add corrections/<file>`\n2. `git -C /var/home/glw907/Projects/survey-notes commit -m \"Log a correction\" -- corrections/<file>`\n3. `git -C /var/home/glw907/Projects/survey-notes pull --rebase`\n4. `git -C /var/home/glw907/Projects/survey-notes push`\n\nIf the pull or the push fails, the commit stays local and I carry on. The next correction's push will take it along.\n\nAfter that I amend the original commit and use your sentence in the message. Tell me to go ahead and I'll run all of it.",
+  "costUsd": 0.18995399999999998
+}
