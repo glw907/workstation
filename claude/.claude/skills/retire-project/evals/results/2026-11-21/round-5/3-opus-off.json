@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:51:24Z",
+  "seconds": 30.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"retire|archive\", \"path\": \"/var/home/glw907/.claude\", \"glob\": \"{docs,skills}/**/*.md\", \"-i\": true, \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "I couldn't run `/retire-project` because it isn't installed in this session. I also couldn't check for a retirement runbook on this machine, because reading `~/.claude` was denied. The plan below is therefore my own, not a house procedure. It assumes the demo is a GitHub repo plus a Worker bound to one D1 database. Nothing has been run.\n\n## What goes in the archive\n\n**1. The repository**\n- `repo.bundle`: a `git bundle create --all` of every branch and tag, not just `main`.\n- An export of GitHub's extras through `gh`: issues, pull requests with their comments, releases and their assets, and the wiki if there is one.\n- `repo-facts.txt`: the remote URL, the default branch, and the names of any Actions secrets (names only, never values).\n\n**2. The D1 database**\n- `d1-dump.sql`: `wrangler d1 export <db> --remote` (schema and data together).\n- `d1-facts.txt`: the database name, its ID, the binding name, `wrangler d1 info`, and the list of migrations already applied.\n- `d1-counts.txt`: the row count for every table, taken from the live database at the same moment as the dump.\n\n**3. The Cloudflare setup around it**\n- The Worker's name, its last deployment version ID, and its routes or custom domains.\n- Any DNS records that point at it, cron triggers, and Access apps.\n- The secret names from `wrangler secret list --name <worker>`, plus non-secret variables.\n\n**4. Credentials (a list, not an export)**\n- Every Proton Pass item, `~/.local/secrets` entry, and API token tied to the project, by name. This becomes the list of things to revoke. No values go in the archive.\n\n**5. `MANIFEST.md`**\n- What the project was, why it's being retired, and today's date (2026-11-21).\n- How to restore it.\n- A SHA-256 checksum for every file above.\n\n## How the archive is proven before deletion\n\n1. **Read it back from where it's stored.** Run every check below against a fresh copy pulled from the archive location, not the local files that were uploaded. Then check every file against the manifest's checksums.\n2. **Repository:**\n   - Run `git bundle verify`.\n   - Clone the bundle into an empty directory and run `git fsck`.\n   - Compare every branch and tag against `git ls-remote` on GitHub. They must match exactly.\n3. **D1:**\n   - Load `d1-dump.sql` into a new local SQLite file.\n   - Compare the table list and schema (`sqlite_master`) with the live database.\n   - Compare each table's row count with `d1-counts.txt`.\n   - Compare a hash of each table's contents, sorted by primary key, between the restored copy and the live database.\n   - Check whether there are any FTS5 or other virtual tables, which D1 export does not include. If there are, save their source rows separately.\n4. **Restore test (cheap for a demo):** build the app from the cloned bundle and run `wrangler dev` against the restored local database. It should start and serve one known record.\n5. **Store a second copy** at a different location, following the household backup policy.\n6. **Record the results** in the manifest (checks run, pass or fail, date). Only then does Geoff approve the deletion.\n\n## Deletion order once the archive is proven\n\nReversible steps come first, permanent ones last:\n\n1. Remove the Worker's routes and domains, and wait briefly in case something still depends on them.\n2. Delete the Worker and its DNS records.\n3. Delete the D1 database. This is the permanent step: D1 Time Travel can't recover a deleted database.\n4. Revoke the tokens and retire the Proton Pass items on the credential list.\n5. Archive the GitHub repo rather than delete it, since archiving can be undone. Delete it later only if Geoff wants it gone.\n6. Update the records that mention the project: the Cloudflare estate inventory, the runbook, and any initiative or maintenance-mode entry.\n\nDecisions for Geoff:\n- **Where the archive lives:** the runbook should name the household backup location.\n- **Archive or delete the GitHub repo:** I'd archive it.\n\nI can turn this into a spec under `building-from-specs` when you want to go ahead.",
+  "costUsd": 0.0644236
+}

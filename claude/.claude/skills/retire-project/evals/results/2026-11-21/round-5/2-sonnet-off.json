@@ -1,0 +1,38 @@
+{
+  "skillName": "retire-project",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "/retire-project the club's old domain, which nothing uses any more. What happens to the domain itself? Plan only; change nothing.",
+  "started": "2026-11-22T03:48:50Z",
+  "seconds": 13.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"club\", \"path\": \"/var/home/glw907/.claude/docs\", \"-i\": true, \"output_mode\": \"content\", \"head_limit\": 40}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"README.md\", \"path\": \"/var/home/glw907/Projects/household-it\"}"
+    }
+  ],
+  "result": "I can't read the estate docs or the household-it repo in this session, because permission wasn't granted. So I haven't confirmed which domain is meant or what's registered, and the plan below is generic. It names the places I'd check.\n\n## What happens to the domain itself\n\n**Recommendation: keep it registered, park it, and stop using it. Don't let it lapse.**\n\nA dropped domain can be re-registered by anyone. The club's old links, email addresses, and any accounts tied to it would then point at someone else's site or mailbox. Renewal is cheap next to that risk. Let it expire only if you're sure nothing ever referenced it. \"Nothing uses it any more\" is a claim to verify first, not a given.\n\n## Plan (nothing run yet)\n\n1. **Confirm the target.** Which domain is it? The club's current site is `aksailingclub-org`. I'd confirm the old one with you rather than guess.\n2. **Check for dependents (read-only).**\n   - DNS records on the zone: MX, SPF/DKIM, CNAMEs, and any Workers routes or custom domains.\n   - Cloudflare Access apps, Turnstile site keys, and email routing rules that name the domain.\n   - Repos, docs, and the registry that mention it, plus OAuth redirect URIs and third-party accounts registered under its addresses.\n   - Inbound mail volume, in case something still sends to it.\n3. **Redirect, don't delete.** Add a 301 from the apex and `www` to the current club site, with path-preserving rules where paths still map. This keeps old links alive.\n4. **Strip what's dead.** Remove unused DNS records, Workers routes, and Access apps. Remove any mail routing only after step 2 shows it has no traffic.\n5. **Harden the parked zone.** If no mail is needed, publish a null MX, `v=spf1 -all`, and a DMARC `p=reject` record. This stops spoofing from the unused domain.\n6. **Registrar settings.** Keep auto-renew on, keep registrar lock on, keep WHOIS privacy on, and keep DNSSEC consistent with the current state.\n7. **Record it.** Update the Cloudflare estate inventory and the registry. Update the Proton Pass items and any secrets tied to the domain. Close the initiative record via `log-project`.\n8. **Set a review date.** Revisit the registration in 1–2 years and decide whether to renew or let it go.\n\n## Decisions for you\n\n- **Redirect or let it 404?** I recommend a redirect.\n- **Keep paying for renewal indefinitely, or set a lapse date?** I recommend renewing for now.\n\nIf you grant read access to the docs and `household-it`, I can fill in the real DNS and dependency inventory.",
+  "costUsd": 0.0211824
+}

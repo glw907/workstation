@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:46:29Z",
+  "seconds": 13.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Retirement plan for `site-staging` (dry run)\n\nNothing was looked up live and nothing was deleted. Every id below is a placeholder, and the inventory step fills it in before anything runs.\n\n## 1. Inventory (read-only, not yet run)\n\n| Item | Id to record | Sole-owner check |\n|---|---|---|\n| Worker `site-staging` | script name | Is any other Worker bound to it by service binding? |\n| D1 database | `<d1-uuid>` | Does the production Worker also bind it? If so, it is shared and stays. |\n| Custom domain | `<hostname>`, zone id | Is it a subdomain of the production site's zone? If so, the zone, apex, and Email Routing are shared and stay. |\n| DNS records for the hostname | record ids | Only records that point at this Worker. |\n| Also check | n/a | R2, KV, Queues, Turnstile, Access apps, Builds triggers, Worker secrets, repo and worktrees, open PRs, other sessions (`claude-worktree-busy`), references in `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, the initiatives repo, and the registry |\n\nI need two things from you, since I can't look them up:\n- Does the site's repo have a staging branch or deploy workflow that targets this Worker?\n- Is the domain a subdomain of a live site's zone, or its own registered domain?\n\n## 2. Archive and prove it\n\n1. Commit or drop uncommitted work in every worktree.\n2. Build `site-staging-2026-11-21.tar.age` with the workstation key. It holds:\n   - a verified `git bundle create --all`, if a repo is sole-owned\n   - the D1 export as SQL\n   - issues and PRs as JSON\n   - the Worker config, with no secret values\n3. Restore it in a scratch directory: decrypt, clone the bundle, and load the SQL into SQLite. Stop if the export fails or is empty.\n4. Store it at `~/Documents/retired-projects/` and at `servers-archive/retired-projects/` in R2. Confirm the R2 copy with `rclone check`.\n5. Record the sha256 in the retirement record.\n\n## 3. Approval questions\n\nEach question needs your typed answer.\n\n1. **Delete the D1 database `<d1-uuid>`?** Options: delete, or keep. Recommendation: delete, once the archive restore is proven.\n2. **Delete the Worker `site-staging`?** Recommendation: delete, after the domain comes off.\n3. **Remove the custom domain `<hostname>` and its DNS records?** Recommendation: remove.\n4. **Domain fate.** This only applies if it is a separately registered domain.\n   - Recommendation: lapse. Turn auto-renew off, park it until expiry, and keep renewing only if you name a use for it.\n   - If it is a subdomain of a live zone, there is nothing to park or lapse. I would remove the record and leave the zone alone.\n5. **Delete the repo and local checkout?** Ask only if the repo is sole-owned. A staging Worker often shares the site's repo, in which case the repo stays.\n\n## 4. Teardown order (after approval, rerunning the inventory for each id first)\n\n1. Remove the custom domain, then its DNS records.\n2. Delete the Worker, then any Builds triggers, then the D1 database.\n3. Revoke any vendor keys at their issuer. Deleting a Worker secret revokes nothing. Then remove the secrets from the store and the registry, and trash the project's `Projects` vault folder through `claude-pass`.\n4. If a standalone domain remains, park it: no Email Routing (you turn it off in the dashboard), `MX 0 .`, `v=spf1 -all`, and `v=DMARC1; p=reject;`.\n5. Delete the GitHub repo and the local checkout only if they are sole-owned.\n\n## 5. Close\n\n- Clear the references found in step 1.\n- Close the initiative.\n- Add a README row beside the archives with the date, sha256, and what went.\n- Rerun the Cloudflare inventory and show it empty.\n\nTell me when to run the inventory and I'll start. Nothing past that point runs without your typed approval.",
+  "costUsd": 0.0885875
+}

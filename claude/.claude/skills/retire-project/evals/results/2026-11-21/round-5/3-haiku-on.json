@@ -1,0 +1,35 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:49:54Z",
+  "seconds": 23.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\", \"args\": \"Audience: Geoff, the owner of the workstation, reading a retirement plan in his terminal before approving anything. Plan only, one repo with one D1 database.\"}"
+    }
+  ],
+  "result": "This is a plan only. Nothing has been run.\n\n**What goes in the archive**\n\nThe archive is one file, `<project>-<date>.tar.age`, encrypted to the workstation age key. For this repo it holds four things. The first is a git bundle from `git bundle create --all`, which carries every branch, tag, and stash ref. A bundle does not carry uncommitted work, so any dirty worktree must be committed or dropped before the bundle is made. Dropping is destructive, so that choice is yours. The second is a SQL export of the one D1 database, taken with `wrangler d1 export --remote` so it reads the live data. The third is the repo's issues and PRs as JSON from `gh`, plus the Worker config (`wrangler.toml` and the deployed settings). The inventory step will show whether R2, KV, or anything else holds data; if it does, those objects go in too. Secret values never go in. A gitignored `.env` with real values stays out, and its secrets stay in the store.\n\nI'd also put a manifest inside the tar that lists each member with its sha256. The restore check then has something to compare against.\n\n**How the archive is proven before anything is deleted**\n\n1. Any failed or empty export stops the run.\n2. Run `git bundle verify`, clone the bundle into a scratch directory, and compare its refs with the live repo's refs.\n3. Decrypt the file into scratch with the age identity, and check every member's checksum against the manifest.\n4. Load the D1 SQL export into a fresh SQLite database in scratch. It must load without error. Then compare per-table row counts with live counts taken at export time, so the file is shown to hold the data and not just to exist.\n5. Parse the issues and PRs JSON and check the counts against `gh`.\n6. Copy the file to `~/Documents/retired-projects/` and to `servers-archive/retired-projects/` in R2. Run `rclone check` against the local copy. A mismatch stops the run.\n7. Record the file's sha256 in the retirement record. Only after that does the run reach your approval step.\n\nNone of these steps deletes anything. Teardown reruns the inventory for each id before it deletes that id.\n\nTwo things need you before a run: whether to drop any uncommitted work, and whether the proof should also restore the R2 copy and not only check it. I'd recommend the restore check, since the R2 copy is the one you'd rely on.",
+  "costUsd": 0.0072254599999999995
+}

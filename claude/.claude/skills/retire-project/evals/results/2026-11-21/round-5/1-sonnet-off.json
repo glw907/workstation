@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:46:43Z",
+  "seconds": 11.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`/retire-project` isn't installed in this session, so I treated your message as a plain request. Nothing below was looked up or run. Every name, ID and command is an unverified placeholder until the live inventory in step 1.\n\n## Dry-run plan: retire `site-staging`\n\n**Known:** Worker `site-staging`, one D1 database, one custom domain.\n**Unknown until step 1:** the D1 database name and ID, the domain's hostname, and any other bindings.\n\n**1. Inventory (read-only, run live later)**\n- Find the Worker's bindings (D1, KV, R2, secrets, cron triggers, routes) with `wrangler` or the Cloudflare API. Check whether the D1 database is bound to any other Worker.\n- Confirm the custom domain is a Workers custom domain, not a route or a plain DNS record, and note its DNS record.\n- Search the repo, CI workflows, the Access applications and the estate inventory (`~/.claude/docs/cloudflare-estate-inventory.md`) for references to the Worker, database or hostname.\n- List the Worker's secrets by name only, and find their entries in the age store and Proton Pass (via `claude-pass`).\n\n**2. Backup (needs your go-ahead)**\n- Export the D1 database to a local file with `wrangler d1 export`. Check that the file is non-empty and that its row counts match the live database.\n- Decide where the export lives, and for how long. This is your call.\n\n**3. Stop traffic**\n- Remove the custom domain from the Worker first. This is a Workers-domain write, so the MCP token can't do it. Use curl with `$CLOUDFLARE_API_TOKEN` from `~/.local/secrets`.\n- Check that the hostname no longer resolves to the Worker. Remove any leftover DNS record or Access application for it.\n\n**4. Delete (each step needs its own confirmation)**\n- Delete the Worker `site-staging`. Do this before the database, because a bound database is the dependency.\n- Delete the D1 database, only after step 2 is verified and nothing else binds it.\n\n**5. Clean up**\n- Remove the Worker's secrets from the age store and the Proton Pass items. Remove the Worker, database and hostname from the estate inventory, the registry and any `wrangler` config. Remove the CI deploy job.\n- Commit these changes with imperative-mood messages, staging files by name.\n\n**6. Verify**\n- Confirm the Worker, database and hostname are gone, and that production is unaffected.\n\n**Risks**\n- D1 deletion is irreversible, so step 2 is the only recovery path.\n- If production shares the database or the Access policy, stop and ask you.\n\nTell me to proceed and I'll start with step 1. I'll stop for your approval before steps 2 and 4.",
+  "costUsd": 0.015363500000000002
+}

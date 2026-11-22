@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:50:17Z",
+  "seconds": 15.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Note:** `/retire-project` is not installed in this session, so it did not run. I treated your message as a plain request and wrote the plan below from the CLAUDE.md rules. I ran nothing and read no repo files. This directory isn't a git repo, so I don't know the demo repo's name, Worker, or database yet.\n\n## What goes in the archive\n\n**1. Repo**\n- `git bundle create <file> --all`, which captures every branch, tag, and ref.\n- A note of any uncommitted or stashed work. Commit or record it first.\n- The final commit SHA and the last deployed version ID.\n\n**2. D1 database**\n- A full export: `wrangler d1 export <db-name> --remote --output=<file>`. Confirm the flags with `--help` before running.\n- Schema only, as a separate file, so the schema can be read without the data.\n- Per-table row counts and a checksum of each table's rows in a fixed order.\n- Metadata: database name, UUID, creation date, and the Worker that binds it.\n\n**3. Deployment record**\n- The `wrangler.toml` or `.jsonc` config, the migrations directory, and the bindings list.\n- Custom domains, routes, DNS records, and any Access apps. Get the list from the Cloudflare API with the token from `~/.local/secrets`, after reading `~/.claude/docs/cloudflare-estate-inventory.md`.\n- Secret **names** only, from `wrangler secret list --name <worker>`. Never values. The values stay in Proton Pass, checked with `claude-pass` by name.\n\n**4. Retirement note**\n- Why it's retired, the date, what was removed, and the steps to restore it.\n\nThe archive must contain no secret values or `.env` contents.\n\n## How the archive is proven before anything is deleted\n\nDeletion waits until every check passes and Geoff approves.\n\n1. **Repo bundle:** run `git bundle verify`. Clone from the bundle into an empty directory, then compare the HEAD SHA and tree hash with the origin.\n2. **Files:** write a sha256 manifest for every archived file. Re-check the manifest after copying to the archive location.\n3. **D1 restore test:** import the dump into a scratch database, not the live one. Compare the schema against the live `sqlite_master`, and compare row counts and checksums table by table. Any mismatch stops the retirement.\n4. **Readability:** open the restored copy and run a few representative queries.\n5. **Copies:** store the archive in at least two places and confirm both are readable.\n6. **Time Travel:** note the live database's Time Travel window as a backup, but don't rely on it. It expires.\n\n## Deletion order, after approval\n\nShow a dry run first. Then:\n1. Remove routes and custom domains, and the DNS records that point at them.\n2. Delete the Worker.\n3. Delete the D1 database last, and only after the verified archive exists.\n4. Record the outcome in the retirement note.\n\n## Before the real run\n\n- Read `~/.claude/docs/cloudflare-estate-inventory.md` and the runbook for any archive location and checklist they define.\n- Check whether `maintenance-mode` applies if the demo is being archived instead of deleted.\n\nIf you give me the repo path and the database name, I'll write this as a concrete checklist with the real names filled in. I still won't run anything until you say to.",
+  "costUsd": 0.00150524
+}

@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:52:41Z",
+  "seconds": 17.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"demo\", \"path\": \"/var/home/glw907/.claude/docs\", \"-i\": true, \"output_mode\": \"content\", \"head_limit\": 40}"
+    }
+  ],
+  "result": "I couldn't open your docs folder because the read permission was declined, so I don't know which demo site you mean. Here's the general shape for a site in your setup (Cloudflare, GitHub, Proton Pass). I haven't changed anything.\n\n**1. Take stock (read-only)**\n- **Cloudflare:** the Worker or Pages project, routes and custom domains, DNS records, and anything bound to it (KV, D1, R2, Queues, Durable Objects, Access apps, Turnstile widgets, email routes).\n- **GitHub:** Actions workflows, Actions secrets, deploy keys, webhooks, and Dependabot or Renovate.\n- **Credentials:** API tokens and secrets made only for this site, wherever they live: Proton Pass, `~/.local/secrets`, the age store, `wrangler secret list`.\n- **References elsewhere:** links from other sites, the runbook, `cloudflare-estate-inventory.md`, initiatives, cc-desk or STATUS entries, and any `maintenance-mode` enrollment.\n- **Data to keep:** form submissions, D1 rows, R2 objects, analytics.\n\n**2. Archive before deleting**\n- Export the data you want to keep.\n- Archive the GitHub repo rather than deleting it: archiving can be undone, deleting can't. Delete it later if you want it gone.\n\n**3. Take it offline, from the outside in**\n- Remove the custom domain or route first, so the site stops serving while its resources still exist.\n- Delete or repoint the DNS records. Watch for leftover CNAMEs, which can let someone else take over the subdomain.\n- Delete the Worker or Pages project, then each bound resource. I'd show you the delete list before running anything.\n- If the domain itself was only for the demo, decide whether to let it lapse or keep it parked. Parking stops someone else from buying it.\n\n**4. Revoke credentials**\n- Revoke the site-only Cloudflare and GitHub tokens, and remove the Actions secrets and deploy keys.\n- Retire the Proton Pass items and the age-store entries, then run `check-drift` so the stores agree with each other.\n\n**5. Clean up the paperwork**\n- Update the Cloudflare inventory, the household-it runbook, and the initiatives record (close it with `log-project`).\n- Remove it from the maintenance-mode list and any backlog.\n- Remove the local clone and worktrees from `~/Projects/` once you're sure.\n\n**Cost:** this is mostly API calls. The judgment calls are what data to keep, whether to keep the domain, and archiving versus deleting the repo.\n\nWhich site and repo is it? With the name, and read access to `~/.claude/docs`, I can turn this into the actual list of resources and the order to remove them. Since it's more than a one-line change, it would go through a spec for your approval before anything is deleted.",
+  "costUsd": 0.0388232
+}

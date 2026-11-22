@@ -1,0 +1,38 @@
+{
+  "skillName": "retire-project",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "/retire-project the club's old domain, which nothing uses any more. What happens to the domain itself? Plan only; change nothing.",
+  "started": "2026-11-22T03:49:04Z",
+  "seconds": 20.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)old domain|former domain|legacy domain\", \"path\": \"/var/home/glw907/.claude/docs\", \"output_mode\": \"content\", \"head_limit\": 20}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*/CLAUDE.md\", \"path\": \"/var/home/glw907/Projects\"}"
+    }
+  ],
+  "result": "I couldn't run any of the inventory. Permission to read `~/.claude/docs` and `~/Projects` was denied, so I also don't know which domain is the club's old one. This plan follows the `retire-project` procedure, with placeholders where the inventory would fill in real values. Nothing has been changed.\n\n## What happens to the domain\n\n**My recommendation is to park the domain now and let it lapse.** You said nothing uses it, and in that case the skill recommends letting it expire rather than renewing it. The final call is yours, and I'd only keep renewing it if you name a use for it.\n\n1. **Park it now and keep it parked until it expires.** That means four changes at the apex (the root of the domain):\n   - Turn off Email Routing. This has to be done in the dashboard, because no workstation token can do it.\n   - Add `MX 0 .`, the \"null MX\" record from RFC 7505, which tells mail servers this domain accepts no mail.\n   - Add `v=spf1 -all`, so no server is authorized to send mail as the domain.\n   - Add `v=DMARC1; p=reject;`, so receiving servers reject mail that claims to come from it.\n2. **Turn off auto-renew** at the registrar and let it expire on its current date. You lose nothing until then, and the parking records stop anyone using its name to send mail while you still own it.\n\nParking comes first because an old club domain still carries the club's name and reputation. Without those records, anyone can send mail that appears to come from it. After expiry, anyone can register it, so if you think impersonation of the club is a real risk, that would be a use worth naming. In that case you'd keep it parked and renew it indefinitely.\n\n## The rest of the plan\n\n1. **Inventory (read-only).** List every record and resource tied to the domain and mark each one sole-owner or shared. Shared items stay. This covers:\n   - **Cloudflare:** DNS records, Workers custom domains, Email Routing rules, Access apps, Turnstile widgets, and the registrar's expiry date and auto-renew setting.\n   - **Vendors:** any service that bills for the domain or holds a credential for it, found through `wrangler secret list` and the secrets registry.\n   - **References:** grep `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, the initiatives repo and the registry. This also catches a note that uses the domain as a test target, which would need a new one.\n2. **Archive.** If there's no repo, Worker or data, this shrinks to an export of the zone's DNS records. That goes into `<domain>-<date>.tar.age`, encrypted with the workstation key. I'd restore it somewhere scratch to prove it opens, then store it in `~/Documents/retired-projects/` and in R2, confirmed with `rclone check`.\n3. **Approval.** You'd get a dry run in your terminal listing each delete by its id. Each irreversible step would be a question with a recommendation, and only your typed answer approves it.\n4. **Teardown, in this order:**\n   1. Remove any custom domain and its DNS records before deleting what they point at, so no record is left pointing at nothing.\n   2. Delete any sole-owner Worker or resource.\n   3. Revoke any keys at the vendor that issued them, then remove them from the store, the registry and Proton Pass.\n   4. Park the domain and turn off auto-renew, as above.\n5. **Close.** Clear the references found in step 1 and add a row to the archive `README.md` with the date, the sha256 and what went. Then rerun the Cloudflare inventory: the only things left should be the parking records.\n\nTo fill in the placeholders, I need the domain name and read access to `~/.claude/docs` and `~/Projects`. With those, I can run the inventory read-only and give you the actual dry run.",
+  "costUsd": 0.1877326
+}

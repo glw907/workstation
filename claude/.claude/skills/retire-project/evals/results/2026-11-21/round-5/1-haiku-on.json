@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:45:57Z",
+  "seconds": 19.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Dry run only.** I ran no lookups and deleted nothing. Anything you didn't name is marked unknown and gets checked in the real inventory.\n\n## Scope as given\n\n- Cloudflare Worker `site-staging`\n- Its D1 database (id unknown)\n- One custom domain (name unknown)\n\n**Open scope question:** `site-staging` is a staging Worker for a site, so the site's repo probably also serves production. If so, the repo, its archive, and step 5's repo deletion don't apply. Only the staging pieces leave.\n\n## 1. Inventory (to run for real, not run now)\n\n| Area | Known from your message | Still to check |\n|---|---|---|\n| Repo | None named | Which repo, unpushed branches, stashes, worktrees, open PRs and issues, Actions secrets, active sessions |\n| Worker | `site-staging` | Routes, bindings, secrets (`wrangler secret list --name site-staging`), Builds triggers, Turnstile and Access apps tied to it |\n| D1 | One database | Name and id, and whether production reads it |\n| Domain | One custom domain | Name, whether it's a subdomain or a registrable domain, DNS records, Email Routing, registrar expiry and auto-renew |\n| Vendors | None known | Services holding secrets for the Worker |\n| References | None known | Grep of `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, the initiatives repo, and the registry |\n\nEach item gets marked sole-owner or shared. Shared items stay.\n\n## 2. Archive (planned, not written)\n\n- File: `<project>-2026-11-21.tar.age`, age-encrypted with the workstation key. The project name is unconfirmed.\n- Contents: `git bundle create --all` (verified), every D1 export (SQL, loaded into scratch SQLite to check), Worker config, and issues and PRs as JSON if a repo is in scope. No secret values.\n- Uncommitted work in any worktree gets committed or dropped first.\n- Restore test in scratch, then copies to `~/Documents/retired-projects/` and `servers-archive/retired-projects/` in R2, confirmed with `rclone check`.\n- Stop on any failed or empty export. The sha256 goes in the retirement record.\n\n## 3. Approval questions (none asked or answered yet)\n\n**Q1. Repo scope.** Options: (a) retire only the staging Worker, D1, and domain; (b) retire the whole site repo too. **Recommendation: (a)** while production uses the repo.\n\n**Q2. Staging domain.** Options: (a) if it's a subdomain of a domain that stays, remove its DNS records only, with no parking; (b) if it's a registrable domain with no further use, let it lapse; (c) keep renewing it. **Recommendation: (b) for a domain with no use**, with auto-renew off and parking records set until expiry. Keep renewing only if you name a use.\n\n**Q3. Each irreversible delete**, by id, after the inventory reruns: the custom domain record, the Worker, the D1 database, and each secret revocation at its issuer. Nothing runs without your typed approval for that id.\n\n## 4. Teardown plan (order fixed, ids to fill in)\n\n1. Remove the custom domain and its DNS records (`<domain>`, `<record-ids>`). Traffic stops before the Worker goes.\n2. Delete Worker `site-staging`. Then delete D1 `<db-id>`. Turnstile, Builds triggers, and R2 only if the inventory finds them.\n3. Revoke each vendor key at its issuer. Deleting a Worker secret revokes nothing. Remove the secrets from the store and registry. Trash the project folder in the `Projects` vault through `claude-pass`.\n4. Park any domain the project leaves (Q2): Email Routing off, `MX 0 .`, `v=spf1 -all`, and `v=DMARC1; p=reject;` at the apex.\n5. Only if Q1 is (b): delete the GitHub repo, then the local checkout and its worktrees.\n\nEach id is rechecked for sole-owner status just before it's deleted. If one is no longer sole-owner, the run stops.\n\n## 5. Close (planned)\n\n- Clear the references the inventory found.\n- Close the initiative.\n- Add a row to `README.md` beside the archives: date, sha256, and what went.\n- Rerun the Cloudflare inventory and show it empty for `site-staging`.\n\n## What I need from you\n\nAnswers to Q1 and Q2, plus the project name for the archive file. The real run starts with the inventory. Nothing has been changed.",
+  "costUsd": 0.00552887
+}

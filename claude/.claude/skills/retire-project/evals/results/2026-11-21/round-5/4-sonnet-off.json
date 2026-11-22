@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:52:31Z",
+  "seconds": 10.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Here's the rough shape. I haven't looked at a specific site or repo, so this is generic. Tell me which one and I'll turn it into a concrete checklist from the Cloudflare inventory and the repo itself.\n\n**1. Inventory what exists (read-only)**\n- Check `~/.claude/docs/cloudflare-estate-inventory.md` and the `runbook` skill for the site's Worker or Pages project, DNS records, Access apps, R2/D1/KV bindings, and routes.\n- In the repo, look for CI workflows, Actions secrets, Dependabot or Renovate config, and open PRs or branches.\n- List the credentials it uses by name: the age store, `~/.local/secrets`, Proton Pass items, and Workers secrets.\n- Search other repos and `~/.dotfiles` for references to it, such as links, a sitemap, or a manifest entry.\n- Run `claude-worktree-busy` on the repo so no other session is working in it.\n\n**2. Decide what to keep**\n- Anything worth reusing, such as content, a design, or a pattern, gets copied out first.\n- Decide whether the data in D1, KV or R2 needs an export before deletion.\n\n**3. Take it down (reversible first)**\n- Remove the DNS records and any custom domain or route. A deleted record is the first visible effect, so I'd do this step and wait a bit before deleting the Worker.\n- Remove any Access application or policy that fronts it. These need curl with `$CLOUDFLARE_API_TOKEN`, since the MCP token is read-only.\n- Delete the Worker or Pages project, then its bindings (D1, KV, R2).\n- Delete the Workers secrets and the Actions secrets.\n\n**4. Clean up credentials and records**\n- Retire the Proton Pass items and the age-store entries through `claude-pass` and `secret-set.sh`, and remove any `~/.local/secrets` lines.\n- Update the inventory doc, the runbook, and any dotfiles manifests that list it. Run `check-drift` to confirm nothing still points at it.\n- Close or update any initiative record (`log-project`).\n\n**5. Retire the repo**\n- Close open PRs and issues.\n- Archive the GitHub repo rather than deleting it. Archiving is reversible and keeps history, and deleting is only worth it if you want it gone for good.\n- Remove the local clone and worktrees from `~/Projects/` only after checking for unpushed branches, stashes, and untracked files.\n\n**Confirmations I'd ask for**\nEvery deletion needs a dry-run listing and your go-ahead first. That covers DNS, the Worker, data stores, secrets, and the repo. Archiving versus deleting the repo is your call.\n\nWhich site and repo is it?",
+  "costUsd": 0.0134132
+}

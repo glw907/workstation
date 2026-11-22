@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:51:01Z",
+  "seconds": 23.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "This is a plan only. Nothing below has been run. `<project>` and `<db>` stand in for the real names, which the inventory supplies.\n\n## What goes in the archive\n\nThe archive is one age-encrypted file, `<project>-2026-11-21.tar.age`, encrypted to the workstation key. For a small repo with one D1 database it holds four things:\n\n1. **A git bundle.** Before making it, every worktree's uncommitted work gets committed or dropped, because a bundle carries only refs. I'd also turn any stashes into branches so they're clearly included. Then `git bundle create <project>.bundle --all` and `git bundle verify <project>.bundle`.\n2. **The D1 export.** `wrangler d1 export <db> --remote --output <db>.sql` gives schema and data as SQL. I'd also save a row count per table from the live database, which the proof step uses.\n3. **Issues and PRs as JSON.** `gh issue list --state all --json ...` and `gh pr list --state all --json ...`, plus releases if there are any.\n4. **The Worker config.** The deployed `wrangler.toml` or `wrangler.jsonc`, its bindings, and the secret *names* from `wrangler secret list`. Secret values never go in.\n\nR2 objects are left out unless the inventory finds a bucket the project owns alone. With only a D1 database, that should come back empty.\n\n## How the archive is proven\n\nAll of this happens before the approval step, and therefore before anything is deleted.\n\n1. **Stop on a bad export.** If the D1 export fails or comes out empty, everything stops. One known way it fails is that D1 export doesn't support virtual tables such as FTS5. If the database has any, I'd ask you how to handle them rather than work around it silently.\n2. **Restore into a scratch directory:**\n   - Decrypt with `age -d`, then untar.\n   - Run `git clone` from the bundle and check that its branches and tags match the remote's.\n   - Load `<db>.sql` into a fresh `sqlite3` database and compare each table's row count with the counts saved from the live D1.\n   - Parse the issues and PRs JSON and check that the counts match GitHub.\n3. **Store two copies:**\n   - `~/Documents/retired-projects/<project>-2026-11-21.tar.age`\n   - `servers-archive/retired-projects/` in R2, confirmed with `rclone check` against the local copy.\n4. **Record the hash.** The file's sha256 goes in the retirement record, and later in the `README.md` row beside the archives.\n\n## What happens after that\n\nOnce the proof passes, you'd get a dry run in your terminal that lists each delete by its id. Each irreversible step is a question with a recommendation, and only your typed approval releases it. Teardown then runs in this order:\n\n1. Remove the custom domain and DNS records.\n2. Delete the Worker, then the D1 database.\n3. Revoke any vendor keys at their issuer and clear the secret stores.\n4. Park any domain the project leaves.\n5. Delete the GitHub repo, then the local checkout.\n\nBefore each delete, I'd rerun the inventory for that id and stop if something else now shares it.",
+  "costUsd": 0.1852378
+}

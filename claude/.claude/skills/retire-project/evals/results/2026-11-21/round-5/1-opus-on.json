@@ -1,0 +1,35 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:46:55Z",
+  "seconds": 33.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\", \"args\": \"audience: Geoff, in his terminal, reading a dry-run retirement plan for approval\"}"
+    }
+  ],
+  "result": "# Dry run: retire `site-staging`\n\nNothing below has run. I made no live lookups and deleted nothing. Every id is a placeholder that step 1 fills in, because the skill requires each delete to be listed by its real id before you approve it. I've also assumed two things that the inventory has to confirm:\n\n- **The repo is shared.** The staging Worker probably lives in the production site's repo as a wrangler environment. If so, the repo, its secrets, and its Actions stay, and staging comes out through a pull request.\n- **The domain is probably a subdomain.** If it's something like `staging.<site>` on the production zone, the zone is shared and stays, and only the subdomain's records go. If it's a separately registered domain, step 4.4 applies to it.\n\n## 1. Inventory (read-only)\n\nEach item gets marked sole-owner or shared. Anything shared stays.\n\n| Item | What to read | Expected |\n|---|---|---|\n| Worker `site-staging` | `wrangler deployments list --name site-staging`, its bindings, routes, cron triggers | sole-owner |\n| Custom domain `<staging-host>` | Workers custom domains for `site-staging`, plus DNS records on `<zone-id>` | the record is sole-owner, the zone is probably shared |\n| D1 `<d1-name>` (`<d1-uuid>`) | bindings across **all** Workers, so production isn't also bound to it | sole-owner, if nothing else binds it |\n| R2, KV, Queues | `site-staging` bindings | probably none |\n| Turnstile widget | a widget whose hostnames list only `<staging-host>` | sole-owner if one exists |\n| Workers Builds trigger | a trigger that targets `site-staging` | sole-owner if one exists |\n| Access app | an app on `<staging-host>` | sole-owner if one exists (common for staging) |\n| Email Routing | rules on the domain | only matters if the domain is registered separately |\n| Secrets | `wrangler secret list --name site-staging` and the registry, by name only | staging-only test keys are sole-owner |\n| Vendors | the issuer of each secret above | revoke staging-only keys, keep shared ones |\n| Repo | the `env.staging` block in wrangler config, staging CI jobs, staging-only Actions secrets | the repo is shared, the staging pieces are sole-owner |\n| References | grep `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, initiatives, the registry for `site-staging` and `<staging-host>` | any note that uses staging as a test target needs a new target |\n| Other sessions | `claude agents`, `claude-worktree-busy` on the site repo | none |\n\n## 2. Archive and prove it\n\n1. Export D1 with `wrangler d1 export <d1-name> --remote --output <d1-name>.sql`. Stop if the export fails or is empty.\n2. Collect the Worker config: the wrangler staging block, the binding list, and route and domain settings. Secret **names** only, never values.\n3. If step 1 found the repo is sole-owner, add a verified `git bundle create --all` and the issues and PRs as JSON. If it's shared, skip both, since the repo stays.\n4. Tar the files and encrypt them with the workstation age key into `site-staging-<date>.tar.age`.\n5. Restore into a scratch directory: decrypt, load the SQL into SQLite, and check the row counts against the export.\n6. Store a copy at `~/Documents/retired-projects/` and another at `servers-archive/retired-projects/` in R2, then confirm the R2 copy with `rclone check`.\n7. Record the sha256.\n\n## 3. Your decisions\n\nOnly your typed words approve these. All of them wait until the archive is proven.\n\n**Q1. Take `<staging-host>` off the Worker and delete its DNS record `<dns-record-id>`.**\nThe options are to delete both now or to keep them. I recommend deleting. The record goes before the Worker so nothing dangles.\n\n**Q2. Delete Worker `site-staging`, plus any Turnstile widget `<widget-id>`, Builds trigger `<trigger-id>`, and Access app `<access-app-id>` that step 1 finds are staging-only.**\nThe options are to delete them or keep the Worker. I recommend deleting.\n\n**Q3. Delete D1 `<d1-uuid>`.**\nThe options are to delete it or keep it as a read-only fallback. I recommend deleting once the restore test passes, because the archive then holds the data.\n\n**Q4. Domain fate.** This depends on what the inventory finds:\n- **Subdomain on the production zone:** nothing further to decide. Q1 covers it, and the zone stays.\n- **Separately registered domain:** I recommend letting it lapse. It would be parked now (null MX, `v=spf1 -all`, `p=reject` DMARC, Email Routing off), with auto-renew turned off so it expires. Keep renewing it only if you name a use for it.\n\n**Q5. Staging pieces in the repo.**\nI recommend a pull request that removes the `env.staging` config, the staging CI jobs, and any staging-only Actions secrets. The repo itself stays. This question becomes \"delete the repo\" only if step 1 shows the repo is sole-owner.\n\n## 4. Teardown, in this order\n\nBefore each delete I rerun that item's inventory, and I stop if it's no longer sole-owner.\n\n1. Remove the custom domain `<staging-host>` from the Worker, then delete DNS record `<dns-record-id>`.\n2. Delete Worker `site-staging`, then the Turnstile widget, Builds trigger, and Access app if they exist, then D1 `<d1-uuid>`.\n3. Revoke each staging-only key at its issuer. Deleting a Worker secret doesn't revoke anything. Then remove those keys from the secrets store, the registry, and their Proton Pass items through `claude-pass`.\n4. Park the domain if Q4 applies. You turn Email Routing off in the dashboard, because no workstation token can.\n5. Merge the repo PR from Q5.\n\n## 5. Close\n\n1. Clear the references found in step 1.\n2. Close the initiative if one exists.\n3. Add a row to `README.md` beside the archives with the date, sha256, and what went.\n4. Rerun the Cloudflare inventory and show that nothing named `site-staging` or `<staging-host>` is left.\n\nTo make this a real plan, the next step is to run the read-only inventory in step 1. That fills in the ids and settles the two assumptions above. Tell me when to run it.",
+  "costUsd": 0.23987780000000003
+}

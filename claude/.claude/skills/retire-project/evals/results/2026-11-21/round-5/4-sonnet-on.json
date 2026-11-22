@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:52:22Z",
+  "seconds": 8.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Here's the rough shape. I haven't looked at anything yet, because I don't know which site this is. Tell me the name and I'll turn this into a concrete checklist from the Cloudflare inventory and the repo.\n\n**1. Inventory (read-only)**\n- Find where the site is hosted: Workers or Pages project, custom domain or `workers.dev` route, and any DNS records.\n- Find what else it uses: D1, KV, R2, Durable Objects, Access apps, Turnstile, email routing.\n- Find its secrets, in `~/.local/secrets`, the age store, Workers secrets, Actions secrets, and Proton Pass items.\n- Find anything that links to it: other sites, docs, the household-it runbook, initiative records, backlog items, dotfiles.\n\n**2. Preserve (if wanted)**\n- Archive the repo, either as a tag or as a final tarball. Export any data worth keeping from D1, KV or R2.\n\n**3. Take it down, in reversible order**\n- Remove the custom domain and DNS records, and any Access app. This is the visible cutover.\n- Delete the Worker or Pages project, then the bound resources.\n- Delete the Actions secrets and Workers secrets, then remove the secret from the age store.\n- Delete or archive the matching Proton Pass items, and revoke any API tokens made only for this site.\n- Disable or remove the CI workflows, and any Dependabot or Renovate config.\n\n**4. Retire the repo**\n- Archive the GitHub repo rather than deleting it, which keeps it reversible. Delete it later if you want.\n- Remove the local checkout and any worktrees in `~/Projects/`.\n- Drop it from the manifests and docs: the estate inventory, the runbook, and any `maintenance-mode` or initiative record.\n\n**5. Verify**\n- The domain no longer resolves or serves.\n- No remaining references turn up in a grep of `~/Projects`, `~/.dotfiles` and `~/.claude/docs`.\n\n**Approval points:** I'd ask for your go-ahead before steps 3 and 4. Those delete things, and I'd show a dry run of each first.\n\n**Questions:**\n1. Which site and repo is it?\n2. Do you want an archive of the repo or its data first, or can it all go?\n3. Should the GitHub repo be archived or deleted?",
+  "costUsd": 0.0118732
+}
