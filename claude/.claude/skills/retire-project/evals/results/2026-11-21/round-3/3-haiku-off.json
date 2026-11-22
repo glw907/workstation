@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:25:39Z",
+  "seconds": 15.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Note:** `/retire-project` isn't installed in this session, so I'm treating your message as a plain request. I ran nothing and read no files, so this plan assumes details I haven't checked, such as the Wrangler config, the binding name, and whether the repo has a git remote.\n\n## What goes in the archive\n\n1. **Source history.** A `git bundle --all` of the repo, which keeps every branch, tag, and commit. Also record the HEAD SHA and any uncommitted changes, or note that there are none.\n2. **D1 database.** Two exports from `wrangler d1 export <db> --remote`:\n   - a full dump (schema and data), and\n   - a schema-only dump, so the structure is readable without loading data.\n   Also record the database name, its UUID, the binding name, and the per-table row counts.\n3. **Deployment config.** The `wrangler.toml` or `wrangler.jsonc`, the Worker name, routes or custom domains, and the last deployed version ID.\n4. **Inventory of dependencies.** DNS records, Access apps, and any other Cloudflare resources (R2, KV, Queues) the Worker uses. Also the runbook entry if household docs mention the project.\n5. **Secret names only.** Record the names of the Worker secrets and where each value lives in Proton Pass or the age store. Never export values, and never archive tokens.\n6. **A retirement note.** The reason for retiring, the date, what replaced it (if anything), and Geoff's approval.\n7. **A manifest.** Every artifact with its SHA-256, the export timestamp, and the commit SHA.\n\n## How the archive is proven before anything is deleted\n\nThe rule is that nothing gets deleted until a restore has passed and the archive has been read back from its destination.\n\n- **Git bundle:** `git bundle verify`, then clone from the bundle into a scratch directory. The clone's HEAD SHA and tree hash must match the recorded values.\n- **D1 restore:** load the full dump into a scratch database (local with `wrangler d1 execute --local --file`, or a throwaway remote DB). Then:\n  - compare the table list and per-table row counts with the originals, and\n  - re-export the restored database and diff that export against the original export. Ordering or timestamp noise may need normalizing, but the row content must match.\n- **Checksums:** `sha256sum -c` on the manifest. Run it on the copy in the archive location, not only on the source.\n- **Two copies:** store the archive in two places and verify both. The storage location should follow the household backup setup, which I'd confirm with you rather than guess.\n- **Sign-off:** show Geoff the manifest and the restore results. The deletion is destructive and hard to reverse, so it waits for his go-ahead.\n\n## Deletion order (after sign-off)\n\n1. Remove the Worker routes and DNS records that point at it.\n2. Delete the Worker.\n3. Delete the D1 database. The API token for this step should come from the Cloudflare estate inventory doc, which the project rules require reading before touching any token.\n4. Archive the GitHub repo (read-only) rather than deleting it. That keeps the change reversible. Delete it only after the retention window you choose.\n\n**Open choices for you:** whether the project might come back (if so, `maintenance-mode` may fit better than retirement), where the second archive copy lives, and how long to keep the repo before it's deleted.",
+  "costUsd": 0.0016502399999999999
+}

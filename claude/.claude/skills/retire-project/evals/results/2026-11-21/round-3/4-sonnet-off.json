@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:27:32Z",
+  "seconds": 9.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Here is the rough shape. I haven't looked at anything yet, because I don't know which site this is. Once you name it, I'll check the estate inventory and the repo to turn this into a concrete list.\n\n**1. Inventory what the site touches (read-only)**\n- Hosting: a Cloudflare Worker or Pages project, plus any custom domain, route, or Access application in front of it.\n- DNS records for the demo hostname.\n- Bindings and data: D1, KV, R2, Durable Objects, queues.\n- Secrets: Workers secrets, Actions secrets, entries in the age store and Proton Pass, and any test accounts in `~/.claude/docs/test-accounts.md`.\n- The repo: CI workflows, Dependabot or Renovate, and any deploy tokens or webhooks.\n- References from elsewhere: other repos, the cairn engine or consumer sites, docs, runbook and inventory entries, and dotfiles or manifests.\n\n**2. Preserve what you might want later**\n- Export any data worth keeping (D1, R2, KV).\n- Decide whether the repo gets archived on GitHub (reversible, and the usual choice) or deleted (not reversible).\n\n**3. Take it offline (reversible steps first)**\n- Remove the custom domain and DNS records, or point them at a redirect.\n- Delete the Worker or Pages project.\n- Delete the bound resources after the export is confirmed.\n- Remove the Access application, if one exists.\n\n**4. Clean up credentials**\n- Revoke or delete tokens and secrets that only this site used. Remove their age store entries and Proton Pass items.\n- Remove Actions secrets, or they go with the repo.\n\n**5. Retire the repo**\n- Disable Actions and Dependabot, then archive the repo.\n- Delete the local checkout and any worktrees, after `claude-worktree-busy` confirms no session is using them.\n- If the site was tracked as an initiative, close it with `log-project`.\n\n**6. Update the records**\n- Remove the site from `cloudflare-estate-inventory.md`, the runbook, and any `~/.dotfiles` references.\n- Run `check-drift` to confirm nothing still points at it.\n\n**Confirmation points:** I would show a dry run and get your go-ahead before each of these:\n- deleting cloud resources or DNS\n- revoking tokens\n- archiving or deleting the repo\n\nWhich site is it? Is the repo's fate archive or delete? Do you need any of its data kept?",
+  "costUsd": 0.012413200000000001
+}

@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "/retire-project the club's old domain, which nothing uses any more. What happens to the domain itself? Plan only; change nothing.",
+  "started": "2026-11-22T03:24:45Z",
+  "seconds": 15.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    }
+  ],
+  "result": "The domain lapses. Under the retirement procedure, a domain that nothing uses gets auto-renew turned off and is left to expire. It stays parked until it does. That is the plan, not one of two options. It only gets renewed if you name a use for it. Because a domain's fate is your call, the dry run will still ask you to approve it.\n\n**Parking the domain until it expires:**\n\n- **Email Routing off.** This has to be done in the Cloudflare dashboard, because no workstation token can turn it off.\n- **`MX 0 .` at the apex.** This null MX record (RFC 7505) tells other mail servers the domain accepts no mail.\n- **`v=spf1 -all` TXT at the apex.** Nothing is allowed to send mail as the domain.\n- **`v=DMARC1; p=reject;` at `_dmarc`.** Receivers reject any mail that claims to come from it.\n\nAll other DNS records are removed before anything they point at is deleted, so no subdomain is left pointing at a dead resource that someone else could take over. These parking records stay until the registration expires. If you decide to keep the domain, it gets the same records.\n\n**The rest of the retirement, in order:**\n\n1. **Inventory (read-only).** Check the zone's DNS records, Email Routing rules, any Workers custom domains or routes, Access apps, the registrar's expiry date and auto-renew setting, and any vendor or registry entries. I'd also search the dotfiles, docs, project CLAUDE.md files and initiatives for references, including anything that uses the domain as a test target. Each item is marked as owned only by this domain or shared with something else; shared items stay.\n2. **Archive.** For a domain with no repo, Worker or data, this is mostly an export of the zone file and the registrar details. They go into one age-encrypted file, checked by restoring it, then stored locally and in R2.\n3. **Approval.** You get a dry run listing every delete by its ID, with the lapse step as its own question and my recommendation to let it lapse.\n4. **Teardown.** Remove the records that carry traffic, set the parking records, turn auto-renew off, then revoke any keys and remove their secrets.\n5. **Close.** Clear the references, add a row to the retired-projects README, and rerun the Cloudflare inventory to confirm only the parking records are left.\n\nAs you asked, I changed nothing. I also haven't run the inventory yet: this folder only holds skill files, so I don't know which domain is the club's old one. Tell me its name and I'll run step 1, which only reads, and bring you the dry run.",
+  "costUsd": 0.1773156
+}

@@ -1,0 +1,38 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:27:42Z",
+  "seconds": 16.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"demo\", \"path\": \"/var/home/glw907/.claude/docs\", \"-i\": true, \"output_mode\": \"content\", \"head_limit\": 40}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*demo*\", \"path\": \"/var/home/glw907/Projects\"}"
+    }
+  ],
+  "result": "I couldn't see which demo site you mean: reading `~/Projects` and `~/.claude/docs` needs permissions this session doesn't have. So this is the general shape for your setup. I haven't checked it against the real site. Once I know which one it is, I can turn it into a checked inventory without changing anything.\n\n## 1. Inventory (read-only)\n- **Repo:** the GitHub remote, Actions workflows and secrets, Dependabot/Renovate, any open PRs or issues, and local clones or worktrees under `~/Projects/` (run `claude-worktree-busy` first).\n- **Cloudflare:** the Worker or Pages project, custom domains and routes, DNS records, any bindings (KV, D1, R2, queues, Durable Objects), Workers secrets, and Access apps or policies. Check these against `cloudflare-estate-inventory.md`.\n- **Credentials:** API tokens scoped to this site, its Proton Pass items, entries in `~/.local/secrets` and the age store, and any test accounts in `test-accounts.md`.\n- **References from elsewhere:** links from your other sites, initiative records in `~/Projects/initiatives`, maintenance-mode lists, `check-drift` legs, monitoring or uptime checks, and mail routes if the domain gets mail.\n- **Data worth keeping:** a D1 export, R2 objects, analytics, and any content that isn't in git.\n\n## 2. Decide\n- Archive the repo on GitHub (read-only and reversible) or delete it. I'd archive it.\n- What happens to the domain or subdomain: drop it, redirect it, or keep it parked.\n- What data to export before anything goes.\n\n## 3. Teardown, in an order that leaves nothing dangling\n1. Export the data you decided to keep.\n2. Stop CI and deploys: disable the workflows and remove the Actions secrets.\n3. Take down the Worker or Pages project, then its routes and custom domains.\n4. Delete the bindings (KV, D1, R2) after the export is checked. These are the steps you can't undo.\n5. Remove or redirect the DNS records and Access apps.\n6. Revoke the site's API tokens, delete its Workers secrets, and retire its Proton Pass items and secret-store entries. Proton Pass should record the item as retired, not just lose it.\n7. Archive the GitHub repo and remove the local clones and worktrees.\n\n## 4. Records\n- Close the initiative record with `log-project`, drop the site from maintenance-mode and drift checks, and update the household-it runbook or estate inventory if they list it.\n- Run `check-drift` afterwards to confirm nothing still points at the site.\n\nEvery destructive step would get a dry run and your go-ahead first. The full teardown is bigger than a one-line change, so it would go through a short spec under `building-from-specs`.\n\nWhich site and repo is it? If you grant read access to `~/Projects` and `~/.claude/docs`, I can fill in the inventory for real.",
+  "costUsd": 0.041255200000000006
+}

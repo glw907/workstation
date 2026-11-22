@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:22:38Z",
+  "seconds": 11.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`/retire-project` isn't installed in this session, so I treated your message as a plain request. This is a dry run. I looked nothing up and deleted nothing, so every name below is a placeholder to confirm against live state before any step runs.\n\n## Retirement plan: `site-staging`\n\n**Phase 0: Read-only inventory (no changes)**\n1. Run `claude-worktree-busy` on the site's repo, and read its status docs and `~/.claude/docs/cloudflare-estate-inventory.md`.\n2. Confirm the Worker is `site-staging` and that nothing else routes to it:\n   - Service bindings from other Workers.\n   - Routes and cron triggers.\n   - Queues, KV, R2, or Durable Objects it owns.\n3. Find the D1 database name and ID from the Worker's bindings (`wrangler.toml` and the live binding list). Check that no other Worker binds the same database.\n4. Identify the one custom domain, and whether it is a Workers custom domain or a route plus a DNS record. Note any Access application attached to it.\n5. List the Worker's secrets by name only (`wrangler secret list --name site-staging`).\n\n**Phase 1: Safety net**\n6. Export the D1 database to a dated SQL file (`wrangler d1 export <db> --remote --output <path>`). Keep it outside any repo and record where it is.\n7. Check that the export is non-empty and that the table list matches the live one.\n\n**Phase 2: Teardown (each step waits for your go-ahead)**\n\nThe order matters: detach, then remove the consumer, then remove the data.\n\n8. Remove the custom domain, and any DNS record or Access app left behind. This uses curl with `$CLOUDFLARE_API_TOKEN`, since the MCP token is read-only for these writes.\n9. Delete the Worker: `wrangler delete --name site-staging`. This must come before the D1 delete, because the binding would otherwise block it or leave a dangling reference.\n10. Delete the D1 database, after a final confirmation that quotes the database name and the export path.\n\n**Phase 3: Cleanup of records**\n11. Remove the Worker's secrets from the age store and the registry, and retire its Proton Pass items through `claude-pass`.\n12. Remove GitHub Actions secrets and any staging deploy job or environment in the repo's CI.\n13. Remove the repo's staging config: the `wrangler.toml` env block, the D1 binding, and docs that mention the staging URL. This goes through a normal PR, or lands directly if it is a one-sentence change.\n14. Update the estate inventory doc and any `check-drift` manifest entries.\n\n**Phase 4: Verify**\n15. Confirm the domain no longer resolves to the Worker, and that the Worker and the database are gone from the account listings.\n16. Report what was removed and what was kept, including the export's location.\n\n**Open items I need from you**\n- The exact domain, and whether you want its DNS record deleted or repointed.\n- How long to keep the D1 export.\n\nSay the word and I'll start with Phase 0.",
+  "costUsd": 0.014783500000000002
+}

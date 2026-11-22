@@ -1,0 +1,43 @@
+{
+  "skillName": "retire-project",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "/retire-project the club's old domain, which nothing uses any more. What happens to the domain itself? Plan only; change nothing.",
+  "started": "2026-11-22T03:24:31Z",
+  "seconds": 13.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/cloudflare-estate-inventory.md\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"aksailingclub|sailing club|old domain|retire\", \"path\": \"/var/home/glw907/.claude/docs\", \"-i\": true, \"output_mode\": \"content\", \"head_limit\": 40}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*/README.md\", \"path\": \"/var/home/glw907/Projects/household-it\"}"
+    }
+  ],
+  "result": "I couldn't read the estate inventory, the docs or `household-it`, because read access was denied. So I haven't confirmed which domain \"the club's old domain\" is, or what it's attached to. Below is the plan in general terms. The unverified parts are marked.\n\n**Short answer on the domain:** retiring the project doesn't have to mean dropping the domain. I'd recommend keeping the registration for now and parking it, then deciding on release later. An unused domain that lapses can be re-registered by anyone. Whoever gets it also receives any mail, links and logins still pointed at it.\n\n**Plan**\n\n1. **Confirm the target.** Name the domain and the project it served. I'd guess `aksailingclub-org` or its predecessor, but I haven't checked.\n2. **Inventory what still touches it** (read-only):\n   - Cloudflare zone: DNS records, Workers routes and custom domains, Access apps, Email Routing, Turnstile widgets.\n   - Mail: MX/SPF/DKIM records, forwarding addresses, and any accounts that sign up with an address on it.\n   - Inbound links: search engines, social profiles, printed material, and other sites.\n   - Credentials: the Proton Pass items, secrets and registry entries tied to it.\n   - The repo, its CI, and any initiative record in `~/Projects/initiatives`.\n3. **Decide the domain's fate.** The options, in my order of preference:\n   - **Park it (recommended).** Keep the registration and the Cloudflare zone. Remove the Workers routes and Access apps. Leave minimal DNS: a redirect to the current club site if the old URLs ever had traffic, plus null SPF/DMARC records (`v=spf1 -all`) if it never sends mail. Auto-renew stays on. Review it again in about a year.\n   - **Redirect permanently.** This is the same as parking, but with a 301 to the new domain. It's the right choice if old links are still out there.\n   - **Let it lapse.** Choose this only if nothing, including mail, ever depended on it, and you're comfortable with someone else registering it. Turn off auto-renew and delete the zone only after the registration has expired or been transferred out.\n4. **Tear down the rest, with a dry run first.** Delete the Workers, DNS records, Access apps and secrets. Archive the repo rather than deleting it. Remove the Proton Pass items and manifest entries. Close the initiative record, using `log-project`.\n5. **Verify.** Resolve the domain from outside, check that no alerts or mail bounce, and watch for a couple of weeks.\n\n**Needs your decision:**\n- Park, redirect, or let it lapse?\n- Did the domain ever carry mail or logins that people still use?\n\nNothing has been changed. If you grant read access to the estate inventory and the `household-it` docs, I'll run step 2 and give you a concrete per-record list.",
+  "costUsd": 0.0228924
+}

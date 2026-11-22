@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:22:15Z",
+  "seconds": 10.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "The `/retire-project` command isn't installed in this session, so I treated your message as a plain request. Nothing was looked up or changed. This plan is built from the general shape of a Worker, its D1 database, and a custom domain, not from the account's current state. Every name and ID needs checking at execution time.\n\n**Dry-run plan: retire `site-staging`**\n\n**Preconditions to verify before any step (read-only, at execution)**\n- Confirm `site-staging` is the Worker you mean, and that its D1 database and custom domain are the ones bound to it. Check that no other Worker, route, or production site uses the same database or hostname.\n- Read `~/.claude/docs/cloudflare-estate-inventory.md` before touching the credential or the account.\n- Check the site repo's `wrangler.toml` for the staging binding, so the repo does not redeploy the Worker later.\n- Check Proton Pass (`claude-pass`) and `~/.local/secrets` for any credential that exists only for this staging site. Retire nothing from the credential stores in this pass.\n\n**Steps, in order**\n1. **Export the D1 database.** Take a backup with `wrangler d1 export` (or the API). Store it outside the repo. Deleting D1 cannot be undone, so this comes first.\n2. **Detach the custom domain.** Remove the Worker's custom domain binding so the hostname stops serving. Then confirm the matching DNS record was created by the Worker binding and remove it only if nothing else uses it. Workers-domain writes need curl with `$CLOUDFLARE_API_TOKEN` from `~/.local/secrets`, because the MCP token is read-only for them.\n3. **Delete the Worker** `site-staging` with `wrangler delete --name site-staging`. The `--name` flag is required so the folder's config does not pick a different Worker.\n4. **Delete the D1 database** only after the Worker is gone and no other binding references it. Use `wrangler d1 delete` or the API.\n5. **Clean up the repo.** Remove the staging environment from `wrangler.toml` in a branch and open a pull request. Do not push to the primary checkout.\n6. **Record the retirement** in the site's notes or initiative record, if one exists.\n\n**Decisions for you before execution**\n- Keep or delete the D1 backup export after the retirement is done?\n- Remove the staging DNS record, or leave it pointing nowhere?\n- Should any staging credential in Proton Pass be retired, or kept for reference?\n\n**Confirmation required:** steps 2 through 4 are destructive and hard to reverse. Each needs your explicit go-ahead after you read the preconditions' results. I have not run any of them.",
+  "costUsd": 0.0010938599999999999
+}

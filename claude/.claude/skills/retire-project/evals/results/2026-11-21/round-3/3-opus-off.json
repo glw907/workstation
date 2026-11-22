@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:26:40Z",
+  "seconds": 20.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)retire|archive\", \"path\": \"/var/home/glw907/.claude\", \"glob\": \"{docs,skills}/**/*.md\", \"output_mode\": \"files_with_matches\", \"head_limit\": 20}"
+    }
+  ],
+  "result": "`/retire-project` isn't installed in this session, so it didn't run. I also couldn't search `~/.claude/docs` for a house retirement procedure, because that read wasn't approved. The plan below follows general practice and the workstation rules in CLAUDE.md. If a retirement doc exists, it overrides this.\n\n## What goes in the archive\n\nOne dated directory, for example `<repo>-retired-2026-11-21/`, holding:\n\n1. **The repo.** A `git bundle create repo.bundle --all`, which keeps every branch, tag and the full history. Add a plain `git archive` tarball of the default branch so the files can be read without git.\n2. **The D1 database, in two forms:**\n   - `wrangler d1 export <db> --remote --output=db.sql` (schema plus data, as SQL that can be replayed).\n   - The schema alone (`--no-data`), so the structure can be read without loading the data.\n   - Row counts per table, taken at export time (`SELECT name FROM sqlite_master`, then `COUNT(*)` on each table), saved as `rowcounts.txt`.\n3. **The Cloudflare config around it.** `wrangler.toml` / `wrangler.jsonc` (already in the bundle, but noted), the D1 database ID and name, the Worker name, routes and custom domains, and the binding names. Secrets are listed by name only (`wrangler secret list --name <worker>`), never by value. The values stay in Proton Pass and the age store, and their retirement is a separate step.\n4. **GitHub metadata the repo doesn't carry.** Open issues and PRs, plus the Actions secret names, exported through `gh` as JSON.\n5. **A `MANIFEST.md`** listing each file, its SHA-256 checksum, the source it came from, and the date. It ends with a short README explaining how to restore the project.\n\nThe archive goes to the store the workstation's backups already use (the household-it runbook names it), not to a new vendor.\n\n## How the archive is proven before anything is deleted\n\nNothing gets deleted until all of these pass:\n\n1. **Checksums.** `sha256sum -c` against the manifest after the archive is copied to its final home. This proves the stored copy matches what was exported.\n2. **Repo restore.** `git bundle verify repo.bundle`, then clone from the bundle into a scratch directory. Compare branch and tag lists and the HEAD commit hashes against the live remote.\n3. **Database restore.** Load `db.sql` into a fresh database: a local SQLite file, or `wrangler d1 execute --local`. Rerun the row-count queries and diff them against `rowcounts.txt`, which must match exactly. Spot-check a few rows from the largest table.\n4. **Freeze, then re-check.** The order matters. Stop writes first (disable the Worker route, or deploy a read-only stub), then export, then verify. After verifying, compare the live D1's row counts once more to confirm nothing changed after the export.\n5. **A written verdict.** The proof results go into the manifest: commands run, outputs, pass or fail.\n6. **Geoff's approval.** With the proof in hand, I send the deletion list for approval: the D1 database, the Worker, routes and DNS records, Actions secrets, and finally archiving or deleting the GitHub repo. Each deletion first shows a dry run of what it targets.\n\nDeletion runs in reverse order of dependency: route and DNS, then the Worker, then D1, then the repo. Credentials come last, in Proton Pass, marked retired rather than deleted.\n\nTo go ahead, name the repo and approve the `~/.claude` read so I can check for a house procedure first. The work is bigger than a one-sentence change, so it would go through `building-from-specs`: a short spec covering the steps above, and nothing destructive until you approve the deletion list.",
+  "costUsd": 0.0437596
+}

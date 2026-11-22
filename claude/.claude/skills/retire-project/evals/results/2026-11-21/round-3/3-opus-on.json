@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:26:20Z",
+  "seconds": 20.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Archive plan for a small demo repo with one D1 database\n\nThis is a plan only. I ran nothing and looked up no ids. `<project>` and `<db>` are placeholders until the read-only inventory fills them in.\n\n## What goes in the archive\n\nThe archive is one age-encrypted file, `<project>-2026-11-21.tar.age`, encrypted to the workstation key. Inside the tar:\n\n| Item | How it's made | Notes |\n|---|---|---|\n| `repo.bundle` | `git bundle create repo.bundle --all` from a checkout that has fetched every remote branch | Gets committed or dropped first: uncommitted work and stashes in every worktree, since a bundle doesn't carry them. |\n| `d1/<db>.sql` | `wrangler d1 export <db> --remote --output d1/<db>.sql` | The one D1 database, with schema and data. |\n| `d1/<db>.counts.txt` | Row count per table, from `wrangler d1 execute <db> --remote` | Saved now so the restore has something to check against. |\n| `github/issues.json`, `github/prs.json` | `gh issue list --state all --json ...` and `gh pr list --state all --json ...`, including comments | Kept even if empty, so the record shows they were checked. |\n| `github/releases.json` | `gh release list` | Only if the inventory finds releases. |\n| `worker/` | The deployed Worker config: `wrangler.toml`, routes, custom domains, bindings | The secret names from `wrangler secret list`, never their values. |\n| `MANIFEST.txt` | The list of contents, the source commit SHAs, and the export timestamp | |\n\nR2 is left out unless the inventory finds a bucket, which a demo with one D1 database probably won't have. No secret values go in.\n\n## How the archive is proven\n\nEach check has to pass before the next one starts. If any check fails, or any export comes back empty, the retirement stops there.\n\n1. **Check the bundle as written:** `git bundle verify repo.bundle`. Then compare `git bundle list-heads` with `git ls-remote origin`; every branch and tag has to match.\n2. **Check the export isn't empty:** the `.sql` file has a `CREATE TABLE` line for every table in the live schema, and isn't zero bytes.\n3. **Encrypt, then restore from the encrypted file only.** Make a scratch directory under `mktemp -d`, then:\n   - Decrypt with `age -d` and untar.\n   - Run `git clone repo.bundle restored/`, then `git -C restored log --all` and `git fsck`.\n   - Run `sqlite3 scratch.db < d1/<db>.sql`. It has to finish without errors, and each table's `count(*)` has to equal `d1/<db>.counts.txt`.\n   - Parse the JSON files with `python3 -I -m json.tool`.\n4. **Hash it:** take `sha256sum <project>-2026-11-21.tar.age` and keep the value for the retirement record.\n5. **Store two copies:**\n   - `~/Documents/retired-projects/`\n   - `servers-archive/retired-projects/` in R2, confirmed with `rclone check` against the local copy. A mismatch is a failure.\n6. **Remove the scratch restore.** The plaintext copy doesn't outlive the proof.\n\n## Before anything is deleted\n\nThe proven archive is the only way into the approval step. The dry run lists each delete by its id: the custom domain and DNS records, the Worker, the D1 database, the GitHub repo, and the local checkout. Each one is a question for you with my recommendation, and only your typed approval releases it. Before each delete I rerun the inventory for that id, and stop if it's no longer owned only by this project.\n\nThe D1 database goes after the Worker. By then its export has already been restored and its row counts matched, so the archive copy is known to be complete.",
+  "costUsd": 0.17769780000000002
+}

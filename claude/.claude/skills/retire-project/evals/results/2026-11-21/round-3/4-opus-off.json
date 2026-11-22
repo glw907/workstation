@@ -1,0 +1,38 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:27:59Z",
+  "seconds": 17.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)demo\", \"path\": \"/var/home/glw907/.claude/docs/cloudflare-estate-inventory.md\", \"output_mode\": \"content\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*demo*\", \"path\": \"/var/home/glw907/Projects\"}"
+    }
+  ],
+  "result": "I couldn't find out which site you mean. My attempts to read `~/.claude/docs/cloudflare-estate-inventory.md` and `~/Projects/` were blocked, so this plan is based on how your setup usually works, not on that site's actual records. If you tell me its name and allow those reads, I can turn it into a checklist of the specific resources.\n\n## Shutting down a demo site: rough plan\n\n**1. Take stock first (read-only)**\n- In the Cloudflare inventory and the repo's `wrangler.toml`, list the Worker or Pages project, routes, custom domains, and DNS records.\n- List what it's bound to: D1, KV, R2, Durable Objects, Queues, and any Access apps or policies.\n- List its secrets: `wrangler secret list --name <worker>`, GitHub Actions secrets, entries in `~/.local/secrets` and the age store, and any Proton Pass items.\n- Look for anything outside the repo: the household-it runbook, an initiatives record, maintenance-mode Renovate or Dependabot schedules, uptime checks, and links from your other sites.\n- Check whether any other project shares those resources, such as a D1 database, an API token, or a zone.\n\n**2. Keep what's worth keeping**\n- Export any data you want from D1, KV, or R2.\n- Archive the GitHub repo instead of deleting it. Archiving can be undone and keeps the history.\n\n**3. Take it offline, in an order you can undo**\n- Remove the custom domain and routes first, or point them at a redirect. Leave it like that for a while in case something breaks.\n- Delete the DNS records once nothing depends on them.\n- Then delete the Worker or Pages project, followed by its bound storage. Deleted storage can't be recovered, so each deletion gets a dry run and your confirmation first.\n\n**4. Clean up credentials**\n- Revoke or narrow any API tokens that only this site used.\n- Delete its Workers and Actions secrets.\n- In Proton Pass, mark its items retired or remove them, using `claude-pass`. Then run `check-drift` to confirm the vault and the stores still agree.\n\n**5. Update the records**\n- Remove the site from the Cloudflare inventory and the runbook.\n- Close its initiatives record, take it off any maintenance-mode list, and turn off CI and dependency bots. Archiving the repo stops most of these anyway.\n- Remove the local checkout and any worktrees, after checking with `claude-worktree-busy`.\n\n**Process:** this touches several systems and the deletions can't be reversed, so under `building-from-specs` it would start as a short spec for you to approve. Steps 1 and 2 are safe to do first. Every deletion in steps 3 and 4 needs your confirmation before it runs.\n\nNothing has been changed.",
+  "costUsd": 0.0406272
+}

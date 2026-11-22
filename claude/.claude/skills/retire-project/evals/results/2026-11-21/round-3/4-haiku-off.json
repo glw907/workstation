@@ -1,0 +1,37 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:27:10Z",
+  "seconds": 11.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/4-haiku-off\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/{wrangler.toml,wrangler.jsonc,package.json,README*,CNAME}\", \"path\": \"/var/home/glw907/Projects\"}"
+    }
+  ],
+  "result": "I haven't touched anything, and I couldn't see the demo repo from here. This directory holds only skill files, and I don't have access to `~/Projects`. So this is the general shape of the work. Tell me the site or repo name and I'll turn it into a checked list against what it actually deploys.\n\n**Rough shape, in order:**\n\n1. **Inventory what it uses.** Check the repo for the Worker or Pages project, custom domains and DNS records, D1, KV, or R2 data, Workers and Actions secrets, mail routes, OAuth or third-party accounts, CI, and Renovate or Dependabot config. Cloudflare resources go in the estate inventory (`~/.claude/docs/cloudflare-estate-inventory.md`), and household DNS and mail go through the `runbook` skill.\n\n2. **Check for dependents.** Look for other sites or links that point at the demo's URL, and for anyone still using it. If it holds data, decide whether to export it first.\n\n3. **Decide the URL's fate.** Either keep a redirect or a static \"retired\" page for a while, or release the domain. Releasing is hard to reverse, so it needs your call.\n\n4. **Show a dry run, then get your go-ahead.** Teardown deletes things, so I'd list every resource and secret to be removed and wait for your yes before acting.\n\n5. **Tear down in this order:**\n   - Export any data, and archive it.\n   - Swap the route for the redirect or retired page, or remove the DNS record.\n   - Delete the Worker or Pages project, then the D1, KV, or R2 stores.\n   - Delete the Workers and Actions secrets, and remove the matching local entries in `~/.local/secrets`.\n   - Retire the Proton Pass items per the `proton-pass` rules, and don't delete them outright.\n   - Turn off CI and dependency bots.\n\n6. **Repo.** Archive it on GitHub rather than deleting it, unless you ask for deletion. Remove the local clone, and update the initiatives record if one exists.\n\n7. **Verify.** Check that the URL returns what we expect, that the DNS and secret listings are clean, and that no docs or other repos still reference the demo.\n\n**Decisions I need from you:**\n- Which site or repo this is.\n- Keep the domain as a redirect, a retired page, or release it?\n- Keep or export any data?\n- Archive the repo or delete it?",
+  "costUsd": 0.0016518600000000002
+}

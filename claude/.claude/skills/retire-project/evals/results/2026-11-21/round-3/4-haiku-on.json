@@ -1,0 +1,42 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:27:01Z",
+  "seconds": 9.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/cloudflare-estate-inventory.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/bluefin-admin/secrets.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*\", \"path\": \"/var/home/glw907/Projects\"}"
+    }
+  ],
+  "result": "I couldn't read the estate inventory, the secrets doc, or `~/Projects`; the read permission was not granted. So this plan is generic and I haven't checked which hosting, DNS, or credentials this site actually uses. Nothing has been changed.\n\n## Shutdown plan (generic)\n\n**1. Identify the site and what it touches.** Tell me the site name, or the repo path, and I'll map its real footprint. Typical pieces for a small demo site:\n- **Hosting:** Cloudflare Workers/Pages, a static host, or a VPS/container.\n- **DNS:** a subdomain record in a zone, plus any Cloudflare Access app or Worker route bound to it.\n- **Secrets:** Workers secrets, Actions secrets, `~/.local/secrets` entries, and Proton Pass items. Check each by name, never by value.\n- **Data:** D1, KV, R2, or a database that holds anything worth keeping.\n- **CI/CD and scheduled jobs:** GitHub Actions, cron, or Workers cron triggers that would fail or redeploy after shutdown.\n- **Mail, analytics, or monitors:** uptime checks or alerts that will start firing.\n\n**2. Decide what to keep.** Export any data the demo still needs, and confirm nothing else links to the URL.\n\n**3. Dry run before anything destructive.** List each resource to be removed and get your confirmation before deleting it. Deleting a Worker, a DNS record, or a database is hard to reverse.\n\n**4. Take the site down in a reversible order.**\n- Remove the public route or DNS record first, or point it at a holding page.\n- Disable scheduled triggers and CI deploys.\n- Then delete the hosting project, data stores, and secrets, once you've confirmed the site is gone.\n\n**5. Clean up the repo.** Archive it on GitHub rather than deleting it, which keeps history and is reversible. Add a README note saying where it went. Remove its entries from any inventory or runbook docs.\n\n**6. Credentials.** Revoke or delete the tokens and secrets the site used, and mark their Proton Pass items retired so `check-drift` doesn't flag them as missing.\n\n**7. Verify.** Confirm the URL returns the expected response, the DNS record is gone, and no failing jobs or alerts remain.\n\n## What I need from you\n- Which site or repo this is (name or path).\n- Whether it's deployed on Cloudflare, and whether you want the repo archived or deleted.\n\nIf you grant read access to `~/Projects` and the inventory doc, I can turn this into a site-specific checklist with the actual resources listed, still without changing anything.",
+  "costUsd": 0.00138096
+}
