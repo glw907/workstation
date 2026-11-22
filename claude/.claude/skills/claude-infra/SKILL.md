@@ -37,7 +37,8 @@ the inventory are in `~/.claude/docs/claude-tooling.md`.
    (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>)
    and the page for the current model
    (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>).
-   Anything beyond the request goes in "Later", never into a task.
+   Anything beyond the request goes to the backlog through `standards:log-issue`, never into a
+   task.
 5. **Land the change through a PR** whose commit messages and body cite the guidance URL, unless
    it meets `building-from-specs` "Direct changes".
 6. **Audit** with `/doctor prompt-audit`, `/skill-doctor`, and Anthropic's `skill-creator`. Run
