@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T02:27:42Z",
+  "seconds": 10.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "This is a plan only. I ran nothing and haven't looked at the repo or the account, so the details below follow the `retire-project` skill.\n\n## Before the archive: inventory (read-only)\n\nI'd list everything the demo owns and mark each item sole-owner or shared. Beyond the D1 database, that covers the Worker, any custom domain or DNS, and any R2, KV, or secrets. It also covers unpushed branches, stashes, worktree status, open PRs and issues, and references in `~/.dotfiles`, the docs, the other projects' `CLAUDE.md` files, and the initiatives repo. If another Worker binds the D1 database, it is shared and stays.\n\nUncommitted work in any worktree gets committed or dropped first, because a bundle doesn't carry it. That includes stashes.\n\n## What goes in the archive\n\nOne file, `demo-2026-11-21.tar.age`, encrypted with the workstation age key. It holds:\n\n- **Git history:** `git bundle create --all`, followed by `git bundle verify`.\n- **D1 data:** a `wrangler d1 export` of the database, with schema and data in SQL. If the database has several tables, I'd also record per-table row counts from the live D1 database.\n- **R2 objects:** only if the inventory finds any.\n- **GitHub metadata:** issues and PRs as JSON.\n- **Worker config:** the wrangler config and bindings.\n- **Secrets:** no values, only their names.\n\n## How the archive is proven before any delete\n\n1. Decrypt the file in a new, empty scratch directory.\n2. Clone the bundle and check that the history and branches match the repo.\n3. Load each SQL export into SQLite. Compare each table's row count to the live D1 counts.\n4. Stop on any failed or empty export.\n5. Store the file at `~/Documents/retired-projects/` and at `servers-archive/retired-projects/` in R2. Confirm the R2 copy with `rclone check`.\n6. Record the file's sha256 for the retirement record.\n\n## What happens after\n\nOnly then does the dry run go to you in your terminal. It lists each delete by id, with the D1 database id as one of them. Each irreversible step is a question with options and a recommendation, and only your typed words approve it. The teardown follows the skill's order: DNS and domain, then the Worker, then D1, then vendors and secrets, then the GitHub repo and local checkout. I rerun the inventory for each id before deleting it.\n\nNothing gets deleted until the restore check passes and you have approved.",
+  "costUsd": 0.09041840000000001
+}

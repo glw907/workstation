@@ -49,11 +49,13 @@ def project(scratch, skill_dir, case, state):
         shutil.copy(skill_dir / name, scratch / Path(name).name)
 
 
-def settings(skill, state):
+def settings(skill, state, proj):
     """Return the session's settings: the user's skillOverrides and plugins, plus this skill when off.
 
-    A deny rule keeps the session from reading any copy of the skill outside the project, such
-    as the main checkout's, so a load can come only from the project.
+    Deny rules keep the session from reading any copy of the skill outside the project, such as the
+    main checkout's, so a load can come only from the project. They also refuse a Read of any
+    SKILL.md in the project, so a load goes through the Skill tool, as it would for a user skill
+    that sits outside the folder a session searches. A skill's supporting files stay readable.
     """
     try:
         user = json.loads((Path.home() / ".claude/settings.json").read_text())
@@ -63,7 +65,8 @@ def settings(skill, state):
     if state == "off":
         merged[skill] = "off"
     home = Path.home().resolve()
-    deny = [f"Read(/{home}/.dotfiles/**/skills/{skill}/**)", f"Read(~/.claude/skills/{skill}/**)"]
+    deny = [f"Read(/{home}/.dotfiles/**/skills/{skill}/**)", f"Read(~/.claude/skills/{skill}/**)",
+            f"Read(/{proj.resolve()}/.claude/skills/*/SKILL.md)"]
     return {"skillOverrides": merged, "enabledPlugins": user.get("enabledPlugins", {}),
             "permissions": {"deny": deny}}
 
@@ -152,7 +155,7 @@ def main():
         "--disallowedTools", "Bash,Edit,Write,NotebookEdit,WebFetch,mcp__plugin_cloudflare_cloudflare",
         "--strict-mcp-config",
         "--setting-sources", "project,local",
-        "--settings", json.dumps(settings(args.skill, args.state)),
+        "--settings", json.dumps(settings(args.skill, args.state, proj)),
         "--no-session-persistence",
     ]
     started = datetime.now(timezone.utc)

@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T02:29:37Z",
+  "seconds": 9.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Without knowing which site, here is the rough shape, in order. I haven't touched or looked at anything yet.\n\n**1. Inventory (read-only)**\n- Find everything the site owns. Check `~/.claude/docs/cloudflare-estate-inventory.md` and the household-it runbook for its Worker or Pages project, custom domain or subdomain, DNS records, Access apps, D1/KV/R2 bindings, and Turnstile or email routes.\n- Search the repo and `~/Projects` for references: GitHub Actions secrets, deploy workflows, links from other sites, and entries in `~/Projects/initiatives`.\n- List credentials tied to it (tokens, test accounts) by name in Proton Pass, `~/.local/secrets`, and the age store.\n\n**2. Preserve what's worth keeping**\n- Decide whether anything should be salvaged (content, a component, a design). Archive a final copy if so.\n- Check that no other site or redirect depends on the demo's domain.\n\n**3. Take it down in reverse dependency order** (each step needs your go-ahead as a destructive op, with a dry run first)\n1. Remove or redirect the DNS records and Access apps.\n2. Delete the Worker or Pages project, then its D1/KV/R2 data. Export first if there's any doubt.\n3. Revoke or delete its tokens and secrets: Workers secrets, Actions secrets, the age store, and the Proton Pass item.\n4. Delete or archive the local worktrees and the checkout in `~/Projects`, and remove the `~/.dotfiles` references.\n\n**4. Retire the repo**\n- Archive the GitHub repo rather than delete it, which is reversible. Delete only if you want it gone. Close any open PRs and issues first.\n\n**5. Clean up records**\n- Update the initiative record, the household-it runbook, and the Cloudflare inventory.\n- Remove any manifest, backup, or alert entries for it, then run `check-drift` to confirm nothing still points at it.\n\n**Decisions for you**\n- The site's name.\n- Whether to archive or delete the repo.\n- Whether any data needs exporting first.\n- Whether its domain should redirect somewhere or be released.\n\nOnce you name the site, I'll run the inventory step and turn this into a concrete checklist with the real resource names.",
+  "costUsd": 0.08062240000000001
+}

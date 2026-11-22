@@ -1,0 +1,48 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T02:29:02Z",
+  "seconds": 12.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/4-haiku-on/.claude/skills/retire-project/SKILL.md"
+  ],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/cloudflare-estate-inventory.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/4-haiku-on/.claude/skills/retire-project/SKILL.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/4-haiku-on/CLAUDE.md\"}"
+    }
+  ],
+  "result": "I haven't changed anything. This directory isn't a git repo and contains no demo site, so I couldn't inventory the project itself. Tell me which repo or site it is and I'll run the read-only inventory first.\n\nThe workstation has a `retire-project` procedure (`.claude/skills/retire-project/SKILL.md`). It's irreversible, so it runs in a fixed order with stops at each boundary. Roughly:\n\n1. **Inventory (read-only).** List everything the project owns and mark each item sole-owner or shared. Shared items stay.\n   - **Repo:** unpushed branches, stashes, worktree status, open PRs and issues, releases, Actions secrets, and any sessions still working it.\n   - **Cloudflare:** Workers, custom domains, D1, R2, KV, Queues, Turnstile, Access apps, Email Routing, Builds triggers, DNS records, and the domain's expiry and auto-renew setting.\n   - **Vendors:** any service that bills for it or holds a credential for it.\n   - **References:** grep the dotfiles, the docs, other repos' CLAUDE.md files, and the initiatives repo for anything that points at it.\n\n2. **Archive and verify.** Write one age-encrypted `<project>-<date>.tar.age` containing a verified `git bundle --all`, D1 exports, R2 objects, issues/PRs as JSON, and the Worker config. Commit or drop uncommitted work first, and never archive secret values. Test-restore it to scratch, then store it in `~/Documents/retired-projects/` and in R2, checking the R2 copy with `rclone check`. Record the sha256.\n\n3. **Approval.** Show you the dry run listing every delete by id. Each irreversible step is a question with a recommendation, and only your typed words approve it. Whether a domain is kept or lapses is your decision.\n\n4. **Teardown, in order.** Rerun the inventory for each id before deleting, and stop if something is no longer sole-owned.\n   - Remove the custom domain and DNS records before the Worker they point at.\n   - Delete the Worker, then Turnstile, Builds triggers, D1, and R2.\n   - Stop vendors and revoke keys at the issuer. Deleting a Worker secret revokes nothing. Then remove secrets from the store and registry, and trash the project's folder in the Proton Pass vault.\n   - Park any kept domain: Email Routing off in the dashboard, `MX 0 .`, `v=spf1 -all`, and a DMARC reject record at the apex.\n   - Delete the GitHub repo (this may need `gh auth refresh -s delete_repo`), then the local checkout and its worktrees.\n\n5. **Close.** Clear the references, close the initiative, add a row with the date, sha256, and contents to the archives README, and rerun the Cloudflare inventory to show it empty.\n\nTwo gaps before I can make this specific:\n- I couldn't read `~/.claude/docs/cloudflare-estate-inventory.md` because the read was not granted. The retire procedure leans on it, so I'd need that access for the Cloudflare inventory.\n- I don't know which site or repo this is, so I can't tell whether it owns a domain, a D1 database, or any vendor keys.",
+  "costUsd": 0.00672575
+}

@@ -1,0 +1,19 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T02:24:11Z",
+  "seconds": 12.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsUsed": [],
+  "result": "`/retire-project` isn't installed in this session, so I treated your message as a plain request. This is a dry run: I looked nothing up and deleted nothing. Names, IDs and the hostname below are placeholders until a live inventory fills them in.\n\n## Retirement plan for `site-staging`\n\n**Phase 0: Inventory (read-only, needed before anything else)**\n1. Find the D1 database bound to the Worker: its name, its UUID, and whether any other Worker also binds it.\n2. Find the custom domain attached to `site-staging` (hostname and domain ID).\n3. Check what else references the Worker:\n   - Other bindings that point at it (service bindings, queues, cron triggers).\n   - Routes.\n   - Access applications covering the staging hostname.\n   - Worker secrets.\n   - The repo's `wrangler` config, CI deploy jobs, and `~/.local/secrets` entries.\n4. Check that production does not depend on the staging D1 or the staging hostname.\n\n**Gate: stop if any of these holds**\n- Another Worker binds the D1 database.\n- Production references the staging hostname or database.\n- Anything unexpected turns up in the Phase 0 inventory.\n\n**Phase 1: Preserve**\n5. Export the D1 database to a file with `wrangler d1 export <db> --remote --output <path>`.\n6. Keep the export somewhere durable until you say to drop it. I'd suggest the project's archive location, not `/tmp`.\n\n**Phase 2: Detach, in this order**\n7. Remove the Access application for the staging hostname, if one exists. This is a write the MCP token can't do, so it goes through curl with `$CLOUDFLARE_API_TOKEN`.\n8. Remove the custom domain from the Worker (`DELETE /accounts/{account}/workers/domains/{id}`). The same token limit applies. Cloudflare removes the auto-created DNS record with it. I'd confirm no stray manual record remains.\n9. Remove any routes and cron triggers.\n\n**Phase 3: Delete (needs your explicit go-ahead)**\n10. Delete the Worker with `wrangler delete site-staging`. This runs before the D1 delete so the binding doesn't block it.\n11. Delete the D1 database with `wrangler d1 delete <db>`. This is irreversible, and it happens only after the export is verified readable.\n\n**Phase 4: Clean up references**\n12. In the site repo:\n    - Remove the staging `wrangler` environment and the CI deploy job.\n    - Drop the staging secrets and variables from Actions.\n13. Remove the staging token or secret from the age store and Proton Pass, via `claude-pass`.\n14. Update `~/.claude/docs/cloudflare-estate-inventory.md` and the household-it runbook, and close the initiative record if one exists.\n\n**Phase 5: Verify**\n15. Confirm the hostname no longer resolves to the Worker.\n16. Confirm `wrangler list` and the D1 list no longer show the resources.\n17. Confirm the repo gate passes.\n\n## Open points for you\n- Do you want to keep the D1 export, and where?\n- Should the hostname stay reserved, or is it fully released?\n- Is `site-staging` the exact Worker name, or only the pattern?\n\nNothing runs until you approve the plan and give the go-ahead for Phase 3.",
+  "costUsd": 0.0916298
+}

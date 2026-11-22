@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "/retire-project the club's old domain, which nothing uses any more. What happens to the domain itself? Plan only; change nothing.",
+  "started": "2026-11-22T02:26:17Z",
+  "seconds": 24.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    }
+  ],
+  "result": "I haven't changed anything. I also haven't run the inventory yet: this session has no shell or Cloudflare access, and nothing in the working directory says which domain is the club's old one. So this plan doesn't use any live data.\n\n## What happens to the domain\n\n**That's your decision. My recommendation is to park it now and let it lapse at expiry, with auto-renew off.** That's the skill's default for a domain with no use. Until it expires it stays parked:\n\n- Email Routing is off. You have to turn it off in the dashboard, because no workstation token can.\n- The apex gets `MX 0 .`, which is a null MX under RFC 7505.\n- The apex gets `v=spf1 -all`.\n- The apex gets `v=DMARC1; p=reject;`.\n- No other records remain.\n\nParked this way, no one can send mail as the domain and nothing points at a resource that's gone.\n\nBefore you choose, one risk is worth weighing. After it lapses, anyone can register it, and a lot of people knew it as the club's domain. Keeping it parked costs only the renewal fee, and it's the better choice if any of these is true:\n\n- An account still uses an address at the domain as its login or recovery email (a vendor, Google, GitHub, a bank, the club's registrations). Whoever owns the domain next could receive those password resets. **This must be zero before the domain lapses, whichever option you pick.**\n- The old domain is still on printed material, in members' address books, or in inbound links that matter.\n\nThe options are:\n- **A. Lapse (recommended).** Park it now and turn auto-renew off. It expires on its date.\n- **B. Keep parked.** Park it, leave auto-renew on, and review it at each renewal.\n\n## The plan (nothing runs until you approve)\n\n1. **Inventory (read-only).**\n   - **Zone:** every DNS record, Email Routing rules and destination addresses, custom domains bound to Workers, Access apps, Turnstile widgets that list the hostname, and the registrar's expiry date and auto-renew setting.\n   - **Ownership:** I'll mark each item as owned only by this domain or shared. A shared item, like a Worker that also serves the current domain, stays.\n   - **References:** grep `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, the initiatives repo, and the secrets registry for the domain name.\n   - **Account emails:** search vendor accounts and Proton Pass items for addresses at the domain.\n2. **Archive and prove it.** If the domain has no repo or data, the archive is small: the zone exported as BIND, the Email Routing rules, and any Worker config. It becomes `<domain>-<date>.tar.age`, encrypted with the workstation key. I'll restore it in scratch to check it, store it in `~/Documents/retired-projects/` and in R2 under `servers-archive/retired-projects/`, confirm the R2 copy with `rclone check`, and record its sha256.\n3. **Approval.** You get a dry run in your terminal that lists each delete by its id. It asks one question per irreversible step, and it includes the lapse-or-keep question above.\n4. **Teardown, in order.** Before each delete I'll rerun the inventory for that id.\n   1. Remove custom domains and DNS records.\n   2. Remove any Worker, Turnstile widget, or other resource used only by this domain.\n   3. Revoke any key held only for this domain at its issuer, then clear it from the store, the registry, and Proton Pass.\n   4. Park the domain as described above. You turn off Email Routing in the dashboard. For option A, I turn auto-renew off.\n5. **Close.**\n   - Clear the references found in step 1.\n   - Add a row to the archive `README.md`.\n   - Rerun the Cloudflare inventory and show that only the parking records remain.\n   - For option A, add a reminder for the expiry date to confirm it lapsed.\n\nTo start, tell me which domain it is and whether you want option A or B. Step 1 is read-only, so I'll run it as soon as I have a session with shell access.",
+  "costUsd": 0.21094700000000002
+}

@@ -1,0 +1,35 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T02:27:10Z",
+  "seconds": 17.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "writing-voice"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\", \"args\": \"Audience: Geoff, a developer reading a retirement plan in his terminal. Shape: a short plan with a clear archive list and a proof sequence. No em dashes.\"}"
+    }
+  ],
+  "result": "Geoff, here is the plan for a demo repo with one D1 database. I ran nothing. The inventory in step 1 still has to be done against the real repo.\n\n**What goes in the archive**\n\nThe archive is one file, `<project>-<date>.tar.age`, encrypted with the workstation age key. It holds four things. The git history comes from `git bundle create --all`, which carries every branch and tag. Uncommitted work and stashes are not in a bundle, so any worktree with changes gets committed or dropped before the bundle is made, and you decide which. The D1 database goes in as a SQL export from `wrangler d1 export`, one file per database. The issues and PRs go in as JSON from `gh`, and the Worker config goes in as JSON from the Cloudflare API, with secret names only. Secret values are never archived. For a repo with no R2 buckets, the R2 part is empty and you can skip it.\n\n**How the archive is proven before anything is deleted**\n\n1. Write the tarball, encrypt it, and record its sha256.\n2. Decrypt it into an empty scratch directory. Do not run anything from inside that directory.\n3. Verify the bundle with `git bundle verify`, clone it, and compare the refs against the live repo.\n4. Load each SQL export into a fresh SQLite database. Compare the row count of every table with a live `SELECT count(*)` on D1. A failed or empty export stops the run here. One caveat: a D1 export can contain D1-only statements that SQLite rejects. If that happens, the loader has to skip or rewrite them, and the skipped statements get listed in the record, not hidden.\n5. Copy the file to `~/Documents/retired-projects/` and to `servers-archive/retired-projects/` in R2. Confirm the R2 copy with `rclone check` and confirm the local copy's sha256.\n6. Write the sha256 into the retirement record.\n\nOnly after step 6 does the dry run go to you. The D1 delete is irreversible, so it waits for your typed approval.\n\n**Decisions I need from you later**\n\nWhether to drop any uncommitted work, and whether the repo name or domain has any kept use. Both come up at approval, not now.",
+  "costUsd": 0.006991
+}

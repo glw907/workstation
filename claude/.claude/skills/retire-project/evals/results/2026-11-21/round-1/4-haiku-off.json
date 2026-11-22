@@ -1,0 +1,37 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T02:29:14Z",
+  "seconds": 14.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/{wrangler.*,CNAME,*.md,.github/workflows/*}\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/4-haiku-off\"}"
+    }
+  ],
+  "result": "I haven't changed anything. This directory is a scratch eval folder, not the demo repo, so I can't see what the site runs on yet. The plan below is the general shape. Once you name the repo, I can map it to the real resources.\n\n**Teardown plan (rough order)**\n\n1. **Inventory what the site uses.** Check the repo for `wrangler.*`, CI workflows, and a `CNAME`. Then list what's live: Worker or Pages project, custom domains and DNS records, D1, KV, R2, and queues, Access apps, Turnstile widgets, email routing, uptime monitors, and any VPS. The runbook skill and `~/.claude/docs/cloudflare-estate-inventory.md` cover the mapping.\n\n2. **Decide what happens to the URL.** Either retire it with a static \"retired\" page or a redirect, or return 410. Keep the domain or subdomain pointed at something you control. Deleting a CNAME whose target is gone leaves a dangling record that someone else could claim.\n\n3. **Preserve the data.** Export anything worth keeping (D1 dumps, R2 objects, KV entries, the repo itself). Store the archive encrypted, not as a loose file, following `secrets.md`.\n\n4. **Tear down the resources.** Remove the Worker or Pages project, then its custom domains, then D1, KV, R2, and queues. Remove Access apps and Turnstile widgets. Stop cron triggers and uptime checks, and check any email routing still pointing at the site. Each step gets a dry-run list and your go-ahead first, since deleting data and domains can't be undone.\n\n5. **Retire the credentials.** Revoke API tokens that were created only for this site. Delete its Workers secrets and its entries in `~/.local/secrets`. Mark its Proton Pass items as retired, with grants removed, so `check-drift` doesn't flag them.\n\n6. **Retire the repo.** Archive it on GitHub rather than deleting it, which keeps history and stays reversible. Remove the local checkout from `~/Projects` if you want. Disable Dependabot or Renovate on it, and remove it from any maintenance-mode list. The `maintenance-mode` skill covers keeping live projects current, not teardown, so it doesn't apply here.\n\n7. **Close the record.** Update or close its initiative in `~/Projects/initiatives` through the `log-project` skill.\n\n8. **Verify.** Confirm the URLs return the retired page or 410. Confirm the DNS records resolve to what you intended, the Cloudflare resource list is empty, and the repo is archived.\n\n**What I need from you:** which site it is (repo path or name). Also tell me whether you want the repo archived or deleted. I'd recommend archived.",
+  "costUsd": 0.0055999
+}
