@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:39:04Z",
+  "seconds": 30.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"retire|archive\", \"path\": \"/var/home/glw907/.claude/docs\", \"-i\": true, \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "`/retire-project` isn't installed in this session, so it didn't run. Below is the plan I'd follow by hand. I ran nothing. I also couldn't read `~/.claude/docs` because permission was refused, so this plan doesn't use any workstation retirement conventions those docs may describe.\n\n## What goes in the archive\n\nThe archive is one dated directory, for example `<repo>-retired-2026-11-21/`, containing:\n\n| Item | How it's made | Why |\n|---|---|---|\n| `repo.bundle` | `git bundle create repo.bundle --all` | Every branch and tag, not just `main`. First check worktrees and stashes for unpushed work. |\n| `github/` | Export issues, PRs, releases and Actions variable names to JSON with `gh api` | The bundle doesn't include anything stored only on GitHub. |\n| `d1/<db>.sql` | `wrangler d1 export <db> --remote --output=...` | Full schema and data. D1 export fails on virtual tables (FTS5), so check `sqlite_master` first. |\n| `d1/meta.json` | Database name, UUID, binding name, region, and live row counts per table | This is the baseline the proof checks against. |\n| `cloudflare.md` | The Worker name and deployed version ID (with the commit it matches), routes, custom domains, DNS records, cron triggers, Access apps | Lets you rebuild the deployment, and lists exactly what gets deleted. |\n| `secrets.md` | Secret **names only** (`wrangler secret list --name <worker>`), with where each value lives in Proton Pass or the age store | Values never go in the archive. |\n| `MANIFEST.md` | Date, source commit, what each file is, SHA-256 of every file, and the proof results below | One document that says what was kept and why it's trustworthy. |\n\n## How the archive is proven before any deletion\n\n1. **Freeze writes first.** Detach the Worker's route or custom domain before exporting. That way the live database can't drift after the export, and the row counts can match exactly. This step can be undone.\n2. **Copy, then verify the copy at its destination.** Run `sha256sum -c` against the destination copy, not the local working files. A later restore drill also uses the destination copy.\n3. **Prove the git bundle.** Run `git bundle verify` on it, clone it into a scratch directory, and diff its `git for-each-ref` output against `git ls-remote origin`. Every ref and SHA must match.\n4. **Do a D1 restore drill.** Load the dump into a scratch local D1 (`wrangler d1 execute <scratch> --local --file d1/<db>.sql`) from a scratch directory. Then compare:\n   - the schema (`sqlite_master`) against the live database;\n   - row counts per table against `meta.json`;\n   - for a small database, a hash of each table's rows in order, compared with the same query run against the live database.\n5. **Record the proof.** Write the commands, counts, hashes and timestamps into `MANIFEST.md`.\n6. **Only then delete, one step at a time, each with a dry run and your go-ahead.** The order is: the Worker and its DNS, then the D1 database, then revoke any credentials only this project used, then archive or delete the GitHub repo (your call), then the local checkout. After that, remove the project from the Cloudflare estate inventory and the runbook, and close its initiative record.\n\nDeleting the D1 database can't be undone. D1's point-in-time restore (Time Travel) doesn't survive deleting the database, so the restore drill in step 4 is your only real safety net.\n\n## Decisions for you\n\n- **Where the archive lives.** I'd use whatever backup target the household-it runbook names.\n- **The GitHub repo.** Archiving it on GitHub keeps it read-only and can be undone; deleting it removes it.\n\nUnder your CLAUDE.md this is spec-sized work. If you want it done, my next step would be a short `building-from-specs` spec built from this plan.",
+  "costUsd": 0.06754360000000001
+}

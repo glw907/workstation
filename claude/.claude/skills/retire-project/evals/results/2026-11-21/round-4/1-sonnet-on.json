@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:34:11Z",
+  "seconds": 16.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Dry run: retire `site-staging`\n\nNothing was looked up and nothing was deleted. Every id below is a placeholder to fill at inventory time. Sole-owner status is unverified for all of it.\n\n## 1. Inventory (read-only, not yet run)\n\n| Item | Id to resolve | Sole-owner check |\n|---|---|---|\n| Worker `site-staging` | script name | Is any other Worker bound to it by service binding or Queue? |\n| D1 database | `<d1-uuid>` | Does the production Worker also bind it? If so, it stays. |\n| Custom domain | `<hostname>` | Does any other Worker route to it? |\n| DNS records for that hostname | `<record-ids>` | Are they a proxied CNAME or AAAA created by the domain binding? |\n| Workers Builds trigger | `<trigger-id>` | Does it point at a repo the production site also uses? |\n| Turnstile, R2, KV, Queues, Access apps, Email Routing rules | none expected | Confirm each is empty. |\n| Worker secrets | `wrangler secret list --name site-staging` | Does each have an issuer key to revoke? |\n| Repo | `<repo>` | Likely **shared with the production site**, so it stays. Check for staging-only branches, stashes, and worktrees. |\n| References | grep `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, initiatives, registry | Does any note use staging as a test target? |\n\nTwo things could change the plan:\n- If the repo is the production site's repo, steps 4.5 and the repo part of step 2 shrink to \"keep the repo, remove staging config and references\".\n- If the custom domain is a subdomain of a zone that other things use, the apex parking in 4.4 does not apply. Only the subdomain's records go.\n\n## 2. Archive and prove\n\n1. Write `site-staging-2026-11-21.tar.age`, encrypted with the workstation key. It holds:\n   - the verified `git bundle create --all`, only if the repo is sole-owner\n   - the D1 export (`wrangler d1 export`)\n   - the Worker config\n   - issues and PRs as JSON, if the repo is in scope\n   - no secret values\n2. Stop if the D1 export fails or comes back empty.\n3. Restore into a scratch directory: decrypt, clone the bundle, load the SQL into SQLite, and compare row counts.\n4. Store the file in `~/Documents/retired-projects/` and in R2 at `servers-archive/retired-projects/`. Confirm the R2 copy with `rclone check`.\n5. Record the sha256.\n\n## 3. Approval questions for Geoff\n\nEach is answered in his typed words, and each lists its ids once they are known.\n\n1. **Delete the D1 database `<d1-uuid>`?** The options are delete after the archive is verified, or keep. I recommend delete, because the verified export holds the data.\n2. **Delete the Worker `site-staging` and its Builds trigger `<trigger-id>`?** I recommend delete.\n3. **What happens to the domain `<hostname>`?** This is his call. If it is a subdomain, I recommend removing its records and nothing more. If it is its own registered domain with no named use, I recommend park it and let it lapse with auto-renew off. The alternative is to keep renewing it, which needs a use he names.\n4. **Delete the GitHub repo?** The default is no, if it is shared with production.\n5. **Revoke each vendor key at its issuer?** Each key is listed by name once the secrets are inventoried. I recommend yes.\n\n## 4. Teardown order (after approval, rerunning the inventory per id before each delete)\n\n1. Remove the custom domain binding and its DNS records, so traffic comes off first.\n2. Delete the Worker, then the Builds trigger, then the D1 database. Turnstile and R2 are skipped if the inventory finds none.\n3. Revoke each key at its issuer, since deleting a Worker secret revokes nothing. Then remove the secrets from the store and the registry, and trash the project's Proton Pass folder through `claude-pass`.\n4. Park the domain, but only if it is a whole domain and not a subdomain: Email Routing off (Geoff does this in the dashboard), `MX 0 .`, `v=spf1 -all`, and `v=DMARC1; p=reject;` at the apex. Then turn auto-renew off and let it expire, unless he names a use.\n5. Delete the GitHub repo and local checkout only if it was sole-owner and approved. Otherwise remove just the staging config and any staging-only branches or worktrees.\n\n## 5. Close\n\n- Clear the references found in step 1.\n- Close the initiative.\n- Add a row to the `README.md` beside the archives with the date, sha256, and what went.\n- Rerun the Cloudflare inventory and show it empty.\n\nBefore I run step 1, I need to know whether the staging Worker shares a repo and D1 database with production. That decides whether the repo and database are deleted or kept. Say go and I will run the read-only inventory.",
+  "costUsd": 0.0923775
+}

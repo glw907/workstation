@@ -1,0 +1,37 @@
+{
+  "skillName": "retire-project",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "/retire-project the club's old domain, which nothing uses any more. What happens to the domain itself? Plan only; change nothing.",
+  "started": "2026-11-22T03:36:48Z",
+  "seconds": 20.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)old domain|former domain|legacy domain|club.*domain\", \"path\": \"/var/home/glw907/.claude/docs\", \"output_mode\": \"content\", \"head_limit\": 30}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)domain\", \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "The domain gets parked and then allowed to expire. This skill doesn't treat that as one of two options: a domain nothing uses lapses, and it only gets renewed if you name a use for it.\n\n## What happens to the domain\n\n**1. Park it now, even though it's going to lapse.** All four go at the apex:\n- **Email Routing off.** This has to be done in the dashboard, because no token on this machine can turn it off.\n- **`MX 0 .`** is a null MX record (RFC 7505). It tells other mail servers the domain accepts no mail.\n- **`TXT \"v=spf1 -all\"`** says no server may send mail as the domain.\n- **`TXT \"v=DMARC1; p=reject;\"`** at `_dmarc`, so receivers reject anything that forges it.\n\nUntil it expires, the domain's name still carries the club's reputation. Parking stops anyone sending phishing from it and stops mail to it going anywhere.\n\n**2. Turn auto-renew off** at the registrar and let it expire. It stays parked until then.\n\n**3. Remove anything that serves traffic before deleting what it points to.** If any custom domain or DNS record still points at a Worker or another host, it comes off first, then the resource. That order avoids a dangling record someone else could take over.\n\n## Before any of that\n\nThese steps run in order, and I've done none of them:\n\n1. **Read-only inventory.** I'd list the zone's DNS records, Email Routing rules, Worker custom domains, Access apps, and Turnstile widgets, plus its expiry date and renewal setting. I'd also search the dotfiles, `~/.claude/docs`, the project CLAUDE.md files, and the secrets registry for the name. Anything shared with the current club domain stays. If a page or test still uses the old name, it needs a new target first.\n2. **Archive.** If the domain has a repo, Worker, or data of its own, it gets an encrypted archive that I test by restoring it. If it's only a DNS zone, the archive is just an export of the zone file.\n3. **Approval.** I'd show you a dry run that lists each deletion by its id. Each step that can't be undone is a question with my recommendation, and only your typed answer approves it.\n\n## What I need from you\n\n- **Which domain is it?** I couldn't work it out. Nothing in this directory names it, and reading `~/.claude/docs` needs a permission you haven't granted yet. I also can't run `wrangler` or the Cloudflare API from here, so I haven't started the inventory.\n- **Does the club want it back someday?** Once a lapsed domain is released, anyone can register it. If the club wants to protect the name, or old links and printed material still point to it, that's a use, and I'd recommend renewing it, still parked. Otherwise I recommend letting it lapse.\n\nNothing was changed.",
+  "costUsd": 0.1880966
+}

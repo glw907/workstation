@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:39:57Z",
+  "seconds": 9.2,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "I don't know which site yet, so this is a generic plan built around how your estate works. Nothing has been changed.\n\n**1. Inventory (read-only)**\n- Find everything the site touches: the Cloudflare Worker or Pages project, its custom domain and DNS records, any Access app, and D1, KV or R2 bindings. `~/.claude/docs/cloudflare-estate-inventory.md` and the `runbook` skill should list these.\n- Find its credentials: Workers secrets, `~/.local/secrets` entries, age-store entries, Proton Pass items, and GitHub Actions secrets.\n- Check inbound references: links from other sites, email routes on the domain, and mentions in `~/Projects/initiatives` and the dotfiles manifests.\n\n**2. Preserve (optional)**\n- Export any data worth keeping (D1 dump, R2 objects).\n- Make a final archive of the repo, either a tagged commit or a GitHub archive flag, if you want a record.\n\n**3. Take it down (each step needs your go-ahead)**\n- Remove the DNS records and the custom domain binding first, so nothing dangles.\n- Delete the Worker or Pages project, then the Access app, then the data stores (D1, KV, R2).\n- Revoke or delete the API tokens scoped only to this site.\n- Remove the secrets from Workers, the age store, `~/.local/secrets`, GitHub Actions and Proton Pass, so the \"authoritative record\" stays accurate.\n\n**4. Repo**\n- Either archive it on GitHub (reversible) or delete it (not reversible). I'd archive first and delete later if you want.\n- Delete the local clone in `~/Projects/` and any worktrees. First check `claude-worktree-busy` and look for unpushed work.\n\n**5. Housekeeping**\n- Remove any tool or manifest entries (dotfiles, `check-drift` lists) that reference the site.\n- Close the initiative record with `log-project`, and update the runbook and inventory docs.\n- Check that no CI or Dependabot config elsewhere still points at the repo.\n\nDeletions and token revocations are hard to reverse, so I'd show a dry-run list of what will go before running any of them.\n\nWhich site and repo is it? Once I know, I can turn this into an exact checklist from the inventory. Should I also read the inventory and the repo to build it, still without changing anything?",
+  "costUsd": 0.011993199999999999
+}

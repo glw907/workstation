@@ -1,0 +1,38 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:39:47Z",
+  "seconds": 9.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/4-haiku-off\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)demo\", \"path\": \"/var/home/glw907/.claude/docs\", \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "I couldn't find the site from here. This directory has only the shared `.claude` skills and no repo, so the plan below is generic. Tell me the repo path or site name and I'll make it specific. I haven't changed anything.\n\n**Rough shape: about 6 steps, mostly inventory and reversible steps first, with the destructive ones last.**\n\n1. **Inventory what the site uses.** Find the hosting (Cloudflare Pages/Workers, a VPS, or static), the custom domain and its DNS records, any Access apps, KV/D1/R2 buckets, cron jobs, analytics, email routes, and third-party accounts. The `runbook` skill and `~/.claude/docs/cloudflare-estate-inventory.md` are the places to check. Also check the repo's remotes, CI, and any Dependabot or Renovate setup.\n\n2. **Check for anything that still depends on it.** Look for inbound links, other sites or apps that call its API or embed its assets, and any form or webhook endpoints. Shutting down a demo rarely matters to anyone, but confirm before you take the domain away.\n\n3. **Decide what to keep.** Options include archiving the repo (read-only on GitHub), keeping the domain pointed at a static \"retired\" page, or deleting everything. A redirect or archive page is cheap and reversible, so I'd default to that unless you say otherwise.\n\n4. **Take the site down in reverse order of how it was built.** Unpublish or delete the deployment, remove the DNS records or point them at the retired page, and delete or disable the Workers, Pages project, or server. Then delete the data stores (D1, KV, R2) only after a backup or an explicit OK from you. Show a dry-run list before any delete, per your sysadmin preference.\n\n5. **Revoke credentials.** Remove the deploy tokens, API keys, and secrets scoped to this site. Check Proton Pass (`claude-pass`) and the local stores by name, and mark or delete the items. Remove the Actions secrets from the repo.\n\n6. **Archive or delete the repo.** Archive it first on GitHub. Delete it only after the other steps are done and you've confirmed it.\n\nAlso update the household docs or inventory if this site is listed there, and cancel any billing or domain renewal you no longer need.\n\n**Decisions I need from you:**\n- Which site and repo is it, and where is it hosted?\n- Keep the domain (with a retired page) or let it lapse?\n- Archive the repo, or delete it outright?\n- Delete the data stores, or keep a backup first?",
+  "costUsd": 0.00138026
+}

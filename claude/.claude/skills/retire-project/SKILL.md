@@ -53,8 +53,9 @@ Rerun the inventory for each id before deleting it, and stop if it's no longer s
    project's folder in the `Projects` vault through `claude-pass` (`proton-pass` skill).
 4. Park every domain the project leaves, kept or lapsing: no Email Routing (the dashboard turns it
    off; no workstation token can), `MX 0 .`, `v=spf1 -all`, and `v=DMARC1; p=reject;` at the apex.
-   A domain with no use then lapses: turn auto-renew off and let it expire, parked until then.
-   That is the plan for it, not one option of two; keep renewing only a domain Geoff names a use for.
+   A domain's fate is Geoff's call, and for one with no use the recommendation is the lapse: turn
+   auto-renew off and let it expire, parked until then. Give him that recommendation, not two equal
+   options; keep renewing only a domain he names a use for.
 5. Delete the GitHub repo (`gh auth refresh -s delete_repo` if needed), then the local checkout and
    its worktrees.
 

@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:38:25Z",
+  "seconds": 15.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`/retire-project` isn't installed in this session, so I treated your message as a plain request. Nothing below has been run. This is a general plan, since I haven't looked at the repo. If your workstation has a standard archive location or manifest format, that would override my choices.\n\n## What goes in the archive\n\n1. **Code:** a `git bundle --all` of the repo, so full history and all branches survive. Any uncommitted or untracked work gets committed to a branch first, so the bundle carries it.\n2. **D1 data:** a full remote export (schema and data) from `wrangler d1 export --remote`. Exports lock the database for writes while they run, which is fine for a demo.\n3. **D1 identity:** the database name, ID, region, and size, plus the current Time Travel bookmark, as a record of what was retired.\n4. **Deploy surface:** `wrangler.toml` as deployed, the migrations folder, and a dump of the Worker's routes, custom domains, DNS records, and any Access apps. Each is saved as JSON from the API so it can be rebuilt.\n5. **Secret names only:** the Worker secret names, plus where each value lives (age store or Proton Pass). No values go in the archive.\n6. **Retirement note:** the date, the reason, what was deleted and where, and the restore steps.\n7. **MANIFEST.sha256:** a checksum for every file above.\n\n## How the archive is proven before anything is deleted\n\nAll checks run in a new, empty scratch directory. The export is untrusted data, so scripts live elsewhere and take paths as arguments.\n\n1. **Checksums:** verify `MANIFEST.sha256` against the files as stored, after copying to the final location.\n2. **Bundle:** run `git bundle verify`, clone it into the scratch directory, and confirm the HEAD commit and the branch list match the source repo.\n3. **D1 restore test:** load the export into a throwaway local D1 (`wrangler d1 execute --local --file`) in the scratch directory. A restore that errors is a failed archive.\n4. **D1 fidelity:** compare the restored copy to the live remote database on table list, schema text, per-table row counts, and a content hash per table (hash of ordered rows). Any difference stops the process. One known gap: exports can fail on virtual tables such as FTS5, so the plan checks for those first.\n5. **Config completeness:** confirm the saved JSON lists every route, domain, and DNS record that currently points at the Worker, so nothing is left dangling.\n6. **Second copy:** the archive exists in two places before any deletion, and the checks pass on the second copy too.\n\n## Deletion, after the proof passes\n\n- **Dry run first.** List every resource to be deleted by exact name and ID, and wait for Geoff's go-ahead. That's his call under the destructive-op rule.\n- **Deletion order:** routes, DNS records, and Access apps first, then the Worker, then the D1 database, and the GitHub repo last. The repo goes last because it is the cheapest piece to keep if anything surprising turns up.\n- **After deletion:** confirm each resource now returns not-found. Remove the project from the manifests and registry. Mark the initiative record closed through `log-project`.\n\nQuestions for you before I'd start: where should the archive live, and should the GitHub repo be deleted or only archived (read-only)? I'd lean toward archiving it, since a read-only repo costs nothing and the bundle is then a backup rather than the only copy.",
+  "costUsd": 0.0192323
+}

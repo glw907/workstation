@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:34:00Z",
+  "seconds": 11.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Dry run only. Nothing was looked up live or changed.**\n\n`/retire-project` isn't installed in this session, so I handled your message as a plain request and wrote the plan by hand. The plan assumes the names you gave (`site-staging`, its D1 database, one custom domain). I haven't checked that any of them exist.\n\n## Plan: retire `site-staging`\n\n**Step 0: Confirm facts (read-only, at execution time)**\n- Worker name, its D1 binding (database name and ID), and the custom domain and its zone.\n- Whether any other Worker or the site's production path uses the same D1 database or domain. If so, stop and re-plan.\n- Worker secret names, which the Worker's secrets store holds, and whether the Proton Pass item for them needs retiring too.\n\n**Step 1: Check for references**\n- The site repo's `wrangler.toml`, CI deploy workflows, and any preview or staging links in docs.\n- DNS records and any Cloudflare Access app that points at the domain.\n- The household-it runbook, if it lists this staging host.\n\n**Step 2: Back up the D1 database**\n- Export the database to a path outside any repo, using the Wrangler D1 export command (I'll confirm its current flags at run time).\n- Check the export file is readable and not empty before any delete.\n\n**Step 3: Remove the custom domain binding**\n- Detach the Worker's custom domain first so traffic stops.\n- Remove the DNS record only if it's left dangling and nothing else uses it.\n\n**Step 4: Delete the Worker**\n- Delete `site-staging` with `--name` set explicitly, so the folder's config can't pick a different Worker.\n- Delete its secrets with the Worker only if they aren't shared elsewhere.\n\n**Step 5: Delete the D1 database**\n- Irreversible, so it runs only after Step 2's export is verified.\n- Delete the database by name and confirm it's gone from the list.\n\n**Step 6: Verify and record**\n- The domain no longer resolves to the Worker, and the Worker and database no longer appear in the account listings.\n- Update the runbook or repo docs that mentioned the staging host. Keep the D1 export unless you say otherwise.\n\n## Decisions I need from you before executing\n1. Approval to run Steps 3 to 5. These are destructive, so I'll show each command and wait for your go-ahead.\n2. Whether to keep the D1 export, and for how long.\n3. Whether the Proton Pass items for this Worker's credentials should be retired or kept.",
+  "costUsd": 0.00130636
+}

@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:34:28Z",
+  "seconds": 14.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`/retire-project` isn't installed in this session, so it didn't run. I'm treating your message as a plain request. Below is a dry-run plan only. I looked nothing up and ran nothing, so every name is a placeholder until step 1 confirms it.\n\n## Retire plan: `site-staging`\n\n**Assumed inputs:** Worker `site-staging`, D1 database `<d1-name>` (id unknown), custom domain `<staging.example.com>`.\n\n### 0. Preconditions\n- Run `claude-worktree-busy` on the site repo, and read its status docs.\n- Read `~/.claude/docs/cloudflare-estate-inventory.md` for the token and account details.\n- Writes use `$CLOUDFLARE_API_TOKEN` from `~/.local/secrets` (the MCP token is read-only for Workers-domain writes).\n\n### 1. Inventory (read-only, later)\n- Worker: routes, custom domains, cron triggers, bindings, and secret names (`wrangler secret list --name site-staging`, names only).\n- D1: confirm the name and id from the Worker's binding. Check that no other Worker or Pages project binds the same database.\n- Domain: the Workers custom-domain entry, its DNS record, and any Access application covering the hostname.\n- References: the repo's `wrangler.toml` and CI deploy workflow, the estate inventory, the runbook, Actions secrets, `~/.local/secrets`, the age store, and Proton Pass items (by name via `claude-pass`).\n- **Stop if** anything outside staging still uses the database or the hostname.\n\n### 2. Back up the D1 database (before any delete)\n- `wrangler d1 export <d1-name> --remote --output <backup-dir>/<d1-name>.sql`\n- Check that the file is non-empty and that its table list matches the live schema.\n- Keep the file somewhere durable, and tell Geoff where.\n\n### 3. Detach the domain (needs go-ahead)\n1. Remove the Access application for the hostname, if one exists.\n2. Remove the Workers custom domain for `<staging.example.com>`.\n3. Remove any leftover DNS record, and confirm the zone no longer routes the name.\n\n### 4. Delete the Worker (needs go-ahead)\n- `wrangler delete --name site-staging`\n- This goes before the database, because the binding would otherwise reference a deleted resource.\n\n### 5. Delete the D1 database (needs go-ahead, irreversible)\n- `wrangler d1 delete <d1-name>`\n- Only after the step 2 export is verified.\n\n### 6. Clean up records\n- Remove the `site-staging` deploy job and config from the repo, and open a PR for it.\n- Delete its Actions secrets and its entries in `~/.local/secrets` and the age store.\n- Retire the related Proton Pass items through `claude-pass`.\n- Update the estate inventory and runbook entries.\n- Run `check-drift` if any manifest listed it.\n\n### 7. Verify\n- The hostname no longer resolves to the Worker.\n- `wrangler deployments list --name site-staging` and the D1 listing both report not found.\n- A grep of the repos and docs for `site-staging`, the database name, and the hostname finds no live references.\n\n### Open points for you\n- Do you want the D1 export kept, and for how long?\n- Should the hostname's DNS record go too, or does it get repointed?\n\nNothing has been touched. Say go and I'll start with step 1, read-only.",
+  "costUsd": 0.0194135
+}

@@ -1,0 +1,46 @@
+{
+  "skillName": "retire-project",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "/retire-project the club's old domain, which nothing uses any more. What happens to the domain itself? Plan only; change nothing.",
+  "started": "2026-11-22T03:35:38Z",
+  "seconds": 28.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/cloudflare-estate-inventory.md\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)club\", \"path\": \"/var/home/glw907/.claude/docs\", \"output_mode\": \"content\", \"head_limit\": 60}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)club\", \"path\": \"/var/home/glw907/Projects\", \"output_mode\": \"files_with_matches\", \"head_limit\": 60}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)club|domain\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on\", \"output_mode\": \"files_with_matches\", \"head_limit\": 60}"
+    }
+  ],
+  "result": "## What happens to the domain\n\nThe domain is not deleted with the project. Under the retirement procedure it is **parked**, **auto-renew is turned off**, and it **lapses** at expiry. Keep renewing it only if you name a use for it. This is the recommended plan. The lapse is still your call at the approval step.\n\n**What I could not check:** reads of `~/Projects` and `~/.claude/docs` were not granted, and nothing in this session's folder mentions the club. So I don't know the domain's name, registrar, expiry date, or DNS records. The steps below apply the procedure to the domain; the inventory in step 1 fills in the specifics.\n\n## Plan for the domain\n\n1. **Inventory, read-only.** Record the registrar (Cloudflare Registrar or other), expiry date, and auto-renew state. List the zone's DNS records (MX, A/AAAA/CNAME pointing at the Worker, TXT), any Worker custom-domain bindings, Email Routing rules, and any Turnstile or Access apps on the zone. Check whose name is on the registration. If the club holds it, the lapse is the club's decision, not yours.\n\n2. **Check who still depends on its addresses before anything else.** Once a domain lapses, anyone can register it. Any login, recovery address, or mailing list still on the domain could then receive password resets and member mail. Parking DNS stops spoofing from the domain but does not stop someone receiving its mail. Move those services to a current address first. This is the main reason not to let it lapse early.\n\n3. **Teardown order.** Before the Worker is deleted (step 4.1), remove its custom-domain binding and the old records that point at it. After the Worker is deleted (step 4.4), apply the parking records at the apex:\n   - Email Routing off in the dashboard (the workstation token cannot do it)\n   - `MX 0 .`\n   - `v=spf1 -all`\n   - `v=DMARC1; p=reject;`\n\n4. **Auto-renew off** at the registrar. Record the expiry date in the retirement record. The parking records stay in place until the domain expires.\n\n5. **Archive the zone.** The procedure archives the Worker config but not the DNS. I'd add a zone export to the archive, so the record of what the domain pointed to survives.\n\n6. **Close.** The `README.md` row records the domain's fate and its expiry date.\n\n## Decisions for you\n\nThese come up one at a time at the approval step, in your terminal.\n\n- **Whose registration is it?** If the club's, I would need you to take the lapse decision to them.\n- **Is there any use to keep it for**, such as a forward or a placeholder page? My recommendation is none, so it lapses. If there is a use, name it and I will keep renewing it.\n- **Which services still hold addresses on it?** My recommendation is to move them before any lapse.\n\nNothing has been changed, and nothing has been deleted. To run the inventory, grant read access to `~/Projects` and `~/.claude/docs`, or tell me the domain's name.",
+  "costUsd": 0.00734332
+}

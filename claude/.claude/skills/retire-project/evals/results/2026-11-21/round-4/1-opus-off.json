@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:35:09Z",
+  "seconds": 28.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"site-staging\", \"path\": \"/var/home/glw907/.claude/docs\", \"output_mode\": \"content\"}"
+    }
+  ],
+  "result": "I couldn't run `/retire-project` because it isn't installed in this session. I've written the plan by hand instead. Nothing was looked up and nothing was changed. When I tried to read the local docs to find the real names, you declined the read, so the plan uses placeholders: `<db-name>`, `<hostname>` and `<account-id>`.\n\n## Dry run: retire `site-staging`\n\n### 0. Checks before anything is removed (read-only)\n1. **Confirm the right resources.** Run `wrangler deployments list --name site-staging` to see the Worker's recent deploys, and `wrangler d1 list` to find `<db-name>`. Get the custom domain's ID from the API with `GET /accounts/<account-id>/workers/domains?service=site-staging`, using curl with `$CLOUDFLARE_API_TOKEN` loaded from `~/.local/secrets` in the same command.\n2. **Find anything else that depends on them.**\n   - Another Worker bound to the same D1 database (production sharing it would be the dangerous case).\n   - Service bindings that point at `site-staging`.\n   - Routes or cron triggers on the Worker.\n   - Queue consumers, if the Worker is one.\n3. **Find what would bring it back.** A CI workflow that deploys to staging would quietly recreate the Worker on the next push. So would an `[env.staging]` block in `wrangler.toml`.\n4. **List the related records.** These are:\n   - any Access application protecting `<hostname>`\n   - the Worker's secrets (`wrangler secret list --name site-staging`)\n   - matching entries in the age store, Proton Pass and the GitHub Actions secrets\n   - any API token scoped only to staging\n\n### 1. Back up (only the database can't be recovered)\n- Export the database with `wrangler d1 export <db-name> --remote --output=site-staging-d1-2026-11-21.sql` and store the file somewhere outside the repo. D1 Time Travel can't help after this point, because it ends when the database is deleted.\n- The Worker's code already lives in the site repo. Write down the last deployed version ID from `wrangler versions list --name site-staging`.\n\n### 2. Turn it off in ways that can be undone\n1. Remove or disable the CI staging deploy job.\n2. Detach the custom domain with `DELETE /accounts/<account-id>/workers/domains/<domain-id>`, via curl, because the MCP token is read-only for Workers domains. Cloudflare removes the DNS record it created for the domain.\n3. Optional: wait a while and check that nothing breaks before going further.\n\n### 3. Delete (can't be undone, and each step needs your go-ahead)\n1. Run `wrangler delete --name site-staging --dry-run` to preview, then `wrangler delete --name site-staging`.\n2. Run `wrangler d1 delete <db-name>`. It asks for confirmation; don't pass `-y`.\n\n### 4. Clean up references\n- Delete the `[env.staging]` block, the D1 binding and the CI job from the site repo, in one pull request.\n- Delete the Access application for `<hostname>`, if there is one.\n- Retire the staging secrets in the age store, the Actions secrets and any staging-only API token. Archive the Proton Pass items rather than deleting them, since Proton Pass is the record of every credential.\n- Update `~/.claude/docs/cloudflare-estate-inventory.md` and the household-it runbook if either lists these resources.\n\n### 5. Verify\n- `<hostname>` no longer resolves or no longer serves the site.\n- `wrangler d1 list` and the Workers list no longer show either resource.\n- `wrangler d1 list` and the Workers list for production still show its Worker and database, and production still serves.\n- The backup file opens and has the expected tables.\n\nThe irreversible steps are 3.1 and 3.2, and both depend on a good backup from step 1 and on step 0.2 finding no shared binding. To run this for real, give me the go-ahead and the real names (or allow the local docs read so I can find them). I'll run step 0 and show you what it finds before I change anything.",
+  "costUsd": 0.0646004
+}
