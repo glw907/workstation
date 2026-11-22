@@ -8,30 +8,31 @@
   Pass and Floccus. Zen's updater keeps the tarball current and leaves `distribution/`
   alone. `bootstrap.sh` (`setup_zen`) installs it. Claude never
   drives Zen, since Anthropic ships no Firefox build of the Claude extension.
-- **Zen's Adwaita theme** is [ClixTW/zen-gnome-theme](https://github.com/ClixTW/zen-gnome-theme)
-  (MIT), a userChrome stylesheet (Geoff asked for an existing theme, 2026-11-21). Stock Zen
-  already follows the desktop's dark scheme, accent, and font; the theme adds Adwaita's
-  surfaces, icons, and controls. `setup_zen_theme` clones it to
-  `~/.local/share/zen-gnome-theme` at a pinned commit, then links `chrome/userChrome.css`,
-  `chrome/theme`, and `user.js` (from `bluefin/zen/user.js`, the three prefs the theme needs)
-  into each Zen profile. A profile exists only after Zen's first launch, so a new host runs
-  `bootstrap.sh setup` once more after it. Zen updates itself and the pin does not: when Zen's
-  chrome looks broken after an update, move the pin (the comment in `setup_zen_theme` says
-  how). To go back to stock Zen, take the `setup_zen_theme` call out of `setup_zen`, delete
-  the profile's two `chrome/` links and its `user.js` link, and reset
-  `zen.theme.content-element-separation` in `about:config`. When icons turn dark on a dark
-  background, set the Zen workspace's light or dark mode to match the desktop's.
+- **Zen's Adwaita theme** is
+  [ClixTW/zen-gnome-theme](https://github.com/ClixTW/zen-gnome-theme) (MIT), a userChrome
+  stylesheet (Geoff asked for an existing theme, 2026-11-21). Stock Zen already follows the
+  desktop's dark scheme, accent, and font; the theme adds Adwaita's surfaces, icons, and
+  controls. `setup_zen_theme` clones it to `~/.local/share/zen-gnome-theme` at a pinned
+  commit, then links `chrome/userChrome.css`, `chrome/theme`, and `user.js` (from
+  `bluefin/zen/user.js`, the three prefs the theme needs) into each Zen profile, replacing a
+  `user.js` already there. A profile exists only after Zen's first launch, so a new host
+  runs `bootstrap.sh setup` once more after it. Zen updates itself and the pin does not:
+  when Zen's chrome looks broken after an update, move the pin (the comment in
+  `setup_zen_theme` says how). To go back to stock Zen, take the `setup_zen_theme` call out
+  of `setup_zen`, delete each profile's two `chrome/` links and its `user.js` link, and
+  reset `zen.theme.content-element-separation` in `about:config`. When icons turn dark on a
+  dark background, set the Zen workspace's light or dark mode to match the desktop's.
 - **Chromium** (layered RPM) is the development browser and the one Claude Code drives on
-  both hosts (Geoff, 2026-11-21). It was pavilion's daily browser from 2026-10-18 until then,
-  and Firefox is retired. It has one profile, `Default`, for development and testing: Geoff
-  checks his development work there and Claude Code drives it (the claude-in-chrome
-  native-messaging host and chrome-devtools MCP automation). The profile holds no password
-  manager and none of Geoff's daily sign-ins, which live in Zen, so automation never runs
-  beside them. Pavilion has had this profile since 2026-11-21, when Geoff had his `Geoff`
-  profile removed. On thinkpad-x1 Chromium still holds one profile, `Profile 1`
-  (2026-11-21), which carries Proton Pass and Floccus beside the Claude extension from before
-  the move to Zen. Until it is replaced the same way (BACKLOG #109), a check there that
-  needs a real Chromium click is a `[you]` step.
+  both hosts (Geoff, 2026-11-21). It was pavilion's daily browser from 2026-10-18 until
+  then, and Firefox is retired. Its user data directory, `~/.config/chromium`, has one
+  profile, `Default`, for development and testing: Geoff checks his development work there
+  and Claude Code drives it (the claude-in-chrome native-messaging host and chrome-devtools
+  MCP automation). The profile holds no password manager and none of Geoff's daily sign-ins,
+  which live in Zen, so automation never runs beside them. Pavilion has had this profile
+  since 2026-11-21, when Geoff had his `Geoff` profile removed. On thinkpad-x1 Chromium
+  still holds one profile, `Profile 1` (2026-11-21), which carries Proton Pass and Floccus
+  beside the Claude extension from before the move to Zen. Until it is replaced the same way
+  (BACKLOG #109), a check there that needs a real Chromium click is a `[you]` step.
 - **Chromium extensions are installed by hand.** Chromium policy is browser-wide and would
   reach every Chromium on the machine, test browsers included, so no policy force-installs
   an extension. The `Default` profile carries only the Claude extension (Chrome Web Store id

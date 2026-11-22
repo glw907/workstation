@@ -11,7 +11,7 @@
 ## Medium
 
 - [ ] **#109** Trim thinkpad-x1's Chromium to what development work needs `#improvement` `#workstation` *(2026-11-21)*
-  Geoff, 2026-11-21: "And Chromium can be cleaned up, so it has only what it needs for development work." Pavilion is done (2026-11-21). Geoff said there, "remove my profile from chromium", and asked for one development profile in its place. Its `Geoff` profile went to the trash, a `Default` profile carrying only the Claude extension replaced it, and `claude/.claude/docs/bluefin-admin/browsers.md` records the one-profile rule and the new policy file.
+  Geoff, 2026-11-21: "And Chromium can be cleaned up, so it has only what it needs for development work." Pavilion is done (2026-11-21). Geoff said there, "remove my profile from chromium", and asked for one development profile in its place. Its `Geoff` profile went to the trash, a `Default` profile that takes only the Claude extension replaced it, and `claude/.claude/docs/bluefin-admin/browsers.md` records the one-profile rule and the new policy file.
   Left on thinkpad-x1: the same change. Geoff, 2026-11-21: "I'll want to follow this same process on the thinkpad." The steps are in `bluefin/SECOND-WORKSTATION.md`, "Changes to carry to thinkpad-x1", the 2026-11-21 entry, and `docs/STATUS.md` lists it as an open step.
 
 - [ ] **#108** Read one week of hook and auto-mode refusals after the core spec landed, due 2026-11-27 `#improvement` `#workstation` *(2026-11-20)*

@@ -12,7 +12,7 @@ Terminal=false
 StartupNotify=true
 StartupWMClass=zen
 Categories=Network;WebBrowser;
-MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;application/pdf;image/gif;image/jpeg;image/png;image/webp;x-scheme-handler/http;x-scheme-handler/https;
+MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;application/pdf;image/gif;image/jpeg;image/png;image/webp;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/about;x-scheme-handler/unknown;
 Actions=new-window;new-private-window;
 
 [Desktop Action new-window]
