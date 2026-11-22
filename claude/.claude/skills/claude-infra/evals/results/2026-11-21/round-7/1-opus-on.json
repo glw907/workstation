@@ -1,0 +1,59 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T04:01:36Z",
+  "seconds": 32.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Plan only, no edits: Geoff keeps pasting the same five-step checklist for cutting a cairn release into chat. Where should it live, and how would the change land?\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/skills\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/.claude/skills/*/SKILL.md\", \"path\": \"/var/home/glw907/Projects/cairn-cms\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/Projects/cairn-cms\", \"glob\": \"{CLAUDE.md,docs/**/*.md,.claude/**/*.md,RELEASING*,CONTRIBUTING*}\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \".claude/skills/**/*.md\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release|direct change\", \"path\": \".claude/skills\", \"output_mode\": \"content\", \"head_limit\": 40}"
+    }
+  ],
+  "result": "I recommend putting the checklist in a **project skill in the cairn-cms repo**, at `~/Projects/cairn-cms/.claude/skills/cairn-release/SKILL.md`. It would load when you type `/cairn-release`, so you'd stop pasting it.\n\n## Why a skill\n\n- **It's a procedure you need some of the time.** Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>) says: \"Put it in a skill if it's reference material Claude needs sometimes.\"\n- **CLAUDE.md is the wrong home, for two reasons.** It should only hold facts that apply on every turn, and a release happens only sometimes. Also, nothing enforces a rule written there.\n- **A hook is the wrong home too.** A hook is for a rule that must hold every time. A checklist is a sequence of steps you follow when you choose to. If one step must never be skipped, such as \"the gate passes before the tag,\" the release script or CI should enforce it. The skill shouldn't be the only thing guarding it.\n- **It belongs in the repo, not your user settings.** Cutting a release is specific to cairn-cms, and the workstation rule is \"project scope only for repo-specific.\" I'd keep it out of the `cairn-pass` overlay unless a pass close is what triggers a release.\n- **You start it, not the model.** Following the skills docs (<https://code.claude.com/docs/en/skills>), the frontmatter would set `disable-model-invocation: true`. A release has side effects you can't take back, so it should run only when you type `/cairn-release`.\n\n## How the change would land\n\n1. **Check for an existing home first.** I couldn't do this: reading `~/Projects/cairn-cms` and `~/.claude/skills` was denied in this session. If cairn-cms already has a release doc or skill, or `cairn-pass` already has a release section, I'd update that instead of adding a second copy.\n2. **Write the skill on a branch** in a cairn-cms worktree, after running `claude-worktree-busy`. It would have a short description, `disable-model-invocation: true`, and your five steps as written, with no new steps added.\n3. **Skip the manifests.** A skill written here is its own manifest. I'd still run `claude-tooling-sync verify`.\n4. **Audit it** with `/skill-doctor` and Anthropic's `skill-creator`, and let the save hooks (`vale-hook`, `tellgrader`) check the text.\n5. **Open a pull request** whose commit message and body cite the skills page. Adding a new file is more than a one-sentence direct change, so it goes through a PR. You approve it by number before it merges.\n\n## What I need from you\n\nThe checklist itself, pasted once more or pointed to in an earlier session.\n\n## Later (not part of this change)\n\n- Have `cairn-pass`'s close checklist point to `/cairn-release`, if passes end in releases.\n- Move any step that must never be skipped into the release script or CI.",
+  "costUsd": 0.11306200000000001
+}

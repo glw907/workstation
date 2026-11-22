@@ -1,0 +1,51 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T04:00:54Z",
+  "seconds": 15.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*{cairn,release,checklist}*\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release (checklist|steps|cut)|cut a (cairn )?release|cairn release\", \"path\": \"/var/home/glw907/.claude\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-off\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-off\", \"output_mode\": \"content\", \"-n\": true, \"head_limit\": 60}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-off/CLAUDE.md\"}"
+    }
+  ],
+  "result": "**Recommendation:** put the checklist in the `cairn-pass` skill, as a release reference file it loads on demand. Don't put it in global `CLAUDE.md` or `pass-core`.\n\n**Why there:**\n- Global `CLAUDE.md` says `cairn-pass` \"holds each repo's gate and checklists.\" That is the designated home.\n- `pass-core` is the shared pass process for every repo, and a cairn release is cairn-specific, so it doesn't belong there.\n- Global `CLAUDE.md` loads into every session. Five cairn-only steps would bloat every other session.\n\n**Planned shape:**\n1. Add `references/release.md` to the `cairn-pass` skill with the five steps, in order, with their gates and commands.\n2. Link it from the skill's `SKILL.md` in one line, so it is read only when needed.\n3. Widen the `cairn-pass` description to name cutting a release. Right now it covers only passes, so a release request might not trigger it.\n4. Keep the checklist's commands runnable as written, and run gates bare, not piped to `head` or `tail`.\n\n**How the change lands:**\n- Global `CLAUDE.md` says changes to Claude Code tooling go through the `claude-infra` skill, and a skill edit counts as tooling. Follow that skill's procedure.\n- The checklist is more than a one-sentence change, so Geoff approves a short spec first. A fresh session writes the edit, a fresh subagent reviews it against the spec, and it ends in a PR that Geoff approves by number.\n- Before editing, check whether the `cairn-pass` copy under `~/.claude` is pinned to a release. `approval-packet` records that `claude-tooling-sync update-skills` overwrites pinned copies, so an edit made only in the workstation copy could be lost. If it's pinned, the edit goes to the source repo.\n\n**What I couldn't verify:** Reading `~/.claude` was denied in this session. So I haven't seen the current `cairn-pass` skill, its description, or the five steps. The plan above is based on the global `CLAUDE.md` and the project-level skills I could read. Once I can read `~/.claude/skills/cairn-pass`, I can confirm the file layout and draft the spec. Alternatively, paste the five steps here and I'll use them as-is.",
+  "costUsd": 0.00356027
+}

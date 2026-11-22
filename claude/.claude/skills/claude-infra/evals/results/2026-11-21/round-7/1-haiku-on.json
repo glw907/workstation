@@ -1,0 +1,42 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T04:00:43Z",
+  "seconds": 11.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra",
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\"}"
+    }
+  ],
+  "result": "The checklist belongs in a **skill in the cairn-cms repo**, at `.claude/skills/<release-skill>/SKILL.md` next to `cairn-running-passes`. I haven't opened the checklist or the repo, so the steps and the skill name are unverified.\n\n**Why a skill, and why this scope**\n- Per the features overview, reference material Claude needs sometimes goes in a skill. A release is occasional, so it doesn't belong in CLAUDE.md, which should hold only facts that apply every turn.\n- Cutting a release is specific to the cairn engine, so repo scope fits. I'd move it to user scope only if a site repo also needs to cut releases.\n- Any step that must never be skipped, such as \"don't tag before CI is green,\" should be enforced by a hook or the gate script, not by skill text. I'd check the five steps for that once I read them.\n- The release checklist is separate from the pass close checklist in `cairn-running-passes`. I'd keep them separate and have the pass close checklist link to the release skill, so the steps have one home.\n\n**How the change lands**\n1. Read the current checklist and its source, and confirm which steps are rules that must hold.\n2. Write the skill with a short description that says when to load it, and move the five steps in unchanged. Don't rewrite them in the same change.\n3. Authored skills are their own manifest, so there's no manifest entry. Run `claude-tooling-sync verify` after.\n4. Run `/skill-doctor` and Anthropic's `skill-creator` on the new skill and fix what they flag.\n5. Land it as a PR in cairn-cms, citing the features-overview URL in the commit message and PR body. It isn't a direct change, because it touches a repo's skills and a shared process.\n6. Don't duplicate the steps anywhere else. Once the skill exists, it is the one home.\n\nAfter the change, the next time you cut a release, Claude loads the skill rather than needing the checklist pasted in.",
+  "costUsd": 0.00208874
+}

@@ -1,0 +1,42 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T04:04:32Z",
+  "seconds": 11.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"/var/home/glw907/Projects/*/.mcp.json\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"mcpServers|svelte\", \"path\": \"/var/home/glw907/.claude/settings.json\", \"output_mode\": \"content\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"svelte.*mcp|mcp.*svelte\", \"path\": \"/var/home/glw907/.claude\", \"-i\": true, \"output_mode\": \"files_with_matches\", \"head_limit\": 20}"
+    }
+  ],
+  "result": "I couldn't read the existing MCP config, because the reads were denied. This answer comes from your setup notes and general practice.\n\n**Recommendation: add it once at user scope on the workstation, not in ecxc-ski's `.mcp.json`.**\n\n- **The need isn't specific to one repo.** The Svelte docs server (the official `@sveltejs/mcp`, remote or via npx) serves any SvelteKit project. ecxc-ski, 907-life, aksailingclub-org and cairn-pub all need the same thing. A per-repo `.mcp.json` means four copies that drift apart, and each one needs a trust prompt.\n- **It has no secrets and is the same on both hosts.** Nothing about it is project-specific, so there's no reason to scope it narrowly.\n- **A project `.mcp.json` is for servers that only make sense in that repo.** An example would be a site-specific data source. Generic documentation doesn't fit that.\n- **Cost of user scope:** the tool definitions load in every session, including non-Svelte work like dotfiles. If that context cost bothers you, add a project-scoped copy to each site instead. A shared `.mcp.json` template stamped into each site would keep those copies consistent.\n\n**Where it should live:** use user scope (`claude mcp add --scope user ...`). Your notes say changes to Claude Code tooling go through the `claude-infra` skill, so it should be done under that. `~/.claude` lives in dotfiles on this workstation, so check whether the user-scope config is stowed from `~/.dotfiles`. If it is, the entry goes there, so both `thinkpad-x1` and `pavilion` get it.\n\n**Caveat:** the engine-consult flow means cairn engine surfaces matter more than generic Svelte docs for site work. The Svelte MCP helps with Svelte 5 runes and SvelteKit API questions, not cairn-specific ones.\n\nI changed nothing. If you want it added, say so and I'll do it through `claude-infra`.",
+  "costUsd": 0.0193808
+}

@@ -1,0 +1,43 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T04:04:14Z",
+  "seconds": 10.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/.mcp.json\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"svelte\", \"path\": \"/var/home/glw907/.claude\", \"-i\": true, \"output_mode\": \"files_with_matches\", \"head_limit\": 30}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/Projects/ecxc-ski/.mcp.json\"}"
+    }
+  ],
+  "result": "**Recommendation: add it at user scope, not in ecxc-ski's `.mcp.json`.** I couldn't verify this against the repo. Reads of `~/Projects` and the `.mcp.json` were refused, so I haven't seen what's already configured.\n\n- **Why not the project file:** `.mcp.json` is checked into the repo, so every clone and collaborator gets the server. A Svelte docs server is useful to all four SvelteKit sites (ecxc-ski, 907-life, aksailingclub-org, cairn-pub), not just one. Putting it in one repo means either duplicating it in four or having only one site get it.\n- **Why user scope:** `claude mcp add --scope user` registers it once in `~/.claude.json` and it's available in every project on this machine. It also doesn't need to be committed to any repo.\n- **Caveat:** Svelte is already the framework in use, so the official Svelte MCP server fits the vendor rule. If one of the sites needs a pinned version or a per-repo setting, a project entry is the better fit for that site only.\n\nBefore acting on this:\n1. Check whether a Svelte entry already exists in `~/.claude.json` or any `.mcp.json`. A duplicate would double the tool list.\n2. Adding an MCP server counts as Claude Code tooling, so per the global CLAUDE.md it should go through the `claude-infra` skill.\n\nI changed nothing. If you grant read access to `~/Projects` and `~/.claude`, I can confirm the current state and tell you exactly what the `.mcp.json` already contains.",
+  "costUsd": 0.00175941
+}

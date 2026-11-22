@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T04:04:25Z",
+  "seconds": 6.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    }
+  ],
+  "result": "**Put it at user scope, not in ecxc-ski's `.mcp.json`.**\n\nThe `claude-infra` skill's tooling rules decide this directly:\n\n- **User scope for stack-wide, project scope only for repo-specific.** The skill says everything the cairn-family stack shares (Svelte, Playwright, DaisyUI) is user scope and recorded in the manifest. A repo's `.mcp.json` carries only what that repo alone needs. The other cairn sites also use Svelte, so ecxc-ski isn't the only consumer. Putting it in one repo's `.mcp.json` would leave the others without it, or force duplicate entries that drift.\n- **Record it in the manifest.** A user-scope MCP server gets an entry in the manifest file that the \"Layout\" table in `~/.claude/docs/claude-tooling.md` names. After adding it, run `claude-tooling-sync verify` and commit the dotfiles.\n- **Check for a skill first.** The skill's scoping rule says that when a library offers both, you take the skill first and the server for on-demand retrieval. An MCP server reaches only the main loop and unrestricted agents, so a fixed-tool-list subagent wouldn't see it. The Svelte docs server is on-demand retrieval, so it fits as a server. The workstation already has `standards:svelte-check` and `standards:svelte-conventions`, but those cover type-checking and comment rules, not docs lookup.\n- **Restart at a session boundary.** A restart loads new servers, so don't do it mid-run.\n\nThe change itself would land through a PR that cites the guidance page, or as a direct change if it meets the `building-from-specs` \"Direct changes\" bar. The skill's step 1 cites <https://code.claude.com/docs/en/features-overview> for the choice of home.\n\nI didn't check whether a Svelte server is already registered at user scope, and I changed nothing. That's worth a look at the manifest before adding one.",
+  "costUsd": 0.020646400000000002
+}

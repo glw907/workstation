@@ -1,0 +1,37 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T04:03:27Z",
+  "seconds": 18.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Where should a rule live that blocks every Bash call running `rm -rf` on a home folder, no exceptions? Answer only; change nothing.\"}"
+    }
+  ],
+  "result": "**Put it in a hook.** Specifically, a user-scope `PreToolUse` hook on the `Bash` tool. It shouldn't go in CLAUDE.md or a skill.\n\n**Why a hook.** Anthropic's features overview (<https://code.claude.com/docs/en/features-overview>) says: \"If a rule must hold every time, make it a hook rather than a prompt instruction.\" \"No exceptions\" is exactly that kind of rule. A hook runs in the harness before every Bash call, whatever the model decides. It reads the command, and if the command matches, it exits with code 2 (or returns a `deny` decision), so the call never runs.\n\n**Why not CLAUDE.md.** Two reasons:\n- CLAUDE.md holds only facts that apply every turn, like which host this is. A rule you need enforced isn't that kind of fact.\n- Nothing enforces a line written in CLAUDE.md. It's a request the model usually follows, which is not the same as blocked.\n\n**Why not a skill.** The same page says a skill is for \"reference material Claude needs sometimes.\" A skill loads only when it's invoked or judged relevant, and it's still just instructions. It can't stop a tool call.\n\n**Why not just a permissions deny rule.** A rule like `Bash(rm -rf ~*)` in `settings.json` matches on the command's prefix. Commands like `rm -r -f ~`, `rm -fr \"$HOME\"`, `cd / && rm -rf /var/home/glw907`, or `sudo rm -rf ...` get past it. A hook script can actually parse the command and catch these. You could add a deny rule as well, but the hook is the real guard.\n\n**Where the hook lives:**\n- It goes in the user-scope `~/.claude/settings.json`, so it covers every repo and session on both hosts. Edit the copy in `~/.dotfiles` and let Stow link it, not the linked file itself.\n- The script goes in `~/.dotfiles/bin/.local/bin/`. Since it parses the command, it should be stdlib-only Python run as `python3 -I`.\n- It needs to match every way the home folder can be written. On Bluefin that includes `~`, `$HOME`, `${HOME}`, `/home/glw907` and `/var/home/glw907`, plus any spelling of the recursive and force flags.\n- It should land through a PR in the dotfiles repo, citing the features-overview URL. The `update-config` skill handles writing the hook into the settings file.\n\n**One limit:** the hook sees only the Bash command text. It won't catch `rm -rf` hidden inside a script file that Bash then runs, or a delete done through Python's `shutil.rmtree`. If you want those covered too, the hook would need to also check what scripts a command runs.\n\nAs you asked, I haven't changed anything.",
+  "costUsd": 0.056914400000000004
+}

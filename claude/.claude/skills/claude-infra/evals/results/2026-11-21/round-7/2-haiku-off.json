@@ -1,0 +1,33 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T04:02:51Z",
+  "seconds": 11.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/settings.json\"}"
+    }
+  ],
+  "result": "**Use a hook in `settings.json`, not CLAUDE.md or a skill.** CLAUDE.md and skills are instructions the model reads and usually follows, but nothing enforces them. A `rm -rf ~` in a Bash call would only be blocked if the model chose to comply. \"No exceptions\" needs a mechanism that runs whether or not the model remembers the rule.\n\n**Options, strongest first:**\n\n1. **A `PreToolUse` hook on the `Bash` matcher (recommended).** The hook receives the command as JSON on stdin. It exits with code 2 to block the call and prints the reason to stderr, which Claude sees. This runs deterministically on every Bash call, including in subagents and background sessions. Put it in `~/.claude/settings.json` so it applies everywhere. The `update-config` skill covers the settings edit.\n\n2. **A `permissions.deny` rule** such as `Bash(rm -rf ~*)`. This is declarative and simple, but it matches command prefixes. It misses `rm -fr`, `rm -r -f`, `rm --recursive --force`, `$HOME/...`, `\"$HOME\"`, `/var/home/glw907`, and anything run through `sh -c` or `eval`. Use it as a backstop, not the main control.\n\n3. **CLAUDE.md or a skill.** Keep these for explanation and for the \"why\". On their own they are advisory.\n\n4. **Managed settings** (the enterprise-level settings file). These cannot be overridden by a project or user setting. Use them only if you want the rule to survive someone editing your user settings. They are probably more than this needs.\n\n**Decisions you need to make before I build it:**\n\n- **What counts as a \"home folder.\"** Blocking only `~` and `$HOME` itself is easy and unambiguous. Blocking any recursive force-delete under `/var/home/glw907/` also stops legitimate cleanup such as `rm -rf node_modules` in `~/Projects`, and you would need an exception path for that. Tell me which you mean.\n- **Which paths the hook resolves.** Expand `~`, `$HOME`, and `/var/home/glw907` (and `/home/glw907` if it exists) before matching. Flag combinations: `-r`/`-R`, `-f`, `--recursive`, `--force`, in any order.\n- **Where the script lives.** Per your CLAUDE.md, a helper goes in `~/.dotfiles/bin/.local/bin/`, stowed with `stow -R bin`. Since it parses the command, I would write it as stdlib-only Python run with `python3 -I`, and wire the hook entry in `~/.dotfiles` rather than editing the stowed link.\n\n**Limits to know:** a hook pattern-matches the command text. It cannot see inside a script that Claude runs, or a command built at runtime, so it is a strong guard against accidents, not a sandbox. Anything that needs a hard boundary needs filesystem permissions or a sandbox.\n\nI did not change anything. I also could not read `~/.claude/settings.json` to check for existing hooks, because read permission was not granted. If you grant it, I can check that before proposing the exact hook entry.",
+  "costUsd": 0.00153456
+}
