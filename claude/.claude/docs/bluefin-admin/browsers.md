@@ -1,6 +1,6 @@
 # Browsers
 
-- **Zen Browser** (upstream tarball in `~/.local/zen`) is Geoff's daily browser on
+- **Zen Browser** (upstream tarball in `~/.local/zen`) is Geoff's daily browser on <!-- host-ok -->
   thinkpad-x1 (Geoff, 2026-11-21). It is a Firefox fork, so Firefox add-ons install from
   addons.mozilla.org. `bluefin/zen/policies.json`, linked into the install's
   `distribution/` directory, carries every Chromium policy that has a Firefox equivalent

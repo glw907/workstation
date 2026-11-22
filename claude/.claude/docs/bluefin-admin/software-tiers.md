@@ -25,7 +25,7 @@ sandboxing concerns don't apply to a terminal, but the upstream installer is sim
 the right tier for a self-contained binary app with its own update mechanism).
 
 Zen Browser on thinkpad-x1 is a second exception. It installs from the upstream tarball
-into `~/.local/zen` (`bootstrap.sh`, `setup_zen`) and updates itself. The Flatpak is out
+into `~/.local/zen` (`bootstrap.sh`, `setup_zen`) and updates itself. The Flatpak is out <!-- host-ok -->
 because `browsers.md` bans Flatpak browsers, and the tarball gives `policies.json` a
 writable home. Like kitty, it has no manifest line and no `check-drift` leg;
 `setup_zen` is the record.
