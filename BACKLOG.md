@@ -10,6 +10,10 @@
 
 ## Medium
 
+- [ ] **#109** Trim Chromium to what development work needs `#improvement` `#workstation` *(2026-11-21)*
+  Geoff, 2026-11-21: "And Chromium can be cleaned up, so it has only what it needs for development work." He said it the day Zen became his daily browser on thinkpad-x1 (pull request 260). `claude/.claude/docs/bluefin-admin/browsers.md` still says he browses in Chromium, in his profile, on pavilion, and Claude Code drives Chromium's `Default` profile on both hosts.
+  Open before any build: whether the cleanup covers thinkpad-x1 only or pavilion too, and what "needs" keeps (policies, extensions, profiles, the Chrome extension Claude Code uses). It needs a spec: the Chromium policy files under `bluefin/` and `browsers.md` both change.
+
 - [ ] **#108** Read one week of hook and auto-mode refusals after the core spec landed, due 2026-11-27 `#improvement` `#workstation` *(2026-11-20)*
   The core spec's settings went live on 2026-11-20 (pull request 255, `claude-tooling-sync apply`). Its "How it lands" asks for one look a week later: read `~/.local/state/claude-denials.jsonl` and every refusal the two new `claude-merge-guard` checks made (forced push to `main`, whole-tree staging in a primary checkout), found in the session records, and mark each refusal right or wrong. A check with more wrong refusals than right ones gets an item to narrow or remove it. Left alone, a removed allow rule or grant that sessions still need goes unnoticed.
   Spec: `~/Projects/cc-desk/docs/specs/2026-11-20-core-design.md`, "How it lands" and "When something goes wrong".
