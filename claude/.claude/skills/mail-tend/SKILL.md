@@ -1,6 +1,6 @@
 ---
 name: mail-tend
-description: Use when Geoff says a message landed in the wrong folder ("this made it to my inbox", "why is this in Notifications", "this isn't spam"), says he tagged messages Misfiled, asks to file a sender, keep or drop a list folder, change how his mail is sorted, re-sort stored mail, or undo a re-sort. Covers diagnosing a message against the mail-filters script on ward, choosing a data edit or a rule change, the quick lane that lands it, and the re-sort through ward-mail-sort.sh.
+description: Use when Geoff says a message landed in the wrong folder ("this made it to my inbox", "why is this in Notifications", "this isn't spam"), says he tagged messages Misfiled, asks to file a sender, keep or drop a list folder, change how his mail is sorted, re-sort stored mail, or undo a re-sort. Covers diagnosing a message against the mail-filters script on ward, choosing a data edit or a rule change, the quick lane, and the re-sort through ward-mail-sort.sh, run only on his request.
 ---
 
 # Mail tend
@@ -49,7 +49,7 @@ and Geoff clears the `Misfiled` tag in Hylki.
    `simplelogin.co`.
 3. Check how far the pattern reaches before you fix one sender: count the Inbox or folder messages
    that share the cause, and name them in your reply.
-4. If counts moved and no plan of yours moved them, ask Geoff before you assume a fault. He
+4. If counts moved and no change of yours moved them, ask Geoff before you assume a fault. He
    tidies mail in Hylki and webmail himself.
 
 ## 2. Choose the fix
@@ -63,7 +63,7 @@ and Geoff clears the `Misfiled` tag in Hylki.
   or the preview's mapping in `scripts/mail-filters.sh`. It takes a branch, tests in
   `tests/mail-filters*.test.sh`, and CI, and you merge it yourself once CI is green. A template or
   helper change runs on the `probe` account first. A change to how mail is deleted, or to who can
-  reach a mailbox, goes to Geoff in a packet instead (`approval-packet`).
+  reach a mailbox, goes to Geoff as a spec instead (`building-from-specs`).
 
 Prefer a data edit when one fits. Bring a rule change to Geoff as a one-paragraph design in chat
 first. It changes how every message sorts.
@@ -75,14 +75,20 @@ For a data edit:
 1. Edit the file, then run `tests/sieve-run/run.sh` and `scripts/mail-filters.sh preview`. Read the
    plan: `tail -n +2 $XDG_RUNTIME_DIR/mail-filters/move-plan.jsonl | jq -r '"\(.from) -> \(.to)"' |
    sort | uniq -c`.
-2. Commit the data file and push it to `main` (`pass-core` "Direct changes"). Run
+2. Commit the data file and push it to `main` (`building-from-specs` "Direct changes"). Run
    `scripts/apply.sh ward --apply`, then `--check`.
 3. Run `scripts/ward-mail-sort.sh install`. The hash it prints must equal the plan header's
    `script_sha256`.
+4. Report what landed and the plan's counts per destination. Stop there: stored mail stays where
+   it is unless Geoff asks for a re-sort.
 
-A rule change merges first, then follows steps 2 and 3 from `main`.
+A rule change merges first, then follows steps 2 to 4 from `main`.
 
-## 4. Re-sort the stored mail
+## 4. Re-sort the stored mail, only when Geoff asks
+
+Run this section only on Geoff's request in this session: he asks to re-sort stored mail, to move
+the messages the plan lists, or to undo a re-sort. A fixed sender, a landed data edit, or a
+`Misfiled` batch is no such request. Without one, the work ends at section 3's report.
 
 `scripts/ward-mail-sort.sh` is the only path for a mailbox change. Run it from the household-it checkout
 as written, since its allow rules are exact. Never call `mail-filters move`, `undo`, or

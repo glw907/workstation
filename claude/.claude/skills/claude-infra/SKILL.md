@@ -1,11 +1,10 @@
 ---
 name: claude-infra
 description: >
-  Use when adding or changing a rule, hook, skill, agent, workflow, CLAUDE.md text, settings.json,
-  MCP server, plugin, or the pass process on this workstation. Create a skill when you keep pasting
-  the same instructions, checklist, or multi-step procedure into chat, or when a section of
-  CLAUDE.md has grown into a procedure rather than a fact. Covers where a rule lives and how to
-  land it.
+  Decides where a rule, hook, skill, agent, workflow, CLAUDE.md line, setting, MCP server, or
+  plugin lives on this workstation, and how the change lands. Use when adding or changing any of
+  those, or the process skill `building-from-specs`. Also use when deciding whether a procedure
+  should become a skill.
 ---
 
 # Claude infrastructure changes
@@ -26,27 +25,15 @@ the inventory are in `~/.claude/docs/claude-tooling.md`.
    turn.
 3. **Keep one home per rule, with its manifest.** Which manifest is the "Layout" table in
    `claude-tooling.md`. Run `claude-tooling-sync verify` after.
-4. **Trace scope to a stated need.** Every change, and every plan or executing dispatch for one,
-   applies Anthropic's own words. Prompting best practices
-   (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>):
-   "Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
-   Keep solutions simple and focused: - Scope: Don't add features, refactor code, or make
-   "improvements" beyond what was asked. A bug fix doesn't need surrounding code cleaned up. A
-   simple feature doesn't need extra configurability. ... - Defensive coding: Don't add error
-   handling, fallbacks, or validation for scenarios that can't happen. Trust internal code and
-   framework guarantees. Only validate at system boundaries (user input, external APIs). -
-   Abstractions: Don't create helpers, utilities, or abstractions for one-time operations. Don't
-   design for hypothetical future requirements. The right amount of complexity is the minimum
-   needed for the current task." Prompting Claude Opus 5
-   (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>):
-   "Deliver what was asked, at the scope intended. Make routine judgment calls yourself, and check
-   in only when different readings of the request would lead to materially different work. If the
-   request seems mistaken or a better approach exists, say so in a sentence and continue with the
-   task as asked rather than quietly narrowing, widening, or transforming it. Finish the whole
-   task, and stop short of actions that are clearly beyond what was asked." Anything beyond the
-   request goes in "Later", never into a task.
+4. **Trace scope to a stated need.** Every change, and every spec or dispatch for one, makes only
+   the change asked for, at the scope intended. The sources are Anthropic's prompting best
+   practices
+   (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices>)
+   and the page for the current model
+   (<https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5>).
+   Anything beyond the request goes in "Later", never into a task.
 5. **Land the change through a PR** whose commit messages and body cite the guidance URL, unless
-   it meets `pass-core` "Direct changes".
+   it meets `building-from-specs` "Direct changes".
 6. **Audit** with `/doctor prompt-audit`, `/skill-doctor`, and Anthropic's `skill-creator`. Run
    them; their output is the audit, not a restatement here.
 
@@ -75,7 +62,7 @@ a tool's NOTE before the next dispatch.
 - Credentials come from the age store. A server's env values stay in `${VAR}` form in
   the manifest and resolve from `~/.local/secrets` at session start; launch Claude Code from
   a shell that sourced them. Never a value in `.mcp.json`, a manifest, or a transcript.
-- Prose review goes by kind. Plans, pull request bodies, and skills are checked by the two save
+- Prose review goes by kind. Specs, pull request bodies, and skills are checked by the two save
   hooks only (`vale-hook` and `tellgrader`), and `prose-voice-reviewer` runs on published pages.
 - Read a third-party skill before vendoring it. It is instructions injected into every
   future session. Check the license, the maintainer, and the text.

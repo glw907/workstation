@@ -59,10 +59,10 @@ limit how far it can roll back, so read that before reverting a deploy.
 
 ## Add a feature
 
-Run a normal pass through `pass-core` while the project stays in maintenance mode. Its first task is
+Build the feature from a spec through `building-from-specs` while the project stays in maintenance mode. Its first task is
 a full `standards:dependency-upgrade` sweep, so the feature starts from current dependencies. That
-sweep is where the held majors get decided. Offer a major only after reading `<repo>.blocked` and what the framework says it targets, and put both in front of Geoff: a new release number says nothing about whether the stack can use it. TypeScript 7.0 has no stable programmatic API, expected in 7.1, so `svelte-check`, `typescript-eslint`, and `@sveltejs/kit` all stop at 6, and SvelteKit is aiming at 7.1 (Geoff, 2026-11-01). The timer skips a dirty or off-`main` checkout but can't
-see a pass in a worktree, so that pass rebases on the update if one lands first.
+sweep is where the held majors get decided. Offer a major only after reading `<repo>.blocked` and what the framework says it targets, and put both in front of Geoff: a new release number says nothing about whether the stack can use it. The timer skips a dirty or off-`main` checkout but can't
+see a task in a worktree, so that task rebases on the update if one lands first.
 
 ## Leave maintenance mode
 

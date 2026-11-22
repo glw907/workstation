@@ -1,6 +1,7 @@
 ---
 name: retire-project
 description: The standard practice for retiring a project on this workstation: inventory, dry run, encrypted archive, approved teardown, and reference sweep. Use when Geoff asks to retire, sunset, shut down, decommission, or delete a repo, site, Worker, or domain, or when an initiative closing leaves a project with no use.
+disable-model-invocation: true
 ---
 
 # Retire a project
@@ -37,9 +38,9 @@ failed or empty export. The file's sha256 goes in the retirement record.
 
 ## 3. Approval
 
-Send the dry run as a document through `approval-packet`, listing each delete by its id. Each
-irreversible step is a question in it, with the options and a recommendation. A domain's fate is
-Geoff's call.
+Put the dry run in front of Geoff in his terminal, listing each delete by its id. Each
+irreversible step is a question in it, with the options and a recommendation, and only his typed
+words approve one (`building-from-specs`). A domain's fate is Geoff's call.
 
 ## 4. Teardown, in this order
 

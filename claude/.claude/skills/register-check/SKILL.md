@@ -1,7 +1,8 @@
 ---
 name: register-check
-description: Run the full cairn four-gate prose review (mechanical slop gate, adversarial register edit, logic and claims check, links and citations) on one or more drafts and fold the findings. Use on any cairn prose artifact before Geoff reads it, or when Geoff asks for a register check.
+description: Runs the full cairn four-gate prose review (mechanical slop gate, adversarial register edit, logic and claims check, links and citations) on one or more drafts and folds the findings into one report. Use on any cairn prose artifact before Geoff reads it, or when Geoff asks for a register check.
 context: fork
+background: false
 ---
 
 # Register check
@@ -38,7 +39,7 @@ itself and loads no corpus; give it the file paths, each file's track, and the s
 
 Dispatch a read-only Opus `general-purpose` agent to verify the draft's factual claims
 against the codebase (both directions: no statement contradicts a checkable fact, and every
-substantive statement traces to positive support — code, a measurement, a documented
+substantive statement traces to positive support: code, a measurement, a documented
 behavior, or Geoff's testimony), check presupposition-level truth, and check logical
 consistency within the draft and against its sibling pages (README, why-cairn,
 editor-welcome, the docs index must stay mutually consistent). Skip this gate only for edits
@@ -52,8 +53,8 @@ overlinking) and the Google developer style guide's link-text rules (descriptive
 never bare URLs or "here").
 
 - **Missing external links:** named entities a reader would plausibly want to follow
-  (products, tools, papers, standards, organizations) linked at first mention — Cloudflare,
-  iA Writer, a cited paper. A citation-shaped claim (a date, a quote, a figure) should carry
+  (products, tools, papers, standards, organizations) linked at first mention, such as Cloudflare,
+  iA Writer, or a cited paper. A citation-shaped claim (a date, a quote, a figure) should carry
   its source where a verified URL exists; never fabricate a URL to satisfy this.
 - **Missing internal links:** references to sibling pages that exist should link them, at the
   point where a reader would actually want to jump.

@@ -12,10 +12,7 @@ needs a phone (Geoff, 2026-10-29), so Claude sees a sheet in a browser only afte
 link. Then claude-in-chrome opens the real Sheets interface. Tokens, scopes, and the Cloud project
 are in `~/.claude/docs/bluefin-admin/google-workspace.md`.
 
-Sheets API behavior (A1 ranges, `batchUpdate` requests, validation rules, reading raw JSON) is in
-the `anthropic-skills:google-workspace` skill's `references/sheets.md` and
-`scripts/sheets_helper.py`. Read those before a structural write; this skill doesn't restate them.
-Two quirks seen on the gear sheet: a `ONE_OF_RANGE` rule sent with a relative range comes back
+Two Sheets API quirks seen on the gear sheet: a `ONE_OF_RANGE` rule sent with a relative range comes back
 absolute, so set per-row rules one row at a time; and a simple trigger never fires on an API write.
 
 ## Design before building

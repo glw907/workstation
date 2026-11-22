@@ -1,6 +1,6 @@
 ---
 name: proton-pass
-description: Use for any work on Proton Pass vaults, items, grants, or credentials on this workstation: which vault an item belongs in, how to name it and write its note, reading or writing an item through claude-pass, a sign-in throttle, the grant map and check-drift's legs, the item-title lint, a new credential or mask, or a bulk vault edit that Geoff runs through pass-sitting.
+description: Holds the Proton Pass vault map, the naming rules, and the claude-pass procedures on this workstation. Use for any work on Proton Pass vaults, items, grants, or credentials: which vault an item belongs in, how to name it and write its note, reading or writing an item through claude-pass, a sign-in throttle, the grant map and check-drift's legs, the item-title lint, a new credential or mask, or a bulk vault edit that Geoff runs through pass-sitting.
 ---
 
 # Proton Pass
