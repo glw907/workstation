@@ -44,12 +44,16 @@ before it finished, as the guide asks.
 
 ## What the sessions could not reach
 
-Five of the six writing sessions tried to read `~/.claude/docs/voice/written-for-people.md`,
-which `building-from-specs` names as the standard for a pull request's body. The file links into
-`~/.dotfiles`, which the test hides so that no session reads the installed skill or the main
-checkout. Each refusal is in that case's `permissionDenials`. The sessions went on without it. A
+Five of the six writing sessions reached for `~/.claude/docs/voice/written-for-people.md`, which
+`building-from-specs` names as the standard for a pull request's body. Three tried to read it,
+and two tried to list its folder. The file links into `~/.dotfiles`, which the test hides so that
+no session reads the installed skill or the main checkout. The sessions went on without it. A
 spec's length doesn't rest on that file, since the guide, which the sessions did read, governs
 what a spec carries.
+
+The writing sessions had nine refused calls in all, each in its case's `permissionDenials`.
+Eight were those reads and listings. The ninth, in `write-gate-red`, was a Bash call that tried
+out a change to `bin/notes` in a copy under `$TMPDIR`. The reader sessions had no refused calls.
 
 ## Reading a row again
 
