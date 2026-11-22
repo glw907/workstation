@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:20:29Z",
+  "seconds": 9.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "Put it at user scope, not in ecxc-ski's `.mcp.json`.\n\n- **One entry covers every site.** The Svelte docs server isn't specific to ecxc-ski. A project `.mcp.json` would mean repeating the entry in ecxc-ski, 907-life, aksailingclub-org and cairn-pub, and it would drift between them.\n- **It's a workstation tool, not a project dependency.** A checked-in `.mcp.json` becomes part of the repo for anyone who clones it and for any automated session. The docs server is only a convenience for the session on this machine.\n- **How to add it:** `claude mcp add --scope user`. The official server is `@sveltejs/mcp`, which you can run locally or use as the hosted endpoint. That writes to `~/.claude.json`, so it follows you into every repo.\n\nTwo caveats:\n\n- User-scope MCP config lives in `~/.claude.json`, which isn't stowed from `~/.dotfiles`. Your convention is that config lives in the dotfiles. So either record the `claude mcp add` command in a dotfiles setup script or doc, or accept that this one entry lives outside it. I'd record the command.\n- Go through the `claude-infra` skill when you make the change, since it's Claude Code tooling.\n\nThe one case for per-repo placement is if you want the server available to Claude sessions that run without your user config, such as CI or background sessions on other hosts. Nothing you've described suggests that.\n\nI haven't looked at the current `.mcp.json` or your user config, so I can't say whether a Svelte server is already registered somewhere.",
+  "costUsd": 0.0739095
+}

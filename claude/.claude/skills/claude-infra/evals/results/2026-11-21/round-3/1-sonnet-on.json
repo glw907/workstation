@@ -1,0 +1,47 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:17:04Z",
+  "seconds": 13.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"release\", \"path\": \"/var/home/glw907/.claude/skills\", \"-i\": true, \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "I couldn't read `~/.claude/docs/claude-tooling.md` or `~/.claude/skills`, so I haven't checked whether a release skill already exists. The plan below follows the `claude-infra` skill and the global CLAUDE.md.\n\n## Where it lives\n\n**A skill, most likely an extension of `cairn-pass` and not a new skill.**\n\n- **Why not CLAUDE.md:** it carries only facts that apply on every turn. A release checklist is reference material needed sometimes, and CLAUDE.md is read as context, so nothing there enforces it. Anthropic's features overview says to put it in a skill if it's \"reference material Claude needs sometimes\" (<https://code.claude.com/docs/en/features-overview>).\n- **Why not a hook:** the same page says \"If a rule must hold every time, make it a hook.\" A hook fits only if a step is mechanical and must never be skipped, such as refusing a tag when the gate hasn't passed. Those steps would go into a script, with the hook calling it. The judgment steps stay in the skill.\n- **Why `cairn-pass`:** it already holds the cairn-cms gate wrapper, the CI watch, and your launch conventions. A release is the same kind of work, so a \"Cutting a release\" section there keeps one home per rule. Make it a separate skill, say `cairn-release`, only if the checklist is long enough to bloat `cairn-pass` or you'd want to trigger it on its own. I'd start with the section.\n\n## How the change lands\n\n1. **Check first.** Read `~/.claude/docs/claude-tooling.md` to confirm the layout and manifest, and grep the skills for an existing release procedure so I don't duplicate it. I'll ask for the read permission.\n2. **Get the five steps.** I need the checklist from you once, or from wherever you last pasted it. I'll write it as ordered steps with the exact commands, and use the `writing-voice` skill for the prose.\n3. **Make the edit.** An authored skill is its own manifest, so the section goes in the `cairn-pass` skill, with no separate manifest entry unless I create `cairn-release`. Run `claude-tooling-sync verify` after.\n4. **Land it through a PR.** This is a change to Claude Code tooling, not a one-sentence edit, so it goes through a PR. The commit messages and body cite the features-overview URL. Commits are imperative, files are staged by name, and the work happens in a worktree after `claude-worktree-busy` shows it's free. Per `building-from-specs`, a PR needs a spec you approve first, unless you rule it a \"Direct change\".\n5. **Audit.** Run `/doctor prompt-audit`, `/skill-doctor`, and `skill-creator`. The `vale-hook` and `tellgrader` hooks check the skill on save.\n\n## Decision for you\n\nShould the release section go inside `cairn-pass` or in its own `cairn-release` skill? I recommend `cairn-pass`. Tell me which, and whether any step should be a hook, and I'll write the spec.",
+  "costUsd": 0.0948145
+}

@@ -1,0 +1,26 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:19:05Z",
+  "seconds": 15.6,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Put it in a PreToolUse hook on the Bash tool. Don't put it in CLAUDE.md or a skill.**\n\n**Why not CLAUDE.md or a skill.** Both are instructions I read and weigh, so they are advisory. A rule saying \"never `rm -rf` a home folder\" would usually hold, but \"no exceptions\" needs something I can't talk myself past. The harness has to enforce it, and CLAUDE.md and skills aren't enforced by the harness. A skill is weaker still, because it only loads when something triggers it.\n\n**Why a hook beats a `permissions.deny` rule.** Both are harness-enforced and apply regardless of what I decide. But deny rules for Bash match command patterns, so they miss many spellings of the same act:\n- `rm -fr`, `rm -r -f`, and `rm --recursive --force`\n- `~`, `$HOME`, `/var/home/glw907`, and `/home/glw907`, which are the same place on Bluefin\n- `cd ~ && rm -rf *`\n- a variable or glob that expands to the home folder\n\nA hook script receives the full command and can normalize flags and resolve the target paths. It can also treat any recursive, forced `rm` whose target resolves to the home directory, or to a parent of it, as a block. It blocks by exiting 2 with a reason, which I see as feedback. A plain deny rule on `rm -rf ~*` could be a cheap second layer, but it shouldn't be the only one.\n\n**Where it lives on this workstation:**\n1. **Scope:** The user-level settings apply to every project. Project settings only cover one repo. If \"no exceptions\" must also survive a project or local settings override, put the hook in managed settings (`/etc/claude-code/managed-settings.json`), which has the highest precedence.\n2. **Source of truth:** Per your conventions, the hook script goes in `~/.dotfiles/bin/.local/bin/`, then `stow -R bin`. Any `/etc` file lands in `~/.dotfiles/bluefin/etc/` first. Edit the dotfiles copy, never the stowed link.\n3. **Process:** Changes to Claude Code tooling go through the `claude-infra` skill. The `~/.dotfiles` gate (`bash scripts/gate.sh`) applies to the change.\n4. **Language:** Bash is fine for a short wrapper. Once it parses flags and resolves paths robustly, stdlib-only Python run as `python3 -I` fits your tool-language rule better.\n\n**Limits to expect.** A hook only sees the Bash tool. It won't catch `find ~ -delete`, `rsync --delete` from an empty directory, `mv` to `/dev/null`, or a script that runs `rm -rf` internally, unless you also block those. It also can't see deletions made by other tools. \"A home folder\" could mean only `~` itself, or anything under it. I'd read it as `~` and its ancestors, since `rm -rf ~/Projects/foo/node_modules` is routine. Tell me if you meant something broader.\n\nI haven't looked at your current settings files or hooks, so I don't know whether a similar guard already exists. I changed nothing. If you want it built, I'll draft the hook and the settings entry under `claude-infra`.",
+  "costUsd": 0.0815715
+}

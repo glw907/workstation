@@ -1,0 +1,33 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:16:49Z",
+  "seconds": 14.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude\", \"glob\": \"**/{SKILL.md,cairn*,*.md}\", \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "**Recommendation:** put it in the `cairn-pass` skill as a reference file, not in chat or memory.\n\n- **Why there:** `cairn-pass` already holds the cairn-cms gate, CI watch, and launch conventions. Per the global CLAUDE.md, each repo's gate and checklists live in its adapter skill. A checklist in a skill loads when a release is requested, so you stop pasting it.\n- **Why not memory:** memory is for facts the repo and skills don't record. A procedure belongs in a skill.\n- **Alternative:** if the same steps should also serve humans, keep the source of truth in the cairn-cms repo (for example `RELEASING.md`) and have the skill point to it. Tell me which you want.\n\n**How the change would land:**\n\n1. **Get the steps.** I'll take the five steps from this chat's history, or you can paste them once more. I can't check whether `cairn-pass` already covers releases, because this session was denied read access to `~/.claude`. If you grant it, I'll check first.\n2. **Route through `claude-infra`.** The CLAUDE.md says changes to Claude Code tooling go through that skill. The skill edit is that route.\n3. **Edit the dotfiles copy, not the link.** If the skill is stowed from `~/.dotfiles`, I'd edit there. Otherwise I'd edit it in place. I'll confirm which before writing.\n4. **Add a reference file and one pointer.** New file: `cairn-pass` release reference holding the five steps. Pointer: a trigger line in `cairn-pass`'s `SKILL.md` (\"cut a release\" or \"release cairn\" loads it).\n5. **Verify.** Start a fresh session, ask to cut a release, and confirm the skill loads and surfaces the five steps. If the edit lands in `~/.dotfiles`, run `bash scripts/gate.sh` from its root.\n6. **Land it directly.** It's a small, fully specified doc change, so it doesn't need a spec or PR under the \"Direct changes\" rule. I'd commit it by name-staged files with an imperative message.\n\n**Choices I'd make, which you can redirect:**\n- Reference file under `cairn-pass`, not a new skill.\n- Steps stay as written, with no new automation.\n\n**What I need from you:**\n- Confirm the target is cairn-cms, and whether the checklist should also live in that repo for humans.\n- Confirm I should take the steps from this chat, or paste them again.\n- Grant read access to `~/.claude` if you want me to check existing `cairn-pass` content first.",
+  "costUsd": 0.00488676
+}

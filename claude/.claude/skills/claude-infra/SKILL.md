@@ -18,16 +18,16 @@ the inventory are in `~/.claude/docs/claude-tooling.md`.
    before writing. If Claude Code already does it, configure that rather than build a copy. To
    write a hook or setting into `settings.json`, use the built-in `update-config` skill for the
    mechanics; this skill only decides whether a hook or setting is the right home.
-2. **Choose the strongest home: hook, then skill or agent, then CLAUDE.md.** Anthropic's
-   features overview (<https://code.claude.com/docs/en/features-overview>): "If a rule must hold
-   every time, make it a hook rather than a prompt instruction." And: "Put it in a skill if it's
-   reference material Claude needs sometimes". CLAUDE.md carries only a fact that applies every
-   turn, never a rule that must hold: Claude reads it as context, and nothing enforces it. An
-   answer that only advises on a home names the same page, and when it turns down CLAUDE.md it
-   says both halves: what CLAUDE.md carries, and that nothing enforces it.
-3. **Keep one home per rule, with its manifest.** The "Layout" table in `claude-tooling.md` names
-   each manifest. A skill or agent authored here is its own manifest, its directory; a vendored
-   skill, a plugin, or a user-scope MCP server gets an entry in its manifest file. Run
+2. **Choose the strongest home: hook, then skill or agent, then CLAUDE.md, which carries only a
+   fact that applies every turn.** Anthropic's features overview
+   (<https://code.claude.com/docs/en/features-overview>): "If a rule must hold every time, make
+   it a hook rather than a prompt instruction." And: "Put it in a skill if it's reference
+   material Claude needs sometimes". A rule that must hold never goes in CLAUDE.md: Claude reads
+   it as context, and nothing enforces it. An answer that only advises on a home names the same
+   page.
+3. **Keep one home per rule. A skill or agent authored here is its own manifest, its
+   directory.** A vendored skill, a plugin, or a user-scope MCP server gets an entry in the
+   manifest file that the "Layout" table in `claude-tooling.md` names. Run
    `claude-tooling-sync verify` after.
 4. **Trace scope to a stated need.** Every change, and every spec or dispatch for one, makes only
    the change asked for, at the scope intended. The sources are Anthropic's prompting best

@@ -1,0 +1,51 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:16:35Z",
+  "seconds": 13.3,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Where should a five-step cairn release checklist live? The user keeps pasting it into chat. Plan only, no edits.\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn*/**/SKILL.md\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*cairn*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on\"}"
+    }
+  ],
+  "result": "I couldn't finish the check. Reads under `~/.claude` were denied, so I could not open `cairn-pass`, `claude-tooling.md`, or the manifests. The plan below comes from the `claude-infra` rules alone.\n\n**Where it should live**\n\nThe checklist is reference material Claude needs only when cutting a release. The `claude-infra` rules put that in a skill, not CLAUDE.md. CLAUDE.md is context that nothing enforces, and a checklist you paste every time is exactly what a skill replaces.\n\n- **Preferred:** add a release section to the existing `cairn-pass` skill, since it already holds the cairn gate and checklists. Use this if the release is part of a pass's close.\n- **Alternative:** a new `cairn-release` skill, if releases happen outside a pass. Its description must name \"cut a release\" and \"release checklist\" so it loads on those requests.\n- **Not CLAUDE.md:** no always-on rule is needed. If one step must never be skipped, such as \"the gate must pass before tagging,\" that one step could become a hook, but that's a separate decision.\n\n**How the change lands**\n\n1. Confirm whether `cairn-pass` already covers any of the five steps, so nothing is duplicated.\n2. Cite the Anthropic skill guidance in the PR body, per `claude-infra` step 1.\n3. Write the skill or section in the dotfiles copy, record it in its manifest, and run `claude-tooling-sync verify`.\n4. Audit with `/skill-doctor` and Anthropic's `skill-creator`.\n5. Land it as a PR, since a new skill is more than a one-sentence change. Geoff approves it by number.\n\n**What I need from you**\n\n- The five steps. I don't have your pasted text in a form I can edit, so paste it once.\n- Whether releases are always part of a pass. That decides between the two options above.\n- A read grant for `~/.claude`, or confirmation that `cairn-pass` and the manifest are where I think they are. Then I can check for overlap before choosing.\n\nNo files were changed.",
+  "costUsd": 0.005761120000000001
+}
