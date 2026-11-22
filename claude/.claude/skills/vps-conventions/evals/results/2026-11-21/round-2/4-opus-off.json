@@ -1,0 +1,26 @@
+{
+  "skillName": "vps-conventions",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "What does `git rebase --onto` do? Give one short example.",
+  "started": "2026-11-22T02:40:36Z",
+  "seconds": 6.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`git rebase --onto <newbase> <upstream> <branch>` takes the commits on `<branch>` that come after `<upstream>` and replays them on top of `<newbase>`. A plain `git rebase` always replays onto the upstream itself. With `--onto` you choose a different base and also say exactly where the range of moved commits starts.\n\n**Example:** you branched `feature` off `topic` by mistake, but `feature` should sit on `main`:\n\n```\nmain:    A---B\n              \\\ntopic:         C---D\n                    \\\nfeature:             E---F\n```\n\n```bash\ngit rebase --onto main topic feature\n```\n\n```\nmain:    A---B\n             |\\\ntopic:       | C---D\n              \\\nfeature:       E'--F'\n```\n\nOnly `E` and `F` (the commits after `topic`) are moved onto `main`. `C` and `D` stay out of `feature`.",
+  "costUsd": 0.1333858
+}

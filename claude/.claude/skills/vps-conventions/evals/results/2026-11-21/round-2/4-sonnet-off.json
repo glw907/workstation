@@ -1,0 +1,26 @@
+{
+  "skillName": "vps-conventions",
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "What does `git rebase --onto` do? Give one short example.",
+  "started": "2026-11-22T02:40:25Z",
+  "seconds": 4.0,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`git rebase --onto <newbase> <oldbase> <branch>` takes the commits that come after `<oldbase>` up to `<branch>` and replays them on top of `<newbase>`. Plain `git rebase` can only replay onto the branch you're comparing against. `--onto` lets you pick a different target, so you can move a slice of history.\n\n**Example:** `feature` was branched off `next`, but it should have been branched off `main`:\n\n```\nmain:    A---B\n              \\\nnext:          C---D\n                    \\\nfeature:             E---F\n```\n\n```bash\ngit rebase --onto main next feature\n```\n\nThis replays `E` and `F` (the commits in `feature` but not in `next`) onto `main`:\n\n```\nmain:    A---B\n             |\\\n             | E'--F'   (feature)\n              \\\nnext:          C---D\n```",
+  "costUsd": 0.0663475
+}

@@ -1,0 +1,49 @@
+{
+  "skillName": "vps-conventions",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "user-data.yaml in this folder is the cloud-init file that provisions our RHEL-family VPS boxes. Read it. We want to add the `jq` package to it. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; don't edit the file.",
+  "started": "2026-11-22T02:37:43Z",
+  "seconds": 14.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "runbook"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-off/user-data.yaml\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-off\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"runbook\", \"args\": \"VPS fleet: how servers are provisioned with cloud-init user-data and how to apply a package change to servers already running (RHEL-family VPS boxes)\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/Projects/household-it/README.md\"}"
+    }
+  ],
+  "result": "I couldn't read the household-it README: the read was denied, so I haven't checked the fleet's docs. The plan below comes from the cloud-init file and general RHEL-family behavior. I haven't verified it against your servers.\n\n**What the file does**\n\n`user-data.yaml` is cloud-init user data. It installs `git`, `podman`, and `rsync` through `packages:`, and runs `systemctl enable --now podman.socket` through `runcmd:`. Both run only on first boot of a new instance. Adding `jq` to the `packages:` list will provision new boxes only. It won't touch servers that are already running.\n\n**What has to happen for the running servers**\n\n1. Edit `user-data.yaml` to add `- jq` under `packages:`. This covers future provisioning.\n2. Install `jq` on each running server with a one-time package install. Do this with `dnf install -y jq` over SSH, or with an ad-hoc Ansible run if you have an inventory. I don't know which you use, so I'll check that once you point me at the inventory or the docs.\n3. Don't rely on re-running cloud-init on existing boxes. `cloud-init clean` followed by a reboot re-provisions the host and is not a safe way to add one package.\n4. Record the change where your fleet's docs say to. I couldn't read those docs, so I don't know the location yet.\n\n**How to check the package name first**\n\nOn one representative box, before changing anything:\n\n```\ncat /etc/os-release\ndnf info jq\ndnf repoquery --whatprovides '*/bin/jq'\n```\n\n`jq` is the package name on RHEL, Rocky, Alma, and CentOS Stream as far as I know. The binary is `/usr/bin/jq`. The check still matters because the repo for `jq` (AppStream, or EPEL on older releases) can differ by major version, and the boxes may not all run the same one. Run the check on each major version in the fleet, not just one box.\n\n**What I need from you**\n\n- Whether you want me to read the household-it docs. Permission for that read was denied, so I'd need you to grant it, or to tell me the server list and how you reach the boxes.\n- The inventory, or the list of hosts, and the OS major versions they run.\n\nNothing has been edited. `user-data.yaml` is unchanged.",
+  "costUsd": 0.0056660600000000005
+}

@@ -1,0 +1,38 @@
+{
+  "skillName": "vps-conventions",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Read prune-uploads.timer in this folder. It will run a weekly prune of old upload files on one of our servers, but its service isn't written yet. Until then I delete the old files with an ssh command, and auto mode keeps denying it. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+  "started": "2026-11-22T02:39:05Z",
+  "seconds": 10.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/prune-uploads*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-off/prune-uploads.timer\"}"
+    }
+  ],
+  "result": "**Don't add the ssh allow rule.** A standing allow for ssh would let any remote command run without a prompt, and a deletion on a server is exactly what the auto-mode denial is there to catch. The denial is doing its job, so I wouldn't work around it.\n\n**What I'd do instead:**\n\n1. **Delete the old files this week with a reviewed, one-off run.** I run a dry run first (a `find` that lists files older than the cutoff, with no `-delete`) and show you the list, the count, and the total size. When you say go, I run the delete for that exact set. This is the confirmation step our rules require before a destructive operation, and it doesn't need a permission rule.\n\n2. **Write the service, then let systemd run the prune.** `prune-uploads.timer` only fires `prune-uploads.service` by default, so the service is the missing piece. It should be a `Type=oneshot` unit with the same prune logic as the dry run, and it should default to listing only until you approve a delete. Once it exists, systemd runs the prune on schedule. Claude doesn't need a permission rule for it.\n\n3. **Keep the files in the dotfiles repo.** Server config goes in `~/.dotfiles/` first, then gets deployed to the server. Don't enable the timer until the service exists. Otherwise it fires against a missing unit.\n\n**Before I write the service, I need three things from you:**\n- Which server, and its hostname, so I can match its conventions.\n- The upload directory path.\n- The retention period. The timer says \"weekly\" but doesn't say how old a file has to be before it's pruned.\n\nIf you'd like a standing ssh rule anyway, tell me the exact command pattern and the host, and I'll propose a narrow rule for your review. I wouldn't add one until you've seen it.\n\nI changed nothing. I only read the timer file.",
+  "costUsd": 0.00459549
+}

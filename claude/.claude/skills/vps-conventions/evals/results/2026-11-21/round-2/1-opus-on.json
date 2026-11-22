@@ -1,0 +1,47 @@
+{
+  "skillName": "vps-conventions",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "backup.service in this folder runs our nightly backup on the AlmaLinux VPS, and a timer fires it. The backup script takes a lock so two runs never overlap. Read the unit and tell me where the lock file should live and what the service unit should carry. Give the revised unit text; don't edit the file.",
+  "started": "2026-11-22T02:36:29Z",
+  "seconds": 23.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/vps-conventions"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/backup.service\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"vps-conventions\"}"
+    }
+  ],
+  "result": "**The lock belongs at `/var/lib/app-backup/backup.lock`, created through `StateDirectory=app-backup`.** The current path, `/run/app-backup/backup.lock`, is inside the unit's `RuntimeDirectory=`. systemd deletes that directory when the unit stops, and the lock file goes with it. A process still holding the lock then holds a file that no longer exists, and the next run locks a new file, so two runs can overlap without either one noticing. A run started by hand outside systemd also finds no `/run/app-backup` and fails on the lock step.\n\n`StateDirectory=` makes `/var/lib/app-backup` persistent, creates it before the unit starts, and makes it writable even under `ProtectSystem=strict`. The script should still run `mkdir -p \"$(dirname \"$BACKUP_LOCK\")\"` before taking the lock, so a manual run also works.\n\n**Revised unit:**\n\n```ini\n[Unit]\nDescription=Nightly backup of the app data\nWants=network-online.target\nAfter=network-online.target\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/app-backup\n\n# Lock lives on a persistent path; StateDirectory creates /var/lib/app-backup\n# and makes it writable under ProtectSystem=strict.\nStateDirectory=app-backup\nEnvironment=BACKUP_LOCK=/var/lib/app-backup/backup.lock\n\n# Per-run scratch only (deleted at stop). Drop this if the script needs no scratch.\nRuntimeDirectory=app-backup\n\n# Hardening\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectSystem=strict\n# Every real write target of app-backup. Each path must already exist on the\n# host, or the unit fails with \"Failed to set up mount namespacing\".\nReadWritePaths=/srv/backups\n```\n\n**Other changes in the unit:**\n- **`Wants=network-online.target`:** `After=` on its own only sets ordering. Without `Wants=`, nothing actually waits for the network to come up.\n- **Hardening:** every service unit gets `NoNewPrivileges=yes`, `PrivateTmp=yes`, and `ProtectSystem=strict`, plus a `ReadWritePaths=` entry for each place the script writes.\n- **`RuntimeDirectory=` stays only for per-run scratch,** such as temp credential files that should be deleted when the run ends. If the script doesn't use it, remove the line.\n\n**What to check before deploying:**\n1. **`ReadWritePaths=/srv/backups` is a placeholder.** `/usr/local/bin/app-backup` isn't in this folder, so I couldn't see where it writes. Replace the placeholder with the script's real write targets, such as the backup destination, any local staging directory, and log files. Each of those directories must exist on the host before the unit starts, so create them in your provisioning or deploy step. The script can't create them itself, because the unit fails before the script runs.\n2. **Timer:** the timer unit isn't in this folder either. It should have `RandomizedDelaySec=`. If it has `Persistent=true`, a backup missed while the VPS was down runs right after boot. Keep the setting only if you want that.\n3. **SELinux:** on AlmaLinux, the new `/var/lib/app-backup` gets the `var_lib_t` label. That's fine for an unconfined service, but confirm the first real run succeeds rather than assuming it.\n4. **Verify:** run `systemd-analyze verify backup.service` on the revised file.\n\nOne more point: systemd never starts a second copy of a `oneshot` unit while the first is still running. The lock mainly protects against a run started by hand, or from another tool, at the same time as the timer's run. That is why it has to sit on a path that exists and stays the same between runs.",
+  "costUsd": 0.20580119999999996
+}

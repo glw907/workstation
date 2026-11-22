@@ -1,0 +1,47 @@
+{
+  "skillName": "vps-conventions",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "backup.service in this folder runs our nightly backup on the AlmaLinux VPS, and a timer fires it. The backup script takes a lock so two runs never overlap. Read the unit and tell me where the lock file should live and what the service unit should carry. Give the revised unit text; don't edit the file.",
+  "started": "2026-11-22T02:36:02Z",
+  "seconds": 12.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/vps-conventions"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/backup.service\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"vps-conventions\"}"
+    }
+  ],
+  "result": "**Where the lock lives:** `/var/lib/app-backup/backup.lock`, on a persistent path. The current `/run/app-backup/backup.lock` is a bug. `RuntimeDirectory=` is deleted when the unit stops, and `/run` is tmpfs, so it is also gone at boot. Systemd removes the lock file at unit stop. If anything outlives a run, such as a stuck holder or a manual run, it keeps an unlinked inode. The next run then locks a fresh file and the two runs overlap without any error.\n\n**What the unit should carry:**\n- `StateDirectory=app-backup` replaces `RuntimeDirectory=`. Systemd creates `/var/lib/app-backup` before it sets up the mount namespace, so there is no pre-creation step. Under `ProtectSystem=strict` it is writable automatically, so it doesn't need a `ReadWritePaths=` entry.\n- `BACKUP_LOCK` points at the new path.\n- The hardening set: `NoNewPrivileges=yes`, `PrivateTmp=yes`, and `ProtectSystem=strict`. The unit has none of these now.\n- `ReadWritePaths=` for the backup's real write targets. I can't see `/usr/local/bin/app-backup` or its destination from this folder, so the line below is a placeholder. Each entry must exist on the host before the unit starts, or startup fails with \"Failed to set up mount namespacing\".\n- `Wants=network-online.target` alongside the existing `After=`, because `After=` alone doesn't pull the target in.\n\n**Revised unit:**\n\n```ini\n[Unit]\nDescription=Nightly backup of the app data\nWants=network-online.target\nAfter=network-online.target\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/app-backup\nStateDirectory=app-backup\nEnvironment=BACKUP_LOCK=/var/lib/app-backup/backup.lock\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectSystem=strict\n# Replace with the script's real write targets; each must exist before start.\nReadWritePaths=/srv/backups\n```\n\n**Other points:**\n- The script should still run `mkdir -p \"$(dirname \"$BACKUP_LOCK\")\"` before it takes the lock. That keeps it working when run by hand, outside the unit.\n- If the script uses scratch space, `PrivateTmp=yes` covers it. Keep `RuntimeDirectory=` only if it needs a per-run directory, and never for the lock.\n- The timer isn't in this folder. It should carry `RandomizedDelaySec`. If it sets `Persistent=true`, a missed run fires at boot.\n- On the first deploy, check the SELinux label of `/var/lib/app-backup`. It inherits `var_lib_t`, which is fine for unconfined services.\n- Run `systemd-analyze verify backup.service` as the gate.",
+  "costUsd": 0.09755450000000002
+}

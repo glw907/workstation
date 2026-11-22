@@ -1,0 +1,26 @@
+{
+  "skillName": "vps-conventions",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "What does `git rebase --onto` do? Give one short example.",
+  "started": "2026-11-22T02:40:29Z",
+  "seconds": 6.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`git rebase --onto <newbase> <upstream> <branch>` takes the commits on `<branch>` that come after `<upstream>` and replays them on top of `<newbase>`. Plain `git rebase` always replays onto the same commit it uses to decide which commits to move. `--onto` lets you choose those two things separately: `<upstream>` sets where your commits start, and `<newbase>` sets where they land.\n\n**Example:** you branched `feature` off `topic`, and now you want `feature` based on `main` without bringing `topic`'s commits along.\n\n```\nBefore:\nmain:     A---B\n               \\\ntopic:          C---D\n                     \\\nfeature:              E---F\n\ngit rebase --onto main topic feature\n\nAfter:\nmain:     A---B\n              |\\\ntopic:        | C---D\n               \\\nfeature:        E'---F'\n```\n\nOnly `E` and `F` (the commits after `topic`) move, and they're rewritten as `E'` and `F'` on top of `main`.\n\nIt's also handy for deleting commits from the middle of a branch. For example, `git rebase --onto HEAD~3 HEAD~1` drops the two commits before the current one, `HEAD~2` and `HEAD~1`.",
+  "costUsd": 0.1354858
+}

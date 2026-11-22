@@ -1,0 +1,38 @@
+{
+  "skillName": "vps-conventions",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Read prune-uploads.timer in this folder. It will run a weekly prune of old upload files on one of our servers, but its service isn't written yet. Until then I delete the old files with an ssh command, and auto mode keeps denying it. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+  "started": "2026-11-22T02:39:53Z",
+  "seconds": 19.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-off/prune-uploads.timer\"}"
+    }
+  ],
+  "result": "No, I wouldn't add an ssh allow rule. Write the service instead. It's a few lines, and once it exists nobody needs ssh for this job.\n\n**Why not an allow rule**\n\n- **It would cover far more than the prune.** An allow rule matches the start of a command, so a rule like `Bash(ssh yourserver:*)` lets any command run on that server, including any `rm`. You only want to allow one specific delete.\n- **Auto mode is blocking it for a good reason.** Deleting files on a remote server can't be undone and changes a shared system. A rule that turns that check off would silently approve every later variation too, such as a typo in the path or a different age cutoff.\n- **It's temporary.** Once the timer works, the rule has no job but stays in place as standing access.\n\n**What to do instead**\n\n1. **Write `prune-uploads.service` now.** The timer has no `Unit=` line, so it starts `prune-uploads.service` by default. A minimal version is a `Type=oneshot` service whose `ExecStart=` runs a `find <dir> -type f -mtime +N -delete`. Do a dry run with `-print` instead of `-delete` first. Put it next to the timer, then `systemctl daemon-reload` and `systemctl enable --now prune-uploads.timer`. Check the next run time with `systemctl list-timers prune-uploads.timer`. Since it runs on the server itself, Claude never needs to ssh in to delete anything.\n2. **Until then, run the ssh command yourself.** Type it with a `!` prefix in the Claude Code prompt, or in your own terminal, or approve the prompt once each time. A weekly manual step isn't worth a standing permission.\n3. **If you really do want Claude to run it unattended:** put the prune in a script on the server and limit an ssh key to that one script with a forced command (`command=\"/usr/local/bin/prune-uploads\",restrict` in `authorized_keys`). Then write an allow rule for that exact invocation, not a prefix. Even if the rule's pattern were too loose, the server would only ever run the prune. Changes to settings go through `claude-infra`.\n\nI'd do option 1. The timer already sets the weekly schedule, and `Persistent=true` catches up on any run missed while the server was off.\n\nI didn't change anything.",
+  "costUsd": 0.16901300000000002
+}

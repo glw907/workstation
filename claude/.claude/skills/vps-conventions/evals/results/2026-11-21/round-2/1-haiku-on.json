@@ -1,0 +1,47 @@
+{
+  "skillName": "vps-conventions",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "backup.service in this folder runs our nightly backup on the AlmaLinux VPS, and a timer fires it. The backup script takes a lock so two runs never overlap. Read the unit and tell me where the lock file should live and what the service unit should carry. Give the revised unit text; don't edit the file.",
+  "started": "2026-11-22T02:35:31Z",
+  "seconds": 13.4,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/vps-conventions"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/backup.service\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"vps-conventions\"}"
+    }
+  ],
+  "result": "The lock should move from `/run/app-backup/` to `/var/lib/app-backup/`. The current path is a bug, not just a style issue. `RuntimeDirectory=` is deleted when the unit stops, and systemd removes the lock file with it. If a run holds the lock while the directory is cleaned up, the next run can lock a fresh file and both runs proceed. Lock files belong on a persistent path, and `StateDirectory=` is the systemd way to get one.\n\nRevised unit text (not written to the file):\n\n```ini\n[Unit]\nDescription=Nightly backup of the app data\nAfter=network-online.target\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/app-backup\nStateDirectory=app-backup\nEnvironment=BACKUP_LOCK=/var/lib/app-backup/backup.lock\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectSystem=strict\nReadWritePaths=/var/lib/app-backup\n```\n\nWhat changed and why:\n\n- **`RuntimeDirectory=app-backup` becomes `StateDirectory=app-backup`.** This keeps the lock across runs and creates `/var/lib/app-backup` at start.\n- **`BACKUP_LOCK` points at `/var/lib/app-backup/backup.lock`.**\n- **Hardening added:** `NoNewPrivileges`, `PrivateTmp`, and `ProtectSystem=strict`, with `ReadWritePaths=` for the lock directory. The house rule is that every service unit carries these.\n\nThings to check before merging:\n\n- **The backup destination needs its own `ReadWritePaths=` entry.** I haven't read `/usr/local/bin/app-backup`, so I don't know where it writes. Under `ProtectSystem=strict` the backup will fail unless its output directory is listed.\n- **Pre-create the directories on the host.** A `ReadWritePaths=` entry must exist before the unit starts, or startup fails with a mount-namespacing error. `StateDirectory` covers the lock directory, but the deploy step should still create it and any other write targets so the failure mode is predictable.\n- **The script should `mkdir -p \"$(dirname \"$BACKUP_LOCK\")\"` before taking the lock.** That keeps manual runs outside systemd working. It should take the lock with `flock` on a file descriptor and never delete the lock file.\n- **The timer isn't in this folder.** If it sets `Persistent=true`, missed runs fire at boot. Add `RandomizedDelaySec=` there if it's missing.\n\nI didn't edit the file. I can apply this change once you confirm the backup's write targets.",
+  "costUsd": 0.00588619
+}

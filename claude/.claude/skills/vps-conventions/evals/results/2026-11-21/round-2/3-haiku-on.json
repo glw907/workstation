@@ -1,0 +1,47 @@
+{
+  "skillName": "vps-conventions",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Read prune-uploads.timer in this folder. It will run a weekly prune of old upload files on one of our servers, but its service isn't written yet. Until then I delete the old files with an ssh command, and auto mode keeps denying it. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+  "started": "2026-11-22T02:38:55Z",
+  "seconds": 9.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/vps-conventions"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/prune-uploads.timer\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"vps-conventions\"}"
+    }
+  ],
+  "result": "**No, don't add the ssh allow rule.** Auto mode ignores ssh allow rules, including narrow prefixes, so the classifier will keep judging each `ssh` command on its own. The rule won't unblock the deletions.\n\n**What to do instead:**\n\n1. **Write a reviewed prune script in the repo**, for example `scripts/prune-uploads.sh`. It should:\n   - Take the host and path as arguments, and print the exact files it will delete before it acts.\n   - Refuse ambiguous input: a leading-dash argument, a directory instead of a file, or a glob or pattern.\n   - Do one thing: prune old uploads.\n   - Default to a dry run, with deletion only on an explicit flag.\n2. **Add an exact `permissions.allow` rule** for the script's invocation shape, such as `Bash(scripts/prune-uploads.sh <host> <path> ...)`. Land the script and its rule together through review. The household-it `ward-mail-delete.sh` and `mx-switch.sh` scripts are the models.\n3. **Run the dry run first** and show you the list before any real deletion, as the sysadmin rules require for destructive operations.\n\n**Finish the timer as well.** The service is the real fix, and it should:\n- Call the reviewed script, or contain the prune logic directly.\n- Carry `NoNewPrivileges=yes`, `PrivateTmp=yes`, and `ProtectSystem=strict`, with `ReadWritePaths=` set to the upload directory.\n- Have that directory pre-created on the host by the deploy step. Otherwise startup fails with a mount-namespacing error before the script runs.\n\nThe timer file also needs a change. It has `Persistent=true`, which fires missed runs at boot, but no `RandomizedDelaySec=`. The conventions call for that setting on every timer.\n\nI haven't read `settings.json`, and I haven't made any changes. To write the script and the rule, I need the server's hostname and the upload path, and whether the prune should keep a retention window, such as \"older than N days\".",
+  "costUsd": 0.005411890000000001
+}

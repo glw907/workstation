@@ -1,0 +1,38 @@
+{
+  "skillName": "vps-conventions",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "Read prune-uploads.timer in this folder. It will run a weekly prune of old upload files on one of our servers, but its service isn't written yet. Until then I delete the old files with an ssh command, and auto mode keeps denying it. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+  "started": "2026-11-22T02:39:25Z",
+  "seconds": 10.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"prune-uploads*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-off/prune-uploads.timer\"}"
+    }
+  ],
+  "result": "No, don't add a broad ssh allow rule. A rule like `Bash(ssh:*)` would let Claude run any command on any host you can reach, not just the prune. Auto mode denies the command because it deletes files on a remote server, and a blanket rule would switch that check off for everything else. A rule narrow enough to cover only this command would be brittle, because it would have to match the exact host, path and age.\n\nWhat I'd do instead:\n\n1. **Write the service.** `prune-uploads.timer` has no `Unit=` line, so it will start `prune-uploads.service` once that exists. The service is the real fix. Make it a `Type=oneshot` unit that runs the delete on the server itself, for example `find <uploads-dir> -type f -mtime +N -delete`. That removes the need for ssh, and the timer then does the weekly run with no permission prompt at all.\n\n2. **Until then, make the manual delete a reviewed step.** Have Claude run the same `find` with `-print` first as a dry run over ssh, so you see the file list. Then give an explicit go-ahead for that one delete, and Claude runs it. That matches your rule of a dry run before any destructive op.\n\n3. **If you still want it unprompted in the meantime,** put the prune in a small script with the host, path and age fixed (in `~/.dotfiles/bin/.local/bin/`). Allow only that script, for example `Bash(prune-uploads-remote)`, not ssh in general.\n\nI'd skip option 3 unless the service is going to take a while, because the service replaces it anyway.\n\nI changed nothing.",
+  "costUsd": 0.0792228
+}

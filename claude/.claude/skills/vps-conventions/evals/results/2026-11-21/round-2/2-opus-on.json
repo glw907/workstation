@@ -1,0 +1,47 @@
+{
+  "skillName": "vps-conventions",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "user-data.yaml in this folder is the cloud-init file that provisions our RHEL-family VPS boxes. Read it. We want to add the `jq` package to it. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; don't edit the file.",
+  "started": "2026-11-22T02:38:20Z",
+  "seconds": 18.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/.claude/skills/vps-conventions"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-opus-on/user-data.yaml\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"vps-conventions\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"rsync|podman|presence|packages\", \"glob\": \"!user-data.yaml\", \"output_mode\": \"files_with_matches\"}"
+    }
+  ],
+  "result": "The file is short. It sets `package_update: true`, installs `git`, `podman`, and `rsync`, and enables `podman.socket` in `runcmd`. I haven't changed anything.\n\n## 1. Check the package name before adding it\n\nA wrong package name in cloud-init fails during first boot, and nobody is watching then. So confirm `jq` exists in the repos your boxes actually use:\n\n```bash\npodman run --rm almalinux:10 dnf -q list jq\n```\n\nReplace `almalinux:10` with the distro and major version your VPS image runs (for example `rockylinux:9` or `almalinux:9`). On RHEL-family systems `jq` comes from the base AppStream/BaseOS repos, so you shouldn't need EPEL. The check confirms that for your version. If it turns out a package needs an optional repo, set that repo up in `runcmd` so a failure there can't stop the core packages from installing.\n\n## 2. The change to `user-data.yaml`\n\nAdd `- jq` under `packages:` after `rsync`. That's the only edit.\n\n## 3. Servers that are already running\n\ncloud-init runs only on a server's first boot. It never re-applies to a server that's already up, so editing this file affects only new servers. The running ones need their own fix:\n\n- **Install it on the running servers.** Use your existing deploy or remediation path to run `dnf -y install jq` on each one. Make it safe to rerun: `rpm -q jq || dnf -y install jq`. If that path is a script, give it a `--check` mode that reports which servers lack `jq` without installing anything.\n- **Update the presence check in the same commit.** If your runbook or gate checks that each server has its required packages, add `jq` to that list in the same commit as the `user-data.yaml` edit. Then newly built servers and that check stay in sync. I didn't find a runbook or check like that in this folder, so it lives in another repo or doesn't exist yet. If it doesn't exist, add one.\n- **Verify on each server.** Run `rpm -q jq && jq --version` on every server. On a freshly built server, also check `/var/log/cloud-init-output.log` to confirm the package step succeeded.\n\n## Order\n\n1. Run the `dnf list` check against the right image.\n2. In one commit, edit `user-data.yaml`, add `jq` to the presence check, and add the install step to the remediation script.\n3. Run the install on the running servers, then verify each one.\n4. On the next new server, confirm cloud-init installed `jq`.\n\nIf you tell me where the runbook or deploy repo lives, I can turn this into the actual changes.",
+  "costUsd": 0.18887279999999998
+}

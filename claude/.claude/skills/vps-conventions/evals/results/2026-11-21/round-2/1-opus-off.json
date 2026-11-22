@@ -1,0 +1,38 @@
+{
+  "skillName": "vps-conventions",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "backup.service in this folder runs our nightly backup on the AlmaLinux VPS, and a timer fires it. The backup script takes a lock so two runs never overlap. Read the unit and tell me where the lock file should live and what the service unit should carry. Give the revised unit text; don't edit the file.",
+  "started": "2026-11-22T02:36:53Z",
+  "seconds": 34.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-off/backup.service\"}"
+    }
+  ],
+  "result": "I read `backup.service`. The lock should move out of the service's own `RuntimeDirectory` and into `/run/lock/`, the system's standard place for lock files.\n\n## Where the lock file should live\n\nUse **`/run/lock/app-backup.lock`**. The current path, `/run/app-backup/backup.lock`, sits in a directory that systemd owns and deletes:\n\n- **It disappears between runs.** `RuntimeDirectory=app-backup` creates `/run/app-backup` when the service starts and removes it, with everything inside, when the service stops. For a oneshot that happens after every run. If you run `app-backup` by hand outside systemd, the directory usually won't exist, so the script can't create its lock.\n- **It can let two runs overlap.** Say a manual run creates the directory and holds a lock on the file, and the timer's run starts and finishes in the meantime. When that service stops, systemd deletes the directory and the locked file. The next run creates a new file and gets a lock on it right away, while the manual run is still going.\n\n`/run/lock` avoids both problems:\n\n- It exists from boot, whether or not the unit is running.\n- No unit cleans it up.\n- It's on tmpfs, so a lock left by a crash is gone after a reboot.\n\nAlso worth knowing: systemd already stops `backup.service` from running twice at once. If the timer fires while a run is still going, nothing new starts. So the script's lock really protects against manual runs and other jobs, which is exactly when the current path fails.\n\n## What the service unit should carry\n\n```ini\n[Unit]\nDescription=Nightly backup of the app data\nWants=network-online.target\nAfter=network-online.target\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/app-backup\nEnvironment=BACKUP_LOCK=/run/lock/app-backup.lock\nNice=10\nIOSchedulingClass=idle\nTimeoutStartSec=4h\n```\n\nWhat changed and why:\n\n- **`RuntimeDirectory=` is removed.** The script doesn't need a private runtime directory now that the lock lives elsewhere. If it uses that directory for other scratch files, keep the line but add `RuntimeDirectoryPreserve=yes`. The lock still belongs in `/run/lock`.\n- **`BACKUP_LOCK` points to `/run/lock/app-backup.lock`.**\n- **`Wants=network-online.target` is added.** `After=` on its own only sets the order. It doesn't pull the target in, so the backup could start before the network is up.\n- **`TimeoutStartSec=4h` is added.** By default, systemd puts no time limit on a oneshot's start. Without a limit, a hung run would block every later nightly run forever, because systemd won't start the unit again while it's still active. Set the value comfortably above your longest normal backup.\n- **`Nice=` and `IOSchedulingClass=idle` are added.** These are optional. They keep the backup from slowing the app.\n- **There's no `[Install]` section.** That's correct as is: the timer's `[Install]` section is what enables it.\n\n## Something to check in the script\n\nThe script isn't in this folder, so I couldn't see how it takes the lock. This advice assumes it uses `flock` on the file. If it treats \"the file exists\" as \"locked\", a crash would leave a stale lock that blocks backups until someone deletes it or the server reboots. Switching to `flock` fixes that. You could also let the unit take the lock itself, with `ExecStart=/usr/bin/flock -n /run/lock/app-backup.lock /usr/local/bin/app-backup`. On AlmaLinux, SELinux labels `/run/lock` as `var_lock_t`, which a root service can write, so that's not a problem.\n\nI didn't edit `backup.service`.",
+  "costUsd": 0.1995848
+}

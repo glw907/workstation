@@ -1,0 +1,47 @@
+{
+  "skillName": "vps-conventions",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Read prune-uploads.timer in this folder. It will run a weekly prune of old upload files on one of our servers, but its service isn't written yet. Until then I delete the old files with an ssh command, and auto mode keeps denying it. Should I add an ssh allow rule for it to settings.json? If not, what should I do instead? Answer only; change nothing.",
+  "started": "2026-11-22T02:39:36Z",
+  "seconds": 16.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/.claude/skills/vps-conventions"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/prune-uploads.timer\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"vps-conventions\"}"
+    }
+  ],
+  "result": "No, an ssh allow rule won't help. Auto mode ignores allow rules for `ssh`, even narrow ones like `ssh host rm ...`. The classifier still judges each ssh command by what it does, and deleting files on a remote server is exactly the kind of step it won't clear. The rule would sit in `settings.json` and change nothing.\n\n**What to do instead:** put the deletion in a reviewed script in the repo and give that script an exact allow rule. Auto mode does honor exact rules for repo scripts.\n\n- **Script:** something like `scripts/prune-uploads.sh` that does one thing.\n  - It takes the host and the exact files to delete as arguments.\n  - It prints those targets before it deletes anything, so the transcript shows exactly what changed.\n  - It refuses anything ambiguous: a file name starting with a dash, a folder, or a wildcard pattern.\n- **Rule:** add one `permissions.allow` entry for each way you call the script, matching that call exactly.\n- **Review:** the script and its rule go in together, through one reviewed pull request. household-it's `scripts/ward-mail-delete.sh` and `scripts/mx-switch.sh` already work this way and are good templates.\n\nThis also helps with the service you haven't written. Once the script is solid, the service can run the same logic on the server itself, so the manual step and the scheduled job can't drift apart.\n\nTwo things in the timer itself, for when you write the service:\n- It has no `RandomizedDelaySec=`, which our conventions expect on every timer.\n- `Persistent=true` means a run missed while the server was off happens at the next boot. Make sure you're comfortable with a prune running then.\n\nI haven't changed anything.",
+  "costUsd": 0.18895040000000002
+}

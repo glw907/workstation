@@ -1,0 +1,43 @@
+{
+  "skillName": "vps-conventions",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "backup.service in this folder runs our nightly backup on the AlmaLinux VPS, and a timer fires it. The backup script takes a lock so two runs never overlap. Read the unit and tell me where the lock file should live and what the service unit should carry. Give the revised unit text; don't edit the file.",
+  "started": "2026-11-22T02:35:45Z",
+  "seconds": 17.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*backup*\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)flock|lock\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-off/backup.service\"}"
+    }
+  ],
+  "result": "The lock path is already right: `/run/app-backup/backup.lock`, set through `BACKUP_LOCK`, with `RuntimeDirectory=app-backup` creating the directory. Three things in the unit need changing.\n\n**Where the lock lives**\n\nKeep it in `/run/app-backup`. `flock` locks are released by the kernel when the holding process dies, so a crash never leaves a stale lock. `/run` is also tmpfs, so it is cleared at boot anyway.\n\n**What the unit should change**\n\n1. **`RuntimeDirectoryPreserve=yes`.** By default systemd deletes `/run/app-backup` when the service stops. If that happens while a manual run of the script holds the lock, the lock file is unlinked under it, and a later run can lock a new file at the same path and overlap. Preserving the directory keeps one lock file for the life of the boot. The script should also never delete the lock file itself.\n2. **`TimeoutStartSec=`, set explicitly.** A hung backup holds the lock forever unless systemd kills it. The default start timeout is 90 seconds, which a nightly backup will exceed, so it must be set. The value below is a placeholder; set it above your worst-case run time.\n3. **`Wants=network-online.target`.** `After=` only orders the unit. Without `Wants=` the unit does not pull in the network target, so the backup can start before the network is up.\n\n**Revised unit text**\n\n```ini\n[Unit]\nDescription=Nightly backup of the app data\nWants=network-online.target\nAfter=network-online.target\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/app-backup\nRuntimeDirectory=app-backup\nRuntimeDirectoryPreserve=yes\nEnvironment=BACKUP_LOCK=/run/app-backup/backup.lock\nTimeoutStartSec=6h\n```\n\n**Two notes**\n\n- The timer alone cannot overlap this unit. systemd does not start a second instance of an already-active oneshot. The lock protects against other invocations of `/usr/local/bin/app-backup`, such as a manual run or a cron entry.\n- I could not see `/usr/local/bin/app-backup` from this folder, so I have not confirmed that the script reads `BACKUP_LOCK` or takes the lock with `flock`. If it uses a pidfile or `mkdir`-style lock instead, the stale-lock reasoning above changes. I have not edited `backup.service`.",
+  "costUsd": 0.00549187
+}

@@ -1,0 +1,42 @@
+{
+  "skillName": "vps-conventions",
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "user-data.yaml in this folder is the cloud-init file that provisions our RHEL-family VPS boxes. Read it. We want to add the `jq` package to it. What else has to happen so the servers already running get it too, and how should we check the package name first? Plan only; don't edit the file.",
+  "started": "2026-11-22T02:37:57Z",
+  "seconds": 10.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/.claude/skills/vps-conventions"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-sonnet-on/user-data.yaml\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"vps-conventions\"}"
+    }
+  ],
+  "result": "**What I read:** `user-data.yaml` is a short `#cloud-config`. It sets `package_update: true`, installs `git`, `podman` and `rsync`, and runs one `runcmd` that enables `podman.socket`. The change itself is one line: add `  - jq` to `packages:`, in the same style as the others.\n\n**Getting it onto servers that are already running**\n\ncloud-init runs at first boot only, so editing this file does nothing for existing boxes. They need a live remediation:\n\n1. Run `sudo dnf install -y jq` on each running server. Because it is an install, it is idempotent and safe to repeat. Show a `--assumeno` dry run first, per the destructive-op rule, even though an install is low risk.\n2. Update the runbook's presence gate in the same commit as the `user-data.yaml` change. Add `jq` to whatever check verifies a box's packages, so a fresh provision and the gate can't drift apart.\n3. Run the remediation through a reviewed script in the repo, not ad hoc `ssh`. Auto mode ignores ssh allow rules, so the classifier would judge each raw `ssh` command separately.\n   - The script takes the target hosts as arguments and prints them before it acts.\n   - It does only the install, and it has a `--check` mode that reports whether `jq` is present without installing.\n   - It gets an exact `permissions.allow` rule, and the script and rule land together through review.\n4. Verify afterwards with `rpm -q jq` or `jq --version` on each host.\n\nI haven't found where the runbook, the gate or any existing remediation script lives, because this folder only has `user-data.yaml`. Before the build I'd locate them, probably in the dubplate or household-it repo. Tell me if you already know where they are.\n\n**Checking the package name first**\n\nA guessed name in the first-boot packages list can brick an unattended provision, so prove it against the real target repos before editing:\n\n```\npodman run --rm almalinux:10 dnf -q list jq\n```\n\n- Use the image that matches the fleet's actual release. `almalinux:10` is the skill's example, so confirm which RHEL-family version the VPS boxes run.\n- If the VPS images enable extra repos, such as EPEL or CRB, check against those too. `jq` is in the AppStream repo on RHEL 8, 9 and 10, so I expect it to resolve, but run the check rather than rely on that.\n- Run `dnf list` on one live box as well, so the check covers its actual repo configuration.\n\n**Order of work**\n\n1. Run the name check.\n2. In one commit, add `jq` to `user-data.yaml` and update the presence gate.\n3. Add the remediation script, its `--check` mode and its allow rule, and send them through review.\n4. Run the remediation on the live boxes, then verify.\n\nI haven't edited anything.",
+  "costUsd": 0.0910327
+}
