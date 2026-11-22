@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:04:59Z",
+  "seconds": 14.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Dry run: retire `site-staging`\n\nNothing was looked up live and nothing was deleted. Every id below is a placeholder to fill from the step 1 inventory. This is the plan, not a record of what exists.\n\n## 1. Inventory (read-only)\n\n| Item | Check | Sole-owner test |\n|---|---|---|\n| Worker `site-staging` | `wrangler deployments list`, bindings in its config | Does production bind to it, or does a service binding or cron point at it? |\n| D1 database `<d1-id>` | `wrangler d1 info`, table row counts | Does the production Worker bind this same database? If so, it stays. |\n| Custom domain `<hostname>` | Workers custom-domain record and its DNS record | Is it a staging subdomain on the production zone, or a whole domain? |\n| Builds trigger | Workers Builds on the repo | Does it also build production? |\n| Secrets | `wrangler secret list --name site-staging`, plus the registry | Is each key issued only for staging? |\n| Other bindings | R2, KV, Queues, Turnstile, Access app on the hostname, Email Routing | Anything found goes on the list. |\n| Repo | Branches, stashes, worktrees, open PRs, other sessions | `site-staging` is probably a config in the site's repo, not its own repo. If so, the repo is **not** deleted. |\n| References | grep `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, initiatives, registry | Any note using staging as a test target needs a new target. |\n\n## 2. Archive and prove it\n\n1. Write `site-staging-2026-11-21.tar.age`, encrypted to the workstation key. It holds the D1 SQL export, the Worker config, and any R2 objects, plus issues and PRs as JSON only if the repo is retired. No secret values go in.\n2. Restore it in an empty scratch directory: decrypt, then load each SQL export into SQLite and compare row counts to step 1.\n3. Store it at `~/Documents/retired-projects/` and `servers-archive/retired-projects/` in R2, then run `rclone check`.\n4. Record the sha256.\n5. Stop on any failed or empty export.\n\n## 3. Approvals\n\nThese are your calls, and I need typed words for each.\n\n1. **D1 `<d1-id>` delete.** Options: delete after the archive is proven, or keep it. Recommend delete, provided it is not shared with production.\n2. **Domain fate.**\n   - If `<hostname>` is a staging subdomain on a live zone, remove only its record. The zone stays, so there is nothing to park. Recommend this.\n   - If it is a whole domain, choose between keeping it, parked, or letting it lapse with auto-renew off. That is your call, and I have no recommendation without knowing the domain.\n3. **Worker delete.** Recommend delete once traffic is off.\n4. **Repo.** Recommend keep, if the Worker is only a config in the site repo. I would remove the staging config and its deploy trigger in a PR.\n\n## 4. Teardown, in this order\n\nEach id is re-inventoried first, and I stop if it is no longer sole-owner.\n\n1. Remove the custom domain `<hostname>` and its DNS record.\n2. Delete Worker `site-staging`, then its Builds trigger, then D1 `<d1-id>`, plus any Turnstile or R2 found.\n3. Revoke each staging-only key at its issuer, since deleting a Worker secret revokes nothing. Then remove the secrets from the store and registry, and trash the Proton Pass folder through `claude-pass`.\n4. Parking applies only if a whole domain is kept: no Email Routing, `MX 0 .`, `v=spf1 -all`, `v=DMARC1; p=reject;` at the apex.\n5. Repo and checkout deletion is skipped unless the repo turns out to be staging-only.\n\n## 5. Close\n\n- Clear the references from step 1.\n- Close the initiative, if one exists.\n- Add a README row beside the archives with the date, sha256, and what went.\n- Rerun the Cloudflare inventory and show it empty for `site-staging`.\n\n## Open questions\n\n1. Which site and hostname is this?\n2. Does production share the D1 database or the zone?\n\nReply with those answers and I'll run step 1 live. That still deletes nothing.",
+  "costUsd": 0.08900350000000001
+}

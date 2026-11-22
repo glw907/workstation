@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:10:03Z",
+  "seconds": 13.2,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    }
+  ],
+  "result": "This directory is a scratch folder with only the workspace `CLAUDE.md` and skills. It has no demo site repo, so I can't see its hosting or contents. Here's the plan in general terms. Tell me the repo path and where the site runs, and I'll tighten it into a specific checklist.\n\n**Rough shape of the work, in order**\n\n1. **Confirm scope and the repo's state (read-only).** Run `claude-worktree-busy <path>` first so no other session is working in it. Check for uncommitted changes, unmerged branches, and open PRs or issues that shutdown would strand.\n\n2. **Inventory what's live.** A shutdown has to cover every place the site touches:\n   - **Hosting:** the Worker, Pages project, or other host. Check `~/.claude/docs/cloudflare-estate-inventory.md` for where it lives.\n   - **DNS and mail:** the custom domain's records and any mail routes on it. Use the `runbook` skill to find the right doc.\n   - **Credentials:** tokens, secrets, and deploy keys tied to the site. Check Proton Pass with `claude-pass`, plus `~/.local/secrets` and `wrangler secret list`, by name only.\n   - **Automation:** GitHub Actions, scheduled jobs, webhooks, and monitors or alerts that would page on a dead site.\n   - **Other sites:** any links or embeds from other properties.\n\n3. **Decide what to keep.** Snapshot the repo before anything is deleted, for example a `git bundle` plus a tag, and export any content or data the site held. Keep the snapshot somewhere durable.\n\n4. **Take the site down.** Remove the DNS record or point it at a short \"retired\" page. Delete or disable the hosting project, the Actions workflows, and the cron jobs. Revoke the tokens the site used, and remove the matching secrets from Workers and `~/.local/secrets`. Each credential change goes through `claude-pass` and the `secrets.md` flow.\n\n5. **Handle the repo.** The safer default is to archive it on GitHub, not delete it. Add a README note that says the site is retired and where the snapshot lives. Remove the local clone only if you say so.\n\n6. **Clean up records.** Close or update any initiative record with `log-project`, and drop the site from backlogs and dashboards.\n\n7. **Verify.** Check that the URL is gone or redirected, the DNS record resolves as intended, no scheduled job runs, and the revoked tokens fail.\n\n**Decisions I'd need from you before any change**\n\n- Delete the repo or archive it. I'd recommend archive.\n- Keep the domain retired with a notice page, or drop the record entirely.\n- How long to keep the snapshot.\n\nDeleting the site, removing DNS, deleting the repo, and revoking credentials are hard to reverse or outward-facing, so I'd show you a dry run of each and wait for your go-ahead before running any of them.",
+  "costUsd": 0.0047696
+}

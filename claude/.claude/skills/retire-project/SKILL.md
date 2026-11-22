@@ -51,8 +51,10 @@ Rerun the inventory for each id before deleting it, and stop if it's no longer s
 3. Stop vendors: release numbers, and revoke each key at its issuer. Deleting a Worker secret
    revokes nothing. Then remove the secrets from the store and the registry, and trash the
    project's folder in the `Projects` vault through `claude-pass` (`proton-pass` skill).
-4. A kept domain gets parked: no Email Routing (the dashboard turns it off; no workstation token can), `MX 0 .`, `v=spf1 -all`, and `v=DMARC1; p=reject;`
-   at the apex. A domain with no use lapses at expiry with auto-renew off, and stays parked until then.
+4. A domain with no use lapses: turn auto-renew off and let it expire, parked until then. That is
+   the plan for it, not one option of two; keep renewing only a domain Geoff names a use for.
+   Parking means no Email Routing (the dashboard turns it off; no workstation token can), `MX 0 .`,
+   `v=spf1 -all`, and `v=DMARC1; p=reject;` at the apex, and a kept domain gets the same.
 5. Delete the GitHub repo (`gh auth refresh -s delete_repo` if needed), then the local checkout and
    its worktrees.
 

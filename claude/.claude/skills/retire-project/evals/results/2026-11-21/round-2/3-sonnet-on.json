@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:08:45Z",
+  "seconds": 12.6,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "# Plan: archive and proof for a demo repo with one D1 database\n\nNothing has run. Every step below is a plan. The order comes from the `retire-project` skill, and the inventory comes first because it decides what the archive holds.\n\n## What goes in the archive\n\nOne file, `<project>-2026-11-21.tar.age`, encrypted with the workstation age key. It holds:\n\n1. **A git bundle.** `git bundle create --all`, then `git bundle verify`. A bundle doesn't carry uncommitted work, so I first check each worktree's `git status`, and anything uncommitted gets committed or dropped. I also check for unpushed branches and stashes before bundling.\n2. **The D1 export.** `wrangler d1 export` with schema and data, as plain SQL. If the export fails or comes back empty, I stop.\n3. **Issues and PRs as JSON.** These come from `gh`.\n4. **The Worker config.** This is the wrangler config plus the deployed bindings and routes.\n5. **R2 objects.** I include these only if the inventory finds an R2 bucket. A demo with one D1 probably has none.\n\n**Secret values are never archived.** Only secret names appear, from `wrangler secret list` and the registry.\n\n## How the archive is proven\n\nAll of this happens before any delete.\n\n1. Put the file in a new, empty scratch directory. Keep any scripts I write in a different directory, and pass paths as arguments.\n2. Decrypt with the workstation key and extract.\n3. Run `git bundle verify`, clone the bundle, and confirm the cloned HEAD matches the repo's HEAD.\n4. Load each SQL export into a fresh SQLite database and confirm it loads without errors.\n5. **My addition, not in the skill:** compare each table's row count in the restored SQLite against the live D1 (`SELECT count(*)` per table). This catches a truncated export that still loads cleanly.\n6. Store the file at `~/Documents/retired-projects/` and at `servers-archive/retired-projects/` in R2. Confirm the R2 copy with `rclone check`.\n7. Record the file's sha256 in the retirement record.\n\nAny failed or empty step stops the whole process.\n\n## What happens after the proof\n\nThe archive doesn't authorize anything by itself. Step 3 puts a dry run in front of you in your terminal, listing each delete by id, with a recommendation on each irreversible step. I delete nothing until you approve it in typed words. Teardown then follows the skill's order: take traffic off, delete the Worker, then the D1, then vendor keys, then the GitHub repo and local checkout.\n\n## Open questions for you\n\n- Does the demo have a custom domain? If so, its fate (park or let lapse) is your call.\n- Is the D1 database shared with any other project? If so, it stays.\n\nI'll find both out in the read-only inventory when you say go.",
+  "costUsd": 0.08677750000000001
+}

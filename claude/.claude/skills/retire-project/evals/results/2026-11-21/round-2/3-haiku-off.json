@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:08:31Z",
+  "seconds": 14.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "I haven't run anything, and I haven't opened the repo or the Cloudflare inventory, so this plan is generic until I can see the actual project. Also, `/retire-project` isn't installed in this session, so I'm treating this as a plain request.\n\n## What goes in the archive\n\n**1. Repo (git bundle plus working tree)**\n- `git bundle create` with all branches and tags, so history survives even if the remote goes away.\n- The last commit SHA, branch and tag list, and any uncommitted or ignored files worth keeping (listed by name, not copied wholesale).\n- Any secret or `.env` files are excluded. Their values stay in Proton Pass, and the archive records only item names.\n\n**2. D1 database**\n- Full export: `wrangler d1 export <db> --remote --output <file>` (schema and data as SQL).\n- Schema-only export as a separate file, so the structure is readable without loading data.\n- Per-table row counts and the database name, UUID, and size from `wrangler d1 info`.\n\n**3. Deployment facts**\n- The Wrangler config (binding names, database ID), the deployed Worker's source, and its last version ID.\n- Routes, custom domains, and DNS records that point at it, and any Access apps that front it.\n- Secret names only, from `wrangler secret list`.\n\n**4. Manifest**\n- A `RETIRED.md` in the archive listing each file, its SHA-256, the date, the source commit, and the restore steps.\n\n## How the archive is proven before anything is deleted\n\nEach check must pass and be recorded in the manifest. Any failure stops the retirement.\n\n**Repo**\n- `git bundle verify` passes.\n- Clone from the bundle into a new empty directory. Its HEAD SHA, tag list, and `git ls-tree -r HEAD` output match the source.\n\n**D1 export**\n- The export file's SHA-256 is recorded, and the file is copied to a second location with its hash checked after the copy.\n- Restore test: create a scratch D1 database, import the export, then compare against live:\n  - Schema: diff `sqlite_master` from both.\n  - Data: row counts per table, plus an ordered checksum per table (for example, a hash of the rows in primary-key order).\n- Delete the scratch database after the comparison, and confirm the deletion by name.\n\n**Worker**\n- The source bundle matches the deployed version ID, and the version still exists in `wrangler deployments list`, so it can be redeployed.\n\n**Stop point**\n- The archive, hashes, and restore test results go in the manifest, and the results are shown to Geoff.\n\n## Deletion order (after Geoff approves the proven archive)\n\nEach step gets a dry run or confirmation first, because all of them are hard to reverse.\n\n1. Remove routes and DNS records, and detach or delete the Access app, so nothing points at the Worker.\n2. Delete the Worker.\n3. Delete the D1 database. This is irreversible, so it is the last data step.\n4. Archive or delete the remote repo, depending on what Geoff chooses.\n5. Update the project's initiative record and any inventory entries.\n\n## Open items before execution\n- The repo path and the D1 database name.\n- Whether the Worker has a custom domain or an Access app.\n- Whether the remote GitHub repo should be archived (read-only) or deleted. I'd recommend archiving.",
+  "costUsd": 0.00463157
+}

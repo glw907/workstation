@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "/retire-project the old staging Worker for a site, named `site-staging`, with its D1 database and one custom domain. Give me the plan as a dry run only. Look nothing up live and delete nothing.",
+  "started": "2026-11-22T03:04:16Z",
+  "seconds": 27.4,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": true,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "**Dry run only.** I ran no lookups, wrote no archive, and deleted nothing.\n\n**Scope:** I read the request as retiring the staging environment of one site: the Worker `site-staging`, its D1 database, and its one custom domain. The production Worker, the repo, and the local checkout stay. If you meant the whole site, the repo deletion and git bundle steps apply, and I'll redo the plan.\n\n## 1. Inventory (not run)\n\nThe live, read-only inventory runs at the real run. These are the checks it will make:\n\n| Item | Check | Sole owner? |\n|---|---|---|\n| Worker `site-staging` | routes, bindings, and which config deploys it | Unknown until checked |\n| Custom domain | hostname, and whether it sits on a zone that production also uses | If it's a subdomain of a shared zone, the zone stays |\n| DNS records for that hostname | record list | Sole only if staging-only |\n| D1 database | whether any other Worker binds the same database ID | Unknown |\n| R2, KV, Queues, Turnstile, Access, Email Routing, Builds triggers | attached to the staging Worker or hostname? | Unknown |\n| Worker secrets | `wrangler secret list --name site-staging` | Shared if production uses the same key |\n| References | grep `~/.dotfiles`, `~/.claude/docs`, `~/Projects/*/CLAUDE.md`, the initiatives repo, and the registry for the Worker name and hostname | n/a |\n| Registrar | expiry and auto-renew, only if the domain is dedicated to staging | n/a |\n\n## 2. Archive (not written)\n\n- **File:** `<site>-staging-<date>.tar.age`, encrypted with the workstation key.\n- **Contents:** D1 SQL export, the Worker config as deployed, and the secret names only, never values.\n- **Git bundle:** skipped under this scope, since the repo stays.\n- **Restore test:** decrypt to a scratch directory, load the SQL export into SQLite, and stop on any failed or empty export.\n- **Stores:** `~/Documents/retired-projects/` and `servers-archive/retired-projects/` in R2, confirmed with `rclone check`.\n- **Record:** the sha256 goes in the retirement record.\n\n## 3. Approval questions (none asked yet)\n\n- **Q1, scope:** staging only, or the whole site? *Recommend staging only.*\n- **Q2, domain:** park it and let it lapse with auto-renew off, keep it active, or release it now? *Recommend park, then lapse with auto-renew off, unless you want to keep the name.* Parking applies only to a dedicated domain, not a subdomain of a shared zone.\n- **Q3, D1 deletion:** delete the staging database once the archive restore test passes? *Recommend yes.*\n- **Q4, vendor keys:** revoke at each issuer any key used only by staging? *Recommend yes. Keys shared with production stay.*\n- **Q5, Proton Pass:** trash the staging items through `claude-pass`? *Recommend yes for staging-only items. The site's folder stays if it holds production items.*\n\n## 4. Teardown (planned, after approval)\n\n1. Remove the custom domain binding and its DNS records.\n2. Delete the Worker `site-staging`, then any staging-only Turnstile widget, Builds trigger, D1 database, and R2 bucket.\n3. Revoke staging-only keys at their issuers, then delete the Worker secrets, then remove them from the store and registry.\n4. If the domain is kept, park it: Email Routing off in the dashboard, `MX 0 .`, `v=spf1 -all`, and `v=DMARC1; p=reject;` at the apex.\n5. Skipped under this scope: repo, local checkout, and worktrees.\n\nEach step reruns the inventory for its ID and stops if the item is no longer sole-owned.\n\n## 5. Close (planned)\n\nClear the references found in step 1, close the initiative with `log-project`, add a row to `README.md` beside the archives with the date, sha256, and what went, then rerun the Cloudflare inventory and show the staging items empty.\n\n**Next:** say \"run it\" and I'll start the live inventory and the archive. Nothing is deleted before you answer the questions in section 3.",
+  "costUsd": 0.006404170000000001
+}

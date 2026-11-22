@@ -1,0 +1,33 @@
+{
+  "skillName": "retire-project",
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "We're done with an old demo site and its repo. What would shutting it down involve, roughly? Plan only; change nothing.",
+  "started": "2026-11-22T03:10:54Z",
+  "seconds": 15.8,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"demo\", \"path\": \"/var/home/glw907/.claude/docs\", \"-i\": true, \"output_mode\": \"content\", \"head_limit\": 40}"
+    }
+  ],
+  "result": "I couldn't read the estate docs from this session, so I can't tell which demo site you mean. Here's the general shape for your setup. Once you name the site, I can check each step against what actually exists. I haven't changed anything.\n\n**1. Take stock**\n- List everything the site touches: the Worker or Pages project, the custom domain and DNS records, any D1, KV, or R2 storage, Access apps, Turnstile widgets, and email routes.\n- List its credentials: Workers secrets, GitHub Actions secrets, API tokens made just for it, and its Proton Pass items.\n- Check `~/.claude/docs/cloudflare-estate-inventory.md` and the household-it runbook for anything else that points at it, like monitors, alerts, or links from your other sites.\n- Check that no other worktree has a session running in the repo.\n\n**2. Save what's worth keeping**\n- Export any data you want from its storage.\n- Leave the repo archived rather than deleted, unless you'd rather it be gone completely.\n\n**3. Take it offline, from the outside in**\n- Remove the custom domain and its DNS records first, or point the domain at a \"retired\" page or redirect if people still visit it.\n- Delete the Worker or Pages project, then its storage, Access apps, and Turnstile widgets.\n- Turn off any CI deploys and scheduled jobs so nothing rebuilds it.\n\n**4. Remove its credentials**\n- Revoke any API tokens made just for it, at Cloudflare and anywhere else.\n- Delete its Actions secrets, entries in the age store, and lines in `~/.local/secrets`.\n- Mark its Proton Pass items retired rather than deleting them outright, then run `check-drift` to confirm nothing is left over.\n\n**5. Retire the repo**\n- Archive it on GitHub so it becomes read-only.\n- Remove the local checkout and any worktrees from `~/Projects/`, after a dry-run listing.\n\n**6. Update the records**\n- Update the Cloudflare inventory, the household-it runbook, and any initiative record so they no longer list it.\n\nSteps 3 and 4 can't be undone, so I'd show you a list of exactly what each one deletes before running it. Which site is it?",
+  "costUsd": 0.1591974
+}

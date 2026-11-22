@@ -1,0 +1,26 @@
+{
+  "skillName": "retire-project",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "/retire-project a small demo repo with one D1 database. What goes in its archive, and how is the archive proven before anything is deleted? Plan only; run nothing.",
+  "started": "2026-11-22T03:08:58Z",
+  "seconds": 14.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [],
+  "toolCalls": [],
+  "result": "`/retire-project` isn't installed in this session, so it didn't run. I've treated your message as a plain request. Nothing below has been run, and I haven't read the repo, so the plan is generic and the details need confirming against it.\n\n## What goes in the archive\n\nOne directory, named for the project and date, holding:\n\n1. **D1 data export.** `wrangler d1 export <db> --remote --output=data.sql` gives schema plus rows. It briefly blocks writes while it runs.\n2. **D1 schema-only export.** The same command with `--no-data`, so the schema can be read without the data.\n3. **Migrations folder and `wrangler.toml`.** These show how the database was built and what it was bound to.\n4. **Source.** A `git bundle` of all refs, plus the final commit hash. Any unpushed or dirty work gets committed or noted first.\n5. **Cloudflare inventory.** Worker name, routes, custom domains, DNS records, Access apps, and the D1 database ID and name, taken from the API or `wrangler` output.\n6. **Secret names only.** Worker secret names, and which Proton Pass items and age-store entries back them. No values.\n7. **`MANIFEST.md`.** Why it was retired, the date, the row count per table, the `sha256` of every file, and the restore steps.\n\nIf the demo data is anything but throwaway, the archive should be encrypted through the workstation age store. I'd confirm that with you rather than guess.\n\n## How the archive is proven before anything is deleted\n\n1. **Freeze writes.** Make sure nothing writes to the D1 during the check, so the counts can be compared.\n2. **Restore into a scratch database.** In a new, empty directory, import `data.sql` into a local D1 or plain SQLite. Run `PRAGMA integrity_check` and `foreign_key_check`.\n3. **Compare against the live database.**\n   - Row counts per table must match.\n   - A content hash per table (a hash over ordered rows) must match.\n   - The schema (`sqlite_master`) must match.\n4. **Check the other files.**\n   - `git bundle verify` passes.\n   - Every checksum in the manifest matches.\n   - The bundle clones into a fresh directory.\n5. **Re-fetch from the final storage location.** Copy the archive back from where it will live, and re-run the checksums on that copy. A copy that was never read back isn't proven.\n6. **Record the D1 Time Travel bookmark** as a short-lived safety net. It is not the archive.\n\n## Then deletion\n\nI'd show a dry-run list of what will be deleted, in this order: routes and DNS, Worker, D1 database, secrets, then the repo and any registry or manifest entries. I would stop there for your go-ahead, given the destructive-op rule, and delete only after you approve. A final read-back that the resources are gone closes it out.\n\n## Open questions for you\n\n- Where should the archive live?\n- Does it need encryption?\n- Is the repo being deleted, or only archived on GitHub?",
+  "costUsd": 0.0822155
+}
