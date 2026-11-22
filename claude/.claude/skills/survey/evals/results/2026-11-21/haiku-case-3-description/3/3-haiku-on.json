@@ -1,0 +1,20 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "started": "2026-11-22T00:50:42Z",
+  "seconds": 19.3,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "I haven't changed anything yet. Here is what I'd do, in order.\n\n**1. Log the correction.** Survey's Corrections section requires this for a commit-message wording fix. I'd write one file to `/var/home/glw907/Projects/survey-notes/corrections/`. The name follows `<YYYY-MM-DD>T<HHMMSS>-<host>.md`, so it would be `2026-11-21T<HHMMSS>-pavilion.md`, with the time taken from `date +%FT%H%M%S` when I write it. The host is `pavilion`, from the session hook.\n\nThe file contents:\n- **Frontmatter:** `date: 2026-11-21`, `host: pavilion`, `repo:` the repo the commit lives in (I'll confirm it first, since this directory isn't a git repo), `audience: commit message`, and `register: commit-and-pr.md`.\n- **Before:** `This change seamlessly streamlines the gate.`\n- **After:** `This change makes the gate faster.`\n- **Context:** the commit's subject line only, with no paths, secrets, or other personal details.\n- **Reason:** `not stated`. You gave no reason, and Survey says I must not supply one.\n\nThen I'd run these four commands in order:\n1. `git -C /var/home/glw907/Projects/survey-notes add corrections/<file>`\n2. `git -C /var/home/glw907/Projects/survey-notes commit -m \"Log a correction\" -- corrections/<file>`\n3. `git -C /var/home/glw907/Projects/survey-notes pull --rebase`\n4. `git -C /var/home/glw907/Projects/survey-notes push`\n\nIf `survey-notes` is missing, I'd run `gh repo clone glw907/survey-notes` into that path first. If the write or clone fails, I'll say so and skip the log. A failed pull or push leaves the commit local and I'll carry on.\n\n**2. Redo the commit.** I'd first find the repo that holds the commit and check whether it has been pushed.\n- If it is unpushed, `git commit --amend -m \"<new message>\"` replaces it.\n- If it has been pushed, amending means a force push. I'd stop and ask you before doing that.\n\n**Two things to settle before I amend:**\n- Your global CLAUDE.md asks for commit subjects in the imperative mood. \"This change makes the gate faster.\" is not imperative. The imperative form would be `Make the gate faster.` Do you want that, or your wording as written?\n- The commit body, if there is one, may also contain filler. I'd check it against the same rules before amending.",
+  "costUsd": 0.0024618
+}

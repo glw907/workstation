@@ -1,5 +1,11 @@
 # Register: agent-facing instructions
 
+Contents:
+
+- [What the standard asks for](#what-the-standard-asks-for)
+- [Exemplars](#exemplars)
+- [Off-voice contrast](#off-voice-contrast)
+
 The reader is Claude or another model: a CLAUDE.md, a skill, an agent definition, a hook
 message. Applies to every file whose audience is a model executing a task, not a human reading
 prose.
@@ -84,8 +90,8 @@ pages in shipped builds.
 A rule with its reason in the same breath, no hedging (be clear and direct; give the why):
 
 ```
-When a pass adds a diagnosable code path, give it a named log event rather than a bare console
-call, and update the reference table in the same pass. The logger is internal and its API is
+When a change adds a diagnosable code path, give it a named log event rather than a bare console
+call, and update the reference table in the same change. The logger is internal and its API is
 free to grow, but the event names are the public contract, so they must stay in sync with the
 docs.
 ```

@@ -1,0 +1,21 @@
+{
+  "case": 4,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Write me a systemd service and timer pair that runs /usr/local/bin/nightly-backup every night at 2:00 local time, and say where each file goes.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:37:42Z",
+  "seconds": 15.0,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "Both files are system units. Per your dotfiles rule, they go in `~/.dotfiles/bluefin/etc/systemd/system/` first and reach `/etc/systemd/system/` from there.\n\n`nightly-backup.service`:\n\n```ini\n[Unit]\nDescription=Nightly backup\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/nightly-backup\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectSystem=strict\n# Replace with the directories nightly-backup writes to. Each must exist\n# before the unit starts, or startup fails with a mount-namespacing error.\nReadWritePaths=/var/backups\n```\n\n`nightly-backup.timer`:\n\n```ini\n[Unit]\nDescription=Run nightly-backup at 02:00\n\n[Timer]\nOnCalendar=*-*-* 02:00:00\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n```\n\nI couldn't see what the script writes, so `ReadWritePaths=/var/backups` is a placeholder. If the script reads or writes outside that path, `ProtectSystem=strict` will make it fail. Check that path before you enable the timer.\n\n`Persistent=true` runs a missed backup at the next boot if the machine was off at 2:00. I left out `RandomizedDelaySec` because you asked for 2:00 exactly.\n\nTo install after the files are in the dotfiles tree:\n\n1. Run `stow -R bluefin`, or copy the files to `/etc/systemd/system/` if that package isn't stowed.\n2. Run `sudo -A systemctl daemon-reload`.\n3. Run `sudo -A systemctl enable --now nightly-backup.timer`.\n4. Run `systemctl list-timers nightly-backup.timer` to confirm the next run time.\n\nI haven't created or installed anything. Say the word and I'll write the files and run those steps, once you've given me the real write paths.",
+  "costUsd": 0.10267899999999999
+}

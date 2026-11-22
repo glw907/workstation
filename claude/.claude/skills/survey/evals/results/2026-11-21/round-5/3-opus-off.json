@@ -1,0 +1,17 @@
+{
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:36:23Z",
+  "seconds": 52.7,
+  "exitCode": 0,
+  "listed": [],
+  "invoked": [],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "I can't tell you exactly yet. The procedure for this lives in a skill that isn't on disk.\n\nMy writing-voice instructions say to log a wording correction from you \"per the `survey` skill's 'Corrections' section.\" That skill is listed in `~/.dotfiles/claude/.claude/tooling/vendored-skills.json:26` (glw907/survey at v1.7.0). But `~/.dotfiles/claude/.claude/skills/survey/` doesn't exist, and neither does `~/.claude/skills/survey/`. Nothing else on the workstation has a \"Corrections\" section I could use instead. So I don't know the file's name, where it goes, or what format it takes, and I won't make one up. I also won't save this as a Claude memory file, because the instructions send it to the survey skill's log, not to memory.\n\nHere's what I'd do, in order:\n\n1. Run `claude-tooling-sync verify` to confirm the survey skill is missing and see why. I would not run `update-skills survey` without asking you. It fetches the default branch, which would move the skill off the v1.7.0 tag it's pinned to.\n2. Once the skill is back, read its \"Corrections\" section and follow it exactly. Then I'd tell you the file and entry before writing it. The entry would at least contain your before and after (\"This change seamlessly streamlines the gate.\" → \"This change makes the gate faster.\"), today's date (2026-11-21), and the rule behind it. \"Seamlessly\" and \"streamlines\" are filler that say less than the plain claim.\n3. Redo the commit with `git commit --amend -m \"<new message>\"`, but only if it hasn't been pushed. If it has, I'd ask you first, because fixing it would mean rewriting a pushed branch.\n\nThere's one more gap. My working directory isn't a git repository, so I can't see which repo that commit is in. Which repo is it? And should I go ahead with step 1?",
+  "costUsd": 0.4448024
+}

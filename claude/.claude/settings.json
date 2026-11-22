@@ -218,7 +218,7 @@
           },
           {
             "type": "command",
-            "command": "~/.local/bin/claude-merge-guard",
+            "command": "~/.local/bin/claude-git-guard",
             "timeout": 30,
             "onFailure": "block"
           }

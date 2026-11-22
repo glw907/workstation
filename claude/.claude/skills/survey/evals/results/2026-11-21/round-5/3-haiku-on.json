@@ -1,0 +1,21 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:34:39Z",
+  "seconds": 16.7,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "I haven't changed anything yet. Here is what I'd do, in order.\n\n**1. Log the correction.** Survey's `Corrections` rule requires this before I go on. I'd write one file to `/var/home/glw907/Projects/survey-notes/corrections/`, named from the current time and host. Today that's `2026-11-21T<HHMMSS>-pavilion.md`, with the time taken from `date +%FT%H%M%S` when I write it.\n\nThe file would hold:\n- **Frontmatter:** `date: 2026-11-21`, `host: pavilion`, `repo:` the repo holding the commit (I still need to find it, since this working directory isn't a git repo), and `audience: commit message`. The register file is `commit-and-pr.md`.\n- **Before:** \"This change seamlessly streamlines the gate.\" (verbatim)\n- **After:** \"This change makes the gate faster.\" (verbatim)\n- **Context:** the commit's subject and the sentence around it, with nothing private.\n- **Reason:** \"not stated\". You gave the correction but no reason, and I won't supply one.\n\nThen I'd run the four git commands from the skill, in order: `add`, `commit -m \"Log a correction\" -- corrections/<file>`, `pull --rebase`, and `push`. A failed pull or push stays local, and I'd carry on. If the notes clone is missing, I'd clone `glw907/survey-notes` first.\n\n**2. Redo the commit message.** Before editing, I'd check the repo is free for me to use, with `claude-worktree-busy <path>`. Then:\n- `git -C <repo> log -1` and `git -C <repo> status -sb` to confirm the last commit is the one you mean and whether it's been pushed.\n- If it's local only: `git -C <repo> commit --amend -m \"<subject>\"`. Nothing is staged, so the tree stays the same and only the message changes. I'd name no files and use no `-a`.\n- If it's already pushed: I'd stop and ask you before any force push.\n\n**The subject line.** Your sentence has a verb in the third person. The house rule says commit messages use the imperative mood, so I'd write the subject as \"Make the gate faster\" and keep your point in the body, unless you'd rather have the sentence exactly. Tell me which you want.\n\nI'll start with the correction log once you confirm the subject line, or right away if you're happy with the imperative version.",
+  "costUsd": 0.005722940000000001
+}

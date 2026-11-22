@@ -1,0 +1,21 @@
+{
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I'm starting a small internal tool: a daisyUI 5 app that isn't on cairn, with a list page and a settings form. Which of the house style's files do I pull in, what do I read before I lay out the pages, and where do the button and text colors come from? Answer here; don't write any code yet.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:30:16Z",
+  "seconds": 18.7,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "I've read Survey's `DESIGN.md`. The recipe for your app is \"Plain app\", which says to use the cairn admin recipe's imports.\n\n**Files to pull in**\n\nInstall `daisyui`, `tailwindcss`, and the three Fontsource packages that `theme/fonts.css` imports. Then install Survey pinned by tag: `npm install github:glw907/survey#v<version>`. In your entry sheet, import Tailwind and activate the daisyUI plugin. After that, import three files from Survey, in this order:\n\n1. `survey/theme/fonts.css`\n2. `survey/theme/survey.css`\n3. `survey/theme/components.css`\n\nYou skip `survey-vars.css`, which is for apps with no daisyUI. If you add icons, install `@lucide/svelte`.\n\n**What to read before laying out the pages**\n\nRead `DESIGN.md` in full. Pay most attention to these parts:\n- the principles\n- the Plain app and Cairn admin recipes\n- the icon guidance (use an icon only beside the label of a frequent action, and keep Cancel as text)\n- the motion rules (page content appears at once, with no fade or rise-in)\n\nBuild the list page and the settings form from stock daisyUI components. Reach for a `site-` class only for a signature detail. The save confirms with a toast, and Cancel is a plain `btn btn-ghost`. When you write up the work, say that you followed the Plain app recipe.\n\n**Where button and text colors come from**\n\nThey come from the daisyUI theme tokens that `survey.css` defines, and `tokens.json` is the one source for those values. `survey.css` defines a light `survey` theme and a dark `survey-dark` theme. The dark one follows `prefers-color-scheme`, and you set `data-theme` only to force a scheme.\n\nBody text uses `--color-base-content`. Muted text uses `--color-muted`. A button's fill is its role color, such as `--color-primary`, and its label uses the paired `-content` token, such as `--color-primary-content`. Every role has such a pair, so you never choose a label color yourself. Any CSS you write takes its values from tokens like `var(--color-muted)` and `var(--spacing-8px)`, never literals.\n\nTwo things to keep in mind. If a token fails WCAG contrast, tune it within its hue and list the old and new values in the change. Any gap you find in Survey goes to its `BACKLOG.md` through `/log-issue`, and you work around it in your own CSS until it's fixed.",
+  "costUsd": 0.1355233
+}

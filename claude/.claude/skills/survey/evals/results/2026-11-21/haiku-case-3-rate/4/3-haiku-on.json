@@ -1,0 +1,18 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "started": "2026-11-22T00:49:11Z",
+  "seconds": 17.1,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "I haven't changed anything yet. This directory isn't a git repo, so I can't see the commit from here. Here is the plan:\n\n1. **Find the commit.** I'll locate the repo that holds it, starting with the path you give me or under `~/Projects/`. Then I'll run `git log -1 --format='%H%n%s%n%b'` to read the current subject and body, and `git status` to confirm the commit is HEAD and nothing else is staged.\n\n2. **Check whether it has left your machine.** I'll run `git branch -vv` and `git log @{upstream}..HEAD`. If the commit is already pushed or part of a PR, I'll stop and ask before rewriting, because amending it means a force push.\n\n3. **Write the new message to a file.** I'll create it with `mktemp` outside the repo, so the working tree stays clean. It will hold the full message: a subject, a blank line, and the original body with the slop sentence replaced. Your global rules require an imperative subject, so the subject can't be your sentence. Something like this:\n\n   ```\n   Speed up the gate\n\n   This change makes the gate faster.\n   ```\n\n   I'll keep the rest of the original body unchanged. The sentence \"This change makes the gate faster\" is only true if the timing supports it, so if I can't back it with a measurement from the repo, I'll flag it for you before the amend.\n\n4. **Amend the message.** `git commit --amend -F <that file>`. This changes only the message, not the files. I'll then run `git log -1 --format=%B` to check the text and `git show --stat HEAD` to confirm the file list hasn't changed. Since no code changes, I won't run the gate.\n\n5. **Log the correction.** I haven't read the `survey` skill's Corrections section yet, so I'll read it first to find the log file and its format. Then I'll append one entry dated 2026-11-21 with the original phrase (\"seamlessly streamlines the gate\"), the replacement (\"makes the gate faster\"), and the rule it teaches: cut filler adverbs like \"seamlessly,\" and state the concrete effect. If that log lives in another repo, I'll tell you where it is and leave the commit decision to you.\n\nI won't force-push, and I won't touch any other commit.\n\nBefore I start, I need two things from you: the repo path if it isn't under `~/Projects/`, and your okay on the subject line \"Speed up the gate.\"",
+  "costUsd": 0.00188526
+}

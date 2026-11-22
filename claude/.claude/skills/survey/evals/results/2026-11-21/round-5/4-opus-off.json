@@ -1,0 +1,19 @@
+{
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Write me a systemd service and timer pair that runs /usr/local/bin/nightly-backup every night at 2:00 local time, and say where each file goes.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:38:35Z",
+  "seconds": 18.7,
+  "exitCode": 0,
+  "listed": [],
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "Both files are system units, so they go in `/etc/systemd/system/`. That's the directory for units an administrator adds by hand. `/usr/lib/systemd/system/` is reserved for packages.\n\n**`/etc/systemd/system/nightly-backup.service`**\n\n```ini\n[Unit]\nDescription=Nightly backup\nWants=network-online.target\nAfter=network-online.target\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/nightly-backup\n\n# Hardening\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectSystem=strict\nStateDirectory=nightly-backup\n# List every path the script writes to. Each one must already exist,\n# or the unit fails with \"Failed to set up mount namespacing\".\nReadWritePaths=/var/backups\n```\n\n**`/etc/systemd/system/nightly-backup.timer`**\n\n```ini\n[Unit]\nDescription=Run nightly backup at 02:00\n\n[Timer]\nOnCalendar=*-*-* 02:00:00\nPersistent=true\nRandomizedDelaySec=5min\nAccuracySec=1min\n\n[Install]\nWantedBy=timers.target\n```\n\nThen load and enable them:\n\n```bash\nsudo systemd-analyze verify /etc/systemd/system/nightly-backup.{service,timer}\nsudo systemctl daemon-reload\nsudo systemctl enable --now nightly-backup.timer\nsystemctl list-timers nightly-backup.timer\n```\n\nA few settings need your input or are worth knowing about:\n\n- **Write paths:** I don't know where your script writes, so `ReadWritePaths=/var/backups` is a guess. Replace it with the script's real targets, such as a mount point or repository directory, and create each one before the first run. `ProtectSystem=strict` makes the rest of the filesystem read-only, so a missing entry makes the backup fail.\n- **State directory:** `StateDirectory=` gives the script a persistent `/var/lib/nightly-backup` that systemd creates itself. Put any lock file or run log there, not under `/run`.\n- **Timing:**\n  - `OnCalendar` uses the machine's local time zone, so 02:00 is local time.\n  - `RandomizedDelaySec=5min` means the start lands somewhere between 02:00 and 02:05. Delete that line if you need exactly 02:00.\n  - `Persistent=true` catches up on missed runs: if the machine was off at 02:00, the backup runs at the next boot. Remove that line if you'd rather skip a missed night.\n- **Bluefin:** if this is for pavilion or thinkpad-x1, `/etc` changes go into `~/.dotfiles/bluefin/etc/systemd/system/` first and get applied from there. I can set that up if you want.\n\nYou can test it once with `sudo systemctl start nightly-backup.service` and read the output with `journalctl -u nightly-backup.service`.",
+  "costUsd": 0.1981432
+}

@@ -1,0 +1,17 @@
+{
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I just changed one color value in Survey's tokens.json. What do I run before I commit it, is the change a minor or a major version, and once it's merged should you go ahead and cut the release?",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:34:01Z",
+  "seconds": 36.8,
+  "exitCode": 0,
+  "listed": [],
+  "invoked": [],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "You need two commands before you commit, the change is a minor, and I can cut the release once the PR merges if you say yes.\n\n**Before you commit**, run these from the repo root (run `npm install` first if `node_modules` is missing):\n\n1. `scripts/build` regenerates `theme/survey.css`, `theme/survey-vars.css`, and the token table in `DESIGN.md` from `tokens.json`.\n2. `scripts/gate` fails if any of those built files is stale. It also fails on any contrast finding from `cairn-audit`, so a new color that misses 4.5:1 for text or 3:1 for an edge stops you here.\n\nCommit `tokens.json` together with the files the build rewrote. Add a line under `## [Unreleased]` in `CHANGELOG.md` too.\n\n**Minor.** The rule at the top of `CHANGELOG.md` says a changed value or rule is a minor and a removed or renamed one is a major. Changing a value under an existing token name moves Survey from 1.7.0 to 1.8.0. A renamed token would make it a major.\n\n**The release.** `scripts/release` will only run once `package.json` says `1.8.0` and `CHANGELOG.md` has a dated `## [1.8.0]` entry, both merged to `main`. You can put the bump in the same PR as the color change. After the merge, the script checks that `main` is clean and matches `origin/main`. It reruns the gate, pushes the `v1.8.0` tag, and creates the GitHub release with the Vale zip attached.\n\nThe tag and the GitHub release are public, so I won't run them without your go-ahead. If you want me to, say so now and I'll run `scripts/release 1.8.0` once the PR merges. Projects pinned to `#v1.7.0` won't change until someone moves their pin.",
+  "costUsd": 0.41579619999999995
+}

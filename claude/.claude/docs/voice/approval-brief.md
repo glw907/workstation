@@ -1,1 +1,0 @@
-../../skills/survey/writing/approval-brief.md

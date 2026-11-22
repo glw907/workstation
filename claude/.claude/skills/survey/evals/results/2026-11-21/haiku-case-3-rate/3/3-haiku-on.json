@@ -1,0 +1,20 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "started": "2026-11-22T00:48:49Z",
+  "seconds": 21.4,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "I haven't run anything yet. Here is what I'd do, in order, and I'll go ahead once you say so.\n\n**1. Log the correction first.** The `survey` skill requires logging a wording correction before going on. The file goes in the separate notes repo, `/var/home/glw907/Projects/survey-notes/corrections/`, and I'd name it `2026-11-21T<HHMMSS>-pavilion.md`. The time comes from `date +%FT%H%M%S` when I write it, and the host from `hostname -s`. If that directory is missing, I'd clone `glw907/survey-notes` there first.\n\nThe file would hold:\n\n```markdown\n---\ndate: 2026-11-21T<HHMMSS>\nhost: pavilion\nrepo: <the repo the commit is in, once I find it>\naudience: commit message (commit-and-pr.md)\n---\n\n## Before\nThis change seamlessly streamlines the gate.\n\n## After\nThis change makes the gate faster.\n\n## Context\n<the surrounding lines of the commit message>\n\n## Reason\nnot stated\n```\n\nFor Reason, you gave the replacement but no explanation, so I'd write \"not stated\" rather than supply one. The Context section holds only the surrounding message text, with no paths, tokens, or personal details.\n\nThen I'd run these four commands in one turn, exactly as the skill lists them:\n\n- `git -C /var/home/glw907/Projects/survey-notes add corrections/<file>`\n- `git -C /var/home/glw907/Projects/survey-notes commit -m \"Log a correction\" -- corrections/<file>`\n- `git -C /var/home/glw907/Projects/survey-notes pull --rebase`\n- `git -C /var/home/glw907/Projects/survey-notes push`\n\nA failed pull or push leaves the commit local, and I'd carry on.\n\n**2. Redo the commit message.** This session's working directory is not a git repo, so I'd first find the repo that holds the commit, and run `claude-worktree-busy` on it before entering. Then I'd check that the commit is the current HEAD and has not been pushed, with `git -C <repo> log -1` and `git -C <repo> show --stat HEAD`.\n\nIf it is unpushed, I'd run `git -C <repo> commit --amend -m \"<new message>\"`. I'd rewrite the whole message against `commit-and-pr.md`, not just this one sentence. That means an imperative subject, no em dashes, and no other filler words. I'd amend without staging anything new, then confirm with `git show --stat HEAD` that only the message changed. If the commit has already been pushed, I'd stop and ask you before any force push.\n\nTwo things I need from you: the go-ahead, and the repo's name or path if you know it. If you don't, I'll search `~/Projects` for the commit.",
+  "costUsd": 0.00300002
+}

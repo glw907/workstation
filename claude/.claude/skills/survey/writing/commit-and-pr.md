@@ -1,5 +1,11 @@
 # Register: commit messages and PR bodies
 
+Contents:
+
+- [What the standard asks for](#what-the-standard-asks-for)
+- [Exemplars](#exemplars)
+- [Off-voice contrast](#off-voice-contrast)
+
 The reader is a future developer skimming `git log` for what changed and why, often years
 later and mid-debugging. Applies to every commit message and PR body.
 
@@ -28,9 +34,10 @@ are in `~/.claude/skills/writing-voice/evals/tellgrader/MEASURES.md`.
   both. The footer describes what breaks and what a consumer must do.
 - Footers hold trailers (the co-author trailer, an issue reference) after a blank line, one per
   line.
-- A PR body for Geoff's approval opens with a `## Brief` written to
-  `~/.claude/docs/voice/approval-brief.md`, and the sections above stay below it as the technical notes.
-  The body is the record on GitHub; the approval packet (`approval-packet`) is the hand-over.
+- A PR body for Geoff's approval follows `~/.claude/docs/voice/written-for-people.md`. A task's PR
+  takes its parts from the `building-from-specs` skill's section "The pull request", and the
+  sections above stay below its report as the technical notes. The body is both the record on
+  GitHub and the hand-over.
 - Claim only what the diff and the session evidence. A test plan you did not run, an issue
   number that does not exist, or a motivation the change does not show misleads the future
   debugger who trusts the log. If you did not run it or see it, do not write it.

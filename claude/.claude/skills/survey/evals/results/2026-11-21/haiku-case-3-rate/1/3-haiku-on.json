@@ -1,0 +1,20 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "started": "2026-11-22T00:48:07Z",
+  "seconds": 22.2,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "Nothing has run yet. This directory is not a git repo, so the commit you mean lives somewhere else. Survey's correction rule says to log the correction before going on, so the steps are in that order.\n\n**1. Log the correction**\n\nI write one file to `/var/home/glw907/Projects/survey-notes/corrections/`. The name comes from `date +%FT%H%M%S` at write time and `hostname -s`, which is `pavilion` here, so it looks like `2026-11-21T<HHMMSS>-pavilion.md`. Its contents:\n\n```markdown\n---\ndate: 2026-11-21T<HHMMSS>\nhost: pavilion\nrepo: <repo that holds the commit>\naudience: commit message\nregister: commit-and-pr.md\n---\n\n## Before\nThis change seamlessly streamlines the gate.\n\n## After\nThis change makes the gate faster.\n\n## Context\nThis change seamlessly streamlines the gate. (the commit body sentence)\n\n## Reason\nNot stated.\n```\n\nThen I run these four commands, exactly as written:\n\n1. `git -C /var/home/glw907/Projects/survey-notes add corrections/<file>`\n2. `git -C /var/home/glw907/Projects/survey-notes commit -m \"Log a correction\" -- corrections/<file>`\n3. `git -C /var/home/glw907/Projects/survey-notes pull --rebase`\n4. `git -C /var/home/glw907/Projects/survey-notes push`\n\nIf `survey-notes` is missing, I run `gh repo clone glw907/survey-notes` into that path first. If the write or clone fails, I say so and skip the log.\n\n**2. Redo the commit**\n\nIn the repo that holds it, I run:\n\n`git -C <repo> commit --amend -m \"Make the gate faster\"`\n\nThen I check it with `git -C <repo> log -1 --format=%B`.\n\nI'm changing your wording in one place. Your sentence, \"This change makes the gate faster,\" is in the third person. Your CLAUDE.md asks for imperative commit subjects, so I'd use \"Make the gate faster.\" Tell me if you want your exact sentence instead.\n\nIf the commit is already pushed, amending means a force-push. I'll stop and ask you before doing that.\n\nTo go ahead, I need three things from you: the path to the repo with the commit, whether it's been pushed, and your call on the imperative subject.",
+  "costUsd": 0.0031461199999999996
+}

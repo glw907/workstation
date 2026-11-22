@@ -1,0 +1,20 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "started": "2026-11-22T00:50:02Z",
+  "seconds": 15.5,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "Nothing has been changed yet. Here is the plan.\n\n**1. The correction log entry**\n\nI write one file to `/var/home/glw907/Projects/survey-notes/corrections/`. The name comes from `date +%FT%H%M%S` and `hostname -s`, so it will look like `2026-11-21T<HHMMSS>-pavilion.md`. I'll read the actual time from `date` when I write it.\n\nThe file opens with frontmatter:\n\n- `date: 2026-11-21`\n- `host: pavilion`\n- `repo:` the repo the commit lives in. This directory isn't a git repo, so I'll confirm the repo before writing.\n- `audience: commit message`\n- the register file: `commit-and-pr.md`\n\nThen four sections:\n\n- **Before:** `This change seamlessly streamlines the gate.`\n- **After:** `This change makes the gate faster.`\n- **Context:** the commit's surrounding body sentence, with no secrets or personal data.\n- **Reason:** \"not stated.\" You gave the rewrite but no reason, so I won't supply one. If you tell me why you prefer it, I'll quote you instead.\n\n**2. The commands**\n\nRun in this order, in the same turn:\n\n1. `git -C /var/home/glw907/Projects/survey-notes add corrections/<file>`\n2. `git -C /var/home/glw907/Projects/survey-notes commit -m \"Log a correction\" -- corrections/<file>`\n3. `git -C /var/home/glw907/Projects/survey-notes pull --rebase`\n4. `git -C /var/home/glw907/Projects/survey-notes push`\n\nIf the notes clone is missing, I'll clone it with `gh repo clone glw907/survey-notes` first. A failed pull or push leaves the commit local, and I'll say so.\n\n**3. Redoing the commit**\n\nAfter the log is written, I'll rewrite the commit message in the imperative mood, with no em dash:\n\n- Subject: `Make the gate faster`\n- Body: the original body with the \"seamlessly streamlines\" sentence removed. I'll read the original message first to keep the rest unchanged.\n\nIf the commit is `HEAD`, I'll run `git commit --amend` on the message only. If it's further back, I'll use an interactive rebase on that commit. If the commit is already pushed, the fix needs a force push, and I'll stop and ask you before running it.\n\nI'll also check the commit's other wording for the same tell (a marketing word such as \"seamlessly\") and tell you what else I find. I won't change it without your go-ahead.\n\nTwo things I need from you before I start: which repo holds the commit, and whether it has been pushed.",
+  "costUsd": 0.00474584
+}

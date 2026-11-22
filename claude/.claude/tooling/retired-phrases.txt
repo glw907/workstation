@@ -135,3 +135,16 @@ and its full sweep when one is due
 # `(order)` runs past a parked pass; only a pass that builds on it waits (pass-core
 # references/round-run.md standing answer 5). Supersedes the rule that every later pass parks.
 parks too and never launches
+
+# Building from specs (alignment spec 2026-11-20, "The old words"): the approval queue, the desk
+# rounds, and the pass plan are retired. Work is built from a spec by building-from-specs.
+approval-packet
+approval packet
+approval-queue
+approval queue
+cc-desk-work
+running-passes
+spec-plan-review
+plan-reviewer
+pass plan
+pass guide

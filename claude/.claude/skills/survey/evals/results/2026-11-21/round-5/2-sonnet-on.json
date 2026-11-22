@@ -1,0 +1,21 @@
+{
+  "case": 2,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I just changed one color value in Survey's tokens.json. What do I run before I commit it, is the change a minor or a major version, and once it's merged should you go ahead and cut the release?",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:33:15Z",
+  "seconds": 5.7,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "Run `scripts/build` first, since `tokens.json` is the source and the built files must match it. Then run `scripts/gate` before you commit. Both run from the Survey repo root.\n\nA changed color value is a minor version. Only a removed or renamed token is a major.\n\nNo, I won't cut the release when it merges. Survey cuts a release only when you ask for one, so I'll wait for that. `releasing.md` in the repo holds the steps for when you do.",
+  "costUsd": 0.0858317
+}

@@ -1,0 +1,20 @@
+{
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Your last commit message says \"This change seamlessly streamlines the gate.\" I'd write \"This change makes the gate faster.\" Before you redo the commit, tell me exactly what you do with this correction: the file you write and its name, what goes in it, and the commands you run.",
+  "started": "2026-11-22T00:51:02Z",
+  "seconds": 25.1,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "survey:survey"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": true,
+  "result": "I haven't run anything yet. Here is what I'd do, in order.\n\n**1. Locate the commit.** This session's working directory isn't a git repository, so I'd first find the repo holding the commit. Then I'd run `git log -1 --format=%H%n%B` there to confirm the current message and whether the commit has been pushed.\n\n**2. Log the correction.** The `survey` skill requires this before I go on. I'd write one file to `/var/home/glw907/Projects/survey-notes/corrections/`, named `2026-11-21T<HHMMSS>-pavilion.md`. The time comes from `date +%H%M%S` at write time, and the host from `hostname -s`, which the session hook reports as `pavilion`. The contents would be:\n\n```\n---\ndate: 2026-11-21\nhost: pavilion\nrepo: <the repo holding the commit>\naudience: commit message\nregister: commit-and-pr.md\n---\n\n## Before\nThis change seamlessly streamlines the gate.\n\n## After\nThis change makes the gate faster.\n\n## Context\n<the sentence or body line around it, nothing secret>\n\n## Reason\nNot stated.\n```\n\nI'd write \"Not stated\" because you gave the rewrite without a reason. I won't supply one. Then I'd run these four commands in order, with the file name filled in:\n\n- `git -C /var/home/glw907/Projects/survey-notes add corrections/<file>`\n- `git -C /var/home/glw907/Projects/survey-notes commit -m \"Log a correction\" -- corrections/<file>`\n- `git -C /var/home/glw907/Projects/survey-notes pull --rebase`\n- `git -C /var/home/glw907/Projects/survey-notes push`\n\nIf the notes clone is missing, I'd clone it first with `gh repo clone glw907/survey-notes`. If the pull or push fails, the commit stays local and I continue.\n\n**3. Redo the commit message.** If the commit is the latest one and isn't pushed, I'd run `git commit --amend -m \"<message>\"` in its repo. That changes only the message, with no staging and no `-a`. The subject would be imperative, as commit messages here are: \"Make the gate faster.\" I'd keep the rest of the body as it is and check the new text for em dashes.\n\nIf the commit is already pushed, amending means a force push, which rewrites shared history. I'd stop and ask before doing that.\n\nThe one open choice is the subject line. I'd use \"Make the gate faster.\" Tell me if you'd prefer different wording. Say go and I'll run steps 1 to 3 in that order.",
+  "costUsd": 0.0029917999999999998
+}

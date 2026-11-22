@@ -1,0 +1,21 @@
+{
+  "case": 4,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Write me a systemd service and timer pair that runs /usr/local/bin/nightly-backup every night at 2:00 local time, and say where each file goes.",
+  "skillSha256": "999e1279b3b5315e12092113baaf442418374121959e863d25d80f33142b87af",
+  "started": "2026-11-22T01:38:14Z",
+  "seconds": 19.4,
+  "exitCode": 0,
+  "listed": [
+    "survey:survey"
+  ],
+  "invoked": [
+    "vps-conventions"
+  ],
+  "readSkillFile": false,
+  "otherCopyReads": [],
+  "loaded": false,
+  "result": "Both files go in `/etc/systemd/system/`, the directory for units the administrator installs. The service and timer share a base name, so the timer starts the service without an explicit `Unit=` line.\n\n**`/etc/systemd/system/nightly-backup.service`**\n\n```ini\n[Unit]\nDescription=Nightly backup\nWants=network-online.target\nAfter=network-online.target\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/nightly-backup\n\n# Hardening\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectSystem=strict\n# List every path the backup writes to. Each one must already exist,\n# or the unit fails with \"Failed to set up mount namespacing\".\nReadWritePaths=/var/lib/nightly-backup\nStateDirectory=nightly-backup\n```\n\n**`/etc/systemd/system/nightly-backup.timer`**\n\n```ini\n[Unit]\nDescription=Run nightly backup at 02:00\n\n[Timer]\nOnCalendar=*-*-* 02:00:00\nPersistent=true\nRandomizedDelaySec=5min\n\n[Install]\nWantedBy=timers.target\n```\n\nEnable the timer, not the service:\n\n```bash\nsudo systemctl daemon-reload\nsudo systemctl enable --now nightly-backup.timer\nsystemctl list-timers nightly-backup.timer\n```\n\nSome details to check before you install them:\n\n- `OnCalendar` uses the system's local time zone, so 02:00 follows daylight saving changes.\n- With `Persistent=true`, if the machine was off at 2:00, the backup runs shortly after the next boot. Remove it if a missed night should just be skipped.\n- `RandomizedDelaySec=5min` starts the run at a random point between 02:00 and 02:05. If it has to start at exactly 02:00, delete that line.\n- `ProtectSystem=strict` makes the whole filesystem read-only except the paths in `ReadWritePaths=`. I don't know where your script writes, so `/var/lib/nightly-backup` is a placeholder. Add the real destination, such as a mount point under `/mnt` or `/var/backups`. If the backup only sends data over the network, `StateDirectory=` alone is enough and you can drop the `ReadWritePaths=` line.\n- To lint both files before enabling the timer, run `systemd-analyze verify /etc/systemd/system/nightly-backup.*`. To test a single run, use `sudo systemctl start nightly-backup.service` and then `journalctl -u nightly-backup`.\n\nIf this is for pavilion, your dotfiles convention applies: put both files in `~/.dotfiles/bluefin/etc/systemd/system/` first, then install them into `/etc`.",
+  "costUsd": 0.2026676
+}

@@ -1,5 +1,11 @@
 # Register: SvelteKit/web developer documentation
 
+Contents:
+
+- [What the standard asks for](#what-the-standard-asks-for)
+- [Exemplars](#exemplars)
+- [Off-voice contrast](#off-voice-contrast)
+
 The reader is a competent web developer adopting or operating the system, who has not read the
 code. Applies to the developer-facing docs in the web repos (the SvelteKit sites and the
 non-published docs of cairn-cms): READMEs, guides, reference pages, explanation pages, and
