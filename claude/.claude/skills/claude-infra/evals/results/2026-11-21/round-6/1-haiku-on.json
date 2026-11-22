@@ -1,0 +1,42 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:53:23Z",
+  "seconds": 15.9,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Where should a five-step cairn release checklist live on this workstation, and how would the change land? Plan only, no edits.\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/skills/cairn-pass\", \"output_mode\": \"content\", \"-n\": true}"
+    }
+  ],
+  "result": "**Recommendation:** put the checklist in the existing `cairn-pass` skill, as a \"Cut a release\" section. Don't add a second home.\n\n**Why this home:**\n- `CLAUDE.md` says `cairn-pass` holds each repo's gate and checklists, so the checklist already has a home there.\n- The checklist is reference material Claude needs only when cutting a release. That makes it a skill, not `CLAUDE.md`, which should carry only facts that apply every turn.\n- If any step must always hold, such as \"the gate passes before tagging,\" enforce it in the gate script or a hook. Prose in the skill is only a request.\n\n**Open check:** I couldn't read `~/.claude/skills/cairn-pass` (the read was denied), so I haven't confirmed whether a release section already exists. Before writing anything, I'd look there and merge with any overlap. If release is a separate procedure from passes, the alternative is a new `cairn-release` skill. I'd still prefer the section unless you say release is its own workflow.\n\n**How the change lands:**\n1. Cite the features-overview page (<https://code.claude.com/docs/en/features-overview>) in the commit body, per the `claude-infra` procedure.\n2. Write the section in the skill's source copy. If the skill is stowed from `~/.dotfiles`, edit there, never the link. I'd confirm the source path first.\n3. A skill authored here gets no manifest entry, so no `claude-tooling.md` edit. Run `claude-tooling-sync verify` anyway.\n4. Keep the scope to the five steps you paste. Anything extra goes to \"Later.\"\n5. Audit with `/skill-doctor` and Anthropic's `skill-creator`.\n6. Land it as a PR, unless it meets the `building-from-specs` \"Direct changes\" test. A doc addition like this may qualify. Stage files by name and use an imperative commit message.\n\n**Needed from you:** confirm the `cairn-pass` section over a new skill. If you paste the five steps again, I can check which ones are must-hold and should move into the gate instead of prose. I haven't edited anything.",
+  "costUsd": 0.0025070400000000003
+}

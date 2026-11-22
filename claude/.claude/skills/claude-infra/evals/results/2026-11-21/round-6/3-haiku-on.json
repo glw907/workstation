@@ -1,0 +1,52 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:56:44Z",
+  "seconds": 11.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/.mcp.json\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"svelte\", \"path\": \"/var/home/glw907/.claude\", \"-i\": true, \"output_mode\": \"files_with_matches\", \"head_limit\": 30}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\"}"
+    }
+  ],
+  "result": "**Short answer: user scope, not ecxc-ski's `.mcp.json`.** I didn't change anything.\n\nThe claude-infra skill's scope rule is: \"Everything the cairn-family stack shares (Svelte, Playwright, DaisyUI) is user scope and in the manifest. A repo's `.mcp.json` carries only what that repo alone needs.\" ecxc-ski, 907-life, aksailingclub-org, and cairn-pub all use Svelte, so a Svelte docs server is stack-wide. Putting it in one repo would leave the other three without it and would make ecxc-ski's file carry something its CLAUDE.md would then have to explain.\n\nBefore adding it, check two things:\n\n- **Skill first, server second.** The skill rules say that when a library offers both a skill and a server, take the skill first and the server for on-demand retrieval. Svelte's docs server fits that second case, since it's retrieval rather than a rule. The workstation already has `standards:svelte-check` and `standards:svelte-conventions`, which cover checking and comment rules, not API docs. So the server is not a duplicate of a local piece.\n- **MCP reach.** An MCP server reaches only the main loop and unrestricted agents. If a dispatched agent with a fixed tool list needs Svelte docs, the server won't reach it, and that is the case where a skill would be needed instead.\n\nThe change itself: add the server to the user-scope manifest, record it there, run `claude-tooling-sync verify`, and commit the dotfiles. Any credential would stay in `${VAR}` form. A Svelte docs server probably needs none. A restart is needed to load it, at a session boundary.\n\n**What I could not verify:** I could not read `~/.claude/docs/claude-tooling.md`, so I don't know the manifest's exact filename or the \"Layout\" table entry. Permission to read the `~/.claude` docs and `~/Projects` was denied in this session. I also did not confirm whether ecxc-ski already has a `.mcp.json` or whether a Svelte server is already configured anywhere. Grant read access to those paths and I can confirm both, then make the change in a PR if you want it.",
+  "costUsd": 0.00221864
+}

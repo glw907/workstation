@@ -1,0 +1,49 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:53:39Z",
+  "seconds": 14.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass*/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/skills\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*.md\", \"path\": \"/var/home/glw907/.claude/docs\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\"}"
+    }
+  ],
+  "result": "**Recommendation:** put the five steps in the cairn-cms repo's own `cairn-running-passes` skill, as a \"Cutting a release\" section. That skill already holds the repo's worktree setup, gate, and close checklist, and it ships with the code it describes. Keep it a section, not a new skill, since five steps don't need their own entry point. The `cairn-pass` skill is Geoff's overlay and can stay as it is, or get one line pointing to the new section.\n\n**Caveat:** my reads of `~/.claude` were denied, so I couldn't open the repo skill or see whether the five steps already exist somewhere. I only know what `cairn-pass` says, and it doesn't mention a release checklist. Before writing anything, I'd confirm the steps against your chat paste and check that no existing section covers them.\n\n**How the change would land (no edits made yet):**\n\n1. Run `claude-worktree-busy` on the cairn-cms checkout. If it's busy, ask before going further.\n2. Create a worktree and branch in cairn-cms, for example `docs/release-checklist`.\n3. Add the section to `.claude/skills/cairn-running-passes/`. Write the steps as the repo's own procedure, with the exact commands, so a release session can follow them without the chat paste.\n4. Run the cairn gate from the worktree (`cairn-run-gate`), then commit with an imperative message and stage the file by name.\n5. Open a draft PR and watch CI with `ci-green`.\n6. Through `approval-packet`, send Geoff the PR for approval. Merge only after he approves it by number, from this session.\n\n**Why this route:** the change touches a repo skill, which is Claude Code tooling, so `claude-infra` likely applies. It is also more than a one-sentence change, so `building-from-specs` may apply, though a single short section could arguably land as a direct change. I'd treat it as a small PR through `claude-infra`, and I'd confirm that call with you before starting.\n\n**Open choices for you:**\n- Section in `cairn-running-passes`, or a standalone `cairn-release` skill if the steps grow?\n- Should `cairn-pass` get a pointer line to the new section?",
+  "costUsd": 0.00225984
+}

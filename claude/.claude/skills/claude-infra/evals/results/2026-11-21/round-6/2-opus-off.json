@@ -1,0 +1,33 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:56:26Z",
+  "seconds": 17.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"PreToolUse|rm -rf|\\\"deny\\\"\", \"path\": \"/var/home/glw907/.claude\", \"glob\": \"settings*.json\", \"output_mode\": \"content\"}"
+    }
+  ],
+  "result": "I'd put it in a **PreToolUse hook** in your user-level `~/.claude/settings.json`, not in CLAUDE.md or a skill.\n\n**Why not CLAUDE.md or a skill:** Both are instructions to me, and I could misread one, lose it when context is summarized, or reason my way past it. A skill also only loads when it's invoked, so it wouldn't be there for every Bash call. \"No exceptions\" needs something the harness enforces, not something I'm asked to remember.\n\n**Why a hook:** Claude Code runs a PreToolUse hook on a `Bash` matcher before every Bash command. If the hook exits with code 2, the call is refused and I get the reason back. That happens outside my judgment. Putting it in user-level settings covers every project and worktree on the machine, not just one repo.\n\n**Why not only a permissions `deny` rule:** A rule like `Bash(rm -rf ~*)` matches the literal command text, and the same deletion can be written many other ways:\n- `rm -r -f ~`\n- `rm -fr $HOME`\n- `/usr/bin/rm -rf /var/home/glw907`\n- `cd ~ && rm -rf .`\n- `rm -rf \"$HOME\"/`\n- a command run inside `bash -c` or `xargs`\n\nA hook script can split the command into its parts and catch these. A deny rule is fine as an extra layer, but it can't be the only one.\n\n**How it would fit this workstation:**\n- Per your CLAUDE.md, the change goes through the `claude-infra` skill. The settings file is a stowed link, so the edit goes in the `~/.dotfiles` copy, and the dotfiles gate runs on it.\n- The script would be a stdlib-only `python3 -I` helper in `~/.dotfiles/bin/.local/bin/`, because it has to parse the command. It reads the hook's JSON input and blocks when a recursive, forced `rm` targets a home folder. That means `~`, `$HOME`, `/home/*`, `/var/home/*`, or a relative path after a `cd` into one.\n- It should fail closed: if it can't parse the command, it blocks.\n- It needs tests covering the tricky spellings above, so it's clear what it catches.\n\n**One limit:** the hook only sees what's in the command text. A script that does the deletion itself (say, a `cleanup.sh` that runs `rm -rf \"$HOME\"`) passes through unless the hook also inspects scripts, which it can't do fully. If you need a guarantee even then, it has to come from the OS, for example running sessions in a sandbox. That's a bigger change. The hook covers what you asked for: Bash calls that run `rm -rf` on a home folder.\n\nI didn't change anything. My attempt to check `~/.claude/settings.json` for an existing guard was denied, so I don't know whether one is already there.",
+  "costUsd": 0.0417152
+}

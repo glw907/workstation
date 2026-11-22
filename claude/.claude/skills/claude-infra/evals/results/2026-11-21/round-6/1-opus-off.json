@@ -1,0 +1,49 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:54:51Z",
+  "seconds": 25.5,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/{cairn-pass,claude-infra,pass-core}/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)release\", \"path\": \"/var/home/glw907/.claude/skills\", \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\", \"args\": \"Plan only: where should a recurring five-step cairn release checklist live, and how would the change land? Do not edit anything.\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \".claude/skills/**/*.md\", \"path\": \"/var/home/glw907/Projects/cairn-cms\"}"
+    }
+  ],
+  "result": "I'd put the checklist in the cairn-cms repo's own `cairn-running-passes` skill, as a release section next to its close checklist. I couldn't open that repo or `~/.claude` in this session, so I haven't seen your five steps or what the skill holds now. The plan rests on what the `cairn-pass` skill says about how the two layers split.\n\n## Where it should live\n\n`cairn-pass` says the repo skill (`.claude/skills/cairn-running-passes/` in the cairn-cms checkout) holds \"what a clone needs\": worktree setup, gates, review checklists and the close checklist. The workstation `cairn-pass` skill \"adds only Geoff's operation.\"\n\nCutting a release (version bump, changelog, tag, publish and so on) is about the repo, so the checklist belongs in the repo skill. It would also travel with the repo to any clone or session, not just this machine.\n\n**Exception:** if any step uses something that only exists on this workstation (`ci-green`, `cairn-run-gate`, a secret from `~/.local/secrets`, an approval-queue step), put the general steps in the repo skill. Then add a short \"Release\" heading to `cairn-pass` covering only those workstation steps, as it already does for the gate and the CI watch.\n\n**Not memory or CLAUDE.md.** Memory is for facts the repo doesn't record, and a checklist you want followed is a procedure, which belongs in a skill. The sessions that release are already told to load the skill.\n\n## How the change would land\n\n1. **Repo part.** This is a cairn-cms change, so it goes through the normal pass flow:\n   - Run `claude-worktree-busy` on the checkout and read STATUS.\n   - Work in a worktree under `.claude/worktrees/`.\n   - Add the section in the voice the `writing-voice` skill sets for developer docs.\n   - Run the fast lane via `gate-tier.mjs --fast` through `cairn-run-gate`. This should only be light docs or skill checks.\n   - Open a draft PR and watch CI with `ci-green`.\n   - Merge only after you approve the PR by number.\n\n   Once your five steps are written into the request, it's small enough to count as a \"direct change\" under `building-from-specs`, so it doesn't need a full spec and task session. It still needs a PR.\n2. **Workstation part, only if needed.** Edit `cairn-pass` through the `claude-infra` skill, since it's Claude Code tooling, with a PR if that skill requires one.\n3. **Check.** In a fresh session, ask it to \"cut a cairn release\" and confirm it finds and follows the checklist without you pasting it.\n\nThe one thing I need from you is the five steps as you paste them. Once you've given them and said go, I'll do the steps above, starting with checking whether any of them are workstation-only.",
+  "costUsd": 0.0740456
+}

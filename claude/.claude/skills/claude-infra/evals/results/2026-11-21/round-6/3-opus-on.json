@@ -1,0 +1,42 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:57:21Z",
+  "seconds": 13.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Where should a Svelte documentation MCP server live: ecxc-ski's .mcp.json or elsewhere? The other cairn sites use Svelte too. Answer only; change nothing.\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)svelte|mcp\", \"path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\", \"output_mode\": \"content\"}"
+    }
+  ],
+  "result": "It shouldn't go in ecxc-ski's `.mcp.json`. Add it at user scope instead and record it in the user-scope MCP manifest.\n\n**Why:** The workstation rule in the `claude-infra` skill says anything the cairn-family stack shares (Svelte, Playwright, DaisyUI) goes at user scope and in the manifest. A repo's `.mcp.json` holds only what that one repo needs, and its CLAUDE.md says so. ecxc-ski, 907-life, aksailingclub-org and cairn-pub all use Svelte, so a server added only to ecxc-ski would leave the other three without it. Copying it into each repo would give one rule four homes.\n\n**How it would land:**\n- Add the entry to the user-scope MCP manifest. The \"Layout\" table in `~/.claude/docs/claude-tooling.md` names that file; I couldn't confirm the exact path because the read needed permission I don't have. Then run `claude-tooling-sync verify` and commit the dotfiles.\n- Keep any env values in `${VAR}` form so they resolve from `~/.local/secrets`. Never put a real value in the manifest.\n- Restart Claude Code at a session boundary to load it, not in the middle of a run.\n\n**One check first:** for a library that offers both, the rule is to use the skill first and the server only for on-demand lookup or tools a skill can't provide. That matters here because an MCP server reaches only the main session and unrestricted agents, not agents with a fixed tool list. If Svelte publishes an official skill, that may be the better primary home, with the server added only for doc lookup.\n\nGuidance: https://code.claude.com/docs/en/features-overview\n\nNothing was changed.",
+  "costUsd": 0.05331580000000001
+}

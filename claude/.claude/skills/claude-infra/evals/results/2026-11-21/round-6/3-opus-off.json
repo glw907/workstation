@@ -1,0 +1,38 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:57:35Z",
+  "seconds": 18.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"*/.mcp.json\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"mcpServers|svelte\", \"path\": \"/var/home/glw907/.claude.json\", \"-i\": true, \"output_mode\": \"count\"}"
+    }
+  ],
+  "result": "I'd put it in every Svelte repo's committed `.mcp.json`, not only ecxc-ski's. That means ecxc-ski, 907-life, aksailingclub-org, cairn-pub, and probably cairn-cms too, since the engine is Svelte as well.\n\nWhy each repo's file is the right place:\n\n- **Only one site gets it if it's just ecxc-ski.** Sessions in the other sites and the engine would go without it, and their answers about Svelte would drift from ecxc-ski's.\n- **User scope would load it everywhere.** That's the workstation-wide setting in `~/.claude.json`. Sessions in `~/.dotfiles`, household-it, and the Go tools would all carry a Svelte server they never use. It's also host-local and not stowed, so you'd have to add it separately on thinkpad-x1 and pavilion, and it would drift.\n- **A committed `.mcp.json` goes everywhere the repo goes.** That covers both hosts, worktrees, and fresh task sessions with no setup on either machine. Svelte's official server is a remote URL with no credential, so committing it doesn't break the secrets rules.\n\nThe cost is five copies of the same few lines. That's acceptable for one entry with no secret in it.\n\nIf you'd rather keep a single copy, the alternative is Svelte's Claude Code plugin, which bundles the same server. You'd turn it on in each Svelte repo's `.claude/settings.json` rather than for every project. It's still one line per repo, but the server settings live in one place.\n\nEither way, it's a change to Claude Code tooling, so it goes through `claude-infra` and lands as a small change in each repo.\n\nI couldn't read `~/Projects` or `~/.claude.json` because the permission was declined. So I haven't checked whether any of these repos already has a `.mcp.json` or a Svelte server set up.",
+  "costUsd": 0.044567999999999997
+}
