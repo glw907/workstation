@@ -10,6 +10,8 @@
 
 ## Medium
 
+- [ ] **#113** Drop the deleted `approval-packet` skill from Vale's config `#improvement` `#workstation` `#initiative:claude-config-alignment` *(2026-11-22)*
+  `vale/.config/vale/.vale.ini:13-16` still names "the approval-packet models" in a comment and globs `**/skills/approval-packet/references/*.md`. The skill is gone, so the glob matches nothing and the comment names a retired word. The `**/*.queue.md` glob stays, since `written-for-people.md` step 2 names pages that way. Left alone, the next retired-words search over `vale/` prints these lines. Found by the first "Retiring the old process" pull request, whose searches leave `vale/` out.
 - [ ] **#111** Carry the cairn front-door "one section per read" rule into cairn-cms `cairn-writing-docs` `#improvement` `#workstation` *(2026-11-21)*
   The personal-skills task of the claude-config-alignment spec (pull request 263) cut the paragraph from `claude/.claude/skills/writing-voice/SKILL.md` (old lines 84-88) as the audit's C10 directs: draft one section per read for `why-cairn.md`, `docs/README.md`, and the arm READMEs. The audit sends it to `cairn-writing-docs`, whose `docs-register.md` in cairn-cms has no such rule. Until it lands there, no skill tells a session to draft the cairn front door a section at a time.
 - [ ] **#110** Record engine-consult's first-run note in the cairn-cms rulings ledger `#improvement` `#workstation` *(2026-11-21)*
