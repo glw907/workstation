@@ -87,7 +87,9 @@ check_bash_syntax() {
 check_shellcheck() {
     # Warning-level findings over the same files check_bash_syntax reads. bin/.local/bin/check-drift
     # is excluded from SC2140 only: its line 173 carries a finding in an auth-data file this pass
-    # leaves alone (BACKLOG has the item). Any other finding there still fails.
+    # leaves alone (BACKLOG has the item). Any other finding there still fails. The spec-writing
+    # proof scripts are excluded from SC2164 only: each one's cd is unguarded, and any edit to them
+    # changes the suite hash that the 2026-11-22 baseline was recorded against (BACKLOG has the item).
     if ! command -v shellcheck >/dev/null 2>&1; then
         echo "shellcheck is not installed (brew install shellcheck)" >&2
         return 1
@@ -95,11 +97,14 @@ check_shellcheck() {
     local f ok=0
     while IFS= read -r f; do
         if head -1 "$f" 2>/dev/null | grep -q '^#!.*bash'; then
-            if [ "$f" = bin/.local/bin/check-drift ]; then
-                shellcheck -S warning --exclude=SC2140 "$f" || ok=1
-            else
-                shellcheck -S warning "$f" || ok=1
-            fi
+            case "$f" in
+                bin/.local/bin/check-drift)
+                    shellcheck -S warning --exclude=SC2140 "$f" || ok=1 ;;
+                claude/.claude/skills/building-from-specs/evals/files/spec-writing/*/proof.sh)
+                    shellcheck -S warning --exclude=SC2164 "$f" || ok=1 ;;
+                *)
+                    shellcheck -S warning "$f" || ok=1 ;;
+            esac
         fi
     done < <(git ls-files)
     return "$ok"

@@ -1,0 +1,258 @@
+{
+  "case": "write-two-sources",
+  "kind": "write",
+  "suite": "spec-writing",
+  "started": "2026-11-22T22:28:44Z",
+  "seconds": 780.2,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "e85af74d5823609c0042d2c249f10b3ed6769944",
+  "promptHash": "960c4aa467dd4a7f36210c62b8abe680e83e8ea0",
+  "fixtureHead": "745419b46508a7ccaba8469e13b0c2e2a087101d",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 6.0,
+  "timeLimitSeconds": 1800,
+  "words": 4213,
+  "judgeCostUsd": 0.0394144,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": null,
+      "answer": "yes",
+      "quote": "the brief's exit code for \"no match\" contradicts a promise in the README",
+      "quoteFound": true
+    },
+    "length": {
+      "passed": false,
+      "words": 4213
+    },
+    "built": {
+      "passed": true,
+      "status": [
+        "?? spec.md"
+      ],
+      "headUnchanged": true
+    },
+    "guide": {
+      "passed": true,
+      "reads": [
+        {
+          "call": "ls -R .claude/skills/building-from-specs && cat .claude/skills/building-from-specs/references/writing-a-spec.md",
+          "inside": true,
+          "failed": false
+        },
+        {
+          "call": "for f in README.md bin/notes tests/run.sh scripts/gate.sh .workstation/task-report.txt .workstation/denials.log .workstation/remote.txt; do echo \"=== $f\"; cat -n -A \"$f\" | sed 's/\\$$//'; done; echo; c",
+          "inside": true,
+          "failed": false
+        }
+      ]
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 4.790018,
+  "turns": 39,
+  "permissionDenials": [
+    {
+      "tool_name": "Bash",
+      "tool_use_id": "toolu_014KL9VSScNtr6BreiVHu6vL",
+      "tool_input": {
+        "command": "ls -la ~/.claude/docs/voice/ 2>&1 | head -20; command -v claude-worktree-busy task-report gh 2>&1; cd /tmp/spec-writing-run-3q9np3r4/write-two-sources && grep -rn -i -e 'written-for-people' -e 'README' .claude/skills/survey/writing/writing-voice.md </dev/null | head -20; ls -la ~/.notes 2>&1 | head -2",
+        "description": "Check the voice standard path and helper commands exist"
+      }
+    }
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/brief.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la && ls -la .workstation .claude 2>/dev/null; git ls-files; cat .workstation/task-report.txt .workstation/denials.log .workstation/remote.txt\", \"description\": \"List repo files and show the workstation stand-in files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -R .claude/skills/building-from-specs && cat .claude/skills/building-from-specs/references/writing-a-spec.md\", \"description\": \"List the skill folder and print the spec-writing guide\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in README.md bin/notes scripts/gate.sh tests/run.sh; do echo \\\"=== $f\\\"; cat -A \\\"$f\\\" | sed 's/\\\\$$//' ; done; ls -la bin scripts tests; ls .claude/skills\", \"description\": \"Print the repo's source files and list skills\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"--- gate\\\"; bash scripts/gate.sh; echo \\\"exit=$?\\\"\\necho \\\"--- versions\\\"; bash --version | head -1; grep --version | head -1; echo \\\"LANG=${LANG:-} LC_ALL=${LC_ALL:-}\\\"\\nf=$(mktemp); printf '%s\\\\n' 'buy rope' 'Call ROPE shop' 'a.c' 'abc' 'fix -v flag' > \\\"$f\\\"\\necho \\\"--- search today\\\"; NOTES_FILE=$f bin/notes search rope; echo \\\"exit=$?\\\"\\necho \\\"--- bare today\\\"; bin/notes;"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"standards:backlog-sweep\", \"args\": \"scoped sweep for a spec adding `bin/notes search` in this repo\"}"
+    },
+    {
+      "name": "ToolSearch",
+      "input": "{\"query\": \"select:TaskStop\", \"max_results\": 1}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"exec </dev/null\\nf=$(mktemp); printf '%s\\\\n' 'buy rope' 'Call ROPE shop' 'a.c' 'abc' 'fix -v flag' > \\\"$f\\\"\\necho \\\"--- grep -iF -v FILE (no --), stdin closed\\\"; timeout 5 grep -iF -v \\\"$f\\\" </dev/null; echo \\\"exit=$?\\\"\\necho \\\"--- grep zebra\\\"; grep -iF -- zebra \\\"$f\\\"; echo \\\"exit=$?\\\"\\necho \\\"--- grep missing file\\\"; grep -iF -- rope \\\"$f.missing\\\"; echo \\\"exit=$?\\\"\\necho \\\"--- gre"
+    },
+    {
+      "name": "TaskStop",
+      "input": "{\"task_id\": \"bl7uehxqi\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"exec </dev/null\\necho \\\"--- no origin/main ref?\\\"; git rev-parse --verify origin/main 2>&1; git rev-parse HEAD\\necho \\\"--- search 1: tracked files\\\"; git ls-files | wc -l; git ls-files\\necho \\\"--- search 2: usage\\\"; grep -rn --exclude-dir=.git --exclude-dir=.claude --exclude-dir=.workstation --exclude=brief.md --exclude=spec.md --exclude=CLAUDE.md -e 'usage' . \\necho \\\"--- search 3: n"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"exec </dev/null\\nf=$(mktemp); printf '%s\\\\n' 'buy rope' 'Call ROPE shop' 'a.c' 'abc' 'fix -v flag' > \\\"$f\\\"\\nrun() { echo \\\"\\\\$ $1\\\"; out=$(mktemp); err=$(mktemp); eval \\\"$1\\\" >\\\"$out\\\" 2>\\\"$err\\\"; rc=$?; echo \\\"stdout: $(cat \\\"$out\\\" | tr '\\\\n' '|')\\\"; echo \\\"stderr: $(cat \\\"$err\\\" | tr '\\\\n' '|')\\\"; echo \\\"exit: $rc\\\"; }\\nrun 'NOTES_FILE=$f bin/notes search rope'\\nrun 'NOTES_FILE=$f"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"content\": \"# Spec: `notes search`\\n\\nWritten 2026-11-22 from `brief.md`, the design Geoff settled in conversation. Everything here was read or run\\nagainst commit `745419b` on `main`.\\n\\nThis spec adds one command, `bin/notes search <word>`, in one task that ends in one pull request. The task is\\nplanned at 40 minutes. Two "
+    },
+    {
+      "name": "Agent",
+      "input": "{\"description\": \"Fresh read of spec.md\", \"subagent_type\": \"general-purpose\", \"model\": \"fable\", \"effort\": \"high\", \"run_in_background\": false, \"prompt\": \"You are the fresh reader for a spec, and you have no other context on purpose.\\n\\nRepo: /tmp/spec-writing-run-3q9np3r4/write-two-sources (a tiny bash notes tool). Read these files there: spec.md (the spec under review), brief.md (the design the own"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la . .workstation .claude .claude/skills/* 2>&1; git status --short; wc -l spec.md brief.md README.md bin/notes tests/run.sh scripts/gate.sh .workstation/* .claude/skills/building-from-specs/references/*\", \"description\": \"List repo files and line counts\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/brief.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in README.md bin/notes tests/run.sh scripts/gate.sh .workstation/task-report.txt .workstation/denials.log .workstation/remote.txt; do echo \\\"=== $f\\\"; cat -n -A \\\"$f\\\" | sed 's/\\\\$$//'; done; echo; cat -n .claude/skills/building-from-specs/references/writing-a-spec.md\", \"description\": \"Print the repo source files and the guide\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files; echo ---; git log --oneline; git remote -v; git branch -a; ls -la bin tests scripts; ls .claude/skills/building-from-specs/references .claude/skills/survey .claude/skills/survey/writing; git status --short --ignored | head -30\", \"description\": \"Show tracked files, remotes, branches, permissions\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"X='--exclude-dir=.git --exclude-dir=.claude --exclude-dir=.workstation --exclude=brief.md --exclude=CLAUDE.md'\\necho \\\"## usage (spec.md excluded)\\\"; grep -rn $X --exclude=spec.md usage . </dev/null; echo \\\"count incl spec.md: $(grep -rn $X usage . </dev/null 2>/dev/null | wc -l)\\\"\\necho \\\"## notes add|list\\\"; grep -rnE $X --exclude=spec.md 'notes (add|list)' . </dev/null\\necho \\\"## l"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"TMPDIR=$TMPDIR\\\"; grep --version </dev/null | head -1; bash --version | head -1; awk --version 2>/dev/null </dev/null | head -1; locale 2>/dev/null | head -3; id -u\\necho \\\"## help quotes\\\"; grep --help </dev/null | grep -E -- '-F, |-i, '\\necho \\\"## man\\\"; (man grep 2>/dev/null </dev/null | col -b | grep -n -A2 'Normally the exit status') || echo \\\"man unavailable\\\"\\nf=$(mktemp"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la ~/.claude/docs/voice/ 2>&1 | head -20; command -v claude-worktree-busy task-report gh 2>&1; cd /tmp/spec-writing-run-3q9np3r4/write-two-sources && grep -rn -i -e 'written-for-people' -e 'README' .claude/skills/survey/writing/writing-voice.md </dev/null | head -20; ls -la ~/.notes 2>&1 | head -2\", \"description\": \"Check the voice standard path and helper commands exist\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"written-for-people|README|shell\", \"path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/.claude/skills/survey/writing\", \"output_mode\": \"content\", \"head_limit\": 20}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"planPathMin|A session at work|The pull request|Launching a task|In place of a question\", \"path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources\", \"output_mode\": \"content\", \"glob\": \"!spec.md\", \"head_limit\": 20}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"wc -l .claude/skills/survey/writing/*.md && cat -n .claude/skills/survey/writing/writing-voice.md | head -80; sed -n 1,12p .claude/skills/survey/writing/technical-doc-go.md; sed -n 30,40p .claude/skills/survey/writing/commit-and-pr.md\", \"description\": \"Read the repo's voice router for README standard\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"exec </dev/null\\nf=$(mktemp); printf '%s\\\\n' 'buy rope' 'Call ROPE shop' 'a.c' 'abc' 'fix -v flag' > \\\"$f\\\"\\nfor w in ROPE 'b*e' '[a-z]'; do echo \\\"grep -iF -- $w:\\\"; grep -iF -- \\\"$w\\\" \\\"$f\\\"; echo \\\"exit=$?\\\"; done\\nfor c in 'search ROPE' \\\"search 'b*e'\\\" \\\"search '[a-z]'\\\"; do eval \\\"NOTES_FILE=\\\\$f bin/notes $c\\\" >/dev/null 2>&1; echo \\\"today $c exit=$?\\\"; done\\nNOTES_FILE=$f.miss"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"planned at 40 minutes. Two things in it go beyond the brief, and both need your eye before you approve: the\\nbrief's exit code for \\\"no match\\\" contradicts a promise in the README, and the task changes `README.md`, a file\\nthe brief doesn't name. The next section covers both. Nothing else"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"run, that `search` exits 1 when nothing matches, and that every command exits 2 on a usage error.\", \"new_string\": \"run, that `search` exits 1 when nothing matches, and that every command exits 2 on a usage error. The second\\nsentence, about scripts, stays and is narrowed to `add` and `lis"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"Three edges are decided here and listed again under the calls.\", \"new_string\": \"The word is checked before the file. A search with no word exits 2 whether or not the notes file exists.\\n\\nThree edges are decided here and listed again under the calls.\"}"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"All three were run today against a five-line file holding `buy rope`, `Call ROPE shop`, `a.c`, `abc`, and\\n`fix -v flag`.\", \"new_string\": \"All three were run today against a file holding `buy rope`, `Call ROPE shop`, `a.c`, `abc`, and `fix -v flag`.\\nThe probes that use brackets, a star, "
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"| `c:\\\\T` printed a warning, \\\"escape sequence `\\\\T' treated as plain `T'\\\", and matched nothing |\", \"new_string\": \"| `c:\\\\T` printed a warning, \\\"escape sequence `\\\\T' treated as plain `T'\\\", and missed `path C:\\\\tmp`, which `grep -iF` found |\"}"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"The file list comes from five searches of the working tree, with `.git`, `.claude`, `.workstation`,\\n`brief.md`, and `CLAUDE.md` left out.\", \"new_string\": \"The file list comes from five searches of the working tree, with `.git`, `.claude`, `.workstation`,\\n`brief.md`, `CLAUDE.md`, and thi"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"| `grep -rnE 'notes (add\\\\|list)'` | 5 |\", \"new_string\": \"| `grep -rnE` for `notes add` or `notes list` | 5 |\"}"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"`bin/notes:7` is the usage line, and it changes. `README.md:10` is the exit-code sentence, and it changes.\", \"new_string\": \"`bin/notes:7` is the usage line, and it changes. `README.md:10` is the exit-code sentence, and it changes along with the sentence on line 11 that depends on it.\"}"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"**Minutes.** 40, and the goal's time clause is `or stop after 80 minutes`. `task-report --since 2026-11-01`\\nlists three tasks in this repo. The two that changed a command are the like ones: \\\"Add notes list\\\" measured 34\\nminutes, and \\\"Let notes add read stdin\\\" measured 41 with one fix"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"   prints `buy rope` and then `Call ROPE shop`, nothing on stderr, and exits 0. Today it prints the old usage\\n   line on stderr and exits 2, as do the commands in items 2 to 5.\\n2. **The word is plain text.** `NOTES_FILE=$f bin/notes search a.c` prints only `a.c`.\\n   `NOTES_FILE=$f bin/"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"4. **A missing word is a usage error.** `bin/notes search` and `bin/notes search \\\"\\\"` each print nothing on\\n   stdout, print exactly `usage: notes add <text> | notes list | notes search <word>` on stderr, and exit 2.\\n   `bin/notes bogus` prints the same line and exits 2.\", \"new_string\""
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"   and `NOTES_FILE=$f bin/notes list` prints the five notes and exits 0. Both do the same today. The diff\\n   leaves `test_add_then_list`, `test_list_empty`, and `test_usage` unchanged.\\n7. **The gate passes and runs the new tests.** On the branch's last commit, `bash scripts/gate.sh` exi"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"10. **The pull request is ready.** It is open against `main` on `example/notes`, the reviewer's verdict on its\\n    last commit is accept, and its body follows the skill's section \\\"The pull request\\\", with `planPathMin` set\\n    to 40.\", \"new_string\": \"10. **The pull request is ready.** "
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"### Start conditions\\n\\n`spec.md` is not committed,\", \"new_string\": \"### Start conditions\\n\\nBefore launch, the launching session fetches `origin` and compares `origin/main` with `745419b`, the commit\\nthis spec was checked against. If they match, the spec stands as written. If `origin/ma"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"applies. The session that launches the task runs all four checks again on the day.\\n\\n## Backlog sweep\\n\\nThe scoped sweep found nothing to rule on. The repo tracks no backlog file:\", \"new_string\": \"applies. The session that launches the task runs all four checks again on the day. A push "
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"keeps its backlog as GitHub issues, they weren't readable from here, and the launching session should look\\nbefore it launches.\", \"new_string\": \"keeps its backlog as GitHub issues, they weren't readable from here. An issue that names one of the three\\nfiles would need its own verdict from"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"13. The task is planned at 40 minutes, from the two measured command tasks.\", \"new_string\": \"13. The task is planned at 41 minutes, the higher of the two measured command tasks.\"}"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-two-sources/spec.md\", \"old_string\": \"17. The `shellcheck` warnings in `tests/run.sh` today (SC2164 and SC2329) are left alone. `shellcheck` isn't\\n    part of the gate.\", \"new_string\": \"17. The `shellcheck` warnings in `tests/run.sh` today (SC2164 and SC2329) are left alone. `shellcheck` isn't\\n    part of the gate.\\n18. The"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git status --short && grep -c '\\u2014' spec.md; grep -n -e 'line 10\\\\b' -e '\\\\b40\\\\b' -e '80 minutes' spec.md; wc -l spec.md\", \"description\": \"Confirm only spec.md changed and scan for leftovers\", \"timeout\": 20000}"
+    }
+  ],
+  "result": "The spec is written to `spec.md`, and it is the only file I wrote; nothing is built or committed. Two decisions in it go beyond the brief and need your eye before you approve.\n\n- **The exit code contradicts the README.** The brief says no match exits 1. `README.md` lines 10 to 11 say every command exits 0 when it runs, and that scripts rely on that. I kept the brief's exit 1, because it is your later word and no working script can call `search` today. Reversing to exit 0 is one line of code, one test, and one README sentence.\n- **`README.md` joins the task.** The brief names only `bin/notes` and `tests/run.sh`. I added the README so it describes `search` and its exit-code sentences stay true, with the scripts promise narrowed to `add` and `list`.\n\nOne start condition is open and needs no ruling from you. This checkout may be behind the remote: the task report lists pull request 18, \"Let notes add read stdin\", but `bin/notes` here reads no stdin and there is no `origin/main` ref to compare. The spec tells the launching session to fetch and compare with `745419b` before launch.\n\nThe rest of the spec:\n\n- **Task:** one task, `notes-search`, ending in one pull request, with ten done items. Each check that can run today was run, and today's result is recorded beside it.\n- **Minutes:** 41, the higher of the two measured command tasks, with a time clause of 82 minutes. The repo has no CI, so the task waits on nothing.\n- **Product calls the brief left open:** seven, each listed with what was passed over. Among them: several words join into one phrase as `add` does, an empty word is a usage error, and a missing notes file counts as no match.\n- **Denials log:** all three refusals fall in the last 30 days, and the task avoids each.\n- **Backlog sweep:** nothing in scope, because the repo tracks no backlog file. GitHub issues weren't readable from here.\n- **Fresh reader:** it returned 12 findings. Nine changed the spec, most usefully two wildcard words and an upper-case word in the done items, since a build with an unquoted comparison passed the first draft. None added a question for you.\n\nThree things I couldn't check from this sandbox: the busy check on the main checkout, the GitHub sign-in the task pushes with, and the voice guide the spec names for the README, which isn't readable here. The spec leaves the first two to the launching session."
+}

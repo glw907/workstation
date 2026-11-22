@@ -1,0 +1,161 @@
+{
+  "case": "write-missing-file",
+  "kind": "write",
+  "suite": "spec-writing",
+  "started": "2026-11-22T22:09:10Z",
+  "seconds": 482.4,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "e85af74d5823609c0042d2c249f10b3ed6769944",
+  "promptHash": "960c4aa467dd4a7f36210c62b8abe680e83e8ea0",
+  "fixtureHead": "d39b6964d0593c249a1e2e8a12769b811310709a",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 6.0,
+  "timeLimitSeconds": 1800,
+  "words": 4084,
+  "judgeCostUsd": 0.0383464,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": true,
+      "answer": "yes",
+      "quote": "| `completions/notes.bash` | Line 2 offers `add list search`. |",
+      "quoteFound": true
+    },
+    "length": {
+      "passed": false,
+      "words": 4084
+    },
+    "built": {
+      "passed": true,
+      "status": [
+        "?? spec.md"
+      ],
+      "headUnchanged": true
+    },
+    "guide": {
+      "passed": true,
+      "reads": [
+        {
+          "call": "ls -R .claude/skills/building-from-specs; cat .claude/skills/building-from-specs/references/writing-a-spec.md; echo ----; cat README.md; echo ----; cat -n bin/notes; echo ----; cat -n tests/run.sh; ec",
+          "inside": true,
+          "failed": false
+        }
+      ]
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 3.8118098000000002,
+  "turns": 20,
+  "permissionDenials": [
+    {
+      "tool_name": "Bash",
+      "tool_use_id": "toolu_01Mabyg3iLiMAWDokvYdaUK8",
+      "tool_input": {
+        "command": "ls -lad ~/.claude/docs ~/.claude 2>&1; file ~/.claude/docs 2>&1; ls -la ~/.claude 2>&1 | head -30",
+        "description": "Check whether the cited voice doc directory exists or is masked"
+      }
+    }
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-missing-file/brief.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && ls -la . .workstation .claude 2>/dev/null; cat .workstation/*\", \"description\": \"List repo files and print workstation stand-in files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -R .claude/skills/building-from-specs; cat .claude/skills/building-from-specs/references/writing-a-spec.md; echo ----; cat README.md; echo ----; cat -n bin/notes; echo ----; cat -n tests/run.sh; echo ----; cat -n scripts/gate.sh; echo ----; cat -n completions/notes.bash; ls .claude/skills\", \"description\": \"Read the spec-writing guide and the repo's source files\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"standards:backlog-sweep\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"== gate today\\\"; bash scripts/gate.sh; echo \\\"exit $?\\\"\\necho \\\"== search today\\\"; bin/notes search rope; echo \\\"exit $?\\\"; bin/notes search; echo \\\"exit $?\\\"\\necho \\\"== remote\\\"; git remote -v; git branch -a; git log --oneline | cat\\necho \\\"== tools\\\"; command -v claude-worktree-busy task-report gh claude grep; grep --version | head -1; bash --version | head -1\\necho \\\"== sear"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"wc -l ~/.claude/docs/voice/written-for-people.md 2>&1; sed -n 1,80p ~/.claude/docs/voice/written-for-people.md 2>&1 | cut -c1-400\\nP=\\\"$TMPDIR/proto\\\"; rm -rf \\\"$P\\\"; mkdir -p \\\"$P\\\"; git archive HEAD | tar -x -C \\\"$P\\\"; cd \\\"$P\\\"\\necho \\\"== grep help lines\\\"; grep --help | grep -E -e '^  -F' -e '^  -i' -e '^  -e'\\n# Prototype A: brief's two files only\\ncat > bin/notes <<'EOF'\\n#!/usr"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cat > \\\"$TMPDIR/checks.sh\\\" <<'EOF'\\nf=$(mktemp)\\nprintf '%s\\\\n' 'buy rope' 'call mum' 'Rope for the boat' 'a.c' 'abc' 'use the -n flag' > \\\"$f\\\"\\nexport NOTES_FILE=$f\\nrun() { echo \\\"\\\\$ $*\\\"; \\\"$@\\\"; echo \\\"[exit $?]\\\"; }\\necho \\\"# 1\\\"; run bin/notes search rope\\necho \\\"# 2\\\"; run bin/notes search ROPE\\necho \\\"# 3\\\"; run bin/notes search a.c; run bin/notes search '.*'; run bin/notes"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd \\\"$TMPDIR/proto\\\" && f=$(mktemp) && echo 'buy rope' > \\\"$f\\\" && chmod 000 \\\"$f\\\" && NOTES_FILE=$f bin/notes search rope; echo \\\"[exit $?]\\\"; d=$(mktemp -d); NOTES_FILE=$d bin/notes search rope; echo \\\"[exit $?]\\\"; cd /tmp/spec-writing-run-3q9np3r4/write-missing-file && git diff main...HEAD --name-only; echo \\\"[exit $?]\\\"; git diff main...HEAD -- tests/run.sh | grep -c '^-[^-]'; dat"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3q9np3r4/write-missing-file/spec.md\", \"content\": \"# Spec: notes search\\n\\nWritten 2026-11-22 from `brief.md`, against `main` at `d39b696`. This spec adds one command,\\n`bin/notes search <word>`, as one task that ends in one pull request, planned at 40 minutes.\\n\\nIt departs from the brief in one place. The brief says the work changes `bin/notes` and\\n`tests/run"
+    },
+    {
+      "name": "Agent",
+      "input": "{\"description\": \"Fresh read of spec.md\", \"subagent_type\": \"general-purpose\", \"model\": \"fable\", \"effort\": \"high\", \"run_in_background\": false, \"prompt\": \"You are the fresh reader of a spec before its owner sees it. You have no other context, and that is the point.\\n\\nRepo: /tmp/spec-writing-run-3q9np3r4/write-missing-file (a tiny bash notes tool: bin/notes, tests/run.sh, scripts/gate.sh, completions"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la . .workstation bin tests scripts completions && cat -n spec.md\", \"description\": \"List repo files and print the spec with line numbers\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cat -n brief.md && for f in bin/notes tests/run.sh scripts/gate.sh completions/notes.bash README.md; do echo \\\"=== $f\\\"; cat -n $f; done\", \"description\": \"Print the brief and the five repo files with line numbers\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in .workstation/*; do echo \\\"=== $f\\\"; cat -n $f; done; git status --short; git ls-files; git branch -a; git remote -v; echo ---list; git grep -nw list -- ':!spec.md'; echo ---usage; git grep -n usage -- ':!spec.md'; echo ---binnotes; git grep -n 'bin/notes' -- ':!spec.md'; echo ---search; git grep -n -i search -- ':!spec.md'; echo ---backlog; git grep -n -i -e backlog -e todo -"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"f=$(mktemp) && printf '%s\\\\n' 'buy rope' 'call mum' 'Rope for the boat' 'a.c' 'abc' 'use the -n flag' > \\\"$f\\\" && export NOTES_FILE=$f\\nrun(){ echo \\\"--- $*\\\"; \\\"$@\\\" > $TMPDIR/o 2> $TMPDIR/e </dev/null; echo \\\"rc=$? stdout=[$(cat $TMPDIR/o)] stderr=[$(cat $TMPDIR/e)]\\\"; }\\nfor i in 1 2; do\\nrun bin/notes search rope; run bin/notes search ROPE; run bin/notes search a.c; run bin/notes "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"HOME=$HOME\\\"; ls ~/.claude/docs 2>&1 | head -20; ls /var/home/glw907/.claude/docs/voice 2>&1 | head\\nsrc=/tmp/spec-writing-run-3q9np3r4/write-missing-file; w=$(mktemp -d); git clone -q \\\"$src\\\" \\\"$w/r\\\" && cd \\\"$w/r\\\" && git checkout -q -b notes-search\\nmk(){ # $1 = extra grep flags, $2 = file test\\ncat > bin/notes <<EOF\\n#!/usr/bin/env bash\\nset -euo pipefail\\nfile=\\\"\\\\${NOTES"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -lad ~/.claude/docs ~/.claude 2>&1; file ~/.claude/docs 2>&1; ls -la ~/.claude 2>&1 | head -30\", \"description\": \"Check whether the cited voice doc directory exists or is masked\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"w=$(ls -dt ${TMPDIR:-/tmp}/tmp.*/r 2>/dev/null | head -1); cd \\\"$w\\\" || exit 1; git checkout -q -- . ; cp tests/run.sh $TMPDIR/run.orig\\necho \\\"## (a) second loop added, test_usage body rewritten, line 21 untouched\\\"\\nsed -i '13s/.*/  true/' tests/run.sh\\nsed -i '21i test_search_x() { true; }' tests/run.sh\\nsed -i 's/^exit \\\"\\\\$fails\\\"/for t in test_search_x; do if \\\"$t\\\"; then echo \\"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd \\\"$TMPDIR/proto\\\" && f=$(mktemp) && printf '%s\\\\n' 'buy rope' 'call mum' 'Rope for the boat' 'a.c' 'abc' 'use the -n flag' > \\\"$f\\\" && export NOTES_FILE=$f\\nfor d in \\\"$TMPDIR/proto\\\" /tmp/spec-writing-run-3q9np3r4/write-missing-file; do cd \\\"$d\\\"; echo \\\"### $d\\\"\\necho '$ search rop'; bin/notes search rop; echo \\\"[exit $?]\\\"\\necho '$ search \\\" \\\"'; bin/notes search ' '; echo \\\"[ex"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"python3 -I - <<'PY'\\nimport re, pathlib\\np = pathlib.Path(\\\"spec.md\\\"); s = p.read_text()\\ndef rep(old, new, count=1):\\n    global s\\n    assert s.count(old) == count, (old, s.count(old))\\n    s = s.replace(old, new)\\n\\nrep(\\\"The first four rows come from the brief and are settled.\\\", \\\"The first five rows come from the brief and are settled.\\\")\\nrep(\\\"| \\\\\\\"Contains\\\\\\\" | The word ma"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"python3 -I - <<'PY'\\nimport pathlib\\np = pathlib.Path(\\\"spec.md\\\"); s = p.read_text()\\nold = \\\"\\\"\\\"The shape that passed every check below is `grep -iF -e \\\"$word\\\" -- \\\"$file\\\"`, after a test that the\\nword is not empty and a test that the path is a regular file (`[ -f ]`). `-e` is what keeps a word such as `-n` from\\nbeing read as an option.\\\"\\\"\\\"\\nnew = \\\"\\\"\\\"The shape that passed "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"python3 -I - <<'PY'\\nimport pathlib\\np = pathlib.Path(\\\"spec.md\\\"); s = p.read_text()\\nold = \\\"\\\"\\\"such as `-n` from being read as an option. How the session writes it is its call, and the goal checks the behaviour.\\n\\\"\\\"\\\"\\nnew = \\\"\\\"\\\"such as `-n` from being read as an option. How the session writes it is its call, and the goal\\nchecks the behaviour.\\n\\\"\\\"\\\"\\nassert old in s; s = s."
+    }
+  ],
+  "result": "The spec is in `spec.md`. It is the only file written, and nothing is committed.\n\nIt departs from the brief in one place: the task changes four files, not the two the brief names.\n\n- **`completions/notes.bash` is required.** `test_completions_match` compares the commands named in `bin/notes` with the ones the completion file offers. Once the usage line names `notes search`, the gate fails. I confirmed this on a throwaway copy: red with the completion file untouched, green once its line 2 offers `add list search`.\n- **`README.md` is my call.** It describes each command, so it would be wrong the day the pull request merges. Striking it removes one goal item and nothing else.\n\nThe spec lists every decision I took where I would have asked. The ones that shape behaviour:\n\n- **Contains:** the word may sit inside a longer word, so `rop` finds `buy rope`.\n- **Extra arguments:** they join into one text, as `add` joins them.\n- **Empty word:** it counts as a missing word and exits 2. A word of only spaces is searched as given.\n- **No notes file:** it counts as no match, so nothing is printed and the exit is 1.\n- **Unreadable notes file:** `grep`'s message and its exit 2 pass through, untested.\n\nThe task is planned at 40 minutes, from the two like tasks in the task report (34 and 41 measured), with a time clause of 80. The goal has 13 items. Each check ran on today's `main` and on the throwaway copy, with the output recorded beside it.\n\nOne fresh reader checked the spec against the repo. Its nine findings were all minor calls, and all are folded in. The biggest was that a whole-word build passed every goal item, so a check for a partial word was added.\n\nThings to know before launch:\n\n- **Fragile test:** any `notes <lowercase word>` in `bin/notes`, even in a comment, turns `test_completions_match` red. The spec warns the session and leaves the test alone. The repo has no backlog to file it in.\n- **Launch checks not run:** `claude-worktree-busy` and the count of working sessions were not reachable from here. They fall to the launching session, which also confirms that local `main` matches the remote's.\n- **Voice standard unread:** `~/.claude/docs/voice/written-for-people.md` could not be read from here. The spec names it for the README sentence and says what the session does if it can't read it either.\n- **Spec location:** `spec.md` stays uncommitted, and the goal names it by absolute path in the main checkout."
+}

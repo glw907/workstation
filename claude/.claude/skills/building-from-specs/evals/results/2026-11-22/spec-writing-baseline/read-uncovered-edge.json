@@ -1,0 +1,55 @@
+{
+  "case": "read-uncovered-edge",
+  "kind": "read",
+  "suite": "spec-writing",
+  "started": "2026-11-22T22:44:56Z",
+  "seconds": 85.9,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "e85af74d5823609c0042d2c249f10b3ed6769944",
+  "promptHash": "83f788a24589bbe8bc83d5e6d601de96272ff95c",
+  "fixtureHead": "e8bd096f0a18fd349d0c15f5430159444ef282ae",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 2.0,
+  "timeLimitSeconds": 900,
+  "words": 634,
+  "judgeCostUsd": 0.008848400000000001,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": null,
+      "answer": "yes",
+      "quote": "`list` treats a missing file as empty, and the spec never says what search does.",
+      "quoteFound": true
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 0.8178116,
+  "turns": 5,
+  "permissionDenials": [],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3q9np3r4/read-uncovered-edge/spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && ls -la\", \"description\": \"List repository files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in bin/notes tests/run.sh scripts/gate.sh README.md; do echo \\\"=== $f\\\"; cat -n -A \\\"$f\\\" | sed 's/\\\\$$//'; done; git remote -v; git grep -n usage -- bin tests; bash scripts/gate.sh; echo \\\"exit $?\\\"; bin/notes search rope; echo \\\"exit $?\\\"; grep -c \\\"notes search\\\" README.md\", \"description\": \"Show source files and verify the spec's stated facts\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd \\\"$TMPDIR\\\" && f=$(mktemp) && printf '%s\\\\n' 'Buy rope' 'fix a.c' 'fix abc' 'ROPE ladder' > \\\"$f\\\"\\nchk(){ # $1 = name, rest = command taking word as last arg\\n  local n=$1; shift\\n  local a b c d; a=$(\\\"$@\\\" rope); ea=$?; b=$(\\\"$@\\\" a.c); c=$(\\\"$@\\\" '.*'); ec=$?; d=$(\\\"$@\\\" zzz); ed=$?\\n  if [ \\\"$a\\\" = $'Buy rope\\\\nROPE ladder' ] && [ $ea = 0 ] && [ \\\"$b\\\" = \\\"fix a.c\\\" ] && [ -z "
+    }
+  ],
+  "result": "I've read the spec, checked its stated facts against the repo (they all hold), and run a few deliberately wrong implementations against the spec's fixture. One question is left, and the done list lets several wrong results through.\n\n## Questions I'd still need answered\n\n1. **What does `notes search buy rope` do, with two unquoted arguments?** The spec only defines a single `<word>` and the missing or empty case. `add` joins its arguments with spaces, so the owner may expect search to do the same. The options are: join into the phrase `buy rope`, reject with usage and exit 2, or search the first word and ignore the rest. Each is a different user-visible behavior and a different test, and no done item covers it. Silently ignoring the extra words is the one that would do damage, and nothing would catch it.\n\nNothing else needs the author.\n\n## Done list: items that pass on a wrong result\n\nOne point applies to items 1 to 4: each is satisfied by the `ok` line printing, and the builder writes the test. A test with a weaker body than the spec describes still prints `ok`, so only the reviewer's read stands between the description and the check.\n\n**Item 1 (`test_search_finds`)**\n- **Whole-word matching passes.** No fixture note has `rope` inside a longer word, so `grep -iwF` passes all four tests yet fails the spec's own example, `rope` finds `ropes`. I ran this.\n- **One-sided case folding passes.** The fixture only searches a lowercase word. An implementation that lowercases the note but not the word passes, and `search ROPE` then finds nothing. I ran this.\n- **Alphabetical order passes.** `Buy rope` sorts before `ROPE ladder`, so output sorted by text instead of by age gets through.\n- **Extra output may pass.** The item says \"prints `Buy rope` then `ROPE ladder`\", not \"only\" as item 2 does, so a contains-style assertion satisfies the wording.\n\n**Item 2 (`test_search_plain_text`)**\n- **A word starting with `-` is taken as an option.** `grep -iF \"$word\"` without `--` passes. I ran this. `search -v` then treats the word as a grep flag.\n- **Backslashes are untested.** An `awk -v` implementation mangles `a\\.c` and passes.\n- **Exit status is unchecked for `search a.c`.** The item asserts only the output.\n\nPlain regex and unquoted glob implementations are caught; I ran both.\n\n**Item 3 (`test_search_no_match`)**\n- **A crash passes.** Empty stdout and exit 1 is also what a `set -e` script dying looks like, and stderr is not asserted.\n- **The missing notes file is uncovered.** A plain `grep` on a missing file prints `No such file or directory` and exits 2, which reads as a usage error. `list` treats a missing file as empty, and the spec never says what search does.\n\n**Item 4 (`test_search_missing_word`)**\n- **The old usage line can survive on the fallback branch.** The new line could be printed only in the search branch while `notes bogus` still prints the old one. `test_usage` checks only the `usage:` prefix, so nothing fails.\n- **Usage on stdout may pass.** Stdout is not asserted empty, so a test that captures `2>&1` accepts usage printed to the wrong stream.\n\n**Item 5 (README grep)**\n- **Any line containing the string passes.** `grep -c \"notes search\"` prints 1 for \"notes search is not supported yet\", or for a description that gets the behavior wrong.\n- **It also fails a correct README.** `grep -c` counts lines, so a description plus an example line prints 2.\n\n**Item 6 (gate exits 0)**\n- **It adds only the three existing tests to items 1 to 4.** \"Nothing about `add` or `list` changes\" rests on two single-case tests, so a change to how `add` joins several arguments passes.\n- **A changed exit code for an unknown command passes.** `test_usage` never checks the exit status."
+}

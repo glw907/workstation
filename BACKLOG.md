@@ -10,6 +10,14 @@
 
 ## Medium
 
+- [ ] **#114** Fix the spec-writing test's grading gaps with its next full run `#bug` `#workstation` `#initiative:claude-config-alignment` *(2026-11-22)*
+  Each fix below changes the suite hash, so it makes the 2026-11-22 baseline stale and needs a full rerun (about $34). Land them together, in the same change as the next full spec-writing run. Found by pull request 266 and its review. In `claude/.claude/skills/building-from-specs/evals/`:
+  - `run_evals.py:545-546`: `--check-graders` stops a sample after one try whenever `answer` is None, which a judge error also returns. On `fail.md` or `near-miss.md` an errored judge grades as the wanted fail, so the line reads `ok` with that judge untested. Break only when `got["pattern"] is False`, and count a result with `"error"` as wrong.
+  - `run_evals.py:449-453` and `654`: in `--run`, a judge error is recorded as a trap `fail`, which `--summary` can't tell from a real one. Mark the check errored and make `--summary` exit 1 on it.
+  - `run_evals.py:296`: `reader_prompt` fills `[DOCUMENT_PATH]` but not the `<path>` in the spec's reader brief, and `promptHash` hashes the processed text where the spec's task 2 compares it with `git hash-object reader-brief.md`. This matters once a reader case fails and `reader-brief.md` is written. Fill `<path>` and record the source file's blob hash.
+  - `run_evals.py:661`: `effort` and `sandbox` are written as literals. Read them from the command the runner passed.
+  - `files/spec-writing/read-false-fact/samples/near-miss.md` lacks the word `fail`, so the pattern gate rejects it and the judge is never tested on a near miss for that case.
+  - Each `files/spec-writing/*/proof.sh` runs `cd "$1"` at line 4 with no `|| exit 1`, and two run `cd "$w"` the same way. Guard each `cd` and drop the SC2164 exclusion in `scripts/check.sh` `check_shellcheck`.
 - [ ] **#113** Drop the deleted `approval-packet` skill from Vale's config `#improvement` `#workstation` `#initiative:claude-config-alignment` *(2026-11-22)* *(swept 2026-11-22)*
   `vale/.config/vale/.vale.ini:13-16` still names "the approval-packet models" in a comment and globs `**/skills/approval-packet/references/*.md`. The skill is gone, so the glob matches nothing and the comment names a retired word. The `**/*.queue.md` glob stays, since `written-for-people.md` step 2 names pages that way. Left alone, the next retired-words search over `vale/` prints these lines. Found by the first "Retiring the old process" pull request, whose searches leave `vale/` out.
 - [ ] **#111** Carry the cairn front-door "one section per read" rule into cairn-cms `cairn-writing-docs` `#improvement` `#workstation` *(2026-11-21)*
