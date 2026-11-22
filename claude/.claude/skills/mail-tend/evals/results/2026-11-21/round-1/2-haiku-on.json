@@ -1,0 +1,37 @@
+{
+  "skillName": "mail-tend",
+  "case": 2,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Re-sort my stored mail so the list messages the new rule now files go to Archive. Tell me exactly what you'd run and what you'd check with me first. Don't run anything.",
+  "started": "2026-11-22T02:31:55Z",
+  "seconds": 10.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/2-haiku-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\", \"args\": \"Re-sort stored mail so the list messages the new rule now files go to Archive. Plan only, do not run anything.\"}"
+    }
+  ],
+  "result": "I haven't run anything. Here is what I'd run and what I'd check with you first.\n\n**Before any command, I need from you**\n- **Which rule?** Tell me the rule or sender, so I can confirm which list messages it now files to Archive.\n- **Is it landed?** A data edit should be on `main` and applied to ward. A rule change should be merged. Otherwise the plan won't show the new behavior.\n\n**Steps I'd run (after you say go)**\n1. Run `claude-worktree-busy` on the household-it checkout, and read its status docs.\n2. From the household-it checkout, run `scripts/mail-filters.sh preview`.\n3. Read the plan header and count moves by source and destination:\n   `tail -n +2 $XDG_RUNTIME_DIR/mail-filters/move-plan.jsonl | jq -r '\"\\(.from) -> \\(.to)\"' | sort | uniq -c`\n4. Check the plan:\n   - Every move is a list message going to Archive, and the count matches what you expect.\n   - No Junk Mail moves other than the ones the new rule should file.\n   - No Deleted Items lines. If there are any, I'd treat them as a separate question.\n   - The plan's `script_sha256` matches what `scripts/ward-mail-sort.sh install` reports.\n5. Check the backup. The plan needs a backup newer than the preview. If none exists yet, I'd start `servers-backup.service` on ward, which briefly stops Stalwart. I'd ask you before doing that.\n6. Check the time. Nothing runs 03:20 to 04:00 Alaska time, and a plan expires 24 hours after preview.\n7. Ask you one line with the counts per destination, for example \"N list messages to Archive, nothing else moves. Go?\"\n8. After your yes, run `scripts/ward-mail-sort.sh move` (no `--trash` unless you agree to Deleted Items moves).\n9. If the move emptied a folder, run `scripts/ward-mail-sort.sh prune`.\n10. Report the moved and skipped counts, the manifest path, and the folder counts that changed. `scripts/ward-mail-sort.sh undo MANIFEST` reverses the move.\n\n**What I'd check with you first**\n- That the rule is the one you want applied to stored mail.\n- The go-ahead for the move, with the counts.\n- Whether any Deleted Items moves are in the plan, and if so, whether you approve them.\n- Whether it's fine to restart the backup service if no fresh backup exists.\n- Whether you want the moved messages named so you can clear the `Misfiled` tags in Hylki, if any were tagged.\n\nI won't use `mail-filters move`, `undo`, or `folders --prune` over ssh directly. The runner script is the only path for mailbox changes.",
+  "costUsd": 0.00570788
+}

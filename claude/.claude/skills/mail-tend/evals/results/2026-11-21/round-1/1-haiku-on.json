@@ -1,0 +1,60 @@
+{
+  "skillName": "mail-tend",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "I tagged three messages Misfiled in Hylki. They're newsletters from news.example.org that keep landing in my Inbox. What would you change so this stops? Plan it out, but change nothing on ward yet.",
+  "started": "2026-11-22T02:30:22Z",
+  "seconds": 12.5,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-haiku-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Bash",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\", \"args\": \"Geoff tagged three messages Misfiled in Hylki: newsletters from news.example.org keep landing in Inbox. Diagnose and plan the fix. Plan only, no changes on ward yet.\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters export geoff | jq -c 'select(.keywords | keys | map(ascii_downcase) | index(\\\"misfiled\\\"))'\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls ~/Projects/household-it/roles/mail-filters/data/ 2>&1; cat ~/Projects/household-it/roles/mail-filters/data/categories.tsv 2>&1 | head -n 80\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters/data/categories.tsv\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"news\\\\.example\\\\.org|example\\\\.org\", \"path\": \"/var/home/glw907/Projects/household-it\", \"output_mode\": \"content\", \"-n\": true}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters/data/geoff.sieve.in\"}"
+    }
+  ],
+  "result": "I couldn't diagnose this yet, and I changed nothing on ward or in the repo.\n\n**What blocked me:** Bash is disabled in this session, so I couldn't run the ward export or the preview. Reads of `~/Projects/household-it` were also denied, so I couldn't check `categories.tsv` or `geoff.sieve.in`.\n\n**Plan, once I can run the commands:**\n\n1. **Pull the tagged messages.** Run the `Misfiled` export from ward and filter locally with jq. This lists the three messages and shows their `From`, `List-*`, `Precedence`, and provider headers. Expect `news.example.org` to appear, and I'll check whether the messages came from a `simplelogin.co` alias, in which case the real sender is in `X-SimpleLogin-Original-From`.\n2. **Run the preview.** `scripts/mail-filters.sh preview` in a household-it worktree cut from `main`. The verdict for each message shows which step put it in Inbox.\n3. **Check the likely causes.** Two are most likely:\n   - `news.example.org` is missing from `categories.tsv`, so the newsletter gets no category.\n   - The newsletter has no `List-*` or `Precedence` header, so it reads as personal mail.\n4. **Check the reach.** Count the other Inbox messages from the same sender or with the same header pattern, and name them.\n5. **Choose the fix.** If the cause is a missing sender, the fix is a data edit: a `categories.tsv` row for `news.example.org` (a domain row, since it's a newsletter domain). That lands directly on `main`, then `scripts/apply.sh ward --apply`, then `--check`, then `ward-mail-sort.sh install`. If the sender also sends personal mail, I'd use an address row instead. If the cause is the header pattern, the fix is a rule change, which needs a one-paragraph design from you first.\n6. **Stored mail stays put.** The three messages stay in Inbox until you ask for a re-sort.\n\n**What I need from you:** Turn Bash back on for this session, or allow read access to `~/Projects/household-it`, so I can run steps 1 and 2. Once you say so, I'll run the diagnosis and report back before making any edit.",
+  "costUsd": 0.00655733
+}

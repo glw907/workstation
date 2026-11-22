@@ -1,0 +1,51 @@
+{
+  "skillName": "mail-tend",
+  "case": 3,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "Why is this in Junk? It's from my dentist's office, appointments@smiledental.example, and it's a real appointment reminder. Diagnose it and say what you'd change. Plan only; change nothing.",
+  "started": "2026-11-22T02:34:23Z",
+  "seconds": 21.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-opus-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\", \"args\": \"Diagnose why a message from appointments@smiledental.example (dentist appointment reminder, legitimate) landed in Junk. Plan only; change nothing.\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"smiledental\", \"path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters\", \"output_mode\": \"content\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"roles/mail-filters/data/*\", \"path\": \"/var/home/glw907/Projects/household-it\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    }
+  ],
+  "result": "I couldn't confirm the cause on this message. Read access to `~/Projects/household-it` was declined, and this session has no shell, so I couldn't reach ward or run the preview. What follows comes from how the filters are built (the `mail-tend` skill). Treat it as a strong hypothesis, not a confirmed cause.\n\n## Likely cause\n\nThe Junk check runs only after every rule that recognizes a sender you trust has had its turn. Mail ends up in Junk only when no rule knew the sender and Stalwart's spam score reached 5 or more. So the likely story has two parts:\n\n1. **`smiledental.example` isn't in the filter data.** It's probably missing from both `categories.tsv` and `always-inbox.txt`, so no earlier rule caught it.\n2. **The message scored 5 or more.** Appointment reminders often come from a booking or texting service sending for the office. Those tend to score high: the SPF/DKIM signature belongs to the service rather than the dentist's domain, and the body is short, template-like, and full of links. That's a guess until I can read the `X-Spam-Result` header.\n\n## How I'd confirm it (all read-only)\n\n1. Find the message in Junk: `ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters export geoff --junk`, then filter for `appointments@smiledental.example`.\n2. Read its `X-Spam-Score` and `X-Spam-Result` headers to see which spam checks pushed it over 5. Also check whether it came through a SimpleLogin alias. If it did, the rule has to name the real sender from `X-SimpleLogin-Original-From`, never `simplelogin.co`.\n3. Run `scripts/mail-filters.sh preview` and check its `verdicts.jsonl` entry to confirm no rule matched it.\n4. Count other mail from that domain in Junk, the Inbox and other folders, so the fix covers all of it.\n\n## What I'd change\n\nThis needs a one-row data edit, not a rule change:\n\n- **Add `appointments@smiledental.example` to `always-inbox.txt`.** You'd see future reminders in the Inbox, and listing the one address keeps any other mail from the office's domain under normal sorting.\n- **Or add `smiledental.example` to `categories.tsv`** if you'd rather the office's mail go to a folder than the Inbox. Either row stops it reaching Junk.\n\nI'd go with the `always-inbox.txt` address, since appointment reminders are mail you want to see promptly.\n\nOnce you approve, the change would go in like this:\n1. Edit the file and run `tests/sieve-run/run.sh`, the preview, and the full gate.\n2. Push to `main`.\n3. Run `scripts/apply.sh ward --apply` and then `--check`.\n4. Run `scripts/ward-mail-sort.sh install` and check that its hash matches the plan.\n\nThat only affects new mail. Stored mail stays put unless you ask for a re-sort, and the message already in Junk is one you could just drag to the Inbox.\n\nI've changed nothing. If you grant read access to `~/Projects/household-it` and a shell, I can run the read-only steps and confirm the cause.",
+  "costUsd": 0.21346780000000004
+}

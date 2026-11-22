@@ -1,0 +1,56 @@
+{
+  "skillName": "mail-tend",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "I tagged three messages Misfiled in Hylki. They're newsletters from news.example.org that keep landing in my Inbox. What would you change so this stops? Plan it out, but change nothing on ward yet.",
+  "started": "2026-11-22T02:30:49Z",
+  "seconds": 13.7,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-sonnet-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Bash",
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"claude-worktree-busy ~/Projects/household-it; ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters export geoff | jq -c 'select(.keywords | keys | map(ascii_downcase) | index(\\\"misfiled\\\"))'\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd ~/Projects/household-it/roles/mail-filters/data && grep -n -i 'example.org' *.tsv *.txt; ls\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"example\\\\.org\", \"path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters\", \"output_mode\": \"content\", \"-i\": true}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"roles/mail-filters/data/*\", \"path\": \"/var/home/glw907/Projects/household-it\"}"
+    }
+  ],
+  "result": "I couldn't inspect anything, so this plan is built from the mail-tend skill and not from your actual messages. Bash is disabled in this session, so I couldn't reach ward. Read access to `~/Projects/household-it` hasn't been granted either, so I couldn't read the data files. I haven't changed anything.\n\n**What I'd do once I can read**\n\n1. **Check the repo and list the batch.** Run `claude-worktree-busy ~/Projects/household-it`. Then list the three `Misfiled` messages with `mail-filters export geoff`, filtered locally for the `misfiled` keyword. That gives me their Message-IDs, From addresses, and which headers they carry. I'd also check Junk Mail with `--junk`.\n2. **Find the cause.** In a household-it worktree, run `scripts/mail-filters.sh preview` and read each message's verdict step in `verdicts.jsonl`. I expect one of two causes:\n   - `news.example.org` is missing from `categories.tsv`, so the mail reads as personal.\n   - The newsletters carry no `List-*`, `Precedence`, or provider header, so no step recognizes them as bulk.\n   Another possible cause is that the From is a different domain or an alias that forwards mail. If so, I'd list the real sender, not `simplelogin.co`.\n3. **Count how far it reaches.** Count the other Inbox messages from `news.example.org` and report them. I'd also check that the fix doesn't catch personal mail from the same domain.\n4. **Pick the fix.** A data edit is the likely fit: a `news.example.org` row in `categories.tsv`. If the preview shows it should go somewhere other than the category default, I'd bring you a one-paragraph rule-change design in chat instead.\n\n**Landing it (only after you give the go-ahead)**\n\n- Add the row.\n- Run `tests/sieve-run/run.sh`, then `bash scripts/check.sh </dev/null` and the preview, and read the move plan.\n- Commit to `main` and run `scripts/apply.sh ward --apply`, then `--check`.\n- Run `scripts/ward-mail-sort.sh install` and confirm its hash matches the plan's `script_sha256`.\n- Report the counts per destination.\n\n**Left for you**\n\n- **Stored mail.** The existing three messages stay in the Inbox. I'd only re-sort them if you ask, and a plan of 20 moves or fewer from a data edit you asked for runs without a further ask.\n- **The `Misfiled` tag.** You'd need to clear it in Hylki, since the tooling never removes keywords.\n\nTo go further, I need Bash and read access to `~/Projects/household-it` (or a different session where those are enabled). Do you want to grant those, or should I wait?",
+  "costUsd": 0.11193879999999999
+}

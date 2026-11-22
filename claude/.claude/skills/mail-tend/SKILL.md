@@ -26,9 +26,9 @@ Geoff marks mail that landed in the wrong folder with Hylki's `Misfiled` tag, wh
 ward as the IMAP keyword `Misfiled` (Geoff, 2026-10-28). When he says he has tagged some, list them
 all and work through them as one batch: `ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters
 export geoff | jq -c 'select(.keywords | keys | map(ascii_downcase) | index("misfiled"))'`, and the
-same with `export geoff --junk` for Junk Mail. The jq runs locally, so it needs no file on ward. The
-helper adds a category tag but never removes a keyword, so name the moved messages in your report
-and Geoff clears the `Misfiled` tag in Hylki.
+same with `export geoff --junk` for Junk Mail. The jq runs locally, so it needs no file on ward. No
+helper removes the `Misfiled` keyword, so every report on a `Misfiled` batch names its messages and says that
+Geoff clears the tag in Hylki, whether or not a re-sort moves them.
 
 1. Find it on ward by its Message-ID: `ssh -o BatchMode=yes geoff@ward.907.life sudo stalwart-jmap
    find geoff '<message-id>'`, or search `sudo mail-filters export geoff` (headers only, never a
@@ -79,8 +79,9 @@ For a data edit:
    `scripts/apply.sh ward --apply`, then `--check`.
 3. Run `scripts/ward-mail-sort.sh install`. The hash it prints must equal the plan header's
    `script_sha256`.
-4. Report what landed and the plan's counts per destination. Stop there: stored mail stays where
-   it is unless Geoff asks for a re-sort.
+4. Report what landed and the plan's counts per destination, and for a `Misfiled` batch, that Geoff
+   clears the tag in Hylki. Stop there: stored mail stays where it is unless Geoff asks for a
+   re-sort.
 
 A rule change merges first, then follows steps 2 to 4 from `main`.
 

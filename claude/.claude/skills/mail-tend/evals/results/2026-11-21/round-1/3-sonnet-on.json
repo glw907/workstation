@@ -1,0 +1,47 @@
+{
+  "skillName": "mail-tend",
+  "case": 3,
+  "model": "claude-sonnet-5-5",
+  "skill": "on",
+  "query": "Why is this in Junk? It's from my dentist's office, appointments@smiledental.example, and it's a real appointment reminder. Diagnose it and say what you'd change. Plan only; change nothing.",
+  "started": "2026-11-22T02:33:58Z",
+  "seconds": 12.8,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-sonnet-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\", \"args\": \"Diagnose why a real appointment reminder from appointments@smiledental.example landed in Junk. Plan only; change nothing.\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"smiledental\", \"path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters\", \"output_mode\": \"content\", \"-i\": true}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"data/*\", \"path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters\"}"
+    }
+  ],
+  "result": "I couldn't diagnose this. Reading the mail-filter data and the message's headers needs access I don't have yet, so everything below is what I would check.\n\n**What I tried:** I tried to read `~/Projects/household-it/roles/mail-filters/`, which holds the Sieve data files. Both reads were denied for lack of permission. I have not touched the message on ward, and I haven't run the preview. I changed nothing.\n\n**What I expect to find:** The `mail-tend` skill says the spam test runs after every rule that vouches for a sender, and it passes or fails at a score of 5. So a message in Junk usually means no rule knows the sender. `smiledental.example` is probably missing from `categories.tsv` and `always-inbox.txt`. I haven't confirmed that.\n\n**Plan, once I can read:**\n1. Grep `roles/mail-filters/data/` for `smiledental` to confirm no row exists.\n2. Find the message on ward with `export geoff --junk`, which reads headers only, never the body. Read its `X-Spam-Score` and `X-Spam-Result`. I'm looking for what pushed it over 5, such as failed SPF, DKIM or DMARC, which would mean the dentist's mail setup is at fault and not your rules. I'd also check whether the From came through a forwarder or a third-party reminder service.\n3. Run `scripts/mail-filters.sh preview` to see which step and folder the script gives it.\n4. Count other messages from the same sender or domain, in Junk and elsewhere, so I can say how far the pattern reaches.\n\n**What I'd change:** Most likely a data edit, with no rule change. That means one row for the address, or the domain if the office mails from several addresses. It goes in `always-inbox.txt`, or in `categories.tsv` if you want it filed to a folder. The sequence would be:\n1. Run the gate and the sieve-run tests.\n2. Push to `main`.\n3. Run `apply.sh ward --apply`, then `--check`, then `ward-mail-sort.sh install`.\n4. Report the plan's counts.\n\nStored mail, including this reminder, wouldn't move unless you ask for a re-sort. If the headers show the message scored high for a reason that also hits other senders, I'd bring you a one-paragraph design for a rule change before touching the script.\n\nCan you grant read access to `~/Projects/household-it/roles/mail-filters/`? I also need to run read-only `ssh` commands to ward for the message headers. With both I can finish the diagnosis. If you'd rather paste the message's `X-Spam-*` and authentication headers, I can work from those.",
+  "costUsd": 0.0988907
+}

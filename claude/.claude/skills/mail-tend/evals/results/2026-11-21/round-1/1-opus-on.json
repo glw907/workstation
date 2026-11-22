@@ -1,0 +1,46 @@
+{
+  "skillName": "mail-tend",
+  "case": 1,
+  "model": "claude-opus-5-5",
+  "skill": "on",
+  "query": "I tagged three messages Misfiled in Hylki. They're newsletters from news.example.org that keep landing in my Inbox. What would you change so this stops? Plan it out, but change nothing on ward yet.",
+  "started": "2026-11-22T02:31:15Z",
+  "seconds": 21.1,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "mail-tend"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/1-opus-on/.claude/skills/mail-tend"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"mail-tend\", \"args\": \"Geoff tagged three messages Misfiled in Hylki: newsletters from news.example.org landing in Inbox. Plan the fix only; change nothing on ward.\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\", \"path\": \"/var/home/glw907/Projects/household-it/roles/mail-filters\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*\"}"
+    }
+  ],
+  "result": "I couldn't look at anything for this. Reading `~/Projects/household-it` was refused, and this session has no shell, so I couldn't reach ward over ssh or run the preview. Everything below follows the mail-tend procedure, but I haven't seen the three messages or checked the data files. The cause is a likely guess until step 1 confirms it.\n\n## Plan\n\n**1. Diagnose (read-only)**\n- List the tagged messages: `ssh -o BatchMode=yes geoff@ward.907.life sudo mail-filters export geoff | jq -c 'select(.keywords | keys | map(ascii_downcase) | index(\"misfiled\"))'`. Run the same with `--junk` in case others are tagged there.\n- For each message, check its From and any `X-SimpleLogin-Original-From`, plus the `List-*`, `Precedence` and provider stamp headers.\n- Run `scripts/mail-filters.sh preview` in a fresh household-it worktree. Its `verdicts.jsonl` will show which of the nine steps filed them to the Inbox.\n\n**2. Most likely cause and fix**\nNewsletters reach the Inbox for one of two reasons:\n- **Most likely:** `news.example.org` is missing from `categories.tsv`. The fix is one row that maps that domain to the newsletter category. This is a data edit, which is the preferred kind of fix.\n- **Or:** the messages carry no bulk headers, so the script reads them as personal mail. The same `categories.tsv` row still fixes that, because sender rows apply whatever the headers say.\n- If `example.org` itself also sends personal mail, I'd list only the `news.` subdomain or the exact sender address, not the whole domain.\n- I'd only consider changing the rules (`geoff.sieve.in`) if the preview showed the row has no effect. That would come to you as a one-paragraph design first.\n\n**3. Check the reach**\nCount every Inbox message from `news.example.org`, not just the three you tagged, and name them in the report.\n\n**4. Verify locally (still nothing on ward)**\nMake the edit in the worktree, then run `tests/sieve-run/run.sh`, `scripts/mail-filters.sh preview` and the full gate (`bash scripts/check.sh </dev/null`). Then read the move plan's counts per destination.\n\n**Where I'd stop for your go-ahead**\nLanding the fix means pushing to `main`, then `scripts/apply.sh ward --apply` and `--check`, then `scripts/ward-mail-sort.sh install`. Those steps change ward, so they wait for your OK. Moving the mail already stored in the Inbox is a separate re-sort, and I'd only do it if you ask. After any move you'd clear the `Misfiled` tags in Hylki yourself.\n\nTo run step 1, I need read access to `~/Projects/household-it` and a session with a shell. Once I have them, I can confirm the cause and bring you the exact row and the move-plan counts.",
+  "costUsd": 0.22196419999999997
+}
