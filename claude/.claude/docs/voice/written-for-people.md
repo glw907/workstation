@@ -11,7 +11,7 @@ of use:
 - Reference material a reader doesn't need to decide goes in a folded section, `<details>` with
   its heading in `<summary>`.
 - Don't use footnotes, alerts, math, or diagrams. They are GitHub website features outside the
-  specification, and the queue shows them as plain text.
+  specification, and a terminal shows them as plain text.
 
 A repo whose rules name a different format keeps it.
 
@@ -19,17 +19,17 @@ A repo whose rules name a different format keeps it.
 
 1. **Write from the standards and the models.** For Geoff, the standards are the Federal Plain
    Language Guidelines, Nielsen Norman Group on web writing, and Google's rules for headings.
-   The models in `~/.claude/skills/approval-packet/references/` apply them. His corrections of
-   2026-11-12 hold for every page:
+   `building-from-specs` applies them to a pull request in its section "The pull request". His
+   corrections of 2026-11-12 hold for every page:
    - Use no id you made up. Name the work in ordinary words, and a pull request by what it does.
    - Ask the plain question, never an indirect one.
    - A title names what changed or what is asked, and never counts things.
    - The opening is the whole page made small. A line of status isn't a summary.
 
    A page in a repo follows the standard the `writing-voice` router names for it.
-2. **Run Vale.** Name a queue document `<name>.queue.md` and write it in the session's job `tmp`
-   folder, outside any repo. Run `vale` on it and fix every error. A summary ending
-   `in 0 files.` means a wrong name or folder.
+2. **Run Vale.** Name a page that lives outside a repo `<name>.queue.md`, the name Vale's config
+   reads for this guide, and write it in the session's job `tmp` folder. Run `vale` on it and
+   fix every error. A summary ending `in 0 files.` means a wrong name or folder.
 3. **Run `tellgrader --register docs`** on the file. Fix what it reports and rerun until it
    prints `"findings": []` and `"warnings": []`.
 4. **Give the page alone to a reader with no context.** Dispatch one blocking Agent call,
@@ -46,7 +46,7 @@ or public. Only a repo's recorded rules replace it (Geoff, 2026-11-13).
 
 | Writing | Steps |
 | --- | --- |
-| A queue document, a round report, a string on a queue page | All four |
+| A page written for Geoff to decide on | All four |
 | A pull request's opening, STATUS, a hand-over's last message | 1 to 3, and 4 when it asks Geoff for something |
 | A reply or a question in chat | 1 |
 | Writing a repo already has rules for: cairn's docs, a site's pages and posts | Those rules, unchanged |
@@ -55,7 +55,7 @@ or public. Only a repo's recorded rules replace it (Geoff, 2026-11-13).
 
 A file only a session reads is written however is quickest and clearest for that session. Skills
 and `CLAUDE.md` stay in the agent-facing register. A plan or a launch prompt still names this
-guide for what its session writes for a person, as `pass-core` `references/planner.md` says.
+guide for what its session writes for a person, as `building-from-specs` does for a pull request.
 
 ## Public repos
 

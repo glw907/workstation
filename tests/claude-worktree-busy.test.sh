@@ -67,13 +67,6 @@ wait_cmd() {
 # stop_fixture: end the fixture process the last case started.
 stop_fixture() { kill "$sleeper" 2>/dev/null; wait "$sleeper" 2>/dev/null; sleeper=; }
 
-aq="$root/approval-queue"
-mkdir -p "$aq/approval-queue"
-git -C "$aq" init -q
-printf 'sleep 6; true\n' >"$aq/approval-queue/build"
-cp "$aq/approval-queue/build" "$aq/approval-queue/build.old"
-git -C "$aq" add approval-queue/build approval-queue/build.old
-git -C "$aq" -c user.name=t -c user.email=t@t commit -q -m init
 printf 'sleep 6; true\n' >"$root/daemon"
 
 check 0 "free" "$repo"
@@ -103,24 +96,10 @@ check 0 "daemon process holds path" "$repo"
 kill -0 "$sleeper" 2>/dev/null || { echo "FAIL: daemon process holds path: fixture ended early"; fail=1; }
 stop_fixture
 
-(cd "$root" && exec -a node bash "$aq/approval-queue/build") &
-sleeper=$!
-wait_cmd "$sleeper" "node $aq/approval-queue/build" "queue server holds path"
-check 0 "queue server holds path" "$aq"
-STUB_CWD="$aq" STUB_STATE="done" check 0 "queue server and a finished row" "$aq"
-kill -0 "$sleeper" 2>/dev/null || { echo "FAIL: queue server cases: fixture ended early"; fail=1; }
-stop_fixture
-
 (cd "$root" && exec -a node bash -c 'sleep 6; true' "$repo/other.js") &
 sleeper=$!
 wait_cmd "$sleeper" "node -c sleep" "other node process holds path"
 check 1 "other node process holds path" "$repo" "busy: process"
-stop_fixture
-
-(cd "$root" && exec -a node bash "$aq/approval-queue/build.old") &
-sleeper=$!
-wait_cmd "$sleeper" "node $aq/approval-queue/build.old" "node process with a longer file name"
-check 1 "node process with a longer file name" "$aq" "busy: process"
 stop_fixture
 
 (cd "$root" && exec -a claude bash daemon status "$repo") &

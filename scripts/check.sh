@@ -141,7 +141,7 @@ legs() {
         "roadmap-refs check test" bash tests/check-roadmap-refs.test.sh
     run memory-write-check '^tests/claude-memory-write-check\.test\.sh$|^bin/\.local/bin/claude-memory-write-check$' \
         "claude-memory-write-check hook" bash tests/claude-memory-write-check.test.sh
-    run pytest "\\.py\$|^ruff\\.toml\$|^tests/(fixtures|vale)/|^bin/\\.local/bin/(claude-(block-pass|launch-guard|merge-guard|secret-guard|tail-guard|tierguard|tooling-sync|pass|worktree-busy)|cairn-run-gate|ci-green|cleanroom|phone-check|pass-report|vale-hook|voipms-sms|pass-access|pass-count|pass-sitting|secret-receive|ws-pass-key|planner|round-watch)\$|^bin/\\.local/share/cleanroom/|^scripts/(check-claude-refs\\.py|check\\.sh|gate\\.sh|githooks/)|^vale/|^claude/\\.claude/(CLAUDE\\.md\$|settings\\.json|tooling/|docs/bluefin-admin)|^bluefin/(Brewfile|layered-packages\\.txt|etc/sudoers\\.d/)|$SKILLS" \
+    run pytest "\\.py\$|^ruff\\.toml\$|^tests/(fixtures|vale)/|^bin/\\.local/bin/(claude-(block-pass|git-guard|merge-guard|secret-guard|tail-guard|tierguard|tooling-sync|pass|worktree-busy)|cairn-run-gate|ci-green|cleanroom|phone-check|task-report|vale-hook|voipms-sms|pass-access|pass-count|pass-sitting|secret-receive|ws-pass-key|planner)\$|^bin/\\.local/share/cleanroom/|^scripts/(check-claude-refs\\.py|check\\.sh|gate\\.sh|githooks/)|^vale/|^claude/\\.claude/(CLAUDE\\.md\$|settings\\.json|tooling/|docs/bluefin-admin)|^bluefin/(Brewfile|layered-packages\\.txt|etc/sudoers\\.d/)|$SKILLS" \
         "vale-hook test suite" uv run --with pytest --no-project python -m pytest tests/ -q
     run vale-fixtures '^tests/(vale/|test_vale_hook\.py$)|^vale/|^bin/\.local/bin/vale-hook$' \
         "vale style fixtures" bash tests/vale/run-fixtures.sh
@@ -197,16 +197,10 @@ legs() {
         "guidance citation test" bash tests/check-guidance-cite.test.sh
     run context-budget-test "^tests/claude-context-budget\\.test\\.sh\$|^bin/\\.local/bin/(claude-context-budget|planner)\$|^claude/\\.claude/(CLAUDE\\.md|docs/claude-md-archive\\.md)\$|$SKILLS" \
         "claude-context-budget line cap" bash tests/claude-context-budget.test.sh
-    run pass-load-test "^tests/claude-pass-load\\.test\\.sh\$|^bin/\\.local/bin/(claude-pass-load|claude-pass|planner)\$|^claude/\\.claude/(CLAUDE\\.md|docs/voice/)|$SKILLS" \
-        "claude-pass-load" bash tests/claude-pass-load.test.sh
     run worktree-busy '^tests/claude-worktree-busy\.test\.sh$|^bin/\.local/bin/claude-worktree-busy$' \
         "claude-worktree-busy" bash tests/claude-worktree-busy.test.sh
     run claude-md-budget '^claude/\.claude/CLAUDE\.md$|^bin/\.local/bin/claude-context-budget$' \
         "CLAUDE.md context budget" bash bin/.local/bin/claude-context-budget claude/.claude/CLAUDE.md
-    run skill-caps "^bin/\\.local/bin/claude-context-budget\$|$SKILLS" \
-        "pass-core word caps" bin/.local/bin/claude-context-budget --skill-caps --root .
-    run pass-loads "^bin/\\.local/bin/claude-pass-load\$|^claude/\\.claude/CLAUDE\\.md\$|^claude/\\.claude/docs/voice/approval-brief\\.md\$|$SKILLS" \
-        "pass role loads" bin/.local/bin/claude-pass-load --check --root .
     run claude-refs '+^claude/\.claude/.*\.md$|^scripts/check-claude-refs\.py$|^claude/\.claude/tooling/retired-phrases\.txt$' \
         "claude refs and retired phrases" python3 scripts/check-claude-refs.py check --root .
     run tooling-sync-lint '+^claude/\.claude/(tooling|skills)/|^bin/\.local/bin/claude-tooling-sync$' \
