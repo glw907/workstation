@@ -1,0 +1,38 @@
+{
+  "skillName": "claude-infra",
+  "case": 2,
+  "model": "claude-opus-5-5",
+  "skill": "off",
+  "query": "I want every Bash call that runs `rm -rf` on a home folder blocked, no exceptions. Should that rule go in CLAUDE.md, a skill, or somewhere else on this workstation? Answer and explain; change nothing.",
+  "started": "2026-11-22T03:43:54Z",
+  "seconds": 20.1,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"PreToolUse|rm -rf|\\\"deny\\\"\", \"path\": \"/var/home/glw907/.claude/settings.json\", \"output_mode\": \"content\", \"-A\": 4}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/managed-settings.json\", \"path\": \"/var/home/glw907/.dotfiles/bluefin/etc\"}"
+    }
+  ],
+  "result": "It belongs in neither CLAUDE.md nor a skill. Put it in a **PreToolUse hook on the Bash tool**, registered in Claude Code's settings. For a rule with no exceptions, register it in the **managed settings file**, which sits above your user settings.\n\n**Why not CLAUDE.md or a skill**\n\nBoth are instructions I read, and I usually follow them, but nothing enforces them. I can misread a rule, a long session can compress it away, a subagent may never load it, and a skill only applies when something triggers it. That's fine for preferences. It can't guarantee \"no exceptions.\"\n\n**Why not a permissions deny rule alone**\n\nA rule like `\"deny\": [\"Bash(rm -rf ~*)\"]` is enforced, but it matches on the command's prefix. Plenty of commands get around it:\n- `rm -fr ~`, `rm -r -f ~`, or `rm --recursive --force ~`\n- `cd ~ && rm -rf .`, or `rm -rf $HOME`, `\"$HOME\"`, `/var/home/glw907`, `/home/glw907` (on Bluefin, `/home` is a symlink to `/var/home`)\n- `sudo rm -rf ...`, `bash -c '...'`, `xargs rm -rf`, `find ~ -delete`\n\nA deny rule is still a cheap backstop, but it shouldn't be the only guard.\n\n**Why a hook**\n\nThe harness runs a PreToolUse hook before every Bash call, whatever the model thinks and whatever the permission mode, including bypass mode. The hook gets the full command as JSON on stdin. It can normalize the command (combined flags, `$HOME`/`~`, both home paths, `sudo` and `bash -c` wrappers) and exit with code 2 to block it, sending the reason back to me. Because it's code, it can be tested against a table of commands that must be blocked and commands that must pass.\n\n**Where to put it on this workstation**\n\n- **For \"no exceptions\": managed settings** at `/etc/claude-code/managed-settings.json`. User and project settings can't override managed settings. Projects can add their own hooks but can't remove a managed one. Under your conventions, that file would start in `~/.dotfiles/bluefin/etc/claude-code/` and be deployed to `/etc`.\n- **Lighter option: `~/.claude/settings.json`** (the dotfiles copy, stowed). This works in every session, but a later edit or a project's local settings could weaken it.\n- **The script itself:** stdlib-only Python run as `python3 -I`, since it parses JSON and shell syntax, in `~/.dotfiles/bin/.local/bin/` with tests.\n\nPer your CLAUDE.md, this change would go through the `claude-infra` skill. It's larger than a one-sentence change, so it would follow `building-from-specs`.\n\n**Limit:** no command-string check catches everything. A script I write and then run, a Python `shutil.rmtree`, or obfuscated shell could still get through. If you want a hard guarantee for the home directory, combine the hook with Claude Code's sandboxing, which restricts filesystem writes at the OS level.\n\nI changed nothing. I also couldn't read your current `settings.json` or `bluefin/etc` because those reads weren't approved, so I don't know whether a similar hook already exists.",
+  "costUsd": 0.050631199999999994
+}

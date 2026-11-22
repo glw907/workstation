@@ -1,0 +1,42 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-sonnet-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:41:39Z",
+  "seconds": 13.7,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/cairn-pass/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"release\", \"path\": \"/var/home/glw907/.claude/skills\", \"-i\": true, \"output_mode\": \"files_with_matches\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/claude-infra/**\", \"path\": \"/var/home/glw907/.claude\"}"
+    }
+  ],
+  "result": "I couldn't read `~/.claude`, so this plan comes from your CLAUDE.md and the skill listing. I haven't checked the actual files.\n\n## Where it should live\n\n**Put it in the `cairn-pass` skill, as its own reference file for cutting a release.** For example, `cairn-pass/release.md`, with a one-line pointer from `SKILL.md`.\n\n- `cairn-pass` is already the workstation's overlay for cairn-cms work. It holds the gate wrapper, the CI watch, and your launch conventions. A release is the end of that flow, so a fresh cairn session will load the skill and find the checklist without you pasting it.\n- Your global CLAUDE.md says to keep each repo's gate and checklists in its pass skill, and it names `cairn-pass`. This follows that rule.\n- A skill loads only when its description matches. Put \"cutting a release\" in the `cairn-pass` description so it triggers on that phrase. A separate file keeps `SKILL.md` short.\n\nI'd reject two alternatives:\n- **Global CLAUDE.md:** every session in every repo would load a cairn-only checklist.\n- **A `cairn-cms` repo doc:** it only helps when the session starts there. Your skills follow you across worktrees, and the release steps probably mix repo steps with workstation steps such as the CI watch and secrets.\n\nIf the steps are deterministic shell (tag, build, publish), a script in `~/.dotfiles/bin/.local/bin/` that the checklist calls would be better. That is a separate decision, and the checklist doesn't need it.\n\n## How the change would land\n\n1. **Check for an existing release section** in `cairn-pass`, so I update it instead of duplicating it. I need read access to `~/.claude` for this and for step 2, and the last attempt was denied. Say if you want to grant it.\n2. **Go through `claude-infra`.** Your CLAUDE.md routes all Claude Code tooling changes through it. It wasn't in my skill listing, so I'd confirm how it handles skill edits.\n3. **Edit the source copy.** If `~/.claude/skills` is stowed from `~/.dotfiles`, I'd edit the dotfiles copy and never the link. Then I'd run `stow -R` for that package.\n4. **Write the checklist** from your five steps, in imperative mood with no em dashes, using `writing-voice` since it's longer than a paragraph. Each step names its command or gate.\n5. **Run the gate:** `bash scripts/gate.sh` from the dotfiles checkout or worktree root, bare and not piped. Before editing, I'd run `claude-worktree-busy ~/.dotfiles` to confirm no other session is in it.\n6. **Land it.** This is a small change to existing tooling, so it may qualify as a direct change under `building-from-specs`. Otherwise it goes through a PR for you to approve by number. Either way, only the session you're talking to merges.\n\n## What I need from you\n\nPaste the five steps once more. I can't see them in this session's context, so I'd rather not reconstruct them from memory.",
+  "costUsd": 0.0227176
+}

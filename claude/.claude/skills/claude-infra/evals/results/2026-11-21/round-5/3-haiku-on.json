@@ -1,0 +1,51 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "on",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:44:14Z",
+  "seconds": 10.0,
+  "exitCode": 0,
+  "listed": true,
+  "invoked": [
+    "claude-infra"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [
+    "/var/home/glw907/.claude/jobs/1ba4a94a/tmp/eval-scratch/3-haiku-on/.claude/skills/claude-infra"
+  ],
+  "slashExpanded": false,
+  "loaded": true,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"claude-infra\", \"args\": \"Question only, no changes: should a Svelte documentation MCP server go in ecxc-ski's .mcp.json, or somewhere else on this workstation? Other cairn sites (907-life, aksailingclub-org, cairn-pub) also use Svelte.\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"svelte\", \"path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\", \"-i\": true, \"output_mode\": \"content\", \"-n\": true}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/Projects/ecxc-ski/.mcp.json\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/claude-tooling.md\"}"
+    }
+  ],
+  "result": "**Short answer: not in ecxc-ski's `.mcp.json`. Put it at user scope, in the tooling manifest, so all four cairn sites get it.**\n\nI could not read `~/.claude/docs/claude-tooling.md` or `~/Projects/ecxc-ski/.mcp.json` because the read permission was denied. So this answer rests on the `claude-infra` rules, not on the current manifest contents. Nothing was changed.\n\n**Why user scope:**\n- The `claude-infra` rules say everything the cairn-family stack shares, including Svelte, is user scope and goes in the manifest. A repo's `.mcp.json` carries only what that repo alone needs.\n- The Svelte docs server serves all four sites (ecxc-ski, 907-life, aksailingclub-org, cairn-pub), so it is stack-wide.\n- Putting it in ecxc-ski alone would mean the other three sites get nothing, and the same server would have to be copied into each repo later.\n\n**Before adding a server, check for a skill:**\n- The rules say that when a library offers both a skill and an MCP server, take the skill first. The server is for on-demand retrieval or for tools a skill cannot carry.\n- A Svelte documentation skill would reach agents with fixed tool lists. An MCP server reaches only the main loop and unrestricted agents.\n- If a skill covers what you need, use it and skip the server.\n\n**If a server is still the right call:**\n1. Add it at user scope and record it in the manifest named in the \"Layout\" table of `claude-tooling.md`.\n2. Run `claude-tooling-sync verify`, then commit the dotfiles.\n3. Restart a session to load the server. Skills and agents load live, but servers need a restart at a session boundary.\n4. Read the server's source, license, and maintainer before adding it, since it runs in every session.\n\n**What would settle it:** a quick look at `claude-tooling.md` to confirm whether a Svelte piece is already listed, and at ecxc-ski's `.mcp.json` to see whether it already carries a Svelte entry that would need to move. If you grant read access to those two files, I can check both and give you a firmer answer.",
+  "costUsd": 0.0021219
+}

@@ -1,0 +1,49 @@
+{
+  "skillName": "claude-infra",
+  "case": 1,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "I keep pasting the same five-step checklist for cutting a cairn release into chat. Where on this workstation should that checklist live instead, and how would the change land? Plan only; don't edit anything.",
+  "started": "2026-11-22T03:41:10Z",
+  "seconds": 14.9,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [
+    "cairn-pass"
+  ],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Skill"
+  ],
+  "toolCalls": [
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"(?i)(cut a release|release checklist|cairn.*release|release.*cairn)\", \"path\": \"/var/home/glw907/.claude\", \"output_mode\": \"files_with_matches\", \"head_limit\": 50}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*cairn*\", \"path\": \"/var/home/glw907/.claude/skills\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/*.md\", \"path\": \"/var/home/glw907/Projects/cairn-cms\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"cairn-pass\"}"
+    }
+  ],
+  "result": "The cairn-pass skill loaded, but it doesn't say where a release checklist lives. It covers pass operations (gates, CI watch, packet, close). I also couldn't read the repo, because file reads of `~/.claude` and `~/Projects/cairn-cms` were refused by permissions. So this plan rests on the workstation conventions, not on the current files.\n\n**Recommended home: the cairn-cms repo, not the workstation.** The cairn-pass skill says a repo's own `cairn-running-passes` skill (in the cairn-cms checkout's `.claude/skills/`) holds the checklists, including the close checklist. A release is repo-specific, so its five steps belong beside them. The workstation skill should only point to it. Two options:\n\n1. **Add a \"Cutting a release\" section to `cairn-running-passes`.** This is the smaller change and keeps one place for cairn checklists. Recommended unless the release steps are long.\n2. **Make a sibling `cairn-release` skill in the same `.claude/skills/` folder.** Choose this if the steps need their own trigger, such as \"cut a release\", and would make `cairn-running-passes` too long.\n\nEither way, the steps go into the repo, not `~/.claude/skills/`, so the next release is run from the repo that owns it.\n\n**How it lands:**\n- A change to a repo skill is more than a one-sentence edit, so it follows `building-from-specs`. Geoff approves a short spec (the five steps as written, plus where they go), a fresh session writes the change in a cairn-cms worktree, a fresh subagent checks it against the spec, and it ends in a PR.\n- Geoff approves the PR by number. Nothing merges until then.\n- Only if the steps are already in the repo skill does this reduce to a pointer. Then no PR is needed, just a note in the workstation skill.\n- If the workstation `cairn-pass` skill needs a pointer to the new section, that is a Claude Code tooling change, so it goes through `claude-infra`.\n\n**What I need before writing the spec:**\n- The five steps as you paste them, or read access to `~/Projects/cairn-cms` so I can check whether a release section already exists in `cairn-running-passes`.\n- Whether you want option 1 or option 2 above. My recommendation is option 1.\n\nNothing has been edited.",
+  "costUsd": 0.0023384400000000002
+}

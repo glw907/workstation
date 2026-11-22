@@ -1,0 +1,43 @@
+{
+  "skillName": "claude-infra",
+  "case": 3,
+  "model": "claude-haiku-5-5",
+  "skill": "off",
+  "query": "Should a Svelte documentation MCP server be added to ecxc-ski's .mcp.json, or somewhere else on this workstation? The other cairn sites use Svelte too. Answer only; change nothing.",
+  "started": "2026-11-22T03:44:25Z",
+  "seconds": 11.3,
+  "exitCode": 0,
+  "listed": false,
+  "invoked": [],
+  "readSkillFile": [],
+  "loadedFrom": [],
+  "slashExpanded": false,
+  "loaded": false,
+  "toolsOffered": [
+    "Glob",
+    "Grep",
+    "Read",
+    "Skill"
+  ],
+  "toolsUsed": [
+    "Glob",
+    "Grep",
+    "Read"
+  ],
+  "toolCalls": [
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/.mcp.json\", \"path\": \"/var/home/glw907/Projects\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/settings.json\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"svelte\", \"path\": \"/var/home/glw907/.claude\", \"-i\": true, \"output_mode\": \"files_with_matches\", \"head_limit\": 30}"
+    }
+  ],
+  "result": "**Recommendation: add it at user scope, not in ecxc-ski's `.mcp.json`.** I couldn't verify the current config, though. Reads outside this session's working directory were denied, so I haven't seen ecxc-ski's `.mcp.json`, the other sites' configs, or your user settings.\n\nWhy user scope:\n\n- **Every cairn site is Svelte.** A Svelte docs server is the same for all four, so one user-level entry covers ecxc-ski, 907-life, aksailingclub-org, and cairn-pub. Copying it into each repo means four files to keep in sync.\n- **`.mcp.json` is committed.** Anything in it goes to every clone and collaborator. A docs lookup tool is a personal workstation choice, so it doesn't belong in a shared repo unless the team wants it.\n- **It carries no secrets or repo-specific data,** so nothing forces it into a project file.\n\nThe exception: put it in ecxc-ski's `.mcp.json` only if the project's contributors need it, or if the server should be pinned to a version the project depends on.\n\nTwo notes before adding it:\n\n- Adding it counts as a Claude Code tooling change, so it goes through the `claude-infra` skill.\n- If it runs through `npx`, the Svelte MCP package is a new dependency fetched at runtime. Check the package and its version before you add it.\n\nIf you want me to confirm the current state, grant read access to `~/Projects` and `~/.claude` and I'll check the existing `.mcp.json` files and settings. I haven't changed anything.",
+  "costUsd": 0.0015660000000000001
+}
