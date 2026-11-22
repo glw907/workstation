@@ -38,6 +38,7 @@ from Glob. Each session read `spec.md` and then called Skill on `building-from-s
 ## Round 5
 
 Behaviors are numbered as in `evals.json`. Each quote comes from the named file's `result`.
+Each Load quote comes from that file's `invoked` and `readSkillFile` fields.
 
 | Case | Model | Loaded, on / off | Met, on | Met, off | Evidence, skill on | Evidence, skill off |
 | --- | --- | --- | --- | --- | --- | --- |
