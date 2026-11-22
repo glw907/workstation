@@ -14,7 +14,7 @@ set -uo pipefail
 poll_s="${RUFIN_AWAKE_POLL_S:-20}"
 floor="${RUFIN_AWAKE_FLOOR:-10}"
 psdir=/sys/class/power_supply
-bus=org.mpris.MediaPlayer2.io.github.screwys.Rufin
+bus=org.mpris.MediaPlayer2.app.rufin.rufin
 holder=
 
 log() { echo "$*" | systemd-cat -t rufin-awake -p info 2>/dev/null || true; }
