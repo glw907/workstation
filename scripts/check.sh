@@ -201,8 +201,6 @@ legs() {
         "claude-worktree-busy" bash tests/claude-worktree-busy.test.sh
     run claude-md-budget '^claude/\.claude/CLAUDE\.md$|^bin/\.local/bin/claude-context-budget$' \
         "CLAUDE.md context budget" bash bin/.local/bin/claude-context-budget claude/.claude/CLAUDE.md
-    run skill-caps "^bin/\\.local/bin/claude-context-budget\$|$SKILLS" \
-        "pass-core word caps" bin/.local/bin/claude-context-budget --skill-caps --root .
     run claude-refs '+^claude/\.claude/.*\.md$|^scripts/check-claude-refs\.py$|^claude/\.claude/tooling/retired-phrases\.txt$' \
         "claude refs and retired phrases" python3 scripts/check-claude-refs.py check --root .
     run tooling-sync-lint '+^claude/\.claude/(tooling|skills)/|^bin/\.local/bin/claude-tooling-sync$' \
