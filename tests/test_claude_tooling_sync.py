@@ -14,6 +14,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 REPO = Path(__file__).resolve().parent.parent
 TOOL = REPO / "bin" / ".local" / "bin" / "claude-tooling-sync"
 PY = shutil.which("python3") or sys.executable
@@ -337,11 +339,12 @@ def test_an_over_cap_description_fails_lint_and_a_trimmed_one_passes(tmp_path):
     assert lint_proc(tmp_path).returncode == 0
 
 
-def test_an_exempt_skill_takes_its_own_cap(tmp_path):
-    cap_skill(tmp_path, "building-from-specs", "x" * 1536)
+@pytest.mark.parametrize("name", ["building-from-specs", "survey"])
+def test_an_exempt_skill_takes_its_own_cap(tmp_path, name):
+    cap_skill(tmp_path, name, "x" * 1536)
     assert lint_proc(tmp_path).returncode == 0
-    cap_skill(tmp_path, "building-from-specs", "x" * 1537)
-    assert hits(lint_proc(tmp_path), "description-cap") == [("building-from-specs", "description")]
+    cap_skill(tmp_path, name, "x" * 1537)
+    assert hits(lint_proc(tmp_path), "description-cap") == [(name, "description")]
 
 
 # ---- the generated live settings.json ----
