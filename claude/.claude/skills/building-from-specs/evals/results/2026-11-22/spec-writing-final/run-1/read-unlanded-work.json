@@ -1,0 +1,59 @@
+{
+  "case": "read-unlanded-work",
+  "kind": "read",
+  "suite": "spec-writing",
+  "started": "2026-11-23T01:05:19Z",
+  "seconds": 95.9,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "3a6fd5dff723d01acb1e084efb7fe17e89401d9e",
+  "promptHash": "83f788a24589bbe8bc83d5e6d601de96272ff95c",
+  "fixtureHead": "f25278bb3c43da2f348dfeaefeb36c2798783747",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 2.0,
+  "timeLimitSeconds": 900,
+  "words": 656,
+  "judgeCostUsd": 0.0090164,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": true,
+      "answer": "yes",
+      "quote": "The spec says each match prints in that format, but there is no `export` anywhere in this repo. `bin/notes` has only `add` and `list`, `main` is the only branch, and I could not reach `origin` from here.",
+      "quoteFound": true
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 0.799728,
+  "turns": 6,
+  "permissionDenials": [],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3qn0s4w2/read-unlanded-work/spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && git branch -a && git worktree list && git stash list && git status --short --ignored\", \"description\": \"List tracked files, branches, worktrees, and stashes\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in bin/notes tests/run.sh scripts/gate.sh README.md; do echo \\\"=== $f\\\"; cat -n \\\"$f\\\"; done; echo \\\"=== git\\\"; git log --all --oneline --decorate; git remote -v; git for-each-ref; ls -la; cat .git/info/exclude 2>/dev/null; ls .git; cat .git/config\", \"description\": \"Show repo source files and git refs and config\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la .git/worktrees .git/remotes .git/branches .git/glab-cli .git/refs/* 2>&1; cat .git/config.worktree 2>&1; git fsck --lost-found --unreachable 2>&1; git count-objects -v; cat .git/packed-refs 2>&1; find .claude -maxdepth 3 -not -name SKILL.md | head -50; ls -la .workstation 2>&1; git reflog --all | head\", \"description\": \"Look for unreachable objects, worktrees, and local config d"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"bash scripts/gate.sh; echo \\\"gate=$?\\\"; NOTES_FILE=$TMPDIR/nx bin/notes search rope; echo \\\"search=$?\\\"; git grep -n usage -- bin tests; grep -c \\\"notes search\\\" README.md; git grep -n -i export; echo \\\"--- ls-remote\\\"; GIT_TERMINAL_PROMPT=0 timeout 20 git ls-remote origin 2>&1 | head -20\", \"description\": \"Verify the spec's stated facts and query the remote's refs\", \"allowed_domains\":"
+    }
+  ],
+  "result": "Three questions are left, and all six items on the done list can pass on a wrong result. The spec's other stated facts check out against the repo: the gate passes, the `usage` grep gives 4 hits, and `search rope` exits 2 today.\n\n## Questions, ranked\n\n1. **What format does `notes export` use, and where is it?** The spec says each match prints in that format, but there is no `export` anywhere in this repo. `bin/notes` has only `add` and `list`, `main` is the only branch, and I could not reach `origin` from here. The answer changes the plan in three ways:\n   - It sets the expected strings in tests 1 and 2, so a guess gets baked into the tests and passes.\n   - If the format carries a number or date, I need to know whether a number is the note's position in the full list or among the matches, and whether the match runs on the note text alone.\n   - If the format has a wrapper such as a header row or brackets, \"no match prints nothing\" conflicts with it.\n\n2. **Does this task build on the unlanded export work or on `main` as it stands?** Both would edit the same `case` block, usage line, test list and README. The usage line the spec dictates has no `export` in it, and test 4 asserts that line exactly. Landing after export would either remove export from the usage line or fail test 4, so the base branch and the usage text both depend on the answer.\n\n3. **What does `notes search buy rope` do?** The spec covers a single word only. Joining the arguments as `add` does, searching only the first, or exiting 2 are all defensible, and a user will see the difference. The first two also pass the done list.\n\n## Done list: items that pass on a wrong result\n\n1. **`test_search_finds`**\n   - A whole-word match passes, because no fixture note has `rope` inside a longer word, so the `ropes` rule is untested.\n   - Sorted output passes, because `Buy rope` sorts before `ROPE ladder` anyway.\n   - Lowercasing only the notes passes, so `search ROPE` could find nothing.\n   - A wrong guess at the export format passes, because the builder writes the expected string.\n\n2. **`test_search_plain_text`**\n   - Escaping only `.` and `*` passes, so `^`, `$`, `[` and `\\` could still act as patterns.\n   - A word starting with `-` is untested; with an unguarded grep, `search -v` inverts the match.\n   - The exit code of `search a.c` is not asserted.\n\n3. **`test_search_no_match`**\n   - The fixture file always exists, so the \"missing notes file counts as no match\" rule is never run. A plain grep there exits 2 with an error, which looks like a usage failure.\n   - Only stdout is checked, so a \"no matches\" message on stderr passes.\n\n4. **`test_search_missing_word`**\n   - A second usage string inside the search branch passes while `bin/notes:7` keeps the old text. `test_usage` checks only the `usage:` prefix, so `notes bogus` could still print the old line.\n   - Usage printed to stdout as well as stderr passes unless the test also asserts empty stdout.\n\n5. **README grep**\n   - `grep -c` counts lines, so any one line containing `notes search` passes, including one that describes the command wrongly.\n   - It also fails on a correct README that mentions the command on two lines.\n\n6. **Gate exits 0**\n   - A new test left out of the `for` list never runs, so the gate alone passes with no search tests at all. Only items 1 to 4 catch that.\n   - The three existing tests are thin on \"nothing about `add` or `list` changes\": one note added and listed, and an empty list. A change to multi-note order or to how `add` joins its arguments passes.\n\nNothing in the list requires the pull request to exist or the reviewer to have accepted it, although the spec says the task ends in one."
+}

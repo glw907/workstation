@@ -1,0 +1,3 @@
+The hung probe has now been stopped by the harness at its background time limit, and it doesn't need restarting. It was the `search -v` check that sat waiting on stdin. My earlier attempt to kill it evidently didn't reach it, even though that command reported no grep left.
+
+Nothing in the report depends on its remaining output: I reran the two checks it never reached (`notes bogus` and the missing notes file) separately, and those results are the ones cited under items 3 and 4. The report above stands as written.

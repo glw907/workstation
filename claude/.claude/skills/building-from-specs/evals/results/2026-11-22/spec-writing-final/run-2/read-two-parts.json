@@ -1,0 +1,55 @@
+{
+  "case": "read-two-parts",
+  "kind": "read",
+  "suite": "spec-writing",
+  "started": "2026-11-23T01:41:44Z",
+  "seconds": 69.1,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "3a6fd5dff723d01acb1e084efb7fe17e89401d9e",
+  "promptHash": "83f788a24589bbe8bc83d5e6d601de96272ff95c",
+  "fixtureHead": "4c6aea643c40d48c6805f77decfdfadc733463d8",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 2.0,
+  "timeLimitSeconds": 900,
+  "words": 564,
+  "judgeCostUsd": 0.0085264,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": null,
+      "answer": "yes",
+      "quote": "\"What gets built\" says no match prints nothing and exits 1, and done item 2 agrees (`search '.*'` exits 1). Done item 3 says `search zzz` gives exit 0.",
+      "quoteFound": true
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 0.7266988000000001,
+  "turns": 5,
+  "permissionDenials": [],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/read-two-parts/spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && ls -la\", \"description\": \"List tracked files in the repo\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in bin/notes tests/run.sh scripts/gate.sh README.md; do echo \\\"=== $f\\\"; cat -n $f; done; git remote -v; bash scripts/gate.sh; echo \\\"exit $?\\\"; git grep -n usage -- bin tests; bin/notes search rope; echo \\\"exit $?\\\"; grep -c \\\"notes search\\\" README.md\", \"description\": \"Show repo files and check the spec's stated facts\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"GIT_TERMINAL_PROMPT=0 timeout 20 git ls-remote origin 2>&1; echo \\\"exit $?\\\"\", \"description\": \"Check whether the origin remote is reachable\"}"
+    }
+  ],
+  "result": "I checked the spec's stated facts against the repo and they hold, except that the sandbox blocked `github.com`, so I could not confirm `origin` is reachable. Two questions remain, and five of the six done items can pass on a wrong result.\n\n## Questions\n\n1. **What does a no-match search exit with: 1 or 0?**\n   - \"What gets built\" says no match prints nothing and exits 1, and done item 2 agrees (`search '.*'` exits 1). Done item 3 says `search zzz` gives exit 0.\n   - No consistent implementation satisfies both items 2 and 3, so the builder must either deviate from the done list or special-case.\n   - The answer also sets the exit code for a missing notes file, which \"counts as no match\", and anything scripted around `notes search` depends on it.\n   - My guess is that item 3 is a typo for exit 1, but I can't confirm that from the document.\n\n2. **What should `search buy rope` (more than one argument) do?**\n   - The spec only covers one word. Three readings are plausible: join the arguments as `add` does, search for the first and ignore the rest, or treat it as a usage error with exit 2.\n   - Each gives different user-visible behaviour, and the usage-error reading needs its own test.\n\n## Done list: items that can pass on a wrong result\n\n- **Item 1 (`test_search_finds`)**\n  - A whole-word match passes, because no fixture note contains `ropes`. The \"`rope` finds `ropes`\" rule is never exercised.\n  - One-sided case folding passes: an implementation that lowercases the note but not the word works for `search rope` and fails for `search ROPE`.\n  - Sorted output passes, because the two expected lines are already in alphabetical order. \"Oldest first\" is only weakly checked.\n- **Item 2 (`test_search_plain_text`)**\n  - A regex match that escapes only `.` and `*` passes. `search '^fix'`, `search '['` or `search 'a\\c'` would still act as patterns or raise errors.\n  - A word starting with `-` (for example `search -v`) can be taken as an option by the underlying tool, and nothing tests it.\n  - The `a.c` half asserts no exit code.\n- **Item 3 (`test_search_no_match`)**\n  - As written it asserts exit 0, so it passes on exactly the result the prose calls wrong.\n  - Even with the code corrected, it only uses a file that exists. A missing notes file could print a `grep` error and exit 2, colliding with the usage exit code, and still pass. No item tests the missing-file rule.\n- **Item 4 (`test_search_missing_word`)**\n  - It checks the new usage line only on the `search` path. `notes bogus` and bare `notes` could still print the old line, because `test_usage` checks only the `usage:` prefix and the spec keeps it that way.\n- **Item 5 (README grep)**\n  - `grep -c` counts lines containing the string, not correctness. One line such as \"notes search: TODO\", or one that describes the command wrongly (regex, newest first), prints 1.\n  - It also fails a correct README that mentions the command on two lines.\n- **Item 6 (gate exits 0)**\n  - On its own it passes if the new tests are never added to the `for` list. Items 1 to 4 close that hole.\n  - It adds no protection beyond the three existing tests for \"nothing about `add` or `list` changes\". Because it runs the same tests, it inherits every gap above."
+}

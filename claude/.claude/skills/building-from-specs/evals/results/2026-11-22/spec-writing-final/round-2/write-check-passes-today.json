@@ -1,0 +1,193 @@
+{
+  "case": "write-check-passes-today",
+  "kind": "write",
+  "suite": "spec-writing",
+  "started": "2026-11-23T00:16:17Z",
+  "seconds": 482.0,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "341b4f1f41d5aac0a2305882d422fa805ff7bf42",
+  "promptHash": "960c4aa467dd4a7f36210c62b8abe680e83e8ea0",
+  "fixtureHead": "7115ad021bffe0c8d0633d27d79b2af24df22e77",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 6.0,
+  "timeLimitSeconds": 1800,
+  "words": 2240,
+  "judgeCostUsd": 0.0241944,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": true,
+      "answer": "yes",
+      "quote": "The brief's check `grep -c notes README.md` prints 3 today and can't show that the task did anything, so it stays word for word as item 7 and item 6 adds a check that prints 0 today.",
+      "quoteFound": true
+    },
+    "length": {
+      "passed": false,
+      "words": 2240
+    },
+    "built": {
+      "passed": true,
+      "status": [
+        "?? spec.md"
+      ],
+      "headUnchanged": true
+    },
+    "guide": {
+      "passed": true,
+      "reads": [
+        {
+          "call": "ls -R .claude/skills | head -80; cat .claude/skills/building-from-specs/references/writing-a-spec.md",
+          "inside": true,
+          "failed": false
+        },
+        {
+          "call": "for f in bin/notes tests/run.sh scripts/gate.sh README.md .workstation/task-report.txt .workstation/denials.log .workstation/remote.txt; do echo \"=== $f\"; cat -n \"$f\"; done; echo \"=== guide\"; cat -n .",
+          "inside": true,
+          "failed": false
+        }
+      ]
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 3.8049694,
+  "turns": 22,
+  "permissionDenials": [
+    {
+      "tool_name": "Bash",
+      "tool_use_id": "toolu_01MkaFNyW8uTbLUV4GMWkVgi",
+      "tool_input": {
+        "command": "cat ~/.claude/docs/voice/written-for-people.md 2>&1 | head -150",
+        "description": "Read the voice standard for prose Geoff reads"
+      }
+    },
+    {
+      "tool_name": "Read",
+      "tool_use_id": "toolu_01TfVpWPQRdX71BF3GEQj1zf",
+      "tool_input": {
+        "file_path": "/var/home/glw907/.claude/docs/voice/written-for-people.md"
+      }
+    },
+    {
+      "tool_name": "Bash",
+      "tool_use_id": "toolu_01D57jmf3EP1ghstbPQjcz9P",
+      "tool_input": {
+        "command": "ls -d ~/.claude ~/.claude/docs ~/.claude/docs/voice 2>&1; ls ~/.claude/docs 2>&1 | head -30; ls ~/.claude/skills/writing-voice 2>&1 | head; grep -rn 'written-for-people' /tmp/spec-writing-run-fhzgvpzn/write-check-passes-today/.claude/skills 2>/dev/null | head -5",
+        "description": "Check whether the voice standard file the spec names exists"
+      }
+    }
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la && ls -la .workstation .claude 2>/dev/null; cat brief.md; echo ----; cat .workstation/task-report.txt; echo ----; cat .workstation/denials.log; echo ----; cat .workstation/remote.txt; echo; git log --stat | head -40\", \"description\": \"Read the brief and the workstation stand-in files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -R .claude/skills | head -80; cat .claude/skills/building-from-specs/references/writing-a-spec.md\", \"description\": \"List skill files and read the spec-writing guide\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in README.md bin/notes scripts/gate.sh tests/run.sh; do echo \\\"=== $f\\\"; cat -A \\\"$f\\\" | sed 's/\\\\$$//'; done; ls -la bin scripts tests; git status --short\", \"description\": \"Read the repo's source, gate, tests, and README\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"standards:backlog-sweep\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"## gate\\\"; bash scripts/gate.sh; echo \\\"exit $?\\\"\\necho \\\"## 1\\\"; f=$(mktemp); printf '%s\\\\n' 'Buy rope' 'call Sam' 'coil the ROPE' > \\\"$f\\\"; NOTES_FILE=$f bin/notes search rope; echo \\\"exit $?\\\"\\necho \\\"## 2\\\"; f=$(mktemp); printf '%s\\\\n' 'axb' 'a.b' > \\\"$f\\\"; NOTES_FILE=$f bin/notes search a.b; echo \\\"exit $?\\\"\\necho \\\"## 2b\\\"; f=$(mktemp); printf '%s\\\\n' 'plain' 'use -x here"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cat ~/.claude/docs/voice/written-for-people.md 2>&1 | head -150\", \"description\": \"Read the voice standard for prose Geoff reads\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd \\\"$TMPDIR\\\" && f=$(mktemp); printf '%s\\\\n' 'Buy rope' 'call Sam' 'coil the ROPE' 'axb' 'a.b' 'use -x here' > \\\"$f\\\"\\necho \\\"# rope\\\"; grep -iF -e rope \\\"$f\\\"; echo \\\"exit $?\\\"\\necho \\\"# a.b\\\"; grep -iF -e a.b \\\"$f\\\"; echo \\\"exit $?\\\"\\necho \\\"# -x\\\"; grep -iF -e -x \\\"$f\\\"; echo \\\"exit $?\\\"\\necho \\\"# sail\\\"; grep -iF -e sail \\\"$f\\\"; echo \\\"exit $?\\\"\\necho \\\"# missing file\\\"; rm -f \\\""
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/voice/written-for-people.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd /tmp/spec-writing-run-fhzgvpzn/write-check-passes-today\\necho \\\"## 2\\\"; f=$(mktemp); printf '%s\\\\n' 'axb' 'a.b' 'use -x here' > \\\"$f\\\"; NOTES_FILE=$f bin/notes search a.b; echo \\\"exit $?\\\"; NOTES_FILE=$f bin/notes search -x; echo \\\"exit $?\\\"\\necho \\\"## 3\\\"; f=$(mktemp); printf '%s\\\\n' 'Buy rope' > \\\"$f\\\"; NOTES_FILE=$f bin/notes search sail; echo \\\"exit $?\\\"; rm -f \\\"$f\\\"; NOTES_FI"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-check-passes-today/spec.md\", \"content\": \"# Spec: notes search\\n\\nWritten 2026-11-22 from `brief.md`, the design Geoff settled in conversation. It waits for his approval. The\\nwork is one task and one pull request to `example/notes`. Nobody could answer a question while this was\\nwritten, so each open reading was decided and is listed under \\\"Call"
+    },
+    {
+      "name": "Agent",
+      "input": "{\"description\": \"Fresh read of spec.md\", \"subagent_type\": \"general-purpose\", \"model\": \"fable\", \"effort\": \"high\", \"run_in_background\": false, \"prompt\": \"You are a fresh reader checking a spec before its owner sees it. Read-only: do not create, edit, or delete any file in the repo, do not commit, and do not start other agents. You may run read-only commands and the repo's own tests; if a check needs"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la . .workstation .claude .claude/skills/building-from-specs .claude/skills/building-from-specs/references bin tests scripts 2>&1; git status --short; git log --oneline\", \"description\": \"List repo files and git state\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-check-passes-today/spec.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-check-passes-today/brief.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in bin/notes tests/run.sh scripts/gate.sh README.md .workstation/task-report.txt .workstation/denials.log .workstation/remote.txt; do echo \\\"=== $f\\\"; cat -n \\\"$f\\\"; done; echo \\\"=== guide\\\"; cat -n .claude/skills/building-from-specs/references/writing-a-spec.md; echo; cat .claude/skills/building-from-specs/SKILL.md 2>&1 | head -5\", \"description\": \"Print code, workstation files,"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"--- ls-files\\\"; git ls-files; git ls-files | wc -l; echo \\\"--- usage\\\"; grep -rn 'usage' README.md bin scripts tests; echo \\\"--- notes list\\\"; grep -rn 'notes list' README.md bin scripts tests; echo \\\"--- search\\\"; grep -rn 'search' README.md bin scripts tests; echo \\\"--- goal1\\\"; f=$(mktemp); printf '%s\\\\n' 'Buy rope' 'call Sam' 'coil the ROPE' > \\\"$f\\\"; NOTES_FILE=$f bin/note"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"--- origin/main\\\"; git rev-parse --verify origin/main 2>&1; git for-each-ref; cat .git/info/exclude 2>/dev/null | grep -v '^#'\\necho \\\"--- voice\\\"; ls -la ~/.claude/docs/voice/ 2>&1 | head -20\\necho \\\"--- tools\\\"; command -v claude-worktree-busy task-report gh claude 2>&1\\necho \\\"--- man grep\\\"; man grep 2>/dev/null | grep -n -B1 -A3 'exit status is 0' | head -12\\necho \\\"--- pr"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -d ~/.claude ~/.claude/docs ~/.claude/docs/voice 2>&1; ls ~/.claude/docs 2>&1 | head -30; ls ~/.claude/skills/writing-voice 2>&1 | head; grep -rn 'written-for-people' /tmp/spec-writing-run-fhzgvpzn/write-check-passes-today/.claude/skills 2>/dev/null | head -5\", \"description\": \"Check whether the voice standard file the spec names exists\"}"
+    },
+    {
+      "name": "Grep",
+      "input": "{\"pattern\": \"written-for-people|docs/voice\", \"path\": \"/tmp/spec-writing-run-fhzgvpzn/write-check-passes-today\", \"output_mode\": \"content\", \"head_limit\": 10}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd /tmp/spec-writing-run-fhzgvpzn/write-check-passes-today\\necho \\\"## 1\\\"; f=$(mktemp); printf '%s\\\\n' 'Buy rope' 'call Sam' 'coil the ROPE' > \\\"$f\\\"; NOTES_FILE=$f bin/notes search RoPe; echo \\\"exit $?\\\"\\necho \\\"## 2\\\"; f=$(mktemp); printf '%s\\\\n' 'axb' 'a.b' 'use -x here' > \\\"$f\\\"; NOTES_FILE=$f bin/notes search a.b; echo \\\"exit $?\\\"; NOTES_FILE=$f bin/notes search -x; echo \\\"exit $"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-check-passes-today/spec.md\", \"content\": \"# Spec: notes search\\n\\nWritten 2026-11-22 from `brief.md`, the design Geoff settled in conversation. It waits for his approval. The\\nwork is one task and one pull request to `example/notes`. Nobody could answer a question while this was\\nwritten, so each open reading was decided and is listed under \\\"Call"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"f=\\\"$TMPDIR/six.txt\\\"; printf '%s\\\\n' 'Buy rope' 'call Sam' 'coil the ROPE' 'axb' 'a.b' 'use -x here' > \\\"$f\\\"; grep -iF -e RoPe \\\"$f\\\"; echo \\\"exit $?\\\"; grep -iF -e 'a?b' \\\"$f\\\"; echo \\\"exit $?\\\"; grep -c '\\u2014' spec.md; awk 'length > 112' spec.md | grep -vc 'f=\\\\$(mktemp)\\\\|bin/notes search 2>&1'; git status --short | grep -v '^?? \\\\.'\", \"description\": \"Re-run two probes on the s"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-check-passes-today/spec.md\", \"old_string\": \"an error occurred.\\\" A probe on 2026-11-22 confirmed each case on a six-line file: `grep -iF -e rope` printed\\n`Buy rope` and `coil the ROPE` and exited 0, `-e RoPe` printed `coil the ROPE`, `-e a.b` printed only `a.b`,\\n`-e -x` printed only `use -x here`, `-e 'a?b'` and `-e sail` "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"awk 'length > 112 {print NR\\\": \\\"length\\\": \\\"substr($0,1,60)}' spec.md\", \"description\": \"List lines of the spec longer than 112 characters\"}"
+    }
+  ],
+  "result": "The spec is written to `spec.md`, and it is the only file I touched; nothing is built or committed.\n\nIt covers one task, \"add notes search\", in one pull request, with eight goal items. I ran every goal command on today's code and recorded its output beside the item. One fresh reader checked the draft, and its findings are fixed in place.\n\nTwo of the brief's done items already hold today, so on their own they can't show the task did anything:\n\n- **`grep -c notes README.md`** prints 3 today. I kept it word for word as item 7 and added item 6, `grep -c 'bin/notes search <word>' README.md`, which prints 0 today.\n- **\"The gate passes\"** is true today with three tests. Item 5 ties it to four named new tests, because `tests/run.sh` only runs tests listed in its loop, and a test left out would still leave the gate green.\n\nThe readings I decided where the brief was silent are in the spec's \"Calls Claude made\" list, yours to overrule:\n\n- **Substring match:** \"contains the word\" means anywhere in a note, so `rope` finds `ropes`.\n- **A second word:** exits 2 with the usage line, rather than joining the words into a phrase as `add` does.\n- **An empty word:** counts as a missing word.\n- **A missing notes file:** gives the no-match result, nothing printed and exit 1.\n- **A word starting with `-`:** is searched for as text.\n- **Left to grep, untested:** an unreadable notes file, and a word that holds a newline.\n- **Usage line:** `usage: notes add <text> | notes list | notes search <word>`.\n\nThe estimate is 41 minutes, the higher of the two like tasks in the task report, with a time clause of 82 minutes. None of the three logged refusals matches a command the task runs.\n\nThings I could not do from here:\n\n- **Voice standard:** reading `~/.claude/docs/voice/written-for-people.md` was denied, so I wrote the spec from the `writing-voice` skill's shape rules alone.\n- **Start conditions:** `claude-worktree-busy` and `claude agents --json` could not run here, and the checkout has no `origin/main` ref. The spec hands those checks to the launching session.\n- **Spec location:** `spec.md` is uncommitted, so the spec says the launch goal names it by absolute path in the main checkout."
+}

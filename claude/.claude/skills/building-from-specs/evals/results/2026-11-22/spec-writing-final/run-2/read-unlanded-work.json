@@ -1,0 +1,63 @@
+{
+  "case": "read-unlanded-work",
+  "kind": "read",
+  "suite": "spec-writing",
+  "started": "2026-11-23T01:42:55Z",
+  "seconds": 100.7,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "3a6fd5dff723d01acb1e084efb7fe17e89401d9e",
+  "promptHash": "83f788a24589bbe8bc83d5e6d601de96272ff95c",
+  "fixtureHead": "f25278bb3c43da2f348dfeaefeb36c2798783747",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 2.0,
+  "timeLimitSeconds": 900,
+  "words": 769,
+  "judgeCostUsd": 0.0100384,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": true,
+      "answer": "yes",
+      "quote": "The spec says each match prints \"in the format `notes export` uses\", but `export` appears nowhere in `bin/notes`, the README or the tests.",
+      "quoteFound": true
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 0.9313768,
+  "turns": 7,
+  "permissionDenials": [],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/read-unlanded-work/spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && git branch -a && git worktree list && git stash list\", \"description\": \"List tracked files, branches, worktrees, stashes\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in bin/notes scripts/gate.sh tests/run.sh README.md; do echo \\\"=== $f\\\"; cat -A \\\"$f\\\" | sed 's/\\\\$$//' ; done; echo; git remote -v; git log --all --oneline; git for-each-ref; ls -la; ls .git; cat .git/config; ls -la .claude 2>/dev/null\", \"description\": \"Show repo files, remotes, refs, and config\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"find .git -path .git/hooks -prune -o -type f -print | grep -v '^.git/objects/[0-9a-f][0-9a-f]/' ; echo ---; find .git -type d -empty; echo ---; cat .git/packed-refs 2>/dev/null; git fsck --lost-found --unreachable 2>&1; git count-objects -v; cat .git/logs/HEAD; ls -la .git/remotes .git/worktrees .git/branches .git/glab-cli .git/config.lock .git/config.worktree 2>&1; ls .claude/skills;"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cat .git/objects/info/alternates; echo; A=$(cat .git/objects/info/alternates); ls -la \\\"$A\\\" 2>&1 | head -30; git ls-remote origin 2>&1 | head; grep -rn \\\"export\\\" README.md bin tests scripts CLAUDE.md\", \"description\": \"Check alternate object store and remote reachability\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd $TMPDIR && f=$(mktemp) && printf '%s\\\\n' 'Buy rope' 'fix a.c' 'fix abc' 'ROPE ladder' > $f\\necho \\\"## whole-word (grep -iwF)\\\"; for w in rope a.c '.*' zzz; do echo \\\"[$w]\\\"; grep -iwF -- \\\"$w\\\" $f; echo \\\"rc=$?\\\"; done\\necho \\\"## lowercases notes only\\\"; for w in rope a.c '.*' zzz ROPE; do echo \\\"[$w]\\\"; awk -v w=\\\"$w\\\" 'index(tolower($0), w)' $f; done\\necho \\\"## missing file\\\"; gr"
+    }
+  ],
+  "result": "I've read the spec, checked its claims against the repo, and tried the done list against a few wrong implementations. Two questions block a good plan, and all six done items can pass on a wrong result.\n\nThe spec's checkable claims about today's repo all hold: the gate passes, `search rope` prints usage and exits 2, the grep finds 4 hits, and the README count is 0.\n\n## Questions, ranked\n\n1. **What format does `notes export` use, and where is `export`?**\n   - The spec says each match prints \"in the format `notes export` uses\", but `export` appears nowhere in `bin/notes`, the README or the tests. The repo has one commit on `main`, no other branches, stashes or worktrees, and I could not reach `origin` from here.\n   - Every test that asserts output depends on this (items 1 and 2). If I guess bare lines like `list` prints, I write the tests to my guess and they pass on the wrong format.\n   - If the format carries a number, I also need to know whether it is the note's position in the full list (1 and 4) or among the matches (1 and 2).\n\n2. **If `export` is unlanded work, does search build on top of it or on `main`, and what is the usage line once both land?**\n   - The spec fixes the usage line as `usage: notes add <text> | notes list | notes search <word>`, with no `export`, and item 4 asserts it.\n   - Built on `main`, this task collides with the export work at `bin/notes:7`, and whichever merges second has a wrong usage line or a failing test.\n   - Built on the export branch, the base, the \"4 hits\" file survey and the usage text all change, and search should reuse export's formatter instead of copying it.\n\n3. **What does `notes search buy rope` do (lowest)?**\n   - `add` joins its arguments, so a user will type this. The spec covers only a missing or empty word.\n   - Joining into a phrase, exiting 2, and ignoring `rope` are three different behaviours, and the third silently returns wrong matches.\n\n## Done list: every item can pass on a wrong result\n\nThe `ok` line reflects only the last command in a test function, because `tests/run.sh` runs without `set -e`. Items 1, 2 and 4 each hold two assertions, so if they are not chained with `&&` the first can fail and the test still prints `ok`.\n\n1. **`test_search_finds`**\n   - Whole-word matching passes: `grep -iwF` gives the same output on this fixture, because no note contains `ropes`. The spec's own example, \"`rope` finds `ropes`\", is untested.\n   - One-sided case folding passes: every test word is lowercase, so an implementation that lowercases only the notes passes while `search ROPE` finds nothing.\n   - Sorted output passes, because `Buy rope` sorts before `ROPE ladder` anyway.\n   - Any format passes: \"in that format\" is undefined (question 1).\n   - Extra lines pass: the item does not say \"only\", so a containment check would accept every note being printed.\n\n2. **`test_search_plain_text`**\n   - A word starting with `-` is not covered: without `--`, `search -c` is read as a grep option.\n   - Other pattern characters are not covered: a glob-based match would let `search 'a?c'` return both `fix a.c` and `fix abc`.\n   - A word containing a backslash is not covered: an `awk -v` implementation mangles it.\n\n3. **`test_search_no_match`**\n   - A missing notes file is untested, because every test creates its file with `mktemp`. Plain `grep` on a missing file prints an error and exits 2, which is the usage exit code, where the spec wants silence and exit 1.\n   - Only stdout is checked, so a \"no matches\" message or a grep error on stderr passes.\n\n4. **`test_search_missing_word`**\n   - A stale usage line passes: a builder can print the new line only in the search branch and leave `bin/notes:7` unchanged. `notes bogus` then still prints the old usage, and `test_usage` checks only the `usage:` prefix.\n   - Usage on stdout passes if the test captures with `2>&1`, as `test_usage` does today.\n\n5. **README grep**\n   - `grep -c \"notes search\" README.md` counts lines, so any single line containing those two words passes. That includes a description that is wrong, for example one calling the word a pattern, or one that omits the exit codes.\n\n6. **`bash scripts/gate.sh` exits 0**\n   - Dropping an existing test passes: nothing requires the three existing `ok` lines to still print, so a test removed from the `for` list or weakened leaves the gate green.\n   - \"Nothing about `add` or `list` changes\" rests on two thin tests, and `test_list_empty` only covers the missing-file case."
+}

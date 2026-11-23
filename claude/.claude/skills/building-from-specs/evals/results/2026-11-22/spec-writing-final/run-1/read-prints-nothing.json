@@ -1,0 +1,47 @@
+{
+  "case": "read-prints-nothing",
+  "kind": "read",
+  "suite": "spec-writing",
+  "started": "2026-11-23T01:00:32Z",
+  "seconds": 98.9,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "3a6fd5dff723d01acb1e084efb7fe17e89401d9e",
+  "promptHash": "83f788a24589bbe8bc83d5e6d601de96272ff95c",
+  "fixtureHead": "e0090c04f99a6f4e5695be3c7f9f0406f04b68f6",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 2.0,
+  "timeLimitSeconds": 900,
+  "words": 516,
+  "judgeCostUsd": 0.0085824,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": true,
+      "answer": "yes",
+      "quote": "The runner in `tests/run.sh` prints only `ok   <name>` or `FAIL <name>`, and items 2 to 4 expect the `ok` form. Read literally, item 1 forces either a change to the runner's output, which breaks items 2 to 4, or a one-off `echo` inside the test.",
+      "quoteFound": true
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 0.7503949999999999,
+  "turns": 3,
+  "permissionDenials": [],
+  "toolCalls": [
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la && cat spec.md && git ls-files\", \"description\": \"List the repo and print the spec\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cat -A bin/notes | head -60; echo ----; cat tests/run.sh; echo ----; cat scripts/gate.sh; echo ----; cat README.md; echo ----; git grep -n usage -- bin tests; git remote -v; bash scripts/gate.sh; echo \\\"exit $?\\\"; bin/notes search rope; echo \\\"exit $?\\\"; grep -c \\\"notes search\\\" README.md\", \"description\": \"Print the tool, tests, gate, README, and run the gate\"}"
+    }
+  ],
+  "result": "The spec has a done list, and I checked its claims about today's state against the repo: all hold. Two questions remain, and every one of the six done items can pass on a wrong result.\n\n## Questions\n\n1. **Is `passed test_search_finds` in item 1 a typo for `ok   test_search_finds`?** The runner in `tests/run.sh` prints only `ok   <name>` or `FAIL <name>`, and items 2 to 4 expect the `ok` form. Read literally, item 1 forces either a change to the runner's output, which breaks items 2 to 4, or a one-off `echo` inside the test. I would assume a typo, but a reviewer checking the list literally would then fail the build.\n\n2. **What does `notes search buy rope` do with more than one argument?** `add` joins its arguments with spaces, so the owner may expect search to do the same. The options are to join them into one phrase, to print the usage line, or to ignore the extras. The answer changes the argument handling and adds a test, and a wrong guess gives either a surprise usage error or results for `buy` alone.\n\n## Done list: items that pass on a wrong result\n\n1. **Item 1 (`test_search_finds`)**\n   - No runner line produces `passed ...`, so the line must come from a separate `echo`, which prints whether or not the assertions hold or the test is in the `for` list.\n   - A whole-word match passes, because no fixture note has the word inside a longer word; the `rope` finds `ropes` rule is never exercised.\n   - Folding case on the note side only passes, because every search word in the tests is lowercase; `search ROPE` could find nothing.\n\n2. **Item 2 (`test_search_plain_text`)**\n   - Only `.` and `*` are tested. A word starting with `-`, such as `search -v`, can be taken as an option by the underlying tool.\n   - A word with a backslash can be reinterpreted by an awk-based build.\n\n3. **Item 3 (`test_search_no_match`)**\n   - The missing-notes-file rule is untested, because every test creates its file with `mktemp`. The obvious `grep` build exits 2 with a \"No such file\" error there instead of exiting 1 silently.\n   - Only stdout is checked, so noise on stderr passes.\n\n4. **Item 4 (`test_search_missing_word`)**\n   - It checks the new usage line only on the `search` path. `notes bogus` and bare `notes` could keep the old line, since `test_usage` checks only the `usage:` prefix and stays as it is.\n\n5. **Item 5 (README)**\n   - Any single line containing `notes search` passes, whatever it says, including a wrong description or no description.\n   - It also fails a correct README that mentions the command on two lines.\n\n6. **Item 6 (gate exits 0)**\n   - The gate runs only tests named in the `for` list. With item 1 as written, `test_search_finds` can be defined, left out of the list, and the gate still exits 0.\n   - \"Nothing about `add` or `list` changes\" rests on two thin existing tests.\n\nThe list also has no item for the pull request or the review, so all six can hold with nothing pushed and no reviewer verdict."
+}
