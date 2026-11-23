@@ -1,0 +1,67 @@
+{
+  "case": "read-two-parts",
+  "kind": "read",
+  "suite": "spec-writing",
+  "started": "2026-11-23T01:04:44Z",
+  "seconds": 78.1,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "3a6fd5dff723d01acb1e084efb7fe17e89401d9e",
+  "promptHash": "83f788a24589bbe8bc83d5e6d601de96272ff95c",
+  "fixtureHead": "4c6aea643c40d48c6805f77decfdfadc733463d8",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 2.0,
+  "timeLimitSeconds": 900,
+  "words": 597,
+  "judgeCostUsd": 0.0085884,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": null,
+      "answer": "yes",
+      "quote": "The prose says \"No match prints nothing and exits 1\", and item 2 asserts exit 1 for `search '.*'`. Item 3 asserts exit 0 for `search zzz`.",
+      "quoteFound": true
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 0.8228958,
+  "turns": 7,
+  "permissionDenials": [
+    {
+      "tool_name": "Read",
+      "tool_use_id": "toolu_01QCpeLVgyYa81eZ3esmCtq1",
+      "tool_input": {
+        "file_path": "/var/home/glw907/.claude/docs/voice/written-for-people.md"
+      }
+    }
+  ],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3qn0s4w2/read-two-parts/spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && ls -la\", \"description\": \"List tracked files in the repo\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in bin/notes tests/run.sh scripts/gate.sh README.md; do echo \\\"=== $f\\\"; cat -n $f; done; git remote -v; git grep -n usage -- bin tests; bash scripts/gate.sh; echo \\\"exit $?\\\"; bin/notes search rope; echo \\\"exit $?\\\"\", \"description\": \"Show the repo files and run the gate\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\", \"args\": \"audience: the spec's author, reading a review report of open questions in the terminal\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/voice/written-for-people.md\"}"
+    }
+  ],
+  "result": "The spec has a done list, and it contradicts the prose on one behavior, so that is the first question. I could not open the plain-language guide (read denied), so this follows the router's shape rules only.\n\nI checked the spec's claims against the repo, and they hold: the gate prints three `ok` lines and exits 0, `git grep` finds the 4 hits, and `search rope` prints the usage line and exits 2 today. I did not test push access to `origin`.\n\n## Questions\n\n1. **What does a search with no match exit with, 1 or 0?** The prose says \"No match prints nothing and exits 1\", and item 2 asserts exit 1 for `search '.*'`. Item 3 asserts exit 0 for `search zzz`. Both are no-match cases, so no honest implementation passes items 2 and 3 together. The answer also sets the exit code for a missing notes file, which \"counts as no match\". I would guess 1, two statements against one, but a wrong guess ships the wrong contract to any script that calls the tool.\n\n2. **What happens with more than one argument, as in `notes search buy rope`?** `add` joins its arguments, but the usage line says `<word>`. Searching the phrase, searching only `buy`, and exiting 2 with usage are all defensible, and each needs a different test. The stakes are lower than question 1, but the owner is likely to type this.\n\n## Done list, item by item\n\nItems 1 to 4 share one weakness. Each check sees only an `ok` line carrying the test's name, and the builder writes the test. A test body of `true` prints that line, so only the reviewer's reading stands between an empty test and done.\n\n1. **`test_search_finds`** passes on three wrong results even when written as described.\n   - Whole-word matching passes, because no fixture note has `rope` inside a longer word. The `rope` finds `ropes` rule is untested.\n   - Lowercasing only the note passes, because the query is always lowercase. `search ROPE` could find nothing.\n   - Printing extra notes passes if the test checks only that the two lines appear in order. The item lacks the \"only\" that item 2 has.\n\n2. **`test_search_plain_text`** passes on an implementation that escapes only `.` and `*`. A word such as `[a-z]`, `^fix`, or `a\\.c` would still act as a pattern. A word that starts with `-`, such as `-v`, is also untested and could be read as an option.\n\n3. **`test_search_no_match`** as written requires exit 0, which the prose calls wrong. That is question 1. No item tests a missing notes file, because every new test creates its file first. A `grep` on the missing file that prints \"No such file\" to stderr and exits 2 gets through all six items.\n\n4. **`test_search_missing_word`** passes when the builder puts the new usage line only in the `search` branch and leaves `bin/notes:7` stale. `notes bogus` would then print the old line, and `test_usage` checks only the `usage:` prefix. It also passes if the usage line goes to stdout as well, unless the test checks that stdout is empty.\n\n5. **The README check** passes on any single line containing `notes search`, including one that describes the command wrongly, such as calling it case-sensitive or a pattern. It also fails a correct README that mentions the command on two lines, because `grep -c` counts lines.\n\n6. **`bash scripts/gate.sh` exits 0** passes today with nothing built. It adds only the three existing tests, which guard \"nothing about `add` or `list` changes\" thinly. A change to how `add` joins several arguments would get through."
+}

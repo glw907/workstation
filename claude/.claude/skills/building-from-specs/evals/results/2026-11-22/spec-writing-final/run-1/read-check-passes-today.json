@@ -1,0 +1,55 @@
+{
+  "case": "read-check-passes-today",
+  "kind": "read",
+  "suite": "spec-writing",
+  "started": "2026-11-23T00:59:22Z",
+  "seconds": 66.9,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "3a6fd5dff723d01acb1e084efb7fe17e89401d9e",
+  "promptHash": "83f788a24589bbe8bc83d5e6d601de96272ff95c",
+  "fixtureHead": "2f0a9ea954ee2222f07a20af75babd52a2a489a7",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 2.0,
+  "timeLimitSeconds": 900,
+  "words": 582,
+  "judgeCostUsd": 0.0083444,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": null,
+      "answer": "yes",
+      "quote": "It prints 3 today, so an untouched README that never mentions `search` passes.",
+      "quoteFound": true
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 0.7103538,
+  "turns": 5,
+  "permissionDenials": [],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3qn0s4w2/read-check-passes-today/spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && git log --oneline | cat\", \"description\": \"List tracked files and commit history\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in README.md bin/notes scripts/gate.sh tests/run.sh; do echo \\\"=== $f\\\"; cat -n \\\"$f\\\"; done; echo \\\"=== gate\\\"; bash scripts/gate.sh; echo \\\"exit=$?\\\"; echo \\\"=== grep usage\\\"; git grep -n usage -- bin tests; echo \\\"=== grep -c notes README\\\"; grep -c notes README.md; echo \\\"=== search rope\\\"; bin/notes search rope; echo \\\"exit=$?\\\"; git remote -v\", \"description\": \"Show repo fi"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"GIT_TERMINAL_PROMPT=0 timeout 20 git ls-remote origin 2>&1 | cat; echo \\\"exit=${PIPESTATUS[0]}\\\"; git branch -a | cat\", \"description\": \"Check whether the origin remote is reachable\", \"allowed_domains\": [\"github.com\"]}"
+    }
+  ],
+  "result": "I read `spec.md` and checked its claims against the repo. The gate, the `git grep` count, and today's `search rope` behaviour all match what it says. The spec does have a done list; five of its six items can pass on a wrong result, and item 5 passes today with no work done.\n\n## Questions I'd still need answered\n\n1. **Does `origin` exist, and can the builder push to it?** The remote is `github.com/example/notes`, which reads like a placeholder, and the sandbox blocked my attempt to reach it. If it isn't real, the task cannot end in a pull request and the plan needs a different final step.\n2. **What should `notes search buy rope` (more than one argument) do?** The spec covers only a missing or empty word. Joining the arguments into a phrase as `add` does, rejecting them with usage and exit 2, or silently using the first word are all user-visible behaviours, and each needs a different test.\n\nEverything else I could decide myself.\n\n## Done-list items that could pass on a wrong result\n\nTwo harness problems apply to items 1 to 4:\n\n- **Only the last command counts.** `tests/run.sh` calls each test as `if \"$t\"`, so a test function returns only the status of its last command. A test that writes its assertions on separate lines, rather than chaining them with `&&`, passes when only the final one holds.\n- **The `ok` line proves little.** The check is the printed `ok` line, not the test body, so a test that asserts less than the spec describes still prints it.\n\nItem by item:\n\n1. **`test_search_finds`** has three gaps.\n   - **Whole-word matching passes.** No fixture note has `rope` inside a longer word, so `grep -w` gets through, though the spec says `rope` finds `ropes`.\n   - **Uppercase search words are untested.** Only the note side has uppercase, so a build that lowercases the notes but not the word passes while `search ROPE` finds nothing.\n   - **Sorted output passes.** `Buy rope` sorts before `ROPE ladder`, so alphabetical order is indistinguishable from oldest first.\n2. **`test_search_plain_text`** has two gaps.\n   - **A word starting with `-` is untested.** `grep -iF \"$word\"` without `--` passes, though `search -v` would then be read as a grep option.\n   - **The exit code of `search a.c` is not asserted.** A build that prints the match but exits non-zero passes.\n3. **`test_search_no_match`** has two gaps.\n   - **The missing-file case is untested.** The file always exists in the test, so a bare `grep` on a missing file, which prints an error and exits 2, passes all six items. The spec requires no output and exit 1.\n   - **Stderr is not checked.** A no-match that writes noise to stderr passes.\n4. **`test_search_missing_word`** exercises only the `search` path. A build that adds a second usage string for `search` and leaves `bin/notes:7` alone passes, so `notes bogus` and bare `notes` still print the old line. `test_usage` checks only the `usage:` prefix and won't catch it.\n5. **`grep -c notes README.md` prints 1 or more.** It prints 3 today, so an untouched README that never mentions `search` passes. The check needs to look for `notes search` and currently print 0.\n6. **`bash scripts/gate.sh` exits 0.** It exits 0 today. It also exits 0 if a new test is never added to the `for` list, or if an existing test is dropped from it, so a regression in `add` or `list` could go unnoticed. No item requires the three existing `ok` lines to still appear."
+}

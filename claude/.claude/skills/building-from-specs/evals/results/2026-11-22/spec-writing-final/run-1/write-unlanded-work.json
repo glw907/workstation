@@ -1,0 +1,161 @@
+{
+  "case": "write-unlanded-work",
+  "kind": "write",
+  "suite": "spec-writing",
+  "started": "2026-11-23T00:41:22Z",
+  "seconds": 454.8,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "3a6fd5dff723d01acb1e084efb7fe17e89401d9e",
+  "promptHash": "960c4aa467dd4a7f36210c62b8abe680e83e8ea0",
+  "fixtureHead": "e3473dfd0df8477c17ae3d3d7cfb7060ad708a35",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 6.0,
+  "timeLimitSeconds": 1800,
+  "words": 1782,
+  "judgeCostUsd": 0.0201604,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": true,
+      "answer": "yes",
+      "quote": "It can't start today: the brief says each match prints \"in the format `notes export` uses\", and this checkout has no `notes export`.",
+      "quoteFound": true
+    },
+    "length": {
+      "passed": false,
+      "words": 1782
+    },
+    "built": {
+      "passed": true,
+      "status": [
+        "?? spec.md"
+      ],
+      "headUnchanged": true
+    },
+    "guide": {
+      "passed": true,
+      "reads": [
+        {
+          "call": "/tmp/spec-writing-run-3qn0s4w2/write-unlanded-work/.claude/skills/building-from-specs/references/writing-a-spec.md",
+          "inside": true,
+          "failed": false
+        },
+        {
+          "call": "/tmp/spec-writing-run-3qn0s4w2/write-unlanded-work/.claude/skills/building-from-specs/references/writing-a-spec.md",
+          "inside": true,
+          "failed": false
+        }
+      ]
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 3.5321966000000002,
+  "turns": 21,
+  "permissionDenials": [],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3qn0s4w2/write-unlanded-work/brief.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la && ls -la .workstation .claude 2>/dev/null; cat .workstation/*; git log --oneline | cat\", \"description\": \"List repo files and show workstation stand-in files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -R .claude/skills/building-from-specs; echo ---; cat README.md; echo ---; cat bin/notes; echo ---; cat tests/run.sh; echo ---; ls scripts; cat scripts/*; echo ---; git status --short; git branch -a; git remote -v; git stash list\", \"description\": \"Show the skill folder listing and the repo's source files\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3qn0s4w2/write-unlanded-work/.claude/skills/building-from-specs/references/writing-a-spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git branch -a -vv | cat; echo --- wt; git worktree list; echo --- stash; git stash list | cat; echo --- refs; git for-each-ref | cat; echo --- reflog; git reflog --all | cat; echo --- fsck; git fsck --lost-found 2>&1 | cat; echo --- gitdir; ls -la .git; cat .git/config; echo; ls .claude/skills; echo --- ; git ls-files | cat; ls -la .claude/.cc-writes bin tests scripts\", \"description\":"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"standards:backlog-sweep\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"## today\\\"; bin/notes search rope; echo \\\"exit $?\\\"; bin/notes export; echo \\\"exit $?\\\"; echo \\\"## gate\\\"; bash scripts/gate.sh; echo \\\"exit $?\\\"; echo \\\"## greps\\\"; git grep -n -e 'usage' ; echo \\\"--\\\"; git grep -n -e 'notes add' -e 'notes list' -e 'notes export' -e 'notes search'; echo \\\"--\\\"; git grep -c -e export -e search; echo \\\"--\\\"; git grep -n 'test_'; echo \\\"## tools\\"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls ~/.claude/docs/voice/ 2>&1 | head; wc -l ~/.claude/docs/voice/written-for-people.md 2>&1; echo \\\"## backlog\\\"; git ls-files | grep -ciE 'backlog|todo|status'; ls docs 2>&1; echo \\\"## fixture checks today\\\"; f=$(mktemp); printf '%s\\\\n' 'buy rope' 'Call Ann' 'coil the ROPE' 'a.b' 'axb' > \\\"$f\\\"\\ng=$(mktemp); printf '%s\\\\n' 'buy rope' 'coil the ROPE' > \\\"$g\\\"\\nh=$(mktemp); printf '%s\\"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"man grep 2>/dev/null | col -b | grep -n -A4 -E 'EXIT STATUS' | head -12; git config --get-regexp 'branch\\\\..*' ; git status -sb | head -1\", \"description\": \"Quote grep's documented exit status and check branch tracking\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"f=$(mktemp); printf '%s\\\\n' 'buy rope' 'Call Ann' 'coil the ROPE' 'a.b' 'axb' > \\\"$f\\\"; export NOTES_FILE=$f\\necho \\\"# 4\\\"; bin/notes search zebra 2>&1 | wc -c; echo \\\"exit ${PIPESTATUS[0]}\\\"\\necho \\\"# 3b\\\"; bin/notes search -e 2>&1 | wc -c; echo \\\"exit ${PIPESTATUS[0]}\\\"\\necho \\\"# two\\\"; bin/notes search buy rope; echo \\\"exit $?\\\"; echo \\\"# empty\\\"; bin/notes search ''; echo \\\"exit $"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3qn0s4w2/write-unlanded-work/spec.md\", \"content\": \"# Spec: notes search\\n\\nWritten 2026-11-22 from `brief.md`, against `main` at `e3473df`. Status: waiting for approval.\\n\\nThis is one task that ends in one pull request. It can't start today. The brief says each match prints \\\"in the\\nformat `notes export` uses\\\", and this checkout has no `notes export`. The ta"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-3qn0s4w2/write-unlanded-work/spec.md\", \"old_string\": \"`: 9 hits. `bin/notes:7`\\n  changes. `tests/run.sh:7` and `:10` are the two existing tests, unchanged. `README.md:3` and `:4` name `add`\\n  and `list` and stay as they are, because the brief limits the work to two files. `brief.md:1`, `:7`, `:9`,\\n  and `:10` are the brief.\", \"new_strin"
+    },
+    {
+      "name": "Agent",
+      "input": "{\"description\": \"Fresh read of spec.md\", \"subagent_type\": \"general-purpose\", \"model\": \"fable\", \"effort\": \"high\", \"run_in_background\": false, \"prompt\": \"You are the fresh reader for a spec, and you start with no context on purpose. Read only; write, edit, and commit nothing.\\n\\nRepo: /tmp/spec-writing-run-3qn0s4w2/write-unlanded-work (a tiny bash notes tool: bin/notes, tests/run.sh, scripts/gate.sh"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3qn0s4w2/write-unlanded-work/spec.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3qn0s4w2/write-unlanded-work/brief.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3qn0s4w2/write-unlanded-work/.claude/skills/building-from-specs/references/writing-a-spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la . .workstation && for f in bin/notes tests/run.sh scripts/gate.sh README.md .workstation/task-report.txt .workstation/denials.log .workstation/remote.txt; do echo \\\"=== $f\\\"; cat -n \\\"$f\\\"; done; git status --short; git branch -a; git log --oneline --all; git stash list; git worktree list\", \"description\": \"Show repo files, stand-in files, and git state\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"--- ls-files\\\"; git ls-files; echo \\\"--- ignored\\\"; git status --short --ignored | head -30; cat .git/info/exclude 2>/dev/null | tail -5; echo \\\"--- remotes\\\"; git remote -v; git for-each-ref; echo \\\"--- grep usage\\\"; git grep -n usage; echo \\\"--- grep cmds\\\"; git grep -n -e 'notes add' -e 'notes list' -e 'notes export' -e 'notes search'; echo \\\"--- test_\\\"; git grep -n test_; "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"f=$(mktemp -p \\\"$TMPDIR\\\"); printf '%s\\\\n' 'buy rope' 'Call Ann' 'coil the ROPE' 'a.b' 'axb' > \\\"$f\\\"\\ng=$(mktemp -p \\\"$TMPDIR\\\"); printf '%s\\\\n' 'buy rope' 'coil the ROPE' > \\\"$g\\\"\\nh=$(mktemp -p \\\"$TMPDIR\\\"); printf '%s\\\\n' 'a.b' > \\\"$h\\\"\\nexport NOTES_FILE=$f\\necho \\\"--- 1\\\"; bin/notes search rope; echo \\\"exit $?\\\"\\necho \\\"--- 2\\\"; s=$(bin/notes search rope) && e=$(NOTES_FILE=$g bi"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"f=$(mktemp -p \\\"$TMPDIR\\\"); printf '%s\\\\n' 'buy rope' 'Call Ann' 'coil the ROPE' 'a.b' 'axb' > \\\"$f\\\"\\necho \\\"--- unguarded word=-e, stdin empty\\\"; w=-e; grep -iF \\\"$w\\\" \\\"$f\\\" </dev/null | wc -c; echo \\\"rc ${PIPESTATUS[0]}\\\"\\necho \\\"--- unguarded word=-e, stdin has data\\\"; printf '%s\\\\n' \\\"$f\\\" | grep -iF \\\"$w\\\" \\\"$f\\\" | wc -c\\necho \\\"--- regex * and [\\\"; grep -i -- '*' \\\"$f\\\"; echo "
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3qn0s4w2/write-unlanded-work/spec.md\", \"content\": \"# Spec: notes search\\n\\nWritten 2026-11-22 from `brief.md`, against `main` at `e3473df`. Status: waiting for approval, with one question\\nfor Geoff under \\\"Calls Claude made\\\".\\n\\nThis is one task that ends in one pull request. It can't start today: the brief says each match prints \\\"in the\\nformat `notes expor"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"f=$(mktemp); printf '%s\\\\n' 'buy rope' 'Call Ann' 'coil the ROPE' 'a.b' 'axb' > \\\"$f\\\"; export NOTES_FILE=$f; bin/notes search '[' 2>&1 | wc -c; echo \\\"exit ${PIPESTATUS[0]}\\\"; grep -iF -- '[' \\\"$f\\\"; echo \\\"grep exit $?\\\"; git status --short | grep -v '^?? \\\\.' ; grep -c '\\u2014' spec.md; awk 'length > 113' spec.md | wc -l\", \"description\": \"Run the new bracket check on today's code a"
+    }
+  ],
+  "result": "`spec.md` is written, but the task it describes can't start yet: the brief's format rule rests on `notes export`, and that command isn't in this checkout.\n\n`bin/notes export` prints the usage line and exits 2 at `e3473df`, and no code mentions `export`. I couldn't reach the remote, so I can't say whether `export` is already on `origin/main` or still on a branch. The checkout has no `origin` refs and may be behind.\n\nThe decisions I made in place of asking are in the spec's \"Calls Claude made\" list. The ones that matter most:\n\n- **The task waits for `export` to merge.** I did not invent a format or add `export` to this task, because either would change what the brief settles. The spec gives a launch check to run on `origin/main` first.\n- **The format is defined by pointing at `export`.** Search prints exactly what `export` prints for a notes file holding only the matches. If `export` turns out to number its records, print a header, or ignore `$NOTES_FILE`, the spec comes back to you.\n- **One argument only.** An empty word or a second word exits 2 with the usage line.\n- **A missing notes file counts as no match.** It prints nothing and exits 1.\n- **\"Contains\" is a substring match.** `rope` finds `ropes`.\n- **`README.md` stays as it is.** The brief limits the work to two files, so the README won't name `search`; the pull request will flag that.\n- **45 minutes, 90-minute time clause.** The two comparable past tasks took 34 and 41 minutes.\n\nEvery done-item check was run on today's code and fails today, with its output recorded beside it. A fresh reader checked the spec once and I fixed what it found; the revised version has not had a second read. The launch checks (`claude-worktree-busy`, live sessions) were not run because those tools aren't reachable here.\n\nOne question only you can answer: which work adds `notes export`? I found no pull request or task for it. If you meant search to print stored lines the way `list` does, the task could start today, but that is your call.\n\nNothing was built or committed; `spec.md` is the only file written."
+}

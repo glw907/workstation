@@ -1,0 +1,51 @@
+{
+  "case": "read-vendored-file",
+  "kind": "read",
+  "suite": "spec-writing",
+  "started": "2026-11-23T01:02:13Z",
+  "seconds": 72.6,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "3a6fd5dff723d01acb1e084efb7fe17e89401d9e",
+  "promptHash": "83f788a24589bbe8bc83d5e6d601de96272ff95c",
+  "fixtureHead": "cbaa209e7dd58e1179530e03693f21ff97269843",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 2.0,
+  "timeLimitSeconds": 900,
+  "words": 773,
+  "judgeCostUsd": 0.0106084,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": true,
+      "answer": "yes",
+      "quote": "The file's own header says \"copied from the shkit project at v2.3.0. Never edit this copy\", and `README.md:10-11` says a change goes to shkit first and is copied back.",
+      "quoteFound": true
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 0.679642,
+  "turns": 4,
+  "permissionDenials": [],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-3qn0s4w2/read-vendored-file/spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && ls -la\", \"description\": \"List tracked files in the repo\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in README.md bin/notes lib/strings.sh scripts/gate.sh tests/run.sh; do echo \\\"=== $f\\\"; cat -n -A \\\"$f\\\" | sed 's/\\\\$$//'; done; git remote -v; git grep -n usage -- bin tests; bash scripts/gate.sh; echo \\\"exit $?\\\"; bin/notes search rope; echo \\\"exit $?\\\"; grep -c \\\"notes search\\\" README.md; git log --oneline -5 -- lib; ls .claude\", \"description\": \"Show repo files, run gate, che"
+    }
+  ],
+  "result": "I'd need three questions answered before planning this, and every item on the done list can pass on a wrong result. The spec's stated facts all held when I checked them: the gate passes, the usage grep gives 4 hits, `search rope` exits 2 today, and the README count is 0.\n\n## Questions, ranked\n\n**1. May the task edit `lib/strings.sh`, given that the repo says never to?**\nThe spec's Files section says `lib/strings.sh` gains a `contains` helper. The file's own header says \"copied from the shkit project at v2.3.0. Never edit this copy\", and `README.md:10-11` says a change goes to shkit first and is copied back. The spec doesn't mention this rule, and shkit's location isn't given anywhere. The plan differs for each reading:\n- **Edit the copy here:** this breaks the repo's rule, leaves the README false, and the next copy-back from shkit silently deletes `contains` and breaks search.\n- **Land it in shkit first:** this is a second repo and a second pull request, outside \"one task, one pull request\", in a project I can't locate.\n- **Put the helper in `bin/notes` or a new non-vendored file:** this contradicts the Files list, though \"the implementation is the builder's choice\" may allow it.\n\n**2. How is `bin/notes` invoked in real use: from the checkout, or copied or symlinked onto `PATH`?**\n`bin/notes` sources nothing today, and the README calls it a one-file tool. If search depends on a file in `lib/`, a copied `bin/notes` fails on `add` and `list` too, because a failed `source` under `set -e` kills the script. A symlinked one needs path resolution. The answer decides whether the helper can live outside `bin/notes` at all.\n\n**3. What does `notes search buy rope` (two unquoted arguments) do?**\nThe spec says `<word>` and is silent on extra arguments. `add` joins its arguments with spaces. Joining, searching only the first word, and a usage error give three different results and need different tests. Silently ignoring the second word would return wrong matches for a likely first use.\n\n## Done list: items that pass on a wrong result\n\n**Item 1, `test_search_finds`**\n- **Whole-word matching passes.** No fixture has `ropes`, so `grep -iw` gets through although the spec says `rope` finds `ropes`.\n- **Lowercasing only the notes passes.** The query is already lowercase, so `search ROPE` or `search Rope` could find nothing.\n- **Order is only checked if the test compares full stdout.** A test that greps for each line separately would pass on newest-first.\n\n**Item 2, `test_search_plain_text`**\n- **A word starting with `-` is untested.** `grep -iF \"$word\"` without `--` passes, yet `search -v` would be read as a grep option.\n- **A word containing a backslash is untested.** An `awk -v` implementation, which processes escapes, passes.\n- **The exit status of `search a.c` is not asserted.**\n\n**Item 3, `test_search_no_match`**\n- **The missing-file case is untested.** Every test creates its file with `mktemp`. An implementation that greps a nonexistent file passes, yet it prints a grep error and exits 2, which collides with the usage exit code.\n\n**Item 4, `test_search_missing_word`**\n- **Two diverging usage strings pass.** A builder can print the new line from the `search` branch and leave `bin/notes:7` unchanged. `notes bogus` then prints the old usage, and `test_usage` checks only the `usage:` prefix.\n- **Usage on stdout passes if the test captures `2>&1`.** The item doesn't require stdout to be empty.\n\n**Items 1 to 4 together**\n- **A cwd-relative `source lib/strings.sh` passes.** `tests/run.sh` does `cd` to the repo root and calls `bin/notes` by relative path, so the tool would break for all three commands when run from any other directory.\n- **Each item only requires an `ok` line.** A test function with a weaker body than described prints the same line, so only the reviewer catches it.\n\n**Item 5, README grep**\n- **Any single line containing \"notes search\" passes.** That includes an inaccurate description.\n- **A stale vendoring claim passes.** If the task edits `lib/strings.sh`, the README's \"never edited here\" line becomes false and the grep doesn't notice.\n- **A correct README can fail.** `grep -c` counts lines, so a correct README that mentions the command on two lines prints 2.\n\n**Item 6, gate exits 0**\n- **Dropping or weakening an existing test passes.** The gate runs only what is in the `for` list, so removing `test_usage` or the `add` and `list` tests still exits 0.\n- **\"Nothing about `add` or `list` changes\" rests on two thin tests.** Nothing else checks it.\n- **The vendoring rule and the `contains` helper are unchecked.** The gate passes whether or not the copy was edited and whether or not the helper exists or is used."
+}
