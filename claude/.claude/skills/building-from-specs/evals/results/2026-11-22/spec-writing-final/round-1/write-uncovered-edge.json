@@ -1,0 +1,157 @@
+{
+  "case": "write-uncovered-edge",
+  "kind": "write",
+  "suite": "spec-writing",
+  "started": "2026-11-22T23:55:43Z",
+  "seconds": 616.2,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "7747200c9ad7bf8b9dd9dbc9dd478f757744c794",
+  "promptHash": "960c4aa467dd4a7f36210c62b8abe680e83e8ea0",
+  "fixtureHead": "399e8de08b4b18bd35b4f2def3ff9be295e5c32c",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 6.0,
+  "timeLimitSeconds": 1800,
+  "words": 3157,
+  "judgeCostUsd": 0.030270400000000003,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": null,
+      "answer": "yes",
+      "quote": "| `search <word>`, and nothing exists at the notes file's path | Nothing | Nothing | 1 | Call 3 |",
+      "quoteFound": true
+    },
+    "length": {
+      "passed": false,
+      "words": 3157
+    },
+    "built": {
+      "passed": true,
+      "status": [
+        "?? spec.md"
+      ],
+      "headUnchanged": true
+    },
+    "guide": {
+      "passed": true,
+      "reads": [
+        {
+          "call": "ls -R .claude/skills/building-from-specs && cat .claude/skills/building-from-specs/references/writing-a-spec.md",
+          "inside": true,
+          "failed": false
+        },
+        {
+          "call": "/tmp/spec-writing-run-_y69ewou/write-uncovered-edge/.claude/skills/building-from-specs/references/writing-a-spec.md",
+          "inside": true,
+          "failed": false
+        }
+      ]
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 4.4983678,
+  "turns": 23,
+  "permissionDenials": [],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-_y69ewou/write-uncovered-edge/brief.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la && ls -la .workstation .claude 2>/dev/null; git ls-files; cat .workstation/*\", \"description\": \"List repo files and print workstation stand-in files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -R .claude/skills/building-from-specs && cat .claude/skills/building-from-specs/references/writing-a-spec.md\", \"description\": \"List the skill folder and print the spec-writing guide\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in README.md bin/notes scripts/gate.sh tests/run.sh; do echo \\\"=== $f\\\"; cat -n \\\"$f\\\"; done; ls .claude/skills; git log --oneline | cat\", \"description\": \"Print the repo's source files and skill list\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"standards:backlog-sweep\", \"args\": \"scoped sweep for a spec: notes search in example/notes\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"--- gate run 1\\\"; bash scripts/gate.sh; echo \\\"exit $?\\\"; echo \\\"--- gate run 2\\\"; bash scripts/gate.sh; echo \\\"exit $?\\\"\\necho \\\"--- searches\\\"\\nfor p in 'usage' 'notes list' 'notes add' 'test_' 'search' 'NOTES_FILE'; do echo \\\"## git grep -n -F '$p' (hits: $(git grep -n -F -e \\\"$p\\\" -- . ':!brief.md' | wc -l))\\\"; git grep -n -F -e \\\"$p\\\" -- . ':!brief.md'; done\\necho \\\"--- to"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"unalias grep 2>/dev/null\\necho \\\"--- backlog files\\\"; git ls-files | command grep -i -c -E 'backlog|todo|issues|STATUS' ; ls docs 2>&1\\necho \\\"--- voice doc\\\"; ls -la ~/.claude/docs/voice/ 2>&1 | head -20\\necho \\\"--- today's checks\\\"\\nf=$(mktemp); printf '%s\\\\n' 'buy rope' 'Call ROPE shop' 'feed cat' 'a.c' 'abc' 'x -v y' > \\\"$f\\\"; export NOTES_FILE=$f\\nrun() { echo \\\"\\\\$ $*\\\"; \\\"$@\\\";"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"P=$(mktemp -d) && mkdir -p \\\"$P/bin\\\" && cat > \\\"$P/bin/notes\\\" <<'EOF'\\n#!/usr/bin/env bash\\nset -euo pipefail\\nfile=\\\"${NOTES_FILE:-$HOME/.notes}\\\"\\nusage() { echo \\\"usage: notes add <text> | notes list | notes search <word>\\\" >&2; exit 2; }\\ncase \\\"${1:-}\\\" in\\n  add) shift; printf '%s\\\\n' \\\"$*\\\" >> \\\"$file\\\" ;;\\n  list) [ -f \\\"$file\\\" ] && cat \\\"$file\\\" || true ;;\\n  search)\\n    "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"unalias grep 2>/dev/null\\necho '$ bin/notes search 2>/dev/null; echo \\\"exit $?\\\"'; bin/notes search 2>/dev/null; echo \\\"exit $?\\\"\\necho '$ bin/notes search 2>&1 >/dev/null'; bin/notes search 2>&1 >/dev/null\\necho '$ bin/notes bogus 2>&1 >/dev/null'; bin/notes bogus 2>&1 >/dev/null\\necho '$ bash scripts/gate.sh | grep -c \\\"^ok   test_search_\\\"'; bash scripts/gate.sh | grep -c '^ok   te"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo '$ git diff --name-only main...HEAD'; git diff --name-only main...HEAD; echo \\\"exit $?\\\"\", \"description\": \"Run the diff-names check once on today's checkout\"}"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-_y69ewou/write-uncovered-edge/spec.md\", \"content\": \"# Spec: notes search\\n\\nThis spec adds one command, `bin/notes search <word>`, to the notes tool in `example/notes`. It is\\nwritten from `brief.md`, the design Geoff settled in conversation, on 2026-11-22 against `main` at\\n`399e8de`. It is one task and ends in one pull request. Nobody could answer a question "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"unalias grep 2>/dev/null\\nf=$(mktemp); printf '%s\\\\n' 'buy rope' 'feed cat' 'Call ROPE shop' 'coil the ropes' 'a.c' 'abc' 'x -v y' > \\\"$f\\\"\\nrun() { echo \\\"\\\\$ grep $(printf '%q ' \\\"${@:2}\\\" | sed \\\"s#$f#F#g\\\")\\\"; \\\"$@\\\" 2>&1 | sed \\\"s#$f#F#g\\\"; echo \\\"exit ${PIPESTATUS[0]}\\\"; }\\nrun grep -i -F -e Rope -- \\\"$f\\\"; run grep -i -F -e a.c -- \\\"$f\\\"; run grep -i -F -e -v -- \\\"$f\\\"; run gre"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"python3 -I - <<'EOF'\\nimport re, pathlib\\np = pathlib.Path(\\\"spec.md\\\"); s = p.read_text()\\nold = \\\"| `rope` | `buy rope`, `Call ROPE shop` (the six-note file of the first run) | 0 | Case is ignored, and file order is kept |\\\"\\nnew = \\\"| `Rope` | `buy rope`, `Call ROPE shop`, `coil the ropes` | 0 | Case is ignored both ways, and file order is kept |\\\"\\nassert old in s; s = s.replace(o"
+    },
+    {
+      "name": "Agent",
+      "input": "{\"description\": \"Fresh read of spec.md\", \"subagent_type\": \"general-purpose\", \"model\": \"fable\", \"effort\": \"high\", \"run_in_background\": false, \"prompt\": \"You are the one fresh reader of a spec before its owner sees it. You have no other context, and that is the point. Read only; edit and create no files, commit nothing.\\n\\nThe repo is at /tmp/spec-writing-run-_y69ewou/write-uncovered-edge (a tiny ba"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la . .workstation .claude .claude/skills/* .claude/skills/*/references 2>&1; echo ---; cat spec.md; echo ---BRIEF; cat brief.md\", \"description\": \"List repo files and print spec and brief\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-_y69ewou/write-uncovered-edge/.claude/skills/building-from-specs/references/writing-a-spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in README.md bin/notes tests/run.sh scripts/gate.sh .workstation/denials.log .workstation/remote.txt .workstation/task-report.txt; do echo \\\"=== $f\\\"; cat -n $f; done; git ls-files; git branch -a; git remote -v; git status --short\", \"description\": \"Print repo source files and workstation stand-ins\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for t in usage 'notes list' 'notes add' test_ search NOTES_FILE; do echo \\\"== $t: $(git grep -n -F -e \\\"$t\\\" -- ':!brief.md' | wc -l)\\\"; git grep -n -F -e \\\"$t\\\" -- ':!brief.md' | cut -d: -f1,2 | tr '\\\\n' ' '; echo; done\\ngrep --version | head -1; echo \\\"bash $BASH_VERSION\\\"; locale 2>/dev/null | head -2\\nf=$(mktemp -p \\\"$TMPDIR\\\"); printf '%s\\\\n' 'buy rope' 'feed cat' 'Call ROPE shop"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"unalias grep 2>/dev/null; echo \\\"LANG=${LANG:-} LC_ALL=${LC_ALL:-}\\\"\\ng=$(mktemp); printf 'feed cat\\\\nodd\\\\0note\\\\n' > \\\"$g\\\"; d=$(mktemp -d)\\necho '--- grep on a file with a NUL, without -a'; grep -i -F -e cat -- \\\"$g\\\" 2>&1 | sed \\\"s#$g#G#\\\"; echo \\\"exit ${PIPESTATUS[0]}\\\"\\necho '--- with -a'; grep -a -i -F -e cat -- \\\"$g\\\"; echo \\\"exit $?\\\"\\nh=$(mktemp); printf 'feed cat\\\\ncaf\\\\351"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-_y69ewou/write-uncovered-edge/spec.md\", \"content\": \"# Spec: notes search\\n\\nThis spec adds one command, `bin/notes search <word>`, to the notes tool in `example/notes`. It is\\nwritten from `brief.md`, the design Geoff settled in conversation, on 2026-11-22 against `main` at\\n`399e8de`. It is one task and ends in one pull request.\\n\\nNobody could answer a questi"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"unalias grep 2>/dev/null\\nbash scripts/gate.sh | grep -c '^FAIL'; bash scripts/gate.sh | grep -c '^ok   test_search_'; grep -c '^test_search_' tests/run.sh; grep -c -F 'notes search' README.md; git diff --name-only main...HEAD; echo \\\"diff exit $?\\\"\\necho \\\"--- em dashes: $(grep -c '\\u2014' spec.md)\\\"; echo \\\"--- status\\\"; git status --short | grep -v '^?? \\\\.' ; git diff --stat | cat"
+    }
+  ],
+  "result": "The spec is written to `spec.md`; nothing else in the repo changed and nothing is committed.\n\nIt covers the brief as one task, `notes-search`, ending in one pull request, planned at 45 minutes from the two like tasks in the task report. The goal has 14 done items. I ran each check command on today's code and recorded its result beside the item; all fail today for the reason the task fixes, except the diff check (item 14), which can't be judged until a branch exists.\n\nThe brief left several edges open. These are the scope and product calls I made, and the ones to check before approving:\n\n- **README added to the task.** The brief names `bin/notes` and `tests/run.sh` only, but the file search showed `README.md` describes every command. This is the one departure from the brief's words; the spec says which two items to strike to reverse it.\n- **Missing notes file:** silence and exit 1, the same as no match.\n- **Empty word (`search \"\"`):** treated as a missing word, so the usage line and exit 2.\n- **More than one argument (`search buy rope`):** a usage error, not joined the way `add` joins. A quoted phrase still works.\n- **\"Contains\" means anywhere in the note**, so `rope` finds `ropes`.\n- **Usage line text:** `usage: notes add <text> | notes list | notes search <word>`.\n\nThe pick is `grep -a -i -F -e`, with guards where probes showed `grep` departing from the settled behavior (missing file, empty word, a newline in the word). The test script's loop names each test by hand, so a new test left out of it never runs and the gate still passes; item 11 catches that.\n\nOne fresh reader checked the spec, as the guide requires. Its findings led to the `-a` flag (a NUL byte in the file hid matches), a tested directory case, a tighter test-count check, and the 45-minute plan.\n\nThree things could not be settled from here:\n\n- **Whether `399e8de` is the remote's `main`.** This copy has no `origin/main` ref, and the task report lists a pull request (\"Let notes add read stdin\") whose change is not in the code. The spec makes confirming this the first launch condition.\n- **The spec is uncommitted**, so a fresh worktree won't contain it. The spec tells the launching session to pass its absolute path in the goal.\n- **`claude-worktree-busy` isn't installed here**, so that launch check was not run."
+}
