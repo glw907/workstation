@@ -123,8 +123,8 @@ the diff, point the agents that need it at the skill file, commit skills and man
   The license serves DaisyUI work in every project on this workstation (Geoff, 2026-09-13).
   The license pair lives in the age store (registry entry in `~/.dotfiles/secrets/registry.md`),
   never in a committed `.mcp.json`. Rule of use: the `standards:daisyui` skill (one
-  guide per component) is what reaches implementer and reviewer subagents, which run without
-  MCP, so the cairn-cms repo's `cairn-implementer` and `standards:daisyui-a11y-reviewer` point at it; for any DaisyUI markup,
+  guide per component) is what reaches reviewer subagents, which run without
+  MCP, so `standards:daisyui-a11y-reviewer` points at it; for any DaisyUI markup,
   read the component guide first and ask Blueprint from the main loop when the guide is thin.
   The DaisyUI-first rule itself is the workstation CLAUDE.md section "Claude tooling:
   manifests, scopes, and the DaisyUI-first rule". Standing uses (Geoff, 2026-09-13; audit record
