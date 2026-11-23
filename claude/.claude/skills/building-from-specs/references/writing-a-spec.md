@@ -27,9 +27,10 @@ Match a spec's length to what its work needs. Cover the substance, and leave out
 repeats another section, and boilerplate. A spec for a change that is one task covers each point of this list in a
 line or two, and each rule in this guide keeps to that size: a search is its command, its count, and the hits that
 change, a label names its source, and each call Claude made is one sentence. Its goal gives each done item as one
-claim, its command, and what that command prints today and when the item holds, with no commentary. A point with
-nothing to say gets one line. A probe's output is quoted only where a done item or a label rests on it. A fresh
-reader's finding is fixed where it lands, and the spec carries no account of the read.
+claim, its command, and what that command prints today and when the item holds, with no commentary. A step another
+skill owns is named and never restated. A point with nothing to say gets one line. A probe's output is quoted only
+where a done item or a label rests on it. A fresh reader's finding is fixed where it lands, and the spec carries no
+account of the read. Before the fresh reader sees the spec, the author cuts each sentence a builder would not miss.
 
 - The intent in Geoff's words, with goals, non-goals, and what would make the work a failure.
 - The approaches considered, what each trades off, and the pick.
