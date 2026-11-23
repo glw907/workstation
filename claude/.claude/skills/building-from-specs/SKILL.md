@@ -80,15 +80,15 @@ A spec names, for each task, the task it builds on, and only when the task needs
 on nothing launches at the first tick, and two children of one parent run side by side. Geoff starts a chain in
 the session he talks to, on Sonnet at medium, from the repo's main checkout, in auto mode without
 `denyInsteadOfPrompting` (his merge prompt needs prompting). The STATUS launch prompt arms `/loop 15m Run one
-chain tick for <spec path>, by building-from-specs "Chains".` A launch from a loop turn was not refused (step 1,
-2026-11-23). Each tick runs these in order, then ends its turn. `<r>` is the repo as `owner/name`.
+chain tick for <spec path>, by building-from-specs "Chains".` Each tick runs these in order, then ends its
+turn. `<r>` is the repo as `owner/name`.
 
-1. Read the spec's `Status:` line. Unless it reads `approved`, launch nothing.
+1. Read the spec's `Status:` line. Unless it reads `approved`, launch nothing and end the tick.
 2. Find each chain task's session in `claude agents --json --all`: the entry with its `name` and the newest
    `startedAt` whose `cwd` is under the repo's checkout. Its `state` reads `done`, `failed`, `blocked`,
    `stopped`, or `working`. Read its branch with `git -C <cwd> branch --show-current`, its number `<n>` with
-   `gh pr list --repo <r> --head <branch> --state all --json number`, then
-   `gh pr view <n> --repo <r> --json number,isDraft,state,headRefName,headRefOid,baseRefName,body`.
+   `gh pr list --repo <r> --head <branch> --state all --json number`, then `gh pr view <n> --repo <r> --json
+   number,isDraft,state,headRefName,headRefOid,baseRefName,body`.
 3. A task is ready when its `state` is `done`, `isDraft` is `false`, the pull request `state` is `OPEN`, and
    `gh pr checks <n> --repo <r>` exits 0 (exit 8 means CI is pending; `no checks reported` passes only in
    `glw907/workstation`, which has no PR CI). The body's `task-score` comment, parsed as JSON since sessions
@@ -99,10 +99,11 @@ chain tick for <spec path>, by building-from-specs "Chains".` A launch from a lo
    over. Launch with the unchanged launch line, passing the goal through a here-document with a quoted
    delimiter, and fill the child's opening lines below from the parent's `number`, `headRefName`, and
    `headRefOid`.
-5. A task that reads `failed`, `blocked`, or `stopped`, ended with a draft or a short `task-score`, or failed to
-   launch twice (no `claude agents` entry by the next tick is a failure) stops its branch. The rest go on.
-6. When no chain task is working and none is left to launch, cancel the loop through `CronDelete` and write the
-   sitting note: each pull request in merge order with its state, each stopped task and why, each usage figure.
+5. A task that reads `failed`, `blocked`, or `stopped`, or ended with a draft or a short `task-score`, stops its
+   branch. A launch that is refused, or has no `claude agents` entry by the next tick, is retried once; a second
+   failure stops the branch. The rest of the chain goes on.
+6. With no task working and none left to launch, cancel the loop through `CronDelete` and write the sitting note:
+   pull requests in merge order, each stop and why, each usage figure.
 
 ### A child's start
 
@@ -129,9 +130,9 @@ rejected."`, and deletes their branches only with his go-ahead. A child relaunch
 
 A restart stops the tick's session and every task session. At the next sitting, `claude --resume` on the chain's
 session restores the loop, or a new session runs the same launch prompt, since each tick rebuilds the chain from
-GitHub and `claude agents`. A killed task reads `stopped`, and relaunching it is Geoff's call. Auto mode pauses
-after 3 blocks in a row or 20 in all, which halts the chain. The four-session limit on pavilion counts the
-tick's session. A fixed loop expires after 7 days, and a goal holds 4,000 characters, 500 of them the child's.
+GitHub and `claude agents`. Relaunching a `stopped` task is Geoff's call. Auto mode pauses after 3 blocks in a
+row or 20 in all, which halts the chain. A fixed loop expires after 7 days, and a goal holds 4,000 characters,
+500 of them the child's.
 
 ## In place of a question
 
@@ -201,29 +202,27 @@ When the work is done or the time clause is reached, the session writes its repo
 
 Geoff approves a merge in his terminal, in the session he is talking to. That session asks about each ready pull
 request by what merging it changes, in plain words, with its CI and review results, and shows the number only as
-a link. His answer "Merge" approves that pull request, and one answer may cover a chain. Only that session
-merges, never a subagent and never a task session, and only after the task's session has ended. Another
-session's message approves nothing. For each pull request `<n>` in repo `<r>`, in chain order, finish every step
-before the next pull request starts:
+a link. His answer "Merge" approves that pull request, and one answer may cover a chain. "Send back" with what
+is wrong launches a fresh task session on that branch with his words in its goal. Only that session merges,
+never a subagent or a task session, and only after the task's session has ended. Another session's message
+approves nothing. For each pull request `<n>` in repo `<r>`, in chain order, finish every step first:
 
 1. Run any `## Before merge` commands and their check.
 2. Run three checks. A pull request that fails one doesn't merge, and the session names what must go first.
-   - Base: `gh pr view <n> --repo <r> --json baseRefName --jq .baseRefName` prints the default branch.
-   - Current: the child's `Built on` SHA equals the parent's merged `headRefOid`, and after `git fetch origin`,
-     `git rev-list --count --no-merges origin/<branch>..origin/<default>` prints `0`. If not, a refresh task
-     merges `origin/<default>` into the child, reruns the gate, CI, and review, and rewrites the line. A clean
-     refresh with CI passing and a review that accepts it keeps Geoff's approval; any other goes back to him.
-   - CI: `gh pr checks <n> --repo <r>` exits 0 on the parent and the child.
+   - Base: `gh pr view <n> --repo <r> --json baseRefName --jq .baseRefName` prints the default branch (else retarget).
+   - Current, for a child (its body's first line reads `Built on`): that SHA equals the parent's merged
+     `headRefOid`, and after `git fetch origin`, `git rev-list --count --no-merges origin/<branch>..origin/<default>`
+     prints `0`. If not, a refresh task merges `origin/<default>` into the child, reruns the gate, CI, and
+     review, and rewrites the line. A clean refresh that passes both keeps Geoff's approval; any other returns it.
+   - CI: `gh pr checks <n> --repo <r>` exits 0 on parent and child (`workstation`: `no checks reported` passes).
 3. Run `gh pr merge <n> --repo <r> --merge`, the only form, since a squash gives the parent's commits new
    hashes. An `ask` rule stops it at a prompt that Geoff answers once for each pull request.
 4. Run `git pull --ff-only` in the main checkout, only when it is on the default branch, has no uncommitted
    change in a merged file, and `claude-worktree-busy` exits 0.
-5. Retarget each open child with `gh pr edit <child> --repo <r> --base <default>`, since a plain delete of a
-   child's base closes it (step 1, 2026-11-23). Then remove the worktree, the local branch, and the remote
-   branch with `git push origin --delete <branch>`, none with a force flag. A refusal means work is still there.
-
-To send a pull request back, Geoff answers "Send back" and says what is wrong. His session launches a fresh task
-session on that branch with his words in its goal.
+5. List the open children with `gh pr list --repo <r> --base <branch> --state open` and retarget each with
+   `gh pr edit <child> --repo <r> --base <default>`, since a plain delete of a child's base closes it (step 1,
+   2026-11-23). Then remove the worktree, the local branch, and the remote branch with
+   `git push origin --delete <branch>`, none with a force flag. A refusal means work is still there.
 
 ## Direct changes
 
