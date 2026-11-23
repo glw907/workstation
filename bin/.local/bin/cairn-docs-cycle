@@ -4,9 +4,10 @@ set -uo pipefail
 # cairn-docs-cycle: launcher for the monthly cairn docs improvement cycle. Starts one unattended
 # session from cairn-cms's .claude/skills/cairn-writing-docs/evals/cycle-prompt.txt in its own systemd
 # scope, so it outlives the oneshot unit that called it. The session samples real cairn sessions,
-# runs the docs evals on main, queues one triage item, and waits for Geoff's ruling.
-# --dry-run skips the pull and the suite run, and tells the session to write the triage file and
-# stop without queuing it. CAIRN_DOCS_CYCLE_REPO overrides the cairn checkout.
+# runs the docs evals on main, opens one pull request, and ends.
+# --dry-run skips the pull and the suite run, and tells the session to write the history entry and
+# stop without committing or opening the pull request. CAIRN_DOCS_CYCLE_REPO overrides the cairn
+# checkout.
 
 export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/home/linuxbrew/.linuxbrew/bin:/usr/bin:$PATH"
 
@@ -45,7 +46,7 @@ prompt+=$'\n\n'"The cairn-cms checkout is $repo; use it wherever these steps nam
 name="cairn-docs-cycle-$(date +%Y-%m)"
 if (( dry_run )); then
     name+="-dry"
-    prompt+=$'\n\n'"Dry run: skip steps 0 and 4. Write the triage file and stop. Do not collect a waiting ruling, queue the item, run notify-send, commit, push, or open a PR."
+    prompt+=$'\n\n'"Dry run: skip step 4. Write the history entry to the state folder and stop. Do not commit, push, or open a PR."
 fi
 
 mkdir -p "$HOME/.local/state/cairn-docs-cycle"
