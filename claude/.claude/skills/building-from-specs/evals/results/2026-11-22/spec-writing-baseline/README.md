@@ -7,7 +7,8 @@ call, and each check with the judge's quote. The Markdown file is the spec a wri
 or the report a reader returned. `probe.json` is the sandbox probe that ran first. The raw streams
 stayed in the run's scratch folder and aren't kept here.
 
-The run was made with this command, two sessions at a time:
+The run was made with this command, two sessions at a time. Below, `$E` is
+`claude/.claude/skills/building-from-specs/evals`, from the repo root.
 
 ```bash
 python3 -I $E/run_evals.py --suite spec-writing --run \

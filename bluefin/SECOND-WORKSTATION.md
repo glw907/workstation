@@ -501,7 +501,7 @@ On 2026-11-10, the workstation refinement pass (pass 1) landed on pavilion. `wor
 2. Remove the user-scope `daisyui-blueprint` server (`claude mcp remove -s user daisyui-blueprint`). It now lives at local scope in the cairn-cms checkout.
 3. Run `make -C ~/.dotfiles/claude/.claude/skills/writing-voice/evals/tellgrader install`, so the laptop's `tellgrader` binary stops printing warning-only output.
 4. Uninstall the retired mail client's flatpak, the one `check-drift` flags. Until then it flags that flatpak and the Blueprint server, and those lines are expected.
-5. Sign in to the Cloudflare plugin again. The sign-in is per host, so `workstation-sync` cannot carry it.
+5. Uninstall the `cloudflare` plugin (`claude plugin uninstall cloudflare@cloudflare`). Since 2026-11-22 only its docs server is kept, at user scope, and it needs no sign-in.
 
 On 2026-11-16, sending a message with a PDF attached made Hylki's WebKit process fill about 30 GB of shared memory, and pavilion froze (hyprlab/hylki#669). Two settings answer it. The drop-in in `systemd/.config/systemd/user/app-flatpak-co.hyprlab.Hylki-.scope.d/` caps every Hylki scope at 4 GB, so a repeat stops Hylki alone. The `systemd` stow package carries it, and `workstation-sync` links it and reloads systemd on both hosts. Hylki picks it up on its next launch.
 

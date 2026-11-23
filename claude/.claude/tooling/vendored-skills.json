@@ -33,29 +33,6 @@
       "_why": "The house style skill. Its writing/ directory is the source of the writing-voice output style, the voice registers, and the authoring charter, which link into it; edit them in the Survey repo only.",
       "note": "On this workstation, writing for Geoff follows ~/.claude/docs/voice/written-for-people.md."
     },
-    "vale-ci": {
-      "repo": "vale-cli/agent-tools",
-      "path": "skills/ci",
-      "rename": "vale-ci",
-      "branch": "main",
-      "commit": "5e8704f5c07a",
-      "license": "MIT",
-      "installed": "2026-09-13",
-      "_why": "Vale's official skills, vendored instead of the plugin because the plugin's edit hook duplicates the workstation vale-hook.",
-      "home": "standards",
-      "description": "Run Vale in GitHub Actions, a pre-commit hook, or another runner. Use when the user says \"add vale to CI\", \"run vale on PRs\", \"add a pre-commit hook\", or \"make the build fail on style errors\"."
-    },
-    "vale-fix": {
-      "repo": "vale-cli/agent-tools",
-      "path": "skills/fix",
-      "rename": "vale-fix",
-      "branch": "main",
-      "commit": "5e8704f5c07a",
-      "license": "MIT",
-      "installed": "2026-09-13",
-      "description": "Run Vale and fix error-level alerts on the current branch. Use when the user says \"run vale\", \"fix vale errors\", \"lint the docs\", \"fix the linter\", or \"make vale pass\". Fixes errors only; leaves warnings and suggestions for a person.",
-      "home": "standards"
-    },
     "vale-setup": {
       "repo": "vale-cli/agent-tools",
       "path": "skills/setup",
@@ -65,29 +42,8 @@
       "license": "MIT",
       "installed": "2026-09-13",
       "home": "standards",
-      "description": "Install Vale, write a .vale.ini, sync styles, and get a first run. Use when the user says \"set up vale\", \"add vale\", \"add prose linting\", or \"lint our docs\" in a repository that has no Vale config yet."
-    },
-    "vale-triage": {
-      "repo": "vale-cli/agent-tools",
-      "path": "skills/triage",
-      "rename": "vale-triage",
-      "branch": "main",
-      "commit": "5e8704f5c07a",
-      "license": "MIT",
-      "installed": "2026-09-13",
-      "home": "standards",
-      "description": "Turn a large first Vale run into a decision per rule — fix, downgrade, or switch off. Use when the user says \"too many alerts\", \"where do we start\", \"vale is too noisy\", or has just added Vale to an existing corpus."
-    },
-    "vale-vocab": {
-      "repo": "vale-cli/agent-tools",
-      "path": "skills/vocab",
-      "rename": "vale-vocab",
-      "branch": "main",
-      "commit": "5e8704f5c07a",
-      "license": "MIT",
-      "installed": "2026-09-13",
-      "home": "standards",
-      "description": "Add project terms to a Vale vocabulary so spell check accepts them. Use when the user says \"vale doesn't know our product name\", \"stop flagging this word\", or spelling alerts are firing on correct terms."
+      "description": "Install Vale, write a .vale.ini, sync styles, and get a first run. Use when the user says \"set up vale\", \"add vale\", \"add prose linting\", or \"lint our docs\" in a repository that has no Vale config yet.",
+      "_why": "Vale's official setup skill, vendored instead of the plugin because the plugin's edit hook duplicates the workstation vale-hook. Its four siblings were removed on 2026-11-22, none called in the 30 days before."
     },
     "receiving-code-review": {
       "repo": "obra/superpowers",
@@ -99,6 +55,16 @@
       "_why": "How to weigh review findings before acting on them (38 runs in the 30 days to 2026-10-19), vendored so the superpowers plugin can stay off.",
       "home": "standards",
       "description": "Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation"
+    },
+    "svelte-core-bestpractices": {
+      "repo": "sveltejs/ai-tools",
+      "path": "plugins/claude/svelte/skills/svelte-core-bestpractices",
+      "branch": "main",
+      "commit": "f9d22f2f7f7c",
+      "license": "MIT",
+      "installed": "2026-11-22",
+      "_why": "The Svelte team's guide to writing Svelte 5 code (runes, events, styling, libraries); the plugin had conventions for comments and a reviewer, but no skill for writing the code.",
+      "home": "standards"
     }
   }
 }

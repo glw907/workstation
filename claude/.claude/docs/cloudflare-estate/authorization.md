@@ -21,8 +21,8 @@
   (aksailingclub-legacy/-org, ecxc-ski, 907-life). Predecessor deleted:
   "Cloudflare Admin" (`48efe6a4...`). `CF_ZT_TOKEN` was once listed here as deleted too, but
   it is live; its own bullet is below.
-  Second credential: the Cloudflare MCP plugin's OAuth (not in the token list; broad
-  READ incl. DNS, refuses writes). Maintenance rules: any scope change lands in THIS
+  The Cloudflare MCP plugin and its OAuth sign-in (broad READ incl. DNS, refused writes) were
+  dropped on 2026-11-22; only the docs server, which needs no sign-in, remains. Maintenance rules: any scope change lands in THIS
   bullet, same session; after a rotation, a RUNNING Claude session's env still holds
   the OLD token (the harness captures env at session start) — prefix commands with
   `source ~/.local/secrets` until the session cycles.

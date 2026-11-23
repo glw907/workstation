@@ -17,6 +17,11 @@
       ],
       "env": {},
       "_why": "Microsoft's Playwright server: structured DOM inspection for reproducing an e2e failure; distinct from claude-in-chrome, which drives the desktop browser. It defaults to a Chrome build at /opt/google/chrome, which this workstation lacks, so it points at the layered Chromium. The version is pinned to 0.0.85, the one measured in the stack-pilots pass, so a new release changes nothing until a dependency upgrade moves it."
+    },
+    "cloudflare-docs": {
+      "type": "http",
+      "url": "https://docs.mcp.cloudflare.com/mcp",
+      "_why": "Cloudflare's documentation server: search of the developer docs, with no sign-in and no account access. It replaced the cloudflare plugin on 2026-11-22, whose 18 skills had no call in 30 days while its docs tool had 17. Account changes go through the API with curl, per the global CLAUDE.md."
     }
   }
 }
