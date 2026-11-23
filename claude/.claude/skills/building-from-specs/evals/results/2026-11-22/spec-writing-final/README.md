@@ -11,11 +11,12 @@ that ran first.
 | `round-1/` | `7747200`, the spec's length rule word for word | the six writing cases | $25.47 |
 | `round-2/` | `341b4f1`, the first rewording | the six writing cases | $22.36 |
 | `run-1/` | `3a6fd5d`, the second rewording | all 16 | $31.40 |
-| `run-2/` | `3a6fd5d` | all 16 | $30.04, plus $0.83 for one rerun |
-| `judge-error/` | `3a6fd5d` | the first `read-wrong-path` attempt in `run-2` | in `run-2` |
+| `run-2/` | `3a6fd5d` | all 16 | $30.04 |
+| `rerun/` | `3a6fd5d` | a second `read-wrong-path` session, which doesn't count in `run-2` | $0.83 |
 
 The task's sessions cost $110.10 of the $130 cap. Every session ran on `claude-fable-5-2` at
-`high`, with the sandbox on, and ended `finished`.
+`high`, with the sandbox on, and ended `finished`. Below, `$E` is
+`claude/.claude/skills/building-from-specs/evals` and `$F` is this folder.
 
 ## The rounds
 
@@ -33,8 +34,8 @@ called for it.
 | `write-uncovered-edge` | 3,903 | 3,157 | 1,915 | 1,809 | 1,944 |
 | `write-two-sources` | 4,213 | 3,337 | 2,266 | 2,110 | 1,891 |
 
-Every length check still failed. Every trap, nothing-built, and guide-read check passed in every
-round and run.
+Every length check still failed. On the writing cases, every trap, nothing-built, and guide-read
+check passed in every round and run.
 
 ## The final pair
 
@@ -48,7 +49,7 @@ round and run.
 | `write-two-sources` | trap pass, length fail | trap pass, length fail |
 | `read-false-fact` | pass | pass |
 | `read-check-passes-today` | pass | pass |
-| `read-wrong-path` | pass | pass, on its rerun |
+| `read-wrong-path` | pass | fail |
 | `read-prints-nothing` | pass | pass |
 | `read-missing-file` | pass | fail |
 | `read-vendored-file` | pass | pass |
@@ -57,17 +58,16 @@ round and run.
 | `read-unlanded-work` | pass | pass |
 | `read-uncovered-edge` | fail | fail |
 
-Three reader checks failed, each with a judge answer of `no` and no error, and none failed in the
-baseline:
+Four reader checks failed. None of these cases failed in the baseline.
 
 - `run-1/read-uncovered-edge` and `run-2/read-uncovered-edge` name a missing notes file only as a
-  gap in the tests, never as a behavior the spec leaves unsaid.
+  gap in the tests, never as a behavior the spec leaves unsaid. The judge answered `no`.
 - `run-2/read-missing-file` asks whether the task may change `completions/notes.bash`, which the
   file list leaves out, and the trap's pattern matched. The judge still answered `no`.
-
-The first `run-2/read-wrong-path` attempt is a judge error. The reader's last message was a note
-about a stuck probe in place of its report, so the judge's `answer` is null. That attempt is in
-`judge-error/`, and its rerun in `run-2/` passed.
+- `run-2/read-wrong-path` failed the pattern gate, so no judge ran. The reader's last message was a
+  note about a stuck probe, not its report, and the runner grades only the last message. A second
+  session of the case, in `rerun/`, passed. It doesn't count, since the first session ended
+  `finished` and the pair runs once.
 
 ## Reading a row again
 
