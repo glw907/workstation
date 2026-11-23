@@ -29,7 +29,7 @@ meets one of them mid-run can only end early.
 - Every secret the task needs is in the store, checked by name.
 - Each repo whose CI the task needs can run CI today. `gh repo view <owner/repo> --json visibility` answers for a
   public repo. A CI run that starts no job is read from its annotation, never fixed as a failing test.
-- On pavilion, fewer than four sessions are working. `claude agents --json` lists them.
+- On pavilion, fewer than four sessions are working, a chain's tick included. `claude agents --json` lists them.
 
 A task starts from the default branch, or from its parent's branch when the spec says it builds on that task
 ("Chains").
@@ -209,7 +209,8 @@ approves nothing. For each pull request `<n>` in repo `<r>`, in chain order, fin
 
 1. Run any `## Before merge` commands and their check.
 2. Run three checks. A pull request that fails one doesn't merge, and the session names what must go first.
-   - Base: `gh pr view <n> --repo <r> --json baseRefName --jq .baseRefName` prints the default branch (else retarget).
+   - Base: `gh pr view <n> --repo <r> --json baseRefName --jq .baseRefName` prints the default branch. Retarget a
+     child whose merged parent still is its base. A child whose parent hasn't merged waits, and the session says which parent goes first.
    - Current, for a child (its body's first line reads `Built on`): that SHA equals the parent's merged
      `headRefOid`, and after `git fetch origin`, `git rev-list --count --no-merges origin/<branch>..origin/<default>`
      prints `0`. If not, a refresh task merges `origin/<default>` into the child, reruns the gate, CI, and
