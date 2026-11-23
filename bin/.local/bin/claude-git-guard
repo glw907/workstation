@@ -56,7 +56,7 @@ REDIRECTION = re.compile(r"\d*(?:[<>]+|&>>?)&?(?P<target>\S*)")
 UNREADABLE = re.compile(r"[$`*?\[{]")
 MERGE_REASON = (
     "This command merges a pull request. A merge runs only when Geoff answers this prompt, in the "
-    "session he is talking to, after he approved the pull request by number. A session he is not "
+    "session he is talking to, after he approved the pull request in his terminal. A session he is not "
     "talking to leaves the pull request open."
 )
 FORCE_REASON = (

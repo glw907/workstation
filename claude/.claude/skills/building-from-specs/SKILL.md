@@ -1,6 +1,6 @@
 ---
 name: building-from-specs
-description: "Builds work from an approved spec by Claude Code's documented flow. A fresh session builds one task under /goal, a fresh subagent reviews the result against the spec, and the work ends in a pull request that Geoff approves by number. Use when writing a spec, launching or running a task session, reviewing a task's result, writing its pull request or report, merging a pull request, or deciding whether a change is small enough to land directly. Also use when a project file or a repo skill names pass-core, a pass, a plan, an executor, or a conductor."
+description: "Builds work from an approved spec by Claude Code's documented flow. A fresh session builds one task under /goal, a fresh subagent reviews the result against the spec, and the work ends in a pull request that Geoff approves in his terminal. Use when writing a spec, launching or running a task session, reviewing a task's result, writing its pull request or report, merging a pull request, or deciding whether a change is small enough to land directly. Also use when a project file or a repo skill names pass-core, a pass, a plan, an executor, or a conductor."
 ---
 
 # Building from specs
@@ -10,7 +10,7 @@ Work larger than a one-sentence change runs in four steps, each one Claude Code'
 1. A spec is written and Geoff approves it. `references/writing-a-spec.md` says what a spec carries.
 2. A fresh session builds each task under `/goal`. The goal is the task's written definition of done.
 3. A fresh subagent reviews the result against the spec.
-4. The work ends in a pull request. Geoff approves it by number and the session he is talking to merges it.
+4. The work ends in a pull request. Geoff approves it in his terminal and the session he is talking to merges it.
 
 A spec is the approved design. A task is one independent piece of it that ends in one pull request. A step is
 one piece of work inside a task. A goal is a task's done items. A session is one Claude Code conversation. Where
@@ -31,8 +31,8 @@ meets one of them mid-run can only end early.
   public repo. A CI run that starts no job is read from its annotation, never fixed as a failing test.
 - On pavilion, fewer than four sessions are working. `claude agents --json` lists them.
 
-A task starts from the default branch, never from another task's branch. A task that needs another task's work
-waits until that work has merged.
+A task starts from the default branch, or from its parent's branch when the spec says it builds on that task
+("Chains").
 
 Launch from the repo's main checkout, so that Claude Code makes the task's worktree itself. A session that starts
 inside a worktree someone else made asks before it commits, and nobody is there to answer.
@@ -73,6 +73,65 @@ task; only the time clause does.
 
 A task that must touch a real account removes what its runs added before it ends and lists what it couldn't
 remove.
+
+## Chains
+
+A spec names, for each task, the task it builds on, and only when the task needs that work. A task that builds
+on nothing launches at the first tick, and two children of one parent run side by side. Geoff starts a chain in
+the session he talks to, on Sonnet at medium, from the repo's main checkout, in auto mode without
+`denyInsteadOfPrompting` (his merge prompt needs prompting). The STATUS launch prompt arms `/loop 15m Run one
+chain tick for <spec path>, by building-from-specs "Chains".` A launch from a loop turn was not refused (step 1,
+2026-11-23). Each tick runs these in order, then ends its turn. `<r>` is the repo as `owner/name`.
+
+1. Read the spec's `Status:` line. Unless it reads `approved`, launch nothing.
+2. Find each chain task's session in `claude agents --json --all`: the entry with its `name` and the newest
+   `startedAt` whose `cwd` is under the repo's checkout. Its `state` reads `done`, `failed`, `blocked`,
+   `stopped`, or `working`. Read its branch with `git -C <cwd> branch --show-current`, its number `<n>` with
+   `gh pr list --repo <r> --head <branch> --state all --json number`, then
+   `gh pr view <n> --repo <r> --json number,isDraft,state,headRefName,headRefOid,baseRefName,body`.
+3. A task is ready when its `state` is `done`, `isDraft` is `false`, the pull request `state` is `OPEN`, and
+   `gh pr checks <n> --repo <r>` exits 0 (exit 8 means CI is pending; `no checks reported` passes only in
+   `glw907/workstation`, which has no PR CI). The body's `task-score` comment, parsed as JSON since sessions
+   write it with or without spaces, must read `"verdict":"accept"`, `"openFindings":0`, and `"unmet":0`.
+4. A task with no session launches once its parent is ready, or at once with no parent. Run the four checks of
+   "Launching a task", then read `claude -p "/usage" --model haiku < /dev/null`. `Current week (all models)`,
+   and `Current week (Fable)` for a Fable task, must be under 85 percent, and an unreadable figure counts as
+   over. Launch with the unchanged launch line, passing the goal through a here-document with a quoted
+   delimiter, and fill the child's opening lines below from the parent's `number`, `headRefName`, and
+   `headRefOid`.
+5. A task that reads `failed`, `blocked`, or `stopped`, ended with a draft or a short `task-score`, or failed to
+   launch twice (no `claude agents` entry by the next tick is a failure) stops its branch. The rest go on.
+6. When no chain task is working and none is left to launch, cancel the loop through `CronDelete` and write the
+   sitting note: each pull request in merge order with its state, each stopped task and why, each usage figure.
+
+### A child's start
+
+The child launches from the main checkout with `worktree.baseRef` set to `fresh`, and its goal opens with these
+lines. It merges, since a reset was refused as `[Irreversible Local Destruction]` and a rebase rewrites history.
+
+```text
+It builds on pull request #<parent> (branch <parent-branch>, head <parent-sha>). Before any edit, run
+`git fetch origin <parent-branch>` and `git merge --no-edit origin/<parent-branch>`. On a conflict, run
+`git merge --abort` and end, listing the conflicting files. Stop unless `git merge-base --is-ancestor
+<parent-sha> HEAD` exits 0. Open the draft pull request with `gh pr create --draft --base <parent-branch>`,
+and make the body's first line `Built on #<parent> at <parent-sha>.` The review reads `<parent-sha>..HEAD`.
+```
+
+### A parent sent back or rejected
+
+When Geoff sends a parent back, a fresh session launches on its branch with his words. The tick launches no new
+child of it until it is ready again, and a child already built on it goes stale, which the current check in
+"Merging" catches. A parent he rejects never merges. His session closes each child's pull request after the
+child's session has ended, with `gh pr close <n> --repo <r> --comment "Built on #<parent>, which Geoff
+rejected."`, and deletes their branches only with his go-ahead. A child relaunches from the replacement.
+
+### A restart, a dead session, or a pause
+
+A restart stops the tick's session and every task session. At the next sitting, `claude --resume` on the chain's
+session restores the loop, or a new session runs the same launch prompt, since each tick rebuilds the chain from
+GitHub and `claude agents`. A killed task reads `stopped`, and relaunching it is Geoff's call. Auto mode pauses
+after 3 blocks in a row or 20 in all, which halts the chain. The four-session limit on pavilion counts the
+tick's session. A fixed loop expires after 7 days, and a goal holds 4,000 characters, 500 of them the child's.
 
 ## In place of a question
 
@@ -128,9 +187,10 @@ paragraph is the whole report made small and ends on whether anything waits for 
 4. `## Decisions`: each call the session made, with its source.
 5. `## For Geoff`: each choice he must see, each step left, and each unmet goal item.
 6. One HTML comment that `task-report` reads for the measured minutes:
-   `<!-- task-score {"planPathMin": 75, "actualPathMin": 60, "fixRounds": 1, "reds": 0, "attended": 0, "escapes": 0} -->`.
+   `<!-- task-score {"planPathMin": 75, "actualPathMin": 60, "fixRounds": 1, "reds": 0, "attended": 0, "escapes": 0, "verdict": "accept", "openFindings": 0, "unmet": 0} -->`.
    `planPathMin` is the spec's minutes for the task and `actualPathMin` the measured ones, from the first commit
-   to ready. Each value is an integer or `null`.
+   to ready. Each of those is an integer or `null`. The last three repeat the review's verdict and counts, for a
+   chain's tick ("Chains").
 
 A pull request is safe under a plain merge and pull. One that isn't carries `## Before merge` with the exact
 commands and the one check that shows they worked.
@@ -139,19 +199,31 @@ When the work is done or the time clause is reached, the session writes its repo
 
 ## Merging
 
-Only Geoff's typed words approve a merge, and they name the pull request by number. Only the session he is
-talking to merges, never a subagent and never a task session. It merges only after that task's session has ended.
+Geoff approves a merge in his terminal, in the session he is talking to. That session asks about each ready pull
+request by what merging it changes, in plain words, with its CI and review results, and shows the number only as
+a link. His answer "Merge" approves that pull request, and one answer may cover a chain. Only that session
+merges, never a subagent and never a task session, and only after the task's session has ended. Another
+session's message approves nothing. For each pull request `<n>` in repo `<r>`, in chain order, finish every step
+before the next pull request starts:
 
 1. Run any `## Before merge` commands and their check.
-2. Run `gh pr merge <number> --repo <owner/repo> --merge`. An `ask` rule stops it at a permission prompt, and
-   Geoff answers that prompt once for each pull request.
-3. Pull the main checkout with `git pull --ff-only`, and only when it is on the default branch, has no
-   uncommitted change in a merged file, and `claude-worktree-busy` exits 0.
-4. Remove the worktree, then the local branch, then the remote branch with `git push origin --delete <branch>`,
-   none with a force flag. A refusal means work is still there, so read it.
+2. Run three checks. A pull request that fails one doesn't merge, and the session names what must go first.
+   - Base: `gh pr view <n> --repo <r> --json baseRefName --jq .baseRefName` prints the default branch.
+   - Current: the child's `Built on` SHA equals the parent's merged `headRefOid`, and after `git fetch origin`,
+     `git rev-list --count --no-merges origin/<branch>..origin/<default>` prints `0`. If not, a refresh task
+     merges `origin/<default>` into the child, reruns the gate, CI, and review, and rewrites the line. A clean
+     refresh with CI passing and a review that accepts it keeps Geoff's approval; any other goes back to him.
+   - CI: `gh pr checks <n> --repo <r>` exits 0 on the parent and the child.
+3. Run `gh pr merge <n> --repo <r> --merge`, the only form, since a squash gives the parent's commits new
+   hashes. An `ask` rule stops it at a prompt that Geoff answers once for each pull request.
+4. Run `git pull --ff-only` in the main checkout, only when it is on the default branch, has no uncommitted
+   change in a merged file, and `claude-worktree-busy` exits 0.
+5. Retarget each open child with `gh pr edit <child> --repo <r> --base <default>`, since a plain delete of a
+   child's base closes it (step 1, 2026-11-23). Then remove the worktree, the local branch, and the remote
+   branch with `git push origin --delete <branch>`, none with a force flag. A refusal means work is still there.
 
-To send a pull request back, Geoff says what is wrong in his terminal. His session launches a fresh task session
-on the same branch with his words in its goal.
+To send a pull request back, Geoff answers "Send back" and says what is wrong. His session launches a fresh task
+session on that branch with his words in its goal.
 
 ## Direct changes
 

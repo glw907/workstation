@@ -18,7 +18,7 @@ steps, because only that session merges. `<version>` is the new version.
       then set `branch` to `v<version>`. The `commit` field keeps the head the files came from.
    5. Check that `diff -r <survey worktree>/skills/survey <worktree>/claude/.claude/skills/survey`
       prints nothing.
-3. After Geoff approves the Survey PR by number, merge it:
+3. After Geoff approves the Survey PR, merge it:
    `gh pr merge <number> --repo glw907/survey --merge`.
 4. Release from a fresh clone, never the main checkout: `R=$(mktemp -d); gh repo clone glw907/survey "$R/survey"`,
    then `npm ci` and `scripts/release <version>` in `$R/survey`. A fresh clone is on `main`, clean,
@@ -27,7 +27,7 @@ steps, because only that session merges. `<version>` is the new version.
    from the clone.
 5. Run the workstation PR's `## Before merge` check:
    `git -C "$R/survey" diff --quiet <vendored commit> v<version> -- skills/survey`. Then, after Geoff
-   approves the workstation PR by number, merge it:
+   approves the workstation PR, merge it:
    `gh pr merge <number> --repo glw907/workstation --merge`.
 6. Pull `~/.dotfiles` and run `stow -R claude`. Check that `claude -p "/output-style"`, run from
    `/tmp`, lists `writing-voice (current)`. Then remove the worktree:

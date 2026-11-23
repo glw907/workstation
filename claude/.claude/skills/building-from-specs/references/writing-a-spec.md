@@ -41,8 +41,9 @@ account of the read. Before the fresh reader sees the spec, the author cuts each
 - A file list that comes from searches. Each search is given with its hit count, and every hit is listed or
   dismissed.
 - Each task's commands, read against the last 30 days of the denials log, so a refusal shows before the run.
-- The tasks. Each has a goal, its files, the reviewers it needs, its minutes, and the task it waits for when it
-  has one. The task that rests on the least-proven assumption goes first. The spec gives the merge order.
+- The tasks. Each has a goal, its files, the reviewers it needs, its minutes, and the task it builds on when it
+  has one. The task that rests on the least-proven assumption goes first. The spec gives the merge order, and a
+  chain merges parent before child ("Chains").
 - The calls Claude made, in one list Geoff can check.
 
 A spec that adds a project, a service, or running infrastructure names where it runs and why, after weighing
