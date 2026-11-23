@@ -1,0 +1,160 @@
+{
+  "case": "write-uncovered-edge",
+  "kind": "write",
+  "suite": "spec-writing",
+  "started": "2026-11-23T00:24:11Z",
+  "seconds": 428.1,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "341b4f1f41d5aac0a2305882d422fa805ff7bf42",
+  "promptHash": "960c4aa467dd4a7f36210c62b8abe680e83e8ea0",
+  "fixtureHead": "399e8de08b4b18bd35b4f2def3ff9be295e5c32c",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 6.0,
+  "timeLimitSeconds": 1800,
+  "words": 1915,
+  "judgeCostUsd": 0.020628399999999998,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": null,
+      "answer": "yes",
+      "quote": "| The notes file doesn't exist | Nothing | 1 |",
+      "quoteFound": true
+    },
+    "length": {
+      "passed": false,
+      "words": 1915
+    },
+    "built": {
+      "passed": true,
+      "status": [
+        "?? spec.md"
+      ],
+      "headUnchanged": true
+    },
+    "guide": {
+      "passed": true,
+      "reads": [
+        {
+          "call": "/tmp/spec-writing-run-fhzgvpzn/write-uncovered-edge/.claude/skills/building-from-specs/references/writing-a-spec.md",
+          "inside": true,
+          "failed": false
+        }
+      ]
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 3.5086468,
+  "turns": 23,
+  "permissionDenials": [],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-uncovered-edge/brief.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && ls -la . .workstation .claude 2>/dev/null && cat .workstation/task-report.txt .workstation/denials.log .workstation/remote.txt\", \"description\": \"List repo files and print the workstation stand-in files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -R .claude/skills/building-from-specs .claude/skills | head -80; cat README.md bin/notes tests/run.sh scripts/gate.sh\", \"description\": \"List skill reference files and print the repo sources\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-uncovered-edge/.claude/skills/building-from-specs/references/writing-a-spec.md\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"standards:backlog-sweep\", \"args\": \"scoped sweep for a spec: notes search in example/notes\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo '--- gate'; bash scripts/gate.sh; echo \\\"exit $?\\\"\\necho '--- counts'; grep -c '^test_[a-z_]*()' tests/run.sh; bash scripts/gate.sh | grep -c '^ok '\\nf=$(mktemp); printf '%s\\\\n' 'buy rope' 'fix a.c' 'Rope shop hours' 'abc' 'tar -x file' > \\\"$f\\\"\\necho '--- 1'; NOTES_FILE=$f bin/notes search ROPE; echo \\\"exit $?\\\"\\necho '--- 2'; NOTES_FILE=$f bin/notes search a.c; echo \\\"exit $?\\\""
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"d=$(mktemp -d) && cp -r bin \\\"$d/\\\" && cat > \\\"$d/bin/notes\\\" <<'EOF'\\n#!/usr/bin/env bash\\nset -euo pipefail\\nfile=\\\"${NOTES_FILE:-$HOME/.notes}\\\"\\nusage() { echo \\\"usage: notes add <text> | notes list | notes search <word>\\\" >&2; exit 2; }\\ncase \\\"${1:-}\\\" in\\n  add) shift; printf '%s\\\\n' \\\"$*\\\" >> \\\"$file\\\" ;;\\n  list) [ -f \\\"$file\\\" ] && cat \\\"$file\\\" || true ;;\\n  search)\\n    [ "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"~/.local/bin/claude-worktree-busy \\\"$PWD\\\"; echo \\\"exit $?\\\"; hostname\", \"description\": \"Check whether another session is working in this checkout\"}"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-uncovered-edge/spec.md\", \"content\": \"# Spec: notes search\\n\\nThis spec covers one task that ends in one pull request to `example/notes`. It was written on 2026-11-22 from\\n`brief.md`, the design Geoff settled in conversation. Nobody could answer a question while it was written, so\\neach point the brief left open is decided here and listed under \\"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"d=$(mktemp -d) && mkdir \\\"$d/bin\\\" && cat > \\\"$d/bin/notes\\\" <<'EOF'\\n#!/usr/bin/env bash\\nset -euo pipefail\\nfile=\\\"${NOTES_FILE:-$HOME/.notes}\\\"\\nusage() { echo \\\"usage: notes add <text> | notes list | notes search <word>\\\" >&2; exit 2; }\\ncase \\\"${1:-}\\\" in\\n  add) shift; printf '%s\\\\n' \\\"$*\\\" >> \\\"$file\\\" ;;\\n  list) [ -f \\\"$file\\\" ] && cat \\\"$file\\\" || true ;;\\n  search)\\n    [ $"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-uncovered-edge/spec.md\", \"old_string\": \"| `usage` | 3 | `bin/notes:7` changes. `tests/run.sh:12` and `:13` stay: `test_usage` checks only that the first word is `usage:`, which still holds. |\", \"new_string\": \"| `usage` | 4 | `bin/notes:7` and `tests/run.sh:15` change. `tests/run.sh:12` and `:13` stay: `test_usage` checks onl"
+    },
+    {
+      "name": "Agent",
+      "input": "{\"description\": \"Fresh read of notes spec\", \"subagent_type\": \"general-purpose\", \"model\": \"fable\", \"effort\": \"high\", \"run_in_background\": false, \"prompt\": \"You are a fresh reader checking a spec before its owner sees it. You have no other context, and that is the point.\\n\\nRead-only job: do not create, edit, or delete any file in the repo, and do not commit. You may run read-only commands and you m"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la . .workstation bin tests scripts && cat -n bin/notes && cat -n tests/run.sh && cat -n scripts/gate.sh && cat -n README.md\", \"description\": \"List repo and print the four source files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cat -n brief.md && cat -n spec.md && for f in .workstation/*; do echo \\\"== $f\\\"; cat -n \\\"$f\\\"; done\", \"description\": \"Print brief, spec, and workstation stand-in files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"f=$(mktemp); printf '%s\\\\n' 'buy rope' 'fix a.c' 'Ropewalk hours' 'abc' 'tar -x file' > \\\"$f\\\"\\necho \\\"--1\\\"; NOTES_FILE=$f bin/notes search ROPE; echo \\\"exit $?\\\"\\necho \\\"--2\\\"; NOTES_FILE=$f bin/notes search a.c; NOTES_FILE=$f bin/notes search -x; echo \\\"exit $?\\\"\\necho \\\"--3\\\"; NOTES_FILE=$f bin/notes search zebra; echo \\\"exit $?\\\"\\necho \\\"--4\\\"; NOTES_FILE=$f.gone bin/notes search"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"d=$(mktemp -d -p \\\"$TMPDIR\\\") && mkdir -p $d/bin $d/tests $d/scripts && cp bin/notes $d/bin/ && cp tests/run.sh $d/tests/ && cp scripts/gate.sh $d/scripts/ && cat > $d/bin/notes <<'EOF'\\n#!/usr/bin/env bash\\nset -euo pipefail\\nfile=\\\"${NOTES_FILE:-$HOME/.notes}\\\"\\nusage() { echo \\\"usage: notes add <text> | notes list | notes search <word>\\\" >&2; exit 2; }\\ncase \\\"${1:-}\\\" in\\n  add) s"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"man grep 2>/dev/null | grep -n -A2 -E 'Ignore case distinctions|Normally the exit status' | head -12\", \"description\": \"Check the quoted grep manual sentences\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"man grep 2>/dev/null | grep -n -B1 -A3 -E '^ +-i, --ignore-case' | head -12\", \"description\": \"Check the grep manual's -i wording\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"python3 -I - <<'PY'\\nimport re, pathlib\\np = pathlib.Path(\\\"spec.md\\\"); s = p.read_text()\\nstart = s.index(\\\"### Goal\\\"); end = s.index(\\\"Each new test checks both\\\")\\ngoal = '''### Goal\\n\\nRun each check from the repo root, in one command that starts with this setup line. A check run without it\\nwould read `~/.notes`.\\n\\n```bash\\nf=$(mktemp); printf '%s\\\\\\\\n' 'buy rope' 'fix a.c' 'Ro"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-uncovered-edge/spec.md\", \"offset\": 1, \"limit\": 112}"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-uncovered-edge/spec.md\", \"old_string\": \"   and is `[ -f \\\"$file\\\" ]`, the test `list` uses. Documented in `grep(1)`, GNU grep 3.12: `-F` is \\\"Interpret PATTERNS as fixed strings, not regular\\n   expressions\\\", `-i` is \\\"Ignore case distinctions in patterns and input data\\\", and \\\"the exit status is 0 if a\\n   line is selecte"
+    },
+    {
+      "name": "Edit",
+      "input": "{\"replace_all\": false, \"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-uncovered-edge/spec.md\", \"old_string\": \"The task needs no secret and no CI. `spec.md` is not committed and the task's worktree starts from\\nthe remote's `main`, so the goal and the reviewer's brief name this file by its absolute path in the main checkout.\\nIt stays out of the pull request.\", \"new_string\": \"The task needs no "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git status --short | grep -v '^?? \\\\.'; git log --oneline | wc -l; sed -n '112,125p;176,212p' spec.md\", \"description\": \"Confirm spec.md is the only new file and print the spec's tail\"}"
+    }
+  ],
+  "result": "The spec is written to `spec.md`. It is the only file I changed, and nothing is built or committed.\n\nI ran every check in the spec on today's code. Each fails today for the reason the task fixes, except the gate itself, which already exits 0. I also ran the search checks against a throwaway copy of `bin/notes` outside the repo, and they can all be met. One fresh reader checked the spec, and its findings are fixed in place.\n\nThe edge the brief didn't cover is in the test runner. `tests/run.sh` runs a hand-written list of test names, so a new search test left off that list never runs and the gate still passes. The spec names the five new tests the gate must print and adds a check that the count of test functions equals the count of `ok` lines.\n\nThe calls I made where I would have asked you, all listed at the end of the spec:\n\n- **Match:** \"contains\" is a substring, so `rope` finds `ropes`.\n- **Missing notes file:** it counts as no match, with nothing printed and exit 1.\n- **Empty word:** it counts as a missing word and exits 2.\n- **More than one word:** it exits 2 with the usage line; a phrase goes in quotes. The option I passed over joins the words as `add` does.\n- **README:** it stays unchanged because the brief sets the files at two, so it won't mention `search` after the merge. The spec carries a ready sentence you can land as a direct change.\n- **Test list:** the new tests are added to the hand-written list. The option I passed over makes the runner find every test itself.\n- **Minutes and model:** 40 minutes, from the 34 and 41 measured on the two like tasks, with a stop clause at 80. The session runs on Sonnet at medium effort.\n\nTwo things could not be checked from here:\n\n- **Busy check:** `claude-worktree-busy` would not run in this session, so the launch runs it first.\n- **Spec location:** `spec.md` is uncommitted, and the task's worktree starts from the remote's `main`. The goal therefore has to name the spec by its absolute path in the main checkout."
+}

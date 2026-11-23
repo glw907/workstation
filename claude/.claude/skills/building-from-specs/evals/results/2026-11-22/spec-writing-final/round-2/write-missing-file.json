@@ -1,0 +1,206 @@
+{
+  "case": "write-missing-file",
+  "kind": "write",
+  "suite": "spec-writing",
+  "started": "2026-11-23T00:07:59Z",
+  "seconds": 495.9,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "341b4f1f41d5aac0a2305882d422fa805ff7bf42",
+  "promptHash": "960c4aa467dd4a7f36210c62b8abe680e83e8ea0",
+  "fixtureHead": "d39b6964d0593c249a1e2e8a12769b811310709a",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 6.0,
+  "timeLimitSeconds": 1800,
+  "words": 2154,
+  "judgeCostUsd": 0.0239684,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": true,
+      "answer": "yes",
+      "quote": "So the task also changes `completions/notes.bash`.",
+      "quoteFound": true
+    },
+    "length": {
+      "passed": false,
+      "words": 2154
+    },
+    "built": {
+      "passed": true,
+      "status": [
+        "?? spec.md"
+      ],
+      "headUnchanged": true
+    },
+    "guide": {
+      "passed": true,
+      "reads": [
+        {
+          "call": "cat .claude/skills/building-from-specs/references/writing-a-spec.md; for f in bin/notes completions/notes.bash scripts/gate.sh tests/run.sh; do echo \"=== $f\"; cat -A $f | sed 's/\\$$//'; done; git stat",
+          "inside": true,
+          "failed": false
+        },
+        {
+          "call": "/tmp/spec-writing-run-fhzgvpzn/write-missing-file/.claude/skills/building-from-specs/references/writing-a-spec.md",
+          "inside": true,
+          "failed": false
+        }
+      ]
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 3.9444824,
+  "turns": 22,
+  "permissionDenials": [
+    {
+      "tool_name": "Bash",
+      "tool_use_id": "toolu_01H4p8Y1zT5mnUMA76n8qQP8",
+      "tool_input": {
+        "command": "wc -l ~/.claude/docs/voice/written-for-people.md 2>&1 && sed -n 1,200p ~/.claude/docs/voice/written-for-people.md",
+        "description": "Read the voice standard for prose the owner reads"
+      }
+    },
+    {
+      "tool_name": "Bash",
+      "tool_use_id": "toolu_01KP59h4sjxU4VP1B63pqJhD",
+      "tool_input": {
+        "command": "ls -R .claude 2>&1 | head -40; git remote -v; git branch -a; ls ~/.claude/docs 2>&1 | head; ls ~/.claude/docs/voice 2>&1 | head; grep -rn \"Launching a task\\|Gates and review\\|The pull request\\|edit.*test\\|weaken\" .claude/skills/building-from-specs/references 2>/dev/null | head -20; grep --help | grep -n -e '-F, ' -e '-e, ' -e '-i, ' -e '-a, ' -e 'Exit status' -A1 | head -20; man grep 2>/dev/null | grep -n -B2 -A2 'protect a pattern'",
+        "description": "Check skill folder, remote, voice doc, and grep help quotes"
+      }
+    },
+    {
+      "tool_name": "Glob",
+      "tool_use_id": "toolu_01KLipi8JyDRtcjpXb2Knahb",
+      "tool_input": {
+        "pattern": "**/written-for-people.md",
+        "path": "/var/home/glw907/.claude/docs"
+      }
+    }
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la && ls -la .workstation .claude 2>/dev/null && cat brief.md && cat .workstation/*\", \"description\": \"List the folder and print the brief and workstation stand-in files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la .claude/skills .claude/skills/building-from-specs .claude/skills/building-from-specs/references 2>&1; echo ---; cat README.md; echo ---; ls -la bin scripts tests completions; git log --stat | head -40\", \"description\": \"List the skill folders and the repo's files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cat .claude/skills/building-from-specs/references/writing-a-spec.md; for f in bin/notes completions/notes.bash scripts/gate.sh tests/run.sh; do echo \\\"=== $f\\\"; cat -A $f | sed 's/\\\\$$//'; done; git status --short; ls .claude/skills/writing-voice\", \"description\": \"Print the spec-writing guide and the repo's source files\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"standards:backlog-sweep\", \"args\": \"scoped sweep for a spec: notes search in example/notes\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git remote -v; git branch -a; echo \\\"--- gate\\\"; bash scripts/gate.sh; echo \\\"exit $?\\\"; echo \\\"--- busy\\\"; claude-worktree-busy . ; echo \\\"exit $?\\\"; command -v task-report gh claude; echo \\\"--- backlog\\\"; ls docs 2>&1; git ls-files; echo \\\"--- grep\\\"; grep --version | head -1; grep --help | grep -E -- '-F,|-i,|-e,|Exit status' ; grep --help | tail -8\", \"description\": \"Check the remo"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"wc -l ~/.claude/docs/voice/written-for-people.md 2>&1 && sed -n 1,200p ~/.claude/docs/voice/written-for-people.md\", \"description\": \"Read the voice standard for prose the owner reads\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"### searches\\\"; grep -rn --exclude-dir=.git --exclude-dir=.claude --exclude-dir=.workstation --exclude=brief.md -I 'notes list' . 2>/dev/null; echo \\\"--\\\"; grep -rnI --exclude-dir=.git --exclude-dir=.claude --exclude-dir=.workstation --exclude=brief.md -e 'add list' -e 'notes \\\\[a-z\\\\]' . 2>/dev/null; echo \\\"--- git grep\\\"; git grep -n -e 'notes list' -- ':!brief.md'; git grep "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"### S1\\\"; git grep -n -e 'notes list' -e 'add list' -- . ':!brief.md'; git grep -n -e 'notes list' -e 'add list' -- . ':!brief.md' | wc -l; echo \\\"### S2\\\"; git grep -n -e 'completions' -- . ':!brief.md'; \\nS=$TMPDIR/scratch; rm -rf \\\"$S\\\"; mkdir -p \\\"$S\\\"; cp -r bin tests scripts completions README.md \\\"$S\\\"/; cd \\\"$S\\\"\\ncat > bin/notes <<'EOF'\\n#!/usr/bin/env bash\\nset -euo p"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd $TMPDIR/scratch && sed -i '3d' bin/notes && f=$(mktemp) && printf 'Buy rope\\\\ncaf\\\\xe9 rope\\\\n' > \\\"$f\\\" && echo \\\"# invalid byte, no -a\\\"; NOTES_FILE=$f bin/notes search rope; echo \\\"exit $?\\\"; echo \\\"# with -a\\\"; grep -aiF -e rope -- \\\"$f\\\" | od -c | head -3; echo \\\"# unreadable\\\"; chmod 000 \\\"$f\\\"; NOTES_FILE=$f bin/notes search rope; echo \\\"exit $?\\\"; chmod 600 \\\"$f\\\"; echo \\\"#"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"run_checks() {\\nf=$(mktemp); printf '%s\\\\n' 'Buy rope' 'call Sam' 'ROPE for the dinghy' 'abc' 'a.c' 'use -i here' > \\\"$f\\\"\\necho \\\"[1]\\\"; NOTES_FILE=$f bin/notes search rope; echo \\\"exit $?\\\"\\necho \\\"[2]\\\"; NOTES_FILE=$f bin/notes search a.c; echo \\\"exit $?\\\"; NOTES_FILE=$f bin/notes search -i; echo \\\"exit $?\\\"\\necho \\\"[3]\\\"; NOTES_FILE=$f bin/notes search buy rope; echo \\\"exit $?\\\"\\n"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"grep --help | grep -E -- '^ +-a,|^ +-F,|^ +-i,|^ +-e,'; man grep 2>/dev/null | grep -B1 -A6 -- '-e PATTERNS' | head -14\", \"description\": \"Quote grep's help lines for the flags the design uses\"}"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-missing-file/spec.md\", \"content\": \"# Spec: notes search\\n\\nThis spec writes down the design in `brief.md`, which Geoff approved in conversation. It is one task and\\nends in one pull request to `main` of `example/notes`. Nobody could answer a question while it was\\nwritten, so each call Claude made is in the last section.\\n\\n## One change to what "
+    },
+    {
+      "name": "Agent",
+      "input": "{\"description\": \"Fresh read of spec.md\", \"subagent_type\": \"general-purpose\", \"model\": \"fable\", \"effort\": \"high\", \"run_in_background\": false, \"prompt\": \"You are the fresh reader for a spec, with no other context. Read-only job: write, edit, and commit nothing, and do not start other agents.\\n\\nRepo: /tmp/spec-writing-run-fhzgvpzn/write-missing-file (a small bash tool, `bin/notes`, with tests in `te"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-missing-file/spec.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-missing-file/brief.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-missing-file/.claude/skills/building-from-specs/references/writing-a-spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in bin/notes tests/run.sh completions/notes.bash scripts/gate.sh README.md; do echo \\\"=== $f\\\"; cat -n \\\"$f\\\"; done; ls -la .workstation; for f in .workstation/*; do echo \\\"=== $f\\\"; cat -n \\\"$f\\\"; done; git ls-files; git status --short\", \"description\": \"Print repo files with line numbers and workstation stand-ins\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"--- search 1\\\"; git grep -n -e 'notes list' -e 'add list' -- . ':!brief.md'; echo \\\"--- search 2\\\"; git grep -n -e 'completions' -- . ':!brief.md'; echo \\\"--- untracked incl\\\"; git grep -n --untracked -e 'completions' -- . ':!brief.md' | head -30; echo \\\"--- notes [a-z]\\\"; grep -n -o \\\"notes [a-z]\\\\+\\\" bin/notes; echo '--- today checks'; f=$(mktemp -p \\\"$TMPDIR\\\"); printf '%s\\\\"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -R .claude 2>&1 | head -40; git remote -v; git branch -a; ls ~/.claude/docs 2>&1 | head; ls ~/.claude/docs/voice 2>&1 | head; grep -rn \\\"Launching a task\\\\|Gates and review\\\\|The pull request\\\\|edit.*test\\\\|weaken\\\" .claude/skills/building-from-specs/references 2>/dev/null | head -20; grep --help | grep -n -e '-F, ' -e '-e, ' -e '-i, ' -e '-a, ' -e 'Exit status' -A1 | head -20; man"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"set -u; S=$(mktemp -d -p \\\"$TMPDIR\\\"); cp -r /tmp/spec-writing-run-fhzgvpzn/write-missing-file/{bin,tests,completions,scripts,README.md} \\\"$S\\\"/; cd \\\"$S\\\"\\n# build to spec: bin/notes only\\npython3 -I - <<'EOF'\\nimport re\\np='bin/notes'; s=open(p).read()\\ns=s.replace('''  *) echo \\\"usage: notes add <text> | notes list\\\" >&2; exit 2 ;;''','''  search)\\n    shift; word=\\\"$*\\\"\\n    [ -n "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git remote -v; git branch -a; ls .claude; ls .claude/skills; ls .claude/skills/building-from-specs; ls .claude/skills/building-from-specs/references\", \"description\": \"List remotes, branches, and the skill folder\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"grep --help | grep -n -e '-F, ' -e '-e, ' -e '-i, ' -e '-a, ' -e 'Exit status' -A1; man grep 2>/dev/null | grep -n -B2 -A2 'protect a pattern'\", \"description\": \"Compare grep help and man text with the spec's quotes\"}"
+    },
+    {
+      "name": "Glob",
+      "input": "{\"pattern\": \"**/written-for-people.md\", \"path\": \"/var/home/glw907/.claude/docs\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"man grep 2>&1 | grep -n -i -B2 -A2 'protect' ; echo \\\"man rc=${PIPESTATUS[0]}\\\"; grep -rn \\\"protect a pattern\\\" /usr/share/info/grep* 2>/dev/null | head -3; zcat /usr/share/man/man1/grep.1.gz 2>/dev/null | grep -n -i -B3 -A2 protect\", \"description\": \"Look up the man page wording for the -e flag\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"run_new() {\\nf=$(mktemp); printf '%s\\\\n' 'Buy rope' 'call Sam' 'ROPE for the dinghy' 'abc' 'a.c' 'use -i here' > \\\"$f\\\"\\necho \\\"[2c]\\\"; NOTES_FILE=$f bin/notes search $'sam\\\\nabc'; echo \\\"exit $?\\\"\\necho \\\"[4c]\\\"; NOTES_FILE=$TMPDIR bin/notes search rope; echo \\\"exit $?\\\"\\necho \\\"[5c]\\\"; NOTES_FILE=$f bin/notes search ' '; echo \\\"exit $?\\\"; NOTES_FILE=$f.gone bin/notes search ''; echo"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-fhzgvpzn/write-missing-file/spec.md\", \"content\": \"# Spec: notes search\\n\\nThis spec writes down the design in `brief.md`, which Geoff approved in conversation. It is one task and\\nends in one pull request to `main` of `example/notes`. The last section lists each call Claude made.\\n\\n## Two files the brief doesn't name\\n\\nThe brief says the work changes `bin/not"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"grep -c '\\u2014' spec.md; git status --short | grep -v '^?? \\\\.' ; git diff --stat; awk 'length > 0' spec.md | wc -l; bash scripts/gate.sh; echo \\\"exit $?\\\"\", \"description\": \"Confirm spec.md is the only new file and the gate still passes\"}"
+    }
+  ],
+  "result": "The spec is in `spec.md`, and it is the only file I wrote. Nothing is built or committed.\n\n**The brief's file list is short by one file.** The brief says the work changes `bin/notes` and `tests/run.sh`, but the gate can't pass with only those two. `test_completions_match` fails as soon as the usage line names `search`, unless `completions/notes.bash` offers it too. I confirmed this on a scratch copy outside the repo. The spec adds that file to the task and says so at the top.\n\nI also added one sentence to `README.md`, which nothing forces. The spec marks it as optional and says what to remove if you strike it.\n\nThe other calls I made in place of asking you, all listed at the end of the spec:\n\n- **Match:** a substring match, so `rope` finds `ropes`.\n- **Several words:** arguments after `search` join into one word, as `add` does.\n- **Missing word:** an empty or spaces-only word counts as missing and exits 2, checked before the notes file.\n- **No notes file:** an absent notes file is no match and exits 1.\n- **Odd input:** a word containing a newline matches nothing, and a note with a byte that isn't valid text still prints.\n- **Unreadable file:** grep's own message and exit status 2 pass through.\n- **Minutes:** 41, from the larger of the two like tasks in `task-report`, so the time clause is 82 minutes.\n- **Launch:** Opus at high.\n- **Pull request:** it quotes the checks from the branch's last commit, because the repo runs no CI.\n\nEvery done item's command ran on today's code and fails for the reason the task fixes. The scratch copy met each one. A fresh reader checked the spec, and its findings are fixed in place.\n\nThree things couldn't be done from here:\n\n- **Start conditions:** `claude-worktree-busy` isn't on this machine, so they are untested. The spec hands them to the launching session.\n- **Spec location:** `spec.md` is untracked, so the launch has to give its absolute path.\n- **Voice standard:** reading `~/.claude/docs/voice/written-for-people.md` was refused, so the spec names that standard for the README sentence without my having read it."
+}
