@@ -1,0 +1,181 @@
+{
+  "case": "write-uncovered-edge",
+  "kind": "write",
+  "suite": "spec-writing",
+  "started": "2026-11-23T01:26:41Z",
+  "seconds": 463.2,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "3a6fd5dff723d01acb1e084efb7fe17e89401d9e",
+  "promptHash": "960c4aa467dd4a7f36210c62b8abe680e83e8ea0",
+  "fixtureHead": "399e8de08b4b18bd35b4f2def3ff9be295e5c32c",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 6.0,
+  "timeLimitSeconds": 1800,
+  "words": 1944,
+  "judgeCostUsd": 0.0215724,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": null,
+      "answer": "yes",
+      "quote": "| The notes file doesn't exist, or is empty | Nothing | Nothing | 1 |",
+      "quoteFound": true
+    },
+    "length": {
+      "passed": false,
+      "words": 1944
+    },
+    "built": {
+      "passed": true,
+      "status": [
+        "?? spec.md"
+      ],
+      "headUnchanged": true
+    },
+    "guide": {
+      "passed": true,
+      "reads": [
+        {
+          "call": "ls -R .claude/skills/building-from-specs .claude/skills | head -80; cat .claude/skills/building-from-specs/references/writing-a-spec.md",
+          "inside": true,
+          "failed": false
+        },
+        {
+          "call": "/tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge/.claude/skills/building-from-specs/references/writing-a-spec.md",
+          "inside": true,
+          "failed": false
+        }
+      ]
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 3.5643503999999995,
+  "turns": 21,
+  "permissionDenials": [
+    {
+      "tool_name": "Bash",
+      "tool_use_id": "toolu_01CTPWWmwxKg5XhvsYCSNiLN",
+      "tool_input": {
+        "command": "cat ~/.claude/docs/voice/written-for-people.md 2>&1 | head -150; cd /tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge; ls .vale.ini 2>&1; command -v tellgrader vale; claude --help 2>&1 | grep -E -- '--(bg|name|model|effort|permission-mode|settings)' ",
+        "description": "Read the voice standard for people-facing docs and check the launch flags exist"
+      }
+    },
+    {
+      "tool_name": "Read",
+      "tool_use_id": "toolu_018H9LN6K5ySWEb7e4uyycYF",
+      "tool_input": {
+        "file_path": "/var/home/glw907/.claude/docs/voice/written-for-people.md"
+      }
+    }
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge/brief.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && ls -la . .workstation .claude 2>/dev/null && cat .workstation/task-report.txt .workstation/denials.log .workstation/remote.txt\", \"description\": \"List repo files and print the workstation stand-in files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -R .claude/skills/building-from-specs .claude/skills | head -80; cat .claude/skills/building-from-specs/references/writing-a-spec.md\", \"description\": \"List the skill's files and print its spec-writing guide\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in README.md bin/notes scripts/gate.sh tests/run.sh; do echo \\\"=== $f\\\"; cat -A \\\"$f\\\" | sed 's/\\\\$$//' ; done; ls -la bin scripts tests; git log --stat | head -30\", \"description\": \"Print the repo's source files and history\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git remote -v; git status --short; for c in claude-worktree-busy task-report gh claude shellcheck; do command -v $c || echo \\\"no $c\\\"; done; grep --version | head -1; bash --version | head -1; ls docs 2>&1; echo ---; bash scripts/gate.sh; echo \\\"exit $?\\\"; echo --- fixture; f=$(mktemp); printf '%s\\\\n' 'buy rope' 'call mum' 'Mend the ROPES' 'fix a.c' 'abc' 'use -i here' > \\\"$f\\\"\\nfor w"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"standards:backlog-sweep\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cat ~/.claude/docs/voice/written-for-people.md 2>&1 | head -150; cd /tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge; ls .vale.ini 2>&1; command -v tellgrader vale; claude --help 2>&1 | grep -E -- '--(bg|name|model|effort|permission-mode|settings)' \", \"description\": \"Read the voice standard for people-facing docs and check the launch flags exist\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/var/home/glw907/.claude/docs/voice/written-for-people.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd /tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge; ls .vale.ini 2>&1; command -v tellgrader vale; claude --help 2>&1 | grep -E -- '--(bg|name|model|effort|permission-mode|settings)'\", \"description\": \"Check for prose linters and that the launch flags exist\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd /tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge\\nf=$(mktemp); printf '%s\\\\n' 'buy rope' 'call mum' 'Mend the ROPES' 'fix a.c' 'abc' 'use -i here' > \\\"$f\\\"\\necho \\\"#1\\\"; NOTES_FILE=$f bin/notes search Rope; echo \\\"exit $?\\\"\\necho \\\"#2\\\"; NOTES_FILE=$f bin/notes search a.c; echo \\\"exit $?\\\"\\necho \\\"#3\\\"; NOTES_FILE=$f bin/notes search -i; echo \\\"exit $?\\\"\\necho \\\"#4\\\"; NOTES_FILE"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge/spec.md\", \"content\": \"# Spec: notes search\\n\\nWritten 2026-11-22 from `brief.md`, against `main` at 399e8de. One task, one pull request. Where the brief\\nleft an edge open, nobody could be asked, so each such call is decided here and listed under\\n[Calls Claude made](#calls-claude-made).\\n\\n## Intent\\n\\nGeoff: \\\"I want to find a no"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd /tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge; man grep | sed -n '48,53p'; man bash | grep -n -B2 -A6 'Case modification' | head -30; tellgrader --help 2>&1 | head -20\", \"description\": \"Verify the quoted manual lines and see how the prose scanner is run\"}"
+    },
+    {
+      "name": "Agent",
+      "input": "{\"description\": \"Fresh read of spec.md\", \"subagent_type\": \"general-purpose\", \"model\": \"fable\", \"effort\": \"high\", \"run_in_background\": false, \"prompt\": \"You are the one fresh reader of a spec before its owner sees it. You have no other context, and that is the point.\\n\\nRepo: /tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge (a tiny bash notes tool: bin/notes, tests/run.sh, scripts/gate.sh, READM"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && ls -la . .workstation .claude .claude/skills/* 2>&1 | head -80\", \"description\": \"List tracked files and repo layout\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge/brief.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge/spec.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge/.claude/skills/building-from-specs/references/writing-a-spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in bin/notes tests/run.sh scripts/gate.sh README.md .workstation/*; do echo \\\"=== $f\\\"; cat -n \\\"$f\\\"; done; ls -la bin tests scripts; git status --short; git branch -a; git remote -v\", \"description\": \"Print source files and workstation stand-ins\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cat .git/info/exclude 2>/dev/null | tail -5; echo \\\"--- usage\\\"; git grep -n usage -- . ':!brief.md'; echo \\\"--- notes list/add\\\"; git grep -n -e 'notes list' -e 'notes add' -- . ':!brief.md'; echo \\\"--- test_\\\"; git grep -n test_ -- . ':!brief.md'; echo \\\"--- search\\\"; git grep -n -i search -- . ':!brief.md'; echo \\\"rc $?\\\"; echo \\\"--- with brief\\\"; git grep -c usage; git grep -c -e "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"f=$(mktemp -p \\\"$TMPDIR\\\"); printf '%s\\\\n' 'buy rope' 'call mum' 'Mend the ROPES' 'fix a.c' 'abc' 'use -i here' > \\\"$f\\\"\\necho \\\"--1\\\"; NOTES_FILE=$f bin/notes search Rope; echo \\\"exit $?\\\"\\necho \\\"--2\\\"; NOTES_FILE=$f bin/notes search a.c; echo \\\"exit $?\\\"\\necho \\\"--3\\\"; NOTES_FILE=$f bin/notes search -i; echo \\\"exit $?\\\"\\necho \\\"--4\\\"; NOTES_FILE=$f bin/notes search zebra; echo \\\"ex"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"man grep 2>/dev/null | col -b | grep -n -A3 -E \\\"^\\\\s+-i, --ignore-case|^\\\\s+-e PATTERNS|^\\\\s+-F, --fixed\\\" ; man grep | col -b | grep -n -B1 -A3 \\\"exit status is 0 if\\\"; man bash 2>/dev/null | col -b | grep -n -i \\\"case modification\\\" | head; \\nS=\\\"$TMPDIR/scratch-notes\\\"; rm -rf \\\"$S\\\"; mkdir -p \\\"$S\\\"; git archive HEAD | tar -x -C \\\"$S\\\"; cd \\\"$S\\\"\\ncat > bin/notes <<'EOF'\\n#!/usr/"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge/spec.md\", \"content\": \"# Spec: notes search\\n\\nWritten 2026-11-22 from `brief.md`, against `main` at 399e8de. One task, one pull request.\\n\\n## Intent\\n\\nGeoff: \\\"I want to find a note without scrolling through the whole list.\\\"\\n\\nThe goal is a new command, `bin/notes search <word>`, that prints every note containing the word, olde"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd /tmp/spec-writing-run-nfc7s3jr/write-uncovered-edge\\nf=$(mktemp); printf '%s\\\\n' 'buy rope' 'call mum' 'Mend the ROPES' 'fix a.c' 'abc' 'use -i here' > \\\"$f\\\"\\necho \\\"## today\\\"; NOTES_FILE=$f bin/notes search \\\"buy rope\\\"; echo \\\"exit $?\\\"\\nNOTES_FILE=$(mktemp) bin/notes search rope; echo \\\"exit $?\\\"\\nNOTES_FILE=$f bin/notes bogus 2>&1 >/dev/null; echo \\\"exit $?\\\"\\necho \\\"## refer"
+    }
+  ],
+  "result": "`spec.md` is written at the repo root and is the only file I added; nothing is built or committed.\n\nThe spec covers the brief's settled design as one task, `notes-search`, with eight done items. I ran each item's command on today's code and recorded what it prints now and what it prints when the item holds. A scratch build outside the repo produced the expected output for items 1 to 6, so those are meetable together; the gate and diff items can only run on the task's branch. One fresh reader checked the spec, and its findings are fixed in place.\n\nThe brief left several edges open. I decided each one and listed it under \"Calls Claude made\":\n\n1. **Missing or empty notes file:** counts as no match, so nothing is printed and the exit is 1.\n2. **\"Contains\":** means anywhere in the line, so `rope` finds `ROPES`. Whole-word matching was passed over.\n3. **Empty word, `search \"\"`:** treated as a missing word, exit 2 with the usage line.\n4. **A second argument, `search buy rope`:** a usage error, exit 2. Joining the arguments as `add` does was passed over, because allowing it later breaks nobody's use.\n5. **Usage line:** `usage: notes add <text> | notes list | notes search <word>`.\n6. **`README.md`:** stays unchanged, because the brief names two files. It won't mention `search`; one sentence there would fit a direct change if you want it.\n\nThe spec also sets the build details:\n\n- **Tests:** the test loop in `tests/run.sh` is a fixed list of names, so a new test left out of it never runs. The spec fixes five test names and the gate item checks for all eight `ok` lines.\n- **Estimate:** 40 minutes, from the 34 and 41 measured for the two like tasks, with a time clause of 80.\n- **Session and review:** the task session runs on Opus at medium effort, and `standards:diff-reviewer` reads the result.\n\nThree things are still owed before launch:\n\n- **Spec on `origin`:** `spec.md` has to reach `origin`'s `main` first, because the task's worktree starts from there.\n- **Launch checks:** `claude-worktree-busy` and `task-report` aren't installed in this session, so today's live sessions went unread and the minutes come from the stand-in file.\n- **Voice standard:** `~/.claude/docs/voice/written-for-people.md` was refused to this session twice. I wrote the spec to the `writing-voice` router's shape rules instead; `tellgrader` reports no findings."
+}

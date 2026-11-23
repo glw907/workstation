@@ -1,0 +1,186 @@
+{
+  "case": "write-unlanded-work",
+  "kind": "write",
+  "suite": "spec-writing",
+  "started": "2026-11-23T01:19:52Z",
+  "seconds": 566.9,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "3a6fd5dff723d01acb1e084efb7fe17e89401d9e",
+  "promptHash": "960c4aa467dd4a7f36210c62b8abe680e83e8ea0",
+  "fixtureHead": "e3473dfd0df8477c17ae3d3d7cfb7060ad708a35",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 6.0,
+  "timeLimitSeconds": 1800,
+  "words": 2128,
+  "judgeCostUsd": 0.0224424,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": true,
+      "answer": "yes",
+      "quote": "One fact holds the launch: the brief gives search the output format of `notes export`, and `main`\nhas no `notes export`.",
+      "quoteFound": true
+    },
+    "length": {
+      "passed": false,
+      "words": 2128
+    },
+    "built": {
+      "passed": true,
+      "status": [
+        "?? spec.md"
+      ],
+      "headUnchanged": true
+    },
+    "guide": {
+      "passed": true,
+      "reads": [
+        {
+          "call": "ls -R .claude/skills/building-from-specs | head -50 && cat .claude/skills/building-from-specs/references/writing-a-spec.md",
+          "inside": true,
+          "failed": false
+        },
+        {
+          "call": "/tmp/spec-writing-run-nfc7s3jr/write-unlanded-work/.claude/skills/building-from-specs/references/writing-a-spec.md",
+          "inside": true,
+          "failed": false
+        }
+      ]
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 4.0179312,
+  "turns": 22,
+  "permissionDenials": [
+    {
+      "tool_name": "Bash",
+      "tool_use_id": "toolu_01VvZnxWJFPT5VWjjPvYYYPV",
+      "tool_input": {
+        "command": "cat ~/.claude/docs/voice/written-for-people.md 2>&1 | head -150",
+        "description": "Read the voice standard for documents a person reads"
+      }
+    },
+    {
+      "tool_name": "Bash",
+      "tool_use_id": "toolu_01R9tjaphxcyFH3D8A1ga9jP",
+      "tool_input": {
+        "command": "echo \"== launch probe\"; f=$(mktemp); printf '%s\\n' one two three > \"$f\"; NOTES_FILE=$f bin/notes export | wc -l; rm -f \"$f\"\nf=$(mktemp); export NOTES_FILE=$f\nprintf '%s\\n' 'Buy rope' 'call Sam' 'ROPES drying' 'a.c' 'abc' 'tar -x flag' > \"$f\"\necho \"== grep probes\"; grep -i -F -e rope \"$f\"; echo \"exit $?\"; grep -i -F -e a.c \"$f\"; grep -i -F -e -x \"$f\"; grep -i -F -e zebra \"$f\"; echo \"exit $?\"; echo \"-- y r:\"; grep -i -F -e 'y r' \"$f\"; echo \"-- y:\"; grep -i -F -e y \"$f\"; echo \"-- r:\"; grep -i -F -e r \"$f\"\necho \"== 1\"; bin/notes search rope | grep -oF -e 'Buy rope' -e 'ROPES drying' -e 'call Sam' -e abc -e tar; bin/notes search rope >/dev/null 2>&1; echo \"exit $?\"\necho \"== 2\"; out=$(bin/notes search rope) && [ \"$(printf '%s\\n' \"$out\" | wc -l)\" = 2 ] &&\n  [ -z \"$(printf '%s\\n' \"$out\" | grep -vxFf <(bin/notes export))\" ] && echo same\necho \"== 3\"; bin/notes search a.c | grep -oF -e a.c -e abc; bin/notes search -x </dev/null | grep -oF -e 'tar -x flag'\necho \"== 4\"; bin/notes search y r | grep -oF -e 'Buy rope' -e 'ROPES drying' -e 'tar -x flag'\necho \"== 5\"; bin/notes search zebra 2>&1; echo \"exit $?\"; NOTES_FILE=$f.none bin/notes search rope 2>&1; echo \"exit $?\"\necho \"== 6\"; bin/notes search 2>/dev/null; echo \"exit $?\"; bin/notes search '' 2>/dev/null; echo \"exit $?\"; bin/notes search 2>&1 >/dev/null | grep -c '^usage:.*notes search <word>'; bin/notes search '' 2>&1 >/dev/null | grep -c '^usage:.*notes search <word>'\necho \"== 7\"; bash scripts/gate.sh; echo \"exit $?\"; bash scripts/gate.sh | grep -c '^ok   test_search'\nrm -f \"$f\"\necho \"== mock that meets the spec\"; m=$(mktemp -d); mkdir \"$m/bin\"; cat > \"$m/bin/notes\" <<'EOF'\n#!/usr/bin/env bash\nset -euo pipefail\nfile=\"${NOTES_FILE:-$HOME/.notes}\"\nu=\"usage: notes add <text> | notes list | notes export | notes search <word>\"\ncase \"${1:-}\" in\n  add) shift; printf '%s\\n' \"$*\" >> \"$file\" ;;\n  list) [ -f \"$file\" ] && cat \"$file\" || true ;;\n  export) [ -f \"$file\" ] && nl -w1 -s$'\\t' \"$file\" || true ;;\n  search) shift; w=\"$*\"; [ -n \"$w\" ] || { echo \"$u\" >&2; exit 2; }\n    [ -f \"$file\" ] || exit 1\n    nl -w1 -s$'\\t' \"$file\" | { grep -i -F -e \"$w\" || exit 1; } ;;\n  *) echo \"$u\" >&2; exit 2 ;;\nesac\nEOF\nchmod +x \"$m/bin/notes\"; cd \"$m\"\nf=$(mktemp); printf '%s\\n' one two three > \"$f\"; NOTES_FILE=$f bin/notes export | wc -l; rm -f \"$f\"\nf=$(mktemp); export NOTES_FILE=$f\nprintf '%s\\n' 'Buy rope' 'call Sam' 'ROPES drying' 'a.c' 'abc' 'tar -x flag' > \"$f\"\necho \"-- 1\"; bin/notes search rope | grep -oF -e 'Buy rope' -e 'ROPES drying' -e 'call Sam' -e abc -e tar; bin/notes search rope >/dev/null 2>&1; echo \"exit $?\"\necho \"-- 2\"; out=$(bin/notes search rope) && [ \"$(printf '%s\\n' \"$out\" | wc -l)\" = 2 ] &&\n  [ -z \"$(printf '%s\\n' \"$out\" | grep -vxFf <(bin/notes export))\" ] && echo same\necho \"-- 3\"; bin/notes search a.c | grep -oF -e a.c -e abc; bin/notes search -x </dev/null | grep -oF -e 'tar -x flag'\necho \"-- 4\"; bin/notes search y r | grep -oF -e 'Buy rope' -e 'ROPES drying' -e 'tar -x flag'\necho \"-- 5\"; bin/notes search zebra 2>&1; echo \"exit $?\"; NOTES_FILE=$f.none bin/notes search rope 2>&1; echo \"exit $?\"\necho \"-- 6\"; bin/notes search 2>/dev/null; echo \"exit $?\"; bin/notes search '' 2>/dev/null; echo \"exit $?\"; bin/notes search 2>&1 >/dev/null | grep -c '^usage:.*notes search <word>'; bin/notes search '' 2>&1 >/dev/null | grep -c '^usage:.*notes search <word>'\nrm -f \"$f\"; rm -f \"$m/bin/notes\"; rmdir \"$m/bin\" \"$m\"\ncd /tmp/spec-writing-run-nfc7s3jr/write-unlanded-work && git status --short | grep -v '^?? \\.'; grep -c '—' spec.md; awk 'length > 120' spec.md | wc -l",
+        "description": "Rerun the launch probe and all seven checks today, then against a throwaway mock in a temp folder"
+      }
+    }
+  ],
+  "toolCalls": [
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"building-from-specs\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cat brief.md && echo ---- && ls -la . .workstation .claude 2>/dev/null && echo ---- && cat .workstation/task-report.txt && echo ---- && cat .workstation/denials.log && echo ---- && cat .workstation/remote.txt && git log --oneline -5 && git status --short && git branch -a\", \"description\": \"Read the brief, workstation stand-in files, and repo state\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -R .claude/skills/building-from-specs | head -50 && cat .claude/skills/building-from-specs/references/writing-a-spec.md\", \"description\": \"List the skill folder and read the spec-writing guide\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cat README.md && echo ---- && ls -la bin scripts tests && echo ---- && cat -A bin/notes | head -150 && echo ---- && cat scripts/* && echo ---- && cat tests/*\", \"description\": \"Read the repo's README, tool, gate script, and tests\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git for-each-ref; echo \\\"--- remotes\\\"; git remote -v; echo \\\"--- stash\\\"; git stash list; echo \\\"--- worktrees\\\"; git worktree list; echo \\\"--- grep export (tracked)\\\"; git grep -n -i export; echo \\\"exit $?\\\"; echo \\\"--- grep all\\\"; grep -rn -i \\\"export\\\\|search\\\\|stdin\\\" --exclude-dir=.git --exclude-dir=.claude . 2>/dev/null; echo \\\"--- log all\\\"; git log --all --oneline --stat; ech"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"bash scripts/gate.sh; echo \\\"gate exit $?\\\"; f=$(mktemp -p \\\"$TMPDIR\\\"); NOTES_FILE=$f bin/notes search rope; echo \\\"search exit $?\\\"; NOTES_FILE=$f bin/notes search; echo \\\"search-noword exit $?\\\"; NOTES_FILE=$f bin/notes export; echo \\\"export exit $?\\\"; rm -f \\\"$f\\\"; git status --short | grep -v '^?? \\\\.' ; echo \\\"--- backlog?\\\"; ls BACKLOG* docs 2>&1; command -v task-report claude-"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"writing-voice\"}"
+    },
+    {
+      "name": "Skill",
+      "input": "{\"skill\": \"standards:backlog-sweep\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cat ~/.claude/docs/voice/written-for-people.md 2>&1 | head -150\", \"description\": \"Read the voice standard for documents a person reads\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"--- backlog search\\\"; git ls-files | grep -i -c -e backlog -e todo -e status; echo \\\"--- usage/command-name search\\\"; git grep -n -e 'usage' -e 'notes list' -e 'notes add' -- . ':!brief.md'; echo \\\"--- count\\\"; git grep -c -e 'usage' -e 'notes list' -e 'notes add' -- . ':!brief.md'; echo \\\"--- export search\\\"; git grep -n -c 'export' -- . ':!brief.md'; echo \\\"exit $?\\\"; git log"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"f=$(mktemp); g=$(mktemp)\\nprintf '%s\\\\n' 'Buy rope' 'call Sam' 'ROPES drying' 'a.c' 'abc' > \\\"$f\\\"\\nprintf '%s\\\\n' 'Buy rope' 'ROPES drying' > \\\"$g\\\"\\nexport NOTES_FILE=$f\\necho \\\"== start\\\"; bin/notes export; echo \\\"exit $?\\\"\\necho \\\"== 1\\\"; bin/notes search rope | grep -oF -e 'Buy rope' -e 'ROPES drying' -e 'call Sam' -e abc; bin/notes search rope >/dev/null 2>&1; echo \\\"exit $?\\\"\\n"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"grep --version | head -1; grep --help | grep -e '^  -F' -e '^  -i' -e '^  -e'; f=$(mktemp); printf '%s\\\\n' 'Buy rope' 'call Sam' 'ROPES drying' 'a.c' 'abc' > \\\"$f\\\"; grep -i -F -e rope \\\"$f\\\"; echo \\\"exit $?\\\"; grep -i -F -e a.c \\\"$f\\\"; echo \\\"exit $?\\\"; grep -i -F -e -x \\\"$f\\\"; echo \\\"exit $?\\\"; grep -i -F -e zebra \\\"$f.none\\\"; echo \\\"exit $?\\\"; rm -f \\\"$f\\\"; echo \\\"--- ref probe\\\"; "
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/write-unlanded-work/spec.md\", \"content\": \"# Spec: notes search\\n\\nThis spec adds `bin/notes search <word>` as one task that ends in one pull request. The design is settled in\\n`brief.md`, and one fact holds the launch: the brief gives search the output format of `notes export`, and no\\n`notes export` exists on `main`. The task waits until the work that"
+    },
+    {
+      "name": "Agent",
+      "input": "{\"description\": \"Fresh read of spec.md\", \"subagent_type\": \"general-purpose\", \"model\": \"fable\", \"effort\": \"high\", \"run_in_background\": false, \"prompt\": \"You are the fresh reader of a spec before its owner sees it. You have no other context, and that is the point.\\n\\nRepo: /tmp/spec-writing-run-nfc7s3jr/write-unlanded-work (a tiny bash notes tool: bin/notes, tests/run.sh, scripts/gate.sh, README.md)"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"ls -la . .workstation .claude .claude/skills/building-from-specs .claude/skills/building-from-specs/references 2>&1; git status --short; git log --oneline | cat\", \"description\": \"List repo files and git state\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/write-unlanded-work/spec.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/write-unlanded-work/brief.md\"}"
+    },
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/write-unlanded-work/.claude/skills/building-from-specs/references/writing-a-spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in bin/notes tests/run.sh scripts/gate.sh README.md .workstation/task-report.txt .workstation/denials.log .workstation/remote.txt; do echo \\\"=== $f\\\"; cat -n $f; done; ls -la bin tests scripts\", \"description\": \"Print the repo source and workstation stand-in files\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"export TMPDIR=$(mktemp -d) && echo \\\"TMPDIR=$TMPDIR\\\"\\necho \\\"--- probe1\\\"; git grep -c export main -- bin/notes; echo \\\"exit $?\\\"\\necho \\\"--- probe2\\\"; bin/notes export; echo \\\"exit $?\\\"\\necho \\\"--- probe3\\\"; git for-each-ref; echo \\\"stash:\\\"; git stash list; echo \\\"exit $?\\\"; git rev-parse --short HEAD; git remote -v; git branch -a\\necho \\\"--- stdin\\\"; s=$(mktemp); echo \\\"from stdin"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"export TMPDIR=$(mktemp -d)\\nf=$(mktemp); g=$(mktemp)\\nprintf '%s\\\\n' 'Buy rope' 'call Sam' 'ROPES drying' 'a.c' 'abc' > \\\"$f\\\"\\nprintf '%s\\\\n' 'Buy rope' 'ROPES drying' > \\\"$g\\\"\\nexport NOTES_FILE=$f\\necho \\\"=== 1\\\"; bin/notes search rope | grep -oF -e 'Buy rope' -e 'ROPES drying' -e 'call Sam' -e abc\\nbin/notes search rope >/dev/null 2>&1; echo \\\"exit $?\\\"\\necho \\\"=== 2\\\"; out=$(NOTE"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"export TMPDIR=$(mktemp -d)\\nmk() { # $1 name, $2 search-branch body\\n  cat > \\\"$TMPDIR/$1\\\" <<EOF\\n#!/usr/bin/env bash\\nset -euo pipefail\\nfile=\\\"\\\\${NOTES_FILE:-\\\\$HOME/.notes}\\\"\\ncase \\\"\\\\${1:-}\\\" in\\n  add) shift; printf '%s\\\\n' \\\"\\\\$*\\\" >> \\\"\\\\$file\\\" ;;\\n  list) [ -f \\\"\\\\$file\\\" ] && cat \\\"\\\\$file\\\" || true ;;\\n  export) [ -f \\\"\\\\$file\\\" ] && nl -ba \\\"\\\\$file\\\" || true ;;\\n  sear"
+    },
+    {
+      "name": "Write",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/write-unlanded-work/spec.md\", \"content\": \"# Spec: notes search\\n\\nThis spec adds `bin/notes search <word>` as one task that ends in one pull request. The design is settled in\\n`brief.md`. One fact holds the launch: the brief gives search the output format of `notes export`, and `main`\\nhas no `notes export`. The task waits until the work that adds expo"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"== launch probe\\\"; f=$(mktemp); printf '%s\\\\n' one two three > \\\"$f\\\"; NOTES_FILE=$f bin/notes export | wc -l; rm -f \\\"$f\\\"\\nf=$(mktemp); export NOTES_FILE=$f\\nprintf '%s\\\\n' 'Buy rope' 'call Sam' 'ROPES drying' 'a.c' 'abc' 'tar -x flag' > \\\"$f\\\"\\necho \\\"== grep probes\\\"; grep -i -F -e rope \\\"$f\\\"; echo \\\"exit $?\\\"; grep -i -F -e a.c \\\"$f\\\"; grep -i -F -e -x \\\"$f\\\"; grep -i -F "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"echo \\\"== launch probe\\\"; f=$(mktemp); printf '%s\\\\n' one two three > \\\"$f\\\"; NOTES_FILE=$f bin/notes export | wc -l; rm -f \\\"$f\\\"\\nf=$(mktemp); export NOTES_FILE=$f\\nprintf '%s\\\\n' 'Buy rope' 'call Sam' 'ROPES drying' 'a.c' 'abc' 'tar -x flag' > \\\"$f\\\"\\necho \\\"== grep probes\\\"; grep -i -F -e rope \\\"$f\\\"; echo \\\"exit $?\\\"; grep -i -F -e a.c \\\"$f\\\"; grep -i -F -e -x \\\"$f\\\"; grep -i -F "
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git status --short | grep -v '^?? \\\\.'; grep -c '\\u2014' spec.md; awk 'length > 120' spec.md | wc -l; wc -l spec.md\", \"description\": \"Confirm spec.md is the only new file and check its dashes and line widths\"}"
+    }
+  ],
+  "result": "`spec.md` is written, and it's the only file I added; nothing is built or committed.\n\nThe brief gives search the output format of `notes export`, and `main` has no `notes export`. It isn't in `bin/notes`, and `main` is the only local ref. I couldn't read the remote's branches or pull requests from here, so I can't say whether an open one adds it.\n\nWhere I would have asked, I decided this: the task waits until the work that adds export has merged, per the skill's rule that a task needing another task's work waits for it. The spec does not invent a format or ship `list`'s bare line in the meantime. Approving the spec approves that wait.\n\n- **Export's shape:** the spec assumes export prints one line per note, with no header or footer. A launch-day probe tests that, and any other result sends the spec back to you before launch.\n- **Other calls I made:**\n  - \"Contains the word\" means a substring, so `rope` finds `ROPES`.\n  - Several arguments join into one word, as `add` does.\n  - An empty word counts as missing.\n  - A missing notes file is no match and exits 1.\n  - `README.md` stays untouched per the brief's two-file list.\n- **Estimate:** 40 minutes with an 80-minute time clause, from the two like tasks in `task-report` (34 and 41 minutes), on Opus at medium.\n- **Checks:** all seven done-item checks and the launch probe ran on today's code, and the spec records what each printed. Their passing side has not been exercised against an implementation; my attempt to run them against a throwaway mock was refused.\n- **Fresh read:** one fresh reader (Fable at high) checked the spec, and its findings are fixed in place. They were mostly checks a wrong implementation could pass, plus the then-unstated assumption about export's shape. The revised spec did not get a second read.\n- **Not done:** the backlog sweep has nothing to report, since the repo has no backlog file and I couldn't read the remote's issues. The four launch checks in the skill are left for launch day."
+}

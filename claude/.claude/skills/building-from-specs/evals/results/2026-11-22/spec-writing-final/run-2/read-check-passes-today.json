@@ -1,0 +1,51 @@
+{
+  "case": "read-check-passes-today",
+  "kind": "read",
+  "suite": "spec-writing",
+  "started": "2026-11-23T01:35:33Z",
+  "seconds": 60.5,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "3a6fd5dff723d01acb1e084efb7fe17e89401d9e",
+  "promptHash": "83f788a24589bbe8bc83d5e6d601de96272ff95c",
+  "fixtureHead": "2f0a9ea954ee2222f07a20af75babd52a2a489a7",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 2.0,
+  "timeLimitSeconds": 900,
+  "words": 474,
+  "judgeCostUsd": 0.007342400000000001,
+  "checks": {
+    "trap": {
+      "passed": true,
+      "pattern": null,
+      "answer": "yes",
+      "quote": "**Item 5 passes today.** `grep -c notes README.md` prints 3 on the untouched README.",
+      "quoteFound": true
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 0.634093,
+  "turns": 4,
+  "permissionDenials": [],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/read-check-passes-today/spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && ls -la\", \"description\": \"List tracked files in the repo\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in README.md bin/notes scripts/gate.sh tests/run.sh; do echo \\\"=== $f\\\"; cat -n $f; done; echo; git remote -v; git grep -n usage -- bin tests; grep -c notes README.md; bash scripts/gate.sh; echo \\\"exit $?\\\"; bin/notes search rope; echo \\\"exit $?\\\"\", \"description\": \"Show repo files and verify the spec's stated facts\"}"
+    }
+  ],
+  "result": "I checked the spec's stated facts against the repo and they all hold. One question is left, and all six done items can pass on a wrong result, most seriously item 5, which passes today with nothing built.\n\n## Questions\n\n1. **What does `notes search buy rope` do, with more than one argument?** The spec only describes a single `<word>`, but `add` joins all its arguments, so an owner used to typing `notes add buy rope` unquoted will type this. The candidates are to search for the phrase `buy rope`, to print usage and exit 2, or to silently search for `buy` alone. Each gives different output, and the choice decides the argument handling, the usage wording, and whether a test is needed. I would guess the phrase search, to match `add`, but it is a guess about product behavior.\n\n## Done list\n\n1. **Item 5 passes today.** `grep -c notes README.md` prints 3 on the untouched README. A build that never mentions `search` in the README gets through. The check needs to look for `notes search`, which prints 0 today.\n\n2. **Item 1 cannot tell substring match from whole-word match, and tests only a lowercase query.**\n   - The fixture has no note where the word sits inside a longer word, so a whole-word implementation (`grep -w`) passes, and `rope` would not find `ropes`.\n   - An implementation that lowercases the notes but not the query also passes, and `search ROPE` would find nothing.\n\n3. **Item 3 does not cover the missing notes file.** No item does. A plain `grep` on a missing file exits 2 with an error on stderr, not 1 and silent, and that gets through.\n\n4. **Item 2 does not cover a word that starts with a dash.** An implementation that passes the word to `grep` without `--` passes the test. `search -v` or `search -e` would then be read as an option, which breaks \"plain text, never a pattern\".\n\n5. **Item 4 checks the new usage line only on the `search` path.** A build that prints the new line from the `search` branch and leaves `bin/notes:7` unchanged passes. `notes bogus` would still print the old line, since `test_usage` only checks the `usage:` prefix.\n\n6. **Items 2 and 4 each hold two assertions in a runner without `set -e`.** A test function returns the status of its last command. If the two assertions are written as separate statements, not one `&&` chain, the first is ignored. In item 4, `search` with no argument could then die with an unbound-variable error and exit 1, and the test would still print `ok`.\n\n7. **Item 6 passes today.** `bash scripts/gate.sh` exits 0 on the untouched tree. It only guards against regressions in the three existing tests. They barely exercise `add` and `list`, so it is weak evidence that \"nothing about `add` or `list` changes\"."
+}

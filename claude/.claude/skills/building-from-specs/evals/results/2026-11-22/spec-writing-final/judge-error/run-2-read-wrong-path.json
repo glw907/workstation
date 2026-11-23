@@ -1,0 +1,63 @@
+{
+  "case": "read-wrong-path",
+  "kind": "read",
+  "suite": "spec-writing",
+  "started": "2026-11-23T01:36:36Z",
+  "seconds": 783.7,
+  "suiteHash": "c6f0a8f799da6cd19bb08a38d8dd0394615d88da1a2e33155238d66ed1b2b0d6",
+  "guideHash": "3a6fd5dff723d01acb1e084efb7fe17e89401d9e",
+  "promptHash": "83f788a24589bbe8bc83d5e6d601de96272ff95c",
+  "fixtureHead": "bf62a276dd40f32f92d20fd4652e68b81d320336",
+  "effort": "high",
+  "sandbox": true,
+  "costCapUsd": 2.0,
+  "timeLimitSeconds": 900,
+  "words": 92,
+  "judgeCostUsd": 0,
+  "checks": {
+    "trap": {
+      "passed": false,
+      "pattern": false,
+      "answer": null,
+      "quote": "",
+      "quoteFound": null
+    }
+  },
+  "ended": "finished",
+  "subtype": "success",
+  "exitCode": 0,
+  "mainModel": "claude-fable-5-2",
+  "models": [
+    "claude-fable-5-2"
+  ],
+  "costUsd": 0.8916998,
+  "turns": 1,
+  "permissionDenials": [],
+  "toolCalls": [
+    {
+      "name": "Read",
+      "input": "{\"file_path\": \"/tmp/spec-writing-run-nfc7s3jr/read-wrong-path/spec.md\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"git ls-files && ls -la\", \"description\": \"List tracked files in the repo\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"for f in bin/notes scripts/gate.sh tests/run.sh README.md; do echo \\\"=== $f\\\"; cat -n \\\"$f\\\"; done; echo; git remote -v; git grep -n usage -- bin tests; ls .claude; bash scripts/gate.sh; echo \\\"exit=$?\\\"; bin/notes search rope; echo \\\"exit=$?\\\"; grep -c \\\"notes search\\\" README.md\", \"description\": \"Show repo files, check remote, and run the gate\"}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"cd \\\"$TMPDIR\\\" && rm -rf probe && mkdir probe && cd probe && cat > notes <<'EOF'\\n#!/usr/bin/env bash\\nset -euo pipefail\\nfile=\\\"${NOTES_FILE:-$HOME/.notes}\\\"\\ncase \\\"${1:-}\\\" in\\n  add) shift; printf '%s\\\\n' \\\"$*\\\" >> \\\"$file\\\" ;;\\n  list) [ -f \\\"$file\\\" ] && cat \\\"$file\\\" || true ;;\\n  search) [ -n \\\"${2:-}\\\" ] || { echo \\\"usage: notes add <text> | notes list | notes search <word>\\\""
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"pkill -f \\\"grep -iFw -v\\\" ; cd \\\"$TMPDIR/probe\\\" && echo \\\"--bogus\\\"; ./notes bogus </dev/null; echo \\\"exit=$?\\\"\\necho \\\"--missing file\\\"; NOTES_FILE=$TMPDIR/probe/nope ./notes search rope </dev/null; echo \\\"exit=$?\\\"\", \"description\": \"Stop the hung probe and run the last two checks\", \"timeout\": 20000}"
+    },
+    {
+      "name": "Bash",
+      "input": "{\"command\": \"pkill -x grep; cd \\\"$TMPDIR/probe\\\" && echo \\\"--bogus\\\"; ./notes bogus </dev/null; echo \\\"exit=$?\\\"\\necho \\\"--missing file\\\"; NOTES_FILE=$TMPDIR/probe/nope ./notes search rope </dev/null; echo \\\"exit=$?\\\"; pgrep -x grep || echo \\\"no grep left\\\"\", \"description\": \"Stop the hung grep and run the last two checks\", \"timeout\": 20000}"
+    }
+  ],
+  "result": "The hung probe has now been stopped by the harness at its background time limit, and it doesn't need restarting. It was the `search -v` check that sat waiting on stdin. My earlier attempt to kill it evidently didn't reach it, even though that command reported no grep left.\n\nNothing in the report depends on its remaining output: I reran the two checks it never reached (`notes bogus` and the missing notes file) separately, and those results are the ones cited under items 3 and 4. The report above stands as written."
+}
