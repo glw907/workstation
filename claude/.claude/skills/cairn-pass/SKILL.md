@@ -2,7 +2,7 @@
 name: cairn-pass
 description: >
   The workstation's facts for building work in cairn-cms: the lane-aware gate wrapper, the fast
-  lane, the CI watch, and where the repo's own process skill lives. Use with building-from-specs
+  lane, the CI watch, and the repo skill, cairn-build. Use with building-from-specs
   when building, resuming, or reviewing a task in cairn-cms, when a cairn-cms session follows a
   STATUS launch prompt, or when asked how to build the next piece of work there. For a consumer
   site use site-pass.
@@ -11,10 +11,10 @@ description: >
 # Cairn pass
 
 Load `building-from-specs` first; it holds the process: a spec Geoff approves, a fresh session per
-task under `/goal`, a fresh review, and a pull request. Then read the repo's own process skill in
-the cairn-cms checkout's `.claude/skills/`. That skill holds what a clone needs: worktree setup, the
-fast lane, the full-suite home, the risk-class path map, the review checklists by path, and the
-close checklist. This skill adds only Geoff's workstation.
+task under `/goal`, a fresh review, and a pull request. Then read the repo skill `cairn-build` in
+the cairn-cms checkout's `.claude/skills/`. It holds what a clone needs: worktree setup, the gate,
+the full-suite home, the risk-class path map, the review checklists by path, and the close
+checklist. This skill adds only Geoff's workstation.
 
 Cross-repo specs and research live in `~/Projects/initiatives/<id>/`. STATUS's next action names
 the spec; trust it. Check `docs/internal/consultations/` for briefs with unrecorded verdicts first
@@ -22,18 +22,14 @@ the spec; trust it. Check `docs/internal/consultations/` for briefs with unrecor
 
 ## Gates
 
-**Gate**: `cairn-run-gate '<string>'` from the task's worktree. It wraps the committed fast lane
-with the shared lanes.
+**Gate**: `cairn-run-gate 'npm run lane:fast -- --range <base>..HEAD'` from the task's worktree
+root, after each commit. The committed fast lane is the one gate form, and its first line carries no
+lane prefix, so the wrapper runs it on the heavy lane. The wrapper outlasts the shell tool's ten-minute
+cap and writes the records `task-report` reads. It exits 75 when the run isn't done: re-issue the same
+command until a `gate exit:` line prints.
 
-**Fast lane**: `node scripts/checks/gate-tier.mjs --fast --range <base>..HEAD` prints the legs.
-Run them in order, each through `cairn-run-gate` with a leading `CAIRN_GATE_LANE=<lane>` lifted onto
-the call (`CAIRN_GATE_LANE=light cairn-run-gate '<rest>'`), since the tool reads the lane from its
-own environment. The `tool` class gate is `make -C tool check` on the light lane; a Node-only
-workspace suite such as `npm test -w packages/create-cairn-site` is light, and the engine's root
-`npm test` drives Chromium and is never light.
-
-**Worktree setup**: The launch's `.claude/worktrees/<name>`, then the setup command the repo's
-process skill names.
+**Worktree setup**: The launch's `.claude/worktrees/<name>`, then the setup command `cairn-build`
+names.
 
 ## CI
 
