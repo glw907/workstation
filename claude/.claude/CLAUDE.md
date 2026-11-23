@@ -64,8 +64,8 @@ background agent is editing; wait for its result, since a mid-edit read is stale
 
 ## Cloudflare and API-first
 
-Full account access: make routine changes directly. For Access and Workers-domain writes the MCP token is read-only:
-use curl with `$CLOUDFLARE_API_TOKEN` from `~/.local/secrets`, which a script sources itself. Read
+Full account access: make routine changes directly, with curl and `$CLOUDFLARE_API_TOKEN` from
+`~/.local/secrets`, which a script sources itself. The Cloudflare MCP server only searches the docs. Read
 `~/.claude/docs/cloudflare-estate-inventory.md` before hunting a credential, provisioning infra, or touching any
 token. Use an API or CLI first.
 

@@ -56,11 +56,13 @@ otherwise.
 **Checklist globs**: The close review loads `standards:svelte-reviewer` for `**/*.svelte` and load, action, or
 hook code; `standards:cloudflare-workers-reviewer` for Worker, D1, and `wrangler.*`;
 `standards:web-auth-security-reviewer` for every `auth-data` glob; `standards:daisyui-a11y-reviewer` for markup and
-styles; `standards:content-review` for website content under `src/content/**`. `standards:visual-verifier` reads
-rendered pages.
+styles. `standards:visual-verifier` reads rendered pages.
 
 **Close checklist**: Beyond `building-from-specs` "Gates and review":
 
+- Before the pull request is marked ready, the task session runs `standards:content-review` on each
+  changed file under `src/content/**`, one file per call, and quotes each result in the PR body. The
+  reviewer subagents have no `Skill` tool, so this check is the session's.
 - The local close run above, where the site has no PR CI. None of these gates scopes gitleaks to a
   change set, so no branch-history scan is owed.
 - Add the task's design decisions to the site's architecture doc (decisions, not narration) and keep the

@@ -141,10 +141,14 @@ the diff, point the agents that need it at the skill file, commit skills and man
   bump in every repo follows; the global CLAUDE.md "Dependencies" section is the standing rule.
 - **Review:** `building-from-specs` holds it. A spec is reviewed on Opus at high before Geoff approves it,
   and a fresh `standards:diff-reviewer` reads each finished branch against its spec.
-- **Svelte:** the official server (user scope, remote).
+- **Svelte:** the official server (user scope, remote) and the Svelte team's
+  `standards:svelte-core-bestpractices` skill (vendored, MIT), for writing Svelte 5 code.
+- **Cloudflare:** the documentation server (user scope, remote, no sign-in). Account changes go
+  through the API with curl.
 - **Playwright:** Microsoft's server (user scope, stdio).
-- **Vale:** five official skills (vendored). The workstation `vale-hook` stays the edit hook. What a repo
-  here does differently from those skills is in `claude/.claude/rules/vale.md`, which loads when a session
+- **Vale:** one official skill, `standards:vale-setup` (vendored). Its four siblings were removed on
+  2026-11-22. The workstation `vale-hook` stays the edit hook. What a repo here does differently
+  from that skill is in `claude/.claude/rules/vale.md`, which loads when a session
   touches `.vale.ini` or `styles/`.
 - **VHS:** `vhs` is not installed on this workstation (`bluefin/Brewfile` has no `vhs`); install it
   through the `dependency-upgrade` skill before running any tape.
@@ -157,12 +161,12 @@ the diff, point the agents that need it at the skill file, commit skills and man
 - **Superpowers:** gone as a plugin (2026-11-10). `standards:receiving-code-review` stays
   vendored from it (MIT). `standards:brainstorming` began as its skill and is now written
   and tested in `glw907/standards`.
-- **Plugins:** frontend-design (Anthropic), cloudflare, tui-design, and standards (this
+- **Plugins:** frontend-design (Anthropic), tui-design, and standards (this
   workstation's portable skills and reviewers). The language servers are `typescript-lsp` and
   `gopls-lsp` (both from `claude-plugins-official`, with `gopls` in the Brewfile). A local
-  `svelte-lsp` plugin was removed on 2026-11-11 (backlog #71). The code-review, code-simplifier,
-  skill-creator,
-  and superpowers plugins are gone; the built-in `/code-review` and `/simplify` and
+  `svelte-lsp` plugin was removed on 2026-11-11 (backlog #71). The cloudflare plugin was removed on 2026-11-22, and its
+  documentation server kept. The code-review, code-simplifier, skill-creator, and superpowers
+  plugins are gone; the built-in `/code-review` and `/simplify` and
   `anthropic-skills:skill-creator` replaced them.
 
 The placement rule for a skill or agent (Geoff, 2026-10-31): plugin when a second repository needs

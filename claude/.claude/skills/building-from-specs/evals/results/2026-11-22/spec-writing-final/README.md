@@ -16,7 +16,7 @@ that ran first.
 
 The task's sessions cost $110.10 of the $130 cap. Every session ran on `claude-fable-5-2` at
 `high`, with the sandbox on, and ended `finished`. Below, `$E` is
-`claude/.claude/skills/building-from-specs/evals` and `$F` is this folder.
+`claude/.claude/skills/building-from-specs/evals`, from the repo root, and `$F` is this folder.
 
 ## The rounds
 
