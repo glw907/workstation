@@ -1,0 +1,23 @@
+[Unit]
+Description=Navidrome music server (Subsonic API) for ~/Music
+Documentation=https://www.navidrome.org/docs/usage/configuration-options/
+ConditionHost=pavilion
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+# Settings come from ND_ variables, so no navidrome.toml is needed. The
+# library is a copy of the music-library R2 bucket's library/ folder; the
+# database and cache live in ~/.local/state/navidrome.
+StateDirectory=navidrome
+Environment=ND_MUSICFOLDER=%h/Music
+Environment=ND_DATAFOLDER=%S/navidrome
+Environment=ND_ADDRESS=[::]
+Environment=ND_PORT=4533
+Environment=ND_ENABLEINSIGHTSCOLLECTOR=false
+ExecStart=/home/linuxbrew/.linuxbrew/bin/navidrome
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

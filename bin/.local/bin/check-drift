@@ -390,6 +390,10 @@ fi
 if [[ "$(hostname)" == pavilion ]]; then
     etc_pair "$BLUEFIN/etc/NetworkManager/conf.d/wifi-powersave-off.conf" /etc/NetworkManager/conf.d/wifi-powersave-off.conf
 fi
+# Avahi on IPv4 only, so pavilion keeps the name pavilion.local, pavilion only.
+if [[ "$(hostname)" == pavilion ]]; then
+    etc_pair "$BLUEFIN/etc/avahi/avahi-daemon.conf.pavilion" /etc/avahi/avahi-daemon.conf
+fi
 # The phonebook runs and the maintenance run, pavilion only (their services carry ConditionHost=pavilion).
 if [[ "$(hostname)" == pavilion ]]; then
     for unit in phonebook-nightly.timer phonebook-nightly.service phonebook-gate.timer phonebook-gate.service maintain-projects.timer maintain-projects.service; do
