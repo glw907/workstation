@@ -21,26 +21,6 @@ the `pavilion` desktop (Fedora 44 base, `bootc`/`ostree`). GNU Stow links tracke
 
 ## Open steps
 
-- **thinkpad-x1: finish Zen's links after the next pull** (PR #260, 2026-11-21). Zen is installed and is the
-  default browser, but `~/.local/zen/distribution/policies.json` and `~/.local/share/applications/zen.desktop` are
-  copies, since a live session held the main checkout. After `git -C ~/.dotfiles pull --ff-only`, run
-  `rm ~/.local/share/applications/zen.desktop && cd ~/.dotfiles && stow -R applications`, then
-  `ln -sf ~/.dotfiles/bluefin/zen/policies.json ~/.local/zen/distribution/policies.json`.
-
-- **thinkpad-x1: restart the queue and move the household-it checkout.** Its first session pulls `~/.dotfiles` and `~/Projects/approval-queue`,
-  then runs `approval-queue restart` (it names any old item still undecided and archives the old files
-  into `archive-2026-11.tar.gz`; see the queue's README, "Restart and the archive"), disables the
-  old timer with `systemctl --user disable --now decision-review.timer`, and checks that
-  `approval-queue merge` with no id exits 2.
-  The same session then moves the servers checkout to its new name, in this order:
-  `git -C ~/Projects/servers remote set-url origin https://github.com/glw907/household-it.git`,
-  `mv ~/Projects/servers ~/Projects/household-it`,
-  `git -C ~/Projects/household-it worktree repair ~/Projects/household-it/.claude/worktrees/*`,
-  `mkdir -p ~/.claude/projects/-var-home-glw907-Projects-household-it`, and
-  `cp -r ~/.claude/projects/-var-home-glw907-Projects-servers/memory ~/.claude/projects/-var-home-glw907-Projects-household-it/`.
-  It makes no link at the old path. Geoff then opens `claude` in `~/Projects/household-it` once and
-  accepts the trust prompt. On the laptop he then runs `claude-tooling-sync apply` and
-  `cd ~/.dotfiles && stow -R claude`. A session can't run those two.
 - **Google Sheets check.** `gws drive files list` should still answer without a new sign-in; if it
   asks, move the `gws-personal` consent screen back to Testing (the 2026-11-05 check is open;
   `docs/plans/2026-10-29-google-sheets-tooling-plan.md`).
