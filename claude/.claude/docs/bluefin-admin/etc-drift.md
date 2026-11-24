@@ -52,7 +52,11 @@ stays the record of what's actually on disk. Current captured files:
   family="ipv4" source address="192.168.1.0/24" service name="samba" accept'`, then
   `sudo -A firewall-cmd --reload`. After installing: `sudo -A systemd-sysusers`, then
   `sudo -A smbpasswd -a oliver`, `sudo -A smbpasswd -a glw907`, and `sudo -A systemctl enable --now smb`. After a config change:
-  `testparm -s`, then `sudo -A systemctl reload smb`
+  `testparm -s`, then `sudo -A systemctl reload smb`. The config pins `smb3 unix extensions = yes`
+  (Samba's default) so a Linux kernel mount with `-o posix` keeps names that hold
+  `: * ? " < > | \` or end in a space or dot. GNOME Files and Dolphin can't negotiate it, and
+  Samba refuses those characters from them with `NT_STATUS_OBJECT_NAME_INVALID` before any VFS
+  module could rename them, so `vfs_catia` can't help (tested 2026-11-24)
 - `bluefin/etc/systemd/resolved.conf.d/10-cloudflare-dns.conf` → `/etc/systemd/resolved.conf.d/` <!-- host-ok -->
   (pavilion, Geoff 2026-11-10: "The home router is a lousey place for a DNS lookup."): every lookup
   goes to Cloudflare's resolvers over DNS-over-TLS, ahead of each link's DNS. The router's forwarder
