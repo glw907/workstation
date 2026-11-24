@@ -39,6 +39,19 @@ stays the record of what's actually on disk. Current captured files:
   publishes `pavilion.local` at the fixed lease `192.168.1.159`. Diff it against
   `/usr/etc/avahi/avahi-daemon.conf` after an Avahi upgrade. After a change:
   `sudo -A systemctl restart avahi-daemon`, then `avahi-resolve -n pavilion.local`
+- `bluefin/etc/samba/smb.conf.pavilion` → `/etc/samba/smb.conf` and <!-- host-ok -->
+  `bluefin/etc/sysusers.d/music-share.conf` → `/etc/sysusers.d/` (pavilion only, Geoff
+  2026-11-24): the `music` share, `~/Music` read-write for Oliver from the `Warwick` network
+  alone. He signs in as the no-login user `oliver`, and his reads and writes act as glw907.
+  The password is `Music share (pavilion)` in Proton Pass `Infrastructure`. Two settings sit
+  outside these files, and `check-drift` checks both. SELinux lets Samba into `~/Music` through
+  `sudo -A semanage fcontext -a -t samba_share_t '/var/home/glw907/Music(/.*)?'` and
+  `sudo -A restorecon -R ~/Music`. The firewall opens Samba to `Warwick` through
+  `sudo -A firewall-cmd --permanent --zone=FedoraWorkstation --add-rich-rule='rule
+  family="ipv4" source address="192.168.1.0/24" service name="samba" accept'`, then
+  `sudo -A firewall-cmd --reload`. After installing: `sudo -A systemd-sysusers`, then
+  `sudo -A smbpasswd -a oliver` and `sudo -A systemctl enable --now smb`. After a config change:
+  `testparm -s`, then `sudo -A systemctl reload smb`
 - `bluefin/etc/systemd/resolved.conf.d/10-cloudflare-dns.conf` → `/etc/systemd/resolved.conf.d/` <!-- host-ok -->
   (pavilion, Geoff 2026-11-10: "The home router is a lousey place for a DNS lookup."): every lookup
   goes to Cloudflare's resolvers over DNS-over-TLS, ahead of each link's DNS. The router's forwarder

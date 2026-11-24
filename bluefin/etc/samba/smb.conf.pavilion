@@ -1,0 +1,31 @@
+# Pavilion's Samba config: one read-write share of ~/Music for the household
+# network. It replaces Fedora's stock file, which shares home directories and
+# printers. Staged in ~/.dotfiles/bluefin/etc/samba/; see etc-drift.md.
+[global]
+	workgroup = WORKGROUP
+	server string = pavilion
+	security = user
+	passdb backend = tdbsam
+	map to guest = never
+	# Only the Warwick network and pavilion itself; Warwick-Devices and
+	# Warwick-Guest are refused here and at the firewall.
+	hosts allow = 192.168.1.0/24 127.0.0.1
+	server min protocol = SMB3
+	load printers = no
+	printing = bsd
+	printcap name = /dev/null
+	disable spoolss = yes
+
+# Oliver signs in as oliver, and his reads and writes act as glw907, so the
+# files stay glw907's and Navidrome keeps reading them. SELinux lets Samba
+# into ~/Music alone, through its samba_share_t label (etc-drift.md).
+[music]
+	comment = Music library
+	path = /var/home/glw907/Music
+	read only = no
+	browseable = yes
+	valid users = oliver
+	force user = glw907
+	force group = glw907
+	create mask = 0644
+	directory mask = 0755
