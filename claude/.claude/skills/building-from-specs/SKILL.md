@@ -234,13 +234,15 @@ when `claude-show-merge` passes every check (Ship/Show/Ask, Wilsenach,
 <https://www.martinfowler.com/articles/ship-show-ask.html>). The tick runs it ("Chains"). With no tick, Geoff's
 session runs it at the start of each sitting, before any other ask: it lists open pull requests with `gh search
 prs --owner glw907 --state open --json repository,number,body`, runs the script on each whose body holds a `From
-spec` line and whose task section reads `Tier: show`, then shows him `claude-show-merge --report` in plain words,
-each merge with its undo. A pull request that exits 1 is an ask. `claude-show-merge --ask-only <r>` prints the
+spec` line, whose task section reads `Tier: show`, and that has no `ask` row in the record ("Chains" step 4), then
+shows him `claude-show-merge --report` in plain words, each merge with its undo. On exit 0 it runs steps 4 and 5
+and the repo pass skill's "After a merge", on exit 0 only. A pull request that exits 1 is an ask, and one that
+exits 2 or 3 waits for the next sitting. `claude-show-merge --ask-only <r>` prints the
 repo's Ask-only globs.
 
 "Revert" from Geoff undoes a Show merge. His session branches from the default branch, runs `git revert -m 1
 <merge sha>`, runs the repo's gate, opens a pull request, and merges it with `--merge`, his word approving both.
-It then runs steps 4 and 5. A revert that conflicts becomes an ask.
+It then runs steps 4 and 5 and the repo pass skill's "After a merge". A revert that conflicts becomes an ask.
 
 ## Direct changes
 
