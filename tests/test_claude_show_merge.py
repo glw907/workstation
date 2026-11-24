@@ -582,7 +582,64 @@ def test_a_usage_error_exits_64(fx):
     assert fx.calls() == []
 
 
+def test_check_6_base_is_not_the_default_branch(fx):
+    fx.pr["baseRefName"] = "worktree-parent"
+    result = fx.run()
+    assert result.returncode == 1
+    assert "worktree-parent" in assert_only(result, "pull-request")
+
+
+def test_check_6_mergeable_unknown_waits(fx):
+    fx.pr["mergeable"] = "UNKNOWN"
+    result = fx.run()
+    assert result.returncode == 3
+    assert_only(result, "pull-request", "wait")
+    assert fx.rows() == []
+
+
+@pytest.mark.parametrize("old, new", [('"verdict": "accept"', '"verdict": "fix"'),
+                                      ('"unmet": 0', '"unmet": 2'),
+                                      ('"unmet": 0', '"unmet": false')])
+def test_check_8_review_score(fx, old, new):
+    fx.pr["body"] = fx.pr["body"].replace(old, new)
+    result = fx.run()
+    assert result.returncode == 1
+    assert_only(result, "review")
+
+
+def test_check_9_before_merge_heading(fx):
+    fx.pr["body"] = fx.body(extra="\n### Before merge\n\n```bash\nstow -R bin\n```\n")
+    result = fx.run()
+    assert result.returncode == 1
+    assert "Before merge" in assert_only(result, "body")
+
+
+def test_check_11_parent_not_merged(fx):
+    fx.pr["body"] = fx.body(first=f"Built on #3 at {PARENT_HEAD}.")
+    fx.state["prs"]["3"] = {"state": "OPEN", "headRefOid": PARENT_HEAD}
+    result = fx.run()
+    assert result.returncode == 1
+    assert "OPEN" in assert_only(result, "current")
+
+
+def test_check_11_unparsable_built_on_line_fails(fx):
+    fx.pr["body"] = fx.body(first=f"Built on #3 at {PARENT_HEAD.upper()}.")
+    result = fx.run()
+    assert result.returncode == 1
+    assert "Built on" in assert_only(result, "current")
+
+
+def test_json_of_the_wrong_shape_is_a_failed_read(fx):
+    fx.state["agents"] = {"name": "demo", "state": "done"}
+    result = fx.run()
+    assert result.returncode == 2
+    assert "not a list" in verdicts(result.stdout)["session"]
+
+
 @pytest.mark.skipif(sys.version_info < (3, 13), reason="PurePath.full_match needs Python 3.13")
-def test_globs_match_across_folders():
-    lines = ask_only("glw907/cairn-cms")
-    assert "**/preview/[[]token[]]/**" in lines
+def test_a_token_folder_glob_matches_the_literal_route():
+    from pathlib import PurePosixPath
+    assert "**/preview/[[]token[]]/**" in ask_only("glw907/cairn-cms")
+    path = PurePosixPath("src/routes/preview/[token]/+page.ts")
+    assert path.full_match("**/preview/[[]token[]]/**")
+    assert not PurePosixPath("src/routes/preview/t/+page.ts").full_match("**/preview/[[]token[]]/**")

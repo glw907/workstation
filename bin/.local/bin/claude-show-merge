@@ -137,12 +137,16 @@ def read(args: list[str], cwd: Path | None = None) -> str:
     return result.stdout
 
 
-def read_json(args: list[str]):
+def read_json(args: list[str], shape: type = dict):
+    """Return a command's JSON, raising ReadError unless it parses as a `shape`."""
     out = read(args)
     try:
-        return json.loads(out)
+        data = json.loads(out)
     except ValueError as error:
         raise ReadError(f"`{' '.join(args[:3])}` printed no JSON") from error
+    if not isinstance(data, shape):
+        raise ReadError(f"`{' '.join(args[:3])}` printed JSON that is not a {shape.__name__}")
+    return data
 
 
 def read_pages(args: list[str]) -> list:
@@ -348,9 +352,9 @@ class Run:
         return "pass", ""
 
     def check_session(self):
-        entries = read_json(["claude", "agents", "--json", "--all"])
+        entries = read_json(["claude", "agents", "--json", "--all"], list)
         named = [entry for entry in entries if isinstance(entry, dict)
-                 and entry.get("name") == self.task] if isinstance(entries, list) else []
+                 and entry.get("name") == self.task]
         if not named:
             return "wait", (f"`claude agents` has no entry named {self.task}; it may have run on "
                             "the other host")
@@ -458,7 +462,9 @@ class Run:
         first = next((line.strip() for line in (pr.get("body") or "").splitlines() if line.strip()),
                      "")
         built = BUILT_ON.fullmatch(first)
-        if built:
+        if first.startswith("Built on") and not built:
+            problems.append(f"the first line `{first}` reads as no `Built on #<n> at <sha>.` line")
+        elif built:
             parent, sha = built.groups()
             data = read_json(["gh", "pr", "view", parent, "--repo", self.repo, "--json",
                               "state,headRefOid"])

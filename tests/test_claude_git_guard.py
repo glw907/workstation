@@ -431,6 +431,8 @@ def test_absolute_directory_read_without_cwd(repos):
 
 
 SHOW_MERGE_RUNS = [
+    "nice -n 5 claude-show-merge glw907/workstation 271 --spec s.md --task t",
+    "bash -o pipefail -c 'claude-show-merge glw907/workstation 271 --spec s.md --task t'",
     "claude-show-merge glw907/x 7 --spec /x.md --task t",
     "bin/.local/bin/claude-show-merge glw907/x 7 --spec /x.md --task t",
     "python3 -I ~/.local/bin/claude-show-merge glw907/x 7 --spec /x.md --task t",

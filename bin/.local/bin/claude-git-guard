@@ -10,7 +10,7 @@ this hook, since Geoff's "Merge" answer in his terminal is the approval.
 In a task session it also denies any run of `claude-show-merge`, the script that merges a Show pull
 request, unless its arguments hold `--ask-only`, `--help`, `-h`, or `--dry-run`, none of which
 merges. It finds the script as the command word of any stage: after `cd ... &&`, after `env` (its
-`-u` and `-C` values included), `sudo`, or a variable assignment, as a path ending in
+`-u` and `-C` values included), `sudo`, `nice`, or a variable assignment, as a path ending in
 `/claude-show-merge`, after `python3` and its flags, or inside a `bash -c` or `sh -c` string. An
 inline `CLAUDE_TASK_SESSION=0` changes nothing, since the hook reads its own environment. The
 permissions page
@@ -66,7 +66,8 @@ PYTHON = re.compile(r"(\S*/)?python3?(\.\d+)?")
 SHELL = re.compile(r"(\S*/)?(?:ba|da|z|k)?sh")
 SHELL_C = re.compile(r"-[a-z]*c[a-z]*")
 SHOW_MERGE_READS = {"--ask-only", "--help", "-h", "--dry-run"}
-VALUE_FLAGS = {"-u", "--unset", "-C", "--chdir"}
+VALUE_FLAGS = {"-u", "--unset", "-C", "--chdir", "-n", "--adjustment"}
+SHELL_VALUE_FLAGS = {"-o", "+o", "-O", "+O"}
 REDIRECTION = re.compile(r"\d*(?:[<>]+|&>>?)&?(?P<target>\S*)")
 UNREADABLE = re.compile(r"[$`*?\[{]")
 MERGE_REASON = (
@@ -239,7 +240,8 @@ def command_words(read: list[str]) -> list[str]:
     while words:
         if words[0] in VALUE_FLAGS:
             del words[:2]
-        elif ASSIGNMENT.match(words[0]) or SKIPPED.fullmatch(words[0]) or words[0] in WRAPPERS:
+        elif (ASSIGNMENT.match(words[0]) or SKIPPED.fullmatch(words[0])
+              or words[0] in WRAPPERS or words[0] == "nice"):
             del words[:1]
         else:
             break
@@ -256,8 +258,8 @@ def show_merges(command: str, depth: int = 0) -> bool:
                 del words[: 2 if words[0] in ("-X", "-W") else 1]
         if words and SHELL.fullmatch(words[0]):
             flags = words[1:]
-            while flags and flags[0].startswith("-") and not SHELL_C.fullmatch(flags[0]):
-                del flags[:1]
+            while flags and flags[0][:1] in "-+" and not SHELL_C.fullmatch(flags[0]):
+                del flags[: 2 if flags[0] in SHELL_VALUE_FLAGS else 1]
             if len(flags) > 1 and SHELL_C.fullmatch(flags[0]) and depth < 3:
                 if show_merges(flags[1], depth + 1):
                     return True
