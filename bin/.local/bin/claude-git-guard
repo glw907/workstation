@@ -5,7 +5,15 @@ It denies a pull request merge in a task session: `gh pr merge`, `gh -R <repo> p
 `/usr/bin/gh pr merge`, and the REST merge call, `gh api -X PUT .../pulls/<n>/merge`. A task
 session's launch line sets `CLAUDE_TASK_SESSION=1` in its `--settings` `env`, and the hook reads it
 from its own environment. With the variable unset or any other value, a merge gets no decision from
-this hook, since Geoff's "Merge" answer in his terminal is the approval. The permissions page
+this hook, since Geoff's "Merge" answer in his terminal is the approval.
+
+In a task session it also denies any run of `claude-show-merge`, the script that merges a Show pull
+request, unless its arguments hold `--ask-only`, `--help`, `-h`, or `--dry-run`, none of which
+merges. It finds the script as the command word of any stage: after `cd ... &&`, after `env` (its
+`-u` and `-C` values included), `sudo`, `nice`, or a variable assignment, as a path ending in
+`/claude-show-merge`, after `python3` and its flags, or inside a `bash -c` or `sh -c` string. An
+inline `CLAUDE_TASK_SESSION=0` changes nothing, since the hook reads its own environment. The
+permissions page
 (https://code.claude.com/docs/en/permissions) says a permission rule "isn't a security boundary around
 the program" and names a PreToolUse hook for reading the whole command, which is this one.
 
@@ -43,7 +51,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-PREFILTER = re.compile(r"(?<![\w.-])(?:git|gh)(?![\w.-])")
+PREFILTER = re.compile(r"(?<![\w.-])(?:git|gh|claude-show-merge)(?![\w.-])")
 HEREDOC = re.compile(r"(?<!<)<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
 REDIRECT = re.compile(r"\d*[<>]&\d*")
 SEPARATORS = re.compile(r"[`()|&;\n]")
@@ -53,12 +61,24 @@ WRAPPERS = {"command", "env", "nohup", "exec", "time", "timeout", "sudo", "xargs
 SKIPPED = re.compile(r"-\S*|\d+[smhd]?|[A-Z]{3,}|\d*[<>]\S*")
 GH = re.compile(r"(\S*/)?gh")
 GIT = re.compile(r"(\S*/)?git")
+SHOW_MERGE = re.compile(r"(\S*/)?claude-show-merge")
+PYTHON = re.compile(r"(\S*/)?python3?(\.\d+)?")
+SHELL = re.compile(r"(\S*/)?(?:ba|da|z|k)?sh")
+SHELL_C = re.compile(r"-[a-z]*c[a-z]*")
+SHOW_MERGE_READS = {"--ask-only", "--help", "-h", "--dry-run"}
+VALUE_FLAGS = {"-u", "--unset", "-C", "--chdir", "-n", "--adjustment"}
+SHELL_VALUE_FLAGS = {"-o", "+o", "-O", "+O"}
 REDIRECTION = re.compile(r"\d*(?:[<>]+|&>>?)&?(?P<target>\S*)")
 UNREADABLE = re.compile(r"[$`*?\[{]")
 MERGE_REASON = (
     "Blocked: this is a task session (CLAUDE_TASK_SESSION=1), and a task session never merges. Only "
     "the session Geoff is talking to merges, after he approves the pull request in his terminal. "
     "Leave the pull request open and say so in the report."
+)
+SHOW_MERGE_REASON = (
+    "Blocked: this is a task session (CLAUDE_TASK_SESSION=1), and a task session never merges, "
+    "claude-show-merge included. Only the session Geoff is talking to runs a Show merge. A task "
+    "session may run claude-show-merge with --dry-run, --ask-only, or --help."
 )
 FORCE_REASON = (
     "Blocked: a forced push to main or master rewrites the branch every session builds on. Push "
@@ -212,6 +232,42 @@ def merges(live: list[str], read: list[str]) -> bool:
             method = word[2:]
     paths = [word for word in rest if re.search(r"(?:^|/)pulls/[^/\s]+/merge/?$", word)]
     return method.upper() == "PUT" and bool(paths)
+
+
+def command_words(read: list[str]) -> list[str]:
+    """Drop a stage's leading assignments, wrappers, and their flags, `env -u NAME` included."""
+    words = list(read)
+    while words:
+        if words[0] in VALUE_FLAGS:
+            del words[:2]
+        elif (ASSIGNMENT.match(words[0]) or SKIPPED.fullmatch(words[0])
+              or words[0] in WRAPPERS or words[0] == "nice"):
+            del words[:1]
+        else:
+            break
+    return words
+
+
+def show_merges(command: str, depth: int = 0) -> bool:
+    """Return whether a command runs claude-show-merge in a form that can merge."""
+    for _, read in stages(command):
+        words = command_words(read)
+        if words and PYTHON.fullmatch(words[0]):
+            words = words[1:]
+            while words and words[0].startswith("-") and words[0] not in ("-c", "-m"):
+                del words[: 2 if words[0] in ("-X", "-W") else 1]
+        if words and SHELL.fullmatch(words[0]):
+            flags = words[1:]
+            while flags and flags[0][:1] in "-+" and not SHELL_C.fullmatch(flags[0]):
+                del flags[: 2 if flags[0] in SHELL_VALUE_FLAGS else 1]
+            if len(flags) > 1 and SHELL_C.fullmatch(flags[0]) and depth < 3:
+                if show_merges(flags[1], depth + 1):
+                    return True
+            continue
+        if words and SHOW_MERGE.fullmatch(words[0]) and not any(
+                word in SHOW_MERGE_READS or word.startswith("--ask-only=") for word in words[1:]):
+            return True
+    return False
 
 
 def git_env(assigned: dict[str, str]) -> dict[str, str]:
@@ -407,6 +463,8 @@ def decision(command: str, cwd: Path | None) -> tuple[str, str] | None:
     """Return the hook's decision on a command and its reason, or None to let it run."""
     merging = os.environ.get("CLAUDE_TASK_SESSION") == "1" and any(
         merges(live, read) for live, read in stages(command))
+    if os.environ.get("CLAUDE_TASK_SESSION") == "1" and show_merges(command):
+        return "deny", SHOW_MERGE_REASON
     for _, _, git in git_stages(command, cwd):
         if git.subcommand == "push" and forced_push_to_main(git):
             return "deny", FORCE_REASON

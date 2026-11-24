@@ -1,0 +1,632 @@
+#!/usr/bin/env -S python3 -I
+"""Merge a Show pull request once every check of the merge-tiers spec passes.
+
+The spec is ~/Projects/initiatives/claude-config-alignment/specs/2026-11-23-merge-tiers-design.md,
+"How the tiers work". `claude-show-merge <owner/repo> <number> --spec <path> --task <name>` runs
+all eleven checks, even after one fails, and prints one line for each: `pass <check>`,
+`fail <check>: <reason>`, or `wait <check>: <reason>`. A read that failed prints as
+`fail <check>: read failed: <reason>`. When every check passes it runs
+`gh pr merge <n> --repo <r> --merge --match-head-commit <sha>` with the head sha the pull request
+check read, so a push after the checks stops the merge.
+
+Exit 0 means merged, or every check passed under --dry-run. Exit 1 means a check failed and the pull
+request is an ask. Exit 2 means a read failed or the head moved at the merge; a second exit 2 for one
+pull request becomes exit 1. Exit 3 means a check waits. When results differ, the first of 1, 2, 3
+sets the exit. A usage error exits 64, outside that table, so a caller never retries it as a read.
+
+Each run that isn't --dry-run and doesn't exit 3 appends one JSON row to
+$XDG_STATE_HOME/claude-show-merge.jsonl (default ~/.local/state). `--report` prints each merged and
+ask row written since the last report, then stores its start time in claude-show-merge.reported.
+`--ask-only <owner/repo>` prints the repo's Ask-only globs, one per line, and exits 1 for a repo with
+no list. The script runs `gh`, `claude`, and `git` from PATH.
+"""
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from datetime import UTC, datetime
+from pathlib import Path, PurePosixPath
+
+USAGE_EXIT = 64
+FILES_CAP = 3000
+COMPARE_CAP = 300
+
+# The repo's hook scripts, the ones claude/.claude/settings.json runs.
+WORKSTATION_HOOKS = (
+    "claude-awake-touch", "claude-block-pass", "claude-context-budget", "claude-denied-log",
+    "claude-git-guard", "claude-memory-write-check", "claude-notify", "claude-secret-guard",
+    "claude-tail-guard", "claude-tierguard",
+)
+# The secrets scripts dotfiles-pass "Paths" lists.
+WORKSTATION_SECRETS = (
+    "claude-block-pass", "claude-pass", "ws-pass-key", "pass-count", "pass-access", "pass-sitting",
+    "check-drift", "claude-secret-guard", "claude-tierguard", "claude-askpass", "claude-sudo-setup",
+    "claude-sudo-clear", "secret-receive",
+)
+WORKSTATION_GATE = ("claude-show-merge", "cairn-run-gate", "ci-green", "ci-green-lib.mjs")
+WORKSTATION = [
+    "claude/.claude/settings.json", "claude/.claude/CLAUDE.md", "claude/.claude/rules/**",
+    "claude/.claude/tooling/**", "claude/.claude/skills/building-from-specs/**",
+    "claude/.claude/skills/cairn-pass/**", "claude/.claude/skills/site-pass/**",
+    ".claude/skills/dotfiles-pass/**", ".github/**", "scripts/**", "secrets/**", "bash/.bashrc",
+    "bluefin/**",
+    *dict.fromkeys(f"bin/.local/bin/{name}"
+                   for name in WORKSTATION_HOOKS + WORKSTATION_SECRETS + WORKSTATION_GATE),
+]
+SESSION_FILES = [".claude/**", "CLAUDE.md", "**/CLAUDE.md"]
+# cairn-build "Risk classes" in cairn-cms, auth-data then runner, braces written out. `[token]` is
+# escaped because a glob reads brackets as a character class.
+CAIRN_CMS = [
+    "src/lib/auth/**", "src/lib/auth-crypto/**", "src/lib/github/**",
+    "src/lib/sveltekit/csrf*.ts", "src/lib/sveltekit/auth-*.ts", "src/lib/sveltekit/commit-log.ts",
+    "src/lib/sveltekit/guard.ts", "src/lib/sveltekit/preview.ts", "src/lib/admin/csrf-context.ts",
+    "src/lib/admin/CsrfField.svelte", "migrations*/**", "examples/showcase/migrations*/**",
+    "templates/*/migrations*/**", "**/hooks.server.ts", "**/preview/[[]token[]]/**",
+    "**/admin/signups/**", "wrangler.*",
+    "scripts/checks/**", "scripts/gate/**", "scripts/release/**", ".github/workflows/**",
+    ".github/ci-green.json",
+]
+# site-pass "Risk-class path map": the globs it names for every site, then each site's additions.
+SITE_EVERY = ["src/hooks.server.ts", "src/routes/admin/**", "wrangler.*", ".github/workflows/**",
+              "scripts/**"]
+SITE_ADDS = {
+    "ecxc-ski": [],
+    "907-life-legacy": [],
+    "aksailingclub-org": ["src/member-auth/**", "src/member-signup/**", "src/admin-club/**",
+                          "migrations/**", "data/membershipworks/**"],
+    "cairn-pub": ["migrations/**"],
+}
+ASK_ONLY = {
+    "glw907/workstation": WORKSTATION,
+    "glw907/cairn-cms": CAIRN_CMS + SESSION_FILES,
+    **{f"glw907/{site}": SITE_EVERY + adds + SESSION_FILES for site, adds in SITE_ADDS.items()},
+    "glw907/cc-desk-scratch": [".github/**", "scripts/**", ".claude/**", "CLAUDE.md"],
+}
+NO_CI_PASSES = {"glw907/workstation"}
+FENCE = re.compile(r"\s*(```|~~~)")
+HEADING = re.compile(r"(#{1,6})\s")
+TASK_SCORE = re.compile(r"<!--\s*task-score\s*(\{.*?\})\s*-->", re.DOTALL)
+BUILT_ON = re.compile(r"Built on #(\d+) at ([0-9a-f]{7,40})\.?")
+BACKTICKED = re.compile(r"`([^`]+)`")
+
+
+class ReadError(Exception):
+    """A `gh`, `claude`, or `git` read that failed, which exits 2 rather than 1."""
+
+
+def state_dir() -> Path:
+    return Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/state")
+
+
+def record_path() -> Path:
+    return state_dir() / "claude-show-merge.jsonl"
+
+
+def marker_path() -> Path:
+    return state_dir() / "claude-show-merge.reported"
+
+
+def now() -> str:
+    return datetime.now(UTC).isoformat(timespec="microseconds")
+
+
+def command(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
+    """Run one command, turning a missing program or a hang into a ReadError."""
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    try:
+        return subprocess.run(args, capture_output=True, text=True, stdin=subprocess.DEVNULL,
+                              timeout=120, cwd=cwd, env=env, check=False)
+    except (OSError, subprocess.SubprocessError) as error:
+        raise ReadError(f"{args[0]} {args[1] if len(args) > 1 else ''}: {error}") from error
+
+
+def last_line(text: str) -> str:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    return lines[-1] if lines else "no output"
+
+
+def read(args: list[str], cwd: Path | None = None) -> str:
+    """Return a command's stdout, raising ReadError on a nonzero exit."""
+    result = command(args, cwd)
+    if result.returncode != 0:
+        raise ReadError(f"`{' '.join(args[:3])}` exited {result.returncode}: "
+                        f"{last_line(result.stderr or result.stdout)}")
+    return result.stdout
+
+
+def read_json(args: list[str], shape: type = dict):
+    """Return a command's JSON, raising ReadError unless it parses as a `shape`."""
+    out = read(args)
+    try:
+        data = json.loads(out)
+    except ValueError as error:
+        raise ReadError(f"`{' '.join(args[:3])}` printed no JSON") from error
+    if not isinstance(data, shape):
+        raise ReadError(f"`{' '.join(args[:3])}` printed JSON that is not a {shape.__name__}")
+    return data
+
+
+def read_pages(args: list[str]) -> list:
+    """Return the items of a `gh api --paginate` read, which prints one JSON array per page."""
+    out, items, index = read(args), [], 0
+    decoder = json.JSONDecoder()
+    while index < len(out):
+        if out[index].isspace():
+            index += 1
+            continue
+        try:
+            page, index = decoder.raw_decode(out, index)
+        except ValueError as error:
+            raise ReadError(f"`{' '.join(args[:3])}` printed no JSON") from error
+        if not isinstance(page, list):
+            raise ReadError(f"`{' '.join(args[:3])}` printed a page that is not a list")
+        items.extend(page)
+    return items
+
+
+def matches(path: str, globs: list[str]) -> bool:
+    return any(PurePosixPath(path).full_match(glob) for glob in globs)
+
+
+def record_rows() -> list[dict]:
+    """Return the record's rows, skipping a line that isn't a JSON object."""
+    try:
+        text = record_path().read_text()
+    except FileNotFoundError:
+        return []
+    rows = []
+    for line in text.splitlines():
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(row, dict):
+            rows.append(row)
+    return rows
+
+
+def append_row(row: dict) -> None:
+    path = record_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a") as handle:
+        handle.write(json.dumps(row) + "\n")
+
+
+def task_section(text: str, task: str) -> dict:
+    """Read a spec's Status line and the task's Tier and Files lines.
+
+    The section runs from the heading above the `Name: <task>` line to the next heading of the
+    same or higher level. Lines inside a fenced block count for nothing. The result holds
+    `problems`, a list that is empty when the section reads as one Show task.
+    """
+    lines = text.splitlines()
+    live, fenced = [], False
+    for index, line in enumerate(lines):
+        if FENCE.match(line):
+            fenced = not fenced
+        elif not fenced:
+            live.append((index, line))
+    status = next((line.strip() for _, line in live if line.startswith("Status:")), "")
+    headings = [(index, len(found.group(1))) for index, line in live
+                if (found := HEADING.match(line))]
+    names = [index for index, line in live if line.strip() == f"Name: {task}"]
+    found = {"status": status, "tier": "", "files": "", "globs": [], "problems": []}
+    if not status.startswith("Status: approved"):
+        found["problems"].append(f"its Status line reads `{status or 'nothing'}`, not approved")
+    if not names:
+        found["problems"].append(f"no section holds `Name: {task}`")
+        return found
+    if len(names) > 1:
+        found["problems"].append(f"{len(names)} lines read `Name: {task}`")
+        return found
+    above = [heading for heading in headings if heading[0] < names[0]]
+    start, level = above[-1] if above else (0, 0)
+    end = next((index for index, depth in headings if index > start and depth <= level), len(lines))
+    section = [line.strip() for index, line in live if start <= index < end]
+    tiers = [line for line in section if line.startswith("Tier:")]
+    files = [line for line in section if line.startswith("Files:")]
+    if len(tiers) != 1 or tiers[0] != "Tier: show":
+        found["problems"].append(f"the `Name: {task}` section reads "
+                                 f"{', '.join(f'`{tier}`' for tier in tiers) or 'no Tier line'}, "
+                                 "not `Tier: show`")
+    if len(files) != 1 or not BACKTICKED.findall(files[0]):
+        found["problems"].append(f"the `Name: {task}` section holds {len(files)} Files lines, "
+                                 "and a Show task needs one with a backticked glob")
+    found["tier"] = tiers[0] if len(tiers) == 1 else ""
+    if len(files) == 1:
+        found["files"] = files[0]
+        found["globs"] = BACKTICKED.findall(files[0])
+    return found
+
+
+class Run:
+    """One pull request's checks, holding the reads the later checks share."""
+
+    def __init__(self, repo: str, number: int, spec: str, task: str, dry_run: bool):
+        self.repo, self.number, self.spec, self.task = repo, number, spec, task
+        self.dry_run = dry_run
+        self.section: dict | None = None
+        self._pr: dict | ReadError | None = None
+        self._default: str | ReadError | None = None
+        self._files: list[str] | ReadError | None = None
+
+    def pr(self) -> dict:
+        if self._pr is None:
+            try:
+                self._pr = read_json(["gh", "pr", "view", str(self.number), "--repo", self.repo,
+                                      "--json", "state,isDraft,mergeable,baseRefName,headRefOid,"
+                                      "body,createdAt"])
+            except ReadError as error:
+                self._pr = error
+        if isinstance(self._pr, ReadError):
+            raise self._pr
+        return self._pr
+
+    def default_branch(self) -> str:
+        if self._default is None:
+            try:
+                data = read_json(["gh", "repo", "view", self.repo, "--json", "defaultBranchRef"])
+                self._default = data["defaultBranchRef"]["name"]
+            except ReadError as error:
+                self._default = error
+            except (KeyError, TypeError):
+                self._default = ReadError("`gh repo view` gave no defaultBranchRef")
+        if isinstance(self._default, ReadError):
+            raise self._default
+        return self._default
+
+    def files(self) -> list[dict]:
+        if self._files is None:
+            try:
+                self._files = read_pages(["gh", "api",
+                                          f"repos/{self.repo}/pulls/{self.number}/files",
+                                          "--paginate"])
+            except ReadError as error:
+                self._files = error
+        if isinstance(self._files, ReadError):
+            raise self._files
+        return self._files
+
+    def paths(self) -> list[str]:
+        """Return every path the pull request touches, renamed-from paths included."""
+        found = []
+        for entry in self.files():
+            for key in ("filename", "previous_filename"):
+                if isinstance(entry, dict) and entry.get(key):
+                    found.append(entry[key])
+        return list(dict.fromkeys(found))
+
+    def check_task_session(self):
+        if os.environ.get("CLAUDE_TASK_SESSION") == "1":
+            return "fail", "CLAUDE_TASK_SESSION is 1, and a task session never merges"
+        return "pass", ""
+
+    def check_repo(self):
+        if self.repo not in ASK_ONLY:
+            return "fail", f"{self.repo} has no Ask-only list, so its tasks stay Ask"
+        return "pass", ""
+
+    def check_earlier_result(self):
+        for row in record_rows():
+            if (row.get("repo"), row.get("number"), row.get("result")) == (self.repo, self.number,
+                                                                           "ask"):
+                return "fail", f"the record holds an ask row from {row.get('time')}"
+        return "pass", ""
+
+    def check_spec(self):
+        path = Path(self.spec).expanduser()
+        if not path.is_file():
+            return "fail", f"{path} is not a file"
+        # Parsed before the repo checks, so the files check has the globs even when this one fails.
+        self.section = task_section(path.read_text(), self.task)
+        top = command(["git", "-C", str(path.parent), "rev-parse", "--show-toplevel"])
+        if top.returncode != 0:
+            return "fail", f"{path} is not in a git repo"
+        root = Path(top.stdout.strip())
+        relative = path.resolve().relative_to(root.resolve()).as_posix()
+        if command(["git", "-C", str(root), "ls-files", "--error-unmatch", "--",
+                    relative]).returncode != 0:
+            return "fail", f"{path} is not tracked in {root}"
+        if read(["git", "-C", str(root), "status", "--porcelain", "--", relative]).strip():
+            return "fail", f"{path} has an uncommitted change"
+        problems = list(self.section["problems"])
+        if problems:
+            return "fail", "; ".join(problems)
+        created = self.pr().get("createdAt", "")
+        sha = read(["git", "-C", str(root), "rev-list", "-1", f"--before={created}", "HEAD", "--",
+                    relative]).strip()
+        if not sha:
+            return "fail", f"no commit of the spec comes at or before the pull request's {created}"
+        then = task_section(read(["git", "-C", str(root), "show", f"{sha}:{relative}"]), self.task)
+        differ = [label for label, same in (
+            ("Status", then["status"].startswith("Status: approved")),
+            ("Tier", then["tier"] == self.section["tier"]),
+            ("Files", then["files"] == self.section["files"])) if not same]
+        if differ:
+            return "fail", (f"the spec as committed at {sha[:12]}, before the pull request opened at "
+                            f"{created}, differs in its {', '.join(differ)} line, and a change "
+                            "after the task started counts for nothing")
+        return "pass", ""
+
+    def check_session(self):
+        entries = read_json(["claude", "agents", "--json", "--all"], list)
+        named = [entry for entry in entries if isinstance(entry, dict)
+                 and entry.get("name") == self.task]
+        if not named:
+            return "wait", (f"`claude agents` has no entry named {self.task}; it may have run on "
+                            "the other host")
+        state = max(named, key=lambda entry: entry.get("startedAt") or 0).get("state")
+        if state == "done":
+            return "pass", ""
+        if state == "working":
+            return "wait", f"the {self.task} session is still working"
+        return "fail", f"the newest {self.task} session reads {state}"
+
+    def check_pull_request(self):
+        pr, default = self.pr(), self.default_branch()
+        problems = []
+        if pr.get("state") != "OPEN":
+            problems.append(f"state is {pr.get('state')}")
+        if pr.get("isDraft") is not False:
+            problems.append("it is a draft")
+        if pr.get("baseRefName") != default:
+            problems.append(f"its base is {pr.get('baseRefName')}, not {default}")
+        if pr.get("mergeable") not in ("MERGEABLE", "UNKNOWN"):
+            problems.append(f"mergeable is {pr.get('mergeable')}")
+        if problems:
+            return "fail", "; ".join(problems)
+        if pr.get("mergeable") == "UNKNOWN":
+            return "wait", "GitHub is still computing whether it merges cleanly"
+        return "pass", ""
+
+    def check_ci(self):
+        result = command(["gh", "pr", "checks", str(self.number), "--repo", self.repo])
+        if result.returncode == 0:
+            return "pass", ""
+        if result.returncode == 8:
+            return "wait", "checks are still running"
+        if "no checks reported" in result.stdout + result.stderr:
+            if self.repo in NO_CI_PASSES:
+                return "pass", ""
+            return "fail", f"no checks reported, and {self.repo} needs green PR CI for Show"
+        rows = [line.split("\t") for line in result.stdout.splitlines() if "\t" in line]
+        if result.returncode == 1 and rows:
+            failing = [row[0] for row in rows if len(row) > 1 and row[1] not in ("pass", "skipping")]
+            return "fail", f"checks not passing: {', '.join(failing) or 'see gh pr checks'}"
+        raise ReadError(f"`gh pr checks` exited {result.returncode}: "
+                        f"{last_line(result.stderr or result.stdout)}")
+
+    def check_review(self):
+        found = TASK_SCORE.search(self.pr().get("body") or "")
+        if not found:
+            return "fail", "the body has no task-score comment"
+        try:
+            score = json.loads(found.group(1))
+        except ValueError:
+            return "fail", "the task-score comment is not JSON"
+        if not isinstance(score, dict):
+            return "fail", "the task-score comment is not a JSON object"
+        problems = [f"{key} is {json.dumps(score.get(key))}"
+                    for key, want in (("verdict", "accept"), ("openFindings", 0), ("unmet", 0))
+                    if score.get(key) != want or isinstance(score.get(key), bool)]
+        return ("fail", "task-score " + "; ".join(problems)) if problems else ("pass", "")
+
+    def check_body(self):
+        lines = [line.strip() for line in (self.pr().get("body") or "").splitlines()]
+        problems = [f"it holds a `## {name}` heading" for name in ("Before merge", "For Geoff")
+                    if any(re.fullmatch(rf"#+\s*{name}\s*#*", line) for line in lines)]
+        line = f"From spec {self.spec}, task {self.task}."
+        if line not in lines:
+            problems.append(f"it lacks the line `{line}`")
+        return ("fail", "; ".join(problems)) if problems else ("pass", "")
+
+    def check_files(self):
+        entries = self.files()
+        if len(entries) >= FILES_CAP:
+            return "fail", f"the files list holds {len(entries)} entries, the API's most"
+        globs = self.section["globs"] if self.section else []
+        ask_only = ASK_ONLY.get(self.repo, [])
+        paths = self.paths()
+        problems = []
+        if not globs:
+            problems.append("the spec's task section gives no Files globs to match")
+        else:
+            outside = [path for path in paths if not matches(path, globs)]
+            if outside:
+                problems.append(f"outside the Files globs: {', '.join(outside)}")
+        reserved = [path for path in paths if matches(path, ask_only)]
+        if reserved:
+            problems.append(f"Ask-only: {', '.join(reserved)}")
+        return ("fail", "; ".join(problems)) if problems else ("pass", "")
+
+    def check_current(self):
+        pr, default = self.pr(), self.default_branch()
+        compare = read_json(["gh", "api",
+                             f"repos/{self.repo}/compare/{pr.get('headRefOid')}...{default}"])
+        changed = compare.get("files") if isinstance(compare, dict) else None
+        if not isinstance(changed, list):
+            raise ReadError("the compare read gave no files list")
+        problems = []
+        if len(changed) >= COMPARE_CAP:
+            problems.append(f"{default} changed {len(changed)} files since the merge base, the "
+                            "compare API's most")
+        else:
+            moved = {entry.get(key) for entry in changed if isinstance(entry, dict)
+                     for key in ("filename", "previous_filename") if entry.get(key)}
+            overlap = [path for path in self.paths() if path in moved]
+            if overlap:
+                problems.append(f"{default} also changed {', '.join(overlap)} since the merge base")
+        first = next((line.strip() for line in (pr.get("body") or "").splitlines() if line.strip()),
+                     "")
+        built = BUILT_ON.fullmatch(first)
+        if first.startswith("Built on") and not built:
+            problems.append(f"the first line `{first}` reads as no `Built on #<n> at <sha>.` line")
+        elif built:
+            parent, sha = built.groups()
+            data = read_json(["gh", "pr", "view", parent, "--repo", self.repo, "--json",
+                              "state,headRefOid"])
+            head = data.get("headRefOid") or ""
+            if data.get("state") != "MERGED":
+                problems.append(f"parent #{parent} reads {data.get('state')}, not MERGED")
+            elif not head.startswith(sha):
+                problems.append(f"parent #{parent} merged at {head[:12]}, not {sha}")
+        return ("fail", "; ".join(problems)) if problems else ("pass", "")
+
+    def checks(self) -> list[tuple[str, str, str]]:
+        """Run every check in the spec's order and return (kind, check, reason) for each."""
+        results = []
+        for name in ("task-session", "repo", "earlier-result", "spec", "session", "pull-request",
+                     "ci", "review", "body", "files", "current"):
+            try:
+                kind, reason = getattr(self, "check_" + name.replace("-", "_"))()
+            except ReadError as error:
+                kind, reason = "error", str(error)
+            results.append((kind, name, reason))
+        return results
+
+
+def line(kind: str, name: str, reason: str) -> str:
+    if kind == "pass":
+        return f"pass {name}"
+    if kind == "error":
+        return f"fail {name}: read failed: {reason}"
+    return f"{kind} {name}: {reason}"
+
+
+def comment(repo: str, number: int, body: str) -> None:
+    result = command(["gh", "pr", "comment", str(number), "--repo", repo, "--body", body])
+    if result.returncode != 0:
+        print(f"note: the pull request comment failed: {last_line(result.stderr)}", file=sys.stderr)
+
+
+def merge(run: Run) -> int:
+    """Run the checks, merge when all pass, record the result, and return the exit code."""
+    results = run.checks()
+    for result in results:
+        print(line(*result))
+    kinds = {kind for kind, _, _ in results}
+    code = 1 if "fail" in kinds else 2 if "error" in kinds else 3 if "wait" in kinds else 0
+    if run.dry_run or code == 3:
+        return code
+    merged = ""
+    if code == 0:
+        head = run.pr()["headRefOid"]
+        attempt = command(["gh", "pr", "merge", str(run.number), "--repo", run.repo, "--merge",
+                           "--match-head-commit", head])
+        if attempt.returncode != 0:
+            code = 2
+            result = ("error", "merge", f"`gh pr merge` exited {attempt.returncode}: "
+                      f"{last_line(attempt.stderr or attempt.stdout)}")
+            results.append(result)
+            print(line(*result))
+        else:
+            try:
+                data = read_json(["gh", "pr", "view", str(run.number), "--repo", run.repo,
+                                  "--json", "mergeCommit"])
+                merged = (data.get("mergeCommit") or {}).get("oid") or ""
+            except ReadError as error:
+                print(f"note: merged, but the merge commit read failed: {error}", file=sys.stderr)
+    if code == 2 and any((row.get("repo"), row.get("number"), row.get("result"))
+                         == (run.repo, run.number, "retry") for row in record_rows()):
+        code = 1
+        print(f"ask: a second read failure for {run.repo}#{run.number} makes it an ask")
+    result = {0: "merged", 1: "ask", 2: "retry"}[code]
+    append_row({
+        "time": now(), "repo": run.repo, "number": run.number, "spec": run.spec, "task": run.task,
+        "result": result,
+        "failed": [{"check": name, "reason": line(kind, name, reason).split(": ", 1)[1]}
+                   for kind, name, reason in results if kind != "pass"],
+        "mergeCommit": merged or None,
+    })
+    if result == "merged":
+        sha = merged or "<merge sha>"
+        lines = [f"merged {run.repo}#{run.number} {sha}", f"undo: git revert -m 1 {sha}"]
+        print("\n".join(lines))
+        comment(run.repo, run.number, "\n".join(lines))
+    elif result == "ask":
+        lines = [line(*found) for found in results if found[0] != "pass"]
+        comment(run.repo, run.number, "claude-show-merge: this pull request waits for Geoff.\n\n"
+                + "\n".join(lines))
+    return code
+
+
+def report() -> int:
+    """Print the merged and ask rows written since the last report, then move the marker."""
+    started = now()
+    try:
+        since = datetime.fromisoformat(marker_path().read_text().strip())
+    except (FileNotFoundError, ValueError):
+        since = None
+    for row in record_rows():
+        try:
+            when = datetime.fromisoformat(row.get("time", ""))
+        except (TypeError, ValueError):
+            continue
+        if since is not None and when <= since:
+            continue
+        where = f"{row.get('repo')}#{row.get('number')}, task {row.get('task')}"
+        if row.get("result") == "merged":
+            sha = row.get("mergeCommit") or "<merge sha>"
+            print(f"Merged {where}, as {sha} with no word from Geoff. "
+                  f"Undo: git revert -m 1 {sha}")
+        elif row.get("result") == "ask":
+            reasons = "; ".join(f"{item.get('check')}: {item.get('reason')}"
+                                for item in row.get("failed") or [])
+            print(f"Ask: {where} waits for Geoff. {reasons}")
+    marker_path().parent.mkdir(parents=True, exist_ok=True)
+    marker_path().write_text(started + "\n")
+    return 0
+
+
+class UsageParser(argparse.ArgumentParser):
+    """An argument parser whose usage error exits 64, since exit 2 means a failed read here."""
+
+    def error(self, message: str):
+        self.print_usage(sys.stderr)
+        print(f"{self.prog}: error: {message}", file=sys.stderr)
+        sys.exit(USAGE_EXIT)
+
+
+def parser() -> UsageParser:
+    built = UsageParser(
+        prog="claude-show-merge", allow_abbrev=False,
+        description="Merge a Show pull request when every check of the merge-tiers spec passes.",
+        epilog="Exit 0 merged (or all passed under --dry-run), 1 a check failed (an ask), 2 a read "
+               "failed (retried once), 3 a check waits, 64 a usage error.")
+    built.add_argument("repo", nargs="?", help="the repo as owner/name")
+    built.add_argument("number", nargs="?", type=int, help="the pull request number")
+    built.add_argument("--spec", help="the approved spec's path, as the body's From spec line has it")
+    built.add_argument("--task", help="the task's Name: in that spec")
+    built.add_argument("--dry-run", action="store_true",
+                       help="run every check, merge nothing, and write no record")
+    built.add_argument("--report", action="store_true",
+                       help="print the merged and ask rows since the last report")
+    built.add_argument("--ask-only", metavar="REPO",
+                       help="print the repo's Ask-only globs, one per line; exit 1 with no list")
+    return built
+
+
+def main(argv: list[str]) -> int:
+    built = parser()
+    args = built.parse_args(argv)
+    if args.ask_only is not None:
+        if args.ask_only not in ASK_ONLY:
+            print(f"{args.ask_only} has no Ask-only list, so its tasks stay Ask", file=sys.stderr)
+            return 1
+        print("\n".join(ASK_ONLY[args.ask_only]))
+        return 0
+    if args.report:
+        return report()
+    if not (args.repo and args.number and args.spec and args.task):
+        built.error("give <owner/repo> <number> --spec <path> --task <name>, --report, or "
+                    "--ask-only <owner/repo>")
+    if not re.fullmatch(r"[\w.-]+/[\w.-]+", args.repo):
+        built.error(f"{args.repo} is not owner/name")
+    return merge(Run(args.repo, args.number, args.spec, args.task, args.dry_run))
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
