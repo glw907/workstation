@@ -16,7 +16,7 @@
 	printcap name = /dev/null
 	disable spoolss = yes
 
-# Oliver signs in as oliver, and his reads and writes act as glw907, so the
+# Oliver signs in as oliver and Geoff as glw907. Every read and write acts as glw907, so the
 # files stay glw907's and Navidrome keeps reading them. SELinux lets Samba
 # into ~/Music alone, through its samba_share_t label (etc-drift.md).
 [music]
@@ -24,7 +24,7 @@
 	path = /var/home/glw907/Music
 	read only = no
 	browseable = yes
-	valid users = oliver
+	valid users = oliver glw907
 	force user = glw907
 	force group = glw907
 	create mask = 0644
