@@ -412,8 +412,9 @@ def test_expansion_elsewhere_still_refused(command, repos):
 
 
 def test_merge_inside_substitution_is_denied_in_a_task_session(tmp_path):
-    assert denied_in_task_session('echo "$(gh pr merge 7)"', tmp_path)
-    assert denied_in_task_session("x=$(gh pr merge 7)", tmp_path)
+    for command in ('echo "$(gh pr merge 7)"', "x=$(gh pr merge 7)"):
+        assert denied_in_task_session(command, tmp_path)
+        assert run_in(command, tmp_path) is None
 
 
 def test_absolute_directory_read_without_cwd(repos):
