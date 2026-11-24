@@ -11,7 +11,7 @@ run it.
 
 Work larger than a one-sentence change follows the `building-from-specs` skill. Geoff approves a spec, a fresh
 session builds each task under `/goal`, a fresh subagent reviews the result against the spec, and the work ends in a
-pull request. Only the session Geoff is talking to merges, and only after he approves the pull request by number.
+pull request. Only the session Geoff is talking to merges, and only after he approves the pull request in his terminal.
 Questions and reports reach him in his terminal. `cairn-pass`, `site-pass`, and `dotfiles-pass` hold each repo's
 gate and checklists. A project file that names `pass-core`, a pass, or a plan means this skill, a task, and a spec.
 
