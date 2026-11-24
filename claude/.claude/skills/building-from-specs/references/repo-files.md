@@ -41,4 +41,4 @@ A repo in another language takes its ecosystem's equivalents, named in that repo
 
 dubplate carries the pattern: its `CLAUDE.md`, its records in `docs/decisions/`, the four checks in
 `.golangci.yml` and `scripts/check.sh`, and the gate legs that hold `CLAUDE.md` to 200 lines and every record to
-a valid status. Its 12 excluded complex functions are named one rule each, and they carry no ceiling yet.
+a valid status.

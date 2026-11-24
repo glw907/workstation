@@ -61,7 +61,8 @@ no longer `working`. Its exit wakes the launching session, which reads the pull 
 
 ```bash
 until claude agents --json | jq -e --arg n <task-name> \
-  '[.[] | select(.name == $n)] | max_by(.startedAt) | .state != "working"' >/dev/null; do sleep 60; done
+  '[.[] | select(.name == $n)] | length > 0 and (max_by(.startedAt).state != "working")' >/dev/null
+do sleep 60; done
 ```
 
 ## A session at work
@@ -177,10 +178,9 @@ The repo's gate passes before the pull request is marked ready, and CI carries t
 with a red check is never ready. If the goal needs green CI, the session waits on CI before it writes its report.
 
 Before the review dispatch, the session runs the built-in `simplify` skill on the commit range the review reads:
-`<parent-sha>..HEAD` for a task built on another, else the branch against the default branch. The prompt names
-the range, as in `/simplify the committed changes on this branch against main, then commit your fixes`, and
-`simplify` commits its fixes in their own commit
-(<https://code.claude.com/docs/en/commands>).
+`<parent-sha>..HEAD` for a task built on another, else the branch against the default branch, as in
+`/simplify the committed changes on this branch against main, then commit your fixes`. `simplify` commits its
+fixes in their own commit (<https://code.claude.com/docs/en/commands>).
 
 Before the pull request is marked ready, the task session dispatches a fresh subagent to review the whole branch
 against the task's goal. The brief gives the spec's path, the task's name, and the branch's commit range, and
