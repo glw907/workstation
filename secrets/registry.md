@@ -193,7 +193,6 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | PHONEBOOK_ACCESS_CLIENT_ID | ✓ | — | — |
 | PHONEBOOK_ACCESS_CLIENT_SECRET | ✓ | — | — |
 | IMMICH_PIKAPODS_API_KEY | ✓ | — | — |
-| TPLINK_ROUTER_PASSWORD | ✓ | — | — |
 | ROUTER_ADMIN_PASSWORD | ✓ | — | — |
 | ROUTER_SSH_KEY_B64 | ✓ | — | — |
 | ROUTER_WIFI_WARWICK | ✓ | — | — |
@@ -880,23 +879,6 @@ tmpfs cache; no password manager holds it for scripts.
 - **Minted 2026-11-14** through the API, values unseen. A new theme's demo Worker needs its script
   added to `ci-cairn-demos`, which takes a temporary token.
 - **Rotation**: inventory rule 6, then `gh secret set CLOUDFLARE_API_TOKEN --env <environment>`.
-
-### TPLINK_ROUTER_PASSWORD
-- **Retired 2026-11-24**: the GL.iNet Flint 2 replaced the TP-Link on 2026-11-13, so this
-  credential reaches no router in the house (`ROUTER_ADMIN_PASSWORD` below is the live one).
-  The value still sits in `values.age` and is the TP-Link ID account password. Remove it with
-  `secret-set.sh TPLINK_ROUTER_PASSWORD --delete` once Geoff agrees, then delete this entry.
-  The rest of this entry describes the old router.
-- **Grants**: the local admin password of the house router (TP-Link Archer C4000 v3.0 at
-  192.168.1.1). **Pending (BACKLOG #26)**: the value stored 2026-10-20 is the TP-Link ID
-  (cloud) password for geoff-login@907.life, received by mistake; the router's local password
-  is unknown and a bound router can't change it without a factory reset. Replace the value
-  when the local password exists; nothing consumes the stored one. Read by the
-  `tplinkrouterc6u` client for LAN-side router management: status, clients, band toggles, DHCP
-  reservations, reboot. Local only; no Worker consumes it. The router's WAN "Remote Management"
-  stays off; this credential never leaves the LAN.
-- **Rotate**: change it on the router's admin page, then `secret-receive TPLINK_ROUTER_PASSWORD`.
-  A scripted login shares the router's single admin session, so a run logs Geoff's browser out.
 
 ### ROUTER_ADMIN_PASSWORD / ROUTER_SSH_KEY_B64
 - **Grants**: full control of the house router, a GL.iNet Flint 2 (GL-MT6000) on OpenWrt. The
