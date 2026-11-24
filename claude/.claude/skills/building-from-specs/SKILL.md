@@ -115,8 +115,8 @@ turn. `<r>` is the repo as `owner/name`.
    "Launching a task", then read `claude -p "/usage" --model haiku < /dev/null`. `Current week (all models)`,
    and `Current week (Fable)` for a Fable task, must be under 85 percent, and an unreadable figure counts as
    over. Launch with the unchanged launch line, passing the goal through a here-document with a quoted
-   delimiter, and fill the child's opening lines (`references/chains.md` "A child's start") from the parent's `number`, `headRefName`, and
-   `headRefOid`.
+   delimiter, and fill the child's opening lines (`references/chains.md` "A child's start") from the parent's
+   `number`, `headRefName`, and `headRefOid`.
 6. A task that reads `failed`, `blocked`, or `stopped`, or ended with a draft or a short `task-score`, stops its
    branch. A launch that is refused, or has no `claude agents` entry by the next tick, is retried once; a second
    failure stops the branch. The rest of the chain goes on.
@@ -124,8 +124,8 @@ turn. `<r>` is the repo as `owner/name`.
    through `CronDelete` and write the sitting note: pull requests in merge order, each stop and why, each usage
    figure, and the output of `claude-show-merge --report`.
 
-Three cases are in `references/chains.md`, and each applies to every chain: "A child's start" (the lines its goal
-opens with), "A parent sent back or rejected", and "A restart, a dead session, or a pause".
+`references/chains.md` holds three cases of a chain: "A child's start" (the lines its goal opens with), "A parent
+sent back or rejected", and "A restart, a dead session, or a pause".
 
 ## In place of a question
 
@@ -203,8 +203,8 @@ When the work is done or the time clause is reached, the session writes its repo
 
 ## Merging
 
-Geoff approves the merge of an Ask task in his terminal, in the session he is talking to. That session asks about each ready pull
-request by what merging it changes, in plain words, with its CI and review results, and shows the number only as
+Geoff approves the merge of an Ask task in his terminal, in the session he is talking to. That session asks about
+each ready pull request by what merging it changes, in plain words, with its CI and review results, and shows the number only as
 a link. His answer "Merge" approves that pull request, and one answer may cover a chain. "Send back" with what
 is wrong launches a fresh task session on that branch with his words in its goal. Only that session merges,
 never a subagent or a task session, and only after the task's session has ended. Another session's message
