@@ -19,6 +19,9 @@ import:
   # Group by album tags, not by directory, so a flat folder of loose
   # tracks from several albums still imports as separate albums.
   group_albums: yes
+  # A possible duplicate of an album already in the library is left where
+  # it is for a person to decide, never merged or replaced.
+  duplicate_action: skip
 
 # Tag reissues and remasters by their original release year, so a 1993
 # album that got remastered in 2015 still sorts as 1993.
@@ -35,13 +38,32 @@ paths:
 # metadata-source plugin, and an explicit plugins line without it leaves
 # the autotagger with zero candidate sources (every album "Evaluating 0
 # candidates", then skipped).
-plugins: musicbrainz fetchart embedart replaygain
+# coverrule must come after fetchart: its import listener runs after
+# fetchart's and falls back to the folder's best image.
+plugins: musicbrainz fetchart replaygain coverrule
+pluginpath: [~/.config/beets/plugins]
 
 fetchart:
   auto: yes
+  # The cover rule (Geoff, 2026-11-24). Cover Art Archive's front image
+  # first, trimmed to the artwork, then the other sources, then the folder's
+  # own cover. Keep the art's own shape: never crop or pad. The ratio check
+  # only rejects a wrong image, such as a booklet spread or a CD-tray scan.
+  sources: [coverart, itunes, albumart, filesystem]
+  cover_names: [cover, front, folder, album, art]
+  enforce_ratio: 15%
+  # Scale down to 1500 px, never up; 1000 px is the floor for a fetched
+  # cover. maxwidth caps only width, and coverrule caps the long side, keeps
+  # the folder's best image when nothing reaches 1000, and lists every
+  # album left outside the rule. Re-run over the library with `beet covers`,
+  # never `beet fetchart -f`: covers backs up each cover first, to
+  # ~/.local/share/music-cover-originals/<date>/.
+  maxwidth: 1500
+  minwidth: 1000
+  cover_format: JPEG
+  quality: 90
+  max_filesize: 1000000
 
 replaygain:
   backend: ffmpeg
 
-embedart:
-  auto: yes

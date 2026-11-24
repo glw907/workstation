@@ -394,6 +394,22 @@ fi
 if [[ "$(hostname)" == pavilion ]]; then
     etc_pair "$BLUEFIN/etc/avahi/avahi-daemon.conf.pavilion" /etc/avahi/avahi-daemon.conf
 fi
+# The read-write ~/Music share for Oliver, pavilion only: its config, its user,
+# the SELinux label that lets Samba into ~/Music, and the firewall rule for Warwick.
+if [[ "$(hostname)" == pavilion ]]; then
+    etc_pair "$BLUEFIN/etc/samba/smb.conf.pavilion" /etc/samba/smb.conf
+    etc_pair "$BLUEFIN/etc/sysusers.d/music-share.conf" /etc/sysusers.d/music-share.conf
+    if [[ "$(stat -c %C "$HOME/Music" 2>/dev/null)" == *:samba_share_t:* ]]; then
+        ok "$HOME/Music carries samba_share_t"
+    else
+        bad "$HOME/Music lacks samba_share_t (see etc-drift.md, the Samba entry)"
+    fi
+    if firewall-cmd --zone=FedoraWorkstation --query-rich-rule='rule family="ipv4" source address="192.168.1.0/24" service name="samba" accept' >/dev/null 2>&1; then
+        ok "firewall lets Warwick reach Samba"
+    else
+        bad "firewall rule for Samba from 192.168.1.0/24 is missing (see etc-drift.md)"
+    fi
+fi
 # The phonebook runs and the maintenance run, pavilion only (their services carry ConditionHost=pavilion).
 if [[ "$(hostname)" == pavilion ]]; then
     for unit in phonebook-nightly.timer phonebook-nightly.service phonebook-gate.timer phonebook-gate.service maintain-projects.timer maintain-projects.service; do
