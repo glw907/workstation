@@ -112,11 +112,11 @@ turn. `<r>` is the repo as `owner/name`.
    which run only on exit 0. Exit 1 is an ask: the pull request waits for Geoff, and its children still launch.
    Exit 2 is a failed read, and the next tick tries once more. Exit 3 is a wait, and the next tick tries again.
 5. A task with no session launches once its parent is ready, or at once with no parent. A task whose parent has merged
-   launches as one with no parent, with no opening lines, from the default branch. A task whose Show parent exited 2 or
-   3 this tick waits, as it may merge and lose its branch. Run the four checks of "Launching a task", then read `claude
-   -p "/usage" --model haiku < /dev/null`. `Current week (all models)`, and `Current week (Fable)` for a Fable task,
-   must be under 85 percent, and an unreadable figure counts as over. Launch with the unchanged launch line, passing the
-   goal through a here-document with a quoted delimiter, and for an open parent fill the child's opening lines
+   launches as one with no parent. A task waits while its Show parent may still merge (exit 2 or 3 this tick, or ready
+   with no `ask` row under an open parent), which deletes its branch. Run the four checks of "Launching a task", then
+   read `claude -p "/usage" --model haiku < /dev/null`. `Current week (all models)`, and `Current week (Fable)` for a
+   Fable task, must be under 85 percent, and an unreadable figure counts as over. Launch with the unchanged launch line,
+   passing the goal through a here-document with a quoted delimiter, and for an open parent fill its opening lines
    (`references/chains.md` "A child's start") from its `number`, `headRefName`, and `headRefOid`.
 6. A task that reads `failed`, `blocked`, or `stopped`, or ended with a draft or a short `task-score`, stops its
    branch. A launch that is refused, or has no `claude agents` entry by the next tick, is retried once; a second
