@@ -45,6 +45,16 @@ fetchart:
   # Navidrome won't show a cover over 20 MB, and some downloaded art is
   # far larger than that; 1500 px keeps every cover well under it.
   maxwidth: 1500
+  # A cover under 1000 px or more than 1% off square is passed over for a
+  # better one online; with none found, the old file stays in place.
+  minwidth: 1000
+  enforce_ratio: 1%
+  max_filesize: 1000000
+  cover_format: JPEG
+  # Existing album folders carry cover.jpg or cover.png; these names are
+  # tried first.
+  cover_names: [cover, front, folder, album, art]
+  sources: [filesystem, coverart, itunes, albumart]
 
 replaygain:
   backend: ffmpeg
