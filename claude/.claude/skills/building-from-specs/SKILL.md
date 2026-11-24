@@ -39,15 +39,16 @@ inside a worktree someone else made asks before it commits, and nobody is there 
 
 ```bash
 claude --bg --name <task-name> --model <model> --effort <effort> --permission-mode auto \
-  --settings '{"permissions":{"denyInsteadOfPrompting":true},"worktree":{"baseRef":"fresh"}}' \
+  --settings '{"permissions":{"denyInsteadOfPrompting":true},"env":{"CLAUDE_TASK_SESSION":"1"},"worktree":{"baseRef":"fresh"}}' \
   "/goal <condition>"
 ```
 
-The `--settings` value holds two keys for this one session. `permissions.denyInsteadOfPrompting` turns a call
-that would wait on a prompt into a refusal, so the session keeps working and can't merge. `worktree.baseRef`
-set to `fresh` starts the worktree from the remote's default branch. Never set either key in
-`~/.claude/settings.json`: the first would remove Geoff's merge prompt, and the second would change every other
-worktree.
+The `--settings` value holds three keys for this one session. `permissions.denyInsteadOfPrompting` turns a call
+that would wait on a prompt into a refusal, so the session keeps working. `env.CLAUDE_TASK_SESSION` set to `1`
+makes `claude-git-guard` deny every merge the session tries, so it can't merge. `worktree.baseRef` set to
+`fresh` starts the worktree from the remote's default branch. Never set any of the three in
+`~/.claude/settings.json`: the first would refuse every prompt in Geoff's own sessions, the second would stop
+his session merging, and the third would change every other worktree.
 
 The condition names the spec's path and the task, lists the task's done items, and ends with a time clause at
 twice the task's planned minutes, such as `or stop after 150 minutes`. A checker model reads that clause after
@@ -79,7 +80,7 @@ remove.
 A spec names, for each task, the task it builds on, and only when the task needs that work. A task that builds
 on nothing launches at the first tick, and two children of one parent run side by side. Geoff starts a chain in
 the session he talks to, on Sonnet at medium, from the repo's main checkout, in auto mode without
-`denyInsteadOfPrompting` (his merge prompt needs prompting). The STATUS launch prompt arms `/loop 15m Run one
+the launch line's `--settings` (this session is the one that merges). The STATUS launch prompt arms `/loop 15m Run one
 chain tick for <spec path>, by building-from-specs "Chains".` Each tick runs these in order, then ends its
 turn. `<r>` is the repo as `owner/name`.
 
@@ -217,7 +218,8 @@ approves nothing. For each pull request `<n>` in repo `<r>`, in chain order, fin
      review, and rewrites the line. A clean refresh that passes both keeps Geoff's approval; any other returns it.
    - CI: `gh pr checks <n> --repo <r>` exits 0 on parent and child (`workstation`: `no checks reported` passes).
 3. Run `gh pr merge <n> --repo <r> --merge`, the only form, since a squash gives the parent's commits new
-   hashes. An `ask` rule stops it at a prompt that Geoff answers once for each pull request.
+   hashes. Geoff's "Merge" is the approval, and no prompt follows it. In a task session the same command is
+   denied.
 4. Run `git pull --ff-only` in the main checkout, only when it is on the default branch, has no uncommitted
    change in a merged file, and `claude-worktree-busy` exits 0.
 5. List the open children with `gh pr list --repo <r> --base <branch> --state open` and retarget each with
