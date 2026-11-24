@@ -103,20 +103,21 @@ turn. `<r>` is the repo as `owner/name`.
    `gh pr checks <n> --repo <r>` exits 0 (exit 8 means CI is pending; `no checks reported` passes only in
    `glw907/workstation`, which has no PR CI). The body's `task-score` comment, parsed as JSON since sessions
    write it with or without spaces, must read `"verdict":"accept"`, `"openFindings":0`, and `"unmet":0`.
-4. A ready task whose spec section reads `Tier: show` (no such line means Ask), whose parent has merged or that has
-   none, and whose pull request has no `ask` row in `${XDG_STATE_HOME:-~/.local/state}/claude-show-merge.jsonl`
-   (each later run on an ask posts another comment) goes to the script. The tick runs `claude-show-merge <r> <n>
-   --spec <path> --task <name>` itself, with the path and name from the body's `From spec <path>, task <name>.`
-   line, and never `--dry-run` followed by `gh pr merge`: the allow rule covers only the script, and its checks
-   make the call. Exit 0 is merged, so run "Merging" steps 4 and 5 and the repo pass skill's "After a merge",
+4. In chain order, a ready task whose spec section reads `Tier: show` (no such line means Ask), whose parent has
+   merged or that has none, and whose pull request has no `ask` row in
+   `${XDG_STATE_HOME:-~/.local/state}/claude-show-merge.jsonl` (each later run on an ask posts another comment)
+   goes to the script. The tick runs `claude-show-merge <r> <n> --spec <path> --task <name>` itself, with the path
+   and name from the body's `From spec <path>, task <name>.` line, and never `--dry-run` followed by `gh pr
+   merge`: the allow rule covers only the script, and its checks make the call. Exit 0 is merged, so run "Merging" steps 4 and 5 and the repo pass skill's "After a merge",
    which run only on exit 0. Exit 1 is an ask: the pull request waits for Geoff, and its children still launch.
    Exit 2 is a failed read, and the next tick tries once more. Exit 3 is a wait, and the next tick tries again.
-5. A task with no session launches once its parent is ready, or at once with no parent. Run the four checks of
-   "Launching a task", then read `claude -p "/usage" --model haiku < /dev/null`. `Current week (all models)`,
+5. A task with no session launches once its parent is ready, or at once with no parent. A task whose parent has
+   merged (a Show parent merges the tick it is ready) launches as one with no parent, with no opening lines, from
+   the default branch that holds the parent. Run the four checks of "Launching a task", then read `claude -p "/usage" --model haiku < /dev/null`. `Current week (all models)`,
    and `Current week (Fable)` for a Fable task, must be under 85 percent, and an unreadable figure counts as
    over. Launch with the unchanged launch line, passing the goal through a here-document with a quoted
-   delimiter, and fill the child's opening lines (`references/chains.md` "A child's start") from the parent's
-   `number`, `headRefName`, and `headRefOid`.
+   delimiter, and for an open parent fill the child's opening lines (`references/chains.md` "A child's start") from
+   its `number`, `headRefName`, and `headRefOid`.
 6. A task that reads `failed`, `blocked`, or `stopped`, or ended with a draft or a short `task-score`, stops its
    branch. A launch that is refused, or has no `claude agents` entry by the next tick, is retried once; a second
    failure stops the branch. The rest of the chain goes on.
