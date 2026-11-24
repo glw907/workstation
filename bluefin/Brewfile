@@ -36,6 +36,9 @@ brew "imapsync"
 # Pavilion only.
 tap "stalwartlabs/tap"
 brew "vandelay" if `hostname`.strip == "pavilion"
+# Navidrome serves ~/Music over the Subsonic API on the LAN (navidrome.service, systemd package).
+# Pavilion only.
+brew "navidrome" if `hostname`.strip == "pavilion"
 # Held with `brew pin proton-pass-cli`; the Pass 0 plan pins it so a
 # routine `ujust update` cannot change the CLI under the key scripts.
 # check-drift fails when a pinned formula falls behind, and the bump is

@@ -882,6 +882,11 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotation**: inventory rule 6, then `gh secret set CLOUDFLARE_API_TOKEN --env <environment>`.
 
 ### TPLINK_ROUTER_PASSWORD
+- **Retired 2026-11-24**: the GL.iNet Flint 2 replaced the TP-Link on 2026-11-13, so this
+  credential reaches no router in the house (`ROUTER_ADMIN_PASSWORD` below is the live one).
+  The value still sits in `values.age` and is the TP-Link ID account password. Remove it with
+  `secret-set.sh TPLINK_ROUTER_PASSWORD --delete` once Geoff agrees, then delete this entry.
+  The rest of this entry describes the old router.
 - **Grants**: the local admin password of the house router (TP-Link Archer C4000 v3.0 at
   192.168.1.1). **Pending (BACKLOG #26)**: the value stored 2026-10-20 is the TP-Link ID
   (cloud) password for geoff-login@907.life, received by mistake; the router's local password

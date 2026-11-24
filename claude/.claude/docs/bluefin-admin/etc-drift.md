@@ -31,6 +31,14 @@ stays the record of what's actually on disk. Current captured files:
   hosts. `ExecStart=` runs the main checkout's `scripts/check/nightly.sh`, so the checkout needs
   `npm ci` after a pull that changes its dependencies. After installing: `sudo -A systemctl daemon-reload && sudo -A systemctl enable --now
   phonebook-nightly.timer phonebook-gate.timer` <!-- host-ok -->
+- `bluefin/etc/avahi/avahi-daemon.conf.pavilion` → `/etc/avahi/avahi-daemon.conf` (pavilion only, <!-- host-ok -->
+  2026-11-24): a whole copy of the stock file with `use-ipv6=no` and `publish-aaaa-on-ipv4=no`.
+  The household's Thread border routers keep adding and dropping pavilion's IPv6 ULAs, and each
+  change set off a false host name conflict, so Avahi renamed pavilion `pavilion-3.local` and the
+  iPad's music client lost the server (avahi bug, Launchpad 831022). On IPv4 alone, Avahi
+  publishes `pavilion.local` at the fixed lease `192.168.1.159`. Diff it against
+  `/usr/etc/avahi/avahi-daemon.conf` after an Avahi upgrade. After a change:
+  `sudo -A systemctl restart avahi-daemon`, then `avahi-resolve -n pavilion.local`
 - `bluefin/etc/systemd/resolved.conf.d/10-cloudflare-dns.conf` → `/etc/systemd/resolved.conf.d/` <!-- host-ok -->
   (pavilion, Geoff 2026-11-10: "The home router is a lousey place for a DNS lookup."): every lookup
   goes to Cloudflare's resolvers over DNS-over-TLS, ahead of each link's DNS. The router's forwarder
