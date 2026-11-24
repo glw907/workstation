@@ -400,9 +400,9 @@ if [[ "$(hostname)" == pavilion ]]; then
     etc_pair "$BLUEFIN/etc/samba/smb.conf.pavilion" /etc/samba/smb.conf
     etc_pair "$BLUEFIN/etc/sysusers.d/music-share.conf" /etc/sysusers.d/music-share.conf
     if [[ "$(stat -c %C "$HOME/Music" 2>/dev/null)" == *:samba_share_t:* ]]; then
-        ok "~/Music carries samba_share_t"
+        ok "$HOME/Music carries samba_share_t"
     else
-        bad "~/Music lacks samba_share_t (see etc-drift.md, the Samba entry)"
+        bad "$HOME/Music lacks samba_share_t (see etc-drift.md, the Samba entry)"
     fi
     if firewall-cmd --zone=FedoraWorkstation --query-rich-rule='rule family="ipv4" source address="192.168.1.0/24" service name="samba" accept' >/dev/null 2>&1; then
         ok "firewall lets Warwick reach Samba"
