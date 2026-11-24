@@ -44,6 +44,16 @@
     ]
   },
   {
+    "skills": [
+      "building-from-specs"
+    ],
+    "query": "A chain tick is running for spec.md in glw907/example-site, and Geoff is away. Pull request 413 is the \"Footer links\" task's. Its session reads `done`, it is not a draft, CI passes, and its `task-score` reads accept with 0 open findings and 0 unmet. Its body holds the line `From spec /home/geoff/specs/spec.md, task footer-links.` The spec's \"Footer links\" section reads `Name: footer-links`, `Tier: show`, and a `Files:` line. Write what the tick does with it, with the exact commands, and what the sitting note holds. Don't run anything.",
+    "files": [
+      "evals/files/spec.md"
+    ],
+    "expected_behavior": "The tick runs `claude-show-merge glw907/example-site 413 --spec /home/geoff/specs/spec.md --task footer-links` itself, with `--spec` and `--task` read from the body's `From spec` line. It runs no bare `gh pr merge` and no `--dry-run` followed by one, and it asks Geoff nothing. On exit 0 it pulls and cleans up as \"Merging\" steps 4 and 5 say, on exit 1 it leaves the pull request waiting for Geoff, on exit 2 it tries once more at the next tick, and on exit 3 it tries again at the next tick. The sitting note holds the output of `claude-show-merge --report`, with its `git revert -m 1` line for the merge."
+  },
+  {
     "skills": [],
     "query": "Write a bash one-liner that prints the ten largest files under the current directory, with their sizes.",
     "files": [],

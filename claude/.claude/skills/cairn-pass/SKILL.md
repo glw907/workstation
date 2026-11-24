@@ -43,5 +43,7 @@ watch. Any other actor's held run is listed under `## For Geoff`. Run it from th
 so its CI line lands under the task's branch for `--records`. A red check stops the work until its
 cause is fixed.
 
+**Show tier**: `claude-show-merge --ask-only glw907/cairn-cms` prints the globs a Show task may not touch.
+
 **Pull request**: `building-from-specs` "The pull request" says what the body carries and when it
 is marked ready.
