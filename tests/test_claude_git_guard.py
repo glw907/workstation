@@ -11,14 +11,24 @@ import pytest
 SCRIPT = Path(__file__).resolve().parent.parent / "bin/.local/bin/claude-git-guard"
 
 
-def run_hook(command):
-    """Run the hook on a Bash command."""
+def hook_env(task_session):
+    """Return the hook's environment: CLAUDE_TASK_SESSION set to task_session, or unset when None."""
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    env.pop("CLAUDE_TASK_SESSION", None)
+    if task_session is not None:
+        env["CLAUDE_TASK_SESSION"] = task_session
+    return env
+
+
+def run_hook(command, task_session="1"):
+    """Run the hook on a Bash command, in a task session unless told otherwise."""
     return subprocess.run(
         [sys.executable, str(SCRIPT)],
         input=json.dumps({"tool_input": {"command": command}}),
         capture_output=True,
         text=True,
         check=False,
+        env=hook_env(task_session),
     )
 
 
@@ -56,17 +66,25 @@ def run_hook(command):
         'echo "`gh pr merge 5`"',
     ],
 )
-def test_every_merge_stage_asks(command):
+def test_every_merge_stage_is_denied_in_a_task_session(command):
     result = run_hook(command)
     assert result.returncode == 0
     out = json.loads(result.stdout)["hookSpecificOutput"]
     assert out["hookEventName"] == "PreToolUse"
-    assert out["permissionDecision"] == "ask"
+    assert out["permissionDecision"] == "deny"
 
 
-def test_ask_message_says_who_answers():
+@pytest.mark.parametrize("task_session", [None, "", "0", "true"])
+def test_a_merge_gets_no_decision_outside_a_task_session(task_session):
+    for command in ("gh pr merge 5", "gh api -X PUT repos/o/r/pulls/5/merge", "echo $(gh pr merge 5)"):
+        result = run_hook(command, task_session)
+        assert (result.returncode, result.stdout, result.stderr) == (0, "", "")
+
+
+def test_deny_message_names_the_task_session():
     reason = json.loads(run_hook("gh pr merge 5").stdout)["hookSpecificOutput"]["permissionDecisionReason"]
-    assert "Geoff answers this prompt" in reason
+    assert "CLAUDE_TASK_SESSION=1" in reason
+    assert "Only the session Geoff is talking to merges" in reason
 
 
 @pytest.mark.parametrize(
@@ -112,9 +130,9 @@ def git(directory, *args):
                    capture_output=True, text=True)
 
 
-def run_in(command, cwd, exempt=""):
+def run_in(command, cwd, exempt="", task_session=None):
     """Run the hook on a command with a cwd and a replaced exempt list; return the reason or None."""
-    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    env = hook_env(task_session)
     env.pop("CLAUDE_GIT_GUARD_EXEMPT", None)
     if exempt is not None:
         env["CLAUDE_GIT_GUARD_EXEMPT"] = exempt
@@ -132,15 +150,9 @@ def run_in(command, cwd, exempt=""):
     return output["permissionDecisionReason"]
 
 
-def asks(command, cwd):
-    """Return whether the hook sends a command to a permission prompt."""
-    result = subprocess.run(
-        [sys.executable, str(SCRIPT)],
-        input=json.dumps({"tool_input": {"command": command}, "cwd": str(cwd)}),
-        capture_output=True, text=True, check=False,
-    )
-    assert (result.returncode, result.stderr) == (0, "")
-    return json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"] == "ask"
+def denied_in_task_session(command, cwd):
+    """Return whether the hook denies a command with CLAUDE_TASK_SESSION set to 1."""
+    return run_in(command, cwd, task_session="1") is not None
 
 
 @pytest.fixture
@@ -173,8 +185,9 @@ def repos(tmp_path):
     "gh api repos/owner/repo/pulls/5/merge -X PUT",
     "gh api -XPUT repos/o/r/pulls/7/merge",
 ])
-def test_other_merge_spellings_ask(command, tmp_path):
-    assert asks(command, tmp_path)
+def test_other_merge_spellings_are_denied_in_a_task_session(command, tmp_path):
+    assert denied_in_task_session(command, tmp_path)
+    assert run_in(command, tmp_path) is None
 
 
 def test_forced_push_beside_a_merge_is_denied(repos):
@@ -396,13 +409,13 @@ def test_expansion_elsewhere_still_refused(command, repos):
     assert run_in(command, repos["primary"]) is not None
 
 
-def test_merge_inside_substitution_asks(tmp_path):
-    assert asks('echo "$(gh pr merge 7)"', tmp_path)
-    assert asks("x=$(gh pr merge 7)", tmp_path)
+def test_merge_inside_substitution_is_denied_in_a_task_session(tmp_path):
+    assert denied_in_task_session('echo "$(gh pr merge 7)"', tmp_path)
+    assert denied_in_task_session("x=$(gh pr merge 7)", tmp_path)
 
 
 def test_absolute_directory_read_without_cwd(repos):
-    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    env = hook_env(None)
     env["CLAUDE_GIT_GUARD_EXEMPT"] = ""
     for command in (f"git -C {repos['primary']} add -A", f"cd {repos['primary']} && git add -A"):
         result = subprocess.run(

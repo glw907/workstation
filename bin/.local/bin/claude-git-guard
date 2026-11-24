@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """PreToolUse hook for the Git and gh slips no session should make.
 
-It sends a pull request merge to a permission prompt: `gh pr merge`, `gh -R <repo> pr merge`,
-`/usr/bin/gh pr merge`, and the REST merge call, `gh api -X PUT .../pulls/<n>/merge`. Geoff
-answers the prompt in the session he is talking to, and a session nobody is watching is refused.
-The `ask` rules in `settings.json` prompt for the usual spelling. The permissions page
-(https://code.claude.com/docs/en/permissions) says such a rule "isn't a security boundary around
+It denies a pull request merge in a task session: `gh pr merge`, `gh -R <repo> pr merge`,
+`/usr/bin/gh pr merge`, and the REST merge call, `gh api -X PUT .../pulls/<n>/merge`. A task
+session's launch line sets `CLAUDE_TASK_SESSION=1` in its `--settings` `env`, and the hook reads it
+from its own environment. With the variable unset or any other value, a merge gets no decision from
+this hook, since Geoff's "Merge" answer in his terminal is the approval. The permissions page
+(https://code.claude.com/docs/en/permissions) says a permission rule "isn't a security boundary around
 the program" and names a PreToolUse hook for reading the whole command, which is this one.
 
-It denies two things:
+It denies two more things in every session:
 
 - A forced `git push` whose destination is `main` or `master`: named in a ref argument, reached
   through `--all` or `--mirror`, or reached through `HEAD`, `@`, or no ref argument when the
@@ -27,9 +28,9 @@ the command, and so does any Git subprocess that fails: Git reports the problem 
 Quoted text, escapes, comments, and heredoc bodies never count as shell syntax, so a command that
 only mentions one of these goes through. A command with neither `git` nor `gh` as a word exits
 before any parsing. Per the hooks reference (https://code.claude.com/docs/en/hooks) a decision is
-`hookSpecificOutput.permissionDecision`, `"deny"` or `"ask"`, with a `permissionDecisionReason`,
-printed with exit 0. A denial outranks a prompt when one command earns both. This is a slip guard, not a security boundary; its registration sets `onFailure: "block"`
-because a timed-out hook does not block the call. Every input the script cannot parse exits 0
+`hookSpecificOutput.permissionDecision`, here always `"deny"`, with a `permissionDecisionReason`,
+printed with exit 0. This is a slip guard, not a security boundary; its registration sets
+`onFailure: "block"` because a timed-out hook does not block the call. Every input the script cannot parse exits 0
 silently.
 """
 
@@ -55,9 +56,9 @@ GIT = re.compile(r"(\S*/)?git")
 REDIRECTION = re.compile(r"\d*(?:[<>]+|&>>?)&?(?P<target>\S*)")
 UNREADABLE = re.compile(r"[$`*?\[{]")
 MERGE_REASON = (
-    "This command merges a pull request. A merge runs only when Geoff answers this prompt, in the "
-    "session he is talking to, after he approved the pull request in his terminal. A session he is not "
-    "talking to leaves the pull request open."
+    "Blocked: this is a task session (CLAUDE_TASK_SESSION=1), and a task session never merges. Only "
+    "the session Geoff is talking to merges, after he approves the pull request in his terminal. "
+    "Leave the pull request open and say so in the report."
 )
 FORCE_REASON = (
     "Blocked: a forced push to main or master rewrites the branch every session builds on. Push "
@@ -404,13 +405,14 @@ def git_stages(command: str, cwd: Path | None):
 
 def decision(command: str, cwd: Path | None) -> tuple[str, str] | None:
     """Return the hook's decision on a command and its reason, or None to let it run."""
-    asks = any(merges(live, read) for live, read in stages(command))
+    merging = os.environ.get("CLAUDE_TASK_SESSION") == "1" and any(
+        merges(live, read) for live, read in stages(command))
     for _, _, git in git_stages(command, cwd):
         if git.subcommand == "push" and forced_push_to_main(git):
             return "deny", FORCE_REASON
         if whole_tree(git) and primary_checkout(git):
             return "deny", STAGING_REASON
-    return ("ask", MERGE_REASON) if asks else None
+    return ("deny", MERGE_REASON) if merging else None
 
 
 def main() -> int:
