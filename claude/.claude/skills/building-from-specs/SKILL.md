@@ -19,6 +19,7 @@ plays the conductor.
 
 A repo's skill holds that repo's gate, CI watch, and checklists: `cairn-pass` for cairn-cms, `site-pass` for the
 site repos, `dotfiles-pass` for the workstation repo. Read it before the first step of a task there.
+`references/repo-files.md` lists the files every repo carries and what each one holds.
 
 ## Launching a task
 
@@ -54,6 +55,15 @@ The condition names the spec's path and the task, lists the task's done items, a
 twice the task's planned minutes, such as `or stop after 150 minutes`. A checker model reads that clause after
 every turn, so it ends a run near the limit and is no hard timer.
 
+A session that launches a task outside a chain starts a watcher in the same turn (Geoff, 2026-11-23). The watcher
+is a Bash command run with `run_in_background`, and it exits once `claude agents --json` shows the task's session
+no longer `working`. Its exit wakes the launching session, which reads the pull request and reports to Geoff.
+
+```bash
+until claude agents --json | jq -e --arg n <task-name> \
+  '[.[] | select(.name == $n)] | max_by(.startedAt) | .state != "working"' >/dev/null; do sleep 60; done
+```
+
 ## A session at work
 
 A task session reads, edits, tests, and commits without asking. It builds what its goal covers. Work it finds
@@ -74,6 +84,11 @@ task; only the time clause does.
 
 A task that must touch a real account removes what its runs added before it ends and lists what it couldn't
 remove.
+
+A tidy of code the task touches, such as a rename, an extracted function, or removed dead code, goes in its own
+commit and changes no behavior (Beck, *Tidy First?*, <https://www.oreilly.com/library/view/tidy-first/9781098151232>).
+A refactor larger than a tidy never rides a feature task. It goes to the backlog through `standards:log-issue` as
+a task that changes no behavior, and the item names the failing check or the review finding that calls for it.
 
 ## Chains
 
@@ -160,6 +175,12 @@ in its report. The goal stays as approved, because Geoff approved those words an
 
 The repo's gate passes before the pull request is marked ready, and CI carries the whole suites. A pull request
 with a red check is never ready. If the goal needs green CI, the session waits on CI before it writes its report.
+
+Before the review dispatch, the session runs the built-in `simplify` skill on the commit range the review reads:
+`<parent-sha>..HEAD` for a task built on another, else the branch against the default branch. The prompt names
+the range, as in `/simplify the committed changes on this branch against main, then commit your fixes`, and
+`simplify` commits its fixes in their own commit
+(<https://code.claude.com/docs/en/commands>).
 
 Before the pull request is marked ready, the task session dispatches a fresh subagent to review the whole branch
 against the task's goal. The brief gives the spec's path, the task's name, and the branch's commit range, and

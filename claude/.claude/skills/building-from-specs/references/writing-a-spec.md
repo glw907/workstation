@@ -37,13 +37,26 @@ account of the read. Before the fresh reader sees the spec, the author cuts each
 - What happens when it goes wrong, and the number for each limit.
 - The published practice and vendor docs it draws on, with a label on each mechanism. Each label rests on a
   quoted source or on a probe and its output. Nothing says "expected".
-- Each assumption that more than one task rests on, with its probe or source.
+- Each assumption that more than one task rests on, with its probe or source, so the least-proven one can be
+  named.
 - A file list that comes from searches. Each search is given with its hit count, and every hit is listed or
   dismissed.
 - Each task's commands, read against the last 30 days of the denials log, so a refusal shows before the run.
 - The tasks. Each has a goal, its files, the reviewers it needs, its minutes, and the task it builds on when it
-  has one. The task that rests on the least-proven assumption goes first. The spec gives the merge order, and a
-  chain merges parent before child ("Chains").
+  has one. The spec gives the merge order, and a chain merges parent before child ("Chains").
+
+  Tasks run setup first, then the foundation every feature needs, then one phase per feature in priority order
+  (Spec Kit, <https://github.github.com/spec-kit/>). A task that builds on nothing is Spec Kit's parallel mark,
+  so a spec adds no other mark. A new project's first task is a walking skeleton: the thinnest build that carries
+  one function end to end through every major part (Cockburn,
+  <https://henricodolfing.com/2018/04/start-your-project-with-walking-skeleton.html>). Among tasks free to go
+  next, the one resting on the least-proven assumption goes first.
+
+  A decision that binds later work becomes a record in the repo's `docs/decisions/`
+  (<https://adr.github.io>), written in the task that first builds on it. When a feature task must change code
+  under a check's exclusion, the spec puts a task that changes no behavior right before it. That task
+  restructures the code and removes the exclusion, and the feature task builds on it (Fowler's preparatory
+  refactoring, <https://martinfowler.com/articles/preparatory-refactoring-example.html>).
 - The calls Claude made, in one list Geoff can check.
 
 A spec that adds a project, a service, or running infrastructure names where it runs and why, after weighing
