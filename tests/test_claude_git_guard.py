@@ -72,10 +72,12 @@ def test_every_merge_stage_is_denied_in_a_task_session(command):
     out = json.loads(result.stdout)["hookSpecificOutput"]
     assert out["hookEventName"] == "PreToolUse"
     assert out["permissionDecision"] == "deny"
+    unset = run_hook(command, None)
+    assert (unset.returncode, unset.stdout, unset.stderr) == (0, "", "")
 
 
-@pytest.mark.parametrize("task_session", [None, "", "0", "true"])
-def test_a_merge_gets_no_decision_outside_a_task_session(task_session):
+@pytest.mark.parametrize("task_session", ["", "0", "true"])
+def test_a_merge_gets_no_decision_under_another_value(task_session):
     for command in ("gh pr merge 5", "gh api -X PUT repos/o/r/pulls/5/merge", "echo $(gh pr merge 5)"):
         result = run_hook(command, task_session)
         assert (result.returncode, result.stdout, result.stderr) == (0, "", "")

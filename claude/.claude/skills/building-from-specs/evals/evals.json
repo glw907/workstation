@@ -9,7 +9,7 @@
     ],
     "expected_behavior": [
       "Gives a `claude --bg` command that sets `--permission-mode auto`.",
-      "The command's `--settings` value sets `permissions.denyInsteadOfPrompting` to true and `worktree.baseRef` to `fresh`.",
+      "The command's `--settings` value sets `permissions.denyInsteadOfPrompting` to true, `env.CLAUDE_TASK_SESSION` to `"1"`, and `worktree.baseRef` to `fresh`.",
       "The `/goal` condition ends with a time clause of 90 minutes, twice the task's 45.",
       "Names `claude-worktree-busy` among the checks before the launch."
     ]
