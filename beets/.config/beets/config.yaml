@@ -19,6 +19,9 @@ import:
   # Group by album tags, not by directory, so a flat folder of loose
   # tracks from several albums still imports as separate albums.
   group_albums: yes
+  # A possible duplicate of an album already in the library is left where
+  # it is for a person to decide, never merged or replaced.
+  duplicate_action: skip
 
 # Tag reissues and remasters by their original release year, so a 1993
 # album that got remastered in 2015 still sorts as 1993.
@@ -39,6 +42,9 @@ plugins: musicbrainz fetchart embedart replaygain
 
 fetchart:
   auto: yes
+  # Navidrome won't show a cover over 20 MB, and some downloaded art is
+  # far larger than that; 1500 px keeps every cover well under it.
+  maxwidth: 1500
 
 replaygain:
   backend: ffmpeg
