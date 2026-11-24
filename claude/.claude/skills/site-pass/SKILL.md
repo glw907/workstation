@@ -53,6 +53,15 @@ task after each push. The other three sites have no watch command.
 cairn-pub adds `migrations/**`. `runner` for `.github/workflows/**` and `scripts/**`; `ordinary`
 otherwise.
 
+**Show tier**: each site's Ask-only globs, which a Show task may not touch, come from one command per site:
+
+```bash
+claude-show-merge --ask-only glw907/ecxc-ski
+claude-show-merge --ask-only glw907/907-life-legacy
+claude-show-merge --ask-only glw907/aksailingclub-org
+claude-show-merge --ask-only glw907/cairn-pub
+```
+
 **Checklist globs**: The close review loads `standards:svelte-reviewer` for `**/*.svelte` and load, action, or
 hook code; `standards:cloudflare-workers-reviewer` for Worker, D1, and `wrangler.*`;
 `standards:web-auth-security-reviewer` for every `auth-data` glob; `standards:daisyui-a11y-reviewer` for markup and

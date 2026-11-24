@@ -45,6 +45,21 @@ account of the read. Before the fresh reader sees the spec, the author cuts each
 - The tasks. Each has a goal, its files, the reviewers it needs, its minutes, and the task it builds on when it
   has one. The spec gives the merge order, and a chain merges parent before child ("Chains").
 
+  The heading of each task's section is followed by these lines, which Geoff approves with the spec:
+
+  ```text
+  Name: <the task's launch name>
+  Tier: show
+  Files: `<glob>`, `<glob>`
+  ```
+
+  `Tier:` reads `show` or `ask`, and a task with no `Tier: show` line is Ask. A Show task's `Files:` line has
+  backticked globs that cover every path it will change, and none of them reaches into its repo's Ask-only list.
+  A repo with no list has no Show task. `claude-show-merge --ask-only <owner/repo>` prints the list, one glob per
+  line, and exits 1 for a repo with none. A task's section runs from the heading above its `Name:` line to the next
+  heading of the same or higher level. Only the spec's author sets a tier, and Geoff approves it with the spec: a
+  task session never picks its own.
+
   Tasks run setup first, then the foundation every feature needs, then one phase per feature in priority order
   (Spec Kit, <https://github.github.com/spec-kit/>). A task that builds on nothing is Spec Kit's parallel mark,
   so a spec adds no other mark. A new project's first task is a walking skeleton: the thinnest build that carries

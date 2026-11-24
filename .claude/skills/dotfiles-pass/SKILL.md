@@ -47,7 +47,10 @@ These paths run unattended work, so `building-from-specs` "Direct changes" lets 
 edit land there without a pull request: `claude/.claude/{skills,agents}/**`,
 `claude/.claude/settings.json`, `claude/.claude/tooling/**`, `.claude/skills/**`, `scripts/**`,
 `tests/**`, and
-`bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-context-budget,claude-git-guard,claude-tooling-sync,claude-worktree-busy,task-report}`.
+`bin/.local/bin/{cairn-run-gate,ci-green,ci-green-lib.mjs,claude-context-budget,claude-git-guard,claude-show-merge,claude-tooling-sync,claude-worktree-busy,task-report}`.
+
+A task of a spec can be Show (`building-from-specs` "Merging") only outside the paths that
+`claude-show-merge --ask-only glw907/workstation` prints, one glob per line. Run it before a spec marks a task Show.
 
 These paths touch secrets, so a change there is sign-in or data work: a second reviewer reads it,
 and the pull request is flagged for Geoff. They are `secrets/**`, `scripts/secrets/**`,
