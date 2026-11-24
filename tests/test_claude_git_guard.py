@@ -428,3 +428,47 @@ def test_absolute_directory_read_without_cwd(repos):
         )
         assert result.returncode == 0, result.stderr
         assert json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
+SHOW_MERGE_RUNS = [
+    "claude-show-merge glw907/x 7 --spec /x.md --task t",
+    "bin/.local/bin/claude-show-merge glw907/x 7 --spec /x.md --task t",
+    "python3 -I ~/.local/bin/claude-show-merge glw907/x 7 --spec /x.md --task t",
+    "bash -c 'claude-show-merge glw907/x 7 --spec /x.md --task t'",
+    "CLAUDE_TASK_SESSION=0 claude-show-merge glw907/x 7 --spec /x.md --task t",
+    "cd /tmp && claude-show-merge glw907/x 7 --spec /x.md --task t",
+    "env -u CLAUDE_TASK_SESSION claude-show-merge glw907/x 7 --spec /x.md --task t",
+    "sh -c \"cd /tmp; claude-show-merge glw907/x 7 --spec /x.md --task t\"",
+    "claude-show-merge --report",
+    "echo $(claude-show-merge glw907/x 7 --spec /x.md --task t)",
+]
+SHOW_MERGE_READS = [
+    "grep -c claude-show-merge f.md",
+    "claude-show-merge --ask-only glw907/workstation",
+    "claude-show-merge --help",
+    "claude-show-merge glw907/x 7 --spec /x.md --task t --dry-run",
+    "echo 'claude-show-merge glw907/x 7 --spec /x.md --task t'",
+    "bash -c 'claude-show-merge --dry-run glw907/x 7 --spec /x.md --task t'",
+]
+
+
+@pytest.mark.parametrize("command", SHOW_MERGE_RUNS)
+def test_show_merge_is_denied_in_a_task_session(command):
+    result = run_hook(command)
+    assert result.returncode == 0
+    out = json.loads(result.stdout)["hookSpecificOutput"]
+    assert out["permissionDecision"] == "deny"
+    assert "CLAUDE_TASK_SESSION=1" in out["permissionDecisionReason"]
+    assert "never merges" in out["permissionDecisionReason"]
+
+
+@pytest.mark.parametrize("command", SHOW_MERGE_READS)
+def test_show_merge_reads_pass_in_a_task_session(command):
+    result = run_hook(command)
+    assert (result.returncode, result.stdout, result.stderr) == (0, "", "")
+
+
+@pytest.mark.parametrize("command", SHOW_MERGE_RUNS + SHOW_MERGE_READS)
+def test_show_merge_passes_with_the_variable_unset(command):
+    result = run_hook(command, None)
+    assert (result.returncode, result.stdout, result.stderr) == (0, "", "")
