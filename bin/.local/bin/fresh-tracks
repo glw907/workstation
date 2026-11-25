@@ -404,13 +404,13 @@ def check_links(target: Path) -> None:
                 raise Refused(f"It holds a name with a control character in it: {rel}")
             if is_dir and name == "__MACOSX":
                 macosx.append(path)
-            if not is_dir and name.startswith("._") and head(path, 4) == APPLEDOUBLE:
-                path.unlink()
-                continue
             # The work folder is hidden from clients, so a plain chmod here can't be redirected.
             mode = 0o755 if is_dir else 0o644
             if stat.S_IMODE(st.st_mode) != mode:
                 os.chmod(path, mode)
+            if not is_dir and name.startswith("._") and head(path, 4) == APPLEDOUBLE:
+                path.unlink()
+                continue
             if not is_dir and path.suffix.lower() in IMAGES and not is_raster(path):
                 raise Refused(f"It holds a file named as an image that isn't one: {rel}")
     # The walk runs top-down and checked every entry, so a nested one is already gone.

@@ -648,6 +648,7 @@ def test_appledouble_files_are_deleted(tmp_path):
     (tmp_path / "__MACOSX/Album A").mkdir(parents=True)
     (tmp_path / "__MACOSX/Album A/._cover.jpg").write_bytes(APPLEDOUBLE)
     (tmp_path / "._cover.jpg").write_bytes(APPLEDOUBLE)
+    (tmp_path / "._cover.jpg").chmod(0)
     (tmp_path / "cover.jpg").write_bytes(JPEG)
     ft.check_links(tmp_path)
     assert [p.name for p in tmp_path.iterdir()] == ["cover.jpg"]
