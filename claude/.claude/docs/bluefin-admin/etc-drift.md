@@ -41,13 +41,17 @@ stays the record of what's actually on disk. Current captured files:
   `sudo -A systemctl restart avahi-daemon`, then `avahi-resolve -n pavilion.local`
 - `bluefin/etc/samba/smb.conf.pavilion` → `/etc/samba/smb.conf` and <!-- host-ok -->
   `bluefin/etc/sysusers.d/music-share.conf` → `/etc/sysusers.d/` (pavilion only, Geoff
-  2026-11-24): the `music` share, `~/Music` read-write for Geoff and Oliver from the `Warwick`
-  network alone. Oliver signs in as the no-login user `oliver` and Geoff as `glw907`, and every
-  read and write acts as glw907. The passwords are `Music share (oliver)` and
-  `Music share (glw907)` in Proton Pass `Infrastructure`. Two settings sit
-  outside these files, and `check-drift` checks both. SELinux lets Samba into `~/Music` through
-  `sudo -A semanage fcontext -a -t samba_share_t '/var/home/glw907/Music(/.*)?'` and
-  `sudo -A restorecon -R ~/Music`. The firewall opens Samba to `Warwick` through
+  2026-11-24): the `Fresh Tracks` share, `~/Fresh Tracks` read-write for Geoff and Oliver from <!-- host-ok -->
+  the `Warwick` network alone. It is an inbox: `fresh-tracks.path` starts the `fresh-tracks`
+  importer, which moves new music into `~/Music` through beets, and no share reads `~/Music`
+  itself (Geoff, 2026-11-24: "The Music share can go away"). Oliver signs in as the no-login
+  user `oliver` and Geoff as `glw907`, and every read and write acts as glw907. The passwords
+  are `Music share (oliver)` and `Music share (glw907)` in Proton Pass `Infrastructure`. Two
+  settings sit outside these files, and `check-drift` checks both. SELinux lets Samba into
+  `~/Fresh Tracks` through `sudo -A semanage fcontext -a -t samba_share_t <!-- host-ok -->
+  '/var/home/glw907/Fresh Tracks(/.*)?'` and `sudo -A restorecon -R ~/'Fresh Tracks'`, run after
+  `fresh-tracks.path` has made the folder. The older `~/Music` rule stays: it costs nothing,
+  and imported files carry that label anyway. The firewall opens Samba to `Warwick` through
   `sudo -A firewall-cmd --permanent --zone=FedoraWorkstation --add-rich-rule='rule
   family="ipv4" source address="192.168.1.0/24" service name="samba" accept'`, then
   `sudo -A firewall-cmd --reload`. After installing: `sudo -A systemd-sysusers`, then

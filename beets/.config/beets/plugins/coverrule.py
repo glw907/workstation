@@ -26,10 +26,14 @@ def _images(folder: Path) -> list[Path]:
         p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_EXTS
     ]
 
+# Pillow picks a decoder by content, and its EPS decoder runs Ghostscript, so a cover is
+# opened only as a raster format.
+RASTER = ["JPEG", "PNG", "WEBP", "GIF", "BMP", "TIFF"]
+
 
 def _size(path: Path) -> tuple[int, int]:
     try:
-        with Image.open(path) as im:
+        with Image.open(path, formats=RASTER) as im:
             return im.size
     except OSError:
         return (0, 0)
@@ -37,7 +41,7 @@ def _size(path: Path) -> tuple[int, int]:
 
 def _conform(path: Path) -> Path:
     """Rewrite the cover as cover.jpg within the size rule; return its new path."""
-    with Image.open(path) as im:
+    with Image.open(path, formats=RASTER) as im:
         if (
             im.format == "JPEG"
             and path.name == "cover.jpg"
@@ -98,15 +102,26 @@ class CoverRulePlugin(BeetsPlugin):
                 Path(os.fsdecode(p)).parent
                 for p in getattr(task, "old_paths", None) or []
             ]
-            found = [img for d in dict.fromkeys(sources) for img in _images(d)]
+            # An empty or unreadable image sizes as (0, 0) and can't be a cover.
+            found = [
+                img
+                for d in dict.fromkeys(sources)
+                for img in _images(d)
+                if _size(img) != (0, 0)
+            ]
             if found:
                 # Album.set_art would send art_set back into this plugin
                 # mid-event, which beets refuses, so copy and conform here.
                 best = max(found, key=lambda p: max(_size(p)))
                 dest = Path(os.fsdecode(album.path)) / f"cover{best.suffix.lower()}"
                 shutil.copy2(best, dest)
-                album.artpath = os.fsencode(_conform(dest))
-                album.store()
+                try:
+                    album.artpath = os.fsencode(_conform(dest))
+                except OSError:
+                    # A truncated image reads its size but fails to decode.
+                    dest.unlink(missing_ok=True)
+                else:
+                    album.store()
         self._check(album)
 
     def covers(self, lib, opts, args):
