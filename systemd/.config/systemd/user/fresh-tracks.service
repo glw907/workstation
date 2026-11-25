@@ -32,7 +32,7 @@ TemporaryFileSystem=%h/.cache
 BindReadOnlyPaths=%h/.config/beets %h/.local/bin %h/.local/share/uv %h/.dotfiles/bin %h/.dotfiles/beets
 BindPaths=%h/.local/share/beets %h/.local/share/music-cover-originals
 StateDirectory=fresh-tracks
-InaccessiblePaths=-%h/.ssh -%h/.gnupg -%h/.claude -%h/.claude.json -%h/.clasprc.json -%h/.mozilla -%h/.var -%h/.vdirsyncer -%h/.contacts -%h/.npm -%h/Projects -%h/Documents -%h/.bash_history -%h/.viminfo -%h/.subversion -%h/.android
+InaccessiblePaths=-%h/.ssh -%h/.gnupg -%h/.claude -%h/.claude.json -%h/.clasprc.json -%h/.mozilla -%h/.var -%h/.vdirsyncer -%h/.contacts -%h/.npm -%h/Projects -%h/Documents -%h/.bash_history -%h/.viminfo -%h/.subversion -%h/.android -%h/.dotfiles-preexisting
 # The user manager and session bus could start a process outside the sandbox, and the docker
 # and libvirt sockets give root, so the run gets no Unix sockets and no runtime folder.
 InaccessiblePaths=-%t
@@ -40,6 +40,10 @@ RestrictAddressFamilies=AF_INET AF_INET6 AF_NETLINK
 # The security key, camera, microphone, and open terminals stay out of reach.
 PrivateDevices=yes
 RestrictNamespaces=yes
+# Another process's command line can carry a token, so the run sees only its own processes.
+PrivatePIDs=yes
+# The quiet period's walk holds one open file per folder level, and a client sets the depth.
+LimitNOFILE=65536
 ReadOnlyPaths=-%h/.bashrc -%h/.bash_profile -%h/.bash_logout -%h/.profile -%h/.zshrc -%h/.zprofile -%h/.gitconfig
 # Every shell runs brew from here, and PATH holds these, so a run must not rewrite them.
 ReadOnlyPaths=-/var/home/linuxbrew -%h/go -%h/.homebrew
