@@ -27,10 +27,12 @@ MemoryMax=4G
 # into a copy. Instead the run's config and code are read-only, and the rest of .config,
 # .local, and .dotfiles is replaced with an empty tmpfs.
 TemporaryFileSystem=%h/.config:ro %h/.local:ro %h/.dotfiles:ro
+# uv and go trust their caches on reuse, so a run gets a scratch ~/.cache it can't leave behind.
+TemporaryFileSystem=%h/.cache
 BindReadOnlyPaths=%h/.config/beets %h/.local/bin %h/.local/share/uv %h/.dotfiles/bin %h/.dotfiles/beets
 BindPaths=%h/.local/share/beets %h/.local/share/music-cover-originals
 StateDirectory=fresh-tracks
-InaccessiblePaths=-%h/.ssh -%h/.gnupg -%h/.claude -%h/.claude.json -%h/.clasprc.json -%h/.mozilla -%h/.var -%h/.vdirsyncer -%h/.contacts -%h/.npm -%h/Projects -%h/Documents -%h/.bash_history -%h/.viminfo -%h/.subversion -%h/.android -%h/.cache/gh
+InaccessiblePaths=-%h/.ssh -%h/.gnupg -%h/.claude -%h/.claude.json -%h/.clasprc.json -%h/.mozilla -%h/.var -%h/.vdirsyncer -%h/.contacts -%h/.npm -%h/Projects -%h/Documents -%h/.bash_history -%h/.viminfo -%h/.subversion -%h/.android
 ReadOnlyPaths=-%h/.bashrc -%h/.bash_profile -%h/.bash_logout -%h/.profile -%h/.zshrc -%h/.zprofile -%h/.gitconfig
 # Every shell runs brew from here, and PATH holds these, so a run must not rewrite them.
 ReadOnlyPaths=-/var/home/linuxbrew -%h/go -%h/.homebrew
