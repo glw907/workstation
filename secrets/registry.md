@@ -525,7 +525,7 @@ tmpfs cache; no password manager holds it for scripts.
   rebuilt or compromised.
 
 ### CF_WS_R2_MUSIC_RW_*
-- **Grants**: the account-owned R2 token `ws-r2-music-rw` (id `(minted at merge)`), stored as
+- **Grants**: the account-owned R2 token `ws-r2-music-rw` (id `1b478a95c6c3537e5cd3b33d80bfe522`), stored as
   `_TOKEN` plus its S3 pair (`_KEY_ID` is the token id, `_SECRET` the SHA-256 of the value, per
   https://developers.cloudflare.com/r2/api/tokens/). Object read and write on `music-library`
   only, with no IP filter and no expiry. The key itself can overwrite and delete every object in
@@ -536,8 +536,8 @@ tmpfs cache; no password manager holds it for scripts.
   only the S3 pair, from `~/.local/secrets`, and runs `rclone copy` of `~/Music` to
   `music-library/library/`, which never deletes an object. The vault item is
   `R2 music token (music-library, read-write)` in `Infrastructure`.
-- **Minted** `(minted at merge)`. The smoke test over S3 lists `music-library` (200), is refused
-  `servers-archive` (403), and writes then deletes one object under `music-library/_smoke/`.
+- **Minted** 2026-11-25. The smoke test over S3 listed `music-library` (200), was refused
+  `servers-archive` (403), and wrote then deleted one object under `music-library/_smoke/`.
 - **Rotate**: mint a new `ws-r2-music-rw` with the same scope, store all three names with
   `secret-set.sh`, run `sync.sh --local`, rerun the smoke test, then delete the old token.
 
