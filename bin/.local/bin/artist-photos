@@ -7,10 +7,11 @@ an import, and a monthly timer retries the fallbacks. The spec is
 docs/specs/2026-11-24-artist-photos-design.md.
 """
 
-from dataclasses import dataclass, field
 from collections import Counter
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import hashlib
+import http.client
 from html.parser import HTMLParser
 import json
 import os
@@ -150,7 +151,7 @@ def fetch(url: str, headers: dict[str, str]) -> Reply:
         except OSError:
             body = b""
         return Reply(err.code, _lower(err.headers), body, url)
-    except (urllib.error.URLError, OSError, ValueError) as err:
+    except (urllib.error.URLError, http.client.HTTPException, OSError, ValueError) as err:
         raise FetchError(f"{url}: {err}") from err
 
 
@@ -617,7 +618,6 @@ class Run:
         self.cfg = cfg
         self.client = client
         self.state = load_state(cfg.folder / "state.json")
-        self.changed: set[str] = set()
         self.tried: dict[str, str] = {}
         self.saved: str | None = None
 
@@ -645,10 +645,11 @@ class Run:
         path, digest = manual[0]
         if ours and ours != path.name:
             (self.cfg.folder / ours).unlink(missing_ok=True)
-        if entry.get("manual_file") != path.name or entry.get("manual_sha256") != digest:
-            self.changed.add(artist.mbid)
+        refresh = entry.get("refresh") or entry.get("manual_file") != path.name or entry.get("manual_sha256") != digest
         entry.clear()
         entry.update(status="manual", manual_file=path.name, manual_sha256=digest, name=artist.name)
+        if refresh:
+            entry["refresh"] = True
         return True
 
     def store(self, artist: Artist, image: Image) -> None:
@@ -663,7 +664,8 @@ class Run:
             old = entry.get("file")
             if old and old != name:
                 (self.cfg.folder / old).unlink(missing_ok=True)
-            self.changed.add(artist.mbid)
+            # Kept in state until a refresh succeeds, since a stored path that already matches won't send it.
+            entry["refresh"] = True
         entry.update(
             status=image.kind, file=name, sha256=digest, source=image.source, url=image.url,
             kind=image.kind, confidence=image.confidence,
@@ -701,8 +703,13 @@ class Run:
             entry["status"] = "none"
         self.tried[artist.mbid] = entry["status"]
 
+    def refreshed(self) -> None:
+        for entry in self.state["artists"].values():
+            entry.pop("refresh", None)
+        self.save()
+
     def refresh_ids(self, artists: list[Artist]) -> list[str]:
-        """Return the Navidrome ids whose stored art isn't their folder file, or whose file changed this run."""
+        """Return the Navidrome ids whose stored art isn't their folder file, or whose file changed unrefreshed."""
         ids = []
         for artist in artists:
             entry = self.entry(artist.mbid)
@@ -711,7 +718,7 @@ class Run:
                 continue
             mine = os.path.realpath(self.cfg.folder / name)
             for nd_id, stored in artist.stored.items():
-                if artist.mbid in self.changed or not stored or os.path.realpath(stored) != mine:
+                if entry.get("refresh") or not stored or os.path.realpath(stored) != mine:
                     ids.append(nd_id)
         return sorted(ids)
 
@@ -815,6 +822,7 @@ def main() -> int:
     print(summary(run))
     ids = run.refresh_ids(artists)
     if not ids:
+        run.refreshed()
         return 0
     try:
         result = subprocess.run([cfg.navidrome, "artwork", "refresh", "ar", *ids], check=False)
@@ -824,6 +832,7 @@ def main() -> int:
     if result.returncode != 0:
         print(f"artist-photos: navidrome artwork refresh exited {result.returncode}", file=sys.stderr)
         return 1
+    run.refreshed()
     return 0
 
 

@@ -872,3 +872,62 @@ def test_a_redirect_to_another_host_drops_the_discogs_token():
     assert same.get_header("Authorization") == "Discogs token=fixture-token"
     with pytest.raises(ap.FetchError):
         handler.redirect_request(req, None, 302, "Found", {}, "file:///etc/passwd")
+
+
+@pytest.mark.parametrize("error", [
+    ap.http.client.IncompleteRead(b"partial"),
+    ap.http.client.InvalidURL("URL can't contain control characters"),
+    ap.http.client.BadStatusLine("garbage"),
+], ids=["incomplete-read", "invalid-url", "bad-status-line"])
+def test_an_http_client_error_is_a_fetch_error(monkeypatch, error):
+    class Opener:
+        def open(self, request, timeout):
+            raise error
+
+    monkeypatch.setattr(ap, "_opener", Opener())
+    with pytest.raises(ap.FetchError):
+        ap.fetch("https://example.invalid/a.jpg", {"User-Agent": UA})
+    monkeypatch.setattr(ap, "sleep", lambda s: None)
+    assert ap.Client(None).ok("https://example.invalid/a.jpg") is None
+
+
+def test_a_failed_refresh_of_a_same_name_file_runs_again_next_time(box, monkeypatch):
+    path = box.folder / f"{INDIA}.jpg"
+    nd = box.artist(INDIA, "India", stored=str(path))
+    box.helper_file(INDIA, jpeg("india-cover"), status="fallback", kind="fallback",
+                    last_try=NOW - 29 * DAY)
+    box.web[mb_url(INDIA)] = mb(INDIA, [("wikidata", "https://www.wikidata.org/wiki/Q9001")])
+    box.web["https://www.wikidata.org/wiki/Special:EntityData/Q9001.json"] = reply({"entities": {"Q9001": {
+        "claims": {"P18": [{"mainsnak": {"datavalue": {"value": "India.jpg"}}}]}}}})
+    box.web[commons("India.jpg")] = image(jpeg("india-photo"))
+    good_stub = box.stub.read_text()
+    box.stub.write_text(f'#!/bin/sh\nprintf "%s\\n" "$*" >> "{box.calls}"\nexit 3\n')
+
+    assert box.run(monkeypatch) == 1
+    assert box.refreshed() == [f"artwork refresh ar {nd}"]
+
+    box.calls.unlink()
+    box.stub.write_text(good_stub)
+    assert ap.main() == 0
+    assert box.refreshed() == [f"artwork refresh ar {nd}"]
+
+    box.calls.unlink()
+    assert ap.main() == 0
+    assert box.refreshed() == []
+    assert "refresh" not in box.entry(INDIA)
+
+
+def test_a_failed_refresh_of_a_new_manual_file_runs_again_next_time(box, monkeypatch):
+    path = box.folder / f"{ALPHA}.jpg"
+    nd = box.artist(ALPHA, "Alpha", stored=str(path))
+    box.helper_file(ALPHA, jpeg("alpha-ours"))
+    path.write_bytes(jpeg("alpha-by-hand"))
+    good_stub = box.stub.read_text()
+    box.stub.write_text("#!/bin/sh\nexit 3\n")
+
+    assert box.run(monkeypatch) == 1
+
+    box.stub.write_text(good_stub)
+    assert ap.main() == 0
+    assert box.refreshed() == [f"artwork refresh ar {nd}"]
+    assert box.entry(ALPHA)["status"] == "manual"
