@@ -39,17 +39,17 @@ Failure: an album lands in `~/Music` half-copied, an unsafe archive member is wr
 
 ## Design
 
-- **Folder.** `~/FreshTracks` on pavilion, mode 0750. It gets the `samba_share_t` label the way `~/Music` does
-  (`etc-drift.md`, the Samba entry): `semanage fcontext -a -t samba_share_t '/var/home/glw907/FreshTracks(/.*)?'`,
-  then `restorecon -R`. Probe today: `matchpathcon /var/home/glw907/FreshTracks` gives `user_home_t`.
-  `check-drift`'s label check moves from `~/Music` to `~/FreshTracks`, since no share reads `~/Music` now.
+- **Folder.** `~/Fresh Tracks` on pavilion, mode 0750. It gets the `samba_share_t` label the way `~/Music` does
+  (`etc-drift.md`, the Samba entry): `semanage fcontext -a -t samba_share_t '/var/home/glw907/Fresh Tracks(/.*)?'`,
+  then `restorecon -R`. Probe today: `matchpathcon /var/home/glw907/Fresh Tracks` gives `user_home_t`.
+  `check-drift`'s label check moves from `~/Music` to `~/Fresh Tracks`, since no share reads `~/Music` now.
   The `~/Music` fcontext rule stays: it costs nothing, and imported files carry that label anyway.
 - **Share.** A `[Fresh Tracks]` section in `bluefin/etc/samba/smb.conf.pavilion`: path
-  `/var/home/glw907/FreshTracks`, `valid users = oliver glw907`, `read only = no`, `force user` and
+  `/var/home/glw907/Fresh Tracks`, `valid users = oliver glw907`, `read only = no`, `force user` and
   `force group = glw907`, `create mask = 0644`, `directory mask = 0755`, `hide dot files = yes`,
   `veto files = /.fresh-tracks-work/`, and the `hosts allow` the `[music]` section uses today. The `[music]`
   section is removed, with its comments.
-- **Units.** `systemd/.config/systemd/user/fresh-tracks.path` (`PathChanged=%h/FreshTracks`, `MakeDirectory=yes`,
+- **Units.** `systemd/.config/systemd/user/fresh-tracks.path` (`PathChanged=%h/Fresh Tracks`, `MakeDirectory=yes`,
   `DirectoryMode=0750`) and `fresh-tracks.service` (`Type=oneshot`, `ConditionHost=pavilion`,
   `ExecStart=%h/.local/bin/fresh-tracks`, `WantedBy=default.target`). `PathChanged=` sees only the top folder,
   which is enough: each drop creates or closes a top-level entry. It doesn't fire for entries present at start
@@ -69,7 +69,7 @@ Failure: an album lands in `~/Music` half-copied, an unsafe archive member is wr
      `group_albums: yes` splits them into albums by their tags instead of one-track albums `-q` would skip.
   5. An archive is opened with `tarfile` or `zipfile` and refused whole on any absolute path, `..` part, link,
      device, FIFO, or control character, and when its unpacked size plus 1 GiB exceeds the free space. Otherwise
-     it unpacks into `~/FreshTracks/.fresh-tracks-work/<item>/`, with `tarfile`'s `data` filter. A folder or
+     it unpacks into `~/Fresh Tracks/.fresh-tracks-work/<item>/`, with `tarfile`'s `data` filter. A folder or
      loose files move into that work folder by rename, on the inbox's file system, so beets' move into
      `~/Music` is a rename too. Dot-named, it doesn't retrigger the path unit ("files whose name starts with a dot ... are generally
      ignored", `systemd.path(5)`), and the share vetoes it.
@@ -210,7 +210,9 @@ dubplate) keep, unrelated; household-it #11 already done. No edits.
 - A path unit over a daemon or a timer.
 - Navidrome's own watcher does the rescan, so no credential sits in a unit.
 - A 10-minute quiet period, and a partial album as the accepted risk of a copy that stalls past it.
-- The folder is `~/FreshTracks` (no space in a unit path); the share's name is `Fresh Tracks`.
+- The folder is `~/Fresh Tracks`, the same name as the share (Geoff, 2026-11-24). A path unit takes the space
+  as written: `systemctl --user show` on a test unit printed `Paths=/var/home/glw907/Fresh Tracks`. A sandbox
+  line that lists the path quotes it.
 - The work folder lives inside the inbox, hidden from Samba, so files keep the share label on their way in.
 - Loose top-level files import as one item, grouped by tags.
 - The task session installs nothing; the merging session does, after Geoff's approval.
