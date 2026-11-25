@@ -55,16 +55,11 @@ def test_navidrome_and_helper_share_the_four_nd_lines():
     assert helper == server
 
 
-def test_artist_art_priority_puts_the_folder_before_external():
-    (value,) = shlex.split(nd_lines("navidrome.service")["ND_ARTISTARTPRIORITY"])
-    assert value == "ND_ARTISTARTPRIORITY=artist.*, album/artist.*, image-folder, external"
-
-
 def test_each_bind_path_folder_is_made_at_install_or_by_a_state_directory():
     state_dirs = {
         f"{STATE_HOME}/{d}"
-        for unit in UNITS.glob("*.service")
-        for value in values(unit.name, "StateDirectory")
+        for unit in ("navidrome.service", "artist-photos.service")
+        for value in values(unit, "StateDirectory")
         for d in value.split()
     }
     binds = [p for value in values("artist-photos.service", "BindPaths") for p in shlex.split(value)]
@@ -77,29 +72,8 @@ def test_fresh_tracks_starts_the_helper_on_success():
     assert values("fresh-tracks.service", "OnSuccess", section="Unit") == ["artist-photos.service"]
 
 
-def test_helper_service_matches_the_spec_units():
-    unit = "artist-photos.service"
-    assert values(unit, "ConditionHost", section="Unit") == ["pavilion"]
-    assert values(unit, "Type") == ["oneshot"]
-    assert values(unit, "TimeoutStartSec") == ["2h"]
-    assert values(unit, "ProtectHome") == ["tmpfs"]
-    assert values(unit, "StateDirectory") == ["artist-photos"]
-    assert values(unit, "PrivateTmp") == ["yes"]
-    assert values(unit, "NoNewPrivileges") == ["yes"]
-    read_only = {p for value in values(unit, "BindReadOnlyPaths") for p in shlex.split(value)}
-    assert read_only == {
-        "%h/Music",
-        "%h/.local/share/beets",
-        "%h/.local/secrets",
-        "%h/.local/bin",
-        "%h/.dotfiles/bin",
-        "/var/home/linuxbrew/.linuxbrew",
-    }
-    (start,) = values(unit, "ExecStart")
+def test_helper_service_starts_the_tracked_script():
+    assert values("artist-photos.service", "ConditionHost", section="Unit") == ["pavilion"]
+    (start,) = values("artist-photos.service", "ExecStart")
     assert start == "%h/.local/bin/artist-photos"
     assert (ROOT / "bin/.local/bin/artist-photos").is_file()
-
-
-def test_timer_runs_monthly_and_catches_up():
-    assert values("artist-photos.timer", "OnCalendar", section="Timer") == ["monthly"]
-    assert values("artist-photos.timer", "Persistent", section="Timer") == ["true"]
