@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# music-backup: copies pavilion's ~/Music to the library/ folder of the
+# music-library R2 bucket. music-backup.service runs it each night.
+#
+# It runs `rclone copy`, which never deletes at the destination: a file lost
+# or removed locally stays in R2, and a file changed locally overwrites its
+# object. A run the unit's timeout stops resumes the next night, because copy
+# skips every object that already matches.
+#
+# rclone reads its remote from RCLONE_CONFIG_R2_* variables, so no config
+# file or argument holds the key. The key is ws-r2-music-rw, scoped to the
+# music-library bucket. A bucket-scoped key can't create a bucket, so rclone
+# skips its bucket check.
+set -euo pipefail
+
+# The Cloudflare account that holds music-library (cloudflare-estate-inventory.md).
+account=120c269ad6d3dfbe6d63a0bb53758ca0
+
+# A systemd user unit starts with no shell profile, so the script reads the
+# workstation's credential store itself, as cairn-tripwire does.
+# shellcheck source=/dev/null
+source "$HOME/.local/secrets"
+
+for var in CF_WS_R2_MUSIC_RW_KEY_ID CF_WS_R2_MUSIC_RW_SECRET; do
+    if [ -z "${!var:-}" ]; then
+        echo "music-backup: $var is empty after sourcing ~/.local/secrets" >&2
+        exit 3
+    fi
+done
+
+export RCLONE_CONFIG_R2_TYPE=s3
+export RCLONE_CONFIG_R2_PROVIDER=Cloudflare
+export RCLONE_CONFIG_R2_ENDPOINT="https://$account.r2.cloudflarestorage.com"
+export RCLONE_CONFIG_R2_ACCESS_KEY_ID=$CF_WS_R2_MUSIC_RW_KEY_ID
+export RCLONE_CONFIG_R2_SECRET_ACCESS_KEY=$CF_WS_R2_MUSIC_RW_SECRET
+export RCLONE_CONFIG_R2_NO_CHECK_BUCKET=true
+
+# The exclude skips the partial file artist-photos writes before its rename.
+exec rclone copy "$HOME/Music" r2:music-library/library --exclude '.artist-images/.*.part'

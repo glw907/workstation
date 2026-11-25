@@ -143,6 +143,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CLAUDE_CLEANROOM_OAUTH_TOKEN | ✓ | — | — |
 | GITHUB_TEST_LOGIN / _PASSWORD / _TOTP_SECRET / _TOKEN / _RECOVERY_CODES | ✓ | — | — |
 | CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
+| CF_WS_R2_MUSIC_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
 | CF_WS_R2_BACKUPS_RO_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
 | CF_ORPHEUS_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
 | CF_WARD_R2_BACKUP_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
@@ -522,6 +523,21 @@ tmpfs cache; no password manager holds it for scripts.
   refused another (403); the read-only token lists both backup buckets.
 - **Rotate**: as for `CF_WS_SERVERS_TOKEN`; a server's token also rotates when that server is
   rebuilt or compromised.
+
+### CF_WS_R2_MUSIC_RW_*
+- **Grants**: the account-owned R2 token `ws-r2-music-rw` (id `(minted at merge)`), stored as
+  `_TOKEN` plus its S3 pair (`_KEY_ID` is the token id, `_SECRET` the SHA-256 of the value, per
+  https://developers.cloudflare.com/r2/api/tokens/). Object read and write on `music-library`
+  only, with no IP filter and no expiry. `ws-r2-music-ro` (`MUSIC_R2_RO_*`) stays beside it, so
+  the pull from the bucket keeps a key that can't write.
+- **Used by**: `music-backup` on pavilion, which `music-backup.timer` runs each night. It reads
+  only the S3 pair, from `~/.local/secrets`, and runs `rclone copy` of `~/Music` to
+  `music-library/library/`, which never deletes an object. The vault item is
+  `R2 music token (music-library, read-write)` in `Infrastructure`.
+- **Minted** `(minted at merge)`. The smoke test over S3 lists `music-library` (200), is refused
+  `servers-archive` (403), and writes then deletes one object under `music-library/_smoke/`.
+- **Rotate**: mint a new `ws-r2-music-rw` with the same scope, store all three names with
+  `secret-set.sh`, run `sync.sh --local`, rerun the smoke test, then delete the old token.
 
 ### ACCESS_GITHUB_CLIENT_ID / ACCESS_GITHUB_CLIENT_SECRET
 - **Issuer**: the GitHub OAuth app "Wright Family Access" on Geoff's GitHub account, callback
