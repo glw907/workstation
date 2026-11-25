@@ -26,10 +26,14 @@ def _images(folder: Path) -> list[Path]:
         p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_EXTS
     ]
 
+# Pillow picks a decoder by content, and its EPS decoder runs Ghostscript, so a cover is
+# opened only as a raster format.
+RASTER = ["JPEG", "PNG", "WEBP", "GIF", "BMP", "TIFF"]
+
 
 def _size(path: Path) -> tuple[int, int]:
     try:
-        with Image.open(path) as im:
+        with Image.open(path, formats=RASTER) as im:
             return im.size
     except OSError:
         return (0, 0)
@@ -37,7 +41,7 @@ def _size(path: Path) -> tuple[int, int]:
 
 def _conform(path: Path) -> Path:
     """Rewrite the cover as cover.jpg within the size rule; return its new path."""
-    with Image.open(path) as im:
+    with Image.open(path, formats=RASTER) as im:
         if (
             im.format == "JPEG"
             and path.name == "cover.jpg"
