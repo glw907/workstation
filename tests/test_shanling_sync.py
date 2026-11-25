@@ -5,6 +5,7 @@ Every test runs the real rsync against folders under tmp_path, so no live card o
 free-space figure through space(), and os.path.ismount for --init.
 """
 
+import contextlib
 import importlib.machinery
 import importlib.util
 import io
@@ -36,6 +37,16 @@ class Stdin(io.StringIO):
 
 def answer(monkeypatch, text: str, tty: bool = True):
     monkeypatch.setattr("sys.stdin", Stdin(text, tty))
+
+
+@contextlib.contextmanager
+def locked(path: Path, mode: int):
+    """Set a folder's mode for the block and restore it after, so tmp_path can be removed."""
+    path.chmod(mode)
+    try:
+        yield
+    finally:
+        path.chmod(0o755)
 
 
 def write(path: Path, data: str = "audio") -> None:
@@ -84,16 +95,11 @@ def synced(rig):
 def test_first_run_copies_library_and_second_run_copies_nothing(rig, capsys):
     dest = synced(rig)
     assert tree(dest) == tree(rig["music"])
-    capsys.readouterr()
+    assert capsys.readouterr().out.rstrip().endswith("Done. Eject the card before unplugging it.")
     assert ss.main(["--dry-run"]) == 0
     out = capsys.readouterr().out
     assert "Copy 0 files" in out
     assert "Deletions" not in out
-
-
-def test_done_line_names_the_eject(rig, capsys):
-    synced(rig)
-    assert capsys.readouterr().out.rstrip().endswith("Done. Eject the card before unplugging it.")
 
 
 def test_no_marked_card_names_the_unmarked_volume(rig, capsys):
@@ -160,11 +166,8 @@ def test_init_refuses_a_folder_that_is_not_a_mount_point(rig, capsys):
 
 def test_init_exits_1_when_the_volume_is_read_only(rig, monkeypatch, capsys):
     monkeypatch.setattr(os.path, "ismount", lambda p: True)
-    rig["stick"].chmod(0o555)
-    try:
+    with locked(rig["stick"], 0o555):
         assert ss.main(["--init", str(rig["stick"])]) == 1
-    finally:
-        rig["stick"].chmod(0o755)
     assert "Could not mark" in capsys.readouterr().err
 
 
@@ -266,23 +269,17 @@ def test_space_rounds_each_copy_up_to_a_cluster(rig, monkeypatch):
 def test_a_copy_that_rsync_cannot_write_passes_its_exit_through(rig):
     # With the card folder read-only rsync can't make Music/ (its exit 11). The dry run, which
     # makes nothing, still passes.
-    rig["card"].chmod(0o555)
-    try:
+    with locked(rig["card"], 0o555):
         assert ss.main(["--dry-run"]) == 0
         assert ss.main([]) == 11
-    finally:
-        rig["card"].chmod(0o755)
     assert not (rig["card"] / "Music").exists()
 
 
 def test_a_read_only_music_folder_exits_with_rsyncs_code(rig):
     dest = synced(rig)
     write(rig["music"] / "Artist C/Album 3/01.flac", "c3")
-    dest.chmod(0)
-    try:
+    with locked(dest, 0):
         assert ss.main([]) == 3
-    finally:
-        dest.chmod(0o755)
     assert not (dest / "Artist C").exists()
 
 

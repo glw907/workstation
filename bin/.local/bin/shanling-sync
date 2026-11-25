@@ -100,7 +100,7 @@ def _has_mtp() -> bool:
 
 
 def check_source(music: Path) -> None:
-    """Exit unless the music folder holds a file, so an empty source can't empty the card."""
+    """Raise Fail unless the music folder holds a file, so an empty source can't empty the card."""
     if not music.is_dir() or not any(p.is_file() for p in music.rglob("*")):
         raise Fail(f"{music} is missing or holds no files. Nothing was changed.")
 
@@ -141,7 +141,7 @@ def space(card: Path) -> tuple[int, int]:
 
 
 def check_space(card: Path, copies: list[tuple[int, str]]) -> tuple[int, int]:
-    """Return the bytes needed and the free bytes, or exit when the copy won't fit."""
+    """Return the bytes needed and the free bytes, or raise Fail when the copy won't fit."""
     cluster, free = space(card)
     needed = sum(-(-size // cluster) * cluster for size, _ in copies) + MARGIN
     if needed > free:
@@ -201,18 +201,15 @@ def sync(dry_run: bool) -> int:
     needed, free = check_space(card, copies)
     print(f"Card: {card}")
     print(f"Copy {len(copies)} files, {needed:,} bytes needed of {free:,} free.")
-    kept = 0
     if deletions:
         print("Deletions:")
         for name in deletions:
             print(f"  {name}")
     if dry_run:
         return 0
+    kept = 0
     if deletions:
-        if ask_delete(len(deletions)):
-            kept = delete(dest, deletions)
-        else:
-            kept = len(deletions)
+        kept = delete(dest, deletions) if ask_delete(len(deletions)) else len(deletions)
     done = rsync(["--info=progress2", f"{music}/", f"{dest}/"], capture=False)
     if done.returncode:
         return done.returncode
@@ -232,12 +229,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return init_card(args.init) if args.init else sync(args.dry_run)
-    except Fail as exc:
+    except (Fail, OSError) as exc:
         print(f"shanling-sync: {exc}", file=sys.stderr)
-        return exc.code
-    except OSError as exc:
-        print(f"shanling-sync: {exc}", file=sys.stderr)
-        return 1
+        return getattr(exc, "code", 1)
 
 
 if __name__ == "__main__":
