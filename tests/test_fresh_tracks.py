@@ -117,6 +117,18 @@ def test_loose_tracks_split_into_albums_by_tags(box):
 
 
 @needs_beet
+def test_loose_file_beets_skips_is_kept(box):
+    for track in (FIXTURES / "loose").iterdir():
+        shutil.copy(track, box / "FreshTracks")
+    (box / "FreshTracks/Album.rar").write_bytes(b"Rar!\x1a\x07\x00")
+    ft.main()
+    assert len(music(box)) == 2
+    kept = box / "FreshTracks/Not imported/Loose tracks"
+    assert sorted(p.name for p in kept.iterdir()) == ["Album.rar", "WHY.txt"]
+    assert "Album.rar" in why(box, "Loose tracks")
+
+
+@needs_beet
 def test_tar_gz_imports_and_is_deleted(box):
     tar_with(box / "FreshTracks/album.tar.gz", album_members())
     ft.main()

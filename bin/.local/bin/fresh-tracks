@@ -363,6 +363,12 @@ def process(cfg: Config, item: Item, slot: Path) -> None:
 
     why = _why_lines(target, left, entries, item.label)
     skipped = max(len(why), sum(1 for tag, _ in entries if tag in REASONS))
+    if item.kind == "loose":
+        # A loose drop has no folder whose clutter beets leaves behind, so a file it
+        # skips, such as a .rar, may be music and is kept.
+        other = sorted(p for p in target.iterdir() if p.is_file() and p not in left)
+        left += other
+        why += [f"{p.name}: beets imports audio files, so it left this file." for p in other]
     line = f"{item.label}: {imported} albums imported, {skipped} skipped"
     if not left and imported == 0:
         dest = set_aside(cfg, moved, item.label, [f"{item.label}: It holds no music beets can read."])
