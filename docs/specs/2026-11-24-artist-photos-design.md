@@ -335,7 +335,8 @@ Name: artist-photos-runbook
 Tier: ask
 Files: `docs/systems/workstations.md`
 
-household-it has no Ask-only list, so Ask. Its repo is private and runs no CI, so its local gate stands in.
+The repo is `glw907/household-it`. The tick launches this task from `~/Projects/household-it`, that repo's main
+checkout, and finds its session and pull request there. household-it has no Ask-only list, so Ask. Its repo is private and runs no CI, so its local gate stands in.
 Builds on tasks 2 and 4 (it documents what merged). Reviewers: `standards:diff-reviewer`. Minutes: 25. Model:
 Sonnet at medium.
 
