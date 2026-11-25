@@ -66,8 +66,10 @@ variables point a test at scratch folders: `SHANLING_SYNC_MUSIC` (default `~/Mus
   deletes only the confirmed paths, itself, before the copy: each resolves and must lie under the resolved
   `<card>/Music/`, or the script exits 1 before deleting anything. Files go first, then folders, deepest first,
   with `rmdir`, so a folder that gained a file since the plan stays. Kept paths are counted in the last line.
-- **The copy.** `rsync -rt --modify-window=1 --info=progress2 <music>/ <card>/Music/`, without `--delete`, so
-  the copy can't remove a path Geoff didn't see. A non-zero rsync exit is the script's exit. After a clean copy
+- **The copy.** `rsync -rt --modify-window=1 --info=progress2 <music>/ <card>/Music/`, without `--delete`. Even
+  so, rsync replaces a card path whose type differs from the library's, such as a file `A` where the library
+  holds a folder `A/`, and the dry run never lists that deletion. So a plan holding such a swap exits 1, names
+  the paths, and changes nothing (found in review of PR #284). A non-zero rsync exit is the script's exit. After a clean copy
   it calls `os.sync()` and prints `Done. Eject the card before unplugging it.`
 
 ## When it goes wrong
