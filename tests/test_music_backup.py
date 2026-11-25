@@ -4,8 +4,8 @@ Each run puts a stub rclone first on PATH and a fixture secrets file under a scr
 nothing reaches R2 or reads the live store.
 """
 
+import configparser
 import json
-import os
 from pathlib import Path
 import subprocess
 
@@ -64,7 +64,7 @@ def run(box):
         "PATH": f"{box / 'stubs'}:/usr/bin:/bin",
         "STUB_LOG": str(box / "rclone.json"),
     }
-    return subprocess.run(["bash", str(SCRIPT)], env=env, capture_output=True, text=True)
+    return subprocess.run([str(SCRIPT)], env=env, capture_output=True, text=True)
 
 
 def stub_call(box):
@@ -108,20 +108,17 @@ def test_copies_the_library_with_the_remote_from_the_store(box):
         [f"export CF_WS_R2_MUSIC_RW_KEY_ID={KEY_ID}"],
         ["export CF_WS_R2_MUSIC_RW_KEY_ID=", f"export CF_WS_R2_MUSIC_RW_SECRET={SECRET}"],
         [f"export CF_WS_R2_MUSIC_RW_KEY_ID={KEY_ID}", "export CF_WS_R2_MUSIC_RW_SECRET="],
+        None,
     ],
-    ids=["no-key-id", "no-secret", "empty-key-id", "empty-secret"],
+    ids=["no-key-id", "no-secret", "empty-key-id", "empty-secret", "no-store"],
 )
 def test_a_missing_half_of_the_pair_runs_nothing(box, lines):
-    write_secrets(box, lines)
+    if lines is not None:
+        write_secrets(box, lines)
     result = run(box)
     assert result.returncode != 0
-    assert "music-backup: CF_WS_R2_MUSIC_RW_" in result.stderr
-    assert stub_call(box) is None
-
-
-def test_a_missing_store_runs_nothing(box):
-    result = run(box)
-    assert result.returncode != 0
+    if lines is not None:
+        assert "music-backup: CF_WS_R2_MUSIC_RW_" in result.stderr
     assert stub_call(box) is None
 
 
@@ -132,19 +129,11 @@ def test_no_task_file_names_a_sync():
 
 
 def unit_lines(path):
-    """Return each section's (key, value) pairs, in order."""
-    sections = {}
-    current = None
-    for raw in path.read_text().splitlines():
-        line = raw.strip()
-        if not line or line.startswith(("#", ";")):
-            continue
-        if line.startswith("[") and line.endswith("]"):
-            current = sections.setdefault(line[1:-1], [])
-            continue
-        key, _, value = line.partition("=")
-        current.append((key, value))
-    return sections
+    """Return each section's (key, value) pairs, keeping the keys' case."""
+    unit = configparser.ConfigParser(interpolation=None)
+    unit.optionxform = str
+    unit.read(path)
+    return {name: list(unit[name].items()) for name in unit.sections()}
 
 
 def test_the_service_runs_only_on_pavilion_under_its_sandbox():
@@ -168,7 +157,3 @@ def test_the_timer_runs_nightly_and_catches_up():
     assert ("Persistent", "true") in unit["Timer"]
     assert ("OnCalendar", "*-*-* 03:30") in unit["Timer"]
     assert ("WantedBy", "timers.target") in unit["Install"]
-
-
-def test_the_script_is_executable():
-    assert os.access(SCRIPT, os.X_OK)
