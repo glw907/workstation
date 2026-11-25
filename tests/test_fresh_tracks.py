@@ -643,6 +643,31 @@ def test_tar_with_a_huge_header_is_refused(box, fmt):
     assert "header of" in why(box, "big")
 
 
+def sparse_tar(path: Path, pax: bool) -> None:
+    """Write a GNU sparse member, or a pax 1.0 one whose map would be read from its data."""
+    if pax:
+        info = tarfile.TarInfo("Album A/01.mp3")
+        info.pax_headers = {"GNU.sparse.major": "1", "GNU.sparse.minor": "0",
+                            "GNU.sparse.name": "Album A/01.mp3", "GNU.sparse.realsize": "10"}
+        data = b"1\n0\n10\n"
+        info.size = len(data)
+        with tarfile.open(path, "w:bz2", format=tarfile.PAX_FORMAT) as tar:
+            tar.addfile(info, io.BytesIO(data))
+    else:
+        info = tarfile.TarInfo("Album A/01.mp3")
+        info.type = tarfile.GNUTYPE_SPARSE
+        with tarfile.open(path, "w:bz2", format=tarfile.GNU_FORMAT) as tar:
+            tar.addfile(info)
+
+
+@pytest.mark.parametrize("pax", [False, True])
+def test_tar_with_a_sparse_member_is_refused(box, pax):
+    """tarfile reads a sparse map outside the header check, so a sparse member is refused."""
+    sparse_tar(box / "FreshTracks/sparse.tar.bz2", pax)
+    assert ft.main() == 0
+    assert "sparse file" in why(box, "sparse")
+
+
 def test_appledouble_files_are_deleted(tmp_path):
     """A Mac's ._ files and __MACOSX folder go, and a ._ name that isn't one still counts."""
     (tmp_path / "__MACOSX/Album A").mkdir(parents=True)
@@ -655,6 +680,15 @@ def test_appledouble_files_are_deleted(tmp_path):
     (tmp_path / "._back.jpg").write_text("%!PS-Adobe-3.0\n")
     with pytest.raises(ft.Refused, match="isn't one: ._back.jpg"):
         ft.check_links(tmp_path)
+
+
+def test_macosx_folder_with_a_client_file_stays(tmp_path):
+    """A folder a client named __MACOSX keeps what isn't AppleDouble."""
+    (tmp_path / "__MACOSX").mkdir()
+    (tmp_path / "__MACOSX/._01.mp3").write_bytes(APPLEDOUBLE)
+    (tmp_path / "__MACOSX/01.mp3").write_bytes(b"ID3")
+    ft.check_links(tmp_path)
+    assert [p.name for p in (tmp_path / "__MACOSX").iterdir()] == ["01.mp3"]
 
 
 @needs_beet

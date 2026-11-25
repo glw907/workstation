@@ -249,6 +249,13 @@ class SmallHeaders(tarfile.TarInfo):
             raise Refused(f"The archive has a header of {self.size:,} bytes, past the 1 MiB limit.")
         return super()._proc_member(tar)
 
+    # tarfile reads a sparse file's map while it lists members, outside the size check above,
+    # and an album never holds one, so a sparse member is refused before its map is read.
+    def _refuse_sparse(self, *args):
+        raise Refused("The archive holds a sparse file, which an album never does.")
+
+    _proc_sparse = _proc_gnusparse_00 = _proc_gnusparse_01 = _proc_gnusparse_10 = _refuse_sparse
+
 
 def tar_members(f: BinaryIO, plain: bool):
     """Yield each member of a tar archive as (name, kind, size).
@@ -384,7 +391,7 @@ def check_links(target: Path) -> None:
     and a control character in a name could forge a log line. A file named as an image must
     start like one. Each folder gets mode 0755 and each file 0644, so beets can move them,
     the clean-up can delete them, and no mode a client set reaches ~/Music. A Mac's
-    AppleDouble files and __MACOSX folders are metadata, and are deleted.
+    AppleDouble files are metadata, and are deleted, with each __MACOSX folder they leave empty.
     """
     def unreadable(err: OSError) -> None:
         raise Refused(f"It holds a folder the importer can't read: {printable(str(err.filename))}")
@@ -413,9 +420,10 @@ def check_links(target: Path) -> None:
                 continue
             if not is_dir and path.suffix.lower() in IMAGES and not is_raster(path):
                 raise Refused(f"It holds a file named as an image that isn't one: {rel}")
-    # The walk runs top-down and checked every entry, so a nested one is already gone.
+    # A folder that held only AppleDouble files is now empty folders. One that still holds a
+    # file was a client's own, and stays.
     for path in macosx:
-        if path.exists():
+        if path.exists() and not any(p.is_file() for p in path.rglob("*")):
             shutil.rmtree(path)
 
 
