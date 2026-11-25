@@ -4,6 +4,8 @@ ConditionHost=pavilion
 # No implicit ordering before default.target: the run at login can wait out a
 # 10-minute quiet period, and the login shouldn't wait with it.
 DefaultDependencies=no
+# The path unit makes ~/FreshTracks, and the bind below needs it to exist.
+After=fresh-tracks.path
 Conflicts=shutdown.target
 Before=shutdown.target
 
@@ -12,6 +14,18 @@ Before=shutdown.target
 # login, because PathChanged= doesn't fire for entries already waiting.
 Type=oneshot
 ExecStart=%h/.local/bin/fresh-tracks
+# Home is an empty tmpfs except for what beets and the script use. Each path
+# below is its own mount, so beets' move into ~/Music copies each file to a
+# temporary name there and renames it into place.
+ProtectHome=tmpfs
+BindPaths=%h/FreshTracks %h/Music %h/.local/share/beets
+BindReadOnlyPaths=%h/.config/beets %h/.dotfiles/beets %h/.dotfiles/bin
+BindReadOnlyPaths=%h/.local/bin %h/.local/share/uv
+# Homebrew lives under /var/home and holds ffmpeg and ImageMagick.
+BindReadOnlyPaths=/var/home/linuxbrew
+StateDirectory=fresh-tracks
+PrivateTmp=yes
+NoNewPrivileges=yes
 
 [Install]
 WantedBy=default.target
