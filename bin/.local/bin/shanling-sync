@@ -27,6 +27,7 @@ MARGIN = 256 << 20
 RSYNC = ["rsync", "-rt", "-8", "--modify-window=1"]
 COPY_LINE = re.compile(r">f\S* +(\d+) (.+)")
 DELETE_LINE = re.compile(r"\*deleting +\d+ (.+)")
+NEW_DIR_LINE = re.compile(r"cd\S* +\d+ (.+)/")
 
 
 class Fail(Exception):
@@ -125,12 +126,25 @@ def plan(music: Path, dest: Path) -> tuple[list[tuple[int, str]], list[str]]:
     if done.returncode:
         sys.stderr.write(done.stderr)
         raise Fail(f"rsync's dry run failed with exit {done.returncode}. Nothing was changed.", done.returncode)
-    copies, deletions = [], []
+    copies, deletions, clashes = [], [], []
     for line in done.stdout.splitlines():
         if m := COPY_LINE.fullmatch(line):
             copies.append((int(m[1]), m[2]))
+            if os.path.isdir(dest / m[2]):
+                clashes.append(m[2])
         elif m := DELETE_LINE.fullmatch(line):
             deletions.append(m[1])
+        elif m := NEW_DIR_LINE.fullmatch(line):
+            if os.path.lexists(dest / m[1]):
+                clashes.append(m[1])
+    if clashes:
+        # rsync removes a path that blocks a file-for-folder swap without listing it as a deletion,
+        # so the plan can't show it for confirmation.
+        listing = "\n".join(f"  {name}" for name in clashes)
+        raise Fail(
+            "These paths are a file on one side and a folder on the other. Rename or remove "
+            f"them on the card, then run again. Nothing was changed.\n{listing}"
+        )
     return copies, deletions
 
 

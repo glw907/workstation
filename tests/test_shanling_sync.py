@@ -306,6 +306,26 @@ def test_delete_refuses_a_path_outside_music_before_deleting_anything(rig):
     assert outside.is_file()
 
 
+def test_a_file_on_the_card_where_the_library_has_a_folder_exits_1_and_keeps_the_file(rig, capsys):
+    (rig["card"] / "Music").mkdir()
+    write(rig["card"] / "Music/Artist A", "a file")
+    before = tree(rig["card"])
+    assert ss.main([]) == 1
+    assert tree(rig["card"]) == before
+    err = capsys.readouterr().err
+    assert "Artist A" in err
+    assert ss.main(["--dry-run"]) == 1
+
+
+def test_an_empty_folder_on_the_card_where_the_library_has_a_file_exits_1(rig, capsys):
+    write(rig["music"] / "loose.flac", "loose")
+    (rig["card"] / "Music/loose.flac").mkdir(parents=True)
+    before = tree(rig["card"])
+    assert ss.main([]) == 1
+    assert tree(rig["card"]) == before
+    assert "loose.flac" in capsys.readouterr().err
+
+
 def test_delete_unlinks_a_symlink_itself_not_what_it_points_at(rig):
     dest = synced(rig)
     (dest / "link.flac").symlink_to(dest / "Artist B/Album 2/01.flac")
