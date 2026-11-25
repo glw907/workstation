@@ -7,7 +7,9 @@ docs/specs/2026-11-24-fresh-tracks-design.md.
 """
 
 from dataclasses import dataclass
+import errno
 import fcntl
+import lzma
 import os
 from pathlib import Path
 import re
@@ -16,8 +18,10 @@ import stat
 import subprocess
 import sys
 import tarfile
+from typing import BinaryIO
 import time
 import zipfile
+import zlib
 
 WORK = ".fresh-tracks-work"
 NOT_IMPORTED = "Not imported"
@@ -29,6 +33,8 @@ AUDIO = frozenset(
     ".mp3 .aac .alac .ogg .opus .flac .ape .wv .mpc .asf .wma .aiff .aif .dsf .wav .m4a .m4b .mp4"
     .split()
 )
+# Audio beets can't read. It is set aside, never deleted with the leftovers.
+UNREADABLE = frozenset(".dff .shn .tta .tak .mka .ac3 .dts .ra .caf .au .amr".split())
 HEADROOM = 1 << 30
 IN_LIBRARY = "It is already in the library."
 REASONS = {
@@ -89,6 +95,11 @@ def report(cfg: Config, line: str) -> None:
         log.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {line}\n")
 
 
+def printable(name: str) -> str:
+    """Return name with each control character as "?", so a name can't forge a log line."""
+    return re.sub(r"[\x00-\x1f\x7f]", "?", name)
+
+
 def archive_stem(name: str) -> str | None:
     """Return the name without its archive suffix, or None when it isn't an archive."""
     lower = name.lower()
@@ -123,10 +134,10 @@ def stamp(path: Path) -> tuple[int, int]:
     return (st.st_size, st.st_mtime_ns)
 
 
-def snapshot(cfg: Config) -> dict[str, tuple[int, int]]:
-    """Map each path waiting under the inbox to its size and mtime."""
+def snapshot(cfg: Config, tops: list[Path]) -> dict[str, tuple[int, int]]:
+    """Map each path under the given top-level entries to its size and mtime."""
     seen = {}
-    for top in pending(cfg):
+    for top in tops:
         seen[top.name] = stamp(top)
         if top.is_dir() and not top.is_symlink():
             for root, dirs, files in os.walk(top):
@@ -136,20 +147,28 @@ def snapshot(cfg: Config) -> dict[str, tuple[int, int]]:
     return seen
 
 
-def wait_quiet(cfg: Config, sleep=time.sleep, clock=time.monotonic) -> None:
-    """Return once nothing waiting in the inbox has changed size or mtime for cfg.quiet seconds.
+def wait_quiet(cfg: Config, sleep=time.sleep, clock=time.monotonic) -> dict[str, tuple[int, int]]:
+    """Wait until nothing in the inbox has changed size or mtime for cfg.quiet seconds.
 
     An SMB copy updates a file's mtime as it writes, so a copy still running keeps the clock
-    from reaching the quiet period.
+    from reaching the quiet period. Returns the last snapshot, for changed() to compare.
     """
     poll = max(0.05, min(30.0, cfg.quiet / 20))
-    last = snapshot(cfg)
+    last = snapshot(cfg, pending(cfg))
     since = clock()
     while clock() - since < cfg.quiet:
         sleep(poll)
-        now = snapshot(cfg)
+        now = snapshot(cfg, pending(cfg))
         if now != last:
             last, since = now, clock()
+    return last
+
+
+def changed(cfg: Config, item: "Item", quiet: dict[str, tuple[int, int]]) -> bool:
+    """Report whether an item changed since the quiet period ended, while earlier items imported."""
+    names = {p.name for p in item.sources}
+    then = {k: v for k, v in quiet.items() if Path(k).parts[0] in names}
+    return snapshot(cfg, item.sources) != then
 
 
 def gather(entries: list[Path]) -> list[Item]:
@@ -161,9 +180,9 @@ def gather(entries: list[Path]) -> list[Item]:
     items, loose = [], []
     for path in entries:
         if path.is_dir() and not path.is_symlink():
-            items.append(Item("folder", path.name, [path]))
+            items.append(Item("folder", printable(path.name), [path]))
         elif path.is_file() and not path.is_symlink() and archive_stem(path.name):
-            items.append(Item("archive", archive_stem(path.name), [path]))
+            items.append(Item("archive", printable(archive_stem(path.name)), [path]))
         else:
             loose.append(path)
     if loose:
@@ -182,9 +201,13 @@ def bad_name(name: str) -> str | None:
     return None
 
 
-def tar_members(path: Path):
-    """Yield each member of a tar archive as (name, kind, size)."""
-    with tarfile.open(path) as tar:
+def tar_members(f: BinaryIO, plain: bool):
+    """Yield each member of a tar archive as (name, kind, size).
+
+    A plain tar whose copy stalled can end in zeros, which tarfile reads as a clean end, so
+    more than two records past the last member refuses it.
+    """
+    with tarfile.open(fileobj=f) as tar:
         for m in tar:
             kind = (
                 "link" if m.issym() or m.islnk()
@@ -194,11 +217,16 @@ def tar_members(path: Path):
                 else "other"
             )
             yield m.name, kind, m.size
+        if plain and os.fstat(f.fileno()).st_size - tar.offset > 2 * tarfile.RECORDSIZE:
+            raise Refused(
+                "The archive ends in empty space after its last file, so its copy may not have "
+                "finished."
+            )
 
 
-def zip_members(path: Path):
+def zip_members(f: BinaryIO):
     """Yield each member of a zip archive as (name, kind, size), its kind from the Unix mode."""
-    with zipfile.ZipFile(path) as archive:
+    with zipfile.ZipFile(f) as archive:
         for info in archive.infolist():
             mode = info.external_attr >> 16
             kind = (
@@ -231,36 +259,70 @@ def free_bytes(path: Path) -> int:
     return shutil.disk_usage(path).free
 
 
-def unpack(cfg: Config, archive: Path, dest: Path) -> None:
-    """Check the archive whole, then unpack it into dest, or raise Refused."""
-    is_zip = archive.name.lower().endswith(".zip")
+def open_archive(path: Path) -> BinaryIO:
+    """Open the archive once, refusing a link, and a FIFO that would block the run."""
     try:
-        size = check_members(zip_members(archive) if is_zip else tar_members(archive))
-        free = free_bytes(cfg.inbox)
-        if size + HEADROOM > free:
-            raise Refused(
-                f"The archive is too big to unpack: it needs {size / 2**30:.1f} GiB, and "
-                f"{free / 2**30:.1f} GiB is free, of which 1 GiB stays spare."
-            )
-        dest.mkdir()
-        if is_zip:
-            with zipfile.ZipFile(archive) as z:
-                z.extractall(dest)
-        else:
-            with tarfile.open(archive) as tar:
-                tar.extractall(dest, filter="data")
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError as err:
+        if err.errno == errno.ELOOP:
+            raise Refused("The archive is a link, not a file.") from err
+        raise
+    f = os.fdopen(fd, "rb")
+    if not stat.S_ISREG(os.fstat(fd).st_mode):
+        f.close()
+        raise Refused("The archive isn't a regular file.")
+    return f
+
+
+def unpack(cfg: Config, archive: Path, dest: Path) -> None:
+    """Check the archive whole, then unpack it into dest, or raise Refused.
+
+    The check and the unpack read one open file, so a swap between them changes nothing.
+    """
+    name = archive.name.lower()
+    try:
+        with open_archive(archive) as f:
+            members = zip_members(f) if name.endswith(".zip") else tar_members(f, name.endswith(".tar"))
+            size = check_members(members)
+            free = free_bytes(cfg.inbox)
+            if size + HEADROOM > free:
+                raise Refused(
+                    f"The archive is too big to unpack: it needs {size / 2**30:.1f} GiB, and "
+                    f"{free / 2**30:.1f} GiB is free, of which 1 GiB stays spare."
+                )
+            dest.mkdir()
+            f.seek(0)
+            if name.endswith(".zip"):
+                with zipfile.ZipFile(f) as z:
+                    z.extractall(dest)
+            else:
+                with tarfile.open(fileobj=f) as tar:
+                    tar.extractall(dest, filter="data")
     # zipfile raises RuntimeError for an encrypted member.
-    except (tarfile.TarError, zipfile.BadZipFile, EOFError, OSError, RuntimeError) as err:
+    except (
+        tarfile.TarError, zipfile.BadZipFile, zlib.error, lzma.LZMAError, EOFError, OSError,
+        RuntimeError,
+    ) as err:
         raise Refused(f"The archive can't be read, so it may be damaged or incomplete: {err}") from err
 
 
 def check_links(target: Path) -> None:
-    """Raise Refused when a folder holds a link or a special file, which beets would follow."""
+    """Raise Refused unless everything under target is a plain folder or a plain file.
+
+    beets follows a link, a hard link keeps a second name a client can still write through,
+    and a control character in a name could forge a log line.
+    """
     for root, dirs, files in os.walk(target):
         for name in dirs + files:
             path = Path(root, name)
-            if path.is_symlink() or not (path.is_dir() or path.is_file()):
-                raise Refused(f"It holds a link or a special file: {path.relative_to(target)}")
+            rel = printable(str(path.relative_to(target)))
+            st = path.lstat()
+            if not (stat.S_ISDIR(st.st_mode) or stat.S_ISREG(st.st_mode)):
+                raise Refused(f"It holds a link or a special file: {rel}")
+            if stat.S_ISREG(st.st_mode) and st.st_nlink > 1:
+                raise Refused(f"It holds a file with a second name, a hard link: {rel}")
+            if printable(name) != name:
+                raise Refused(f"It holds a name with a control character in it: {rel}")
 
 
 def beet(cfg: Config, *args: str) -> str:
@@ -302,26 +364,65 @@ def covers(stdout: str) -> list[str]:
 def leftover_audio(target: Path) -> list[Path]:
     if not target.exists():
         return []
-    return sorted(p for p in target.rglob("*") if p.is_file() and p.suffix.lower() in AUDIO)
+    # beets ignores dot names, such as the ._ files a Mac leaves, so they aren't music it skipped.
+    return sorted(
+        p for p in target.rglob("*")
+        if p.is_file() and not p.name.startswith(".") and p.suffix.lower() in AUDIO | UNREADABLE
+    )
 
 
 def write_why(dest: Path, lines: list[str]) -> None:
     (dest / "WHY.txt").write_text(WHY_HEADER + "".join(f"{line}\n" for line in lines))
 
 
-def set_aside(cfg: Config, label: str, moves: list[tuple[Path, Path]], why: list[str]) -> str:
+def open_not_imported(cfg: Config) -> int:
+    """Open Not imported/ without following a link, moving aside whatever took its name."""
+    for _ in range(3):
+        try:
+            os.mkdir(cfg.not_imported)
+        except FileExistsError:
+            pass
+        try:
+            return os.open(cfg.not_imported, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        except OSError:
+            # A link or a file a client put there. Moved, it imports like any drop.
+            moved = unique(cfg.inbox, f"{NOT_IMPORTED} (moved)")
+            cfg.not_imported.rename(moved)
+            report(cfg, f"Moved {moved.name} aside: it wasn't a folder.")
+    raise RuntimeError(f"{cfg.not_imported} keeps changing into something other than a folder")
+
+
+def set_aside(cfg: Config, slot: Path, label: str, moves: list[tuple[Path, Path]], why: list[str]) -> str:
     """Move each (source, path under the folder) into Not imported/<label>/ beside a WHY.txt.
 
-    Returns the folder's path under the inbox, for the log line.
+    The folder is built in the work slot, which Samba hides, and then renamed into place
+    through a handle that doesn't follow links, so a client can't redirect a write. Returns
+    the folder's path under the inbox, for the log line.
     """
-    cfg.not_imported.mkdir(exist_ok=True)
-    dest = unique(cfg.not_imported, label)
-    dest.mkdir()
+    aside = slot / "aside"
+    aside.mkdir()
     for src, rel in moves:
-        (dest / rel).parent.mkdir(parents=True, exist_ok=True)
-        src.rename(dest / rel)
-    write_why(dest, why)
-    return str(dest.relative_to(cfg.inbox))
+        (aside / rel).parent.mkdir(parents=True, exist_ok=True)
+        src.rename(aside / rel)
+    write_why(aside, why)
+    fd = open_not_imported(cfg)
+    try:
+        for n in range(1, 10_000):
+            name = label if n == 1 else f"{label} ({n})"
+            try:
+                os.lstat(name, dir_fd=fd)
+                continue
+            except FileNotFoundError:
+                pass
+            try:
+                os.rename(aside, name, dst_dir_fd=fd)
+                return f"{NOT_IMPORTED}/{name}"
+            except OSError as err:
+                if err.errno not in (errno.EEXIST, errno.ENOTEMPTY, errno.ENOTDIR, errno.EISDIR):
+                    raise
+        raise RuntimeError(f"no free name for {label} in {cfg.not_imported}")
+    finally:
+        os.close(fd)
 
 
 def recover(cfg: Config) -> None:
@@ -329,10 +430,12 @@ def recover(cfg: Config) -> None:
     if not cfg.work.exists():
         return
     for slot in sorted(cfg.work.iterdir()):
-        src = slot / "src"
-        if src.is_dir():
-            for entry in sorted(src.iterdir()):
-                entry.rename(unique(cfg.inbox, entry.name))
+        # aside/ holds what a crash inside set_aside() hadn't yet moved into Not imported.
+        for part in ("src", "aside"):
+            if (slot / part).is_dir():
+                for entry in sorted((slot / part).iterdir()):
+                    if entry.name != "WHY.txt":
+                        entry.rename(unique(cfg.inbox, entry.name))
         if slot.is_dir() and not slot.is_symlink():
             shutil.rmtree(slot)
         else:
@@ -340,11 +443,11 @@ def recover(cfg: Config) -> None:
         report(cfg, f"Moved a crashed run's leftovers in {slot.name} back to the inbox.")
 
 
-def process(cfg: Config, item: Item, slot: Path, albums: int) -> int:
+def process(cfg: Config, item: Item, slot: Path, albums: int | None) -> int | None:
     """Import one item through beets, set aside what it skipped, and log one line.
 
-    Takes the library's album count before the item and returns it after, so each item
-    lists the library once.
+    Takes the library's album count before the item, or None when no item has counted it
+    yet, and returns it after, so each item lists the library once.
     """
     src = slot / "src"
     src.mkdir(parents=True)
@@ -353,18 +456,23 @@ def process(cfg: Config, item: Item, slot: Path, albums: int) -> int:
         path.rename(src / path.name)
     whole = [(src / p.name, Path(p.name)) for p in item.sources]
     try:
+        # Each source is checked where it now sits, so one a client swapped for a link
+        # after gather() is refused.
+        check_links(src)
         if item.kind == "archive":
             target = slot / "unpacked"
             unpack(cfg, whole[0][0], target)
-        else:
-            target = src / item.label if item.kind == "folder" else src
             check_links(target)
+        else:
+            target = whole[0][0] if item.kind == "folder" else src
     except Refused as why:
-        dest = set_aside(cfg, item.label, whole, [str(why)])
+        dest = set_aside(cfg, slot, item.label, whole, [str(why)])
         shutil.rmtree(slot)
         report(cfg, f"{item.label}: not imported, moved to {dest}. {why}")
         return albums
 
+    if albums is None:
+        albums = album_count(cfg)
     log = slot / "import.log"
     stdout = beet(cfg, "import", "-q", "-l", str(log), str(target))
     after = album_count(cfg)
@@ -380,7 +488,7 @@ def process(cfg: Config, item: Item, slot: Path, albums: int) -> int:
     if why:
         # A skipped archive is kept whole; a folder keeps only the audio beets left.
         keep = whole if item.kind == "archive" or not left else [(p, p.relative_to(target)) for p in left]
-        line += f", moved to {set_aside(cfg, item.label, keep, why)}"
+        line += f", moved to {set_aside(cfg, slot, item.label, keep, why)}"
     shutil.rmtree(slot)
     if cover_lines := covers(stdout):
         line += ". Covers outside the rule: " + "; ".join(cover_lines)
@@ -394,10 +502,13 @@ def why_lines(target: Path, left: list[Path], entries, label: str) -> list[str]:
     for path in left:
         rel = path.parent.relative_to(target)
         name = str(rel) if rel.parts else label
-        reason = next(
-            (REASONS.get(tag, f"beets logged {tag}.") for tag, rest in entries if str(path) in rest),
-            "beets left it without logging why; see journalctl --user -u fresh-tracks.",
-        )
+        if path.suffix.lower() in UNREADABLE:
+            reason = f"beets can't read {path.suffix.lower()} files."
+        else:
+            reason = next(
+                (REASONS.get(tag, f"beets logged {tag}.") for tag, rest in entries if str(path) in rest),
+                "beets left it without logging why; see journalctl --user -u fresh-tracks.",
+            )
         folders.setdefault(name, reason)
     return [f"{name}: {reason}" for name, reason in folders.items()]
 
@@ -415,10 +526,15 @@ def main() -> int:
         recover(cfg)
         # Sweep again after each batch, so a drop that lands mid-run imports in this run.
         while pending(cfg):
-            wait_quiet(cfg)
+            quiet = wait_quiet(cfg)
             cfg.work.mkdir(exist_ok=True)
-            albums = album_count(cfg)
+            if cfg.work.is_symlink():
+                raise RuntimeError(f"{cfg.work} is a link; Samba should hide it from clients")
+            albums = None
             for n, item in enumerate(gather(pending(cfg)), 1):
+                if changed(cfg, item, quiet):
+                    report(cfg, f"{item.label}: still changing, so it waits for the next quiet period.")
+                    continue
                 albums = process(cfg, item, unique(cfg.work, str(n)), albums)
     return 0
 

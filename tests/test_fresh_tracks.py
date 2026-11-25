@@ -224,11 +224,38 @@ def test_damaged_archive_is_refused(box):
     assert "can't be read" in why(box, "cut")
 
 
+def test_zip_with_corrupt_data_is_refused(box):
+    """A damaged deflate stream raises zlib.error, which must not fail the run."""
+    path = box / "FreshTracks/cut.zip"
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("Album A/01.mp3", bytes(range(256)) * 64)
+    data = bytearray(path.read_bytes())
+    start = 30 + len("Album A/01.mp3")
+    data[start:start + 40] = b"\xff" * 40
+    path.write_bytes(bytes(data))
+    assert ft.main() == 0
+    assert "can't be read" in why(box, "cut")
+    assert (box / "FreshTracks/Not imported/cut/cut.zip").exists()
+
+
+@needs_beet
+def test_unreadable_audio_and_mac_dot_files(box):
+    """Audio beets can't read is set aside; a Mac's ._ file is not counted as skipped music."""
+    add_album(box / "FreshTracks/Album A")
+    (box / "FreshTracks/Album A/._01.mp3").write_bytes(b"mac")
+    (box / "FreshTracks/Album A/bonus.dff").write_bytes(b"dsd")
+    ft.main()
+    assert len(music(box)) == 2
+    dest = box / "FreshTracks/Not imported/Album A"
+    assert sorted(p.name for p in dest.iterdir()) == ["WHY.txt", "bonus.dff"]
+    assert "beets can't read .dff files." in why(box, "Album A")
+
+
 def test_folder_with_a_link_is_refused(box):
     add_album(box / "FreshTracks/Album A")
     os.symlink("/etc/passwd", box / "FreshTracks/Album A/03.mp3")
     ft.main()
-    assert "a link or a special file: 03.mp3" in why(box, "Album A")
+    assert "a link or a special file: Album A/03.mp3" in why(box, "Album A")
     assert (box / "FreshTracks/Not imported/Album A/Album A/01.mp3").exists()
 
 
@@ -285,6 +312,18 @@ def test_crashed_run_moves_back_and_imports(box):
     assert len(music(box)) == 2
 
 
+def test_crash_while_setting_aside_moves_back(box):
+    """A crash after the move into aside/ loses nothing: the next run returns it to the inbox."""
+    work = box / "FreshTracks/.fresh-tracks-work"
+    add_album(work / "1/aside/Album A")
+    (work / "1/aside/WHY.txt").write_text("Fresh Tracks didn't import this.\n")
+    cfg = ft.load_config()
+    cfg.state.mkdir(parents=True)
+    ft.recover(cfg)
+    assert inbox_names(box) == [".fresh-tracks-work", "Album A"]
+    assert (box / "FreshTracks/Album A/01.mp3").exists()
+
+
 def test_second_run_exits_at_once(box):
     cfg = ft.load_config()
     cfg.state.mkdir(parents=True)
@@ -298,3 +337,97 @@ def test_second_run_exits_at_once(box):
 def test_covers_parses_the_coverrule_report():
     out = "noise\nCovers outside the rule:\n  Artist - Album: 640 px\n  Other - Two: none\ndone\n"
     assert ft.covers(out) == ["Artist - Album: 640 px", "Other - Two: none"]
+
+
+def test_folder_swapped_for_a_link_after_gather_is_refused(box):
+    """A folder a client replaces with a link while earlier items import is never followed."""
+    outside = box / "Videos"
+    add_album(outside)
+    cfg = ft.load_config()
+    cfg.state.mkdir(parents=True)
+    cfg.work.mkdir()
+    add_album(cfg.inbox / "Album B")
+    [item] = ft.gather(ft.pending(cfg))
+    shutil.rmtree(cfg.inbox / "Album B")
+    os.symlink(outside, cfg.inbox / "Album B")
+    ft.process(cfg, item, cfg.work / "1", None)
+    assert sorted(p.name for p in outside.iterdir()) == ["01.mp3", "02.mp3", "album.cue", "rip.log"]
+    assert "a link or a special file: Album B" in why(box, "Album B")
+    assert (cfg.not_imported / "Album B/Album B").is_symlink()
+
+
+def test_not_imported_as_a_link_is_moved_aside(box):
+    """A link named Not imported is moved away, so nothing is written through it."""
+    elsewhere = box / "elsewhere"
+    elsewhere.mkdir()
+    cfg = ft.load_config()
+    os.symlink(elsewhere, cfg.not_imported)
+    add_album(cfg.inbox / "Album A")
+    os.symlink("/etc/passwd", cfg.inbox / "Album A/03.mp3")
+    ft.main()
+    assert list(elsewhere.iterdir()) == []
+    assert cfg.not_imported.is_dir() and not cfg.not_imported.is_symlink()
+    assert "a link or a special file" in why(box, "Album A")
+    assert (cfg.not_imported / "Loose tracks/Not imported (moved)").is_symlink()
+
+
+def test_set_aside_skips_a_name_a_client_planted(box):
+    """A link planted at the set-aside folder's name is passed over, and its target untouched."""
+    victim = box / "victim"
+    victim.mkdir()
+    cfg = ft.load_config()
+    cfg.state.mkdir(parents=True)
+    cfg.not_imported.mkdir()
+    os.symlink(victim, cfg.not_imported / "Album A")
+    add_album(cfg.inbox / "Album A")
+    os.symlink("/etc/passwd", cfg.inbox / "Album A/03.mp3")
+    ft.main()
+    assert list(victim.iterdir()) == []
+    assert "a link or a special file" in why(box, "Album A (2)")
+
+
+def test_hard_link_and_control_character_are_refused(box):
+    add_album(box / "FreshTracks/Album A")
+    os.link(box / "FreshTracks/Album A/01.mp3", box / "linked.mp3")
+    (box / "FreshTracks/Bad\nName").mkdir()
+    (box / "FreshTracks/Bad\nName/01.mp3").write_bytes(b"x")
+    ft.main()
+    assert "a hard link: Album A/01.mp3" in why(box, "Album A")
+    assert "a control character in it: Bad?Name" in why(box, "Bad?Name")
+    assert "Bad\nName" not in state_log(box)
+
+
+def test_plain_tar_ending_in_zeros_is_refused(box):
+    """A plain tar whose copy stalled ends in zeros and must not import as complete."""
+    path = box / "FreshTracks/stalled.tar"
+    with tarfile.open(path, "w") as tar:
+        for name, data in album_members():
+            info = tarfile.TarInfo(name)
+            info.size = len(data)
+            tar.addfile(info, io.BytesIO(data))
+    with open(path, "ab") as f:
+        f.write(bytes(3 * tarfile.RECORDSIZE))
+    ft.main()
+    assert "its copy may not have finished" in why(box, "stalled")
+
+
+@needs_beet
+def test_item_that_changes_after_the_wait_waits(box, monkeypatch):
+    """An item written to while earlier items import waits for the next quiet period."""
+    real = ft.wait_quiet
+    calls = []
+
+    def wait(cfg):
+        seen = real(cfg)
+        if not calls:
+            (cfg.inbox / "Album A/rip.log").write_text("still ripping, longer now\n")
+        calls.append(1)
+        return seen
+
+    monkeypatch.setattr(ft, "wait_quiet", wait)
+    add_album(box / "FreshTracks/Album A")
+    ft.main()
+    log = state_log(box)
+    assert "Album A: still changing, so it waits for the next quiet period." in log
+    assert "Album A: 1 albums imported, 0 skipped." in log
+    assert len(calls) == 2
