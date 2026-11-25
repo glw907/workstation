@@ -330,7 +330,8 @@ def process(cfg: Config, item: Item, slot: Path) -> None:
     """Import one item through beets, set aside what it skipped, and log one line."""
     src = slot / "src"
     src.mkdir(parents=True)
-    # A rename on the inbox's file system, so beets' move into ~/Music is a rename too.
+    # A rename within the inbox. The unit's sandbox mounts ~/Music apart, so beets' move
+    # there copies each file to a temporary name and renames it into place.
     for path in item.sources:
         path.rename(src / path.name)
     moved = [src / p.name for p in item.sources]
