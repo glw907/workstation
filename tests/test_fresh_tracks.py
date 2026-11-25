@@ -364,7 +364,7 @@ def test_a_failing_item_does_not_stop_the_next(box):
     add_album(box / "Fresh Tracks/B open")
     locked.chmod(0o555)
     try:
-        assert ft.main() == 0
+        assert ft.main() == 1
     finally:
         locked.chmod(0o755)
     assert len(music(box)) == 2

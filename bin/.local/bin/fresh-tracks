@@ -269,7 +269,7 @@ def check_links(target: Path) -> None:
 
 
 def beet(cfg: Config, *args: str) -> str:
-    """Run beet and return its stdout; a failed run raises and fails the service."""
+    """Run beet and return its stdout; a failed run raises, and main sets that item aside."""
     return subprocess.run(
         [str(cfg.beet), *args], check=True, stdout=subprocess.PIPE, text=True, errors="replace"
     ).stdout
@@ -443,7 +443,8 @@ def main() -> int:
                     # One item's error mustn't stop the items behind it.
                     failed.update(item.sources)
                     _set_aside_failed(cfg, item, slot, exc)
-    return 0
+    # A failed item fails the service, so systemctl --user status shows it.
+    return 1 if failed else 0
 
 
 def _set_aside_failed(cfg: Config, item: Item, slot: Path, exc: Exception) -> None:
