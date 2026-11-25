@@ -113,15 +113,17 @@ def load_config() -> Config:
     )
 
 
-# Landlock's x86_64 syscalls and the rights that change a file system: write a file, then remove
+# Landlock's syscalls and the rights that change a file system: write a file, then remove
 # a folder or file and make a device, folder, file, socket, fifo, or link (bits 4 to 12).
 _SYS_CREATE, _SYS_ADD_RULE, _SYS_RESTRICT = 444, 445, 446
 _WRITE_RIGHTS = 1 << 1 | 0x1FF0
 _REFER, _TRUNCATE = 1 << 13, 1 << 14
+# From ABI 6, a run can't reach an abstract socket or signal a process outside its sandbox.
+_SCOPE_ABSTRACT_UNIX_SOCKET, _SCOPE_SIGNAL = 1 << 0, 1 << 1
 
 
 def writable(cfg: Config) -> list[Path]:
-    """List the folders a run writes beneath: the inbox, the library, beets' data, and scratch."""
+    """List the folders a run writes beneath: the inbox, its state, the library, beets' data, and scratch."""
     home = Path.home()
     share = home / ".local/share"
     return [
@@ -157,9 +159,19 @@ def confine(folders: list[Path]) -> None:
         return got
 
     abi = call(_SYS_CREATE, None, ctypes.c_size_t(0), ctypes.c_uint32(1))
-    rights = _WRITE_RIGHTS | (_REFER if abi >= 2 else 0) | (_TRUNCATE if abi >= 3 else 0)
-    handled = ctypes.c_uint64(rights)
-    ruleset = call(_SYS_CREATE, ctypes.byref(handled), ctypes.c_size_t(8), ctypes.c_uint32(0))
+    if abi < 2:
+        # ABI 1 refuses every rename between folders, which would turn beets' move into a copy.
+        raise OSError(errno.ENOTSUP, f"Landlock ABI {abi} can't keep beets' move a rename")
+    rights = _WRITE_RIGHTS | _REFER | (_TRUNCATE if abi >= 3 else 0)
+    # struct landlock_ruleset_attr: the file rights, the network rights (none), then the scopes.
+    if abi >= 6:
+        scoped = _SCOPE_ABSTRACT_UNIX_SOCKET | _SCOPE_SIGNAL
+        attr = ctypes.create_string_buffer(struct.pack("=QQQ", rights, 0, scoped))
+        size = 24
+    else:
+        attr = ctypes.create_string_buffer(struct.pack("=Q", rights))
+        size = 8
+    ruleset = call(_SYS_CREATE, attr, ctypes.c_size_t(size), ctypes.c_uint32(0))
     try:
         for folder in folders:
             try:

@@ -723,21 +723,22 @@ for attempt in ("open(box / '.bashrc', 'w')", "(box / 'inbox/x').rename(box / 'm
         print("refused")
 child = subprocess.run(["sh", "-c", f"echo planted > {box}/.profile"], capture_output=True)
 print("child", child.returncode)
+print("signal", subprocess.run(["kill", "-0", sys.argv[3]], capture_output=True).returncode)
 """
 
 
 def test_confine_allows_only_its_folders(tmp_path):
-    """A confined run writes and renames beneath its folders, and nothing it starts writes outside."""
+    """A confined run writes and renames beneath its folders, and nothing it starts writes or signals outside."""
     (tmp_path / "inbox").mkdir()
     (tmp_path / "Music").mkdir()
     (tmp_path / "inbox/x").write_text("x")
     run = subprocess.run(
-        [sys.executable, "-I", "-c", CONFINED, str(SCRIPT), str(tmp_path)],
+        [sys.executable, "-I", "-c", CONFINED, str(SCRIPT), str(tmp_path), str(os.getpid())],
         capture_output=True,
         text=True,
     )
     assert run.returncode == 0, run.stderr
-    assert run.stdout.split("\n")[:3] == ["refused", "refused", "child 1"]
+    assert run.stdout.split("\n")[:4] == ["refused", "refused", "child 1", "signal 1"]
     assert (tmp_path / "Music/track.flac").read_text() == "audio"
     assert not (tmp_path / ".bashrc").exists()
     assert not (tmp_path / ".profile").exists()

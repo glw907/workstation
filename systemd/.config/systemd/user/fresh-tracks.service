@@ -33,6 +33,9 @@ BindReadOnlyPaths=%h/.config/beets %h/.local/bin %h/.local/share/uv %h/.dotfiles
 BindPaths=%h/.local/share/beets %h/.local/share/music-cover-originals
 StateDirectory=fresh-tracks
 InaccessiblePaths=-%h/.ssh -%h/.gnupg -%h/.claude -%h/.claude.json -%h/.clasprc.json -%h/.mozilla -%h/.var -%h/.vdirsyncer -%h/.contacts -%h/.npm -%h/Projects -%h/Documents -%h/.bash_history -%h/.viminfo -%h/.subversion -%h/.android
+# Landlock doesn't cover connecting to a socket, and the user manager and session bus here
+# could start a process outside the sandbox, so the runtime folder is hidden.
+InaccessiblePaths=-%t
 ReadOnlyPaths=-%h/.bashrc -%h/.bash_profile -%h/.bash_logout -%h/.profile -%h/.zshrc -%h/.zprofile -%h/.gitconfig
 # Every shell runs brew from here, and PATH holds these, so a run must not rewrite them.
 ReadOnlyPaths=-/var/home/linuxbrew -%h/go -%h/.homebrew
