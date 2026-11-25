@@ -1,0 +1,17 @@
+[Unit]
+Description=Import new music from ~/FreshTracks into ~/Music through beets
+ConditionHost=pavilion
+# No implicit ordering before default.target: the run at login can wait out a
+# 10-minute quiet period, and the login shouldn't wait with it.
+DefaultDependencies=no
+Conflicts=shutdown.target
+Before=shutdown.target
+
+[Service]
+# fresh-tracks.path starts this when the inbox changes. It also runs once at
+# login, because PathChanged= doesn't fire for entries already waiting.
+Type=oneshot
+ExecStart=%h/.local/bin/fresh-tracks
+
+[Install]
+WantedBy=default.target
