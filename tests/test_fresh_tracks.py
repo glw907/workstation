@@ -223,6 +223,30 @@ def test_damaged_archive_is_refused(box):
     assert "can't be read" in why(box, "cut")
 
 
+@pytest.mark.parametrize("name", ["bad.zip", "bad.tar.xz"])
+def test_corrupt_compressed_archive_is_refused(box, name):
+    # zlib.error and lzma.LZMAError aren't OSErrors, so each needs a case of its own.
+    path = box / "FreshTracks" / name
+    member = "Album A/01.mp3"
+    data = b"".join(b"%08d" % i for i in range(40000))
+    if name.endswith(".zip"):
+        with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr(member, data)
+        # The deflate stream starts after the 30-byte local header and the name.
+        at = 30 + len(member)
+    else:
+        with tarfile.open(path, "w:xz") as tar:
+            info = tarfile.TarInfo(member)
+            info.size = len(data)
+            tar.addfile(info, io.BytesIO(data))
+        at = path.stat().st_size // 2
+    raw = bytearray(path.read_bytes())
+    raw[at : at + 8] = b"\xff" * 8
+    path.write_bytes(bytes(raw))
+    assert ft.main() == 0
+    assert "damaged or incomplete" in why(box, name.split(".")[0])
+
+
 def test_folder_with_a_link_is_refused(box):
     add_album(box / "FreshTracks/Album A")
     os.symlink("/etc/passwd", box / "FreshTracks/Album A/03.mp3")

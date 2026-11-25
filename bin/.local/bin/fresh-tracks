@@ -8,6 +8,7 @@ docs/specs/2026-11-24-fresh-tracks-design.md.
 
 from dataclasses import dataclass
 import fcntl
+import lzma
 import os
 from pathlib import Path
 import re
@@ -18,6 +19,7 @@ import sys
 import tarfile
 import time
 import zipfile
+import zlib
 
 WORK = ".fresh-tracks-work"
 NOT_IMPORTED = "Not imported"
@@ -39,6 +41,10 @@ REASONS = {
     "duplicate-skip": IN_LIBRARY,
     "duplicate-replace": IN_LIBRARY,
 }
+# A damaged archive raises these. zlib.error and lzma.LZMAError aren't OSErrors.
+ARCHIVE_ERRORS = (
+    tarfile.TarError, zipfile.BadZipFile, EOFError, OSError, zlib.error, lzma.LZMAError
+)
 WHY_HEADER = "Fresh Tracks didn't import this music. Nothing in it was deleted.\n\n"
 
 
@@ -224,7 +230,7 @@ def unpack(cfg: Config, archive: Path, dest: Path) -> None:
     is_zip = archive.name.lower().endswith(".zip")
     try:
         size = check_zip(archive) if is_zip else check_tar(archive)
-    except (tarfile.TarError, zipfile.BadZipFile, EOFError, OSError) as err:
+    except ARCHIVE_ERRORS as err:
         raise Refused(f"The archive can't be read, so it may be damaged or incomplete: {err}")
     free = free_bytes(cfg.inbox)
     if size + HEADROOM > free:
@@ -240,7 +246,7 @@ def unpack(cfg: Config, archive: Path, dest: Path) -> None:
         else:
             with tarfile.open(archive) as tar:
                 tar.extractall(dest, filter="data")
-    except (tarfile.TarError, zipfile.BadZipFile, EOFError, OSError, RuntimeError) as err:
+    except (*ARCHIVE_ERRORS, RuntimeError) as err:
         raise Refused(f"The archive can't be unpacked, so it may be damaged or incomplete: {err}")
 
 
