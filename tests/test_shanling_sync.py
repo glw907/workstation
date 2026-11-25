@@ -258,6 +258,19 @@ def test_free_space_below_the_bytes_needed_exits_1_with_nothing_copied(rig, monk
     assert f"{ss.MARGIN:,}" in err
 
 
+def test_a_dry_run_that_runs_short_still_prints_the_copy_count_and_deletions(rig, monkeypatch, capsys):
+    synced(rig)
+    shutil.rmtree(rig["music"] / "Artist B")
+    write(rig["music"] / "Artist C/Album 3/01.flac", "c3")
+    capsys.readouterr()
+    monkeypatch.setattr(ss, "space", lambda card: (4096, ss.MARGIN))
+    assert ss.main(["--dry-run"]) == 1
+    cap = capsys.readouterr()
+    assert "Copy 1 files" in cap.out
+    assert "Artist B/Album 2/01.flac" in cap.out
+    assert "needs" in cap.err
+
+
 def test_space_rounds_each_copy_up_to_a_cluster(rig, monkeypatch):
     needed = 3 * 32768 + ss.MARGIN
     monkeypatch.setattr(ss, "space", lambda card: (32768, needed))
@@ -291,6 +304,20 @@ def test_delete_refuses_a_path_outside_music_before_deleting_anything(rig):
         ss.delete(dest, ["Artist B/Album 2/01.flac", "../beside.txt"])
     assert (dest / "Artist B/Album 2/01.flac").is_file()
     assert outside.is_file()
+
+
+def test_delete_unlinks_a_symlink_itself_not_what_it_points_at(rig):
+    dest = synced(rig)
+    (dest / "link.flac").symlink_to(dest / "Artist B/Album 2/01.flac")
+    ss.delete(dest, ["link.flac"])
+    assert not (dest / "link.flac").is_symlink()
+    assert (dest / "Artist B/Album 2/01.flac").is_file()
+
+
+def test_an_empty_init_argument_is_not_a_sync(rig):
+    before = tree(rig["card"])
+    assert ss.main(["--init", ""]) == 1
+    assert tree(rig["card"]) == before
 
 
 def test_delete_leaves_a_folder_that_gained_a_file(rig):

@@ -140,13 +140,10 @@ def space(card: Path) -> tuple[int, int]:
     return st.f_bsize, st.f_bavail * st.f_frsize
 
 
-def check_space(card: Path, copies: list[tuple[int, str]]) -> tuple[int, int]:
-    """Return the bytes needed and the free bytes, or raise Fail when the copy won't fit."""
+def measure_space(card: Path, copies: list[tuple[int, str]]) -> tuple[int, int]:
+    """Return the bytes the copies need, each rounded up to a cluster plus the margin, and the free bytes."""
     cluster, free = space(card)
-    needed = sum(-(-size // cluster) * cluster for size, _ in copies) + MARGIN
-    if needed > free:
-        raise Fail(f"The copy needs {needed:,} bytes and the card has {free:,} free. Nothing was changed.")
-    return needed, free
+    return sum(-(-size // cluster) * cluster for size, _ in copies) + MARGIN, free
 
 
 def ask_delete(count: int) -> bool:
@@ -171,8 +168,9 @@ def delete(dest: Path, names: list[str]) -> int:
     root = dest.resolve()
     targets = []
     for name in names:
-        target = (root / name.rstrip("/")).resolve()
-        if target == root or root not in target.parents:
+        target = root / name.rstrip("/")
+        resolved = target.resolve()
+        if resolved == root or root not in resolved.parents:
             raise Fail(f"Refusing to delete {name}: it is outside {root}. Nothing was deleted.")
         targets.append((name.endswith("/"), target))
     for is_dir, target in targets:
@@ -198,13 +196,15 @@ def sync(dry_run: bool) -> int:
     check_source(music)
     dest = card / "Music"
     copies, deletions = plan(music, dest)
-    needed, free = check_space(card, copies)
+    needed, free = measure_space(card, copies)
     print(f"Card: {card}")
     print(f"Copy {len(copies)} files, {needed:,} bytes needed of {free:,} free.")
     if deletions:
         print("Deletions:")
         for name in deletions:
             print(f"  {name}")
+    if needed > free:
+        raise Fail(f"The copy needs {needed:,} bytes and the card has {free:,} free. Nothing was changed.")
     if dry_run:
         return 0
     kept = 0
@@ -228,7 +228,7 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--init", metavar="VOLUME", help="mark a mounted volume as the card")
     args = parser.parse_args(argv)
     try:
-        return init_card(args.init) if args.init else sync(args.dry_run)
+        return init_card(args.init) if args.init is not None else sync(args.dry_run)
     except (Fail, OSError) as exc:
         print(f"shanling-sync: {exc}", file=sys.stderr)
         return getattr(exc, "code", 1)
