@@ -31,10 +31,11 @@ AUDIO = frozenset(
     ".mp3 .aac .alac .ogg .opus .flac .ape .wv .mpc .asf .wma .aiff .aif .dsf .wav .m4a .m4b .mp4"
     .split()
 )
-# Archives and audio that beets doesn't read. Inside a folder or archive these may be
-# music, so they're kept rather than deleted with the other leftovers.
-KEEP = frozenset(
-    ".zip .tar .gz .tgz .xz .bz2 .zst .rar .7z .dff .mka .tak .shn .oga .m4r".split()
+# The rip clutter deleted with an imported item. Any other file beets leaves may be music
+# it can't read, such as a .dts or a nested archive, so it's kept.
+CLUTTER = frozenset(
+    ".cue .log .txt .nfo .m3u .m3u8 .sfv .md5 .ffp .accurip .pdf"
+    " .jpg .jpeg .png .gif .bmp .webp .tif .tiff".split()
 )
 KEPT = "beets imports audio files, so it left this file."
 HEADROOM = 1 << 30
@@ -96,6 +97,8 @@ def load_config() -> Config:
 
 def report(cfg: Config, line: str) -> None:
     """Print a line for the journal and append it to the state log."""
+    # A name from an old Latin-1 tarball arrives with surrogates that UTF-8 can't encode.
+    line = line.encode("utf-8", "backslashreplace").decode("utf-8")
     print(line, flush=True)
     with open(cfg.state / "log", "a", encoding="utf-8") as log:
         log.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {line}\n")
@@ -303,12 +306,13 @@ def covers(stdout: str) -> list[str]:
 
 def leftover_audio(target: Path) -> list[Path]:
     return sorted(
-        p for p in target.rglob("*") if p.is_file() and p.suffix.lower() in AUDIO | KEEP
+        p for p in target.rglob("*") if p.is_file() and p.suffix.lower() not in CLUTTER
     ) if target.exists() else []
 
 
 def write_why(dest: Path, lines: list[str]) -> None:
-    (dest / "WHY.txt").write_text(WHY_HEADER + "".join(f"{line}\n" for line in lines))
+    text = WHY_HEADER + "".join(f"{line}\n" for line in lines)
+    (dest / "WHY.txt").write_text(text, encoding="utf-8", errors="backslashreplace")
 
 
 def set_aside(cfg: Config, sources: list[Path], label: str, why: list[str]) -> Path:
@@ -426,12 +430,34 @@ def main() -> int:
             return 0
         recover(cfg)
         # Sweep again after each batch, so a drop that lands mid-run imports in this run.
-        while pending(cfg):
+        failed: set[Path] = set()
+        while [p for p in pending(cfg) if p not in failed]:
             wait_quiet(cfg)
             cfg.work.mkdir(exist_ok=True)
-            for n, item in enumerate(gather(pending(cfg)), 1):
-                process(cfg, item, unique(cfg.work, str(n)))
+            waiting = [p for p in pending(cfg) if p not in failed]
+            for n, item in enumerate(gather(waiting), 1):
+                slot = unique(cfg.work, str(n))
+                try:
+                    process(cfg, item, slot)
+                except Exception as exc:
+                    # One item's error mustn't stop the items behind it.
+                    failed.update(item.sources)
+                    _set_aside_failed(cfg, item, slot, exc)
     return 0
+
+
+def _set_aside_failed(cfg: Config, item: Item, slot: Path, exc: Exception) -> None:
+    """Move what a failed item left in its work slot to Not imported/, keeping every file."""
+    why = f"{item.label}: Fresh Tracks hit an error ({exc!r}); see journalctl --user -u fresh-tracks."
+    src = slot / "src"
+    try:
+        if src.is_dir() and any(src.iterdir()):
+            set_aside(cfg, sorted(src.iterdir()), item.label, [why])
+            shutil.rmtree(slot)
+        report(cfg, why)
+    except Exception as again:
+        # The files stay in the work folder, and the next run's recover moves them back.
+        report(cfg, f"{why} Setting it aside failed too ({again!r}).")
 
 
 if __name__ == "__main__":

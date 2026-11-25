@@ -345,3 +345,27 @@ def test_second_run_exits_at_once(box):
 def test_covers_parses_the_coverrule_report():
     out = "noise\nCovers outside the rule:\n  Artist - Album: 640 px\n  Other - Two: none\ndone\n"
     assert ft.covers(out) == ["Artist - Album: 640 px", "Other - Two: none"]
+
+
+@needs_beet
+def test_unread_format_in_a_folder_is_kept(box):
+    add_album(box / "Fresh Tracks/Album A")
+    (box / "Fresh Tracks/Album A/5.1").mkdir()
+    (box / "Fresh Tracks/Album A/5.1/01.dts").write_bytes(b"\x7f\xfe\x80\x01")
+    ft.main()
+    assert len(music(box)) == 2
+    assert (box / "Fresh Tracks/Not imported/Album A/5.1/01.dts").exists()
+
+
+@needs_beet
+def test_a_failing_item_does_not_stop_the_next(box):
+    locked = box / "Fresh Tracks/A locked"
+    add_album(locked)
+    add_album(box / "Fresh Tracks/B open")
+    locked.chmod(0o555)
+    try:
+        assert ft.main() == 0
+    finally:
+        locked.chmod(0o755)
+    assert len(music(box)) == 2
+    assert locked.exists()
