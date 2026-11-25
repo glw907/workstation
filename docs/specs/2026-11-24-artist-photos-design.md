@@ -1,6 +1,6 @@
 # Artist photos: a photo for every artist in the pavilion library
 
-Status: approved (Geoff, 2026-11-25)
+Status: approved
 
 Written on Opus. Geoff ruled that this spec is written on Opus, because Fable's weekly limit is used up until
 Nov 27.
