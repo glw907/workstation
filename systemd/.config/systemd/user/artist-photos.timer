@@ -1,0 +1,13 @@
+[Unit]
+Description=Retry artist photos monthly for fallbacks and artists with none
+
+[Timer]
+OnCalendar=monthly
+# A run missed while the machine was off fires once at the next login, when
+# the user manager starts.
+Persistent=true
+# Spreads the firing across a window.
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target
