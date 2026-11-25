@@ -1,6 +1,8 @@
-# Pavilion's Samba config: one read-write share of ~/Music for the household
-# network. It replaces Fedora's stock file, which shares home directories and
-# printers. Staged in ~/.dotfiles/bluefin/etc/samba/; see etc-drift.md.
+# Pavilion's Samba config: one share, Fresh Tracks, the household network's inbox
+# for new music. fresh-tracks imports what lands there into ~/Music through beets,
+# and nothing shares ~/Music itself. It replaces Fedora's stock file, which shares
+# home directories and printers. Staged in ~/.dotfiles/bluefin/etc/samba/; see
+# etc-drift.md.
 [global]
 	workgroup = WORKGROUP
 	server string = pavilion
@@ -21,12 +23,13 @@
 	printcap name = /dev/null
 	disable spoolss = yes
 
-# Oliver signs in as oliver and Geoff as glw907. Every read and write acts as glw907, so the
-# files stay glw907's and Navidrome keeps reading them. SELinux lets Samba
-# into ~/Music alone, through its samba_share_t label (etc-drift.md).
-[music]
-	comment = Music library
-	path = /var/home/glw907/Music
+# Oliver signs in as oliver and Geoff as glw907. Every read and write acts as
+# glw907, so the files stay glw907's and the importer can move them. SELinux lets
+# Samba into ~/FreshTracks alone, through its samba_share_t label (etc-drift.md).
+# The importer's work folder is vetoed, so a drop can't touch an import in flight.
+[Fresh Tracks]
+	comment = New music: drop albums, tracks, or archives here
+	path = /var/home/glw907/FreshTracks
 	read only = no
 	browseable = yes
 	valid users = oliver glw907
@@ -34,3 +37,5 @@
 	force group = glw907
 	create mask = 0644
 	directory mask = 0755
+	hide dot files = yes
+	veto files = /.fresh-tracks-work/
