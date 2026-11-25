@@ -783,3 +783,19 @@ def test_confine_refuses_a_folder_that_holds_home(where):
     path = {"/": Path("/"), "home": home, "parent": home.parent}[where]
     with pytest.raises(ValueError, match="may not write all"):
         ft.confine([path])
+
+
+def test_sigterm_ends_a_waiting_run(tmp_path):
+    """A stop ends the run through its own handler, which PID 1 of a namespace needs."""
+    import signal
+    import time
+
+    inbox = tmp_path / "inbox"
+    inbox.mkdir()
+    (inbox / "track.mp3").write_bytes(b"audio")
+    env = dict(os.environ, FRESH_TRACKS_INBOX=str(inbox), XDG_STATE_HOME=str(tmp_path / "state"))
+    run = subprocess.Popen([sys.executable, "-I", str(SCRIPT)], env=env)
+    time.sleep(2)
+    run.send_signal(signal.SIGTERM)
+    assert run.wait(timeout=10) == 128 + signal.SIGTERM
+    assert (inbox / "track.mp3").exists()

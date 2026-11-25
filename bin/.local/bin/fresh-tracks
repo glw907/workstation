@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import signal
 import stat
 import struct
 import subprocess
@@ -828,4 +829,7 @@ if __name__ == "__main__":
     config = load_config()
     config.state.mkdir(parents=True, exist_ok=True)
     confine(writable(config))
+    # The unit's PrivatePIDs makes this PID 1, which ignores SIGTERM without a handler. A stop
+    # ends the run at once, and the next run's recovery moves its item back.
+    signal.signal(signal.SIGTERM, lambda *_: os._exit(128 + signal.SIGTERM))
     sys.exit(main())
