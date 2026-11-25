@@ -168,8 +168,8 @@ music-VPS docs to household-it). Verdict: keep; it's unrelated to this work.
 
 - Python over Bash, because the script parses rsync's output.
 - A marker file over a volume label, because the label the Q2 writes when it formats a card is unknown.
-- The script deletes the confirmed paths itself and copies without `--delete`, so rsync never deletes a path
-  Geoff didn't see.
+- The script deletes the confirmed paths itself and copies without `--delete`, and a plan that swaps a
+  file and a folder is refused, so rsync never deletes a path Geoff didn't see.
 - A declined deletion still copies the new files, so one "no" never holds back new albums.
 - Space is rounded up per cluster, and space freed by deletions isn't counted, so the check errs toward refusing.
 - Files the Q2 may write inside `Music/` wait for the device; they would only show in the deletion list.
