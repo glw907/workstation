@@ -4,8 +4,8 @@ Documentation=man:systemd.path(5)
 
 [Path]
 # PathChanged= sees only the top folder, which is enough: each drop creates or
-# closes a top-level entry. Dot-named entries, such as the importer's work
-# folder, never trigger it.
+# closes a top-level entry. It doesn't watch while the service runs, so the
+# importer's own moves don't start a second run.
 PathChanged=%h/FreshTracks
 MakeDirectory=yes
 DirectoryMode=0750

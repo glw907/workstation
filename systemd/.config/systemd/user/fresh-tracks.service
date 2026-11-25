@@ -4,6 +4,9 @@ ConditionHost=pavilion
 # No implicit ordering before default.target: the run at login can wait out a
 # 10-minute quiet period, and the login shouldn't wait with it.
 DefaultDependencies=no
+# Each top-level change starts a run, and one with nothing waiting exits at once. No
+# start limit, so a burst of those can't fail the unit and stop the path unit watching.
+StartLimitIntervalSec=0
 Conflicts=shutdown.target
 Before=shutdown.target
 

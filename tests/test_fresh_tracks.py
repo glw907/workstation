@@ -251,6 +251,20 @@ def test_unreadable_audio_and_mac_dot_files(box):
     assert "beets can't read .dff files." in why(box, "Album A")
 
 
+@needs_beet
+def test_archive_beets_cant_open_is_set_aside(box):
+    """A .rar among loose tracks, or a .zip inside a folder, is kept, never deleted."""
+    shutil.copy(FIXTURES / "loose/b1.mp3", box / "FreshTracks/b1.mp3")
+    (box / "FreshTracks/album.rar").write_bytes(b"Rar!")
+    add_album(box / "FreshTracks/Album A")
+    (box / "FreshTracks/Album A/bonus.zip").write_bytes(b"PK")
+    ft.main()
+    assert len(music(box)) == 3
+    assert (box / "FreshTracks/Not imported/Loose tracks/album.rar").exists()
+    assert "beets can't import a .rar archive" in why(box, "Loose tracks")
+    assert (box / "FreshTracks/Not imported/Album A/bonus.zip").exists()
+
+
 def test_folder_with_a_link_is_refused(box):
     add_album(box / "FreshTracks/Album A")
     os.symlink("/etc/passwd", box / "FreshTracks/Album A/03.mp3")
@@ -316,7 +330,7 @@ def test_crash_while_setting_aside_moves_back(box):
     """A crash after the move into aside/ loses nothing: the next run returns it to the inbox."""
     work = box / "FreshTracks/.fresh-tracks-work"
     add_album(work / "1/aside/Album A")
-    (work / "1/aside/WHY.txt").write_text("Fresh Tracks didn't import this.\n")
+    (work / "1/aside/WHY.txt").write_text(ft.WHY_HEADER + "Album A: a reason\n")
     cfg = ft.load_config()
     cfg.state.mkdir(parents=True)
     ft.recover(cfg)
@@ -431,3 +445,79 @@ def test_item_that_changes_after_the_wait_waits(box, monkeypatch):
     assert "Album A: still changing, so it waits for the next quiet period." in log
     assert "Album A: 1 albums imported, 0 skipped." in log
     assert len(calls) == 2
+
+
+def test_work_folder_as_a_link_is_removed(box):
+    """A link at the work folder's name is removed, and the folder it points at is untouched."""
+    outside = box / "Documents"
+    (outside / "1/src").mkdir(parents=True)
+    (outside / "1/src/notes.txt").write_text("mine\n")
+    os.symlink(outside, box / "FreshTracks/.fresh-tracks-work")
+    cfg = ft.load_config()
+    cfg.state.mkdir(parents=True)
+    ft.recover(cfg)
+    assert (outside / "1/src/notes.txt").read_text() == "mine\n"
+    assert inbox_names(box) == []
+
+
+def test_failed_item_is_set_aside_and_the_next_imports(box, monkeypatch):
+    """An error on one item sets it aside and fails the run, but the items after it still run."""
+    real = ft.check_links
+
+    def check(target):
+        if (target / "Album A").exists():
+            raise UnicodeEncodeError("utf-8", "x", 0, 1, "planted")
+        real(target)
+
+    monkeypatch.setattr(ft, "check_links", check)
+    add_album(box / "FreshTracks/Album A")
+    (box / "FreshTracks/Scans").mkdir()
+    (box / "FreshTracks/Scans/booklet.pdf").write_text("pdf")
+    os.symlink("/etc/passwd", box / "FreshTracks/Scans/link")
+    assert ft.main() == 1
+    assert "The importer failed on it: UnicodeEncodeError" in why(box, "Album A")
+    assert (box / "FreshTracks/Not imported/Album A/Album A/01.mp3").exists()
+    assert "a link or a special file" in why(box, "Scans")
+
+
+def test_name_that_isnt_utf8_is_written_escaped(box):
+    """A Latin-1 folder name from an old rip is refused or set aside without a crash."""
+    name = os.fsdecode(b"Caf\xe9")
+    add_album(box / "FreshTracks" / name)
+    os.symlink("/etc/passwd", box / "FreshTracks" / name / "03.mp3")
+    assert ft.main() == 0
+    assert "a link or a special file: Caf?/03.mp3" in why(box, "Caf?")
+
+
+@needs_beet
+def test_locked_folder_imports(box):
+    """A folder and a file its owner can't use get their owner bits back, and import."""
+    locked = box / "FreshTracks/Locked"
+    add_album(locked)
+    (locked / "02.mp3").chmod(0o200)
+    (locked / "Disc").mkdir()
+    (locked / "Disc").chmod(0)
+    locked.chmod(0o400)
+    assert ft.main() == 0
+    assert len(music(box)) == 2
+    assert inbox_names(box) == [".fresh-tracks-work"]
+
+
+def test_item_that_fails_and_cant_move_is_tried_once(box, monkeypatch):
+    """An item that fails before it leaves the inbox waits for the next run, not a loop."""
+    monkeypatch.setattr(ft, "unlock", lambda path: (_ for _ in ()).throw(OSError("planted")))
+    add_album(box / "FreshTracks/Album A")
+    assert ft.main() == 1
+    assert "Album A" in inbox_names(box)
+    assert state_log(box).count("Album A: the importer failed on it, and it is in the inbox.") == 1
+    assert not (box / "FreshTracks/Not imported").exists()
+
+
+def test_long_name_set_aside_twice(box):
+    """A 250-byte folder name set aside a second time is shortened to fit the numbered name."""
+    name = "x" * 250
+    (box / "FreshTracks/Not imported" / name).mkdir(parents=True)
+    add_album(box / "FreshTracks" / name)
+    os.symlink("/etc/passwd", box / "FreshTracks" / name / "03.mp3")
+    assert ft.main() == 0
+    assert "a link or a special file" in why(box, "x" * 240)

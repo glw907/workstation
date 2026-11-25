@@ -39,3 +39,5 @@
 	directory mask = 0755
 	hide dot files = yes
 	veto files = /.fresh-tracks-work/
+	# An inbox needs no links, and a link a POSIX client makes could reach the vetoed folder.
+	follow symlinks = no
