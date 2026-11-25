@@ -458,6 +458,9 @@ def set_aside(cfg: Config, slot: Path, label: str, moves: list[tuple[Path, Path]
     for src, rel in moves:
         (aside / rel).parent.mkdir(parents=True, exist_ok=True)
         src.rename(aside / rel)
+    if os.path.lexists(aside / "WHY.txt"):
+        # A loose WHY.txt a client dropped keeps its text under another name.
+        (aside / "WHY.txt").rename(unique(aside, "WHY (dropped).txt"))
     write_why(aside, why)
     fd = open_not_imported(cfg)
     try:
@@ -498,22 +501,36 @@ def guard_work(cfg: Config) -> None:
         report(cfg, f"Removed {WORK}: it wasn't a folder.")
 
 
+def restore(cfg: Config, slot: Path) -> list[str]:
+    """Move an item's files in a work slot back to the inbox's top level, then delete the slot.
+
+    src/ holds what beets hadn't moved, and aside/ what set_aside() hadn't yet moved into
+    Not imported. The rest of the slot is an archive's unpacked copy and our own WHY.txt.
+    A failed rename raises before the slot is deleted, so the next run's recover() retries.
+    Returns the names the files now have in the inbox.
+    """
+    names = []
+    if slot.is_dir() and not slot.is_symlink():
+        for part in ("src", "aside"):
+            if (slot / part).is_dir() and not (slot / part).is_symlink():
+                for entry in sorted((slot / part).iterdir()):
+                    if not is_our_why(entry):
+                        dest = unique(cfg.inbox, entry.name)
+                        entry.rename(dest)
+                        names.append(dest.name)
+        shutil.rmtree(slot)
+    elif os.path.lexists(slot):
+        slot.unlink()
+    return names
+
+
 def recover(cfg: Config) -> None:
     """Move what a crashed run left in the work folder back to the inbox's top level."""
     guard_work(cfg)
     if not cfg.work.exists():
         return
     for slot in sorted(cfg.work.iterdir()):
-        # aside/ holds what a crash inside set_aside() hadn't yet moved into Not imported.
-        for part in ("src", "aside"):
-            if (slot / part).is_dir():
-                for entry in sorted((slot / part).iterdir()):
-                    if not is_our_why(entry):
-                        entry.rename(unique(cfg.inbox, entry.name))
-        if slot.is_dir() and not slot.is_symlink():
-            shutil.rmtree(slot)
-        else:
-            slot.unlink()
+        restore(cfg, slot)
         report(cfg, f"Moved a crashed run's leftovers in {slot.name} back to the inbox.")
 
 
@@ -573,24 +590,6 @@ def process(cfg: Config, item: Item, slot: Path, albums: int | None) -> int | No
     return after
 
 
-def rescue(cfg: Config, item: Item, slot: Path, err: Exception) -> str:
-    """Set aside what is left of an item the importer failed on, so the next item still runs.
-
-    beets moves what it imports out of src/, so what src/ still holds wasn't imported. An
-    archive stays whole in src/; its unpacked copy is deleted with the slot. Returns where
-    the item now is, for the log line.
-    """
-    src = slot / "src"
-    moves = [(e, Path(e.name)) for e in sorted(src.iterdir())] if src.is_dir() else []
-    dest = "the inbox"
-    if moves:
-        why = [f"The importer failed on it: {printable(f'{type(err).__name__}: {err}')}"]
-        dest = set_aside(cfg, slot, item.label, moves, why)
-    if slot.exists():
-        shutil.rmtree(slot)
-    return dest
-
-
 def why_lines(target: Path, left: list[Path], entries, label: str) -> list[str]:
     """Name each folder holding audio beets left, with the reason its import log gives."""
     folders: dict[str, str] = {}
@@ -621,7 +620,7 @@ def main() -> int:
         except BlockingIOError:
             return 0
         recover(cfg)
-        # Names the importer failed on and couldn't move, skipped for the rest of this run.
+        # Inbox names of the items that failed, skipped for the rest of this run.
         failed: set[str] = set()
 
         def todo() -> list[Path]:
@@ -641,12 +640,17 @@ def main() -> int:
                 try:
                     albums = process(cfg, item, slot, albums)
                 except Exception as err:
-                    # One bad item fails the service but never blocks the items after it.
+                    # One bad item fails the service but never blocks the items after it. What
+                    # beets hadn't imported goes back to the inbox, and the next run retries it.
                     failed |= {p.name for p in item.sources}
                     albums = None
-                    dest = rescue(cfg, item, slot, err)
-                    line = f"{item.label}: the importer failed on it, and it is in {dest}."
-                    report(cfg, f"{line} {printable(str(err))}")
+                    try:
+                        failed |= set(restore(cfg, slot))
+                        where = "what is left of it is back in the inbox for the next run"
+                    except Exception as again:
+                        where = f"its files wait in {WORK}/{slot.name} for the next run ({again})"
+                    line = f"{item.label}: the importer failed on it, and {where}."
+                    report(cfg, printable(f"{line} {type(err).__name__}: {err}"))
     return 1 if failed else 0
 
 

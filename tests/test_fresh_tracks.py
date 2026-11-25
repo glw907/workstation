@@ -460,8 +460,8 @@ def test_work_folder_as_a_link_is_removed(box):
     assert inbox_names(box) == []
 
 
-def test_failed_item_is_set_aside_and_the_next_imports(box, monkeypatch):
-    """An error on one item sets it aside and fails the run, but the items after it still run."""
+def test_failed_item_goes_back_and_the_next_imports(box, monkeypatch):
+    """An error on one item returns it to the inbox and fails the run; the items after it run."""
     real = ft.check_links
 
     def check(target):
@@ -475,9 +475,37 @@ def test_failed_item_is_set_aside_and_the_next_imports(box, monkeypatch):
     (box / "FreshTracks/Scans/booklet.pdf").write_text("pdf")
     os.symlink("/etc/passwd", box / "FreshTracks/Scans/link")
     assert ft.main() == 1
-    assert "The importer failed on it: UnicodeEncodeError" in why(box, "Album A")
-    assert (box / "FreshTracks/Not imported/Album A/Album A/01.mp3").exists()
+    assert (box / "FreshTracks/Album A/01.mp3").exists()
+    assert not (box / "FreshTracks/Not imported/Album A").exists()
+    assert "Album A: the importer failed on it, and what is left" in state_log(box)
+    assert "UnicodeEncodeError" in state_log(box)
     assert "a link or a special file" in why(box, "Scans")
+
+
+def test_failed_set_aside_keeps_the_item(box):
+    """A set-aside that fails after its files left src/ returns them to the inbox, deleting none."""
+    scans = box / "FreshTracks/Scans"
+    scans.mkdir()
+    (scans / "booklet.pdf").write_text("pdf")
+    os.symlink("/etc/passwd", scans / "link")
+    (box / "FreshTracks/Not imported").mkdir(mode=0o500)
+    try:
+        assert ft.main() == 1
+    finally:
+        (box / "FreshTracks/Not imported").chmod(0o700)
+    assert (scans / "booklet.pdf").read_text() == "pdf"
+    assert (scans / "link").is_symlink()
+    assert list((box / "FreshTracks/.fresh-tracks-work").iterdir()) == []
+    assert state_log(box).count("Scans: the importer failed on it, and what is left") == 1
+
+
+def test_dropped_why_txt_is_kept(box):
+    """A loose WHY.txt a client dropped is set aside under another name, not overwritten."""
+    (box / "FreshTracks/WHY.txt").write_text("my notes")
+    os.symlink("/etc/passwd", box / "FreshTracks/link.mp3")
+    assert ft.main() == 0
+    kept = box / "FreshTracks/Not imported/Loose tracks/WHY (dropped).txt"
+    assert kept.read_text() == "my notes"
 
 
 def test_name_that_isnt_utf8_is_written_escaped(box):
@@ -509,7 +537,7 @@ def test_item_that_fails_and_cant_move_is_tried_once(box, monkeypatch):
     add_album(box / "FreshTracks/Album A")
     assert ft.main() == 1
     assert "Album A" in inbox_names(box)
-    assert state_log(box).count("Album A: the importer failed on it, and it is in the inbox.") == 1
+    assert state_log(box).count("Album A: the importer failed on it, and what is left") == 1
     assert not (box / "FreshTracks/Not imported").exists()
 
 
