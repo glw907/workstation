@@ -528,7 +528,9 @@ tmpfs cache; no password manager holds it for scripts.
 - **Grants**: the account-owned R2 token `ws-r2-music-rw` (id `(minted at merge)`), stored as
   `_TOKEN` plus its S3 pair (`_KEY_ID` is the token id, `_SECRET` the SHA-256 of the value, per
   https://developers.cloudflare.com/r2/api/tokens/). Object read and write on `music-library`
-  only, with no IP filter and no expiry. `ws-r2-music-ro` (`MUSIC_R2_RO_*`) stays beside it, so
+  only, with no IP filter and no expiry. The key itself can overwrite and delete every object in
+  the bucket, `state/` included; only `music-backup`'s one command never deletes. Treat a leak as
+  a threat to the library's offsite copy. `ws-r2-music-ro` (`MUSIC_R2_RO_*`) stays beside it, so
   the pull from the bucket keeps a key that can't write.
 - **Used by**: `music-backup` on pavilion, which `music-backup.timer` runs each night. It reads
   only the S3 pair, from `~/.local/secrets`, and runs `rclone copy` of `~/Music` to
