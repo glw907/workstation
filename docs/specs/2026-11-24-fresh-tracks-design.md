@@ -74,9 +74,13 @@ Failure: an album lands in `~/Music` half-copied, an unsafe archive member is wr
      `~/Music` is a rename too. Dot-named, it doesn't retrigger the path unit ("files whose name starts with a dot ... are generally
      ignored", `systemd.path(5)`), and the share vetoes it.
   6. Runs `~/.local/bin/beet import -q -l <work>/import.log <work>/<item>` with the live config, and keeps its
-     stdout. beets moves what it imports and leaves what it skips. In the log, `skip` means no confident
-     MusicBrainz match and `duplicate-skip` means the album is already in the library (beets 2.14.1,
-     `importer/session.py`, `tag_log`).
+     stdout. beets moves what it imports and leaves what it skips, so audio still in the work folder is the
+     test of a skip, and the log only names the reason. In the log, `skip` means no confident MusicBrainz match.
+     A duplicate of an album already in the library logs `duplicate-keep` even though `duplicate_action: skip`
+     leaves its files in place, because `log_choice` tests the choice before the skip (beets 2.14.1,
+     `importer/session.py`; probe: Oliver's import, 2026-11-24, logged 20 `duplicate-keep` lines, and all 20
+     albums' files stayed in staging). Treat `duplicate-keep`, `duplicate-skip`, and `duplicate-replace` as
+     "already in the library".
   7. Audio left in a folder item moves to `Not imported/<item>/`, with `WHY.txt` naming each skipped folder and
      its reason in plain words; the item's other leftovers are deleted. A skipped archive item moves whole to
      `Not imported/` with its `WHY.txt`, and its unpacked files are deleted. A refused or unreadable archive goes
