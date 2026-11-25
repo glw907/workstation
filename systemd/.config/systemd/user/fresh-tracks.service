@@ -20,9 +20,7 @@ ExecStart=%h/.local/bin/fresh-tracks
 ProtectHome=tmpfs
 BindPaths=%h/FreshTracks %h/Music %h/.local/share/beets
 BindReadOnlyPaths=%h/.config/beets %h/.dotfiles/beets %h/.dotfiles/bin
-BindReadOnlyPaths=%h/.local/bin %h/.local/share/uv
-# Homebrew lives under /var/home and holds ffmpeg and ImageMagick.
-BindReadOnlyPaths=/var/home/linuxbrew
+BindReadOnlyPaths=%h/.local/bin %h/.local/share/uv/tools/beets
 StateDirectory=fresh-tracks
 PrivateTmp=yes
 NoNewPrivileges=yes
