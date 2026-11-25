@@ -38,6 +38,14 @@ AUDIO = frozenset(
 UNREADABLE = frozenset(".dff .shn .tta .tak .mka .ac3 .dts .ra .caf .au .amr .mp2 .oga .spx .webm".split())
 # Archives beets can't import, left in a folder or among loose tracks. Set aside, never deleted.
 PACKED = frozenset(".rar .7z .zip .tar .gz .tgz .xz .txz .bz2 .tbz2 .zst".split())
+# A part of a split archive: .r00, .z01, .001.
+SPLIT = re.compile(r"\.([rz]\d\d|\d{3})$", re.IGNORECASE)
+# The suffixes fetchart and coverrule take for cover art, and the first bytes of each raster
+# format. ImageMagick and Pillow pick a decoder by content, so PostScript named cover.jpg
+# would reach Ghostscript.
+IMAGES = frozenset(".jpg .jpeg .png .webp .gif .bmp .tif .tiff".split())
+RASTER = (b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n", b"GIF87a", b"GIF89a", b"BM", b"II*\x00", b"MM\x00*")
+MAX_MEMBERS = 10_000
 HEADROOM = 1 << 30
 # A set-aside folder's name, in bytes, leaving room for " (n)" under the 255-byte limit.
 NAME_BYTES = 240
@@ -162,7 +170,8 @@ def snapshot(cfg: Config, tops: list[Path]) -> dict[str, tuple[int, ...]]:
     for top in tops:
         seen[top.name] = stamp(top)
         if top.is_dir() and not top.is_symlink():
-            for root, dirs, files in os.walk(top):
+            # fwalk refuses a top swapped for a link after the check, where walk follows it.
+            for root, dirs, files, _ in os.fwalk(top):
                 for name in dirs + files:
                     path = Path(root, name)
                     seen[str(path.relative_to(cfg.inbox))] = stamp(path)
@@ -261,10 +270,16 @@ def zip_members(f: BinaryIO):
             yield info.filename, kind, info.file_size
 
 
-def check_members(members) -> int:
-    """Return the archive's unpacked size, or raise Refused naming its first unsafe member."""
+def check_members(members, free: int) -> None:
+    """Raise Refused naming the archive's first unsafe member, or when it won't fit in free.
+
+    The size check runs as each header is read, so a small archive that claims to unpack to
+    far more than the disk holds is refused before its data is decompressed.
+    """
     total = 0
-    for name, kind, size in members:
+    for count, (name, kind, size) in enumerate(members, 1):
+        if count > MAX_MEMBERS:
+            raise Refused(f"The archive holds more than {MAX_MEMBERS:,} entries.")
         if why := bad_name(name):
             raise Refused(f"The archive holds {why}")
         if kind == "link":
@@ -274,7 +289,11 @@ def check_members(members) -> int:
         if kind == "other":
             raise Refused(f"The archive holds an entry that is not a file: {name}")
         total += size if kind == "file" else 0
-    return total
+        if total + HEADROOM > free:
+            raise Refused(
+                f"The archive is too big to unpack: it needs more than {total / 2**30:.1f} GiB, "
+                f"and {free / 2**30:.1f} GiB is free, of which 1 GiB stays spare."
+            )
 
 
 def free_bytes(path: Path) -> int:
@@ -305,13 +324,7 @@ def unpack(cfg: Config, archive: Path, dest: Path) -> None:
     try:
         with open_archive(archive) as f:
             members = zip_members(f) if name.endswith(".zip") else tar_members(f, name.endswith(".tar"))
-            size = check_members(members)
-            free = free_bytes(cfg.inbox)
-            if size + HEADROOM > free:
-                raise Refused(
-                    f"The archive is too big to unpack: it needs {size / 2**30:.1f} GiB, and "
-                    f"{free / 2**30:.1f} GiB is free, of which 1 GiB stays spare."
-                )
+            check_members(members, free_bytes(cfg.inbox))
             dest.mkdir()
             f.seek(0)
             if name.endswith(".zip"):
@@ -350,8 +363,9 @@ def check_links(target: Path) -> None:
     """Raise Refused unless everything under target is a plain folder or a plain file.
 
     beets follows a link, a hard link keeps a second name a client can still write through,
-    and a control character in a name could forge a log line. A folder or file its owner
-    can't read and write gets those bits back, so beets can move it and the clean-up delete it.
+    and a control character in a name could forge a log line. A file named as an image must
+    start like one. Each folder gets mode 0755 and each file 0644, so beets can move them,
+    the clean-up can delete them, and no mode a client set reaches ~/Music.
     """
     def unreadable(err: OSError) -> None:
         raise Refused(f"It holds a folder the importer can't read: {printable(str(err.filename))}")
@@ -369,9 +383,17 @@ def check_links(target: Path) -> None:
             if any(unsafe(c) for c in name):
                 raise Refused(f"It holds a name with a control character in it: {rel}")
             # The work folder is hidden from clients, so a plain chmod here can't be redirected.
-            need = 0o700 if is_dir else 0o600
-            if st.st_mode & need != need:
-                os.chmod(path, stat.S_IMODE(st.st_mode) | need)
+            mode = 0o755 if is_dir else 0o644
+            if stat.S_IMODE(st.st_mode) != mode:
+                os.chmod(path, mode)
+            if not is_dir and path.suffix.lower() in IMAGES and not is_raster(path):
+                raise Refused(f"It holds a file named as an image that isn't one: {rel}")
+
+
+def is_raster(path: Path) -> bool:
+    with open(path, "rb") as f:
+        head = f.read(12)
+    return head.startswith(RASTER) or (head[:4] == b"RIFF" and head[8:12] == b"WEBP")
 
 
 def beet(cfg: Config, *args: str) -> str:
@@ -423,7 +445,7 @@ def leftover_audio(target: Path, entries: list[tuple[str, str]]) -> list[Path]:
     return sorted(
         p for p in target.rglob("*")
         if p.is_file() and not p.name.startswith("._") and (
-            p.suffix.lower() in AUDIO | UNREADABLE | PACKED or str(p) in logged
+            p.suffix.lower() in AUDIO | UNREADABLE | PACKED or SPLIT.search(p.name) or str(p) in logged
         )
     )
 
@@ -592,7 +614,7 @@ def process(cfg: Config, item: Item, slot: Path, albums: int | None) -> int | No
         line += f", moved to {set_aside(cfg, slot, item.label, keep, why)}"
     shutil.rmtree(slot)
     if cover_lines := covers(stdout):
-        line += ". Covers outside the rule: " + "; ".join(cover_lines)
+        line += ". Covers outside the rule: " + "; ".join(map(printable, cover_lines))
     report(cfg, line + ".")
     return after
 
@@ -603,7 +625,7 @@ def why_lines(target: Path, left: list[Path], entries, label: str) -> list[str]:
     for path in left:
         rel = path.parent.relative_to(target)
         name = printable(str(rel)) if rel.parts else label
-        if path.suffix.lower() in PACKED:
+        if path.suffix.lower() in PACKED or SPLIT.search(path.name):
             reason = f"beets can't import a {path.suffix.lower()} archive; unpack it and drop the folder."
         elif path.suffix.lower() in UNREADABLE:
             reason = f"beets can't read {path.suffix.lower()} files."

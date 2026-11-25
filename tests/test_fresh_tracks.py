@@ -583,3 +583,48 @@ def test_long_name_set_aside_twice(box):
     os.symlink("/etc/passwd", box / "FreshTracks" / name / "03.mp3")
     assert ft.main() == 0
     assert "a link or a special file" in why(box, "x" * 240)
+
+
+def test_postscript_named_as_a_cover_is_set_aside(box):
+    """ImageMagick and Pillow read an image by its content, so a cover must start like one."""
+    add_album(box / "FreshTracks/Album A")
+    (box / "FreshTracks/Album A/cover.jpg").write_text("%!PS-Adobe-3.0\nshowpage\n")
+    assert ft.main() == 0
+    assert "named as an image that isn't one: Album A/cover.jpg" in why(box, "Album A")
+    assert music(box) == []
+
+
+def test_real_images_pass_and_modes_are_set(tmp_path):
+    """A raster cover passes, and every mode a client set becomes 0755 or 0644."""
+    (tmp_path / "scans").mkdir(mode=0o777)
+    (tmp_path / "scans/cover.png").write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0" * 8)
+    (tmp_path / "scans/back.webp").write_bytes(b"RIFF\0\0\0\0WEBPVP8 ")
+    (tmp_path / "01.mp3").write_bytes(b"ID3")
+    (tmp_path / "01.mp3").chmod(0o777)
+    os.chmod(tmp_path / "scans", 0o777)
+    ft.check_links(tmp_path)
+    assert oct((tmp_path / "scans").stat().st_mode & 0o7777) == "0o755"
+    assert oct((tmp_path / "01.mp3").stat().st_mode & 0o7777) == "0o644"
+
+
+def test_size_check_stops_at_the_first_header_over_the_limit():
+    """An archive that claims more than the disk holds is refused before the rest is read."""
+    def members():
+        yield "a.flac", "file", 1 << 40
+        raise AssertionError("read past the member that broke the limit")
+
+    with pytest.raises(ft.Refused, match="too big to unpack"):
+        ft.check_members(members(), 2 << 30)
+
+
+def test_archive_with_too_many_entries_is_refused():
+    members = (("d%d" % n, "dir", 0) for n in range(ft.MAX_MEMBERS + 1))
+    with pytest.raises(ft.Refused, match="more than 10,000 entries"):
+        ft.check_members(members, 2 << 30)
+
+
+def test_split_archive_parts_are_kept(tmp_path):
+    for name in ("disc2.r00", "disc2.001", "disc2.z01", "notes.cue"):
+        (tmp_path / name).write_text("x")
+    names = [p.name for p in ft.leftover_audio(tmp_path, [])]
+    assert names == ["disc2.001", "disc2.r00", "disc2.z01"]
