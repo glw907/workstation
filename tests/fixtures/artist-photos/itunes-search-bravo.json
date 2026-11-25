@@ -1,0 +1,9 @@
+{
+  "resultCount": 2,
+  "results": [
+    {"wrapperType": "artist", "artistType": "Artist", "artistName": "Bravo Brass Band", "artistId": 2009,
+     "artistLinkUrl": "https://music.apple.com/us/artist/bravo-brass-band/2009"},
+    {"wrapperType": "artist", "artistType": "Artist", "artistName": "Bravo", "artistId": 2001,
+     "artistLinkUrl": "https://music.apple.com/us/artist/bravo/2001"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "resultCount": 2,
+  "results": [
+    {"wrapperType": "artist", "artistType": "Artist", "artistName": "Bravo", "artistId": 2001},
+    {"wrapperType": "collection", "collectionType": "Album", "artistName": "Bravo", "collectionName": "Bravo Album",
+     "artworkUrl100": "https://is1-ssl.mzstatic.com/image/thumb/Music/bravo-album/100x100bb.jpg"}
+  ]
+}

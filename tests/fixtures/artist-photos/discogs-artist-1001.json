@@ -1,0 +1,8 @@
+{
+  "id": 1001,
+  "name": "Alpha",
+  "images": [
+    {"type": "secondary", "uri": "https://i.discogs.com/alpha-second.jpg", "width": 600, "height": 600},
+    {"type": "primary", "uri": "https://i.discogs.com/alpha-primary.jpg", "width": 600, "height": 600}
+  ]
+}
