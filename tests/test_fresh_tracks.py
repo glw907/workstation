@@ -129,6 +129,18 @@ def test_loose_file_beets_skips_is_kept(box):
 
 
 @needs_beet
+def test_archive_inside_a_folder_is_kept(box):
+    add_album(box / "FreshTracks/Album A")
+    (box / "FreshTracks/Album A/Disc 2.zip").write_bytes(b"PK\x05\x06" + bytes(18))
+    (box / "FreshTracks/Album A/Bonus.rar").write_bytes(b"Rar!\x1a\x07\x00")
+    ft.main()
+    assert len(music(box)) == 2
+    kept = box / "FreshTracks/Not imported/Album A"
+    assert sorted(p.name for p in kept.iterdir()) == ["Bonus.rar", "Disc 2.zip", "WHY.txt"]
+    assert "Disc 2.zip" in why(box, "Album A")
+
+
+@needs_beet
 def test_tar_gz_imports_and_is_deleted(box):
     tar_with(box / "FreshTracks/album.tar.gz", album_members())
     ft.main()

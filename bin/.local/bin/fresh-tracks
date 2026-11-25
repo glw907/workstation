@@ -31,6 +31,12 @@ AUDIO = frozenset(
     ".mp3 .aac .alac .ogg .opus .flac .ape .wv .mpc .asf .wma .aiff .aif .dsf .wav .m4a .m4b .mp4"
     .split()
 )
+# Archives and audio that beets doesn't read. Inside a folder or archive these may be
+# music, so they're kept rather than deleted with the other leftovers.
+KEEP = frozenset(
+    ".zip .tar .gz .tgz .xz .bz2 .zst .rar .7z .dff .mka .tak .shn .oga .m4r".split()
+)
+KEPT = "beets imports audio files, so it left this file."
 HEADROOM = 1 << 30
 IN_LIBRARY = "It is already in the library."
 REASONS = {
@@ -297,7 +303,7 @@ def covers(stdout: str) -> list[str]:
 
 def leftover_audio(target: Path) -> list[Path]:
     return sorted(
-        p for p in target.rglob("*") if p.is_file() and p.suffix.lower() in AUDIO
+        p for p in target.rglob("*") if p.is_file() and p.suffix.lower() in AUDIO | KEEP
     ) if target.exists() else []
 
 
@@ -361,14 +367,12 @@ def process(cfg: Config, item: Item, slot: Path) -> None:
     entries = read_log(log)
     left = leftover_audio(target)
 
+    if item.kind == "loose":
+        # A loose drop has no folder whose clutter beets leaves behind, so every file it
+        # skips is kept.
+        left += sorted(p for p in target.iterdir() if p.is_file() and p not in left)
     why = _why_lines(target, left, entries, item.label)
     skipped = max(len(why), sum(1 for tag, _ in entries if tag in REASONS))
-    if item.kind == "loose":
-        # A loose drop has no folder whose clutter beets leaves behind, so a file it
-        # skips, such as a .rar, may be music and is kept.
-        other = sorted(p for p in target.iterdir() if p.is_file() and p not in left)
-        left += other
-        why += [f"{p.name}: beets imports audio files, so it left this file." for p in other]
     line = f"{item.label}: {imported} albums imported, {skipped} skipped"
     if not left and imported == 0:
         dest = set_aside(cfg, moved, item.label, [f"{item.label}: It holds no music beets can read."])
@@ -387,7 +391,8 @@ def process(cfg: Config, item: Item, slot: Path) -> None:
 
 def _why_lines(target: Path, left: list[Path], entries, label: str) -> list[str]:
     folders: dict[str, str] = {}
-    for path in left:
+    kept = [f"{p.relative_to(target)}: {KEPT}" for p in left if p.suffix.lower() not in AUDIO]
+    for path in (p for p in left if p.suffix.lower() in AUDIO):
         rel = path.parent.relative_to(target)
         name = str(rel) if rel.parts else label
         reason = next(
@@ -395,7 +400,7 @@ def _why_lines(target: Path, left: list[Path], entries, label: str) -> list[str]
             "beets left it without logging why; see journalctl --user -u fresh-tracks.",
         )
         folders.setdefault(name, reason)
-    return [f"{name}: {reason}" for name, reason in folders.items()]
+    return [f"{name}: {reason}" for name, reason in folders.items()] + kept
 
 
 def _set_aside_audio(cfg: Config, target: Path, left: list[Path], label: str, why: list[str]) -> Path:
