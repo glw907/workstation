@@ -1,0 +1,12 @@
+{
+  "entities": {
+    "Q1001": {
+      "id": "Q1001",
+      "claims": {
+        "P18": [
+          {"mainsnak": {"snaktype": "value", "property": "P18", "datavalue": {"value": "Alpha live 2019.jpg", "type": "string"}}}
+        ]
+      }
+    }
+  }
+}
