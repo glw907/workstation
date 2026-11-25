@@ -40,7 +40,7 @@ Failure: an album lands in `~/Music` half-copied, an unsafe archive member is wr
 ## Design
 
 - **Folder.** `~/Fresh Tracks` on pavilion, mode 0750. It gets the `samba_share_t` label the way `~/Music` does
-  (`etc-drift.md`, the Samba entry): `semanage fcontext -a -t samba_share_t '/var/home/glw907/Fresh Tracks(/.*)?'`,
+  (`etc-drift.md`, the Samba entry): `semanage fcontext -a -t samba_share_t '/var/home/glw907/Fresh[[:space:]]Tracks(/.*)?'`,
   then `restorecon -R`. Probe today: `matchpathcon /var/home/glw907/Fresh Tracks` gives `user_home_t`.
   `check-drift`'s label check moves from `~/Music` to `~/Fresh Tracks`, since no share reads `~/Music` now.
   The `~/Music` fcontext rule stays: it costs nothing, and imported files carry that label anyway.

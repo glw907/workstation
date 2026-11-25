@@ -49,8 +49,9 @@ stays the record of what's actually on disk. Current captured files:
   are `Music share (oliver)` and `Music share (glw907)` in Proton Pass `Infrastructure`. Two
   settings sit outside these files, and `check-drift` checks both. SELinux lets Samba into
   `~/Fresh Tracks` through `sudo -A semanage fcontext -a -t samba_share_t <!-- host-ok -->
-  '/var/home/glw907/Fresh Tracks(/.*)?'` and `sudo -A restorecon -R ~/'Fresh Tracks'`, run after
-  `fresh-tracks.path` has made the folder. The older `~/Music` rule stays: it costs nothing,
+  '/var/home/glw907/Fresh[[:space:]]Tracks(/.*)?'` and `sudo -A restorecon -R ~/'Fresh Tracks'`, run after
+  `fresh-tracks.path` has made the folder. `semanage` refuses a space in a file spec, so the rule
+  writes it as `[[:space:]]`. The older `~/Music` rule stays: it costs nothing,
   and imported files carry that label anyway. The firewall opens Samba to `Warwick` through
   `sudo -A firewall-cmd --permanent --zone=FedoraWorkstation --add-rich-rule='rule
   family="ipv4" source address="192.168.1.0/24" service name="samba" accept'`, then
