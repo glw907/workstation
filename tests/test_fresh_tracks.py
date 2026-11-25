@@ -501,24 +501,36 @@ def test_failed_set_aside_keeps_the_item(box):
 
 @needs_beet
 def test_skipped_track_with_an_odd_suffix_is_kept(box):
-    """beets reads a track by its header, so a skipped .m4p or a renamed MP3 is set aside, not deleted."""
+    """beets reads a track by its header, so a skipped .m4p or renamed track is set aside, not deleted."""
     add_album(box / "FreshTracks/Album A")
     assert ft.main() == 0
     again = box / "FreshTracks/Album A again"
     add_album(again)
     (again / "02.mp3").rename(again / "02.m4p")
+    (again / "01.mp3").rename(again / "01.track")
     (again / "booklet.txt").write_text("notes")
     assert ft.main() == 0
     kept = box / "FreshTracks/Not imported/Album A again"
-    assert sorted(p.name for p in kept.iterdir()) == ["01.mp3", "02.m4p", "WHY.txt"]
+    assert sorted(p.name for p in kept.iterdir()) == ["01.track", "02.m4p", "WHY.txt"]
 
 
-def test_header_marks_audio_by_any_name(tmp_path):
-    """A file's first bytes, not its suffix, say whether it may be music."""
-    mp3 = next((FIXTURES / "album-a").glob("*.mp3"))
-    (tmp_path / "track.bin").write_bytes(mp3.read_bytes())
+def test_logged_skip_marks_audio_by_any_name(tmp_path):
+    """A file the import log names in a skip is music whatever its suffix; an asis line isn't."""
+    (tmp_path / "track.bin").write_bytes(b"audio")
+    (tmp_path / "other.bin").write_bytes(b"audio")
     (tmp_path / "notes.cue").write_text("FILE track.bin MP3")
-    assert ft.leftover_audio(tmp_path, []) == [tmp_path / "track.bin"]
+    entries = [("duplicate-skip", str(tmp_path / "track.bin")), ("asis", str(tmp_path / "other.bin"))]
+    assert ft.leftover_audio(tmp_path, entries) == [tmp_path / "track.bin"]
+
+
+@needs_beet
+def test_clean_import_deletes_a_utf16_rip_log(box):
+    """A rip log written in UTF-16 is a leftover like any other, deleted after a clean import."""
+    add_album(box / "FreshTracks/Album A")
+    (box / "FreshTracks/Album A/rip.log").write_text("Exact Audio Copy", encoding="utf-16")
+    assert ft.main() == 0
+    assert len(music(box)) == 2
+    assert not (box / "FreshTracks/Not imported").exists()
 
 
 def test_dropped_why_txt_is_kept(box):

@@ -34,9 +34,6 @@ AUDIO = frozenset(
     ".mp3 .aac .alac .ogg .opus .flac .ape .wv .mpc .asf .wma .aiff .aif .aifc .dsf .wav .wave"
     " .m4a .m4b .m4p .m4r .mp4 .3gp .mpg .mpeg".split()
 )
-# mutagen picks a format by a file's header, not its suffix, so these mark audio by any name.
-MAGIC = (b"ID3", b"fLaC", b"OggS", b"RIFF", b"FORM", b"MAC ", b"wvpk", b"MPCK", b"MP+", b"FRM8",
-         bytes.fromhex("3026b2758e66cf11"))
 # Audio beets can't read. It is set aside, never deleted with the leftovers.
 UNREADABLE = frozenset(".dff .shn .tta .tak .mka .ac3 .dts .ra .caf .au .amr .mp2 .oga .spx .webm".split())
 # Archives beets can't import, left in a folder or among loose tracks. Set aside, never deleted.
@@ -413,32 +410,20 @@ def covers(stdout: str) -> list[str]:
     return lines
 
 
-def sounds_like_audio(path: Path) -> bool:
-    """Report whether a file's first bytes match a format mutagen reads, whatever its suffix."""
-    try:
-        with open(path, "rb") as f:
-            head = f.read(12)
-    except OSError:
-        return True  # Keep what can't be checked.
-    # An MPEG audio frame starts with 11 set bits; an MP4 container names "ftyp" at byte 4.
-    frame = len(head) > 1 and head[0] == 0xFF and head[1] & 0xE0 == 0xE0
-    return head.startswith(MAGIC) or head[4:8] == b"ftyp" or frame
-
-
 def leftover_audio(target: Path, entries: list[tuple[str, str]]) -> list[Path]:
     """List what beets left that may be music: audio, and archives it can't open.
 
-    A file counts when its suffix names audio or an archive, when its header does, or when
-    the import log names it, since beets reads a file by its content.
+    A file counts when its suffix names audio or an archive, or when the import log names it
+    in a skip, since beets reads a file by its header and logs every path of an album it skips.
     """
     if not target.exists():
         return []
-    logged = " ".join(rest for _, rest in entries)
+    logged = " ".join(rest for tag, rest in entries if tag in REASONS)
     # The ._ files a Mac leaves beside each file are metadata, not music beets skipped.
     return sorted(
         p for p in target.rglob("*")
         if p.is_file() and not p.name.startswith("._") and (
-            p.suffix.lower() in AUDIO | UNREADABLE | PACKED or str(p) in logged or sounds_like_audio(p)
+            p.suffix.lower() in AUDIO | UNREADABLE | PACKED or str(p) in logged
         )
     )
 
