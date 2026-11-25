@@ -199,6 +199,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | ROUTER_WIFI_DEVICES | ✓ | — | — |
 | ROUTER_WIFI_GUEST | ✓ | — | — |
 | ROUTER_MONITOR_TOKEN | ✓ | — | — |
+| DISCOGS_TOKEN | ✓ | — | — |
 
 > `DUBPLATE_MAGIC_LINK_SECRET` and `DUBPLATE_SESSION_SECRET` (minted 2026-10-05, dubplate rung
 > 5d's first-deploy sitting): the greenfield server's two HMAC keys, 48 random bytes each
@@ -899,6 +900,13 @@ tmpfs cache; no password manager holds it for scripts.
 - **Rotate**: store a new value, update the vault item, run `scripts/router/apply.sh --apply`,
   then rejoin every device on that network. The desk phones take the `Warwick` value through
   their web pages.
+
+### DISCOGS_TOKEN
+- **Grants**: read access to the Discogs API as Geoff's account: artist and release data and their images. The
+  pavilion music library's artist photo fill reads it. Generated 2026-11-24 by Geoff as a Discogs personal access
+  token. The vault item is `Discogs token (music library)` in `Infrastructure`.
+- **Rotate**: generate a new token at Discogs Settings > Developers, run `secret-receive DISCOGS_TOKEN`, and update
+  the vault item.
 
 ### ROUTER_MONITOR_TOKEN
 - **Grants**: the right to post reports to the monitor Worker's `/router/report` route. The home
