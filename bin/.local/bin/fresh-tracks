@@ -117,9 +117,18 @@ def load_config() -> Config:
 # a folder or file and make a device, folder, file, socket, fifo, or link (bits 4 to 12).
 _SYS_CREATE, _SYS_ADD_RULE, _SYS_RESTRICT = 444, 445, 446
 _WRITE_RIGHTS = 1 << 1 | 0x1FF0
-_REFER, _TRUNCATE = 1 << 13, 1 << 14
+_REFER, _TRUNCATE, _IOCTL_DEV, _RESOLVE_UNIX = 1 << 13, 1 << 14, 1 << 15, 1 << 16
+# What a writable folder grants: write, remove, and make folders and plain files, and rename.
+# Links, sockets, fifos, and devices stay refused everywhere, as do device ioctls.
+_FOLDER_RIGHTS = 1 << 1 | 1 << 4 | 1 << 5 | 1 << 7 | 1 << 8 | _REFER | _TRUNCATE
+# The rights a rule on a file, rather than a folder, may carry.
+_FILE_RIGHTS = 1 << 1 | _TRUNCATE
 # From ABI 6, a run can't reach an abstract socket or signal a process outside its sandbox.
 _SCOPE_ABSTRACT_UNIX_SOCKET, _SCOPE_SIGNAL = 1 << 0, 1 << 1
+# A run binds no TCP port and connects only to web ports and DNS, so a hijacked run can't
+# drive a local service such as Syncthing or Navidrome.
+_BIND_TCP, _CONNECT_TCP = 1 << 0, 1 << 1
+_TCP_PORTS = (53, 80, 443)
 
 
 def writable(cfg: Config) -> list[Path]:
@@ -136,18 +145,23 @@ def writable(cfg: Config) -> list[Path]:
         Path(tempfile.gettempdir()),
         Path("/tmp"),
         Path("/var/tmp"),
-        Path("/dev"),
+        Path("/dev/null"),
     ]
 
 
-def confine(folders: list[Path]) -> None:
-    """Let this process, and every program it starts, change files only beneath folders.
+def confine(paths: list[Path]) -> None:
+    """Let this process, and every program it starts, change files only beneath paths.
 
     Landlock rules follow paths, not mounts, so the inbox and ~/Music stay on one mount and
     beets' move stays a rename. A file that takes over ffmpeg, ImageMagick, or Ghostscript
-    then can't plant code in home's top level, such as ~/.bashrc. A folder that doesn't exist
-    is skipped. A kernel without Landlock refuses the run.
+    then can't plant code in home's top level, such as ~/.bashrc. A file in paths, such as
+    /dev/null, may be written but not replaced, and a path that doesn't exist is skipped. A
+    kernel without Landlock ABI 6 refuses the run, and so does a path that would open home.
     """
+    home = Path.home().resolve()
+    for path in paths:
+        if home.is_relative_to(path.resolve()):
+            raise ValueError(f"A run may not write all of {path}.")
     libc = ctypes.CDLL(None, use_errno=True)
     libc.syscall.restype = ctypes.c_long
 
@@ -159,31 +173,36 @@ def confine(folders: list[Path]) -> None:
         return got
 
     abi = call(_SYS_CREATE, None, ctypes.c_size_t(0), ctypes.c_uint32(1))
-    if abi < 2:
-        # ABI 1 refuses every rename between folders, which would turn beets' move into a copy.
-        raise OSError(errno.ENOTSUP, f"Landlock ABI {abi} can't keep beets' move a rename")
-    rights = _WRITE_RIGHTS | _REFER | (_TRUNCATE if abi >= 3 else 0)
-    # struct landlock_ruleset_attr: the file rights, the network rights (none), then the scopes.
-    if abi >= 6:
-        scoped = _SCOPE_ABSTRACT_UNIX_SOCKET | _SCOPE_SIGNAL
-        attr = ctypes.create_string_buffer(struct.pack("=QQQ", rights, 0, scoped))
-        size = 24
-    else:
-        attr = ctypes.create_string_buffer(struct.pack("=Q", rights))
-        size = 8
-    ruleset = call(_SYS_CREATE, attr, ctypes.c_size_t(size), ctypes.c_uint32(0))
+    if abi < 6:
+        # Before ABI 6 a run could reach an abstract socket or signal a process outside it.
+        raise OSError(errno.ENOTSUP, f"Landlock ABI {abi} can't scope a run's sockets and signals")
+    handled = _WRITE_RIGHTS | _REFER | _TRUNCATE | _IOCTL_DEV
+    if abi >= 9:
+        # No rule grants it, so the run can't connect to a socket such as /run/docker.sock.
+        handled |= _RESOLVE_UNIX
+    # struct landlock_ruleset_attr: the file rights, the network rights, then the scopes.
+    scoped = _SCOPE_ABSTRACT_UNIX_SOCKET | _SCOPE_SIGNAL
+    net = _BIND_TCP | _CONNECT_TCP
+    attr = ctypes.create_string_buffer(struct.pack("=QQQ", handled, net, scoped))
+    ruleset = call(_SYS_CREATE, attr, ctypes.c_size_t(24), ctypes.c_uint32(0))
     try:
-        for folder in folders:
+        for path in paths:
             try:
-                fd = os.open(folder, os.O_PATH | os.O_DIRECTORY | os.O_CLOEXEC)
-            except (FileNotFoundError, NotADirectoryError):
+                fd = os.open(path, os.O_PATH | os.O_CLOEXEC)
+            except FileNotFoundError:
                 continue
             try:
+                is_dir = stat.S_ISDIR(os.fstat(fd).st_mode)
+                allowed = _FOLDER_RIGHTS if is_dir else _FILE_RIGHTS
                 # struct landlock_path_beneath_attr is packed: a u64 of rights, then the fd.
-                rule = ctypes.create_string_buffer(struct.pack("=Qi", rights, fd))
+                rule = ctypes.create_string_buffer(struct.pack("=Qi", allowed, fd))
                 call(_SYS_ADD_RULE, ruleset, 1, rule, ctypes.c_uint32(0))
             finally:
                 os.close(fd)
+        for port in _TCP_PORTS:
+            # struct landlock_net_port_attr: a u64 of rights, then a u64 port.
+            rule = ctypes.create_string_buffer(struct.pack("=QQ", _CONNECT_TCP, port))
+            call(_SYS_ADD_RULE, ruleset, 2, rule, ctypes.c_uint32(0))
         if libc.prctl(38, 1, 0, 0, 0) < 0:  # PR_SET_NO_NEW_PRIVS, which Landlock requires
             raise OSError(ctypes.get_errno(), "The run couldn't drop new privileges.")
         call(_SYS_RESTRICT, ruleset, ctypes.c_uint32(0))

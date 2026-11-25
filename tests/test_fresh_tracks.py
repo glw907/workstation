@@ -706,13 +706,14 @@ def test_mac_zip_imports(box):
 
 
 CONFINED = """
-import importlib.machinery, importlib.util, os, subprocess, sys
+import importlib.machinery, importlib.util, os, socket, subprocess, sys
 from pathlib import Path
 loader = importlib.machinery.SourceFileLoader("fresh_tracks", sys.argv[1])
 ft = importlib.util.module_from_spec(importlib.util.spec_from_loader("fresh_tracks", loader))
 loader.exec_module(ft)
 box = Path(sys.argv[2])
-ft.confine([box / "inbox", box / "Music", box / "missing"])
+listener = socket.create_server(("127.0.0.1", 0))
+ft.confine([box / "inbox", box / "Music", box / "missing", Path("/dev/null")])
 (box / "inbox/track.flac").write_text("audio")
 os.rename(box / "inbox/track.flac", box / "Music/track.flac")
 for attempt in ("open(box / '.bashrc', 'w')", "(box / 'inbox/x').rename(box / 'moved')"):
@@ -724,9 +725,28 @@ for attempt in ("open(box / '.bashrc', 'w')", "(box / 'inbox/x').rename(box / 'm
 child = subprocess.run(["sh", "-c", f"echo planted > {box}/.profile"], capture_output=True)
 print("child", child.returncode)
 print("signal", subprocess.run(["kill", "-0", sys.argv[3]], capture_output=True).returncode)
+Path("/dev/null").write_text("discarded")
+link = "os.symlink('/etc/hostname', box / 'Music/link')"
+local = "socket.create_connection(listener.getsockname(), 3)"
+for attempt in ("open('/dev/zero', 'w')", "open('/dev/full', 'w')", link, local):
+    try:
+        eval(attempt)
+        print("allowed", attempt)
+    except OSError:
+        print("refused")
 """
 
 
+def landlock_abi() -> int:
+    """Return this kernel's Landlock ABI, or 0 when it has none."""
+    import ctypes
+
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.syscall.restype = ctypes.c_long
+    return max(libc.syscall(444, None, ctypes.c_size_t(0), ctypes.c_uint32(1)), 0)
+
+
+@pytest.mark.skipif(landlock_abi() < 6, reason="the kernel has no Landlock ABI 6")
 def test_confine_allows_only_its_folders(tmp_path):
     """A confined run writes and renames beneath its folders, and nothing it starts writes or signals outside."""
     (tmp_path / "inbox").mkdir()
@@ -738,7 +758,8 @@ def test_confine_allows_only_its_folders(tmp_path):
         text=True,
     )
     assert run.returncode == 0, run.stderr
-    assert run.stdout.split("\n")[:4] == ["refused", "refused", "child 1", "signal 1"]
+    expected = ["refused", "refused", "child 1", "signal 1"] + ["refused"] * 4
+    assert run.stdout.split("\n")[:8] == expected
     assert (tmp_path / "Music/track.flac").read_text() == "audio"
     assert not (tmp_path / ".bashrc").exists()
     assert not (tmp_path / ".profile").exists()
@@ -753,3 +774,12 @@ def test_writable_names_the_inbox_and_the_library(box):
     assert cfg.inbox in folders and cfg.state in folders
     assert home / "Music" in folders and home / ".local/share/beets" in folders
     assert home not in folders and home / ".local" not in folders
+
+
+@pytest.mark.parametrize("where", ["/", "home", "parent"])
+def test_confine_refuses_a_folder_that_holds_home(where):
+    """A writable path of /, home, or a folder above home is refused before anything is confined."""
+    home = Path.home()
+    path = {"/": Path("/"), "home": home, "parent": home.parent}[where]
+    with pytest.raises(ValueError, match="may not write all"):
+        ft.confine([path])
