@@ -1,0 +1,32 @@
+[Unit]
+Description=Give each artist in the Navidrome library a photo from ~/Music/.artist-images
+Documentation=file://%h/.dotfiles/docs/specs/2026-11-24-artist-photos-design.md
+ConditionHost=pavilion
+
+[Service]
+# fresh-tracks.service starts this through OnSuccess=, and artist-photos.timer
+# starts it monthly to retry the fallbacks. Starting it by hand refreshes an
+# artist whose photo was replaced with a dropped-in <mbid>.jpg.
+Type=oneshot
+ExecStart=%h/.local/bin/artist-photos
+TimeoutStartSec=2h
+# The same four lines as navidrome.service, so the helper and the server read
+# one library, one database, and one folder. tests/test_artist_photos_units.py
+# keeps them equal.
+Environment=ND_MUSICFOLDER=%h/Music
+Environment=ND_DATAFOLDER=%S/navidrome
+Environment=ND_ARTISTIMAGEFOLDER=%h/Music/.artist-images
+Environment="ND_ARTISTARTPRIORITY=artist.*, album/artist.*, image-folder, external"
+# ProtectHome=tmpfs hides /home, so the helper gets navidrome by its full path
+# and the Homebrew prefix by the bind below.
+Environment=ARTIST_PHOTOS_NAVIDROME=/home/linuxbrew/.linuxbrew/bin/navidrome
+# Home is an empty tmpfs except for these paths. The photo folder and
+# Navidrome's state are writable; systemd mounts the photo folder's bind over
+# the read-only ~/Music, which the helper reads for library covers.
+ProtectHome=tmpfs
+BindPaths=%h/Music/.artist-images %h/.local/state/navidrome
+BindReadOnlyPaths=%h/Music %h/.local/share/beets %h/.local/secrets
+BindReadOnlyPaths=%h/.local/bin %h/.dotfiles/bin /var/home/linuxbrew/.linuxbrew
+StateDirectory=artist-photos
+PrivateTmp=yes
+NoNewPrivileges=yes
