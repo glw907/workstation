@@ -211,7 +211,12 @@ def og_image(html: str, base: str) -> str | None:
         parser.feed(html)
     except AssertionError:
         return None
-    return urllib.parse.urljoin(base, parser.url) if parser.url else None
+    if not parser.url:
+        return None
+    try:
+        return urllib.parse.urljoin(base, parser.url)
+    except ValueError:
+        return None
 
 
 def commons_file(name: str) -> str:
@@ -240,10 +245,14 @@ class Client:
         self.last: dict[str, float] = {}
 
     def get(self, url: str) -> Reply:
-        parts = urllib.parse.urlsplit(url)
-        if parts.scheme not in ("http", "https") or not parts.hostname:
+        # Most URLs here come from remote replies, so one that won't parse fails like any other request.
+        try:
+            parts = urllib.parse.urlsplit(url)
+            host = (parts.hostname or "").lower()
+        except ValueError as err:
+            raise FetchError(f"{url}: {err}") from err
+        if parts.scheme not in ("http", "https") or not host:
             raise FetchError(f"not a web URL: {url}")
-        host = parts.hostname.lower()
         gap = PACE.get(host, DEFAULT_PACE)
         if host in self.last:
             wait = self.last[host] + gap - monotonic()
@@ -257,7 +266,7 @@ class Client:
         finally:
             self.last[host] = monotonic()
         left = reply.headers.get("x-discogs-ratelimit-remaining", "")
-        if host == "api.discogs.com" and left.isdigit() and int(left) <= DISCOGS_FLOOR:
+        if host == "api.discogs.com" and left.isascii() and left.isdigit() and int(left) <= DISCOGS_FLOOR:
             sleep(DISCOGS_WAIT)
         return reply
 

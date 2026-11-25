@@ -950,3 +950,21 @@ def test_a_truncated_error_body_still_gives_its_status(monkeypatch):
 
     assert got.status == 503
     assert got.body == b""
+
+
+def test_a_remote_url_that_wont_parse_moves_the_chain_on(box, monkeypatch):
+    box.artist(ALPHA, "Alpha")
+    alpha_routes(box.web)
+    box.web["https://api.discogs.com/artists/1001"] = reply(
+        {"images": [{"type": "primary", "uri": "http://[bad/x.jpg"}]})
+
+    assert box.run(monkeypatch) == 0
+
+    assert (box.folder / f"{ALPHA}.jpg").read_bytes() == jpeg("alpha-wikidata")
+    assert box.entry(ALPHA)["source"] == "wikidata"
+
+
+def test_an_og_image_that_wont_parse_is_no_image():
+    page = '<meta property="og:image" content="http://[bad/x.jpg">'
+    assert ap.og_image(page, "https://example.org/") is None
+    assert ap.Client(None).ok("http://[bad/x.jpg") is None
