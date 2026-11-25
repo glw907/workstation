@@ -9,7 +9,6 @@ import hashlib
 import importlib.machinery
 import importlib.util
 import json
-import os
 from pathlib import Path
 import sqlite3
 import stat
@@ -252,16 +251,11 @@ class Box:
 @pytest.fixture
 def box(tmp_path, monkeypatch):
     b = Box(tmp_path)
-    monkeypatch.delenv("DISCOGS_TOKEN", raising=False)
-    monkeypatch.delenv("ND_ARTISTIMAGEFOLDER", raising=False)
-    monkeypatch.delenv("ND_DATAFOLDER", raising=False)
-    monkeypatch.delenv("STATE_DIRECTORY", raising=False)
-    monkeypatch.setenv("ARTIST_PHOTOS_FOLDER", str(b.folder))
-    monkeypatch.setenv("ARTIST_PHOTOS_NAVIDROME_DB", str(b.nd_db))
-    monkeypatch.setenv("ARTIST_PHOTOS_BEETS_DB", str(b.beets_db))
-    monkeypatch.setenv("ARTIST_PHOTOS_NAVIDROME", str(b.stub))
-    monkeypatch.setenv("ARTIST_PHOTOS_STATE", str(b.state_dir))
-    monkeypatch.setenv("ARTIST_PHOTOS_SECRETS", str(b.secrets))
+    for name in ("DISCOGS_TOKEN", "ND_ARTISTIMAGEFOLDER", "ND_DATAFOLDER", "STATE_DIRECTORY"):
+        monkeypatch.delenv(name, raising=False)
+    for name, path in {"FOLDER": b.folder, "NAVIDROME_DB": b.nd_db, "BEETS_DB": b.beets_db,
+                       "NAVIDROME": b.stub, "STATE": b.state_dir, "SECRETS": b.secrets}.items():
+        monkeypatch.setenv(f"ARTIST_PHOTOS_{name}", str(path))
     yield b
     for url, headers in b.web.requests:
         assert headers["User-Agent"] == UA, url
@@ -803,7 +797,6 @@ def test_navidrome_database_is_opened_read_only(box, monkeypatch):
     box.artist(ALPHA, "Alpha", stored="")
     box.helper_file(ALPHA, jpeg("alpha"))
     box.build()
-    assert not os.access(box.nd_db, os.W_OK) or os.geteuid() == 0
     assert stat.S_IMODE(box.nd_db.stat().st_mode) == 0o444
 
     assert box.run(monkeypatch) == 0
@@ -823,6 +816,7 @@ def test_a_failed_refresh_fails_the_run_after_writing(box, monkeypatch):
 def test_parse_scan_time_reads_navidromes_format():
     assert ap.parse_scan_time("2026-11-24 18:46:32.582002428-09:00") == pytest.approx(1795578392.582002)
     assert ap.parse_scan_time("0000-00-00 00:00:00") == 0.0
+    assert ap.parse_scan_time("0001-01-01 00:00:00+00:00") == 0.0
     assert ap.parse_scan_time("") == 0.0
 
 

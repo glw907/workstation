@@ -8,7 +8,8 @@ docs/specs/2026-11-24-artist-photos-design.md.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from collections import Counter
+from datetime import datetime, timezone
 import hashlib
 from html.parser import HTMLParser
 import json
@@ -173,11 +174,15 @@ def sniff(body: bytes) -> tuple[str, str] | None:
     return None
 
 
-def image_ext(content_type: str, body: bytes) -> str | None:
-    """Return the file extension when the reply is an accepted image under 10 MB, else None."""
-    declared = content_type.split(";")[0].strip().lower()
+def image_ext(content_type: str | None, body: bytes) -> str | None:
+    """Return the file extension when body is an accepted image under 10 MB, else None.
+
+    A content_type of None skips the check that the declared type matches the bytes.
+    """
     found = sniff(body)
-    if found is None or found[0] != declared or len(body) >= MAX_BYTES:
+    if found is None or len(body) >= MAX_BYTES:
+        return None
+    if content_type is not None and found[0] != content_type.split(";")[0].strip().lower():
         return None
     return found[1]
 
@@ -251,29 +256,29 @@ class Client:
             sleep(DISCOGS_WAIT)
         return reply
 
-    def json(self, url: str):
+    def ok(self, url: str) -> Reply | None:
+        """Return the reply when it is a 200; any other status or a failed request is None."""
         try:
             reply = self.get(url)
-            return json.loads(reply.body) if reply.status == 200 else None
-        except (FetchError, ValueError):
+        except FetchError:
+            return None
+        return reply if reply.status == 200 else None
+
+    def json(self, url: str):
+        reply = self.ok(url)
+        try:
+            return json.loads(reply.body) if reply else None
+        except ValueError:
             return None
 
     def page_image(self, url: str) -> str | None:
         """Return the og:image of a page, or None when the page or the tag is missing."""
-        try:
-            reply = self.get(url)
-        except FetchError:
-            return None
-        if reply.status != 200:
-            return None
-        return og_image(reply.body.decode("utf-8", "replace"), reply.url)
+        reply = self.ok(url)
+        return og_image(reply.body.decode("utf-8", "replace"), reply.url) if reply else None
 
     def image(self, url: str, source: str, kind: str) -> Image | None:
-        try:
-            reply = self.get(url)
-        except FetchError:
-            return None
-        if reply.status != 200:
+        reply = self.ok(url)
+        if reply is None:
             return None
         ext = image_ext(reply.headers.get("content-type", ""), reply.body)
         return Image(reply.body, ext, source, url, kind) if ext else None
@@ -426,8 +431,8 @@ def local_cover(path: Path) -> Image | None:
         body = path.read_bytes()
     except OSError:
         return None
-    found = sniff(body)
-    return Image(body, found[1], "library", str(path), "fallback") if found else None
+    ext = image_ext(None, body)
+    return Image(body, ext, "library", str(path), "fallback") if ext else None
 
 
 def relations(record: dict) -> dict[str, list[str]]:
@@ -456,17 +461,16 @@ where a.missing = 0 and a.mbz_artist_id <> ''
 order by a.name, a.id
 """
 TITLES_SQL = """
-select mf.title, mf.album from media_file mf
+select m.artist_id, mf.title, mf.album from media_file mf
 join media_file_artists m on m.media_file_id = mf.id
-where m.artist_id = ? and mf.missing = 0
+where mf.missing = 0
 """
 COVERS_SQL = """
-select l.path, min(mf.path) from album al
+select json_extract(al.participants, '$.albumartist[0].id'), l.path, min(mf.path) from album al
 join media_file mf on mf.album_id = al.id and mf.missing = 0
 join library l on l.id = mf.library_id
 where al.missing = 0
   and json_array_length(al.participants, '$.albumartist') = 1
-  and json_extract(al.participants, '$.albumartist[0].id') = ?
 group by al.id
 order by al.min_year, al.name, al.id
 """
@@ -486,12 +490,14 @@ def read_artists(db: sqlite3.Connection) -> list[Artist]:
         artist.ids.append(nd_id)
         if source_path is not None:
             artist.stored[nd_id] = source_path
+    by_id = {nd_id: artist for artist in by_mbid.values() for nd_id in artist.ids}
+    for nd_id, title, album in db.execute(TITLES_SQL):
+        if nd_id in by_id:
+            by_id[nd_id].titles.update(normalize(t) for t in (title, album) if t)
+    for nd_id, lib, rel in db.execute(COVERS_SQL):
+        if nd_id in by_id:
+            by_id[nd_id].covers.extend(_cover_files(Path(lib) / Path(rel).parent))
     for artist in by_mbid.values():
-        for nd_id in artist.ids:
-            for title, album in db.execute(TITLES_SQL, (nd_id,)):
-                artist.titles.update(normalize(t) for t in (title, album) if t)
-            for lib, rel in db.execute(COVERS_SQL, (nd_id,)):
-                artist.covers.extend(_cover_files(Path(lib) / Path(rel).parent))
         artist.titles.discard("")
     return list(by_mbid.values())
 
@@ -510,23 +516,13 @@ def _cover_files(folder: Path) -> list[Path]:
 
 def parse_scan_time(text: str) -> float:
     """Return a Navidrome timestamp as epoch seconds; its zero value and anything unparsed are 0."""
-    match = re.match(
-        r"(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d):(\d\d)(?:\.(\d+))?\s*(Z|[+-]\d\d:?\d\d)?", text or ""
-    )
-    if not match or match.group(1) == "0000":
-        return 0.0
-    year, month, day, hour, minute, second = (int(g) for g in match.groups()[:6])
-    micro = int((match.group(7) or "0")[:6].ljust(6, "0"))
-    offset = match.group(8) or "Z"
-    tz = timezone.utc
-    if offset != "Z":
-        sign = 1 if offset[0] == "+" else -1
-        hours, minutes = int(offset[1:3]), int(offset[-2:])
-        tz = timezone(sign * timedelta(hours=hours, minutes=minutes))
     try:
-        return datetime(year, month, day, hour, minute, second, micro, tz).timestamp()
+        stamp = datetime.fromisoformat((text or "").strip())
     except ValueError:
         return 0.0
+    if stamp.tzinfo is None:
+        stamp = stamp.replace(tzinfo=timezone.utc)
+    return max(stamp.timestamp(), 0.0)
 
 
 def scan_pending(cfg: Config) -> bool:
@@ -619,12 +615,16 @@ class Run:
         self.state = load_state(cfg.folder / "state.json")
         self.changed: set[str] = set()
         self.tried: dict[str, str] = {}
+        self.saved: str | None = None
 
     def entry(self, mbid: str) -> dict:
         return self.state["artists"].setdefault(mbid, {})
 
     def save(self) -> None:
-        write_atomic(self.cfg.folder / "state.json", json.dumps(self.state, indent=2, sort_keys=True) + "\n")
+        text = json.dumps(self.state, indent=2, sort_keys=True) + "\n"
+        if text != self.saved:
+            write_atomic(self.cfg.folder / "state.json", text)
+            self.saved = text
 
     def check_manual(self, artist: Artist) -> bool:
         """Record a manual file for the artist and remove the helper's own; return True when one is there."""
@@ -643,9 +643,8 @@ class Run:
             (self.cfg.folder / ours).unlink(missing_ok=True)
         if entry.get("manual_file") != path.name or entry.get("manual_sha256") != digest:
             self.changed.add(artist.mbid)
-        name = entry.get("name")
         entry.clear()
-        entry.update(status="manual", manual_file=path.name, manual_sha256=digest, name=name or artist.name)
+        entry.update(status="manual", manual_file=path.name, manual_sha256=digest, name=artist.name)
         return True
 
     def store(self, artist: Artist, image: Image) -> None:
@@ -702,17 +701,23 @@ class Run:
             if not name or not (self.cfg.folder / name).exists():
                 continue
             mine = os.path.realpath(self.cfg.folder / name)
-            for nd_id in artist.ids:
-                if nd_id not in artist.stored:
-                    continue
-                stored = artist.stored[nd_id]
+            for nd_id, stored in artist.stored.items():
                 if artist.mbid in self.changed or not stored or os.path.realpath(stored) != mine:
                     ids.append(nd_id)
         return sorted(ids)
 
 
+REPORT_SECTIONS = {
+    "fallback": "Release covers in place of a photo",
+    "low": "Low-confidence photos",
+    "manual": "Manual files",
+    "none": "No file",
+    "deferred": "Deferred by a failed request",
+}
+
+
 def report(run: Run, artists: list[Artist], token: bool, at: float) -> str:
-    sections: dict[str, list[str]] = {k: [] for k in ("fallback", "low", "manual", "none", "deferred")}
+    sections: dict[str, list[str]] = {k: [] for k in REPORT_SECTIONS}
     for artist in sorted(artists, key=lambda a: (a.name.casefold(), a.mbid)):
         entry = run.entry(artist.mbid)
         who = f"{artist.name} (`{artist.mbid}`)"
@@ -735,14 +740,7 @@ def report(run: Run, artists: list[Artist], token: bool, at: float) -> str:
     ]
     if not token:
         lines += ["", "Discogs was skipped: no DISCOGS_TOKEN in the environment or the secrets file."]
-    titles = {
-        "fallback": "Release covers in place of a photo",
-        "low": "Low-confidence photos",
-        "manual": "Manual files",
-        "none": "No file",
-        "deferred": "Deferred by a failed request",
-    }
-    for key, title in titles.items():
+    for key, title in REPORT_SECTIONS.items():
         lines += ["", f"## {title}", ""]
         lines += sections[key] or ["None."]
     return "\n".join(lines) + "\n"
@@ -759,10 +757,7 @@ def _search_links(artist: Artist) -> str:
 
 
 def summary(run: Run) -> str:
-    counts = {k: 0 for k in ("photo", "fallback", "none", "deferred")}
-    for status in run.tried.values():
-        if status in counts:
-            counts[status] += 1
+    counts = Counter(run.tried.values())
     return (
         f"artist-photos: {len(run.tried)} artists tried: {counts['photo']} photos, "
         f"{counts['fallback']} fallbacks, {counts['none']} none, {counts['deferred']} deferred"
@@ -807,7 +802,6 @@ def main() -> int:
     for artist in artists:
         run.process(artist, now())
         run.save()
-    run.save()
     write_atomic(cfg.state_dir / "report.md", report(run, artists, bool(token), now()))
     print(summary(run))
     ids = run.refresh_ids(artists)
