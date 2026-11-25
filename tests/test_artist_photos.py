@@ -931,3 +931,22 @@ def test_a_failed_refresh_of_a_new_manual_file_runs_again_next_time(box, monkeyp
     assert ap.main() == 0
     assert box.refreshed() == [f"artwork refresh ar {nd}"]
     assert box.entry(ALPHA)["status"] == "manual"
+
+
+def test_a_truncated_error_body_still_gives_its_status(monkeypatch):
+    class Body:
+        def read(self, n=-1):
+            raise ap.http.client.IncompleteRead(b"part")
+
+        def close(self):
+            pass
+
+    class Opener:
+        def open(self, request, timeout):
+            raise ap.urllib.error.HTTPError(request.full_url, 503, "Service Unavailable", {}, Body())
+
+    monkeypatch.setattr(ap, "_opener", Opener())
+    got = ap.fetch("https://musicbrainz.org/ws/2/artist/x", {"User-Agent": UA})
+
+    assert got.status == 503
+    assert got.body == b""

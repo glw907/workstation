@@ -148,7 +148,7 @@ def fetch(url: str, headers: dict[str, str]) -> Reply:
     except urllib.error.HTTPError as err:
         try:
             body = err.read(MAX_BYTES)
-        except OSError:
+        except (OSError, http.client.HTTPException):
             body = b""
         return Reply(err.code, _lower(err.headers), body, url)
     except (urllib.error.URLError, http.client.HTTPException, OSError, ValueError) as err:
