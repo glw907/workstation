@@ -46,6 +46,15 @@ SPLIT = re.compile(r"\.([rz]\d\d|\d{3})$", re.IGNORECASE)
 IMAGES = frozenset(".jpg .jpeg .png .webp .gif .bmp .tif .tiff".split())
 RASTER = (b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n", b"GIF87a", b"GIF89a", b"BM", b"II*\x00", b"MM\x00*")
 MAX_MEMBERS = 10_000
+# A Mac writes ._name beside each file it copies, and Finder's zips hold more under __MACOSX.
+APPLEDOUBLE = b"\x00\x05\x16\x07"
+# tarfile reads a pax or GNU long-name header whole while it reads the next member, so
+# check_members() never sees it. A real one is a few hundred bytes.
+MAX_HEADER = 1 << 20
+LONG_HEADERS = (
+    tarfile.GNUTYPE_LONGNAME, tarfile.GNUTYPE_LONGLINK, tarfile.XHDTYPE, tarfile.XGLTYPE,
+    tarfile.SOLARIS_XHDTYPE,
+)
 HEADROOM = 1 << 30
 # A set-aside folder's name, in bytes, leaving room for " (n)" under the 255-byte limit.
 NAME_BYTES = 240
@@ -232,13 +241,22 @@ def bad_name(name: str) -> str | None:
     return None
 
 
+class SmallHeaders(tarfile.TarInfo):
+    """A tar header that refuses a pax or long-name header past MAX_HEADER before reading it."""
+
+    def _proc_member(self, tar):
+        if self.type in LONG_HEADERS and self.size > MAX_HEADER:
+            raise Refused(f"The archive has a header of {self.size:,} bytes, past the 1 MiB limit.")
+        return super()._proc_member(tar)
+
+
 def tar_members(f: BinaryIO, plain: bool):
     """Yield each member of a tar archive as (name, kind, size).
 
     A plain tar whose copy stalled can end in zeros, which tarfile reads as a clean end, so
     more than two records past the last member refuses it.
     """
-    with tarfile.open(fileobj=f) as tar:
+    with tarfile.open(fileobj=f, tarinfo=SmallHeaders) as tar:
         for m in tar:
             kind = (
                 "link" if m.issym() or m.islnk()
@@ -331,7 +349,7 @@ def unpack(cfg: Config, archive: Path, dest: Path) -> None:
                 with zipfile.ZipFile(f) as z:
                     z.extractall(dest)
             else:
-                with tarfile.open(fileobj=f) as tar:
+                with tarfile.open(fileobj=f, tarinfo=SmallHeaders) as tar:
                     tar.extractall(dest, filter="data")
     # zipfile raises RuntimeError for an encrypted member.
     except (
@@ -365,11 +383,13 @@ def check_links(target: Path) -> None:
     beets follows a link, a hard link keeps a second name a client can still write through,
     and a control character in a name could forge a log line. A file named as an image must
     start like one. Each folder gets mode 0755 and each file 0644, so beets can move them,
-    the clean-up can delete them, and no mode a client set reaches ~/Music.
+    the clean-up can delete them, and no mode a client set reaches ~/Music. A Mac's
+    AppleDouble files and __MACOSX folders are metadata, and are deleted.
     """
     def unreadable(err: OSError) -> None:
         raise Refused(f"It holds a folder the importer can't read: {printable(str(err.filename))}")
 
+    macosx = []
     for root, dirs, files in os.walk(target, onerror=unreadable):
         for name in dirs + files:
             path = Path(root, name)
@@ -382,18 +402,31 @@ def check_links(target: Path) -> None:
                 raise Refused(f"It holds a file with a second name, a hard link: {rel}")
             if any(unsafe(c) for c in name):
                 raise Refused(f"It holds a name with a control character in it: {rel}")
+            if is_dir and name == "__MACOSX":
+                macosx.append(path)
+            if not is_dir and name.startswith("._") and head(path, 4) == APPLEDOUBLE:
+                path.unlink()
+                continue
             # The work folder is hidden from clients, so a plain chmod here can't be redirected.
             mode = 0o755 if is_dir else 0o644
             if stat.S_IMODE(st.st_mode) != mode:
                 os.chmod(path, mode)
             if not is_dir and path.suffix.lower() in IMAGES and not is_raster(path):
                 raise Refused(f"It holds a file named as an image that isn't one: {rel}")
+    # The walk runs top-down and checked every entry, so a nested one is already gone.
+    for path in macosx:
+        if path.exists():
+            shutil.rmtree(path)
+
+
+def head(path: Path, size: int) -> bytes:
+    with open(path, "rb") as f:
+        return f.read(size)
 
 
 def is_raster(path: Path) -> bool:
-    with open(path, "rb") as f:
-        head = f.read(12)
-    return head.startswith(RASTER) or (head[:4] == b"RIFF" and head[8:12] == b"WEBP")
+    start = head(path, 12)
+    return start.startswith(RASTER) or (start[:4] == b"RIFF" and start[8:12] == b"WEBP")
 
 
 def beet(cfg: Config, *args: str) -> str:

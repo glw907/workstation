@@ -628,3 +628,41 @@ def test_split_archive_parts_are_kept(tmp_path):
         (tmp_path / name).write_text("x")
     names = [p.name for p in ft.leftover_audio(tmp_path, [])]
     assert names == ["disc2.001", "disc2.r00", "disc2.z01"]
+
+
+JPEG = b"\xff\xd8\xff\xe0" + b"\0" * 16
+APPLEDOUBLE = b"\x00\x05\x16\x07" + b"\0" * 20
+
+
+@pytest.mark.parametrize("fmt", [tarfile.PAX_FORMAT, tarfile.GNU_FORMAT])
+def test_tar_with_a_huge_header_is_refused(box, fmt):
+    """tarfile reads a pax or long-name header whole, so one past 1 MiB is refused unread."""
+    with tarfile.open(box / "FreshTracks/big.tar.bz2", "w:bz2", format=fmt) as tar:
+        tar.addfile(tarfile.TarInfo("Album A/" + "n" * (2 << 20) + ".mp3"), io.BytesIO(b""))
+    assert ft.main() == 0
+    assert "header of" in why(box, "big")
+
+
+def test_appledouble_files_are_deleted(tmp_path):
+    """A Mac's ._ files and __MACOSX folder go, and a ._ name that isn't one still counts."""
+    (tmp_path / "__MACOSX/Album A").mkdir(parents=True)
+    (tmp_path / "__MACOSX/Album A/._cover.jpg").write_bytes(APPLEDOUBLE)
+    (tmp_path / "._cover.jpg").write_bytes(APPLEDOUBLE)
+    (tmp_path / "cover.jpg").write_bytes(JPEG)
+    ft.check_links(tmp_path)
+    assert [p.name for p in tmp_path.iterdir()] == ["cover.jpg"]
+    (tmp_path / "._back.jpg").write_text("%!PS-Adobe-3.0\n")
+    with pytest.raises(ft.Refused, match="isn't one: ._back.jpg"):
+        ft.check_links(tmp_path)
+
+
+@needs_beet
+def test_mac_zip_imports(box):
+    """Finder's zip of an album with a cover holds __MACOSX/<album>/._cover.jpg."""
+    with zipfile.ZipFile(box / "FreshTracks/album.zip", "w") as z:
+        for name, data in album_members() + [("Album A/cover.jpg", JPEG)]:
+            z.writestr(name, data)
+        z.writestr("__MACOSX/Album A/._cover.jpg", APPLEDOUBLE)
+    ft.main()
+    assert len(music(box)) == 2
+    assert inbox_names(box) == [".fresh-tracks-work"]

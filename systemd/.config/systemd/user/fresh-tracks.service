@@ -7,6 +7,8 @@ DefaultDependencies=no
 # Each top-level change starts a run, and one with nothing waiting exits at once. No
 # start limit, so a burst of those can't fail the unit and stop the path unit watching.
 StartLimitIntervalSec=0
+# The path unit makes ~/FreshTracks, so a run at login finds it.
+After=fresh-tracks.path
 Conflicts=shutdown.target
 Before=shutdown.target
 
@@ -19,14 +21,17 @@ ExecStart=%h/.local/bin/fresh-tracks
 # import. A run killed here leaves its item for the next run's recovery.
 TimeoutStartSec=6h
 MemoryMax=4G
-# beets hands files from a share others write to on to ImageMagick, Ghostscript, and ffmpeg.
-# The run sees only the folders it imports through, and the code it runs read-only, so a
-# hostile file can't reach a secret or plant a plugin for the next manual beet.
-ProtectHome=tmpfs
-BindPaths=%h/FreshTracks %h/Music %h/.local/share/beets %h/.local/share/music-cover-originals
-BindReadOnlyPaths=%h/.local/bin %h/.local/share/uv %h/.config/beets %h/.dotfiles
-InaccessiblePaths=-%h/.dotfiles/secrets
+# beets hands files from a share others write to on to ImageMagick, Ghostscript, and ffmpeg,
+# so a hostile file must not reach a secret or plant code for a later run. The inbox and
+# ~/Music stay on home's mount, since a bind of each would turn beets' move between them
+# into a copy. Instead the run's config and code are read-only, and the rest of .config,
+# .local, and .dotfiles is replaced with an empty tmpfs.
+TemporaryFileSystem=%h/.config:ro %h/.local:ro %h/.dotfiles:ro
+BindReadOnlyPaths=%h/.config/beets %h/.local/bin %h/.local/share/uv %h/.dotfiles/bin %h/.dotfiles/beets
+BindPaths=%h/.local/share/beets %h/.local/share/music-cover-originals
 StateDirectory=fresh-tracks
+InaccessiblePaths=-%h/.ssh -%h/.gnupg -%h/.claude -%h/.claude.json -%h/.clasprc.json -%h/.mozilla -%h/.var -%h/.vdirsyncer -%h/.contacts -%h/.npm -%h/Projects -%h/Documents
+ReadOnlyPaths=-%h/.bashrc -%h/.bash_profile -%h/.bash_logout -%h/.profile -%h/.zshrc -%h/.zprofile -%h/.gitconfig
 PrivateTmp=yes
 NoNewPrivileges=yes
 RestrictSUIDSGID=yes
