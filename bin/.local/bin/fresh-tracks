@@ -115,25 +115,25 @@ def pending(cfg: Config) -> list[Path]:
     )
 
 
-def snapshot(cfg: Config) -> dict[str, tuple[int, int]]:
-    """Map each path waiting under the inbox to its size and mtime."""
-    seen = {}
-    for top in pending(cfg):
-        seen[top.name] = _stamp(top)
-        if top.is_dir() and not top.is_symlink():
-            for root, dirs, files in os.walk(top):
-                for name in dirs + files:
-                    path = Path(root, name)
-                    seen[str(path.relative_to(cfg.inbox))] = _stamp(path)
-    return seen
-
-
-def _stamp(path: Path) -> tuple[int, int]:
+def stamp(path: Path) -> tuple[int, int]:
     try:
         st = path.lstat()
     except FileNotFoundError:
         return (-1, -1)
     return (st.st_size, st.st_mtime_ns)
+
+
+def snapshot(cfg: Config) -> dict[str, tuple[int, int]]:
+    """Map each path waiting under the inbox to its size and mtime."""
+    seen = {}
+    for top in pending(cfg):
+        seen[top.name] = stamp(top)
+        if top.is_dir() and not top.is_symlink():
+            for root, dirs, files in os.walk(top):
+                for name in dirs + files:
+                    path = Path(root, name)
+                    seen[str(path.relative_to(cfg.inbox))] = stamp(path)
+    return seen
 
 
 def wait_quiet(cfg: Config, sleep=time.sleep, clock=time.monotonic) -> None:
@@ -182,36 +182,48 @@ def bad_name(name: str) -> str | None:
     return None
 
 
-def check_tar(path: Path) -> int:
-    """Return the archive's unpacked size, or raise Refused naming its first unsafe member."""
-    total = 0
+def tar_members(path: Path):
+    """Yield each member of a tar archive as (name, kind, size)."""
     with tarfile.open(path) as tar:
-        for member in tar:
-            if why := bad_name(member.name):
-                raise Refused(f"The archive holds {why}")
-            if member.issym() or member.islnk():
-                raise Refused(f"The archive holds a link: {member.name}")
-            if member.isdev():
-                raise Refused(f"The archive holds a device or FIFO: {member.name}")
-            if not (member.isfile() or member.isdir()):
-                raise Refused(f"The archive holds an entry that is not a file: {member.name}")
-            total += member.size if member.isfile() else 0
-    return total
+        for m in tar:
+            kind = (
+                "link" if m.issym() or m.islnk()
+                else "device" if m.isdev()
+                else "file" if m.isfile()
+                else "dir" if m.isdir()
+                else "other"
+            )
+            yield m.name, kind, m.size
 
 
-def check_zip(path: Path) -> int:
-    """Return the archive's unpacked size, or raise Refused naming its first unsafe member."""
-    total = 0
+def zip_members(path: Path):
+    """Yield each member of a zip archive as (name, kind, size), its kind from the Unix mode."""
     with zipfile.ZipFile(path) as archive:
         for info in archive.infolist():
-            if why := bad_name(info.filename):
-                raise Refused(f"The archive holds {why}")
             mode = info.external_attr >> 16
-            if stat.S_ISLNK(mode):
-                raise Refused(f"The archive holds a link: {info.filename}")
-            if stat.S_ISCHR(mode) or stat.S_ISBLK(mode) or stat.S_ISFIFO(mode) or stat.S_ISSOCK(mode):
-                raise Refused(f"The archive holds a device or FIFO: {info.filename}")
-            total += info.file_size
+            kind = (
+                "link" if stat.S_ISLNK(mode)
+                else "device" if stat.S_ISCHR(mode) or stat.S_ISBLK(mode) or stat.S_ISFIFO(mode)
+                or stat.S_ISSOCK(mode)
+                else "dir" if info.is_dir()
+                else "file"
+            )
+            yield info.filename, kind, info.file_size
+
+
+def check_members(members) -> int:
+    """Return the archive's unpacked size, or raise Refused naming its first unsafe member."""
+    total = 0
+    for name, kind, size in members:
+        if why := bad_name(name):
+            raise Refused(f"The archive holds {why}")
+        if kind == "link":
+            raise Refused(f"The archive holds a link: {name}")
+        if kind == "device":
+            raise Refused(f"The archive holds a device or FIFO: {name}")
+        if kind == "other":
+            raise Refused(f"The archive holds an entry that is not a file: {name}")
+        total += size if kind == "file" else 0
     return total
 
 
@@ -223,25 +235,23 @@ def unpack(cfg: Config, archive: Path, dest: Path) -> None:
     """Check the archive whole, then unpack it into dest, or raise Refused."""
     is_zip = archive.name.lower().endswith(".zip")
     try:
-        size = check_zip(archive) if is_zip else check_tar(archive)
-    except (tarfile.TarError, zipfile.BadZipFile, EOFError, OSError) as err:
-        raise Refused(f"The archive can't be read, so it may be damaged or incomplete: {err}")
-    free = free_bytes(cfg.inbox)
-    if size + HEADROOM > free:
-        raise Refused(
-            f"The archive is too big to unpack: it needs {size / 2**30:.1f} GiB, and "
-            f"{free / 2**30:.1f} GiB is free, of which 1 GiB stays spare."
-        )
-    dest.mkdir()
-    try:
+        size = check_members(zip_members(archive) if is_zip else tar_members(archive))
+        free = free_bytes(cfg.inbox)
+        if size + HEADROOM > free:
+            raise Refused(
+                f"The archive is too big to unpack: it needs {size / 2**30:.1f} GiB, and "
+                f"{free / 2**30:.1f} GiB is free, of which 1 GiB stays spare."
+            )
+        dest.mkdir()
         if is_zip:
             with zipfile.ZipFile(archive) as z:
                 z.extractall(dest)
         else:
             with tarfile.open(archive) as tar:
                 tar.extractall(dest, filter="data")
+    # zipfile raises RuntimeError for an encrypted member.
     except (tarfile.TarError, zipfile.BadZipFile, EOFError, OSError, RuntimeError) as err:
-        raise Refused(f"The archive can't be unpacked, so it may be damaged or incomplete: {err}")
+        raise Refused(f"The archive can't be read, so it may be damaged or incomplete: {err}") from err
 
 
 def check_links(target: Path) -> None:
@@ -290,24 +300,28 @@ def covers(stdout: str) -> list[str]:
 
 
 def leftover_audio(target: Path) -> list[Path]:
-    return sorted(
-        p for p in target.rglob("*") if p.is_file() and p.suffix.lower() in AUDIO
-    ) if target.exists() else []
+    if not target.exists():
+        return []
+    return sorted(p for p in target.rglob("*") if p.is_file() and p.suffix.lower() in AUDIO)
 
 
 def write_why(dest: Path, lines: list[str]) -> None:
     (dest / "WHY.txt").write_text(WHY_HEADER + "".join(f"{line}\n" for line in lines))
 
 
-def set_aside(cfg: Config, sources: list[Path], label: str, why: list[str]) -> Path:
-    """Move sources into Not imported/<label>/ beside a WHY.txt, and return that folder."""
+def set_aside(cfg: Config, label: str, moves: list[tuple[Path, Path]], why: list[str]) -> str:
+    """Move each (source, path under the folder) into Not imported/<label>/ beside a WHY.txt.
+
+    Returns the folder's path under the inbox, for the log line.
+    """
     cfg.not_imported.mkdir(exist_ok=True)
     dest = unique(cfg.not_imported, label)
     dest.mkdir()
-    for src in sources:
-        src.rename(dest / src.name)
+    for src, rel in moves:
+        (dest / rel).parent.mkdir(parents=True, exist_ok=True)
+        src.rename(dest / rel)
     write_why(dest, why)
-    return dest
+    return str(dest.relative_to(cfg.inbox))
 
 
 def recover(cfg: Config) -> None:
@@ -326,53 +340,56 @@ def recover(cfg: Config) -> None:
         report(cfg, f"Moved a crashed run's leftovers in {slot.name} back to the inbox.")
 
 
-def process(cfg: Config, item: Item, slot: Path) -> None:
-    """Import one item through beets, set aside what it skipped, and log one line."""
+def process(cfg: Config, item: Item, slot: Path, albums: int) -> int:
+    """Import one item through beets, set aside what it skipped, and log one line.
+
+    Takes the library's album count before the item and returns it after, so each item
+    lists the library once.
+    """
     src = slot / "src"
     src.mkdir(parents=True)
     # A rename on the inbox's file system, so beets' move into ~/Music is a rename too.
     for path in item.sources:
         path.rename(src / path.name)
-    moved = [src / p.name for p in item.sources]
+    whole = [(src / p.name, Path(p.name)) for p in item.sources]
     try:
         if item.kind == "archive":
             target = slot / "unpacked"
-            unpack(cfg, moved[0], target)
+            unpack(cfg, whole[0][0], target)
         else:
             target = src / item.label if item.kind == "folder" else src
             check_links(target)
     except Refused as why:
-        dest = set_aside(cfg, moved, item.label, [str(why)])
+        dest = set_aside(cfg, item.label, whole, [str(why)])
         shutil.rmtree(slot)
-        report(cfg, f"{item.label}: not imported, moved to {dest.relative_to(cfg.inbox)}. {why}")
-        return
+        report(cfg, f"{item.label}: not imported, moved to {dest}. {why}")
+        return albums
 
-    before = album_count(cfg)
     log = slot / "import.log"
     stdout = beet(cfg, "import", "-q", "-l", str(log), str(target))
-    imported = album_count(cfg) - before
+    after = album_count(cfg)
     entries = read_log(log)
     left = leftover_audio(target)
+    # beets logs each album it skips, once.
+    skipped = sum(1 for tag, _ in entries if tag in REASONS)
+    line = f"{item.label}: {after - albums} albums imported, {skipped} skipped"
 
-    why = _why_lines(target, left, entries, item.label)
-    skipped = max(len(why), sum(1 for tag, _ in entries if tag in REASONS))
-    line = f"{item.label}: {imported} albums imported, {skipped} skipped"
-    if not left and imported == 0:
-        dest = set_aside(cfg, moved, item.label, [f"{item.label}: It holds no music beets can read."])
-        line += f", moved to {dest.relative_to(cfg.inbox)}"
-    elif why:
-        if item.kind == "archive":
-            dest = set_aside(cfg, moved, item.label, why)
-        else:
-            dest = _set_aside_audio(cfg, target, left, item.label, why)
-        line += f", moved to {dest.relative_to(cfg.inbox)}"
+    why = why_lines(target, left, entries, item.label)
+    if not left and after == albums:
+        why = [f"{item.label}: It holds no music beets can read."]
+    if why:
+        # A skipped archive is kept whole; a folder keeps only the audio beets left.
+        keep = whole if item.kind == "archive" or not left else [(p, p.relative_to(target)) for p in left]
+        line += f", moved to {set_aside(cfg, item.label, keep, why)}"
     shutil.rmtree(slot)
     if cover_lines := covers(stdout):
         line += ". Covers outside the rule: " + "; ".join(cover_lines)
     report(cfg, line + ".")
+    return after
 
 
-def _why_lines(target: Path, left: list[Path], entries, label: str) -> list[str]:
+def why_lines(target: Path, left: list[Path], entries, label: str) -> list[str]:
+    """Name each folder holding audio beets left, with the reason its import log gives."""
     folders: dict[str, str] = {}
     for path in left:
         rel = path.parent.relative_to(target)
@@ -383,17 +400,6 @@ def _why_lines(target: Path, left: list[Path], entries, label: str) -> list[str]
         )
         folders.setdefault(name, reason)
     return [f"{name}: {reason}" for name, reason in folders.items()]
-
-
-def _set_aside_audio(cfg: Config, target: Path, left: list[Path], label: str, why: list[str]) -> Path:
-    cfg.not_imported.mkdir(exist_ok=True)
-    dest = unique(cfg.not_imported, label)
-    for path in left:
-        to = dest / path.relative_to(target)
-        to.parent.mkdir(parents=True, exist_ok=True)
-        path.rename(to)
-    write_why(dest, why)
-    return dest
 
 
 def main() -> int:
@@ -411,8 +417,9 @@ def main() -> int:
         while pending(cfg):
             wait_quiet(cfg)
             cfg.work.mkdir(exist_ok=True)
+            albums = album_count(cfg)
             for n, item in enumerate(gather(pending(cfg)), 1):
-                process(cfg, item, unique(cfg.work, str(n)))
+                albums = process(cfg, item, unique(cfg.work, str(n)), albums)
     return 0
 
 

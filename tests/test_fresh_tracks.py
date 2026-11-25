@@ -144,7 +144,8 @@ def test_duplicate_goes_to_not_imported(box):
     assert sorted(p.name for p in dest.iterdir()) == ["01.mp3", "02.mp3", "WHY.txt"]
     assert "Album A again: It is already in the library." in why(box, "Album A again")
     assert len(music(box)) == 2
-    assert "Album A again: 0 albums imported, 1 skipped, moved to Not imported/Album A again." in state_log(box)
+    line = "Album A again: 0 albums imported, 1 skipped, moved to Not imported/Album A again."
+    assert line in state_log(box)
 
 
 @needs_beet
