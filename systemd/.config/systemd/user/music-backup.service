@@ -1,0 +1,18 @@
+[Unit]
+Description=Copy ~/Music to the music-library R2 bucket
+ConditionHost=pavilion
+
+[Service]
+# music-backup.timer starts this each night.
+Type=oneshot
+ExecStart=%h/.local/bin/music-backup
+# The first run uploads about 33 GB. A run this stops resumes the next night,
+# because rclone copy skips what is already in the bucket.
+TimeoutStartSec=6h
+# The script only reads: the library, the credential store, and itself.
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+NoNewPrivileges=yes
+# Navidrome and the Samba share read the same disk, so the copy yields to them.
+IOSchedulingClass=idle
