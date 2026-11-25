@@ -1,0 +1,828 @@
+#!/usr/bin/python3 -I
+"""Give each artist in the Navidrome library a photo from a source tied to its MusicBrainz ID.
+
+Files land in Navidrome's ArtistImageFolder as <mbid>.<ext>. A file there whose hash this
+helper didn't record is manual, and the helper never touches it. Fresh Tracks starts it after
+an import, and a monthly timer retries the fallbacks. The spec is
+docs/specs/2026-11-24-artist-photos-design.md.
+"""
+
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+import hashlib
+from html.parser import HTMLParser
+import json
+import os
+from pathlib import Path
+import re
+import sqlite3
+import subprocess
+import sys
+import time
+import unicodedata
+import urllib.error
+import urllib.parse
+import urllib.request
+
+VERSION = "1.0.0"
+USER_AGENT = f"artist-photos/{VERSION} ( glw@907.life )"
+MAX_BYTES = 10 * 1024 * 1024
+TIMEOUT = 20
+RETRY_AFTER = 28 * 86400
+SCAN_POLL = 15
+SCAN_POLLS = 600 // SCAN_POLL
+MB_BACKOFF = (5, 10, 20, 40)
+# Seconds between requests to one host. MusicBrainz allows 1 per second and 503s near it;
+# iTunes Search publishes "approximately 20 calls per minute".
+PACE = {"musicbrainz.org": 1.1, "itunes.apple.com": 3.5}
+DEFAULT_PACE = 1.0
+DISCOGS_FLOOR = 2
+DISCOGS_WAIT = 60
+
+MUSICBRAINZ = "https://musicbrainz.org/ws/2"
+DISCOGS = "https://api.discogs.com"
+ITUNES = "https://itunes.apple.com"
+DEEZER = "https://api.deezer.com"
+
+UUID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\Z")
+# Navidrome's image-folder match takes any image extension, so a manual file may use any.
+IMAGE_SUFFIXES = frozenset(".jpg .jpeg .png .webp .gif .bmp .avif .tif .tiff".split())
+COVER_STEMS = ("cover", "folder", "front")
+COVER_SUFFIXES = (".jpg", ".jpeg", ".png", ".webp")
+SURE = frozenset({"discogs", "wikidata", "bandcamp", "musicbrainz-image", "discogs-release", "library"})
+# MusicBrainz url-rel type, then the source name the report and state use. Their order is the
+# spec's chain order for the page scrapes behind Apple.
+PROFILE_RELS = (
+    ("social network", "social"),
+    ("soundcloud", "soundcloud"),
+    ("youtube", "youtube"),
+    ("official homepage", "homepage"),
+)
+
+# Clock seams the tests replace.
+now = time.time
+monotonic = time.monotonic
+sleep = time.sleep
+
+
+class FetchError(Exception):
+    """A request that got no HTTP reply: a refused URL, a timeout, or a network error."""
+
+
+class Deferred(Exception):
+    """MusicBrainz kept failing, so the artist waits for the next run."""
+
+
+@dataclass(frozen=True)
+class Reply:
+    status: int
+    headers: dict[str, str]
+    body: bytes
+    url: str
+
+
+@dataclass(frozen=True)
+class Image:
+    body: bytes
+    ext: str
+    source: str
+    url: str
+    kind: str
+
+    @property
+    def confidence(self) -> str:
+        return "sure" if self.source in SURE else "low"
+
+
+@dataclass
+class Artist:
+    mbid: str
+    name: str
+    ids: list[str] = field(default_factory=list)
+    # Navidrome id to its stored primary source_path; an id with no item_artwork row is absent.
+    stored: dict[str, str] = field(default_factory=dict)
+    titles: set[str] = field(default_factory=set)
+    covers: list[Path] = field(default_factory=list)
+
+
+@dataclass
+class Lookup:
+    artist: Artist
+    rels: dict[str, list[str]]
+    discogs_id: str | None = None
+    apple_cover: str | None = None
+
+
+@dataclass(frozen=True)
+class Config:
+    folder: Path
+    navidrome_db: Path
+    beets_db: Path
+    navidrome: str
+    state_dir: Path
+    secrets: Path
+
+
+class _NoOddRedirects(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if urllib.parse.urlsplit(newurl).scheme not in ("http", "https"):
+            raise FetchError(f"redirect to a non-web URL: {newurl}")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_opener = urllib.request.build_opener(_NoOddRedirects)
+
+
+def fetch(url: str, headers: dict[str, str]) -> Reply:
+    """Send one GET and read at most MAX_BYTES of the body; the one place the helper touches the network."""
+    request = urllib.request.Request(url, headers=headers)
+    try:
+        with _opener.open(request, timeout=TIMEOUT) as resp:
+            return Reply(resp.status, _lower(resp.headers), resp.read(MAX_BYTES), resp.url)
+    except urllib.error.HTTPError as err:
+        try:
+            body = err.read(MAX_BYTES)
+        except OSError:
+            body = b""
+        return Reply(err.code, _lower(err.headers), body, url)
+    except (urllib.error.URLError, OSError, ValueError) as err:
+        raise FetchError(f"{url}: {err}") from err
+
+
+def _lower(headers) -> dict[str, str]:
+    return {k.lower(): v for k, v in (headers or {}).items()}
+
+
+def normalize(text: str) -> str:
+    """Fold a name or title for matching: NFKD, marks and punctuation dropped, casefolded, spaces collapsed."""
+    decomposed = unicodedata.normalize("NFKD", text)
+    kept = "".join(
+        c for c in decomposed if unicodedata.category(c)[0] != "P" and unicodedata.category(c) != "Mn"
+    )
+    return " ".join(kept.casefold().split())
+
+
+def sniff(body: bytes) -> tuple[str, str] | None:
+    """Return the MIME type and extension the magic bytes name, for the three accepted types."""
+    if body.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg", "jpg"
+    if body.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png", "png"
+    if len(body) >= 12 and body[:4] == b"RIFF" and body[8:12] == b"WEBP":
+        return "image/webp", "webp"
+    return None
+
+
+def image_ext(content_type: str, body: bytes) -> str | None:
+    """Return the file extension when the reply is an accepted image under 10 MB, else None."""
+    declared = content_type.split(";")[0].strip().lower()
+    found = sniff(body)
+    if found is None or found[0] != declared or len(body) >= MAX_BYTES:
+        return None
+    return found[1]
+
+
+class _OgImage(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.url: str | None = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag != "meta" or self.url:
+            return
+        attr = {k: v for k, v in attrs if v is not None}
+        if (attr.get("property") or attr.get("name") or "").lower() == "og:image" and attr.get("content"):
+            self.url = attr["content"].strip()
+
+
+def og_image(html: str, base: str) -> str | None:
+    parser = _OgImage()
+    try:
+        parser.feed(html)
+    except AssertionError:
+        return None
+    return urllib.parse.urljoin(base, parser.url) if parser.url else None
+
+
+def commons_file(name: str) -> str:
+    """Point at a Commons file scaled to 1200 px, so an original over 10 MB still arrives."""
+    quoted = urllib.parse.quote(name.replace(" ", "_"))
+    return f"https://commons.wikimedia.org/wiki/Special:FilePath/{quoted}?width=1200"
+
+
+def primary_image(data) -> str | None:
+    """Return a Discogs entity's primary image URI, else its first."""
+    images = data.get("images") if isinstance(data, dict) else None
+    if not isinstance(images, list):
+        return None
+    usable = [i for i in images if isinstance(i, dict) and isinstance(i.get("uri"), str) and i["uri"]]
+    for image in usable:
+        if image.get("type") == "primary":
+            return image["uri"]
+    return usable[0]["uri"] if usable else None
+
+
+class Client:
+    """Paced, identified requests and the source chain built on them."""
+
+    def __init__(self, token: str | None):
+        self.token = token
+        self.last: dict[str, float] = {}
+
+    def get(self, url: str) -> Reply:
+        parts = urllib.parse.urlsplit(url)
+        if parts.scheme not in ("http", "https") or not parts.hostname:
+            raise FetchError(f"not a web URL: {url}")
+        host = parts.hostname.lower()
+        gap = PACE.get(host, DEFAULT_PACE)
+        if host in self.last:
+            wait = self.last[host] + gap - monotonic()
+            if wait > 0:
+                sleep(wait)
+        headers = {"User-Agent": USER_AGENT}
+        if host == "api.discogs.com" and self.token:
+            headers["Authorization"] = f"Discogs token={self.token}"
+        try:
+            reply = fetch(url, headers)
+        finally:
+            self.last[host] = monotonic()
+        left = reply.headers.get("x-discogs-ratelimit-remaining", "")
+        if host == "api.discogs.com" and left.isdigit() and int(left) <= DISCOGS_FLOOR:
+            sleep(DISCOGS_WAIT)
+        return reply
+
+    def json(self, url: str):
+        try:
+            reply = self.get(url)
+            return json.loads(reply.body) if reply.status == 200 else None
+        except (FetchError, ValueError):
+            return None
+
+    def page_image(self, url: str) -> str | None:
+        """Return the og:image of a page, or None when the page or the tag is missing."""
+        try:
+            reply = self.get(url)
+        except FetchError:
+            return None
+        if reply.status != 200:
+            return None
+        return og_image(reply.body.decode("utf-8", "replace"), reply.url)
+
+    def image(self, url: str, source: str, kind: str) -> Image | None:
+        try:
+            reply = self.get(url)
+        except FetchError:
+            return None
+        if reply.status != 200:
+            return None
+        ext = image_ext(reply.headers.get("content-type", ""), reply.body)
+        return Image(reply.body, ext, source, url, kind) if ext else None
+
+    def musicbrainz(self, mbid: str) -> dict:
+        """Return the artist's MusicBrainz record, {} when it has none; raise Deferred after five failures."""
+        url = f"{MUSICBRAINZ}/artist/{mbid}?inc=url-rels+release-groups&fmt=json"
+        for attempt in range(len(MB_BACKOFF) + 1):
+            try:
+                reply = self.get(url)
+            except FetchError:
+                reply = None
+            if reply is not None and reply.status == 200:
+                try:
+                    data = json.loads(reply.body)
+                except ValueError:
+                    data = None
+                if isinstance(data, dict):
+                    return data
+            if reply is not None and reply.status == 404:
+                return {}
+            if attempt < len(MB_BACKOFF):
+                sleep(MB_BACKOFF[attempt])
+        raise Deferred(mbid)
+
+    def candidates(self, look: Lookup):
+        """Yield (source, image URL) pairs in chain order, requesting each source only when reached."""
+        if self.token:
+            yield from self.discogs(look)
+        yield from self.wikidata(look)
+        yield from self.scrape(look, "bandcamp", "bandcamp")
+        yield from self.apple(look)
+        for rel, source in PROFILE_RELS:
+            yield from self.scrape(look, rel, source)
+        for link in look.rels.get("image", []):
+            match = re.match(r"https?://commons\.wikimedia\.org/wiki/File:(.+)", link)
+            yield "musicbrainz-image", commons_file(urllib.parse.unquote(match.group(1))) if match else link
+        yield from self.deezer(look)
+
+    def discogs(self, look: Lookup):
+        for link in look.rels.get("discogs", []):
+            match = re.search(r"discogs\.com/(?:[a-z]{2}/)?artist/(\d+)", link)
+            if not match:
+                continue
+            look.discogs_id = look.discogs_id or match.group(1)
+            url = primary_image(self.json(f"{DISCOGS}/artists/{match.group(1)}"))
+            if url:
+                yield "discogs", url
+
+    def wikidata(self, look: Lookup):
+        for link in look.rels.get("wikidata", []):
+            match = re.search(r"wikidata\.org/wiki/(Q\d+)\Z", link)
+            if not match:
+                continue
+            data = self.json(f"https://www.wikidata.org/wiki/Special:EntityData/{match.group(1)}.json")
+            try:
+                entity = next(iter(data["entities"].values()))
+                name = entity["claims"]["P18"][0]["mainsnak"]["datavalue"]["value"]
+            except (KeyError, IndexError, TypeError, StopIteration, AttributeError):
+                continue
+            if isinstance(name, str):
+                yield "wikidata", commons_file(name)
+
+    def scrape(self, look: Lookup, rel: str, source: str):
+        for link in look.rels.get(rel, []):
+            url = self.page_image(link)
+            if url:
+                yield source, url
+
+    def apple(self, look: Lookup):
+        want = normalize(look.artist.name)
+        query = urllib.parse.urlencode({"term": look.artist.name, "entity": "musicArtist", "limit": 25})
+        data = self.json(f"{ITUNES}/search?{query}")
+        for result in _results(data, "results"):
+            if normalize(str(result.get("artistName", ""))) != want or not result.get("artistId"):
+                continue
+            lookup = urllib.parse.urlencode({"id": result["artistId"], "entity": "album", "limit": 200})
+            albums = [
+                a for a in _results(self.json(f"{ITUNES}/lookup?{lookup}"), "results")
+                if a.get("wrapperType") == "collection"
+                and normalize(str(a.get("collectionName", ""))) in look.artist.titles
+            ]
+            if not albums:
+                continue
+            art = albums[0].get("artworkUrl100")
+            if isinstance(art, str):
+                look.apple_cover = re.sub(r"/\d+x\d+bb\.", "/1200x1200bb.", art)
+            page = result.get("artistLinkUrl")
+            url = self.page_image(page) if isinstance(page, str) else None
+            # Apple serves album art as the og:image of an artist with no photo; only paths under
+            # AMCArtistImages are photos (10 of 26 hits in the 2026-11-24 probe).
+            if url and "AMCArtistImages" in urllib.parse.urlsplit(url).path:
+                yield "apple", url
+            return
+
+    def deezer(self, look: Lookup):
+        want = normalize(look.artist.name)
+        query = urllib.parse.urlencode({"q": look.artist.name})
+        for result in _results(self.json(f"{DEEZER}/search/artist?{query}"), "data"):
+            if normalize(str(result.get("name", ""))) != want or not result.get("id"):
+                continue
+            albums = _results(self.json(f"{DEEZER}/artist/{result['id']}/albums?limit=100"), "data")
+            if not any(normalize(str(a.get("title", ""))) in look.artist.titles for a in albums):
+                continue
+            picture = result.get("picture_xl")
+            # Deezer's placeholder for an artist with no picture has an empty hash segment.
+            if isinstance(picture, str) and "/images/artist//" not in picture:
+                yield "deezer", picture
+            return
+
+    def fallback(self, look: Lookup) -> Image | None:
+        """Return a release cover for an artist with no photo, in the spec's order."""
+        if self.token and look.discogs_id:
+            image = self.discogs_release(look.discogs_id)
+            if image:
+                return image
+        if look.apple_cover:
+            image = self.image(look.apple_cover, "apple-cover", "fallback")
+            if image:
+                return image
+        for path in look.artist.covers:
+            image = local_cover(path)
+            if image:
+                return image
+        return None
+
+    def discogs_release(self, discogs_id: str) -> Image | None:
+        query = urllib.parse.urlencode({"sort": "year", "sort_order": "asc", "per_page": 100})
+        releases = [
+            r for r in _results(self.json(f"{DISCOGS}/artists/{discogs_id}/releases?{query}"), "releases")
+            if r.get("role") == "Main" and isinstance(r.get("year"), int) and r["year"] > 0 and r.get("id")
+        ]
+        if not releases:
+            return None
+        first = min(releases, key=lambda r: r["year"])
+        kind = "masters" if first.get("type") == "master" else "releases"
+        url = primary_image(self.json(f"{DISCOGS}/{kind}/{first['id']}"))
+        return self.image(url, "discogs-release", "fallback") if url else None
+
+
+def _results(data, key: str) -> list[dict]:
+    items = data.get(key) if isinstance(data, dict) else None
+    return [i for i in items if isinstance(i, dict)] if isinstance(items, list) else []
+
+
+def local_cover(path: Path) -> Image | None:
+    try:
+        if path.stat().st_size >= MAX_BYTES:
+            return None
+        body = path.read_bytes()
+    except OSError:
+        return None
+    found = sniff(body)
+    return Image(body, found[1], "library", str(path), "fallback") if found else None
+
+
+def relations(record: dict) -> dict[str, list[str]]:
+    rels: dict[str, list[str]] = {}
+    for rel in record.get("relations") or []:
+        if not isinstance(rel, dict):
+            continue
+        url = (rel.get("url") or {}).get("resource")
+        if isinstance(url, str) and isinstance(rel.get("type"), str):
+            rels.setdefault(rel["type"], []).append(url)
+    return rels
+
+
+def connect_ro(path: Path) -> sqlite3.Connection:
+    uri = f"file:{urllib.parse.quote(str(path))}?mode=ro"
+    return sqlite3.connect(uri, uri=True)
+
+
+ARTISTS_SQL = """
+select a.id, a.name, lower(a.mbz_artist_id), i.source_path
+from artist a
+left join item_artwork i on i.item_kind = 'ar' and i.item_id = a.id and i.image_type = 'primary'
+where a.missing = 0 and a.mbz_artist_id <> ''
+  and exists (select 1 from media_file_artists m
+              where m.artist_id = a.id and m.role in ('artist', 'albumartist'))
+order by a.name, a.id
+"""
+TITLES_SQL = """
+select mf.title, mf.album from media_file mf
+join media_file_artists m on m.media_file_id = mf.id
+where m.artist_id = ? and mf.missing = 0
+"""
+COVERS_SQL = """
+select l.path, min(mf.path) from album al
+join media_file mf on mf.album_id = al.id and mf.missing = 0
+join library l on l.id = mf.library_id
+where al.missing = 0
+  and json_array_length(al.participants, '$.albumartist') = 1
+  and json_extract(al.participants, '$.albumartist[0].id') = ?
+group by al.id
+order by al.min_year, al.name, al.id
+"""
+
+
+def read_artists(db: sqlite3.Connection) -> list[Artist]:
+    """Return the in-scope artists by MusicBrainz ID, less those whose stored art is an artist.* file."""
+    libraries = [Path(row[0]) for row in db.execute("select path from library")]
+    by_mbid: dict[str, Artist] = {}
+    for nd_id, name, mbid, source_path in db.execute(ARTISTS_SQL):
+        if not UUID.match(mbid or ""):
+            print(f"artist-photos: skipping {name}: MusicBrainz ID {mbid!r} isn't a UUID", file=sys.stderr)
+            continue
+        if source_path and _artist_file(Path(source_path), libraries):
+            continue
+        artist = by_mbid.setdefault(mbid, Artist(mbid, name))
+        artist.ids.append(nd_id)
+        if source_path is not None:
+            artist.stored[nd_id] = source_path
+    for artist in by_mbid.values():
+        for nd_id in artist.ids:
+            for title, album in db.execute(TITLES_SQL, (nd_id,)):
+                artist.titles.update(normalize(t) for t in (title, album) if t)
+            for lib, rel in db.execute(COVERS_SQL, (nd_id,)):
+                artist.covers.extend(_cover_files(Path(lib) / Path(rel).parent))
+        artist.titles.discard("")
+    return list(by_mbid.values())
+
+
+def _artist_file(path: Path, libraries: list[Path]) -> bool:
+    return path.name.lower().startswith("artist.") and any(path.is_relative_to(lib) for lib in libraries)
+
+
+def _cover_files(folder: Path) -> list[Path]:
+    try:
+        names = {p.name.lower(): p for p in folder.iterdir() if p.is_file()}
+    except OSError:
+        return []
+    return [names[s + x] for s in COVER_STEMS for x in COVER_SUFFIXES if s + x in names]
+
+
+def parse_scan_time(text: str) -> float:
+    """Return a Navidrome timestamp as epoch seconds; its zero value and anything unparsed are 0."""
+    match = re.match(
+        r"(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d):(\d\d)(?:\.(\d+))?\s*(Z|[+-]\d\d:?\d\d)?", text or ""
+    )
+    if not match or match.group(1) == "0000":
+        return 0.0
+    year, month, day, hour, minute, second = (int(g) for g in match.groups()[:6])
+    micro = int((match.group(7) or "0")[:6].ljust(6, "0"))
+    offset = match.group(8) or "Z"
+    tz = timezone.utc
+    if offset != "Z":
+        sign = 1 if offset[0] == "+" else -1
+        hours, minutes = int(offset[1:3]), int(offset[-2:])
+        tz = timezone(sign * timedelta(hours=hours, minutes=minutes))
+    try:
+        return datetime(year, month, day, hour, minute, second, micro, tz).timestamp()
+    except ValueError:
+        return 0.0
+
+
+def scan_pending(cfg: Config) -> bool:
+    """Report whether beets added music after Navidrome's last scan finished."""
+    try:
+        beets = connect_ro(cfg.beets_db)
+        nd = connect_ro(cfg.navidrome_db)
+        try:
+            added = beets.execute("select max(added) from items").fetchone()[0]
+            scans = [parse_scan_time(r[0]) for r in nd.execute("select last_scan_at from library")]
+        finally:
+            beets.close()
+            nd.close()
+    except sqlite3.Error:
+        return False
+    return added is not None and bool(scans) and float(added) > max(scans)
+
+
+def wait_for_scan(cfg: Config) -> None:
+    for _ in range(SCAN_POLLS):
+        if not scan_pending(cfg):
+            return
+        sleep(SCAN_POLL)
+    if scan_pending(cfg):
+        print("artist-photos: Navidrome hasn't scanned the newest import after 10 minutes; running anyway")
+
+
+def read_token(cfg: Config) -> str | None:
+    """Return DISCOGS_TOKEN from the environment, else from its one export line in the secrets file."""
+    token = os.environ.get("DISCOGS_TOKEN", "").strip()
+    if token:
+        return token
+    try:
+        lines = cfg.secrets.read_text().splitlines()
+    except OSError:
+        return None
+    for line in lines:
+        match = re.match(r"\s*export\s+DISCOGS_TOKEN=(.*)$", line)
+        if match:
+            value = match.group(1).strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+                value = value[1:-1]
+            return value or None
+    return None
+
+
+def sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def load_state(path: Path) -> dict:
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return {"artists": {}}
+    if not isinstance(data, dict) or not isinstance(data.get("artists"), dict):
+        return {"artists": {}}
+    return data
+
+
+def write_atomic(path: Path, text: str) -> None:
+    # The .part suffix keeps a half-written file out of the library backup's copy.
+    part = path.with_name(f".{path.name}.part")
+    part.write_text(text)
+    os.replace(part, path)
+
+
+def folder_files(folder: Path, mbid: str) -> list[Path]:
+    return sorted(
+        p for p in folder.iterdir()
+        if not p.name.startswith(".") and p.stem.lower() == mbid
+        and p.suffix.lower() in IMAGE_SUFFIXES and p.is_file()
+    )
+
+
+def due(entry: dict, at: float) -> bool:
+    """Decide whether the chain runs: new or deferred now, fallback or none after 28 days, else never."""
+    if not entry or entry.get("deferred"):
+        return True
+    status = entry.get("status")
+    if status in ("fallback", "none"):
+        return at - float(entry.get("last_try", 0)) > RETRY_AFTER
+    return status not in ("photo", "manual")
+
+
+class Run:
+    def __init__(self, cfg: Config, client: Client):
+        self.cfg = cfg
+        self.client = client
+        self.state = load_state(cfg.folder / "state.json")
+        self.changed: set[str] = set()
+        self.tried: dict[str, str] = {}
+
+    def entry(self, mbid: str) -> dict:
+        return self.state["artists"].setdefault(mbid, {})
+
+    def save(self) -> None:
+        write_atomic(self.cfg.folder / "state.json", json.dumps(self.state, indent=2, sort_keys=True) + "\n")
+
+    def check_manual(self, artist: Artist) -> bool:
+        """Record a manual file for the artist and remove the helper's own; return True when one is there."""
+        entry = self.entry(artist.mbid)
+        ours = entry.get("file")
+        manual = []
+        for path in folder_files(self.cfg.folder, artist.mbid):
+            digest = sha256(path.read_bytes())
+            if path.name == ours and digest == entry.get("sha256"):
+                continue
+            manual.append((path, digest))
+        if not manual:
+            return False
+        path, digest = manual[0]
+        if ours and ours != path.name:
+            (self.cfg.folder / ours).unlink(missing_ok=True)
+        if entry.get("manual_file") != path.name or entry.get("manual_sha256") != digest:
+            self.changed.add(artist.mbid)
+        name = entry.get("name")
+        entry.clear()
+        entry.update(status="manual", manual_file=path.name, manual_sha256=digest, name=name or artist.name)
+        return True
+
+    def store(self, artist: Artist, image: Image) -> None:
+        entry = self.entry(artist.mbid)
+        digest = sha256(image.body)
+        name = f"{artist.mbid}.{image.ext}"
+        target = self.cfg.folder / name
+        if not (entry.get("file") == name and entry.get("sha256") == digest and target.exists()):
+            part = self.cfg.folder / f".{artist.mbid}.part"
+            part.write_bytes(image.body)
+            os.replace(part, target)
+            old = entry.get("file")
+            if old and old != name:
+                (self.cfg.folder / old).unlink(missing_ok=True)
+            self.changed.add(artist.mbid)
+        entry.update(
+            status=image.kind, file=name, sha256=digest, source=image.source, url=image.url,
+            kind=image.kind, confidence=image.confidence,
+        )
+
+    def process(self, artist: Artist, at: float) -> None:
+        entry = self.entry(artist.mbid)
+        entry["name"] = artist.name
+        if self.check_manual(artist) or not due(entry, at):
+            return
+        try:
+            record = self.client.musicbrainz(artist.mbid)
+        except Deferred:
+            entry["deferred"] = True
+            entry.setdefault("status", "none")
+            self.tried[artist.mbid] = "deferred"
+            return
+        look = Lookup(artist, relations(record))
+        image = None
+        for source, url in self.client.candidates(look):
+            image = self.client.image(url, source, "photo")
+            if image:
+                break
+        image = image or self.client.fallback(look)
+        entry["deferred"] = False
+        entry["last_try"] = at
+        if image:
+            self.store(artist, image)
+        elif not entry.get("file"):
+            entry["status"] = "none"
+        self.tried[artist.mbid] = entry["status"]
+
+    def refresh_ids(self, artists: list[Artist]) -> list[str]:
+        """Return the Navidrome ids whose stored art isn't their folder file, or whose file changed this run."""
+        ids = []
+        for artist in artists:
+            entry = self.entry(artist.mbid)
+            name = entry.get("manual_file") if entry.get("status") == "manual" else entry.get("file")
+            if not name or not (self.cfg.folder / name).exists():
+                continue
+            mine = os.path.realpath(self.cfg.folder / name)
+            for nd_id in artist.ids:
+                if nd_id not in artist.stored:
+                    continue
+                stored = artist.stored[nd_id]
+                if artist.mbid in self.changed or not stored or os.path.realpath(stored) != mine:
+                    ids.append(nd_id)
+        return sorted(ids)
+
+
+def report(run: Run, artists: list[Artist], token: bool, at: float) -> str:
+    sections: dict[str, list[str]] = {k: [] for k in ("fallback", "low", "manual", "none", "deferred")}
+    for artist in sorted(artists, key=lambda a: (a.name.casefold(), a.mbid)):
+        entry = run.entry(artist.mbid)
+        who = f"{artist.name} (`{artist.mbid}`)"
+        status = entry.get("status")
+        if entry.get("deferred"):
+            sections["deferred"].append(f"- {who}")
+        if status == "manual":
+            sections["manual"].append(f"- {who}: {entry.get('manual_file')}")
+        elif entry.get("file") and status == "fallback":
+            sections["fallback"].append(f"- {who}: {entry.get('source')}, {entry.get('url')}")
+        elif entry.get("file") and entry.get("confidence") == "low":
+            sections["low"].append(f"- {who}: {entry.get('source')}, {entry.get('url')}")
+        elif not entry.get("file") and not entry.get("deferred"):
+            sections["none"].append(f"- {who}: {_search_links(artist)}")
+    stamp = datetime.fromtimestamp(at, timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    lines = [
+        "# Artist photos",
+        "",
+        f"Written {stamp} for {len(artists)} artists.",
+    ]
+    if not token:
+        lines += ["", "Discogs was skipped: no DISCOGS_TOKEN in the environment or the secrets file."]
+    titles = {
+        "fallback": "Release covers in place of a photo",
+        "low": "Low-confidence photos",
+        "manual": "Manual files",
+        "none": "No file",
+        "deferred": "Deferred by a failed request",
+    }
+    for key, title in titles.items():
+        lines += ["", f"## {title}", ""]
+        lines += sections[key] or ["None."]
+    return "\n".join(lines) + "\n"
+
+
+def _search_links(artist: Artist) -> str:
+    def site(domain: str) -> str:
+        return "https://duckduckgo.com/?" + urllib.parse.urlencode({"q": f"site:{domain} {artist.name}"})
+
+    return (
+        f"[MusicBrainz](https://musicbrainz.org/artist/{artist.mbid}), "
+        f"[Partyflock]({site('partyflock.nl')}), [Resident Advisor]({site('ra.co')})"
+    )
+
+
+def summary(run: Run) -> str:
+    counts = {k: 0 for k in ("photo", "fallback", "none", "deferred")}
+    for status in run.tried.values():
+        if status in counts:
+            counts[status] += 1
+    return (
+        f"artist-photos: {len(run.tried)} artists tried: {counts['photo']} photos, "
+        f"{counts['fallback']} fallbacks, {counts['none']} none, {counts['deferred']} deferred"
+    )
+
+
+def config() -> Config:
+    env = os.environ.get
+    home = Path.home()
+    state_home = Path(env("XDG_STATE_HOME") or home / ".local/state")
+    data = env("ND_DATAFOLDER")
+    state_dir = env("ARTIST_PHOTOS_STATE") or (env("STATE_DIRECTORY") or "").split(":")[0]
+    return Config(
+        folder=Path(env("ARTIST_PHOTOS_FOLDER") or env("ND_ARTISTIMAGEFOLDER") or home / "Music/.artist-images"),
+        navidrome_db=Path(
+            env("ARTIST_PHOTOS_NAVIDROME_DB")
+            or (Path(data) / "navidrome.db" if data else state_home / "navidrome/navidrome.db")
+        ),
+        beets_db=Path(env("ARTIST_PHOTOS_BEETS_DB") or home / ".local/share/beets/library.db"),
+        navidrome=env("ARTIST_PHOTOS_NAVIDROME") or "navidrome",
+        state_dir=Path(state_dir or state_home / "artist-photos"),
+        secrets=Path(env("ARTIST_PHOTOS_SECRETS") or home / ".local/secrets"),
+    )
+
+
+def main() -> int:
+    cfg = config()
+    cfg.folder.mkdir(mode=0o755, parents=True, exist_ok=True)
+    cfg.state_dir.mkdir(parents=True, exist_ok=True)
+    wait_for_scan(cfg)
+    try:
+        db = connect_ro(cfg.navidrome_db)
+        try:
+            artists = read_artists(db)
+        finally:
+            db.close()
+    except sqlite3.Error as err:
+        print(f"artist-photos: can't read {cfg.navidrome_db}: {err}", file=sys.stderr)
+        return 1
+    token = read_token(cfg)
+    run = Run(cfg, Client(token))
+    for artist in artists:
+        run.process(artist, now())
+        run.save()
+    run.save()
+    write_atomic(cfg.state_dir / "report.md", report(run, artists, bool(token), now()))
+    print(summary(run))
+    ids = run.refresh_ids(artists)
+    if not ids:
+        return 0
+    try:
+        result = subprocess.run([cfg.navidrome, "artwork", "refresh", "ar", *ids], check=False)
+    except OSError as err:
+        print(f"artist-photos: can't run {cfg.navidrome}: {err}", file=sys.stderr)
+        return 1
+    if result.returncode != 0:
+        print(f"artist-photos: navidrome artwork refresh exited {result.returncode}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

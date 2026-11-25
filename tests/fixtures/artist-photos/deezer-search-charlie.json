@@ -1,0 +1,8 @@
+{
+  "data": [
+    {"id": 3001, "name": "Charlie", "picture_xl": "https://e-cdns-images.dzcdn.net/images/artist/wrong/1000x1000-000000-80-0-0.jpg"},
+    {"id": 3002, "name": "Charlie!", "picture_xl": "https://e-cdns-images.dzcdn.net/images/artist/right/1000x1000-000000-80-0-0.jpg"},
+    {"id": 3003, "name": "Charlie Brown", "picture_xl": "https://e-cdns-images.dzcdn.net/images/artist/brown/1000x1000-000000-80-0-0.jpg"}
+  ],
+  "total": 3
+}
