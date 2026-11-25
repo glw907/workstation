@@ -8,6 +8,9 @@ DefaultDependencies=no
 After=fresh-tracks.path
 Conflicts=shutdown.target
 Before=shutdown.target
+# Each successful run starts the artist photos, so new artists get theirs
+# within minutes of the import.
+OnSuccess=artist-photos.service
 
 [Service]
 # fresh-tracks.path starts this when the inbox changes. It also runs once at

@@ -12,6 +12,11 @@ After=network-online.target
 StateDirectory=navidrome
 Environment=ND_MUSICFOLDER=%h/Music
 Environment=ND_DATAFOLDER=%S/navidrome
+# Artist photos from artist-photos.service. The order keeps an artist.* file in
+# the library first and Navidrome's Deezer lookup last. artist-photos.service
+# carries the same lines.
+Environment=ND_ARTISTIMAGEFOLDER=%h/Music/.artist-images
+Environment="ND_ARTISTARTPRIORITY=artist.*, album/artist.*, image-folder, external"
 Environment=ND_ADDRESS=[::]
 Environment=ND_PORT=4533
 Environment=ND_ENABLEINSIGHTSCOLLECTOR=false
