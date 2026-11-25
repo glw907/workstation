@@ -1,0 +1,252 @@
+#!/usr/bin/python3 -I
+"""Mirror ~/Music to the Music/ folder of the Shanling Q2's card.
+
+Usage:
+    shanling-sync [--dry-run]
+    shanling-sync --init <volume>
+
+The card is a folder directly under /run/media/$USER whose top level holds a file named
+.shanling-sync. Mark a mounted card once with --init. A run lists what it would copy and what it
+would delete, asks before deleting anything, then copies with rsync. --dry-run prints the plan
+and changes nothing. Three environment variables point a test at scratch folders:
+SHANLING_SYNC_MUSIC, SHANLING_SYNC_MEDIA, and SHANLING_SYNC_GVFS. The spec is
+docs/specs/2026-11-25-shanling-sync-design.md.
+"""
+
+import argparse
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+MARKER = ".shanling-sync"
+MARGIN = 256 << 20
+# -8 keeps non-ASCII names readable in rsync's list under any locale, so a deletion's path
+# names a file that exists.
+RSYNC = ["rsync", "-rt", "-8", "--modify-window=1"]
+COPY_LINE = re.compile(r">f\S* +(\d+) (.+)")
+DELETE_LINE = re.compile(r"\*deleting +\d+ (.+)")
+NEW_DIR_LINE = re.compile(r"cd\S* +\d+ (.+)/")
+
+
+class Fail(Exception):
+    """A run that ends early; code is the exit status."""
+
+    def __init__(self, message: str, code: int = 1):
+        super().__init__(message)
+        self.code = code
+
+
+def music_dir() -> Path:
+    return Path(os.environ.get("SHANLING_SYNC_MUSIC") or Path.home() / "Music")
+
+
+def media_root() -> Path:
+    return Path(os.environ.get("SHANLING_SYNC_MEDIA") or f"/run/media/{os.environ.get('USER', '')}")
+
+
+def gvfs_root() -> Path:
+    return Path(os.environ.get("SHANLING_SYNC_GVFS") or f"/run/user/{os.getuid()}/gvfs")
+
+
+def init_card(volume: str) -> int:
+    """Mark a mounted volume as the card. It must be a mount point directly under the media root."""
+    path = Path(volume).resolve()
+    media = media_root().resolve()
+    if path.parent != media:
+        raise Fail(f"{path} is not a folder directly under {media}.")
+    if not os.path.ismount(path):
+        raise Fail(f"{path} is not a mounted volume.")
+    marker = path / MARKER
+    if marker.exists():
+        print(f"{path}: already marked")
+        return 0
+    try:
+        marker.touch()
+    except OSError as exc:
+        raise Fail(f"Could not mark {path}: {exc}") from exc
+    print(f"Marked {path} as the card.")
+    return 0
+
+
+def find_card() -> Path:
+    media = media_root()
+    volumes = sorted(p for p in media.iterdir() if os.path.isdir(p)) if os.path.isdir(media) else []
+    marked = [p for p in volumes if os.path.isfile(p / MARKER)]
+    if len(marked) == 1:
+        return marked[0]
+    if marked:
+        listing = "\n".join(f"  {p}" for p in marked)
+        raise Fail(f"More than one volume is marked as the card:\n{listing}")
+    lines = [f"No volume under {media} is marked as the card."]
+    if volumes:
+        lines.append("Mark the Q2's card with one of these:")
+        lines += [f"  shanling-sync --init {p}" for p in volumes]
+    else:
+        lines.append(f"Nothing is mounted under {media}. Plug in the Q2 or its card.")
+    if _has_mtp():
+        lines.append(
+            "The Q2 is connected as an MTP device, which this script can't write to. Set its USB "
+            "mode to storage, or put the card in a card reader."
+        )
+    raise Fail("\n".join(lines))
+
+
+def _has_mtp() -> bool:
+    try:
+        return any(name.startswith("mtp:") for name in os.listdir(gvfs_root()))
+    except OSError:
+        return False
+
+
+def check_source(music: Path) -> None:
+    """Raise Fail unless the music folder holds a file, so an empty source can't empty the card."""
+    if not music.is_dir() or not any(p.is_file() for p in music.rglob("*")):
+        raise Fail(f"{music} is missing or holds no files. Nothing was changed.")
+
+
+def rsync(args: list[str], capture: bool) -> subprocess.CompletedProcess:
+    try:
+        return subprocess.run(
+            RSYNC + args,
+            capture_output=capture,
+            encoding="utf-8",
+            errors="surrogateescape",
+        )
+    except FileNotFoundError as exc:
+        raise Fail("rsync isn't installed.") from exc
+
+
+def plan(music: Path, dest: Path) -> tuple[list[tuple[int, str]], list[str]]:
+    """Return the copies as (size, name) and the deletions, from rsync's dry run."""
+    done = rsync(
+        ["--delete", "--dry-run", "--out-format=%i %l %n", f"{music}/", f"{dest}/"], capture=True
+    )
+    if done.returncode:
+        sys.stderr.write(done.stderr)
+        raise Fail(f"rsync's dry run failed with exit {done.returncode}. Nothing was changed.", done.returncode)
+    copies, deletions, clashes = [], [], []
+    for line in done.stdout.splitlines():
+        if m := COPY_LINE.fullmatch(line):
+            copies.append((int(m[1]), m[2]))
+            if os.path.isdir(dest / m[2]):
+                clashes.append(m[2])
+        elif m := DELETE_LINE.fullmatch(line):
+            deletions.append(m[1])
+        elif m := NEW_DIR_LINE.fullmatch(line):
+            if os.path.lexists(dest / m[1]):
+                clashes.append(m[1])
+    if clashes:
+        # rsync removes a path that blocks a file-for-folder swap without listing it as a deletion,
+        # so the plan can't show it for confirmation.
+        listing = "\n".join(f"  {name}" for name in clashes)
+        raise Fail(
+            "These paths are a file on one side and a folder on the other. Rename or remove "
+            f"them on the card, then run again. Nothing was changed.\n{listing}"
+        )
+    return copies, deletions
+
+
+def space(card: Path) -> tuple[int, int]:
+    """Return the card's cluster size and its free bytes."""
+    st = os.statvfs(card)
+    return st.f_bsize, st.f_bavail * st.f_frsize
+
+
+def measure_space(card: Path, copies: list[tuple[int, str]]) -> tuple[int, int]:
+    """Return the bytes the copies need, each rounded up to a cluster plus the margin, and the free bytes."""
+    cluster, free = space(card)
+    return sum(-(-size // cluster) * cluster for size, _ in copies) + MARGIN, free
+
+
+def ask_delete(count: int) -> bool:
+    """Ask once; only y or yes says yes. A closed or non-terminal stdin says no."""
+    if not sys.stdin.isatty():
+        print("stdin is not a terminal, so these stay on the card.")
+        return False
+    try:
+        answer = input(f"Delete these {count} paths from the card? [y/N] ")
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return False
+    return answer.strip().lower() in ("y", "yes")
+
+
+def delete(dest: Path, names: list[str]) -> int:
+    """Delete the named paths under dest and return how many stayed.
+
+    Every path is checked before the first deletion. Files go first, then folders, deepest first,
+    with rmdir so a folder that gained a file since the plan stays.
+    """
+    root = dest.resolve()
+    targets = []
+    for name in names:
+        target = root / name.rstrip("/")
+        resolved = target.resolve()
+        if resolved == root or root not in resolved.parents:
+            raise Fail(f"Refusing to delete {name}: it is outside {root}. Nothing was deleted.")
+        targets.append((name.endswith("/"), target))
+    for is_dir, target in targets:
+        if not is_dir:
+            try:
+                target.unlink()
+            except FileNotFoundError:
+                pass
+    kept = 0
+    for _, target in sorted((t for t in targets if t[0]), key=lambda t: -len(t[1].parts)):
+        try:
+            target.rmdir()
+        except FileNotFoundError:
+            pass
+        except OSError:
+            kept += 1
+    return kept
+
+
+def sync(dry_run: bool) -> int:
+    music = music_dir()
+    card = find_card()
+    check_source(music)
+    dest = card / "Music"
+    copies, deletions = plan(music, dest)
+    needed, free = measure_space(card, copies)
+    print(f"Card: {card}")
+    print(f"Copy {len(copies)} files, {needed:,} bytes needed of {free:,} free.")
+    if deletions:
+        print("Deletions:")
+        for name in deletions:
+            print(f"  {name}")
+    if needed > free:
+        raise Fail(f"The copy needs {needed:,} bytes and the card has {free:,} free. Nothing was changed.")
+    if dry_run:
+        return 0
+    kept = 0
+    if deletions:
+        kept = delete(dest, deletions) if ask_delete(len(deletions)) else len(deletions)
+    done = rsync(["--info=progress2", f"{music}/", f"{dest}/"], capture=False)
+    if done.returncode:
+        return done.returncode
+    os.sync()
+    tail = f" Kept {kept} paths on the card." if kept else ""
+    print(f"Done. Eject the card before unplugging it.{tail}")
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="shanling-sync", description="Mirror ~/Music to the Music/ folder of the Shanling Q2's card."
+    )
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--dry-run", action="store_true", help="print the plan and change nothing")
+    mode.add_argument("--init", metavar="VOLUME", help="mark a mounted volume as the card")
+    args = parser.parse_args(argv)
+    try:
+        return init_card(args.init) if args.init is not None else sync(args.dry_run)
+    except (Fail, OSError) as exc:
+        print(f"shanling-sync: {exc}", file=sys.stderr)
+        return getattr(exc, "code", 1)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
