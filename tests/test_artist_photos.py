@@ -824,3 +824,51 @@ def test_normalize_folds_case_marks_punctuation_and_spaces():
     assert ap.normalize("  Beyoncé!  ") == "beyonce"
     assert ap.normalize("CHARLIE   SONGS (Deluxe)") == "charlie songs deluxe"
     assert ap.normalize("Ｆｕｌｌ") == "full"
+
+
+def test_a_deleted_helper_file_is_searched_again(box, monkeypatch):
+    box.artist(ALPHA, "Alpha")
+    box.helper_file(ALPHA, jpeg("alpha-old")).unlink()
+    alpha_routes(box.web)
+
+    box.run(monkeypatch)
+
+    assert mb_url(ALPHA) in box.web.urls()
+    assert (box.folder / f"{ALPHA}.jpg").read_bytes() == jpeg("alpha-discogs")
+
+
+def test_a_deleted_helper_file_with_nothing_found_is_reported(box, monkeypatch):
+    box.artist(KILO, "Kilo")
+    box.helper_file(KILO, jpeg("kilo-old")).unlink()
+
+    box.run(monkeypatch)
+
+    assert box.entry(KILO)["status"] == "none"
+    assert f"- Kilo (`{KILO}`)" in box.section("No file")
+
+
+def test_connect_ro_refuses_a_write_to_a_writable_database(tmp_path):
+    path = tmp_path / "rw.db"
+    db = sqlite3.connect(path)
+    db.execute("create table t (x)")
+    db.commit()
+    db.close()
+    ro = ap.connect_ro(path)
+    with pytest.raises(sqlite3.OperationalError):
+        ro.execute("insert into t values (1)")
+    ro.close()
+
+
+def test_a_redirect_to_another_host_drops_the_discogs_token():
+    handler = ap._NoOddRedirects()
+    req = ap.urllib.request.Request("https://api.discogs.com/artists/1", headers={
+        "User-Agent": UA, "Authorization": "Discogs token=fixture-token"})
+
+    elsewhere = handler.redirect_request(req, None, 302, "Found", {}, "https://other.example/x")
+    same = handler.redirect_request(req, None, 302, "Found", {}, "https://api.discogs.com/artists/2")
+
+    assert not elsewhere.has_header("Authorization")
+    assert elsewhere.get_header("User-agent") == UA
+    assert same.get_header("Authorization") == "Discogs token=fixture-token"
+    with pytest.raises(ap.FetchError):
+        handler.redirect_request(req, None, 302, "Found", {}, "file:///etc/passwd")

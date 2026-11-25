@@ -128,7 +128,11 @@ class _NoOddRedirects(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         if urllib.parse.urlsplit(newurl).scheme not in ("http", "https"):
             raise FetchError(f"redirect to a non-web URL: {newurl}")
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
+        new = super().redirect_request(req, fp, code, msg, headers, newurl)
+        # urllib copies every header but Content-* to the redirect, so the Discogs token would follow it.
+        if new is not None and urllib.parse.urlsplit(newurl).hostname != urllib.parse.urlsplit(req.full_url).hostname:
+            new.remove_header("Authorization")
+        return new
 
 
 _opener = urllib.request.build_opener(_NoOddRedirects)
@@ -668,6 +672,11 @@ class Run:
     def process(self, artist: Artist, at: float) -> None:
         entry = self.entry(artist.mbid)
         entry["name"] = artist.name
+        ours = entry.get("file")
+        if ours and not (self.cfg.folder / ours).exists():
+            # Someone deleted the helper's file by hand: forget it, so the chain runs again and the report counts it.
+            for key in ("status", "file", "sha256", "source", "url", "kind", "confidence", "last_try"):
+                entry.pop(key, None)
         if self.check_manual(artist) or not due(entry, at):
             return
         try:
