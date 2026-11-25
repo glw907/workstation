@@ -1,10 +1,10 @@
 [Unit]
-Description=Import new music from ~/FreshTracks into ~/Music through beets
+Description=Import new music from ~/Fresh Tracks into ~/Music through beets
 ConditionHost=pavilion
 # No implicit ordering before default.target: the run at login can wait out a
 # 10-minute quiet period, and the login shouldn't wait with it.
 DefaultDependencies=no
-# The path unit makes ~/FreshTracks, and the bind below needs it to exist.
+# The path unit makes ~/Fresh Tracks, and the bind below needs it to exist.
 After=fresh-tracks.path
 Conflicts=shutdown.target
 Before=shutdown.target
@@ -18,7 +18,7 @@ ExecStart=%h/.local/bin/fresh-tracks
 # below is its own mount, so beets' move into ~/Music copies each file to a
 # temporary name there and renames it into place.
 ProtectHome=tmpfs
-BindPaths=%h/FreshTracks %h/Music %h/.local/share/beets
+BindPaths="%h/Fresh Tracks" %h/Music %h/.local/share/beets
 BindReadOnlyPaths=%h/.config/beets %h/.dotfiles/beets %h/.dotfiles/bin
 BindReadOnlyPaths=%h/.local/bin %h/.local/share/uv/tools/beets
 StateDirectory=fresh-tracks

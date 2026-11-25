@@ -1,12 +1,12 @@
 [Unit]
-Description=Watch ~/FreshTracks, the Fresh Tracks share, for new music
+Description=Watch ~/Fresh Tracks, the Fresh Tracks share, for new music
 Documentation=man:systemd.path(5)
 
 [Path]
 # PathChanged= sees only the top folder, which is enough: each drop creates or
 # closes a top-level entry. Dot-named entries, such as the importer's work
 # folder, never trigger it.
-PathChanged=%h/FreshTracks
+PathChanged=%h/Fresh Tracks
 MakeDirectory=yes
 DirectoryMode=0750
 

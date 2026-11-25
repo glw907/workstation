@@ -25,11 +25,11 @@
 
 # Oliver signs in as oliver and Geoff as glw907. Every read and write acts as
 # glw907, so the files stay glw907's and the importer can move them. SELinux lets
-# Samba into ~/FreshTracks alone, through its samba_share_t label (etc-drift.md).
+# Samba into ~/Fresh Tracks alone, through its samba_share_t label (etc-drift.md).
 # The importer's work folder is vetoed, so a drop can't touch an import in flight.
 [Fresh Tracks]
 	comment = New music: drop albums, tracks, or archives here
-	path = /var/home/glw907/FreshTracks
+	path = /var/home/glw907/Fresh Tracks
 	read only = no
 	browseable = yes
 	valid users = oliver glw907

@@ -1,5 +1,5 @@
 #!/usr/bin/python3 -I
-"""Import new music from the Fresh Tracks share (~/FreshTracks) into ~/Music through beets.
+"""Import new music from the Fresh Tracks share (~/Fresh Tracks) into ~/Music through beets.
 
 fresh-tracks.path starts it when the inbox changes, and it runs once at login. Music beets
 won't take moves to "Not imported/" with a WHY.txt; nothing it skips is deleted. The spec is
@@ -86,7 +86,7 @@ def load_config() -> Config:
     home = Path.home()
     state_home = Path(os.environ.get("XDG_STATE_HOME") or home / ".local/state")
     return Config(
-        inbox=Path(os.environ.get("FRESH_TRACKS_INBOX") or home / "FreshTracks"),
+        inbox=Path(os.environ.get("FRESH_TRACKS_INBOX") or home / "Fresh Tracks"),
         # The user manager's PATH lacks ~/.local/bin, so beet is called by full path.
         beet=Path(os.environ.get("FRESH_TRACKS_BEET") or home / ".local/bin/beet"),
         quiet=float(os.environ.get("FRESH_TRACKS_QUIET") or 600),

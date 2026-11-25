@@ -395,14 +395,14 @@ if [[ "$(hostname)" == pavilion ]]; then
     etc_pair "$BLUEFIN/etc/avahi/avahi-daemon.conf.pavilion" /etc/avahi/avahi-daemon.conf
 fi
 # The Fresh Tracks inbox share for Oliver, pavilion only: its config, its user,
-# the SELinux label that lets Samba into ~/FreshTracks, and the firewall rule for Warwick.
+# the SELinux label that lets Samba into ~/Fresh Tracks, and the firewall rule for Warwick.
 if [[ "$(hostname)" == pavilion ]]; then
     etc_pair "$BLUEFIN/etc/samba/smb.conf.pavilion" /etc/samba/smb.conf
     etc_pair "$BLUEFIN/etc/sysusers.d/music-share.conf" /etc/sysusers.d/music-share.conf
-    if [[ "$(stat -c %C "$HOME/FreshTracks" 2>/dev/null)" == *:samba_share_t:* ]]; then
-        ok "$HOME/FreshTracks carries samba_share_t"
+    if [[ "$(stat -c %C "$HOME/Fresh Tracks" 2>/dev/null)" == *:samba_share_t:* ]]; then
+        ok "$HOME/Fresh Tracks carries samba_share_t"
     else
-        bad "$HOME/FreshTracks lacks samba_share_t (see etc-drift.md, the Samba entry)"
+        bad "$HOME/Fresh Tracks lacks samba_share_t (see etc-drift.md, the Samba entry)"
     fi
     if firewall-cmd --zone=FedoraWorkstation --query-rich-rule='rule family="ipv4" source address="192.168.1.0/24" service name="samba" accept' >/dev/null 2>&1; then
         ok "firewall lets Warwick reach Samba"
