@@ -20,6 +20,8 @@ ExecStart=%h/.local/bin/fresh-tracks
 # A oneshot has no start timeout by default, and a run that hangs would stop every later
 # import. A run killed here leaves its item for the next run's recovery.
 TimeoutStartSec=6h
+# The script exits 143 on SIGTERM, so a stop at logout or shutdown is a clean one.
+SuccessExitStatus=143
 MemoryMax=4G
 # beets hands files from a share others write to on to ImageMagick, Ghostscript, and ffmpeg,
 # so a hostile file must not reach a secret or plant code for a later run. The inbox and

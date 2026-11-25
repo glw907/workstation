@@ -795,7 +795,10 @@ def test_sigterm_ends_a_waiting_run(tmp_path):
     (inbox / "track.mp3").write_bytes(b"audio")
     env = dict(os.environ, FRESH_TRACKS_INBOX=str(inbox), XDG_STATE_HOME=str(tmp_path / "state"))
     run = subprocess.Popen([sys.executable, "-I", str(SCRIPT)], env=env)
-    time.sleep(2)
+    lock = tmp_path / "state" / "fresh-tracks" / "lock"
+    deadline = time.monotonic() + 30
+    while not lock.exists() and time.monotonic() < deadline:
+        time.sleep(0.05)
     run.send_signal(signal.SIGTERM)
     assert run.wait(timeout=10) == 128 + signal.SIGTERM
     assert (inbox / "track.mp3").exists()
