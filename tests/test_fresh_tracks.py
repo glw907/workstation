@@ -11,6 +11,8 @@ import io
 import os
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import tarfile
 import zipfile
 
@@ -701,3 +703,52 @@ def test_mac_zip_imports(box):
     ft.main()
     assert len(music(box)) == 2
     assert inbox_names(box) == [".fresh-tracks-work"]
+
+
+CONFINED = """
+import importlib.machinery, importlib.util, os, subprocess, sys
+from pathlib import Path
+loader = importlib.machinery.SourceFileLoader("fresh_tracks", sys.argv[1])
+ft = importlib.util.module_from_spec(importlib.util.spec_from_loader("fresh_tracks", loader))
+loader.exec_module(ft)
+box = Path(sys.argv[2])
+ft.confine([box / "inbox", box / "Music", box / "missing"])
+(box / "inbox/track.flac").write_text("audio")
+os.rename(box / "inbox/track.flac", box / "Music/track.flac")
+for attempt in ("open(box / '.bashrc', 'w')", "(box / 'inbox/x').rename(box / 'moved')"):
+    try:
+        eval(attempt)
+        print("allowed", attempt)
+    except PermissionError:
+        print("refused")
+child = subprocess.run(["sh", "-c", f"echo planted > {box}/.profile"], capture_output=True)
+print("child", child.returncode)
+"""
+
+
+def test_confine_allows_only_its_folders(tmp_path):
+    """A confined run writes and renames beneath its folders, and nothing it starts writes outside."""
+    (tmp_path / "inbox").mkdir()
+    (tmp_path / "Music").mkdir()
+    (tmp_path / "inbox/x").write_text("x")
+    run = subprocess.run(
+        [sys.executable, "-I", "-c", CONFINED, str(SCRIPT), str(tmp_path)],
+        capture_output=True,
+        text=True,
+    )
+    assert run.returncode == 0, run.stderr
+    assert run.stdout.split("\n")[:3] == ["refused", "refused", "child 1"]
+    assert (tmp_path / "Music/track.flac").read_text() == "audio"
+    assert not (tmp_path / ".bashrc").exists()
+    assert not (tmp_path / ".profile").exists()
+    assert (tmp_path / "inbox/x").exists()
+
+
+def test_writable_names_the_inbox_and_the_library(box):
+    """The run may write its inbox, its state, the library, and beets' data, and not home itself."""
+    cfg = ft.load_config()
+    folders = ft.writable(cfg)
+    home = Path.home()
+    assert cfg.inbox in folders and cfg.state in folders
+    assert home / "Music" in folders and home / ".local/share/beets" in folders
+    assert home not in folders and home / ".local" not in folders

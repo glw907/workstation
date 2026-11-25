@@ -6,6 +6,7 @@ won't take moves to "Not imported/" with a WHY.txt; nothing it skips is deleted.
 docs/specs/2026-11-24-fresh-tracks-design.md.
 """
 
+import ctypes
 from dataclasses import dataclass
 import errno
 import fcntl
@@ -15,9 +16,11 @@ from pathlib import Path
 import re
 import shutil
 import stat
+import struct
 import subprocess
 import sys
 import tarfile
+import tempfile
 from typing import BinaryIO
 import time
 import unicodedata
@@ -108,6 +111,72 @@ def load_config() -> Config:
         quiet=float(os.environ.get("FRESH_TRACKS_QUIET") or 600),
         state=state_home / "fresh-tracks",
     )
+
+
+# Landlock's x86_64 syscalls and the rights that change a file system: write a file, then remove
+# a folder or file and make a device, folder, file, socket, fifo, or link (bits 4 to 12).
+_SYS_CREATE, _SYS_ADD_RULE, _SYS_RESTRICT = 444, 445, 446
+_WRITE_RIGHTS = 1 << 1 | 0x1FF0
+_REFER, _TRUNCATE = 1 << 13, 1 << 14
+
+
+def writable(cfg: Config) -> list[Path]:
+    """List the folders a run writes beneath: the inbox, the library, beets' data, and scratch."""
+    home = Path.home()
+    share = home / ".local/share"
+    return [
+        cfg.inbox,
+        cfg.state,
+        home / "Music",
+        share / "beets",
+        share / "music-cover-originals",
+        home / ".cache",
+        Path(tempfile.gettempdir()),
+        Path("/tmp"),
+        Path("/var/tmp"),
+        Path("/dev"),
+    ]
+
+
+def confine(folders: list[Path]) -> None:
+    """Let this process, and every program it starts, change files only beneath folders.
+
+    Landlock rules follow paths, not mounts, so the inbox and ~/Music stay on one mount and
+    beets' move stays a rename. A file that takes over ffmpeg, ImageMagick, or Ghostscript
+    then can't plant code in home's top level, such as ~/.bashrc. A folder that doesn't exist
+    is skipped. A kernel without Landlock refuses the run.
+    """
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.syscall.restype = ctypes.c_long
+
+    def call(*args) -> int:
+        got = libc.syscall(*args)
+        if got < 0:
+            err = ctypes.get_errno()
+            raise OSError(err, f"Landlock refused the sandbox: {os.strerror(err)}")
+        return got
+
+    abi = call(_SYS_CREATE, None, ctypes.c_size_t(0), ctypes.c_uint32(1))
+    rights = _WRITE_RIGHTS | (_REFER if abi >= 2 else 0) | (_TRUNCATE if abi >= 3 else 0)
+    handled = ctypes.c_uint64(rights)
+    ruleset = call(_SYS_CREATE, ctypes.byref(handled), ctypes.c_size_t(8), ctypes.c_uint32(0))
+    try:
+        for folder in folders:
+            try:
+                fd = os.open(folder, os.O_PATH | os.O_DIRECTORY | os.O_CLOEXEC)
+            except (FileNotFoundError, NotADirectoryError):
+                continue
+            try:
+                # struct landlock_path_beneath_attr is packed: a u64 of rights, then the fd.
+                rule = ctypes.create_string_buffer(struct.pack("=Qi", rights, fd))
+                call(_SYS_ADD_RULE, ruleset, 1, rule, ctypes.c_uint32(0))
+            finally:
+                os.close(fd)
+        if libc.prctl(38, 1, 0, 0, 0) < 0:  # PR_SET_NO_NEW_PRIVS, which Landlock requires
+            raise OSError(ctypes.get_errno(), "The run couldn't drop new privileges.")
+        call(_SYS_RESTRICT, ruleset, ctypes.c_uint32(0))
+    finally:
+        os.close(ruleset)
 
 
 def report(cfg: Config, line: str) -> None:
@@ -725,4 +794,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    config = load_config()
+    config.state.mkdir(parents=True, exist_ok=True)
+    confine(writable(config))
     sys.exit(main())
