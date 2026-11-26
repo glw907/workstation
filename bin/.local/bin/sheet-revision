@@ -1,0 +1,101 @@
+#!/usr/bin/python3 -I
+"""Lists or downloads past revisions of a Google Sheet, Doc, or Slides file.
+
+The Drive API lists a Google file's revisions, but a revision's content comes only from its
+export link, which needs a bearer token. gws fetches API calls, not arbitrary links, so this
+mints a short-lived access token from gws's own stored login and keeps it in memory.
+
+    sheet-revision list FILE_ID
+    sheet-revision get FILE_ID REVISION [--format xlsx|csv|pdf|ods] [-o PATH]
+
+"get" with --format csv exports only the first tab, as Google's export does.
+"""
+
+import argparse
+import json
+import pathlib
+import subprocess
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+
+MIME = {
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "ods": "application/x-vnd.oasis.opendocument.spreadsheet",
+    "csv": "text/csv",
+    "pdf": "application/pdf",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+
+
+def gws(*args, params):
+    out = subprocess.run(["gws", *args, "--params", json.dumps(params)],
+                         capture_output=True, text=True)
+    if out.returncode:
+        sys.exit(f"gws {' '.join(args)} failed: {out.stderr.strip() or out.stdout.strip()}")
+    return json.loads(out.stdout[out.stdout.index("{"):])
+
+
+def access_token():
+    """Trades gws's stored refresh token for an access token, without printing either."""
+    out = subprocess.run(["gws", "auth", "export", "--unmasked"], capture_output=True, text=True)
+    if out.returncode:
+        sys.exit("gws auth export failed; run `gws auth status`.")
+    creds = json.loads(out.stdout[out.stdout.index("{"):])
+    body = urllib.parse.urlencode({
+        "client_id": creds["client_id"], "client_secret": creds["client_secret"],
+        "refresh_token": creds["refresh_token"], "grant_type": "refresh_token",
+    }).encode()
+    try:
+        reply = urllib.request.urlopen("https://oauth2.googleapis.com/token", body)
+    except urllib.error.HTTPError as e:
+        error = json.loads(e.read() or b"{}").get("error", e.code)
+        sys.exit(f"Google refused the stored gws login ({error}); a new `gws auth login` fixes it.")
+    return json.loads(reply.read())["access_token"]
+
+
+def list_revisions(file_id):
+    params = {"fileId": file_id, "pageSize": 1000,
+              "fields": "nextPageToken,revisions(id,modifiedTime,lastModifyingUser(displayName))"}
+    while True:
+        page = gws("drive", "revisions", "list", params=params)
+        for r in page.get("revisions", []):
+            who = r.get("lastModifyingUser", {}).get("displayName") or "(anonymous)"
+            print(f"{r['id']:>6}  {r['modifiedTime']}  {who}")
+        if "nextPageToken" not in page:
+            return
+        params["pageToken"] = page["nextPageToken"]
+
+
+def get_revision(file_id, revision, fmt, out):
+    links = gws("drive", "revisions", "get",
+                params={"fileId": file_id, "revisionId": revision, "fields": "exportLinks"})
+    link = links.get("exportLinks", {}).get(MIME[fmt])
+    if not link:
+        sys.exit(f"Revision {revision} has no {fmt} export; it offers "
+                 f"{', '.join(sorted(links.get('exportLinks', {}))) or 'none'}.")
+    request = urllib.request.Request(link, headers={"Authorization": "Bearer " + access_token()})
+    path = pathlib.Path(out or f"{file_id[:8]}-rev{revision}.{fmt}")
+    path.write_bytes(urllib.request.urlopen(request).read())
+    print(path)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("list", help="list revisions, oldest first").add_argument("file_id")
+    get = sub.add_parser("get", help="download one revision")
+    get.add_argument("file_id")
+    get.add_argument("revision")
+    get.add_argument("--format", choices=sorted(MIME), default="xlsx")
+    get.add_argument("-o", "--output", help="file to write (default: <id>-rev<N>.<format>)")
+    args = parser.parse_args()
+    if args.command == "list":
+        list_revisions(args.file_id)
+    else:
+        get_revision(args.file_id, args.revision, args.format, args.output)
+
+
+if __name__ == "__main__":
+    main()

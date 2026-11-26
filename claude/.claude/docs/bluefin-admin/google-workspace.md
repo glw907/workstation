@@ -28,6 +28,13 @@ hands Geoff the URL with `&amp;` fixed to `&`; the consent screen is his grant.
   https://www.googleapis.com/auth/spreadsheets`, run from `~` because `--creds` takes a relative
   path. clasp's defaults add `cloud-platform`, `service.management`, and `logging.read`.
 
+A Google file's past revisions come through `sheet-revision` (`~/.dotfiles/bin`): `list FILE_ID`
+shows each revision's ID, time, and editor, and `get FILE_ID REVISION` downloads one as xlsx (or
+`--format csv`, `pdf`, `ods`). The content needs a bearer token on an export link that `gws` can't
+fetch, so the script mints one from the `gws` login. `gws auth export` masks secrets unless given
+`--unmasked`; the masked values fail at Google's token endpoint as `invalid_client` or
+`invalid_grant`, which looks like a dead login but isn't (2026-11-16).
+
 The Apps Script API is on in Geoff's account settings and enabled in `gws-personal`. A script runs
 through `clasp run-function` only once its Cloud project is switched to 754967083271, a click in
 the script editor's Project Settings that Geoff makes, once per script.
