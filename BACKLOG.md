@@ -14,6 +14,14 @@
 
 ## Medium
 
+- [ ] **#126** Use the Proton Pass access tokens more effectively `#improvement` `#workstation` *(2026-11-26)*
+  Geoff plans a full design session for this the week of 2026-11-30. An agent token's session lasts two hours, but `claude-pass` and `ws-pass-key` log in and out on every call. That trips Proton's login throttle after about four calls, which is why `check-drift --titles` sleeps 150 s between vaults. Geoff approved reusing a short-lived session (2026-11-26). Also in scope:
+  - Allow `agent monitor` alone in `claude-pass`, so the monthly review can read the access log and its reasons.
+  - Change the renewal steps in `~/.claude/docs/bluefin-admin/secrets.md` from creating a fresh token to `pass-cli agent renew <name> --expiration 3m`, which keeps the grants.
+  - Reconcile the ASC age key restore rule. `secrets.md` says Geoff restores it by hand. `aksailingclub-legacy/CLAUDE.md` and its `scripts/secrets/sync.sh` say Claude restores it through `claude-pass`.
+  - Decide the token lifetime: 3 months now, with 6 months or a year allowed.
+  Sources: <https://protonpass.github.io/pass-cli/commands/agent/>, <https://protonpass.github.io/pass-cli/commands/personal-access-token>. `bin/.local/bin/claude-pass`, `bin/.local/bin/ws-pass-key`, `bin/.local/bin/check-drift`
+
 - [ ] **#125** Name each merge blocker and Geoff's part when a PR is ready `#improvement` `#workstation` *(2026-11-25)*
   A merge-session miss in the artist photos chain (PR #281, 2026-11-25). The session reported "waits for Geoff" without listing the dashboard step, the merge-order dependency, the `scripts/check.sh` conflict, or the hardening rulings, and Geoff had to ask "What do you need for Task 4?". For the next refinement session: decide whether `building-from-specs` "Merging" or the chain tick should require a blockers list in the first message about a ready PR. The memory `feedback-merge-blockers` holds the interim rule.
 
