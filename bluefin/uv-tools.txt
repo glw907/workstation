@@ -7,5 +7,7 @@ yt-dlp
 ruff
 jrnl
 # beets pins Python 3.14: its jellyfish dependency builds through PyO3, which
-# had no Python 3.15 support when pavilion was set up on 2026-10-13.
-beets[fetchart,embedart] --python 3.14
+# had no Python 3.15 support when pavilion was set up on 2026-10-13. The
+# Python is uv-managed because the Fedora 45 image dropped /usr/bin/python3.14
+# and broke the tool environment (2026-11-26).
+beets[fetchart,embedart] --python 3.14 --managed-python

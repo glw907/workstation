@@ -23,7 +23,9 @@ ExecStart=%h/.local/bin/fresh-tracks
 ProtectHome=tmpfs
 BindPaths="%h/Fresh Tracks" %h/Music %h/.local/share/beets
 BindReadOnlyPaths=%h/.config/beets %h/.dotfiles/beets %h/.dotfiles/bin
-BindReadOnlyPaths=%h/.local/bin %h/.local/share/uv/tools/beets
+# beets runs on a uv-managed Python, so an image update that moves the system
+# Python can't break it.
+BindReadOnlyPaths=%h/.local/bin %h/.local/share/uv/tools/beets %h/.local/share/uv/python
 StateDirectory=fresh-tracks
 PrivateTmp=yes
 NoNewPrivileges=yes
