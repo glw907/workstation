@@ -140,6 +140,7 @@ of truth; a mismatch between this table and that table is a bug in whichever cha
 | CF_WS_SERVERS_TOKEN | ✓     | —    | —        |
 | CF_WS_CAIRN_GATE_TOKEN | ✓ | — | — |
 | CF_WS_CAIRN_CLEANROOM_TOKEN | ✓ | — | — |
+| CF_SHEET_ECXC_PRINTOUT_TOKEN | ✓ | — | — |
 | CLAUDE_CLEANROOM_OAUTH_TOKEN | ✓ | — | — |
 | GITHUB_TEST_LOGIN / _PASSWORD / _TOTP_SECRET / _TOKEN / _RECOVERY_CODES | ✓ | — | — |
 | CF_WS_R2_ARCHIVE_RW_TOKEN / _KEY_ID / _SECRET | ✓ | — | — |
@@ -365,6 +366,18 @@ tmpfs cache; no password manager holds it for scripts.
 - **Minted 2026-11-09** on pavilion by Geoff, per the setup tooling plan's pre-flight item 3.
 - **Rotate**: none; it is deleted at the polish loop's end (Decide S-6). A rerun past its expiry
   mints a new one the same way.
+
+### CF_SHEET_ECXC_PRINTOUT_TOKEN
+- **Grants**: Cloudflare **account-owned** token `sheet-ecxc-printout` (id `fb085c53...`). Account
+  `120c269ad6d3dfbe6d63a0bb53758ca0` only: Browser Run Write. No IP filter, since Google's Apps
+  Script servers call it from no fixed address, and no expiry.
+- **Used by**: the ECXC team sheet's bound script, which prints the attendance printout through
+  Browser Run's `/pdf` endpoint. The script holds a copy in Geoff's Apps Script user properties
+  (key `cloudflarePrintoutToken`), never in script properties, which any link editor can see.
+- **Minted 2026-11-25** on pavilion from `tmp-account-tokens`, which was then deleted.
+- **Rotate**: mint a new one the same way and store it here, then copy it to the script with
+  `setPrintoutToken` through the Apps Script API (recipe in ecxc-ski
+  `docs/coach-tools/team-sheet.md`, "Printout"), and delete the old token by id.
 
 ### CLAUDE_CLEANROOM_OAUTH_TOKEN
 - **Grants**: a Claude Code subscription token from `claude setup-token` on Geoff's Claude account,
