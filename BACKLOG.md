@@ -19,7 +19,7 @@
   - Allow `agent monitor` alone in `claude-pass`, so the monthly review can read the access log and its reasons.
   - Change the renewal steps in `~/.claude/docs/bluefin-admin/secrets.md` from creating a fresh token to `pass-cli agent renew <name> --expiration 3m`, which keeps the grants.
   - Reconcile the ASC age key restore rule. `secrets.md` says Geoff restores it by hand. `aksailingclub-legacy/CLAUDE.md` and its `scripts/secrets/sync.sh` say Claude restores it through `claude-pass`.
-  - Decide the token lifetime: 3 months now, with 6 months or a year allowed.
+  - Move every token to a one-year lifetime (Geoff, 2026-11-26: "A year is fine for my purposes"). Today each runs 3 months. Renew with `--expiration 1y`, then update `secrets/proton-grants.tsv`, the `ws-pass-key --store` default, and the "three months" lines in `secrets.md` and the `proton-pass` skill.
   Sources: <https://protonpass.github.io/pass-cli/commands/agent/>, <https://protonpass.github.io/pass-cli/commands/personal-access-token>. `bin/.local/bin/claude-pass`, `bin/.local/bin/ws-pass-key`, `bin/.local/bin/check-drift`
 
 - [ ] **#125** Name each merge blocker and Geoff's part when a PR is ready `#improvement` `#workstation` *(2026-11-25)*
