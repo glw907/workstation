@@ -14,6 +14,13 @@
 
 ## Medium
 
+- [ ] **#127** Make small desktop config changes land directly on main `#improvement` `#workstation` *(2026-11-26)*
+  The Show Apps folders and the Zen-on-both-hosts doc fixes went through a worktree, PR #285, two
+  full gate runs, and a long finish list; Geoff called it "quite a bit of ceremony for a small
+  config change." `building-from-specs` "Direct changes" and `dotfiles-pass` "Paths" should say
+  plainly that a gnome-settings.txt edit or a doc fact correction lands on main with the fast lane.
+  Interim: memory `feedback-small-config-ceremony`.
+
 - [ ] **#126** Use the Proton Pass access tokens more effectively `#improvement` `#workstation` *(2026-11-26)*
   Geoff plans a full design session for this the week of 2026-11-30. An agent token's session lasts two hours, but `claude-pass` and `ws-pass-key` log in and out on every call. That trips Proton's login throttle after about four calls, which is why `check-drift --titles` sleeps 150 s between vaults. Geoff approved reusing a short-lived session (2026-11-26). Also in scope:
   - Allow `agent monitor` alone in `claude-pass`, so the monthly review can read the access log and its reasons.
