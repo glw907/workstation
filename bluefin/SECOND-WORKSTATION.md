@@ -389,9 +389,8 @@ the rest unless the step says it is a hard stop.
    name. So `gnome-settings.txt` doesn't track the background until both
    machines run artwork with the same numbering.
 
-   The dock needs no step here. `setup` applies it from `gnome-settings.txt`:
-   Files, Terminal, Chromium, Hylki, Discord, Rufin, Steam,
-   then Trash. Before that line existed, pavilion kept Bluefin's
+   The dock and the Show Apps folders need no step here. `setup` applies both
+   from `gnome-settings.txt`, which lists the dock's apps in order. Before that line existed, pavilion kept Bluefin's
    stock dock, including the installer and a dead link to the removed
    Thunderbird ESR (Thunderbird is retired). If an icon is missing, check that its app installed and
    that `check-drift` reports `favorite-apps` matching.

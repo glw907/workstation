@@ -23,9 +23,10 @@ org.gnome.shell.extensions.dash-to-dock show-icons-notifications-counter false
 org.gnome.shell.extensions.dash-to-dock dance-urgent-applications false
 
 # The dock, left to right (Geoff, 2026-10-13, from thinkpad-x1; Calendar and
-# Contacts added 2026-10-21; Zen took Chromium's place 2026-11-22). Trash sits
-# after these through dash-to-dock's stock show-trash.
-org.gnome.shell favorite-apps ['org.gnome.Ptyxis.desktop', 'org.gnome.Nautilus.desktop', 'zen.desktop', 'co.hyprlab.Hylki.desktop', 'org.gnome.Calendar.desktop', 'org.gnome.Contacts.desktop', 'com.discordapp.Discord.desktop', 'sportsyou.desktop', 'app.rufin.rufin.desktop', 'com.valvesoftware.Steam.desktop', 'com.belmoussaoui.Authenticator.desktop']
+# Contacts added 2026-10-21; Zen took Chromium's place 2026-11-22; Calculator,
+# Weather, and Settings added 2026-11-26). Trash sits after these through
+# dash-to-dock's stock show-trash.
+org.gnome.shell favorite-apps ['org.gnome.Ptyxis.desktop', 'org.gnome.Nautilus.desktop', 'zen.desktop', 'co.hyprlab.Hylki.desktop', 'org.gnome.Calendar.desktop', 'org.gnome.Contacts.desktop', 'com.discordapp.Discord.desktop', 'sportsyou.desktop', 'app.rufin.rufin.desktop', 'com.valvesoftware.Steam.desktop', 'org.gnome.Calculator.desktop', 'org.gnome.Weather.desktop', 'com.belmoussaoui.Authenticator.desktop', 'org.gnome.Settings.desktop']
 
 # Super+Shift+P opens phone-check, which answers a site's phone check through
 # the voip.ms number (Geoff has no mobile phone; 2026-10-29). The list keeps
@@ -34,3 +35,54 @@ org.gnome.settings-daemon.plugins.media-keys custom-keybindings ['/org/gnome/set
 org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/ name 'Phone check'
 org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/ command 'ptyxis --new-window -- bash -lc "phone-check --pause"'
 org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/ binding '<Super><Shift>p'
+
+# Show Apps fits on one page (Geoff, 2026-11-26, from thinkpad-x1): ten
+# everyday apps loose, then ten folders. GNOME leaves dock apps out
+# of the grid, so the folders list some apps that never show there. Each
+# folder lists its apps by hand and clears the categories and exclusions
+# that Bluefin's defaults give Development and Games. A new app lands loose
+# at the end of the page, and an app that one host lacks is skipped there.
+# Bluefin's other folders, such as Utilities, are left out of folder-children
+# and no longer show.
+org.gnome.desktop.app-folders folder-children ['Internet', 'Office', 'Media', 'Graphics', 'Accessories', 'Development', 'System', 'Customize', 'Games', 'Help']
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Internet/ name 'Internet'
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Internet/ apps ['chrome-cfphpplneldjgkdkaopngiflgjapojop-Profile_1.desktop', 'co.hyprlab.Hylki.desktop', 'com.discordapp.Discord.desktop', 'im.dino.Dino.desktop', 'org.gajim.Gajim.desktop', 'sportsyou.desktop']
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Internet/ categories @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Internet/ excluded-apps @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Office/ name 'Office'
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Office/ apps ['org.gnome.Calendar.desktop', 'org.gnome.Contacts.desktop', 'org.gnome.SimpleScan.desktop']
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Office/ categories @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Office/ excluded-apps @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Media/ name 'Media'
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Media/ apps ['app.rufin.rufin.desktop', 'org.jeffvli.feishin.desktop', 'com.plexamp.Plexamp.desktop', 'org.gnome.Decibels.desktop', 'org.gnome.Showtime.desktop', 'org.gnome.Snapshot.desktop']
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Media/ categories @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Media/ excluded-apps @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Graphics/ name 'Graphics'
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Graphics/ apps ['com.github.PintaProject.Pinta.desktop', 'be.alexandervanhee.gradia.desktop', 'org.gnome.font-viewer.desktop']
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Graphics/ categories @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Graphics/ excluded-apps @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Accessories/ name 'Accessories'
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Accessories/ apps ['org.gnome.Calculator.desktop', 'org.gnome.Weather.desktop', 'org.gnome.Characters.desktop', 'it.mijorus.smile.desktop', 'com.belmoussaoui.Authenticator.desktop', 'org.gnome.FileRoller.desktop']
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Accessories/ categories @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Accessories/ excluded-apps @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Development/ name 'Development'
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Development/ apps ['virt-manager.desktop', 'com.ranfdev.DistroShelf.desktop', 'term-headless.desktop', 'org.gnome.Connections.desktop', 'remote-viewer.desktop', 'org.gnome.Sysprof.desktop']
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Development/ categories @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Development/ excluded-apps @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/System/ name 'System'
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/System/ apps ['org.gnome.DiskUtility.desktop', 'org.gnome.baobab.desktop', 'org.gnome.DejaDup.desktop', 'org.gnome.Logs.desktop', 'org.gnome.Firmware.desktop', 'firewall-config.desktop', 'system-update.desktop', 'io.github.pwr_solaar.solaar.desktop', 'input-remapper-gtk.desktop', 'io.gitlab.adhami3310.Impression.desktop', 'org.freedesktop.MalcontentControl.desktop']
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/System/ categories @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/System/ excluded-apps @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Customize/ name 'Customize'
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Customize/ apps ['org.gnome.tweaks.desktop', 'com.mattjakeman.ExtensionManager.desktop', 'page.tesk.Refine.desktop', 'com.github.tchx84.Flatseal.desktop', 'io.github.flattool.Warehouse.desktop', 'io.github.flattool.Ignition.desktop']
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Customize/ categories @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Customize/ excluded-apps @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Games/ name 'Games'
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Games/ apps ['com.valvesoftware.Steam.desktop', 'com.github.Matoking.protontricks.desktop']
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Games/ categories @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Games/ excluded-apps @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Help/ name 'Help'
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Help/ apps ['org.gnome.Tour.desktop', 'documentation.desktop', 'discourse.desktop']
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Help/ categories @as []
+org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Help/ excluded-apps @as []
+org.gnome.shell app-picker-layout [{'chromium-browser.desktop': <{'position': <0>}>, 'md.obsidian.Obsidian.desktop': <{'position': <1>}>, 'org.gnome.TextEditor.desktop': <{'position': <2>}>, 'com.microsoft.VSCode.desktop': <{'position': <3>}>, 'org.gnome.Papers.desktop': <{'position': <4>}>, 'org.gnome.Loupe.desktop': <{'position': <5>}>, 'org.gnome.clocks.desktop': <{'position': <6>}>, 'org.gnome.Maps.desktop': <{'position': <7>}>, 'io.missioncenter.MissionCenter.desktop': <{'position': <8>}>, 'io.github.kolunmi.Bazaar.desktop': <{'position': <9>}>, 'Internet': <{'position': <10>}>, 'Office': <{'position': <11>}>, 'Media': <{'position': <12>}>, 'Graphics': <{'position': <13>}>, 'Accessories': <{'position': <14>}>, 'Development': <{'position': <15>}>, 'System': <{'position': <16>}>, 'Customize': <{'position': <17>}>, 'Games': <{'position': <18>}>, 'Help': <{'position': <19>}>}]

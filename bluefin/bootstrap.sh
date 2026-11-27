@@ -204,9 +204,9 @@ setup_dx_group() {
 }
 
 # Bluefin preinstalls a Flatpak Firefox, and the base image's default browser
-# points at it. Chromium (a layered RPM) is the browser here: Flatpak's
-# sandbox blocks the native messaging that the password manager and Claude's
-# browser tooling both depend on. Leaving the Flatpak installed means a
+# points at it. Zen (the upstream tarball) is the daily browser and Chromium (a
+# layered RPM) the test browser: Flatpak's sandbox blocks the native messaging
+# that the password manager and Claude's browser tooling both depend on. Leaving the Flatpak installed means a
 # sandboxed second browser still winning every link click.
 #
 # This sticks. The system Flatpak set is installed by `ujust
@@ -236,14 +236,11 @@ setup_remove_conflicting_flatpaks() {
         fi
     done
 
-    # Hand the default-browser association to the layered Chromium RPM;
-    # setting it explicitly covers a system where it pointed at Firefox.
-    # thinkpad-x1 browses in Zen, and setup_zen sets its default.
-    if [[ "$(hostname)" == thinkpad-x1 ]]; then
-        echo "thinkpad-x1: default browser left to setup_zen"
-    elif [[ -f /usr/share/applications/chromium-browser.desktop ]]; then
-        xdg-settings set default-web-browser chromium-browser.desktop
-        echo "default browser set to chromium-browser.desktop (layered RPM)"
+    # Zen is the default browser on both hosts, and setup_zen sets it. The
+    # layered Chromium RPM is the test and development browser, so this only
+    # checks that it is present.
+    if [[ -f /usr/share/applications/chromium-browser.desktop ]]; then
+        echo "chromium-browser.desktop present (layered RPM, test and dev browser)"
     else
         echo "WARNING: /usr/share/applications/chromium-browser.desktop not found;" >&2
         echo "         is the chromium RPM layered? (bootstrap.sh layer)" >&2
@@ -376,18 +373,14 @@ setup_kitty() {
     ln -sf "$HOME/.local/kitty.app/bin/kitten" "$HOME/.local/bin/kitten"
 }
 
-# Zen is Geoff's daily browser on thinkpad-x1 (Geoff, 2026-11-21); pavilion
-# stays on Chromium. It installs from the upstream tarball into ~/.local/zen,
+# Zen is Geoff's daily browser on both hosts (thinkpad-x1 2026-11-21, pavilion
+# by 2026-11-26), and Chromium is the test and development browser. It installs from the upstream tarball into ~/.local/zen,
 # where its built-in updater keeps it current. A Flatpak build is out (see
 # browsers.md), and the tarball gives policies.json a writable home in the
 # install's distribution directory, which updates leave alone. The policies
 # also install Proton Pass and Floccus.
 setup_zen() {
-    echo "== setup: Zen Browser upstream tarball (thinkpad-x1 daily browser) =="
-    if [[ "$(hostname)" != thinkpad-x1 ]]; then
-        echo "not thinkpad-x1, skipping"
-        return
-    fi
+    echo "== setup: Zen Browser upstream tarball (daily browser) =="
     local zen_dir="$HOME/.local/zen"
     if [[ ! -x "$zen_dir/zen" ]]; then
         local tmp release url digest
@@ -504,15 +497,9 @@ Browsers:
     cannot split them.
   - `flatpak list | grep -i firefox` returns nothing: the
     preinstalled Flatpak builds are gone and the layered Chromium is what runs.
-  - `xdg-settings get default-web-browser` prints chromium-browser.desktop,
-    the layered RPM's desktop file under /usr/share/applications. On
-    thinkpad-x1 it prints zen.desktop instead.
-  - thinkpad-x1 only: setup_zen gates on the hostname, which a fresh install
-    sets after its first `setup` run. Rerun `bootstrap.sh setup` once the
-    hostname is thinkpad-x1, or Zen is skipped and Chromium stays the default.
-  - thinkpad-x1 only: about:policies in Zen lists the policies from
-    bluefin/zen/policies.json as active, and Proton Pass and Floccus appear
-    in about:addons.
+  - `xdg-settings get default-web-browser` prints zen.desktop.
+  - about:policies in Zen lists the policies from bluefin/zen/policies.json
+    as active, and Proton Pass and Floccus appear in about:addons.
 
 Hylki (desktop mail client) and GNOME Online Accounts:
   - `flatpak list | grep -i thunderbird` returns nothing.

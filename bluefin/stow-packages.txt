@@ -3,7 +3,7 @@
 # read this file instead of carrying their own hardcoded list.
 # applications: user .desktop overrides; chromium-browser.desktop routes launches through
 # chromium-launch (bin), which forces X11 on NVIDIA for Widevine video.
-# zen.desktop launches the Zen tarball on thinkpad-x1 and hides itself elsewhere (TryExec).
+# zen.desktop launches the Zen tarball and hides itself where it isn't installed (TryExec).
 applications
 bash
 beets

@@ -1,15 +1,18 @@
 # Browsers
 
-- **Zen Browser** (upstream tarball in `~/.local/zen`) is Geoff's daily browser on <!-- host-ok -->
-  thinkpad-x1 (Geoff, 2026-11-21). It is a Firefox fork, so Firefox add-ons install from
+- **Zen Browser** (upstream tarball in `~/.local/zen`) is Geoff's daily browser on both <!-- host-ok -->
+  hosts (Geoff: thinkpad-x1 2026-11-21, pavilion by 2026-11-26). It is a Firefox fork, so Firefox add-ons install from
   addons.mozilla.org. `bluefin/zen/policies.json`, linked into the install's
   `distribution/` directory, carries every Chromium policy that has a Firefox equivalent
   (the home button, spell-check service, and background mode have none) and installs Proton
   Pass and Floccus. Zen's updater keeps the tarball current and leaves `distribution/`
-  alone. `bootstrap.sh` (`setup_zen`) installs it on thinkpad-x1 only. Claude never
-  drives Zen, since Anthropic ships no Firefox build of the Claude extension.
-- **Chromium** (layered RPM) is the daily browser on pavilion (Geoff, 2026-10-18; Firefox is
-  retired), and the browser Claude Code drives on both hosts. Two profiles split the roles: Geoff browses in his own profile, and
+  alone. `bootstrap.sh` (`setup_zen`) installs it and makes it the default browser on both
+  hosts. Claude never drives Zen, since Anthropic ships no Firefox build of the Claude
+  extension. Firefox-based browsers block every extension on Mozilla's own sites
+  (`extensions.webextensions.restrictedDomains`, which covers `accounts.firefox.com` and
+  `addons.mozilla.org`), so never test Proton Pass autofill there (2026-11-26).
+- **Chromium** (layered RPM) is the test and development browser on both hosts (Geoff,
+  2026-11-26), and the browser Claude Code drives. Two profiles split the roles: Geoff tests in his own profile, and
   Claude Code drives the `Default` profile (the claude-in-chrome native-messaging
   host, chrome-devtools MCP automation, and `chromium-shot`), so automation never
   runs beside his sessions or password manager. On pavilion no `Default` profile exists yet
